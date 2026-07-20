@@ -1,0 +1,14 @@
+{
+  "name": "spd-seed-analyzer",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["web"],
+  "scripts": {
+    "build:wasm": "PATH=\"$HOME/.cargo/bin:$PATH\" wasm-pack build crates/spd-wasm --target web --out-dir ../../web/src/wasm --out-name spd_wasm",
+    "dev": "bun run build:wasm && bun run --filter spd-seed-analyzer-web dev",
+    "build": "bun run build:wasm && bun run --filter spd-seed-analyzer-web build",
+    "preview": "bun run --filter spd-seed-analyzer-web preview",
+    "test:rust": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo test -p spd-core",
+    "lint": "bun run --filter spd-seed-analyzer-web lint"
+  }
+}

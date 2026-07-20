@@ -1,0 +1,23 @@
+# Rust
+/target
+**/*.rs.bk
+
+# WASM pack output (generated into web)
+web/src/wasm/
+pkg/
+
+# Node / Bun
+node_modules/
+web/node_modules/
+web/dist/
+*.local
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Env
+.env
+.env.*

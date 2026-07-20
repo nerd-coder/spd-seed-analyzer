@@ -1,0 +1,16 @@
+[package]
+name = "spd-wasm"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "WASM bindings for spd-core"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+spd-core = { workspace = true }
+serde = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
+wasm-bindgen = { workspace = true }
+console_error_panic_hook = { workspace = true }
