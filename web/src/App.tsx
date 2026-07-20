@@ -59,7 +59,7 @@ function IdentityTable({
 }
 
 export default function App() {
-  const [seed, setSeed] = useState("JLY-ZYR-HET");
+  const [seed, setSeed] = useState("GFX-PZH-DCH");
   const [floors, setFloors] = useState(24);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -127,7 +127,7 @@ export default function App() {
                 id="seed"
                 value={seed}
                 onChange={(e) => setSeed(e.target.value)}
-                placeholder="JLY-ZYR-HET"
+                placeholder="XXX-XXX-XXX"
                 autoComplete="off"
                 spellCheck={false}
                 className="font-mono uppercase"
