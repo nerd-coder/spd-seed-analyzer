@@ -3,6 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::dungeon_seed::SeedError;
+use crate::items::IdentityMaps;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SeedInfo {
@@ -34,8 +35,9 @@ pub struct SeedReport {
     pub spd_version: String,
     pub spd_commit: String,
     pub floors_requested: u32,
+    pub identities: IdentityMaps,
     pub floors: Vec<FloorReport>,
-    /// `"scaffold"` until full analysis lands; then `"ok"`.
+    /// `"ok"` when identities are ready; floor listing still partial until levelgen lands.
     pub status: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,

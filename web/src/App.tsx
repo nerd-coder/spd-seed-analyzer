@@ -16,8 +16,47 @@ import { Label } from "@/components/ui/label";
 import {
   analyzeSeed,
   getSpdMeta,
+  type IdentityEntry,
   type SeedReport,
 } from "@/lib/spd-wasm";
+
+function IdentityTable({
+  title,
+  entries,
+  appearanceLabel,
+}: {
+  title: string;
+  entries: IdentityEntry[];
+  appearanceLabel: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <h3 className="text-sm font-medium">{title}</h3>
+      <div className="overflow-x-auto rounded-md border">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50 text-muted-foreground">
+            <tr>
+              <th className="px-3 py-2 text-left font-medium">Item</th>
+              <th className="px-3 py-2 text-left font-medium">
+                {appearanceLabel}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {entries.map((e) => (
+              <tr key={e.item} className="border-t">
+                <td className="px-3 py-1.5">{e.name}</td>
+                <td className="px-3 py-1.5 font-mono text-xs capitalize">
+                  {e.appearance.toLowerCase()}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   const [seed, setSeed] = useState("JLY-ZYR-HET");
@@ -127,50 +166,80 @@ export default function App() {
       )}
 
       {report && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-mono">
-              {report.seed.code ?? report.seed.formatted}
-            </CardTitle>
-            <CardDescription className="space-y-1">
-              <span className="block">
-                Numeric:{" "}
-                <span className="font-mono text-foreground">
-                  {report.seed.numeric}
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-mono">
+                {report.seed.code ?? report.seed.formatted}
+              </CardTitle>
+              <CardDescription className="space-y-1">
+                <span className="block">
+                  Numeric:{" "}
+                  <span className="font-mono text-foreground">
+                    {report.seed.numeric}
+                  </span>
                 </span>
-              </span>
-              <span className="block">
-                Status: <Badge variant="outline">{report.status}</Badge>
-              </span>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+                <span className="block">
+                  Status: <Badge variant="outline">{report.status}</Badge>
+                </span>
+              </CardDescription>
+            </CardHeader>
             {report.message && (
-              <Alert>
-                <AlertTitle>Work in progress</AlertTitle>
-                <AlertDescription>{report.message}</AlertDescription>
-              </Alert>
+              <CardContent>
+                <Alert>
+                  <AlertTitle>Progress</AlertTitle>
+                  <AlertDescription>{report.message}</AlertDescription>
+                </Alert>
+              </CardContent>
             )}
+          </Card>
 
-            {report.floors.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                No floor items yet. Seed parsing and RNG foundations are in
-                place; per-floor generation is next.
-              </p>
-            ) : (
-              report.floors.map((floor) => (
-                <div key={floor.depth} className="space-y-2">
-                  <h3 className="font-medium">Floor {floor.depth}</h3>
-                  <ul className="text-sm list-disc pl-5">
-                    {floor.items.map((item, i) => (
-                      <li key={`${floor.depth}-${i}`}>{item.name}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Identities</CardTitle>
+              <CardDescription>
+                Unidentified appearances for this seed (from run init RNG).
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <IdentityTable
+                title="Potions"
+                entries={report.identities.potions}
+                appearanceLabel="Color"
+              />
+              <IdentityTable
+                title="Scrolls"
+                entries={report.identities.scrolls}
+                appearanceLabel="Rune"
+              />
+              <IdentityTable
+                title="Rings"
+                entries={report.identities.rings}
+                appearanceLabel="Gem"
+              />
+            </CardContent>
+          </Card>
+
+          {report.floors.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Floors</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {report.floors.map((floor) => (
+                  <div key={floor.depth} className="space-y-2">
+                    <h3 className="font-medium">Floor {floor.depth}</h3>
+                    <ul className="list-disc pl-5 text-sm">
+                      {floor.items.map((item, i) => (
+                        <li key={`${floor.depth}-${i}`}>{item.name}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
     </div>
   );

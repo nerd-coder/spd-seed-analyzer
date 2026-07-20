@@ -12,6 +12,18 @@ export type SeedInfo = {
   formatted: string;
 };
 
+export type IdentityEntry = {
+  item: string;
+  name: string;
+  appearance: string;
+};
+
+export type IdentityMaps = {
+  potions: IdentityEntry[];
+  scrolls: IdentityEntry[];
+  rings: IdentityEntry[];
+};
+
 export type ItemEntry = {
   name: string;
   category: string;
@@ -29,6 +41,7 @@ export type SeedReport = {
   spd_version: string;
   spd_commit: string;
   floors_requested: number;
+  identities: IdentityMaps;
   floors: FloorReport[];
   status: string;
   message?: string | null;

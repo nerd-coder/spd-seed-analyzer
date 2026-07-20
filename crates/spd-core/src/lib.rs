@@ -3,14 +3,20 @@
 //! Target game source: local clone of 00-Evan/shattered-pixel-dungeon (see README).
 
 pub mod dungeon_seed;
+pub mod generator;
+pub mod items;
 pub mod java_random;
 pub mod random;
 pub mod report;
+pub mod rooms;
+pub mod run;
 
 pub use dungeon_seed::{DungeonSeed, SeedError, TOTAL_SEEDS};
+pub use items::IdentityMaps;
 pub use java_random::JavaRandom;
 pub use random::Random;
 pub use report::{AnalyzeError, FloorReport, SeedInfo, SeedReport};
+pub use run::{RunState, init_run};
 
 /// Pinned SPD version this port targets (from local clone at scaffold time).
 pub const SPD_VERSION: &str = "v3.3.8";
@@ -26,7 +32,6 @@ pub fn parse_seed(input: &str) -> Result<SeedInfo, SeedError> {
     let code = if numeric < TOTAL_SEEDS {
         DungeonSeed::convert_to_code(numeric).ok()
     } else {
-        // Daily seeds sit outside TOTAL_SEEDS; no ABC-DEF-GHI form.
         None
     };
     Ok(SeedInfo {
@@ -39,19 +44,22 @@ pub fn parse_seed(input: &str) -> Result<SeedInfo, SeedError> {
 
 /// Analyze a seed for the given number of floors.
 ///
-/// Currently returns scaffold data (seed info only). Levelgen lands in later phases.
+/// Currently returns seed info + identity maps from run init. Levelgen is later.
 pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError> {
     let info = parse_seed(input)?;
     let floors = floors.clamp(1, 26);
+    let run = init_run(info.numeric);
+
     Ok(SeedReport {
         seed: info,
         spd_version: SPD_VERSION.to_string(),
         spd_commit: SPD_COMMIT.to_string(),
         floors_requested: floors,
+        identities: run.identities,
         floors: Vec::new(),
-        status: "scaffold".to_string(),
+        status: "identities".to_string(),
         message: Some(format!(
-            "Seed parsed. Per-floor item listing not yet implemented (requested {floors} floors)."
+            "Identity maps ready. Per-floor item listing not yet implemented (requested {floors} floors)."
         )),
     })
 }

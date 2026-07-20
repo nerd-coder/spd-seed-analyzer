@@ -54,8 +54,8 @@ cd web && bunx shadcn@latest add <component>
 - [x] Monorepo scaffold (Cargo + Bun/Vite/shadcn)
 - [x] `java.util.Random` + watabou `Random` stack
 - [x] `DungeonSeed` parse/format
-- [x] WASM `parse_seed` / `analyze_seed` (scaffold report)
-- [ ] Run init (identity maps)
+- [x] WASM `parse_seed` / `analyze_seed`
+- [x] Run init (potion/scroll/ring identity maps + room/generator deck RNG)
 - [ ] Item generator
 - [ ] Headless levelgen + per-floor item listing
 
