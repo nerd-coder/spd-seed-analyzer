@@ -56,8 +56,9 @@ cd web && bunx shadcn@latest add <component>
 - [x] `DungeonSeed` parse/format
 - [x] WASM `parse_seed` / `analyze_seed`
 - [x] Run init (potion/scroll/ring identity maps + room/generator deck RNG)
-- [ ] Item generator
-- [ ] Headless levelgen + per-floor item listing
+- [x] Item generator (decks, tiers, enchants/glyphs, item.random)
+- [x] Partial levelgen (forced drops + feelings per floor)
+- [ ] Full headless levelgen (rooms, heaps, mobs, quests)
 
 ## License
 

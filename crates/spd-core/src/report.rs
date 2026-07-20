@@ -17,6 +17,8 @@ pub struct SeedInfo {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FloorReport {
     pub depth: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub feeling: Option<String>,
     pub items: Vec<ItemEntry>,
     pub quests: Vec<String>,
 }
@@ -37,7 +39,7 @@ pub struct SeedReport {
     pub floors_requested: u32,
     pub identities: IdentityMaps,
     pub floors: Vec<FloorReport>,
-    /// `"ok"` when identities are ready; floor listing still partial until levelgen lands.
+    /// `"partial"` while only forced drops exist; `"ok"` when full levelgen lands.
     pub status: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,

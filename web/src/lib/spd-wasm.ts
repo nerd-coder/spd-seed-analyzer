@@ -32,6 +32,7 @@ export type ItemEntry = {
 
 export type FloorReport = {
   depth: number;
+  feeling?: string | null;
   items: ItemEntry[];
   quests: string[];
 };

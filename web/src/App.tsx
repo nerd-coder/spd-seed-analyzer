@@ -224,16 +224,41 @@ export default function App() {
             <Card>
               <CardHeader>
                 <CardTitle>Floors</CardTitle>
+                <CardDescription>
+                  Partial data: forced drops and feelings only (room loot
+                  pending).
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-5">
                 {report.floors.map((floor) => (
-                  <div key={floor.depth} className="space-y-2">
-                    <h3 className="font-medium">Floor {floor.depth}</h3>
-                    <ul className="list-disc pl-5 text-sm">
-                      {floor.items.map((item, i) => (
-                        <li key={`${floor.depth}-${i}`}>{item.name}</li>
-                      ))}
-                    </ul>
+                  <div key={floor.depth} className="space-y-2 border-b pb-4 last:border-0 last:pb-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="font-medium">Floor {floor.depth}</h3>
+                      {floor.feeling && floor.feeling !== "none" && (
+                        <Badge variant="secondary" className="capitalize">
+                          {floor.feeling}
+                        </Badge>
+                      )}
+                    </div>
+                    {floor.items.length === 0 ? (
+                      <p className="text-muted-foreground text-sm">
+                        No forced drops listed.
+                      </p>
+                    ) : (
+                      <ul className="list-disc space-y-0.5 pl-5 text-sm">
+                        {floor.items.map((item, i) => (
+                          <li key={`${floor.depth}-${i}`}>
+                            <span>{item.name}</span>
+                            {item.source && (
+                              <span className="text-muted-foreground">
+                                {" "}
+                                ({item.source})
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 ))}
               </CardContent>

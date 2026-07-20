@@ -1,7 +1,8 @@
 //! Run initialization sequence from `Dungeon.init()`.
 
-use crate::items::{IdentityMaps, init_identities};
+use crate::dungeon::{DungeonState, LimitedDrops};
 use crate::generator::{self, GeneratorState};
+use crate::items::{IdentityMaps, init_identities};
 use crate::random::Random;
 use crate::rooms::{self, RoomRunState};
 
@@ -24,14 +25,12 @@ pub struct RunState {
 /// ```
 pub fn init_run(seed: i64) -> RunState {
     Random::reset_generators();
-    // offset seed slightly to avoid output patterns
     Random::push_generator_seeded(seed.wrapping_add(1));
 
     let identities = init_identities();
     let rooms = rooms::init_rooms_for_run();
     let generator = generator::full_reset();
 
-    // Game resets the stack after init; keep RunState pure and reset too.
     Random::reset_generators();
 
     RunState {
@@ -39,6 +38,21 @@ pub fn init_run(seed: i64) -> RunState {
         identities,
         rooms,
         generator,
+    }
+}
+
+/// Build a mutable dungeon context from a finished run init.
+pub fn dungeon_from_run(run: RunState) -> DungeonState {
+    DungeonState {
+        seed: run.seed,
+        depth: 1,
+        branch: 0,
+        challenges: 0,
+        identities: run.identities,
+        rooms: run.rooms,
+        generator: run.generator,
+        limited: LimitedDrops::reset(),
+        items_to_spawn: Vec::new(),
     }
 }
 
@@ -54,7 +68,7 @@ mod tests {
         assert_eq!(a.rooms.specials, b.rooms.specials);
         assert_eq!(a.rooms.secrets, b.rooms.secrets);
         assert_eq!(a.rooms.region_secrets, b.rooms.region_secrets);
-        assert_eq!(a.generator.using_first_deck, b.generator.using_first_deck);
+        assert_eq!(a.generator.using_first_deck(), b.generator.using_first_deck());
     }
 
     #[test]
@@ -80,7 +94,6 @@ mod tests {
     fn different_seeds_usually_differ() {
         let a = init_run(1);
         let b = init_run(2);
-        // Extremely unlikely to match all three maps
         assert_ne!(a.identities, b.identities);
     }
 }

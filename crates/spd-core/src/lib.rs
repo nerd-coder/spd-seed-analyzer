@@ -2,10 +2,12 @@
 //!
 //! Target game source: local clone of 00-Evan/shattered-pixel-dungeon (see README).
 
+pub mod dungeon;
 pub mod dungeon_seed;
 pub mod generator;
 pub mod items;
 pub mod java_random;
+pub mod level;
 pub mod random;
 pub mod report;
 pub mod rooms;
@@ -16,7 +18,7 @@ pub use items::IdentityMaps;
 pub use java_random::JavaRandom;
 pub use random::Random;
 pub use report::{AnalyzeError, FloorReport, SeedInfo, SeedReport};
-pub use run::{RunState, init_run};
+pub use run::{RunState, dungeon_from_run, init_run};
 
 /// Pinned SPD version this port targets (from local clone at scaffold time).
 pub const SPD_VERSION: &str = "v3.3.8";
@@ -44,22 +46,27 @@ pub fn parse_seed(input: &str) -> Result<SeedInfo, SeedError> {
 
 /// Analyze a seed for the given number of floors.
 ///
-/// Currently returns seed info + identity maps from run init. Levelgen is later.
+/// Returns identity maps plus **partial** per-floor data (forced drops / feelings).
+/// Full room loot is not yet ported.
 pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError> {
     let info = parse_seed(input)?;
     let floors = floors.clamp(1, 26);
     let run = init_run(info.numeric);
+    let mut dungeon = dungeon_from_run(run);
+    let identities = dungeon.identities.clone();
+    let floor_reports = level::analyze_floors(&mut dungeon, floors);
 
     Ok(SeedReport {
         seed: info,
         spd_version: SPD_VERSION.to_string(),
         spd_commit: SPD_COMMIT.to_string(),
         floors_requested: floors,
-        identities: run.identities,
-        floors: Vec::new(),
-        status: "identities".to_string(),
-        message: Some(format!(
-            "Identity maps ready. Per-floor item listing not yet implemented (requested {floors} floors)."
-        )),
+        identities,
+        floors: floor_reports,
+        status: "partial".to_string(),
+        message: Some(
+            "Showing forced drops and level feelings only. Full floor loot (rooms, mobs, quests) is not ported yet."
+                .to_string(),
+        ),
     })
 }
