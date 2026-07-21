@@ -135,6 +135,19 @@ impl Room {
                 self.bottom -= 1;
             }
         }
+        if self.size_factor == 3
+            && matches!(
+                self.name.as_str(),
+                "LibraryRingRoom" | "LibraryRingEntranceRoom" | "LibraryRingExitRoom"
+            )
+        {
+            if self.width() % 2 == 1 {
+                self.right -= 1;
+            }
+            if self.height() % 2 == 1 {
+                self.bottom -= 1;
+            }
+        }
     }
 
     /// SPD `Room.random()` — point inset by 1 tile from walls.
@@ -372,5 +385,27 @@ mod tests {
         pipe.resize(8, 8);
         assert!(!pipe.can_connect_point(Point::new(pipe.left, pipe.top + 1)));
         assert!(pipe.can_connect_point(Point::new(pipe.left, pipe.top + 2)));
+    }
+
+    #[test]
+    fn giant_library_ring_resize_forces_even_inclusive_dimensions() {
+        let mut giant = Room::new(
+            0,
+            "LibraryRingRoom",
+            RoomKind::Standard,
+            3,
+            16,
+            14,
+            18,
+            14,
+            18,
+        );
+        giant.resize(16, 14);
+        assert_eq!((giant.width(), giant.height()), (16, 14));
+
+        let mut large = giant.clone();
+        large.size_factor = 2;
+        large.resize(16, 14);
+        assert_eq!((large.width(), large.height()), (17, 15));
     }
 }

@@ -91,6 +91,8 @@ pub fn size_cat_probs(room_name: &str) -> [f32; 3] {
         "SegmentedRoom" | "PillarsRoom" | "CavesFissureRoom" => [9., 3., 1.],
         "CellBlockRoom" | "SkullsRoom" | "SegmentedLibraryRoom" => [0., 3., 1.],
         "CirclePitRoom" | "RuinsRoom" | "LibraryRingRoom" => [4., 2., 1.],
+        "LibraryHallRoom" | "LibraryHallEntranceRoom" | "LibraryHallExitRoom" => [2., 1., 0.],
+        "StatuesRoom" => [9., 3., 1.],
         "CaveRoom" => [4., 2., 1.],
         "RitualRoom" => [6., 3., 1.],
         // entrances/exits with non-default sizes
@@ -98,10 +100,12 @@ pub fn size_cat_probs(room_name: &str) -> [f32; 3] {
         | "CircleBasinEntranceRoom"
         | "LibraryRingEntranceRoom"
         | "RingExitRoom"
-        | "CircleBasinExitRoom" => [0., 1., 0.],
+        | "CircleBasinExitRoom"
+        | "LibraryRingExitRoom" => [0., 1., 0.],
         "PillarsEntranceRoom"
         | "PillarsExitRoom"
         | "StatuesEntranceRoom"
+        | "StatuesExitRoom"
         | "CavesFissureEntranceRoom" => [3., 1., 0.],
         "RegionDecoBridgeEntranceRoom" | "RegionDecoBridgeExitRoom" => [2., 1., 0.],
         "CavesFissureExitRoom" => [3., 1., 0.],
@@ -283,5 +287,17 @@ mod tests {
         assert_eq!(size_cat_probs("CellBlockRoom"), [0., 3., 1.]);
         assert_eq!(size_cat_probs("CellBlockEntranceRoom"), [0., 1., 0.]);
         assert_eq!(size_cat_probs("CellBlockExitRoom"), [0., 1., 0.]);
+    }
+
+    #[test]
+    fn city_rooms_keep_pinned_size_weights() {
+        assert_eq!(size_cat_probs("HallwayRoom"), [1., 0., 0.]);
+        assert_eq!(size_cat_probs("LibraryHallRoom"), [2., 1., 0.]);
+        assert_eq!(size_cat_probs("LibraryHallExitRoom"), [2., 1., 0.]);
+        assert_eq!(size_cat_probs("LibraryRingRoom"), [4., 2., 1.]);
+        assert_eq!(size_cat_probs("LibraryRingExitRoom"), [0., 1., 0.]);
+        assert_eq!(size_cat_probs("StatuesRoom"), [9., 3., 1.]);
+        assert_eq!(size_cat_probs("StatuesExitRoom"), [3., 1., 0.]);
+        assert_eq!(size_cat_probs("SegmentedLibraryRoom"), [0., 3., 1.]);
     }
 }

@@ -386,6 +386,29 @@ mod tests {
     }
 
     #[test]
+    fn hallways_only_merge_together_and_keep_special_connector() {
+        let mut hallway = named_room(0, "HallwayRoom", 1, 1, 8, 8);
+        let mut entrance = named_room(1, "HallwayEntranceRoom", 8, 1, 15, 8);
+        hallway.connected.push(1);
+        entrance.connected.push(0);
+        let rooms = vec![hallway, entrance];
+        let door = Point::new(8, 4);
+        let mut map = terrain::paint_minimal(&rooms).expect("map");
+        assert!(merge_rooms(&mut map, &rooms[0], &rooms[1], Some(door), 18));
+        let connector = map.point_to_cell(door.x, door.y).expect("connector");
+        let strip = map.point_to_cell(door.x, door.y - 1).expect("strip");
+        assert_eq!(map.map[connector], terrain::EMPTY_SP);
+        assert_eq!(map.map[strip], terrain::EMPTY);
+
+        let rooms = vec![
+            named_room(0, "HallwayRoom", 1, 1, 8, 8),
+            named_room(1, "LibraryHallRoom", 8, 1, 15, 8),
+        ];
+        let mut map = terrain::paint_minimal(&rooms).expect("map");
+        assert!(!merge_rooms(&mut map, &rooms[0], &rooms[1], Some(door), 18));
+    }
+
+    #[test]
     fn caves_explicit_chasm_merge_can_cross_fissure_edges() {
         let left = named_room(0, "CavesFissureRoom", 1, 1, 8, 8);
         let right = named_room(1, "CircleWallRoom", 8, 1, 15, 8);

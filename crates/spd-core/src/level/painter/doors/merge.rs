@@ -31,13 +31,31 @@ fn point_inside(room: &Room, from: Point, n: i32) -> Point {
     step
 }
 
-fn can_merge_at(map: &TerrainMap, room: &Room, p: Point, merge_terrain: i32, depth: i32) -> bool {
+fn can_merge_at(
+    map: &TerrainMap,
+    room: &Room,
+    other: &Room,
+    p: Point,
+    merge_terrain: i32,
+    depth: i32,
+) -> bool {
     if !is_mergeable_standard(room) {
         return false;
     }
     let inside = point_inside(room, p, 1);
     match map.point_to_cell(inside.x, inside.y) {
         Some(_) if room.name == "SewerPipeRoom" => false,
+        Some(_)
+            if matches!(
+                room.name.as_str(),
+                "HallwayRoom" | "HallwayEntranceRoom" | "HallwayExitRoom"
+            ) && !matches!(
+                other.name.as_str(),
+                "HallwayRoom" | "HallwayEntranceRoom" | "HallwayExitRoom"
+            ) =>
+        {
+            false
+        }
         Some(_) if room.name == "WaterBridgeEntranceRoom" && depth <= 2 => false,
         Some(i)
             if matches!(
@@ -142,16 +160,16 @@ pub(in crate::level::painter) fn merge_rooms_with_terrain(
         let x = inter.left;
         let mut p = Point::new(x, top);
         while top > inter.top
-            && can_merge_at(map, n, p, requested_terrain, depth)
-            && can_merge_at(map, r, p, requested_terrain, depth)
+            && can_merge_at(map, n, r, p, requested_terrain, depth)
+            && can_merge_at(map, r, n, p, requested_terrain, depth)
         {
             top -= 1;
             p.y -= 1;
         }
         p.y = bottom;
         while bottom < inter.bottom
-            && can_merge_at(map, n, p, requested_terrain, depth)
-            && can_merge_at(map, r, p, requested_terrain, depth)
+            && can_merge_at(map, n, r, p, requested_terrain, depth)
+            && can_merge_at(map, r, n, p, requested_terrain, depth)
         {
             bottom += 1;
             p.y += 1;
@@ -173,16 +191,16 @@ pub(in crate::level::painter) fn merge_rooms_with_terrain(
         let y = inter.top;
         let mut p = Point::new(left, y);
         while left > inter.left
-            && can_merge_at(map, n, p, requested_terrain, depth)
-            && can_merge_at(map, r, p, requested_terrain, depth)
+            && can_merge_at(map, n, r, p, requested_terrain, depth)
+            && can_merge_at(map, r, n, p, requested_terrain, depth)
         {
             left -= 1;
             p.x -= 1;
         }
         p.x = right;
         while right < inter.right
-            && can_merge_at(map, n, p, requested_terrain, depth)
-            && can_merge_at(map, r, p, requested_terrain, depth)
+            && can_merge_at(map, n, r, p, requested_terrain, depth)
+            && can_merge_at(map, r, n, p, requested_terrain, depth)
         {
             right += 1;
             p.x += 1;
@@ -228,6 +246,17 @@ fn paint_merge_connector(
     door: Option<Point>,
     requested_terrain: i32,
 ) {
+    if matches!(
+        room.name.as_str(),
+        "HallwayRoom" | "HallwayEntranceRoom" | "HallwayExitRoom"
+    ) {
+        if let Some(door) = door {
+            if let Some(cell) = map.point_to_cell(door.x, door.y) {
+                map.map[cell] = EMPTY_SP;
+            }
+        }
+        return;
+    }
     if !matches!(other.name.as_str(), "PlatformRoom" | "ChasmRoom") {
         return;
     }

@@ -85,6 +85,19 @@ pub fn dims_for_kind(kind: RoomKind, size_factor: i32, name: &str) -> (i32, i32,
         "SegmentedRoom" | "PillarsRoom" | "PillarsEntranceRoom" | "PillarsExitRoom" => {
             return (min_w.max(7), max_w, min_h.max(7), max_h);
         }
+        "HallwayRoom" | "HallwayEntranceRoom" | "HallwayExitRoom" => {
+            return (min_w.max(5), max_w, min_h.max(5), max_h);
+        }
+        "LibraryHallRoom"
+        | "LibraryHallEntranceRoom"
+        | "LibraryHallExitRoom"
+        | "StatuesRoom"
+        | "StatuesEntranceRoom"
+        | "StatuesExitRoom" => return (min_w.max(7), max_w, min_h.max(7), max_h),
+        "LibraryRingRoom" => return (min_w.max(9), max_w, min_h.max(9), max_h),
+        "LibraryRingEntranceRoom" | "LibraryRingExitRoom" => {
+            return (min_w.max(13), max_w, min_h.max(13), max_h);
+        }
         _ => {}
     }
 
@@ -147,6 +160,11 @@ mod tests {
                 "CellBlockEntranceRoom",
                 (10, 14, 10, 14),
             ),
+            (RoomKind::Standard, 1, "HallwayRoom", (5, 10, 5, 10)),
+            (RoomKind::Standard, 1, "LibraryHallRoom", (7, 10, 7, 10)),
+            (RoomKind::Standard, 1, "LibraryRingRoom", (9, 10, 9, 10)),
+            (RoomKind::Exit, 2, "LibraryRingExitRoom", (13, 14, 13, 14)),
+            (RoomKind::Entrance, 1, "StatuesEntranceRoom", (7, 10, 7, 10)),
         ];
         for (kind, size, name, expected) in cases {
             assert_eq!(dims_for_kind(kind, size, name), expected, "{name}");

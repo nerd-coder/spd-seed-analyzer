@@ -6,15 +6,22 @@ mod caves_fissure;
 mod cell_block;
 mod chasm_bridge;
 mod circles;
+mod hallway;
+mod library_hall;
+mod library_ring;
 mod pathing;
 mod pillars;
 mod ring;
 mod segmented;
+mod segmented_library;
 mod sewer_pipe;
 mod standard_bridge;
 mod statue_line;
+mod statues;
 mod water_bridge;
 
+#[cfg(test)]
+mod city_tests;
 #[cfg(test)]
 mod tests;
 
@@ -67,6 +74,17 @@ pub(super) fn paint(
         "CellBlockRoom" | "CellBlockEntranceRoom" | "CellBlockExitRoom" => {
             cell_block::paint(map, room)
         }
+        "HallwayRoom" | "HallwayEntranceRoom" | "HallwayExitRoom" => {
+            hallway::paint(map, room, room_index, doors)
+        }
+        "LibraryHallRoom" | "LibraryHallEntranceRoom" | "LibraryHallExitRoom" => {
+            library_hall::paint(map, room, room_index, doors)
+        }
+        "LibraryRingRoom" | "LibraryRingEntranceRoom" | "LibraryRingExitRoom" => {
+            library_ring::paint(map, room, room_index, doors)
+        }
+        "StatuesRoom" | "StatuesEntranceRoom" | "StatuesExitRoom" => statues::paint(map, room),
+        "SegmentedLibraryRoom" => segmented_library::paint(map, room, room_index, doors),
         _ => return None,
     }
     Some(StandardPaintResult::default())
@@ -121,6 +139,15 @@ fn draw_inside(map: &mut TerrainMap, room: &Room, from: Point, n: i32, terrain: 
         return;
     };
     for step in 1..=n {
+        set(map, from.x + dx * step, from.y + dy * step, terrain);
+    }
+}
+
+fn draw_line(map: &mut TerrainMap, from: Point, to: Point, terrain: i32) {
+    let dx = (to.x - from.x).signum();
+    let dy = (to.y - from.y).signum();
+    let steps = (to.x - from.x).abs().max((to.y - from.y).abs());
+    for step in 0..=steps {
         set(map, from.x + dx * step, from.y + dy * step, terrain);
     }
 }
