@@ -13,6 +13,7 @@ pub const DOOR: i32 = 5;
 pub const OPEN_DOOR: i32 = 6;
 pub const ENTRANCE: i32 = 7;
 pub const EXIT: i32 = 8;
+pub const EMBERS: i32 = 9;
 pub const LOCKED_DOOR: i32 = 10;
 /// SPD `Terrain.SECRET_DOOR` — hidden wall door.
 pub const SECRET_DOOR: i32 = 16;
@@ -21,8 +22,10 @@ pub const EMPTY_SP: i32 = 14;
 pub const HIGH_GRASS: i32 = 15;
 pub const SECRET_TRAP: i32 = 17;
 pub const TRAP: i32 = 18;
+pub const INACTIVE_TRAP: i32 = 19;
 pub const EMPTY_DECO: i32 = 20;
 pub const WATER: i32 = 29;
+pub const REGION_DECO: i32 = 33;
 
 #[derive(Debug, Clone)]
 pub struct TerrainMap {
@@ -34,6 +37,12 @@ pub struct TerrainMap {
     /// Row-major terrain IDs (`Terrain.*`)
     pub map: Vec<i32>,
     pub passable: Vec<bool>,
+    /// Room-specific `canPlaceWater` mask used by the post-paint lake pass.
+    pub water_allowed: Vec<bool>,
+    /// Room-specific `canPlaceGrass` mask used by the post-paint grass pass.
+    pub grass_allowed: Vec<bool>,
+    /// Room-specific `canPlaceTrap` mask used by the post-paint trap pass.
+    pub trap_allowed: Vec<bool>,
     /// Parallel to `map`: trap destroys dropped items (randomDropCell filter).
     pub trap_destroys_items: Vec<bool>,
     /// Optional trap class name for debugging / future UI.
@@ -62,7 +71,7 @@ impl TerrainMap {
     pub fn is_solid(&self, cell: usize) -> bool {
         matches!(
             self.map[cell],
-            WALL | WALL_DECO | DOOR | LOCKED_DOOR | SECRET_DOOR
+            WALL | WALL_DECO | DOOR | LOCKED_DOOR | SECRET_DOOR | REGION_DECO
         )
     }
 
@@ -121,12 +130,14 @@ pub fn is_passable_tile(t: i32) -> bool {
         EMPTY
             | GRASS
             | HIGH_GRASS
+            | EMBERS
             | DOOR
             | OPEN_DOOR
             | ENTRANCE
             | EXIT
             | EMPTY_SP
             | EMPTY_DECO
+            | INACTIVE_TRAP
             | WATER
             | SECRET_TRAP // SECRET_TRAP = EMPTY | SECRET
     )
@@ -229,6 +240,9 @@ pub fn paint_minimal(rooms: &[Room]) -> Option<TerrainMap> {
     }
 
     let passable: Vec<bool> = map.iter().copied().map(is_passable_tile).collect();
+    let water_allowed = vec![true; len];
+    let grass_allowed = vec![true; len];
+    let trap_allowed = vec![true; len];
     let trap_destroys_items = vec![false; len];
     let trap_names = vec![None; len];
 
@@ -239,6 +253,9 @@ pub fn paint_minimal(rooms: &[Room]) -> Option<TerrainMap> {
         origin_y,
         map,
         passable,
+        water_allowed,
+        grass_allowed,
+        trap_allowed,
         trap_destroys_items,
         trap_names,
     })

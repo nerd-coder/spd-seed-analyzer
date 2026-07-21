@@ -292,8 +292,12 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
 
                 // Special/secret room paint loot (before createItems; may consume itemsToSpawn).
                 // Includes RegularPainter shuffle + placeDoors + door-type upgrades.
-                let special =
-                    special_loot::special_room_loot(dungeon, &floor.rooms, &mut items_to_spawn);
+                let special = special_loot::special_room_loot(
+                    dungeon,
+                    &floor.rooms,
+                    &mut map,
+                    &mut items_to_spawn,
+                );
                 let special_loot::SpecialPaintResult {
                     loot: special_loot_items,
                     mut doors,

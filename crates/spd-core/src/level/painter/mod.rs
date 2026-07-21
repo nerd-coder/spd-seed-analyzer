@@ -7,6 +7,7 @@
 mod decorate;
 mod doors;
 mod params;
+mod room_geometry;
 
 use crate::level::patch;
 use crate::level::terrain::{self, TerrainMap, EMPTY, GRASS, HIGH_GRASS, SECRET_TRAP, TRAP, WATER};
@@ -16,6 +17,7 @@ use crate::rooms::room::Room;
 
 pub use doors::{apply_room_door_types, door_spots, paint_doors, place_doors_for_room, DoorMap};
 pub use params::n_traps;
+pub(crate) use room_geometry::paint_standard_room;
 
 /// Water + grass + traps + region decorate under a separate generator
 /// (`Random.pushGenerator(Random.Long())` … `pop`), matching RegularPainter.
@@ -56,7 +58,10 @@ fn paint_water(map: &mut TerrainMap, rooms: &[Room], fill: f32, smoothness: i32)
                 for x in room.left..=room.right {
                     // Room.canPlaceWater defaults true for all points in room rect.
                     if let Some(i) = map.point_to_cell(x, y) {
-                        if lake.get(i).copied().unwrap_or(false) && map.map[i] == EMPTY {
+                        if lake.get(i).copied().unwrap_or(false)
+                            && map.water_allowed[i]
+                            && map.map[i] == EMPTY
+                        {
                             map.map[i] = WATER;
                         }
                     }
@@ -65,7 +70,7 @@ fn paint_water(map: &mut TerrainMap, rooms: &[Room], fill: f32, smoothness: i32)
         }
     } else {
         for (i, cell) in map.map.iter_mut().enumerate() {
-            if lake.get(i).copied().unwrap_or(false) && *cell == EMPTY {
+            if lake.get(i).copied().unwrap_or(false) && map.water_allowed[i] && *cell == EMPTY {
                 *cell = WATER;
             }
         }
@@ -81,7 +86,10 @@ fn paint_grass(map: &mut TerrainMap, rooms: &[Room], fill: f32, smoothness: i32)
             for y in room.top..=room.bottom {
                 for x in room.left..=room.right {
                     if let Some(i) = map.point_to_cell(x, y) {
-                        if grass.get(i).copied().unwrap_or(false) && map.map[i] == EMPTY {
+                        if grass.get(i).copied().unwrap_or(false)
+                            && map.grass_allowed[i]
+                            && map.map[i] == EMPTY
+                        {
                             grass_cells.push(i);
                         }
                     }
@@ -90,7 +98,7 @@ fn paint_grass(map: &mut TerrainMap, rooms: &[Room], fill: f32, smoothness: i32)
         }
     } else {
         for (i, cell) in map.map.iter().enumerate() {
-            if grass.get(i).copied().unwrap_or(false) && *cell == EMPTY {
+            if grass.get(i).copied().unwrap_or(false) && map.grass_allowed[i] && *cell == EMPTY {
                 grass_cells.push(i);
             }
         }
@@ -147,7 +155,7 @@ fn paint_traps(
             for y in room.top..=room.bottom {
                 for x in room.left..=room.right {
                     if let Some(i) = map.point_to_cell(x, y) {
-                        if map.map[i] == EMPTY {
+                        if map.trap_allowed[i] && map.map[i] == EMPTY {
                             valid.push(i);
                         }
                     }
@@ -156,7 +164,7 @@ fn paint_traps(
         }
     } else {
         for (i, &t) in map.map.iter().enumerate() {
-            if t == EMPTY {
+            if t == EMPTY && map.trap_allowed[i] {
                 valid.push(i);
             }
         }

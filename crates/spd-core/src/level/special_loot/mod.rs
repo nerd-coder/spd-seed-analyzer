@@ -19,7 +19,10 @@ mod tests;
 use crate::dungeon::DungeonState;
 use crate::items::model::GeneratedItem;
 use crate::level::create_items::PlacedLoot;
-use crate::level::painter::{apply_room_door_types, place_doors_for_room, DoorMap};
+use crate::level::painter::{
+    apply_room_door_types, paint_standard_room, place_doors_for_room, DoorMap,
+};
+use crate::level::terrain::TerrainMap;
 use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
@@ -40,6 +43,7 @@ pub struct SpecialPaintResult {
 pub fn special_room_loot(
     dungeon: &mut DungeonState,
     rooms: &[Room],
+    map: &mut TerrainMap,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> SpecialPaintResult {
     let mut out = Vec::new();
@@ -64,6 +68,7 @@ pub fn special_room_loot(
         }
         // Room.paint door-type upgrades (LOCKED / HIDDEN / REGULAR / …).
         apply_room_door_types(room, ri, &mut doors);
+        paint_standard_room(map, room, ri, &doors);
 
         match room.kind {
             RoomKind::Special | RoomKind::Secret => {

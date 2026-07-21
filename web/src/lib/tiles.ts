@@ -16,6 +16,7 @@ export const Terrain = {
   OPEN_DOOR: 6,
   ENTRANCE: 7,
   EXIT: 8,
+  EMBERS: 9,
   LOCKED_DOOR: 10,
   WALL_DECO: 12,
   EMPTY_SP: 14,
@@ -23,8 +24,10 @@ export const Terrain = {
   SECRET_DOOR: 16,
   SECRET_TRAP: 17,
   TRAP: 18,
+  INACTIVE_TRAP: 19,
   EMPTY_DECO: 20,
   WATER: 29,
+  REGION_DECO: 33,
 } as const
 
 /** 1-based (x,y) on the 16-wide sheet → linear index. */
@@ -36,6 +39,7 @@ function xy(x: number, y: number): number {
 const FLOOR = xy(1, 1) // 0
 const FLOOR_SP = xy(1, 1) + 4 // 4
 const FLOOR_DECO = xy(1, 1) + 1 // 1 — lightly decorated floor
+const EMBERS = xy(1, 1) + 3
 const GRASS = xy(1, 1) + 2 // 2
 const HIGH_GRASS = xy(1, 1) + 3 // 3
 const ENTRANCE = xy(1, 1) + 16 // 16
@@ -45,6 +49,7 @@ const FLAT_WALL_DECO = xy(1, 4) + 1 // 49
 const FLAT_DOOR = xy(1, 4) + 8 // 56
 const FLAT_DOOR_OPEN = xy(1, 4) + 9 // 57
 const FLAT_DOOR_LOCKED = xy(1, 4) + 10 // 58
+const FLAT_REGION_DECO = xy(1, 5) + 10
 const CHASM = xy(9, 2) // 24
 // water uses animated sheets in-game; fall back to floor tint via grass-ish slot
 const WATER_VIS = xy(1, 1) + 2
@@ -61,6 +66,8 @@ export function terrainToSheetIndex(terrain: number): number {
       return FLOOR
     case Terrain.EMPTY_DECO:
       return FLOOR_DECO
+    case Terrain.EMBERS:
+      return EMBERS
     case Terrain.GRASS:
       return GRASS
     case Terrain.HIGH_GRASS:
@@ -69,6 +76,8 @@ export function terrainToSheetIndex(terrain: number): number {
       return FLAT_WALL
     case Terrain.WALL_DECO:
       return FLAT_WALL_DECO
+    case Terrain.REGION_DECO:
+      return FLAT_REGION_DECO
     case Terrain.SECRET_DOOR:
       return FLAT_WALL // looks like wall until searched
     case Terrain.DOOR:
@@ -86,6 +95,7 @@ export function terrainToSheetIndex(terrain: number): number {
     case Terrain.WATER:
       return WATER_VIS
     case Terrain.TRAP:
+    case Terrain.INACTIVE_TRAP:
       return TRAP_VIS
     case Terrain.SECRET_TRAP:
       return SECRET_TRAP_VIS

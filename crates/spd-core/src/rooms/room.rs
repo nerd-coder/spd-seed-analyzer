@@ -362,18 +362,50 @@ pub fn dims_for_kind(kind: RoomKind, size_factor: i32, name: &str) -> (i32, i32,
         }
         _ => {}
     }
+    let (base_min_w, base_max_w, base_min_h, base_max_h) = dims_for_size_factor(size_factor);
+    match name {
+        "RegionDecoPatchEntranceRoom"
+        | "RegionDecoPatchExitRoom"
+        | "CaveEntranceRoom"
+        | "CaveExitRoom"
+        | "RuinsEntranceRoom"
+        | "RuinsExitRoom"
+        | "ChasmEntranceRoom"
+        | "ChasmExitRoom" => {
+            return (base_min_w.max(7), base_max_w, base_min_h.max(7), base_max_h);
+        }
+        "RegionDecoPatchRoom" | "CaveRoom" | "ChasmRoom" => {
+            return (base_min_w.max(5), base_max_w, base_min_h.max(5), base_max_h);
+        }
+        _ => {}
+    }
     match kind {
         RoomKind::Connection => (3, 10, 3, 10),
         RoomKind::Special | RoomKind::Secret | RoomKind::Shop => (5, 10, 5, 10),
         RoomKind::Entrance | RoomKind::Exit => {
-            let (mw, xw, mh, xh) = dims_for_size_factor(size_factor);
-            (mw.max(5), xw, mh.max(5), xh)
+            (base_min_w.max(5), base_max_w, base_min_h.max(5), base_max_h)
         }
-        RoomKind::Standard => {
-            let (mw, xw, mh, xh) = dims_for_size_factor(size_factor);
-            // CircleBasin etc. may force LARGE min — keep size_factor dims
-            let _ = name;
-            (mw, xw, mh, xh)
-        }
+        RoomKind::Standard => (base_min_w, base_max_w, base_min_h, base_max_h),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn patch_room_dimension_overrides_match_subclasses() {
+        assert_eq!(
+            dims_for_kind(RoomKind::Standard, 1, "CaveRoom"),
+            (5, 10, 5, 10)
+        );
+        assert_eq!(
+            dims_for_kind(RoomKind::Entrance, 1, "CaveEntranceRoom"),
+            (7, 10, 7, 10)
+        );
+        assert_eq!(
+            dims_for_kind(RoomKind::Exit, 2, "ChasmExitRoom"),
+            (10, 14, 10, 14)
+        );
     }
 }

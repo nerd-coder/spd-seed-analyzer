@@ -89,7 +89,7 @@ pub fn size_cat_probs(room_name: &str) -> [f32; 3] {
         "PillarsRoom" | "CavesFissureRoom" => [9., 3., 1.],
         "CellBlockRoom" | "SkullsRoom" | "SegmentedLibraryRoom" => [0., 3., 1.],
         "CirclePitRoom" | "RuinsRoom" | "LibraryRingRoom" => [4., 2., 1.],
-        "CaveRoom" => [2., 1., 0.],
+        "CaveRoom" => [4., 2., 1.],
         "RitualRoom" => [6., 3., 1.],
         // entrances/exits with non-default sizes
         "RingEntranceRoom"
@@ -250,4 +250,15 @@ pub fn create_exit(depth: i32) -> RoomSpec {
     let mut r = RoomSpec::exit(name);
     r.size_factor = size;
     r
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cave_room_keeps_pinned_standard_size_weights() {
+        assert_eq!(size_cat_probs("CaveRoom"), [4., 2., 1.]);
+        assert_eq!(size_cat_probs("CaveEntranceRoom"), [2., 1., 0.]);
+    }
 }

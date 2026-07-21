@@ -1,6 +1,7 @@
 # SPD Seed Analyzer — Implementation Progress
 
-**Last updated:** 2026-07-21 (P2: paintDoors merge/Graph)  
+**Last updated:** 2026-07-21 (P2: standard PatchRoom geometry)
+
 **Branch:** `main`  
 **Pinned SPD:** v3.3.8 @ `7b8b845a7`  
 **Local game source:** `/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`
@@ -95,6 +96,7 @@ bun run check:all    # biome + rust fmt/clippy
 | Patch.generate | `level/patch.rs` | Full cellular water/grass mask (force fill-rate) |
 | Water/grass/traps/decorate | `level/painter/` | Region fill rates + trap tables; sub-generator after room paint; sewers/prison/city/caves/halls decorate (approx); drop cells reject item-destroying traps |
 | paintDoors merge/Graph | `level/painter/doors.rs` | placeDoors element pick + door-type upgrades; mergeRooms for standard pairs; hidden-door Float + Graph connectivity; SECRET_DOOR/LOCKED_DOOR map tiles |
+| Standard PatchRoom geometry | `level/painter/room_geometry/` | RegionDecoPatch/Cave/Ruins/Chasm/Burned interiors; connected-patch validation, diagonal cleanup, Burned traps/restrictions; patch entrance/exit placement |
 | Special-room prizes | `level/special_loot/` | Crypt/Armory/Library/Treasury/Pool/Storage/Runestone/Lab/Statue + Sentry/Traps/MagicalFire/Sacrifice/ToxicGas + Pit/Garden/MagicWell + secrets (Honeypot/Maze/Summoning/ChestChasm/Garden/Well); room-shuffle + placeDoors RNG; may `findPrizeItem` from itemsToSpawn |
 | Shop stock | `level/shop.rs` | `ShopRoom.generateItems` (FOR_SALE); bag pick hero-less (scroll holder first); generated post-build (not mid-setSize) |
 | Ghost quest | `quests/ghost.rs` | `Ghost.Quest.spawn` on sewers: chance, placement (approx openSpace), weapon/armor rewards |
@@ -134,7 +136,7 @@ bun run check:all    # biome + rust fmt/clippy
 
 Results are **partial**. Not game-parity yet because:
 
-1. Water/grass/trap painter + paintDoors merge/Graph ported; full room geometry paint still approximate (merge success can desync)  
+1. Water/grass/trap painter + paintDoors merge/Graph ported; only the first standard PatchRoom geometry family is ported, so remaining room interiors can still desync merge success
 2. Special/secret room geometry still incomplete (drop cells / trap instances approximate); prize item RNG for main specials is largely ported  
 3. Shop stock timing is post-build (SPD generates during room `setSize`); bag choice is hero-less  
 4. Ghost quest rewards ported; placement uses minimal openSpace; full `createMobs` not ported  
@@ -167,7 +169,8 @@ Status string: `"partial"`.
 - ~~Water/grass/trap placement RNG~~ (`level/patch.rs` + `level/painter/`; nTraps + sub-generator Long)  
 - ~~Region decorate (Sewer/Prison/City/Caves/Halls)~~ (partial: caves neighbour-merge / chasm region-deco skipped)  
 - ~~paintDoors: mergeRooms + Graph hidden-door connectivity~~ (`level/painter/doors.rs`; door types from room paint table; merge depends on approximate interiors)  
-- Improve door placement / connection corridors / full room `paint()` geometry  
+- ~~First standard PatchRoom geometry slice~~ (RegionDecoPatch / Cave / Ruins / Chasm / Burned, including matching entrance/exit variants; connected-patch path validation + Burned placement masks)
+- Improve connection corridors / remaining standard and special room `paint()` geometry
 - Chasm feeling padding + CHASM terrain from caves merge
 
 ### P3 — Builder parity
@@ -272,7 +275,7 @@ SPD is GPL-3.0. This project ports generation logic → treat as **GPL-3.0-or-la
 
 1. Read this file + `README.md`  
 2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs` / `level/special_loot/` / `quests/{ghost,wandmaker,blacksmith,imp}.rs` / `level/shop.rs`  
-3. Next recommended work: **full room geometry paint** (special/standard interiors) for merge/drop-cell parity; optional **full Maze.generate** for SecretMaze prize-stream; **Java golden checks** (P6 oracle); WeakFloor/DemonSpawner are layout-only  
+3. Next recommended work: continue **standard room geometry** with the remaining generic family (Plants/Aquarium/Platform/Fissure/Striped/Study/SuspiciousChest/Minefield), then region-specific structural rooms; optional **full Maze.generate** for SecretMaze prize-stream; **Java golden checks** (P6 oracle); WeakFloor/DemonSpawner are layout-only
 4. Icons: `web/src/lib/item-icons.ts` + `components/ItemIcon.tsx` (items.png sheet)  
 5. Do not re-copy full asset tree; use `web/public/assets/` as flattened SPD assets  
 6. After Rust changes: `bun run build:wasm` (or `bun run dev`)  
