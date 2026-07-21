@@ -263,6 +263,23 @@ mod tests {
     }
 
     #[test]
+    fn chasm_bridge_merge_avoids_its_chasm_space() {
+        let left = named_room(0, "ChasmBridgeRoom", 1, 1, 9, 9);
+        let right = named_room(1, "EmptyRoom", 9, 1, 17, 9);
+        let rooms = vec![left, right];
+        let start = Some(Point::new(9, 5));
+        let mut open = terrain::paint_minimal(&rooms).expect("open map");
+        assert!(merge_rooms(&mut open, &rooms[0], &rooms[1], start, 8));
+
+        let mut blocked = terrain::paint_minimal(&rooms).expect("blocked map");
+        for y in 1..=9 {
+            let cell = blocked.point_to_cell(8, y).expect("bridge interior");
+            blocked.map[cell] = terrain::CHASM;
+        }
+        assert!(!merge_rooms(&mut blocked, &rooms[0], &rooms[1], start, 8));
+    }
+
+    #[test]
     fn paint_doors_can_hide_or_unlock() {
         Random::push_generator_seeded(99);
         let mut a = box_room(0, RoomKind::Standard, 1, 1, 8, 8);

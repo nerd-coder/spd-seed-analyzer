@@ -67,6 +67,14 @@ fn can_merge_at(map: &TerrainMap, room: &Room, p: Point, merge_terrain: i32, dep
         {
             map.map[i] != REGION_DECO_ALT
         }
+        Some(i)
+            if matches!(
+                room.name.as_str(),
+                "ChasmBridgeRoom" | "ChasmBridgeEntranceRoom" | "ChasmBridgeExitRoom"
+            ) =>
+        {
+            map.map[i] != CHASM
+        }
         Some(i) => !map.is_solid(i),
         None => false,
     }

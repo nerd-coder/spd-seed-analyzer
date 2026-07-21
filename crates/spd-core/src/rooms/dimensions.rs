@@ -73,6 +73,18 @@ pub fn dims_for_kind(kind: RoomKind, size_factor: i32, name: &str) -> (i32, i32,
         "CircleWallEntranceRoom" | "CircleWallExitRoom" => {
             return (min_w.max(11), max_w, min_h.max(11), max_h);
         }
+        "RegionDecoLineRoom" | "ChasmBridgeRoom" => {
+            return (min_w.max(5), max_w, min_h.max(5), max_h);
+        }
+        "RegionDecoLineEntranceRoom"
+        | "RegionDecoLineExitRoom"
+        | "ChasmBridgeEntranceRoom"
+        | "ChasmBridgeExitRoom" => {
+            return (min_w.max(7), max_w, min_h.max(7), max_h);
+        }
+        "SegmentedRoom" | "PillarsRoom" | "PillarsEntranceRoom" | "PillarsExitRoom" => {
+            return (min_w.max(7), max_w, min_h.max(7), max_h);
+        }
         _ => {}
     }
 
@@ -119,6 +131,22 @@ mod tests {
                 (7, 10, 7, 10),
             ),
             (RoomKind::Standard, 2, "CircleBasinRoom", (11, 14, 11, 14)),
+            (RoomKind::Standard, 1, "RegionDecoLineRoom", (5, 10, 5, 10)),
+            (
+                RoomKind::Entrance,
+                1,
+                "RegionDecoLineEntranceRoom",
+                (7, 10, 7, 10),
+            ),
+            (RoomKind::Standard, 1, "SegmentedRoom", (7, 10, 7, 10)),
+            (RoomKind::Standard, 1, "PillarsRoom", (7, 10, 7, 10)),
+            (RoomKind::Exit, 1, "ChasmBridgeExitRoom", (7, 10, 7, 10)),
+            (
+                RoomKind::Entrance,
+                2,
+                "CellBlockEntranceRoom",
+                (10, 14, 10, 14),
+            ),
         ];
         for (kind, size, name, expected) in cases {
             assert_eq!(dims_for_kind(kind, size, name), expected, "{name}");

@@ -88,7 +88,7 @@ pub fn size_cat_probs(room_name: &str) -> [f32; 3] {
         "PlatformRoom" | "FissureRoom" => [6., 3., 1.],
         "BurnedRoom" | "MinefieldRoom" => [4., 1., 0.],
         "StripedRoom" | "StudyRoom" => [2., 1., 0.],
-        "PillarsRoom" | "CavesFissureRoom" => [9., 3., 1.],
+        "SegmentedRoom" | "PillarsRoom" | "CavesFissureRoom" => [9., 3., 1.],
         "CellBlockRoom" | "SkullsRoom" | "SegmentedLibraryRoom" => [0., 3., 1.],
         "CirclePitRoom" | "RuinsRoom" | "LibraryRingRoom" => [4., 2., 1.],
         "CaveRoom" => [4., 2., 1.],
@@ -99,11 +99,14 @@ pub fn size_cat_probs(room_name: &str) -> [f32; 3] {
         | "LibraryRingEntranceRoom"
         | "RingExitRoom"
         | "CircleBasinExitRoom" => [0., 1., 0.],
-        "PillarsEntranceRoom" | "StatuesEntranceRoom" | "CavesFissureEntranceRoom" => [3., 1., 0.],
+        "PillarsEntranceRoom"
+        | "PillarsExitRoom"
+        | "StatuesEntranceRoom"
+        | "CavesFissureEntranceRoom" => [3., 1., 0.],
         "RegionDecoBridgeEntranceRoom" | "RegionDecoBridgeExitRoom" => [2., 1., 0.],
         "CavesFissureExitRoom" => [3., 1., 0.],
         "CircleWallEntranceRoom" | "CircleWallExitRoom" => [0., 1., 0.],
-        "CellBlockEntranceRoom" => [0., 1., 0.],
+        "CellBlockEntranceRoom" | "CellBlockExitRoom" => [0., 1., 0.],
         "CaveEntranceRoom" | "RuinsEntranceRoom" | "ChasmEntranceRoom" => [2., 1., 0.],
         _ => [1., 0., 0.],
     }
@@ -268,5 +271,17 @@ mod tests {
         assert_eq!(size_cat_probs("RegionDecoBridgeRoom"), [2., 1., 0.]);
         assert_eq!(size_cat_probs("CavesFissureExitRoom"), [3., 1., 0.]);
         assert_eq!(size_cat_probs("CircleWallEntranceRoom"), [0., 1., 0.]);
+    }
+
+    #[test]
+    fn prison_rooms_keep_pinned_size_weights() {
+        assert_eq!(size_cat_probs("RegionDecoLineRoom"), [1., 0., 0.]);
+        assert_eq!(size_cat_probs("SegmentedRoom"), [9., 3., 1.]);
+        assert_eq!(size_cat_probs("PillarsRoom"), [9., 3., 1.]);
+        assert_eq!(size_cat_probs("PillarsEntranceRoom"), [3., 1., 0.]);
+        assert_eq!(size_cat_probs("PillarsExitRoom"), [3., 1., 0.]);
+        assert_eq!(size_cat_probs("CellBlockRoom"), [0., 3., 1.]);
+        assert_eq!(size_cat_probs("CellBlockEntranceRoom"), [0., 1., 0.]);
+        assert_eq!(size_cat_probs("CellBlockExitRoom"), [0., 1., 0.]);
     }
 }

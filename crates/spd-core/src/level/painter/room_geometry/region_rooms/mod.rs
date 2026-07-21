@@ -3,11 +3,16 @@
 mod basin;
 mod bridge;
 mod caves_fissure;
+mod cell_block;
+mod chasm_bridge;
 mod circles;
 mod pathing;
+mod pillars;
 mod ring;
+mod segmented;
 mod sewer_pipe;
 mod standard_bridge;
+mod statue_line;
 mod water_bridge;
 
 #[cfg(test)]
@@ -50,6 +55,17 @@ pub(super) fn paint(
         }
         "CirclePitRoom" | "CircleWallRoom" | "CircleWallEntranceRoom" | "CircleWallExitRoom" => {
             circles::paint(map, room, room_index, doors)
+        }
+        "RegionDecoLineRoom" | "RegionDecoLineEntranceRoom" | "RegionDecoLineExitRoom" => {
+            statue_line::paint(map, room, room_index, doors)
+        }
+        "SegmentedRoom" => segmented::paint(map, room, room_index, doors),
+        "PillarsRoom" | "PillarsEntranceRoom" | "PillarsExitRoom" => pillars::paint(map, room),
+        "ChasmBridgeRoom" | "ChasmBridgeEntranceRoom" | "ChasmBridgeExitRoom" => {
+            chasm_bridge::paint(map, room, room_index, doors)
+        }
+        "CellBlockRoom" | "CellBlockEntranceRoom" | "CellBlockExitRoom" => {
+            cell_block::paint(map, room)
         }
         _ => return None,
     }

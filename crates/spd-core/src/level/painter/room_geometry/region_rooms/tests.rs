@@ -1,6 +1,7 @@
 use crate::level::painter::{place_doors_for_room, DoorMap};
 use crate::level::terrain::{
-    self, CHASM, DOOR, EMPTY_SP, ENTRANCE, ENTRANCE_SP, EXIT, REGION_DECO_ALT, WATER,
+    self, CHASM, DOOR, EMPTY_SP, ENTRANCE, ENTRANCE_SP, EXIT, REGION_DECO, REGION_DECO_ALT, WALL,
+    WATER,
 };
 use crate::random::Random;
 use crate::rooms::room::Room;
@@ -228,6 +229,108 @@ fn circle_basin_paints_cross_chasm_patch_and_center_transition() {
         .position(|&terrain| terrain == WATER)
         .expect("water cell");
     assert!(map.item_allowed[water_cell]);
+    assert!(map.map.contains(&EMPTY_SP));
+    assert!(map.map.contains(&ENTRANCE_SP));
+}
+
+#[test]
+fn prison_region_line_uses_least_door_side_and_transition() {
+    Random::push_generator_seeded(0xD311);
+    let entrance = room("RegionDecoLineEntranceRoom", RoomKind::Entrance, 1, 11);
+    let (rooms, doors) = with_east_connection(entrance);
+    let mut map = terrain::paint_minimal(&rooms).expect("map");
+    assert!(paint(&mut map, &rooms, &rooms[0], 0, &doors, 8).is_some());
+    Random::pop_generator();
+
+    assert!(map.map.contains(&REGION_DECO));
+    assert!(map.map.contains(&ENTRANCE));
+    let east_middle = map
+        .point_to_cell(rooms[0].right - 1, (rooms[0].top + rooms[0].bottom) / 2)
+        .expect("east inset");
+    assert_ne!(map.map[east_middle], REGION_DECO);
+}
+
+#[test]
+fn prison_segmented_recursion_keeps_external_door_open() {
+    Random::push_generator_seeded(0x5E6);
+    let segmented = room("SegmentedRoom", RoomKind::Standard, 2, 13);
+    let (rooms, doors) = with_east_connection(segmented);
+    let door = doors.get(0, 1).expect("door");
+    let mut map = terrain::paint_minimal(&rooms).expect("map");
+    assert!(paint(&mut map, &rooms, &rooms[0], 0, &doors, 8).is_some());
+    assert_eq!(Random::int(), 2_099_453_593);
+    Random::pop_generator();
+
+    let cell = map.point_to_cell(door.x, door.y).expect("door cell");
+    assert_eq!(map.map[cell], crate::level::terrain::EMPTY);
+    assert!(map.map.contains(&WALL));
+}
+
+#[test]
+fn prison_pillars_exit_blocks_character_on_transition() {
+    Random::push_generator_seeded(0xB11);
+    let exit = room("PillarsExitRoom", RoomKind::Exit, 1, 11);
+    let (rooms, doors) = with_east_connection(exit);
+    let mut map = terrain::paint_minimal(&rooms).expect("map");
+    assert!(paint(&mut map, &rooms, &rooms[0], 0, &doors, 8).is_some());
+    Random::pop_generator();
+
+    let exit_cell = map
+        .map
+        .iter()
+        .position(|&terrain| terrain == EXIT)
+        .expect("exit");
+    assert!(!map.character_allowed[exit_cell]);
+}
+
+#[test]
+fn prison_chasm_bridge_blocks_space_rect_placement() {
+    Random::push_generator_seeded(0xC45);
+    let bridge = room("ChasmBridgeEntranceRoom", RoomKind::Entrance, 2, 13);
+    let (rooms, doors) = with_east_connection(bridge);
+    let mut map = terrain::paint_minimal(&rooms).expect("map");
+    assert!(paint(&mut map, &rooms, &rooms[0], 0, &doors, 8).is_some());
+    Random::pop_generator();
+
+    assert!(map.map.contains(&CHASM));
+    assert!(map.map.contains(&EMPTY_SP));
+    for (cell, &terrain) in map.map.iter().enumerate() {
+        if matches!(terrain, CHASM | EMPTY_SP) {
+            assert!(!map.item_allowed[cell]);
+            assert!(!map.character_allowed[cell]);
+        }
+    }
+    let entrance = map
+        .map
+        .iter()
+        .position(|&terrain| terrain == ENTRANCE)
+        .expect("entrance");
+    let width = map.width as usize;
+    for neighbour in [
+        entrance - width - 1,
+        entrance - width,
+        entrance - width + 1,
+        entrance - 1,
+        entrance + 1,
+        entrance + width - 1,
+        entrance + width,
+        entrance + width + 1,
+    ] {
+        assert_eq!(map.map[neighbour], crate::level::terrain::EMPTY);
+    }
+}
+
+#[test]
+fn prison_cell_block_entrance_preserves_empty_sp_transition() {
+    Random::push_generator_seeded(0xCE11);
+    let entrance = room("CellBlockEntranceRoom", RoomKind::Entrance, 2, 13);
+    let (rooms, doors) = with_east_connection(entrance);
+    let mut map = terrain::paint_minimal(&rooms).expect("map");
+    assert!(paint(&mut map, &rooms, &rooms[0], 0, &doors, 8).is_some());
+    assert_eq!(Random::int(), 1_328_498_476);
+    Random::pop_generator();
+
+    assert!(map.map.contains(&REGION_DECO));
     assert!(map.map.contains(&EMPTY_SP));
     assert!(map.map.contains(&ENTRANCE_SP));
 }
