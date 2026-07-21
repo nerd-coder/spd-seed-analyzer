@@ -39,6 +39,14 @@ const SOURCE_LABELS: Record<string, string> = {
   CrystalChoiceRoom: 'Crystal choice',
   CrystalPathRoom: 'Crystal path',
   BlacksmithRoom: 'Blacksmith forge',
+  GardenRoom: 'Garden',
+  MagicWellRoom: 'Magic well',
+  PitRoom: 'Pit room',
+  SentryRoom: 'Sentry room',
+  TrapsRoom: 'Traps room',
+  MagicalFireRoom: 'Magical fire',
+  SacrificeRoom: 'Sacrifice room',
+  ToxicGasRoom: 'Toxic gas room',
 
   // Secret rooms
   SecretLibraryRoom: 'Secret library',
@@ -49,6 +57,15 @@ const SOURCE_LABELS: Record<string, string> = {
   SecretHoardRoom: 'Secret hoard',
   SecretHoneypotRoom: 'Secret honeypot',
   SecretMazeRoom: 'Secret maze',
+  SecretSummoningRoom: 'Secret summoning',
+  SecretChestChasmRoom: 'Secret chest chasm',
+  SecretGardenRoom: 'Secret garden',
+  SecretWellRoom: 'Secret well',
+
+  // Heap-like tags from specials
+  plant: 'Plant',
+  well: 'Well',
+  sacrificial: 'Sacrificial fire',
 
   // Quest rewards
   'Ghost.Quest': 'Ghost quest',
@@ -109,7 +126,7 @@ export function formatItemSource(
 /** Whether a source is high-value for seed finding (quests / crystal / shop / etc.). */
 export function isHighlightSource(source: string | null | undefined): boolean {
   if (!source) return false
-  return /Quest|Crystal|Shop|Blacksmith|Crypt|Armory|Pool|Treasury|Library|Statue|Secret|MassGrave|Laboratory|Storage|Runestone/i.test(
+  return /Quest|Crystal|Shop|Blacksmith|Crypt|Armory|Pool|Treasury|Library|Statue|Secret|MassGrave|Laboratory|Storage|Runestone|Pit|Garden|Sentry|Traps|MagicalFire|Sacrifice|ToxicGas|MagicWell/i.test(
     source
   )
 }

@@ -80,7 +80,7 @@ bun run check:all    # biome + rust fmt/clippy
 | Loop builder | `builders/` | placeRoom, findFreeSpace, tunnels, branches |
 | Figure-eight | — | **Falls back to loop** (not parity) |
 | Minimal paint | `level/terrain.rs` | SPD Terrain IDs; walls/empty/doors/entrance/exit; solid/openSpace helpers |
-| Special-room prizes | `level/special_loot.rs` | Crypt/Armory/Library/Treasury/Pool/Storage/Runestone/Lab/Statue + Sentry/Traps/MagicalFire/Sacrifice/ToxicGas + secrets (incl. Honeypot); room-shuffle + placeDoors RNG; may `findPrizeItem` from itemsToSpawn |
+| Special-room prizes | `level/special_loot.rs` | Crypt/Armory/Library/Treasury/Pool/Storage/Runestone/Lab/Statue + Sentry/Traps/MagicalFire/Sacrifice/ToxicGas + Pit/Garden/MagicWell + secrets (Honeypot/Maze/Summoning/ChestChasm/Garden/Well); room-shuffle + placeDoors RNG; may `findPrizeItem` from itemsToSpawn |
 | Shop stock | `level/shop.rs` | `ShopRoom.generateItems` (FOR_SALE); bag pick hero-less (scroll holder first); generated post-build (not mid-setSize) |
 | Ghost quest | `quests/ghost.rs` | `Ghost.Quest.spawn` on sewers: chance, placement (approx openSpace), weapon/armor rewards |
 | Wandmaker quest | `quests/wandmaker.rs` | `spawnRoom` on prison 7–9 (before shuffle); two +1 wands; MassGrave/Ritual/RotGarden side-effects (approx) |
@@ -124,9 +124,10 @@ Results are **partial**. Not game-parity yet because:
 3. Shop stock timing is post-build (SPD generates during room `setSize`); bag choice is hero-less  
 4. Ghost quest rewards ported; placement uses minimal openSpace; full `createMobs` not ported  
 5. Wandmaker + Blacksmith + Imp quests ported; RotGarden full paint/mobs incomplete; CrystalPath/Choice placement geometry approximate  
-6. Figure-eight builder incomplete  
-7. `randomDropCell` simplified vs full map flags  
-8. Sewer room-count tables used for all regions  
+6. SecretMaze `Maze.generate` not ported — maze chest prize stream approximate when that room appears  
+7. Figure-eight builder incomplete  
+8. `randomDropCell` simplified vs full map flags  
+9. Sewer room-count tables used for all regions  
 
 Status string: `"partial"`.
 
@@ -143,13 +144,15 @@ Status string: `"partial"`.
 - ~~Crystal rooms~~ (Vault / Choice / Path prize gen in `special_loot.rs`; Path geometry not painted, placement RNG approximate)  
 - ~~Blacksmith.Quest~~ (see `quests/blacksmith.rs`; smithRewards at initRooms; room paint equip drops; mining branch not ported)  
 - ~~Sentry / Traps / MagicalFire / Sacrifice / ToxicGas / SecretHoneypot prize RNG~~ (approx layout; keys into itemsToSpawn; see `special_loot.rs`)  
-- Remaining specials with limited/no portable prizes: Garden/WeakFloor/MagicWell/Pit/DemonSpawner (stub or RNG-only); secret maze/well/summoning/chest-chasm fidelity  
+- ~~PitRoom / GardenRoom / MagicWellRoom / SecretWellRoom / SecretGardenRoom / SecretMazeRoom / SecretSummoningRoom / SecretChestChasmRoom~~ (see `special_loot.rs`; maze layout RNG not fully ported so maze prize stream is approximate; Patch.generate burned for secret garden)  
+- Remaining stubs / layout-only: WeakFloorRoom, DemonSpawnerRoom; SecretMaze full `Maze.generate` for prize-stream parity; RotGarden heart/lasher  
 - Golden tests vs Java oracle for a handful of seeds  
 
 ### P2 — Painter parity
 - Water/grass/trap placement RNG (affects special-room drop-cell parity)  
 - Region-specific painters (SewerPainter, …)  
 - Improve door placement / connection corridors  
+- Reuse `burn_patch_generate` / full Patch for grass painter  
 
 ### P3 — Builder parity
 - Full `FigureEightBuilder`  
@@ -253,7 +256,7 @@ SPD is GPL-3.0. This project ports generation logic → treat as **GPL-3.0-or-la
 
 1. Read this file + `README.md`  
 2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs` / `level/special_loot.rs` / `quests/{ghost,wandmaker,blacksmith,imp}.rs` / `level/shop.rs`  
-3. Next recommended work: **SentryRoom / TrapsRoom / MagicalFireRoom / SacrificeRoom** prizes (or **SecretHoneypot** fidelity); then **Java golden checks** when ready; painter water/grass/traps (P2) for drop-cell parity  
+3. Next recommended work: **Java golden checks** (P6 oracle) when ready; or **P2 painter** water/grass/traps for drop-cell parity; optional **full Maze.generate** for SecretMaze prize-stream parity; WeakFloor/DemonSpawner are layout-only  
 4. Icons: `web/src/lib/item-icons.ts` + `components/ItemIcon.tsx` (items.png sheet)  
 5. Do not re-copy full asset tree; use `web/public/assets/` as flattened SPD assets  
 6. After Rust changes: `bun run build:wasm` (or `bun run dev`)  

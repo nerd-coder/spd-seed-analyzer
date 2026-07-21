@@ -347,6 +347,10 @@ pub fn dims_for_kind(kind: RoomKind, size_factor: i32, name: &str) -> (i32, i32,
             // min 7; max stays special default 10
             return (7, 10, 7, 10);
         }
+        "SecretMazeRoom" => return (14, 18, 14, 18),
+        "SecretChestChasmRoom" => return (8, 9, 8, 9),
+        "SecretSummoningRoom" => return (5, 8, 5, 8),
+        "PitRoom" => return (6, 9, 6, 9),
         "RitualSiteRoom" => {
             let (mw, xw, mh, xh) = dims_for_size_factor(size_factor);
             return (mw.max(9), xw, mh.max(9), xh);

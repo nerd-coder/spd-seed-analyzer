@@ -219,6 +219,18 @@ impl GeneratorState {
         }
     }
 
+    /// `Generator.randomUsingDefaults()` — pick category via `defaultCatProbs`, then item.
+    pub fn random_using_defaults_any(&mut self, depth: i32) -> GeneratedItem {
+        let idx = Random::chances(&self.default_cat_probs);
+        let cat = if idx < 0 {
+            // should not happen while defaultCatProbs has weight
+            Category::Gold
+        } else {
+            Category::ALL[idx as usize]
+        };
+        self.random_using_defaults(cat, depth)
+    }
+
     /// `Generator.randomUsingDefaults(cat)`.
     pub fn random_using_defaults(&mut self, cat: Category, depth: i32) -> GeneratedItem {
         match cat {

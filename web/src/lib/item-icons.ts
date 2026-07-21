@@ -150,6 +150,10 @@ export const CLASS_ICON: Record<string, number> = {
   StormvineSeed: 389,
   SungrassSeed: 387,
   SwiftthistleSeed: 386,
+  // Garden / secret-garden specials (seedpod/dewcatcher have plant tiles only)
+  BlandfruitBushSeed: 440, // BLANDFRUIT food icon as stand-in
+  SeedpodSeed: 393, // starflower stand-in
+  DewcatcherSeed: 387, // sungrass stand-in
 
   // Stones
   StoneOfAggression: 336,
