@@ -13,7 +13,10 @@ use crate::random::Random;
 use crate::rooms::room::Room;
 
 /// `SentryRoom.paint` prize — chest equip or findPrizeItem + PotionOfHaste.
-pub(super) fn sentry_prize(dungeon: &mut DungeonState, items_to_spawn: &mut Vec<GeneratedItem>) -> PlacedLoot {
+pub(super) fn sentry_prize(
+    dungeon: &mut DungeonState,
+    items_to_spawn: &mut Vec<GeneratedItem>,
+) -> PlacedLoot {
     // Layout (center/sentry/treasure) is geometric from entrance — no RNG before prize.
     let mut prize = if Random::int_max(2) == 0 {
         find_prize_item(items_to_spawn, None).unwrap_or_else(|| sentry_equip(dungeon))
@@ -48,7 +51,10 @@ fn sentry_equip(dungeon: &mut DungeonState) -> GeneratedItem {
 }
 
 /// `TrapsRoom.paint` — trap class RNG then chest prize + PotionOfLevitation.
-pub(super) fn traps_prize(dungeon: &mut DungeonState, items_to_spawn: &mut Vec<GeneratedItem>) -> PlacedLoot {
+pub(super) fn traps_prize(
+    dungeon: &mut DungeonState,
+    items_to_spawn: &mut Vec<GeneratedItem>,
+) -> PlacedLoot {
     // Trap class selection (layout only; no trap instances in report).
     // Int(4)==0 → chasm (null traps); else oneOf(levelTraps[depth/5]).
     if Random::int_max(4) != 0 {

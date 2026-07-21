@@ -89,6 +89,11 @@ impl Room {
         self.bottom - self.top + 1
     }
 
+    /// SPD `Rect.square()` = width × height (room area in cells).
+    pub fn square(&self) -> i32 {
+        self.width() * self.height()
+    }
+
     pub fn as_rect(&self) -> Rect {
         Rect {
             left: self.left,

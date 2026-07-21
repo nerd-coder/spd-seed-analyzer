@@ -1,8 +1,6 @@
 //! Consumable/stock special rooms: Library, Treasury, Storage, Runestone, Laboratory.
 
-use super::super::placement::{
-    burn_drop_pos, find_prize_item, find_prize_item_category,
-};
+use super::super::placement::{burn_drop_pos, find_prize_item, find_prize_item_category};
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};

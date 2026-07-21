@@ -1,6 +1,8 @@
 //! Headless level generation.
 
 mod create_items;
+mod painter;
+pub mod patch;
 mod shop;
 mod special_loot;
 mod terrain;
@@ -270,14 +272,11 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         );
 
         if build_ok {
-            if let Some(map) = terrain::paint_minimal(&floor.rooms) {
-                floor_map = Some(crate::report::FloorMap {
-                    width: map.width as u32,
-                    height: map.height as u32,
-                    tileset: terrain::tileset_for_depth(dungeon.depth).to_string(),
-                    tiles: map.map.iter().map(|&t| t as u16).collect(),
-                });
+            // RegularPainter: nTraps() is rolled when constructing the painter,
+            // before room shuffle / placeDoors / special paint.
+            let n_traps = painter::n_traps(dungeon.depth);
 
+            if let Some(mut map) = terrain::paint_minimal(&floor.rooms) {
                 // Shop stock: in SPD generated during setSize (mid-build). We run
                 // after build / before other special paint so Generator still
                 // advances before createItems (timing approximate).
@@ -292,6 +291,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 }
 
                 // Special/secret room paint loot (before createItems; may consume itemsToSpawn).
+                // Includes RegularPainter shuffle + placeDoors RNG.
                 let special =
                     special_loot::special_room_loot(dungeon, &floor.rooms, &mut items_to_spawn);
                 for p in special {
@@ -321,6 +321,25 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                     }
                     placed_items.push(p.item);
                 }
+
+                // paintDoors main-stream RNG (hidden-door Float per connection; merge skipped).
+                painter::paint_doors_rng(dungeon.depth, feeling, &floor.rooms);
+
+                // Water / grass / traps / decorate on a separate generator.
+                painter::paint_water_grass_traps(
+                    &mut map,
+                    &floor.rooms,
+                    dungeon.depth,
+                    feeling,
+                    n_traps,
+                );
+
+                floor_map = Some(crate::report::FloorMap {
+                    width: map.width as u32,
+                    height: map.height as u32,
+                    tileset: terrain::tileset_for_depth(dungeon.depth).to_string(),
+                    tiles: map.map.iter().map(|&t| t as u16).collect(),
+                });
 
                 // createMobs subset: Ghost (sewers) / Wandmaker (prison) before createItems.
                 // Full mob placement still not ported — createItems RNG remains approximate.

@@ -249,8 +249,7 @@ fn garden_and_well_prizes() {
     Random::pop_generator();
     assert_eq!(well.len(), 1);
     assert!(
-        well[0].item.class_name == "WaterOfAwareness"
-            || well[0].item.class_name == "WaterOfHealth"
+        well[0].item.class_name == "WaterOfAwareness" || well[0].item.class_name == "WaterOfHealth"
     );
     assert_eq!(well[0].heap_type, "well");
 

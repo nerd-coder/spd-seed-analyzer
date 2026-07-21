@@ -199,6 +199,13 @@ fn random_drop_cell(rooms: &[Room], map: &TerrainMap, occupied: &mut [bool]) -> 
         if idx >= map.passable.len() || !map.passable[idx] {
             continue;
         }
+        if map.is_solid(idx) {
+            continue;
+        }
+        // Items cannot spawn on traps that destroy items (Burning/Frost/…/Pitfall).
+        if map.trap_destroys_items.get(idx).copied().unwrap_or(false) {
+            continue;
+        }
         occupied[idx] = true;
         return idx as i32;
     }

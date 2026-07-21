@@ -1,7 +1,7 @@
 //! Equip-focused special rooms: Crypt, Armory, Pool, Statue.
 
-use super::{is_curse_enchant, is_good_glyph};
 use super::super::placement::{burn_drop_pos, burn_terrain_pos, find_prize_item};
+use super::{is_curse_enchant, is_good_glyph};
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::items::enchants;

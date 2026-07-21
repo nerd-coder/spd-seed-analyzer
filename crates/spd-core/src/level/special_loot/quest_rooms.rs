@@ -84,7 +84,10 @@ pub(super) fn ritual_site_setup(items_to_spawn: &mut Vec<GeneratedItem>) -> Vec<
 }
 
 /// `RotGardenRoom.paint` — locked door key + approximate wall-scatter RNG.
-pub(super) fn rot_garden_setup(room: &Room, items_to_spawn: &mut Vec<GeneratedItem>) -> Vec<PlacedLoot> {
+pub(super) fn rot_garden_setup(
+    room: &Room,
+    items_to_spawn: &mut Vec<GeneratedItem>,
+) -> Vec<PlacedLoot> {
     items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
 
     // Chaotic wall placement: 12× random(1), 8× random(2), 4× random(3)

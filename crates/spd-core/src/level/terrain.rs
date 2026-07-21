@@ -4,8 +4,7 @@ use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
 
 // Match `com.shatteredpixel.shatteredpixeldungeon.levels.Terrain`
-// (some IDs reserved for full painter parity)
-#[allow(dead_code)]
+#[allow(dead_code)] // reserved for chasm feeling / caves merge paint
 pub const CHASM: i32 = 0;
 pub const EMPTY: i32 = 1;
 pub const GRASS: i32 = 2;
@@ -14,9 +13,13 @@ pub const DOOR: i32 = 5;
 pub const OPEN_DOOR: i32 = 6;
 pub const ENTRANCE: i32 = 7;
 pub const EXIT: i32 = 8;
-#[allow(dead_code)]
 pub const LOCKED_DOOR: i32 = 10;
+pub const WALL_DECO: i32 = 12;
 pub const EMPTY_SP: i32 = 14;
+pub const HIGH_GRASS: i32 = 15;
+pub const SECRET_TRAP: i32 = 17;
+pub const TRAP: i32 = 18;
+pub const EMPTY_DECO: i32 = 20;
 pub const WATER: i32 = 29;
 
 #[derive(Debug, Clone)]
@@ -29,6 +32,10 @@ pub struct TerrainMap {
     /// Row-major terrain IDs (`Terrain.*`)
     pub map: Vec<i32>,
     pub passable: Vec<bool>,
+    /// Parallel to `map`: trap destroys dropped items (randomDropCell filter).
+    pub trap_destroys_items: Vec<bool>,
+    /// Optional trap class name for debugging / future UI.
+    pub trap_names: Vec<Option<&'static str>>,
 }
 
 impl TerrainMap {
@@ -51,7 +58,11 @@ impl TerrainMap {
 
     /// Approximate SPD `Terrain.SOLID` flag for painted tiles.
     pub fn is_solid(&self, cell: usize) -> bool {
-        matches!(self.map[cell], WALL | DOOR | LOCKED_DOOR)
+        matches!(self.map[cell], WALL | WALL_DECO | DOOR | LOCKED_DOOR)
+    }
+
+    pub fn recompute_passable(&mut self) {
+        self.passable = self.map.iter().copied().map(is_passable_tile).collect();
     }
 
     /// Approximate SPD `openSpace`: not solid, and some diagonal corner pair is open.
@@ -96,6 +107,25 @@ impl TerrainMap {
         let cell = (nx + ny * self.width) as usize;
         self.is_solid(cell)
     }
+}
+
+/// SPD `Terrain.flags[t] & PASSABLE` approximation for our tile subset.
+pub fn is_passable_tile(t: i32) -> bool {
+    matches!(
+        t,
+        EMPTY
+            | GRASS
+            | HIGH_GRASS
+            | DOOR
+            | OPEN_DOOR
+            | ENTRANCE
+            | EXIT
+            | EMPTY_SP
+            | EMPTY_DECO
+            | WATER
+            | SECRET_TRAP // SECRET_TRAP = EMPTY | SECRET
+    )
+    // TRAP is AVOID (not passable)
 }
 
 /// Region tileset key for frontend asset lookup.
@@ -193,15 +223,9 @@ pub fn paint_minimal(rooms: &[Room]) -> Option<TerrainMap> {
         }
     }
 
-    let passable: Vec<bool> = map
-        .iter()
-        .map(|&t| {
-            matches!(
-                t,
-                EMPTY | GRASS | DOOR | OPEN_DOOR | ENTRANCE | EXIT | EMPTY_SP | WATER
-            )
-        })
-        .collect();
+    let passable: Vec<bool> = map.iter().copied().map(is_passable_tile).collect();
+    let trap_destroys_items = vec![false; len];
+    let trap_names = vec![None; len];
 
     Some(TerrainMap {
         width,
@@ -210,5 +234,7 @@ pub fn paint_minimal(rooms: &[Room]) -> Option<TerrainMap> {
         origin_y,
         map,
         passable,
+        trap_destroys_items,
+        trap_names,
     })
 }

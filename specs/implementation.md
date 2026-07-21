@@ -1,6 +1,6 @@
 # SPD Seed Analyzer — Implementation Progress
 
-**Last updated:** 2026-07-21 (CI: Cloudflare Worker SPA deploy)  
+**Last updated:** 2026-07-21 (P2: water/grass/trap painter)  
 **Branch:** `main`  
 **Pinned SPD:** v3.3.8 @ `7b8b845a7`  
 **Local game source:** `/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`
@@ -63,7 +63,8 @@ bun run check:all    # biome + rust fmt/clippy
 ### Deploy (Cloudflare Worker SPA)
 
 - Config: `web/wrangler.toml` — static assets from `web/dist`, `not_found_handling = "single-page-application"`
-- CI: `.github/workflows/ci.yaml` — on PR: check/build; on `main` push / `workflow_dispatch`: deploy
+- CI: `.github/workflows/ci.yaml` — on PR: check/build; on `main` push / `workflow_dispatch`: deploy  
+  - Actions pins: `actions/checkout@v7`, `actions/cache@v6`, `oven-sh/setup-bun@v2.2.0`, `Swatinem/rust-cache@v2.9.1`, `jetli/wasm-pack-action@v0.4.0`, `dtolnay/rust-toolchain@stable`
 - GitHub **Environment** `prod` secrets/vars:
   - **Secret:** `CLOUDFLARE_API_TOKEN`
   - **Vars:** `CLOUDFLARE_ACCOUNT_ID`, `WEB_WORKER_NAME` (required); `WEB_DOMAIN`, `WEB_URL` (optional custom domain)
@@ -91,6 +92,8 @@ bun run check:all    # biome + rust fmt/clippy
 | Loop builder | `builders/` | placeRoom, findFreeSpace, tunnels, branches |
 | Figure-eight | — | **Falls back to loop** (not parity) |
 | Minimal paint | `level/terrain.rs` | SPD Terrain IDs; walls/empty/doors/entrance/exit; solid/openSpace helpers |
+| Patch.generate | `level/patch.rs` | Full cellular water/grass mask (force fill-rate) |
+| Water/grass/traps/decorate | `level/painter/` | Region fill rates + trap tables; sub-generator after room paint; sewers/prison/city/caves/halls decorate (approx); drop cells reject item-destroying traps |
 | Special-room prizes | `level/special_loot/` | Crypt/Armory/Library/Treasury/Pool/Storage/Runestone/Lab/Statue + Sentry/Traps/MagicalFire/Sacrifice/ToxicGas + Pit/Garden/MagicWell + secrets (Honeypot/Maze/Summoning/ChestChasm/Garden/Well); room-shuffle + placeDoors RNG; may `findPrizeItem` from itemsToSpawn |
 | Shop stock | `level/shop.rs` | `ShopRoom.generateItems` (FOR_SALE); bag pick hero-less (scroll holder first); generated post-build (not mid-setSize) |
 | Ghost quest | `quests/ghost.rs` | `Ghost.Quest.spawn` on sewers: chance, placement (approx openSpace), weapon/armor rewards |
@@ -130,14 +133,14 @@ bun run check:all    # biome + rust fmt/clippy
 
 Results are **partial**. Not game-parity yet because:
 
-1. Full `RegularPainter` (water/grass/traps) incomplete — special-room prizes approximate  
+1. Water/grass/trap painter ported (region fills + decorate); paintDoors merge/Graph and full room geometry paint still approximate  
 2. Special/secret room geometry still incomplete (drop cells / trap instances approximate); prize item RNG for main specials is largely ported  
 3. Shop stock timing is post-build (SPD generates during room `setSize`); bag choice is hero-less  
 4. Ghost quest rewards ported; placement uses minimal openSpace; full `createMobs` not ported  
 5. Wandmaker + Blacksmith + Imp quests ported; RotGarden full paint/mobs incomplete; CrystalPath/Choice placement geometry approximate  
 6. SecretMaze `Maze.generate` not ported — maze chest prize stream approximate when that room appears  
 7. Figure-eight builder incomplete  
-8. `randomDropCell` simplified vs full map flags  
+8. `randomDropCell` still simplified (standard rooms + passable + trap filter; no heaps/mobs/`canPlaceItem` fidelity)  
 9. Sewer room-count tables used for all regions  
 
 Status string: `"partial"`.
@@ -160,10 +163,11 @@ Status string: `"partial"`.
 - Golden tests vs Java oracle for a handful of seeds  
 
 ### P2 — Painter parity
-- Water/grass/trap placement RNG (affects special-room drop-cell parity)  
-- Region-specific painters (SewerPainter, …)  
-- Improve door placement / connection corridors  
-- Reuse `burn_patch_generate` / full Patch for grass painter  
+- ~~Water/grass/trap placement RNG~~ (`level/patch.rs` + `level/painter/`; nTraps + sub-generator Long)  
+- ~~Region decorate (Sewer/Prison/City/Caves/Halls)~~ (partial: caves neighbour-merge / chasm region-deco skipped)  
+- paintDoors: mergeRooms + Graph hidden-door connectivity still approximate (Float per connection only)  
+- Improve door placement / connection corridors / full room `paint()` geometry  
+- Chasm feeling padding + CHASM terrain from caves merge
 
 ### P3 — Builder parity
 - Full `FigureEightBuilder`  
@@ -267,7 +271,7 @@ SPD is GPL-3.0. This project ports generation logic → treat as **GPL-3.0-or-la
 
 1. Read this file + `README.md`  
 2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs` / `level/special_loot/` / `quests/{ghost,wandmaker,blacksmith,imp}.rs` / `level/shop.rs`  
-3. Next recommended work: **Java golden checks** (P6 oracle) when ready; or **P2 painter** water/grass/traps for drop-cell parity; optional **full Maze.generate** for SecretMaze prize-stream parity; WeakFloor/DemonSpawner are layout-only  
+3. Next recommended work: **paintDoors merge/Graph** or **full room geometry paint** for better map/drop-cell parity; optional **full Maze.generate** for SecretMaze; **Java golden checks** (P6 oracle); WeakFloor/DemonSpawner are layout-only  
 4. Icons: `web/src/lib/item-icons.ts` + `components/ItemIcon.tsx` (items.png sheet)  
 5. Do not re-copy full asset tree; use `web/public/assets/` as flattened SPD assets  
 6. After Rust changes: `bun run build:wasm` (or `bun run dev`)  

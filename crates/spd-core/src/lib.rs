@@ -68,7 +68,7 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
         floors: floor_reports,
         status: "partial".to_string(),
         message: Some(
-            "Partial analysis: layout builder + special/secret-room prizes (incl. pit/garden/wells/maze/summoning/chest-chasm) + shop/crystal loot (approx.) + Ghost/Wandmaker/Blacksmith/Imp quest rewards + main createItems drops. Full createMobs, water/grass/trap painter, Maze.generate, and figure-eight builder still incomplete — results may not match the game yet."
+            "Partial analysis: layout builder + special/secret-room prizes (incl. pit/garden/wells/maze/summoning/chest-chasm) + shop/crystal loot (approx.) + Ghost/Wandmaker/Blacksmith/Imp quest rewards + water/grass/trap painter (approx. doors/merge) + main createItems drops. Full createMobs, room geometry paint, Maze.generate, and figure-eight builder still incomplete — results may not match the game yet."
                 .to_string(),
         ),
     })
