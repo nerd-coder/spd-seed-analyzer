@@ -11,6 +11,7 @@ mod placement;
 mod quest_rooms;
 mod secret_rooms;
 mod special_rooms;
+mod standard_rooms;
 mod trap_rooms;
 
 #[cfg(test)]
@@ -68,7 +69,16 @@ pub fn special_room_loot(
         }
         // Room.paint door-type upgrades (LOCKED / HIDDEN / REGULAR / …).
         apply_room_door_types(room, ri, &mut doors);
-        paint_standard_room(map, room, ri, &doors);
+        let standard_paint =
+            paint_standard_room(map, room, ri, &doors, &mut dungeon.generator, dungeon.depth);
+        let mut standard_loot = standard_rooms::paint_center_loot(
+            dungeon,
+            room,
+            map,
+            standard_paint.center_loot,
+            items_to_spawn,
+        );
+        out.append(&mut standard_loot);
 
         match room.kind {
             RoomKind::Special | RoomKind::Secret => {

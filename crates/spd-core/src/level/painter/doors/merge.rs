@@ -1,7 +1,7 @@
 //! `RegularPainter.mergeRooms` for standard room pairs.
 
 use crate::geom::Point;
-use crate::level::terrain::{TerrainMap, EMPTY};
+use crate::level::terrain::{TerrainMap, CHASM, EMPTY, EMPTY_SP, GRASS};
 use crate::rooms::room::{intersect, Room};
 use crate::rooms::types::RoomKind;
 
@@ -36,16 +36,31 @@ fn can_merge_at(map: &TerrainMap, room: &Room, p: Point) -> bool {
     }
     let inside = point_inside(room, p, 1);
     match map.point_to_cell(inside.x, inside.y) {
+        Some(i) if room.name == "MinefieldRoom" => map.map[i] == EMPTY,
         Some(i) => !map.is_solid(i),
         None => false,
     }
 }
 
-/// Open a shared wall strip to `EMPTY` when wide enough.
+fn merge_terrain(room: &Room, other: &Room) -> i32 {
+    match room.name.as_str() {
+        "PlantsRoom" if matches!(other.name.as_str(), "PlantsRoom" | "GrassyGraveRoom") => GRASS,
+        "GrassyGraveRoom" if matches!(other.name.as_str(), "PlantsRoom" | "GrassyGraveRoom") => {
+            GRASS
+        }
+        "PlatformRoom" if matches!(other.name.as_str(), "PlatformRoom" | "ChasmRoom") => CHASM,
+        "ChasmRoom" if matches!(other.name.as_str(), "ChasmRoom" | "PlatformRoom") => CHASM,
+        "StripedRoom" if other.name == "StripedRoom" => EMPTY_SP,
+        _ => EMPTY,
+    }
+}
+
+/// Open a shared wall strip with the iterated room's merge terrain when wide enough.
 ///
 /// Uses watabou `Rect` math: `height() = bottom - top` (not inclusive).
 pub(super) fn merge_rooms(map: &mut TerrainMap, r: &Room, n: &Room, start: Option<Point>) -> bool {
     let inter = intersect(r, n);
+    let terrain = merge_terrain(r, n);
     if inter.left == inter.right {
         let mut top = start
             .map(|p| p.y)
@@ -65,9 +80,10 @@ pub(super) fn merge_rooms(map: &mut TerrainMap, r: &Room, n: &Room, start: Optio
         if bottom - top >= 3 {
             for y in (top + 1)..bottom {
                 if let Some(i) = map.point_to_cell(x, y) {
-                    map.map[i] = EMPTY;
+                    map.map[i] = terrain;
                 }
             }
+            paint_merge_connector(map, r, n, start, terrain);
             return true;
         }
         false
@@ -90,13 +106,36 @@ pub(super) fn merge_rooms(map: &mut TerrainMap, r: &Room, n: &Room, start: Optio
         if right - left >= 3 {
             for x in (left + 1)..right {
                 if let Some(i) = map.point_to_cell(x, y) {
-                    map.map[i] = EMPTY;
+                    map.map[i] = terrain;
                 }
             }
+            paint_merge_connector(map, r, n, start, terrain);
             return true;
         }
         false
     } else {
         false
+    }
+}
+
+fn paint_merge_connector(
+    map: &mut TerrainMap,
+    room: &Room,
+    other: &Room,
+    door: Option<Point>,
+    terrain: i32,
+) {
+    if terrain != CHASM || !matches!(other.name.as_str(), "PlatformRoom" | "ChasmRoom") {
+        return;
+    }
+    let connector = match room.name.as_str() {
+        "PlatformRoom" => EMPTY_SP,
+        "ChasmRoom" => EMPTY,
+        _ => return,
+    };
+    if let Some(door) = door {
+        if let Some(cell) = map.point_to_cell(door.x, door.y) {
+            map.map[cell] = connector;
+        }
     }
 }

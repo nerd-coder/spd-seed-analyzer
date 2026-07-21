@@ -197,6 +197,12 @@ mod tests {
         room
     }
 
+    fn named_room(id: usize, name: &str, l: i32, t: i32, r: i32, b: i32) -> Room {
+        let mut room = box_room(id, RoomKind::Standard, l, t, r, b);
+        room.name = name.into();
+        room
+    }
+
     #[test]
     fn place_doors_picks_spot() {
         Random::push_generator_seeded(1);
@@ -252,5 +258,56 @@ mod tests {
                 d.door_type
             );
         }
+    }
+
+    #[test]
+    fn generic_room_merge_overrides_match_room_painters() {
+        let cases = [
+            ("PlantsRoom", "PlantsRoom", terrain::GRASS, terrain::GRASS),
+            (
+                "StripedRoom",
+                "StripedRoom",
+                terrain::EMPTY_SP,
+                terrain::EMPTY_SP,
+            ),
+            (
+                "PlatformRoom",
+                "ChasmRoom",
+                terrain::CHASM,
+                terrain::EMPTY_SP,
+            ),
+            ("ChasmRoom", "PlatformRoom", terrain::CHASM, terrain::EMPTY),
+            ("ChasmRoom", "ChasmRoom", terrain::CHASM, terrain::EMPTY),
+        ];
+        for (left_name, right_name, merge_terrain, connector_terrain) in cases {
+            let left = named_room(0, left_name, 1, 1, 8, 8);
+            let right = named_room(1, right_name, 8, 1, 15, 8);
+            let rooms = vec![left, right];
+            let mut map = terrain::paint_minimal(&rooms).expect("map");
+            let door = Point::new(8, 4);
+            assert!(merge_rooms(&mut map, &rooms[0], &rooms[1], Some(door)));
+            let connector = map.point_to_cell(door.x, door.y).expect("door cell");
+            let strip = map.point_to_cell(door.x, door.y - 1).expect("merge strip");
+            assert_eq!(map.map[connector], connector_terrain);
+            assert_eq!(map.map[strip], merge_terrain);
+        }
+    }
+
+    #[test]
+    fn minefield_only_merges_through_empty_interior() {
+        let left = named_room(0, "MinefieldRoom", 1, 1, 8, 8);
+        let right = named_room(1, "EmptyRoom", 8, 1, 15, 8);
+        let rooms = vec![left, right];
+        let mut map = terrain::paint_minimal(&rooms).expect("map");
+        for y in 1..=8 {
+            let cell = map.point_to_cell(7, y).expect("inside minefield");
+            map.map[cell] = terrain::EMBERS;
+        }
+        assert!(!merge_rooms(
+            &mut map,
+            &rooms[0],
+            &rooms[1],
+            Some(Point::new(8, 4))
+        ));
     }
 }

@@ -15,6 +15,7 @@ pub const ENTRANCE: i32 = 7;
 pub const EXIT: i32 = 8;
 pub const EMBERS: i32 = 9;
 pub const LOCKED_DOOR: i32 = 10;
+pub const PEDESTAL: i32 = 11;
 /// SPD `Terrain.SECRET_DOOR` — hidden wall door.
 pub const SECRET_DOOR: i32 = 16;
 pub const WALL_DECO: i32 = 12;
@@ -24,6 +25,7 @@ pub const SECRET_TRAP: i32 = 17;
 pub const TRAP: i32 = 18;
 pub const INACTIVE_TRAP: i32 = 19;
 pub const EMPTY_DECO: i32 = 20;
+pub const BOOKSHELF: i32 = 27;
 pub const WATER: i32 = 29;
 pub const REGION_DECO: i32 = 33;
 
@@ -43,6 +45,8 @@ pub struct TerrainMap {
     pub grass_allowed: Vec<bool>,
     /// Room-specific `canPlaceTrap` mask used by the post-paint trap pass.
     pub trap_allowed: Vec<bool>,
+    /// Room-specific `canPlaceItem` mask used by `randomDropCell`.
+    pub item_allowed: Vec<bool>,
     /// Parallel to `map`: trap destroys dropped items (randomDropCell filter).
     pub trap_destroys_items: Vec<bool>,
     /// Optional trap class name for debugging / future UI.
@@ -71,7 +75,7 @@ impl TerrainMap {
     pub fn is_solid(&self, cell: usize) -> bool {
         matches!(
             self.map[cell],
-            WALL | WALL_DECO | DOOR | LOCKED_DOOR | SECRET_DOOR | REGION_DECO
+            WALL | WALL_DECO | BOOKSHELF | DOOR | LOCKED_DOOR | SECRET_DOOR | REGION_DECO
         )
     }
 
@@ -135,6 +139,7 @@ pub fn is_passable_tile(t: i32) -> bool {
             | OPEN_DOOR
             | ENTRANCE
             | EXIT
+            | PEDESTAL
             | EMPTY_SP
             | EMPTY_DECO
             | INACTIVE_TRAP
@@ -243,6 +248,7 @@ pub fn paint_minimal(rooms: &[Room]) -> Option<TerrainMap> {
     let water_allowed = vec![true; len];
     let grass_allowed = vec![true; len];
     let trap_allowed = vec![true; len];
+    let item_allowed = vec![true; len];
     let trap_destroys_items = vec![false; len];
     let trap_names = vec![None; len];
 
@@ -256,6 +262,7 @@ pub fn paint_minimal(rooms: &[Room]) -> Option<TerrainMap> {
         water_allowed,
         grass_allowed,
         trap_allowed,
+        item_allowed,
         trap_destroys_items,
         trap_names,
     })

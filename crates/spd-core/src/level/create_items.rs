@@ -199,6 +199,14 @@ fn random_drop_cell(rooms: &[Room], map: &TerrainMap, occupied: &mut [bool]) -> 
         if idx >= map.passable.len() || !map.passable[idx] {
             continue;
         }
+        if !map.item_allowed.get(idx).copied().unwrap_or(false) {
+            continue;
+        }
+        // AquariumRoom checks the final terrain dynamically, including water
+        // added by RegularPainter after the room's own pool was painted.
+        if room.name == "AquariumRoom" && map.map[idx] == crate::level::terrain::WATER {
+            continue;
+        }
         if map.is_solid(idx) {
             continue;
         }
@@ -210,4 +218,54 @@ fn random_drop_cell(rooms: &[Room], map: &TerrainMap, occupied: &mut [bool]) -> 
         return idx as i32;
     }
     -1
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::level::terrain::{self, EMPTY, WATER};
+
+    fn room(name: &str) -> Room {
+        let mut room = Room::new(0, name, RoomKind::Standard, 1, 16, 5, 5, 5, 5);
+        room.left = 1;
+        room.top = 1;
+        room.right = 5;
+        room.bottom = 5;
+        room
+    }
+
+    #[test]
+    fn random_drop_cell_enforces_room_item_mask() {
+        Random::reset_generators();
+        let room = room("PlantsRoom");
+        let mut map = terrain::paint_minimal(std::slice::from_ref(&room)).expect("map");
+        map.item_allowed.fill(false);
+        let only = map.point_to_cell(3, 3).expect("center");
+        map.item_allowed[only] = true;
+        let mut occupied = vec![false; map.len()];
+        Random::push_generator_seeded(3);
+        let selected = random_drop_cell(&[room], &map, &mut occupied);
+        Random::pop_generator();
+        assert_eq!(selected, only as i32);
+    }
+
+    #[test]
+    fn aquarium_rejects_water_from_later_painter_passes() {
+        Random::reset_generators();
+        let room = room("AquariumRoom");
+        let mut map = terrain::paint_minimal(std::slice::from_ref(&room)).expect("map");
+        for y in 2..=4 {
+            for x in 2..=4 {
+                let cell = map.point_to_cell(x, y).expect("interior");
+                map.map[cell] = WATER;
+            }
+        }
+        let only = map.point_to_cell(3, 3).expect("center");
+        map.map[only] = EMPTY;
+        let mut occupied = vec![false; map.len()];
+        Random::push_generator_seeded(7);
+        let selected = random_drop_cell(&[room], &map, &mut occupied);
+        Random::pop_generator();
+        assert_eq!(selected, only as i32);
+    }
 }

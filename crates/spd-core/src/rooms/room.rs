@@ -364,6 +364,15 @@ pub fn dims_for_kind(kind: RoomKind, size_factor: i32, name: &str) -> (i32, i32,
     }
     let (base_min_w, base_max_w, base_min_h, base_max_h) = dims_for_size_factor(size_factor);
     match name {
+        "PlantsRoom" | "FissureRoom" | "SuspiciousChestRoom" => {
+            return (base_min_w.max(5), base_max_w, base_min_h.max(5), base_max_h);
+        }
+        "PlatformRoom" => {
+            return (base_min_w.max(6), base_max_w, base_min_h.max(6), base_max_h);
+        }
+        "AquariumRoom" | "StudyRoom" => {
+            return (base_min_w.max(7), base_max_w, base_min_h.max(7), base_max_h);
+        }
         "RegionDecoPatchEntranceRoom"
         | "RegionDecoPatchExitRoom"
         | "CaveEntranceRoom"
@@ -405,6 +414,26 @@ mod tests {
         );
         assert_eq!(
             dims_for_kind(RoomKind::Exit, 2, "ChasmExitRoom"),
+            (10, 14, 10, 14)
+        );
+    }
+
+    #[test]
+    fn generic_standard_room_dimension_overrides_match_subclasses() {
+        assert_eq!(
+            dims_for_kind(RoomKind::Standard, 1, "PlantsRoom"),
+            (5, 10, 5, 10)
+        );
+        assert_eq!(
+            dims_for_kind(RoomKind::Standard, 1, "PlatformRoom"),
+            (6, 10, 6, 10)
+        );
+        assert_eq!(
+            dims_for_kind(RoomKind::Standard, 1, "AquariumRoom"),
+            (7, 10, 7, 10)
+        );
+        assert_eq!(
+            dims_for_kind(RoomKind::Standard, 2, "StudyRoom"),
             (10, 14, 10, 14)
         );
     }
