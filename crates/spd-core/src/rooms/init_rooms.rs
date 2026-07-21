@@ -150,6 +150,10 @@ pub fn init_rooms_regular(
     let _ = quests::try_spawn_blacksmith(blacksmith, generator, depth, &mut specs);
     // CityLevel.initRooms: Imp.Quest.spawn(super.initRooms()) — generates ring now
     let _ = quests::try_spawn_imp(imp, generator, depth, &mut specs);
+    // HallsLevel.initRooms appends one mandatory demon spawner before build shuffle.
+    if (21..=24).contains(&depth) {
+        specs.push(RoomSpec::special("DemonSpawnerRoom"));
+    }
 
     Random::shuffle_vec(&mut specs);
 
@@ -232,5 +236,44 @@ mod tests {
         let names_b: Vec<_> = b.rooms.iter().map(|r| r.name.as_str()).collect();
         assert_eq!(names_a, names_b);
         assert_eq!(a.builder_kind, b.builder_kind);
+    }
+
+    #[test]
+    fn halls_append_the_mandatory_demon_spawner() {
+        Random::reset_generators();
+        Random::push_generator_seeded(0xD3E0);
+        let mut run_sp = crate::rooms::special::init_for_run();
+        let (mut run_sec, mut reg) = crate::rooms::secret::init_for_run();
+        let mut lab = 0;
+        let mut pit = -1;
+        let mut wm = WandmakerQuestState::default();
+        let mut bs = BlacksmithQuestState::default();
+        let mut imp = ImpQuestState::default();
+        let mut generator = crate::generator::full_reset();
+        let floor = init_rooms_regular(
+            23,
+            Feeling::None,
+            false,
+            false,
+            &mut lab,
+            &mut run_sp,
+            &mut run_sec,
+            &mut reg,
+            &mut pit,
+            &mut wm,
+            &mut bs,
+            &mut imp,
+            &mut generator,
+        );
+        Random::pop_generator();
+
+        assert_eq!(
+            floor
+                .rooms
+                .iter()
+                .filter(|room| room.name == "DemonSpawnerRoom")
+                .count(),
+            1
+        );
     }
 }

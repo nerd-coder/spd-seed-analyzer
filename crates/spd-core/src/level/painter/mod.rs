@@ -139,7 +139,11 @@ fn paint_grass(
     ];
 
     for &i in &grass_cells {
-        // No heaps/mobs in our paint path — always height roll.
+        // Java forces low grass under heaps/mobs without consuming Float.
+        if map.heap_occupied[i] || map.mob_occupied[i] {
+            map.map[i] = GRASS;
+            continue;
+        }
         let mut count = 1i32;
         let x = (i as i32) % w;
         let y = (i as i32) / w;

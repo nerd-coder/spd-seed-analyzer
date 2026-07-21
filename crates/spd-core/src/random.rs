@@ -208,6 +208,18 @@ impl Random {
         Self::shuffle(vec.as_mut_slice());
     }
 
+    /// Shuffle a Java `List` using `Collections.shuffle(list, generator)`.
+    ///
+    /// SPD uses both its own forward Fisher–Yates helper for arrays and the
+    /// JDK's backwards list shuffle.  Keeping this separate is important for
+    /// room painters which pass an `ArrayList` to `Random.shuffle`.
+    pub fn shuffle_list<T>(list: &mut [T]) {
+        for i in (2..=list.len()).rev() {
+            let j = Self::int_max(i as i32) as usize;
+            list.swap(i - 1, j);
+        }
+    }
+
     /// Number of generators on the stack (for tests).
     #[cfg(test)]
     pub fn stack_len() -> usize {
@@ -252,6 +264,16 @@ mod tests {
         Random::pop_generator();
 
         assert_eq!(a, b);
+    }
+
+    #[test]
+    fn java_list_shuffle_uses_backwards_collections_order() {
+        Random::reset_generators();
+        Random::push_generator_seeded(0x1157);
+        let mut list = vec![0, 1, 2, 3, 4, 5];
+        Random::shuffle_list(&mut list);
+        Random::pop_generator();
+        assert_eq!(list, [2, 5, 1, 4, 3, 0]);
     }
 
     #[test]

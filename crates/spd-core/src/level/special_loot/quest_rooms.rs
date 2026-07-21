@@ -83,25 +83,13 @@ pub(super) fn ritual_site_setup(items_to_spawn: &mut Vec<GeneratedItem>) -> Vec<
     Vec::new()
 }
 
-/// `RotGardenRoom.paint` — locked door key + approximate wall-scatter RNG.
+/// `RotGardenRoom.paint` key. Geometry, heart, and lasher RNG are painted by
+/// `special_loot::geometry` before this helper runs.
 pub(super) fn rot_garden_setup(
     room: &Room,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
     items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
-
-    // Chaotic wall placement: 12× random(1), 8× random(2), 4× random(3)
-    for _ in 0..12 {
-        let _ = room.random_margin(1);
-    }
-    for _ in 0..8 {
-        let _ = room.random_margin(2);
-    }
-    for _ in 0..4 {
-        let _ = room.random_margin(3);
-    }
-    // Full game retries until openCells threshold + heart/lasher placement —
-    // not ported; further mob RNG deferred (may desync createItems slightly).
     let _ = room;
     Vec::new()
 }

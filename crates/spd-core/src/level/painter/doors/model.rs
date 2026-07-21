@@ -74,6 +74,11 @@ impl DoorMap {
         self.doors.insert(Self::key(a, b), door);
     }
 
+    #[cfg(test)]
+    pub(crate) fn insert_test_point(&mut self, a: usize, b: usize, point: Point) {
+        self.insert(a, b, Door::new(point));
+    }
+
     pub fn contains(&self, a: usize, b: usize) -> bool {
         self.doors.contains_key(&Self::key(a, b))
     }

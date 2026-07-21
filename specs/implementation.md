@@ -1,6 +1,6 @@
 # SPD Seed Analyzer — Implementation Progress
 
-**Last updated:** 2026-07-21 (P2: halls structural rooms + GrassyGrave)
+**Last updated:** 2026-07-21 (P1: remaining special/secret room painters)
 
 **Branch:** `main`  
 **Pinned SPD:** v3.3.8 @ `7b8b845a7`  
@@ -105,9 +105,10 @@ bun run check:all    # biome + rust fmt/clippy
 | Grassy-grave geometry | `level/painter/room_geometry/generic_rooms/` | Grass interior, interleaved tomb positions and prize/Gold generation, occupied item masks, and Plants/GrassyGrave merge terrain |
 | Chasm/caves painter behavior | `level/{terrain.rs,painter/decorate.rs}` | Chasm-feeling two-cell padding + CHASM outside terrain; shuffled-order caves neighbour merges with CHASM/REGION_DECO and connection-aware corner decoration |
 | Special-room prizes | `level/special_loot/` | Crypt/Armory/Library/Treasury/Pool/Storage/Runestone/Lab/Statue + Sentry/Traps/MagicalFire/Sacrifice/ToxicGas + Pit/Garden/MagicWell + secrets (Honeypot/Maze/Summoning/ChestChasm/Garden/Well); room-shuffle + placeDoors RNG; may `findPrizeItem` from itemsToSpawn |
+| Remaining P1 room painters | `level/special_loot/geometry/` | Full SecretMaze `Maze.generate` + farthest chest, RotGarden retry/heart/lasher placement, WeakFloor paths/well, and mandatory Halls DemonSpawner terrain/masks/center RNG |
 | Shop stock | `level/shop.rs` | `ShopRoom.generateItems` (FOR_SALE); bag pick hero-less (scroll holder first); generated post-build (not mid-setSize) |
 | Ghost quest | `quests/ghost.rs` | `Ghost.Quest.spawn` on sewers: chance, placement (approx openSpace), weapon/armor rewards |
-| Wandmaker quest | `quests/wandmaker.rs` | `spawnRoom` on prison 7–9 (before shuffle); two +1 wands; MassGrave/Ritual/RotGarden side-effects (approx) |
+| Wandmaker quest | `quests/wandmaker.rs` | `spawnRoom` on prison 7–9 (before shuffle); two +1 wands; MassGrave/Ritual/RotGarden side-effects (RotGarden terrain/heart/lasher placement now pinned) |
 | Blacksmith quest | `quests/blacksmith.rs` | `Blacksmith.Quest.spawn` on caves 12–14 (before shuffle); `generateRewards(true)` smith pool (2 weapons + missile + armor + optional enchant/glyph); room paint drops 2 equip |
 | Imp quest | `quests/imp.rs` | `Imp.Quest.spawn` on city 17–19 (before shuffle); cursed +2 ring reward generated at initRooms |
 | Crystal rooms | `level/special_loot/` (`crystal.rs`) | Vault (wand/ring/artifact crystal chests + mimic chance), Choice (pots/scrolls + chest), Path (3+3 consumables with dedup/sort) |
@@ -147,12 +148,11 @@ Results are **partial**. Not game-parity yet because:
 2. Special/secret room geometry still incomplete (drop cells / trap instances approximate); prize item RNG for main specials is largely ported  
 3. Shop stock timing is post-build (SPD generates during room `setSize`); bag choice is hero-less  
 4. Ghost quest rewards ported; placement uses minimal openSpace; full `createMobs` not ported  
-5. Wandmaker + Blacksmith + Imp quests ported; RotGarden full paint/mobs incomplete; CrystalPath/Choice placement geometry approximate  
-6. SecretMaze `Maze.generate` not ported — maze chest prize stream approximate when that room appears  
-7. Figure-eight builder incomplete  
-8. `randomDropCell` still simplified (standard rooms + passable + trap filter; no heaps/mobs/`canPlaceItem` fidelity)  
-9. Sewer room-count tables used for all regions  
-10. Structural-room paint/transition rejection loops (including SewerPipe, WaterBridge, RegionDecoBridge, CavesFissure, Pillars, ChasmBridge, CellBlock, and LibraryHall) are capped at 10,000 attempts for browser safety; valid builder layouts are not expected to reach the cap. Early guide pages use an isolated unseeded generator in SPD and remain omitted from reports.
+5. Wandmaker + Blacksmith + Imp quests are ported; RotGarden heart/lasher paint and occupancy are ported, but the analyzer does not export mobs; CrystalPath/Choice placement geometry remains approximate
+6. Figure-eight builder incomplete
+7. `randomDropCell` is still simplified (standard rooms + passable + trap filter; room-painted heap/mob occupancy only, incomplete `canPlaceItem` fidelity)
+8. Sewer room-count tables used for all regions
+9. Structural-room paint/transition rejection loops (including SewerPipe, WaterBridge, RegionDecoBridge, CavesFissure, Pillars, ChasmBridge, CellBlock, LibraryHall, RotGarden, and malformed SecretMaze wall selection) are capped at 10,000 attempts for browser safety; valid builder layouts are not expected to reach the cap. `Maze.generate` retains its pinned 2,500 consecutive-failure limit. Early guide pages use an isolated unseeded generator in SPD and remain omitted from reports.
 
 Status string: `"partial"`.
 
@@ -164,13 +164,13 @@ Status string: `"partial"`.
 - ~~Port `paint()` prize logic: Crypt, Armory, Library, Treasury, Statue, Pool, secrets~~ (partial; see `level/special_loot/`)  
 - ~~Shop (FOR_SALE) stock~~ (approx; see `level/shop.rs`)  
 - ~~Ghost.Quest rewards~~ (see `quests/ghost.rs`)  
-- ~~Wandmaker.Quest~~ (see `quests/wandmaker.rs`; MassGrave loot + ritual candles + rot-garden RNG approx; RotGarden heart/lasher not ported)  
+- ~~Wandmaker.Quest~~ (see `quests/wandmaker.rs`; MassGrave loot + ritual candles + full RotGarden terrain/heart/lasher placement RNG)
 - ~~Imp.Quest~~ (see `quests/imp.rs`; cursed +2 ring at initRooms; AmbitiousImpRoom paint is placement RNG only)  
 - ~~Crystal rooms~~ (Vault / Choice / Path prize gen in `special_loot/crystal.rs`; Path geometry not painted, placement RNG approximate)  
 - ~~Blacksmith.Quest~~ (see `quests/blacksmith.rs`; smithRewards at initRooms; room paint equip drops; mining branch not ported)  
 - ~~Sentry / Traps / MagicalFire / Sacrifice / ToxicGas / SecretHoneypot prize RNG~~ (approx layout; keys into itemsToSpawn; see `special_loot/hazards.rs`)  
-- ~~PitRoom / GardenRoom / MagicWellRoom / SecretWellRoom / SecretGardenRoom / SecretMazeRoom / SecretSummoningRoom / SecretChestChasmRoom~~ (see `special_loot/hazards.rs`; maze layout RNG not fully ported so maze prize stream is approximate; Patch.generate burned for secret garden)  
-- Remaining stubs / layout-only: WeakFloorRoom, DemonSpawnerRoom; SecretMaze full `Maze.generate` for prize-stream parity; RotGarden heart/lasher  
+- ~~PitRoom / GardenRoom / MagicWellRoom / SecretWellRoom / SecretGardenRoom / SecretMazeRoom / SecretSummoningRoom / SecretChestChasmRoom~~ (see `special_loot/`; SecretMaze includes full pinned `Maze.generate` and farthest-cell selection; Patch.generate burned for secret garden)
+- ~~WeakFloorRoom / DemonSpawnerRoom / RotGardenRoom painter parity~~ (`special_loot/geometry/`; DemonSpawner is appended on Halls floors and refuses exit connections)
 - Golden tests vs Java oracle for a handful of seeds  
 
 ### P2 — Painter parity
@@ -289,7 +289,7 @@ SPD is GPL-3.0. This project ports generation logic → treat as **GPL-3.0-or-la
 
 1. Read this file + `README.md`  
 2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs` / `level/special_loot/` / `quests/{ghost,wandmaker,blacksmith,imp}.rs` / `level/shop.rs`  
-3. Next recommended work: finish **standard room geometry** with halls structural rooms and GrassyGrave, then remaining special/secret geometry; optional **full Maze.generate** for SecretMaze prize-stream; **Java golden checks** (P6 oracle); WeakFloor/DemonSpawner are layout-only
+3. Next recommended work: **FigureEightBuilder**, connection-room variants, and outer build retries (P3), followed by **Java golden checks** (P6 oracle)
 4. Icons: `web/src/lib/item-icons.ts` + `components/ItemIcon.tsx` (items.png sheet)  
 5. Do not re-copy full asset tree; use `web/public/assets/` as flattened SPD assets  
 6. After Rust changes: `bun run build:wasm` (or `bun run dev`)  

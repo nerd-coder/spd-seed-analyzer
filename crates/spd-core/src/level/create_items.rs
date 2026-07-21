@@ -23,7 +23,10 @@ pub fn create_items_main(
     items_to_spawn: Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
     let mut out = Vec::new();
-    let mut occupied: Vec<bool> = vec![false; map.len()];
+    let mut occupied = map.heap_occupied.clone();
+    for (occupied, &mob) in occupied.iter_mut().zip(&map.mob_occupied) {
+        *occupied |= mob;
+    }
 
     // nItems = 3 + chances{6,3,1}; +2 if LARGE
     let mut n_items = 3 + Random::chances(&[6., 3., 1.]);

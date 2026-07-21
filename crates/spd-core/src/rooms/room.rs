@@ -286,6 +286,12 @@ pub fn can_connect_rooms(a: &Room, b: &Room, rooms: &[Room]) -> bool {
     if (a.is_exit() && b.is_entrance()) || (a.is_entrance() && b.is_exit()) {
         return false;
     }
+    // DemonSpawnerRoom.connect rejects the floor exit in pinned SPD.
+    if (a.name == "DemonSpawnerRoom" && b.is_exit())
+        || (b.name == "DemonSpawnerRoom" && a.is_exit())
+    {
+        return false;
+    }
     let i = intersect(a, b);
     let mut found_point = false;
     // points along intersection
@@ -407,5 +413,24 @@ mod tests {
         large.size_factor = 2;
         large.resize(16, 14);
         assert_eq!((large.width(), large.height()), (17, 15));
+    }
+
+    #[test]
+    fn demon_spawner_cannot_connect_to_exit() {
+        let mut spawner = Room::new(0, "DemonSpawnerRoom", RoomKind::Special, 1, 1, 6, 6, 6, 6);
+        spawner.left = 1;
+        spawner.top = 1;
+        spawner.right = 6;
+        spawner.bottom = 6;
+        let mut exit = Room::new(1, "ExitRoom", RoomKind::Exit, 1, 16, 5, 5, 6, 6);
+        exit.left = 6;
+        exit.top = 1;
+        exit.right = 10;
+        exit.bottom = 6;
+        assert!(!can_connect_rooms(
+            &spawner,
+            &exit,
+            &[spawner.clone(), exit.clone()]
+        ));
     }
 }

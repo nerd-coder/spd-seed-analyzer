@@ -64,7 +64,7 @@ pub(super) fn pit_prizes(
 }
 
 /// `SecretMazeRoom.paint` prize — +1 floor-set weapon/armor, never cursed, 33% upgrade.
-/// Maze layout RNG is not fully ported (PathFinder distance pick skipped) — prize stream is approximate.
+/// Full maze geometry and its RNG run immediately before this helper.
 pub(super) fn secret_maze_prize(dungeon: &mut DungeonState) -> PlacedLoot {
     let floor = (dungeon.depth / 5) + 1;
     let mut prize = if Random::int_max(2) == 0 {

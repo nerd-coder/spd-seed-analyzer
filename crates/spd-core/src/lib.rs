@@ -68,7 +68,7 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
         floors: floor_reports,
         status: "partial".to_string(),
         message: Some(
-            "Partial analysis: layout builder + special/secret-room prizes (incl. pit/garden/wells/maze/summoning/chest-chasm) + shop/crystal loot (approx.) + Ghost/Wandmaker/Blacksmith/Imp quest rewards + water/grass/trap painter + paintDoors merge/Graph + generic/caves standard-room geometry + main createItems drops. Full createMobs, remaining region/special room geometry, Maze.generate, and figure-eight builder are still incomplete — results may not match the game yet."
+            "Partial analysis: layout builder + special/secret-room prizes (including full SecretMaze layout, RotGarden, WeakFloor, and DemonSpawner paint) + shop/crystal loot (approx.) + Ghost/Wandmaker/Blacksmith/Imp quest rewards + water/grass/trap painter + paintDoors merge/Graph + generic/region standard-room geometry + main createItems drops. Full createMobs, remaining special-room geometry, region room-count parity, and figure-eight builder are still incomplete — results may not match the game yet."
                 .to_string(),
         ),
     })
@@ -365,6 +365,18 @@ mod analyze_smoke {
             // A mid Halls floor should still generate
             let f24 = r.floors.iter().find(|f| f.depth == 24).expect("24");
             assert!(f24.map.is_some() || !f24.rooms.is_empty() || f24.builder.is_some());
+        }
+    }
+
+    #[test]
+    fn halls_report_the_mandatory_demon_spawner() {
+        let report = analyze_seed("GFX-PZH-DCH", 24).expect("analyze");
+        for depth in 21..=24 {
+            let floor = &report.floors[(depth - 1) as usize];
+            assert!(
+                floor.rooms.iter().any(|room| room == "DemonSpawnerRoom"),
+                "missing demon spawner on depth {depth}"
+            );
         }
     }
 }

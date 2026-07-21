@@ -6,6 +6,7 @@
 
 mod crystal;
 mod gardens;
+mod geometry;
 mod pit_secrets;
 mod placement;
 mod quest_rooms;
@@ -89,12 +90,14 @@ pub fn special_room_loot(
 
         match room.kind {
             RoomKind::Special | RoomKind::Secret => {
+                geometry::paint(map, room, ri, &doors);
                 let mut loot = paint_special(dungeon, rooms, ri, items_to_spawn);
                 out.append(&mut loot);
             }
             RoomKind::Standard
                 if room.name == "RitualSiteRoom" || room.name == "BlacksmithRoom" =>
             {
+                geometry::paint(map, room, ri, &doors);
                 let mut loot = paint_special(dungeon, rooms, ri, items_to_spawn);
                 out.append(&mut loot);
             }
