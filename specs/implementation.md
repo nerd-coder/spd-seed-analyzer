@@ -64,7 +64,7 @@ bun run check:all    # biome + rust fmt/clippy
 
 - Config: `web/wrangler.toml` — static assets from `web/dist`, `not_found_handling = "single-page-application"`
 - CI: `.github/workflows/ci.yaml` — on PR: check/build; on `main` push / `workflow_dispatch`: deploy  
-  - Actions pins: `actions/checkout@v7`, `actions/cache@v6`, `oven-sh/setup-bun@v2.2.0`, `Swatinem/rust-cache@v2.9.1`, `jetli/wasm-pack-action@v0.4.0`, `dtolnay/rust-toolchain@stable`
+  - Actions pins: `actions/checkout@v7`, `actions/cache@v6`, `oven-sh/setup-bun@v2.2.0`, `Swatinem/rust-cache@v2.9.1`, `qmaru/wasm-pack-action@v0.6.0`, `dtolnay/rust-toolchain@stable`
 - GitHub **Environment** `prod` secrets/vars:
   - **Secret:** `CLOUDFLARE_API_TOKEN`
   - **Vars:** `CLOUDFLARE_ACCOUNT_ID`, `WEB_WORKER_NAME` (required); `WEB_DOMAIN`, `WEB_URL` (optional custom domain)
