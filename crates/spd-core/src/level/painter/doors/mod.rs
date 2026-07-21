@@ -230,14 +230,7 @@ mod tests {
             apply_room_door_types(&rooms[i], i, &mut doors);
         }
         let mut map = terrain::paint_minimal(&rooms).expect("map");
-        paint_doors(
-            &mut map,
-            &rooms,
-            &[0, 1, 2],
-            10,
-            Feeling::None,
-            &mut doors,
-        );
+        paint_doors(&mut map, &rooms, &[0, 1, 2], 10, Feeling::None, &mut doors);
         Random::pop_generator();
 
         let doorish = map
@@ -246,7 +239,7 @@ mod tests {
             .filter(|&&t| t == DOOR || t == SECRET_DOOR || t == LOCKED_DOOR)
             .count();
         assert!(
-            doorish > 0 || map.map.iter().any(|&t| t == EMPTY),
+            doorish > 0 || map.map.contains(&EMPTY),
             "expected door tiles or merge openings"
         );
         for d in doors.doors.values() {

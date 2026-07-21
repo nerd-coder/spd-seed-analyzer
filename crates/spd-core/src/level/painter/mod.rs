@@ -14,9 +14,7 @@ use crate::level::Feeling;
 use crate::random::Random;
 use crate::rooms::room::Room;
 
-pub use doors::{
-    apply_room_door_types, door_spots, paint_doors, place_doors_for_room, DoorMap,
-};
+pub use doors::{apply_room_door_types, door_spots, paint_doors, place_doors_for_room, DoorMap};
 pub use params::n_traps;
 
 /// Water + grass + traps + region decorate under a separate generator

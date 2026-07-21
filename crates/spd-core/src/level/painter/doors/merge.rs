@@ -44,15 +44,12 @@ fn can_merge_at(map: &TerrainMap, room: &Room, p: Point) -> bool {
 /// Open a shared wall strip to `EMPTY` when wide enough.
 ///
 /// Uses watabou `Rect` math: `height() = bottom - top` (not inclusive).
-pub(super) fn merge_rooms(
-    map: &mut TerrainMap,
-    r: &Room,
-    n: &Room,
-    start: Option<Point>,
-) -> bool {
+pub(super) fn merge_rooms(map: &mut TerrainMap, r: &Room, n: &Room, start: Option<Point>) -> bool {
     let inter = intersect(r, n);
     if inter.left == inter.right {
-        let mut top = start.map(|p| p.y).unwrap_or_else(|| (inter.top + inter.bottom) / 2);
+        let mut top = start
+            .map(|p| p.y)
+            .unwrap_or_else(|| (inter.top + inter.bottom) / 2);
         let mut bottom = top;
         let x = inter.left;
         let mut p = Point::new(x, top);
@@ -75,7 +72,9 @@ pub(super) fn merge_rooms(
         }
         false
     } else if inter.top == inter.bottom {
-        let mut left = start.map(|p| p.x).unwrap_or_else(|| (inter.left + inter.right) / 2);
+        let mut left = start
+            .map(|p| p.x)
+            .unwrap_or_else(|| (inter.left + inter.right) / 2);
         let mut right = left;
         let y = inter.top;
         let mut p = Point::new(left, y);

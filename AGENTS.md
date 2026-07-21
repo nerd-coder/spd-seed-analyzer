@@ -26,12 +26,22 @@ bun run test:rust    # cargo test -p spd-core
 bun run build:wasm
 bun run check        # biome check (TS/JS/CSS/JSON)
 bun run check:fix    # biome check --fix
+bun run check:rust   # cargo fmt --check + clippy -D warnings (CI)
 bun run format       # biome format + cargo fmt
 bun run lint         # biome lint + cargo clippy -D warnings
 bun run check:all    # biome + rust fmt/clippy checks
 ```
 
 Use **rustup** cargo for wasm (`PATH` scripts prepend `$HOME/.cargo/bin`).
+
+### CI parity (before done)
+
+GitHub Actions `check` job (`.github/workflows/ci.yaml`) runs, in order:
+
+1. `bun run check` — Biome  
+2. `bun run check:rust` — `cargo fmt --all -- --check` + `cargo clippy --workspace --all-targets -- -D warnings`  
+3. `bun run test:rust` — `cargo test -p spd-core`  
+4. `bun run build` — wasm-pack + Vite production build  
 
 ## Rules
 
@@ -41,6 +51,7 @@ Use **rustup** cargo for wasm (`PATH` scripts prepend `$HOME/.cargo/bin`).
 - **BUN-WEB** — Package manager is Bun. UI: Vite + React + shadcn. Do not introduce npm/yarn as primary.
 - **WASM-REBUILD** — After Rust changes, rebuild wasm (`bun run build:wasm` / `dev`) before treating UI as verified.
 - **TEST-RUST** — Add/extend `spd-core` tests for RNG and analyze paths; keep smoke coverage on `analyze_seed`.
+- **CI-BEFORE-DONE** — Before marking a task complete, committing work as finished, or claiming “done”, run the same checks as CI’s `check` job (see **CI parity** above). Minimum for any Rust-touching change: `bun run check:rust` and `bun run test:rust`. If TS/web or wasm exports changed, also `bun run check` and `bun run build`. Fix fmt/clippy/test/build failures before hand-off; do not skip with “clippy later”.
 - **ADV-MAP** — Floor maps and identity tables are opt-in spoilers (`Map spoilers` / `Show identities`). Keep default UX non-spoiler; map/identity data may still be in the report.
 - **ASSETS-FLAT** — Assets live at `web/public/assets/{environment,sprites,…}`. No nested `assets/assets/`.
 - **PIN-SPD** — Target the pinned SPD version/commit; note version impact when porting from a newer tree.

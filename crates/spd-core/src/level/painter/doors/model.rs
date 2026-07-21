@@ -145,27 +145,11 @@ fn special_door_type(name: &str) -> DoorType {
     match name {
         "DemonSpawnerRoom" => DoorType::Unlocked,
         "SacrificeRoom" => DoorType::Empty,
-        "CryptRoom"
-        | "ArmoryRoom"
-        | "LibraryRoom"
-        | "TreasuryRoom"
-        | "StorageRoom"
-        | "RunestoneRoom"
-        | "LaboratoryRoom"
-        | "StatueRoom"
-        | "GardenRoom"
-        | "MagicWellRoom"
-        | "CrystalVaultRoom"
-        | "CrystalChoiceRoom"
-        | "RotGardenRoom" => DoorType::Locked,
-        "PoolRoom"
-        | "TrapsRoom"
-        | "SentryRoom"
-        | "ToxicGasRoom"
-        | "MagicalFireRoom"
-        | "WeakFloorRoom"
-        | "CrystalPathRoom"
-        | "PitRoom" => DoorType::Regular,
+        "CryptRoom" | "ArmoryRoom" | "LibraryRoom" | "TreasuryRoom" | "StorageRoom"
+        | "RunestoneRoom" | "LaboratoryRoom" | "StatueRoom" | "GardenRoom" | "MagicWellRoom"
+        | "CrystalVaultRoom" | "CrystalChoiceRoom" | "RotGardenRoom" => DoorType::Locked,
+        "PoolRoom" | "TrapsRoom" | "SentryRoom" | "ToxicGasRoom" | "MagicalFireRoom"
+        | "WeakFloorRoom" | "CrystalPathRoom" | "PitRoom" => DoorType::Regular,
         _ => DoorType::Regular,
     }
 }
