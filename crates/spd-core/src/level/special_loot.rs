@@ -45,6 +45,10 @@ pub fn special_room_loot(
                 let mut loot = paint_special(dungeon, room, items_to_spawn);
                 out.append(&mut loot);
             }
+            RoomKind::Standard if room.name == "RitualSiteRoom" => {
+                let mut loot = paint_special(dungeon, room, items_to_spawn);
+                out.append(&mut loot);
+            }
             RoomKind::Shop => {
                 // Shop contents deferred (FOR_SALE filter); still burn no RNG here.
             }
@@ -129,8 +133,109 @@ fn paint_special(
             Vec::new()
         }
         "CrystalVaultRoom" | "CrystalChoiceRoom" | "CrystalPathRoom" => Vec::new(),
+        // Wandmaker quest rooms
+        "MassGraveRoom" => mass_grave_prizes(dungeon, room, items_to_spawn),
+        "RitualSiteRoom" => ritual_site_setup(items_to_spawn),
+        "RotGardenRoom" => rot_garden_setup(room, items_to_spawn),
         _ => Vec::new(),
     }
+}
+
+/// `MassGraveRoom.paint` loot (approx placement; skeleton mobs skipped).
+fn mass_grave_prizes(
+    dungeon: &mut DungeonState,
+    room: &Room,
+    items_to_spawn: &mut Vec<GeneratedItem>,
+) -> Vec<PlacedLoot> {
+    // Barricade entrance → PotionOfLiquidFlame into itemsToSpawn
+    items_to_spawn.push(GeneratedItem::new(
+        "PotionOfLiquidFlame",
+        ItemCategory::Potion,
+    ));
+
+    // 50% 1 skeleton, 50% 2 — placement burns room.random() (terrain check approx)
+    let n_skel = Random::int_max(2); // 0 or 1 → loop i=0..=n_skel → 1 or 2
+    let mut occupied = Vec::new();
+    for _ in 0..=n_skel {
+        burn_drop_pos(room, &mut occupied);
+    }
+
+    let mut out = Vec::new();
+    // 100% corpse dust, 2x gold(1), 2x30% gold, 1x60% random, 1x30% armor
+    let mut items: Vec<GeneratedItem> = Vec::new();
+    items.push(GeneratedItem::new("CorpseDust", ItemCategory::Other));
+    {
+        let mut g = GeneratedItem::new("Gold", ItemCategory::Gold);
+        g.quantity = 1;
+        items.push(g);
+    }
+    {
+        let mut g = GeneratedItem::new("Gold", ItemCategory::Gold);
+        g.quantity = 1;
+        items.push(g);
+    }
+    if Random::float() <= 0.3 {
+        let mut g = GeneratedItem::new("Gold", ItemCategory::Gold);
+        randomize_item(&mut g, dungeon.depth);
+        items.push(g);
+    }
+    if Random::float() <= 0.3 {
+        let mut g = GeneratedItem::new("Gold", ItemCategory::Gold);
+        randomize_item(&mut g, dungeon.depth);
+        items.push(g);
+    }
+    if Random::float() <= 0.6 {
+        items.push(dungeon.generator.random(dungeon.depth));
+    }
+    if Random::float() <= 0.3 {
+        items.push(
+            dungeon
+                .generator
+                .random_armor(dungeon.depth / 5, dungeon.depth),
+        );
+    }
+
+    for mut item in items {
+        burn_drop_pos(room, &mut occupied);
+        // Haunted-if-cursed: no extra RNG for analysis
+        item.source = Some("MassGraveRoom".into());
+        out.push(PlacedLoot {
+            item,
+            heap_type: "skeleton",
+        });
+    }
+    out
+}
+
+/// `RitualSiteRoom.paint` — four ceremonial candles into itemsToSpawn.
+fn ritual_site_setup(items_to_spawn: &mut Vec<GeneratedItem>) -> Vec<PlacedLoot> {
+    for _ in 0..4 {
+        items_to_spawn.push(GeneratedItem::new(
+            "CeremonialCandle",
+            ItemCategory::Other,
+        ));
+    }
+    Vec::new()
+}
+
+/// `RotGardenRoom.paint` — locked door key + approximate wall-scatter RNG.
+fn rot_garden_setup(room: &Room, items_to_spawn: &mut Vec<GeneratedItem>) -> Vec<PlacedLoot> {
+    items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
+
+    // Chaotic wall placement: 12× random(1), 8× random(2), 4× random(3)
+    for _ in 0..12 {
+        let _ = room.random_margin(1);
+    }
+    for _ in 0..8 {
+        let _ = room.random_margin(2);
+    }
+    for _ in 0..4 {
+        let _ = room.random_margin(3);
+    }
+    // Full game retries until openCells threshold + heart/lasher placement —
+    // not ported; further mob RNG deferred (may desync createItems slightly).
+    let _ = room;
+    Vec::new()
 }
 
 // --- prize helpers ---

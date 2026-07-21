@@ -68,7 +68,7 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
         floors: floor_reports,
         status: "partial".to_string(),
         message: Some(
-            "Partial analysis: layout builder + special-room/shop loot (approx.) + Ghost quest rewards + main createItems drops. Full createMobs, water/grass/trap painter, and figure-eight builder still incomplete — results may not match the game yet."
+            "Partial analysis: layout builder + special-room/shop loot (approx.) + Ghost/Wandmaker quest rewards + main createItems drops. Full createMobs, water/grass/trap painter, and figure-eight builder still incomplete — results may not match the game yet."
                 .to_string(),
         ),
     })
@@ -141,6 +141,36 @@ mod analyze_smoke {
             "expected ShopRoom stock on depth 6, rooms={:?}",
             f6.rooms
         );
+    }
+
+    #[test]
+    fn wandmaker_quest_spawns_within_prison() {
+        // Depth 9 always spawns the quest room if not yet placed on 7–8.
+        let mut saw = false;
+        for s in [
+            "GFX-PZH-DCH",
+            "AAA-AAA-AAA",
+            "hello",
+            "42",
+            "shattered",
+            "JLY-ZYR-HET",
+        ] {
+            let r = analyze_seed(s, 9).expect("analyze");
+            for f in &r.floors {
+                if f.quests.iter().any(|q| q.contains("Old Wandmaker"))
+                    || f.items
+                        .iter()
+                        .any(|i| i.source.as_deref() == Some("Wandmaker.Quest"))
+                {
+                    saw = true;
+                    break;
+                }
+            }
+            if saw {
+                break;
+            }
+        }
+        assert!(saw, "expected Wandmaker.Quest on at least one prison run");
     }
 
     #[test]

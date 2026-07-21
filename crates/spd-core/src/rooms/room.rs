@@ -332,6 +332,16 @@ pub fn dims_for_size_factor(size_factor: i32) -> (i32, i32, i32, i32) {
 }
 
 pub fn dims_for_kind(kind: RoomKind, size_factor: i32, name: &str) -> (i32, i32, i32, i32) {
+    // Wandmaker quest rooms (overrides default special/standard mins)
+    match name {
+        "MassGraveRoom" => return (7, 10, 7, 10),
+        "RotGardenRoom" => return (10, 10, 10, 10),
+        "RitualSiteRoom" => {
+            let (mw, xw, mh, xh) = dims_for_size_factor(size_factor);
+            return (mw.max(9), xw, mh.max(9), xh);
+        }
+        _ => {}
+    }
     match kind {
         RoomKind::Connection => (3, 10, 3, 10),
         RoomKind::Special | RoomKind::Secret | RoomKind::Shop => (5, 10, 5, 10),

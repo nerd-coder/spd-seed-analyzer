@@ -203,16 +203,19 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
     // RegularLevel only — bosses + depth 26 LastLevel use dedicated layouts in SPD.
     if dungeon.regular_level() {
         let lab_needed = dungeon.lab_room_needed();
+        let shop = dungeon.shop_on_level();
+        let depth = dungeon.depth;
         let mut floor = init_rooms::init_rooms_regular(
-            dungeon.depth,
+            depth,
             feeling,
-            dungeon.shop_on_level(),
+            shop,
             lab_needed,
             &mut dungeon.limited.lab_room,
             &mut dungeon.rooms.specials,
             &mut dungeon.rooms.secrets,
             &mut dungeon.rooms.region_secrets,
             &mut dungeon.rooms.pit_needed_depth,
+            &mut dungeon.wandmaker,
         );
         builder = Some(floor.builder_kind);
 
@@ -279,13 +282,22 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                     placed_items.push(p.item);
                 }
 
-                // createMobs subset: Ghost.Quest.spawn on sewer floors (before createItems).
+                // createMobs subset: Ghost (sewers) / Wandmaker (prison) before createItems.
                 // Full mob placement still not ported — createItems RNG remains approximate.
                 if let Some(exit) = floor.rooms.iter().find(|r| r.is_exit() && !r.is_empty()) {
                     if let Some(ghost) = quests::try_spawn_ghost(dungeon, exit, &map) {
                         quests.push(ghost.summary.clone());
                         placed_items.push(ghost.weapon);
                         placed_items.push(ghost.armor);
+                    }
+                }
+                if let Some(entrance) =
+                    floor.rooms.iter().find(|r| r.is_entrance() && !r.is_empty())
+                {
+                    if let Some(wm) = quests::try_spawn_wandmaker(dungeon, entrance, &map) {
+                        quests.push(wm.summary.clone());
+                        placed_items.push(wm.wand1);
+                        placed_items.push(wm.wand2);
                     }
                 }
 

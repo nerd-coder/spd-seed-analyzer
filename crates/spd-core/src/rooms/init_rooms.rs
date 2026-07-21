@@ -1,6 +1,7 @@
 //! `RegularLevel.initRooms` + builder selection.
 
 use crate::level::Feeling;
+use crate::quests::{self, WandmakerQuestState};
 use crate::random::Random;
 use crate::rooms::room::{dims_for_kind, Room};
 use crate::rooms::secret;
@@ -64,6 +65,9 @@ fn room_from_spec(id: usize, spec: RoomSpec) -> Room {
 }
 
 /// Full initRooms sequence for a regular (non-boss) floor.
+///
+/// Prison floors also run `Wandmaker.Quest.spawnRoom` after base rooms and
+/// **before** shuffle (matches `PrisonLevel.initRooms`).
 #[allow(clippy::too_many_arguments)] // mirrors SPD RegularLevel.initRooms parameter surface
 pub fn init_rooms_regular(
     depth: i32,
@@ -75,6 +79,7 @@ pub fn init_rooms_regular(
     run_secrets: &mut Vec<&'static str>,
     region_secrets: &mut [i32; 5],
     pit_needed_depth: &mut i32,
+    wandmaker: &mut WandmakerQuestState,
 ) -> FloorRooms {
     let (builder_kind, curve_intensity, curve_offset) = select_builder();
 
@@ -133,6 +138,9 @@ pub fn init_rooms_regular(
         specs.push(secret::create_room(run_secrets));
     }
 
+    // PrisonLevel.initRooms: Wandmaker.Quest.spawnRoom(super.initRooms())
+    let _ = quests::try_spawn_wandmaker_room(wandmaker, depth, &mut specs);
+
     Random::shuffle_vec(&mut specs);
 
     let rooms: Vec<Room> = specs
@@ -162,6 +170,7 @@ mod tests {
         let (mut run_sec, mut reg) = crate::rooms::secret::init_for_run();
         let mut lab = 0;
         let mut pit = -1;
+        let mut wm = WandmakerQuestState::default();
         let a = init_rooms_regular(
             2,
             Feeling::None,
@@ -172,6 +181,7 @@ mod tests {
             &mut run_sec,
             &mut reg,
             &mut pit,
+            &mut wm,
         );
         Random::pop_generator();
 
@@ -181,6 +191,7 @@ mod tests {
         let (mut run_sec, mut reg) = crate::rooms::secret::init_for_run();
         let mut lab = 0;
         let mut pit = -1;
+        let mut wm = WandmakerQuestState::default();
         let b = init_rooms_regular(
             2,
             Feeling::None,
@@ -191,6 +202,7 @@ mod tests {
             &mut run_sec,
             &mut reg,
             &mut pit,
+            &mut wm,
         );
         Random::pop_generator();
 

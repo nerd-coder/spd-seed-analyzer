@@ -383,6 +383,27 @@ impl GeneratorState {
     pub fn using_first_deck(&self) -> bool {
         self.using_first_deck
     }
+
+    /// `Generator.undoDrop(Class)` — put a drawn class back into its category deck.
+    ///
+    /// Does not reverse the category-seed `dropped` counter (matches Java).
+    /// Java checks `cls.isAssignableFrom(cat.superClass)`, which never holds for
+    /// concrete item classes; we instead match by class name so re-rolls (e.g.
+    /// Wandmaker unique wands) restore the intended deck weight.
+    pub fn undo_drop(&mut self, class_name: &str) {
+        for cat in Category::ALL {
+            let idx = cat.index();
+            let rt = &mut self.cats[idx];
+            if rt.def.default_probs.is_none() {
+                continue;
+            }
+            if let Some(i) = rt.def.classes.iter().position(|&c| c == class_name) {
+                if i < rt.probs.len() {
+                    rt.probs[i] += 1.0;
+                }
+            }
+        }
+    }
 }
 
 /// `Generator.fullReset()` entry used by run init.
