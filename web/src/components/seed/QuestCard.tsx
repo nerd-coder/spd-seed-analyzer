@@ -1,3 +1,4 @@
+import { ItemName } from '@/components/ItemName'
 import { Badge } from '@/components/ui/badge'
 import { type ParsedQuest, parseQuest } from '@/lib/labels'
 import { cn } from '@/lib/utils'
@@ -53,11 +54,13 @@ export function QuestCard({ quest }: { quest: string }) {
           <span className="text-muted-foreground mr-1.5 text-xs font-medium tracking-wide uppercase">
             Rewards
           </span>
-          {parsed.rewards}
+          <ItemName name={parsed.rewards} />
         </p>
       )}
       {!parsed.rewards && (
-        <p className="text-muted-foreground text-xs">{parsed.raw}</p>
+        <p className="text-muted-foreground text-xs">
+          <ItemName name={parsed.raw} />
+        </p>
       )}
     </div>
   )

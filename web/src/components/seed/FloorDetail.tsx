@@ -1,6 +1,7 @@
 import { DepthIcon } from '@/components/DepthIcon'
 import { FloorMapPreview } from '@/components/FloorMapPreview'
 import { ItemIcon } from '@/components/ItemIcon'
+import { ItemName } from '@/components/ItemName'
 import { QuestCard } from '@/components/seed/QuestCard'
 import { Badge } from '@/components/ui/badge'
 import { itemAppearance } from '@/lib/identity'
@@ -76,7 +77,7 @@ export function FloorDetail({
                     className="mt-0.5"
                   />
                   <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-                    <span>{item.name}</span>
+                    <ItemName name={item.name} />
                     {item.cursed && (
                       <Badge
                         variant="destructive"
