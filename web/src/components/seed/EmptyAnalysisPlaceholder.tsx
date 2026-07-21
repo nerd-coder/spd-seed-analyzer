@@ -7,9 +7,9 @@ export function EmptyAnalysisPlaceholder() {
         No seeds analyzed yet
       </h2>
       <p className="text-muted-foreground max-w-sm text-sm leading-relaxed">
-        Enter a seed in the left panel and click Analyze. Open seeds stay as
-        tabs until you close them (max {MAX_SAVED_SEEDS}), and are restored
-        after a refresh.
+        Enter a seed in the left panel and press Enter (or the search icon).
+        Open seeds stay as tabs until you close them (max {MAX_SAVED_SEEDS}),
+        and are restored after a refresh.
       </p>
     </div>
   )

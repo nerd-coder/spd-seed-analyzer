@@ -1,25 +1,22 @@
 import { useStore } from '@nanostores/react'
-import { Info, Loader2, Search, X } from 'lucide-react'
+import { Loader2, Search, Sprout, X } from 'lucide-react'
 import { type FormEvent, useEffect, useRef } from 'react'
-
+import { SettingsButton } from '@/components/SettingsButton'
 import { EmptyAnalysisPlaceholder } from '@/components/seed/EmptyAnalysisPlaceholder'
 import { SessionPane } from '@/components/seed/SessionPane'
-import { SpoilerToggle } from '@/components/seed/SpoilerToggle'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip'
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group'
+import { Label } from '@/components/ui/label'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { TooltipProvider } from '@/components/ui/tooltip'
 import { useSeedTabsHeight } from '@/hooks/useSeedTabsHeight'
 import {
   $activeSeedId,
@@ -36,8 +33,6 @@ import {
   MAX_SAVED_SEEDS,
   normalizeSeedInput,
   setActiveSeed,
-  setIdentitySpoilers,
-  setMapSpoilers,
   setSeedInput,
   startSessionRehydrate,
   tabLabel,
@@ -89,53 +84,69 @@ export default function App() {
                   className="absolute inset-0 h-full w-full object-contain"
                   style={{ imageRendering: 'pixelated' }}
                 />
-                {/* Mobile: theme control lives in the title panel */}
-                <div className="absolute top-2 right-2 z-10 lg:hidden">
+                {/* Mobile: controls live in the title panel */}
+                <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 lg:hidden">
+                  <SettingsButton className="border-white/20 bg-black/55 text-white hover:bg-black/70 hover:text-white" />
                   <ThemeToggle className="border-white/20 bg-black/55 text-white hover:bg-black/70 hover:text-white" />
                 </div>
               </div>
-              <CardContent className="space-y-1 py-3">
+              <CardContent className="space-y-1 pb-3">
                 <p className="text-muted-foreground text-xs leading-relaxed">
                   Partial seed analysis — layout, loot, and quest rewards (not
                   full game parity).
                 </p>
                 {meta && (
-                  <Badge variant="secondary" className="font-mono text-[10px]">
-                    v{meta.version}@{meta.commit}
-                  </Badge>
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    Tested on{' '}
+                    <span className="font-bold">Shattered Pixel Dungeon</span>{' '}
+                    <Badge
+                      variant="secondary"
+                      className="font-mono text-[10px]"
+                    >
+                      {meta.version}
+                    </Badge>
+                  </p>
                 )}
               </CardContent>
             </Card>
 
-            <form onSubmit={onAnalyze} className="space-y-3">
-              <div className="grid gap-1.5">
-                <Label htmlFor="seed">Seed</Label>
-                <Input
-                  id="seed"
-                  value={seedInput}
-                  onChange={(e) => setSeedInput(e.target.value)}
-                  placeholder="XXX-XXX-XXX"
-                  autoComplete="off"
-                  spellCheck={false}
-                  className="font-mono uppercase"
-                />
-                <p className="text-muted-foreground text-[11px] leading-snug">
-                  Codes, numeric seeds, or free-text fun seeds. Up to{' '}
-                  {MAX_SAVED_SEEDS} open seeds are kept (oldest dropped).
-                </p>
+            <form onSubmit={onAnalyze} className="space-y-1.5">
+              <Label htmlFor="seed">Enter your Seed</Label>
+              <div className="flex w-full items-stretch">
+                <InputGroup className="min-w-0 flex-1 border-r-0">
+                  <InputGroupAddon align="inline-start" aria-hidden>
+                    <Sprout className="text-muted-foreground size-4" />
+                  </InputGroupAddon>
+                  <InputGroupInput
+                    id="seed"
+                    value={seedInput}
+                    onChange={(e) => setSeedInput(e.target.value)}
+                    placeholder="XXX-XXX-XXX"
+                    autoComplete="off"
+                    spellCheck={false}
+                    className="font-mono uppercase"
+                  />
+                </InputGroup>
+                <Button
+                  type="submit"
+                  size="default"
+                  disabled={analyzing || !normalizeSeedInput(seedInput)}
+                >
+                  {analyzing ? (
+                    <Loader2
+                      data-icon="inline-start"
+                      className="animate-spin"
+                    />
+                  ) : (
+                    <Search data-icon="inline-start" />
+                  )}
+                  Analyze
+                </Button>
               </div>
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={analyzing || !normalizeSeedInput(seedInput)}
-              >
-                {analyzing ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  <Search data-icon="inline-start" />
-                )}
-                Analyze
-              </Button>
+              <p className="text-muted-foreground text-[11px] leading-snug">
+                Codes, numeric seeds, or free-text fun seeds. Up to{' '}
+                {MAX_SAVED_SEEDS} open seeds are kept (oldest dropped).
+              </p>
             </form>
 
             {formError && (
@@ -144,54 +155,15 @@ export default function App() {
                 <AlertDescription>{formError}</AlertDescription>
               </Alert>
             )}
-
-            <Separator />
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-1.5">
-                <p className="text-xs font-medium tracking-wide uppercase">
-                  Spoilers
-                </p>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      className="text-muted-foreground hover:text-foreground inline-flex size-5 items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                      aria-label="About spoilers"
-                    >
-                      <Info className="size-3.5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="max-w-56 text-left">
-                    These options reveal seed secrets. Leave them off if you
-                    want to keep exploration surprises.
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-
-              <SpoilerToggle
-                id="identity-spoilers"
-                label="Identities"
-                info="Reveals potion, scroll, and ring color/rune/gem → type mappings for the active seed."
-                checked={identitySpoilers}
-                onCheckedChange={setIdentitySpoilers}
-              />
-              <SpoilerToggle
-                id="map-spoilers"
-                label="Floor maps"
-                info="Shows 128×128 floor map thumbnails (click to expand). Heavily spoils layout before you play."
-                checked={mapSpoilers}
-                onCheckedChange={setMapSpoilers}
-              />
-            </div>
           </div>
         </aside>
 
         {/* —— Content panel —— */}
         <main className="relative min-w-0 flex-1">
-          {/* Desktop: theme control at top-right of content panel */}
+          {/* Desktop: controls at top-right of content panel */}
           {sessions.length === 0 && (
-            <div className="absolute top-3 right-3 z-30 hidden lg:block">
+            <div className="absolute top-3 right-3 z-30 hidden items-center gap-1.5 lg:flex">
+              <SettingsButton />
               <ThemeToggle />
             </div>
           )}
@@ -240,7 +212,10 @@ export default function App() {
                     </div>
                   ))}
                 </TabsList>
-                <ThemeToggle className="mt-0.5 mb-1.5 hidden shrink-0 lg:inline-flex" />
+                <div className="mt-0.5 mb-1.5 hidden shrink-0 items-center gap-1.5 lg:flex">
+                  <SettingsButton />
+                  <ThemeToggle />
+                </div>
               </div>
 
               <div className="space-y-4 p-4 md:p-6">
