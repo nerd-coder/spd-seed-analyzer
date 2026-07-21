@@ -1,0 +1,38 @@
+import org.gradle.api.tasks.SourceSetContainer
+
+// Register before project evaluation so Gradle 9 can discover the injected
+// task while it is selecting the command line task graph.
+gradle.beforeProject { project ->
+    if (project.path != ':core') {
+        return
+    }
+
+    project.pluginManager.withPlugin('java-library') {
+        def sourceDir = gradle.startParameter.projectProperties['oracleSourceDir']
+        def seed = gradle.startParameter.projectProperties['oracleSeed']
+        if (sourceDir == null || seed == null) {
+            throw new GradleException('javaOracleDump requires oracleSourceDir and oracleSeed')
+        }
+
+        def sourceSets = project.extensions.getByType(SourceSetContainer)
+        def main = sourceSets.named('main').get()
+        def oracle = sourceSets.create('javaOracle') {
+            java.srcDir(sourceDir)
+            compileClasspath = main.output + main.compileClasspath
+            runtimeClasspath = output + main.runtimeClasspath
+        }
+
+        project.tasks.named(oracle.compileJavaTaskName) {
+            dependsOn(project.tasks.named(main.classesTaskName))
+            options.release = 11
+        }
+        project.tasks.register('javaOracleDump', JavaExec) {
+            group = 'verification'
+            description = 'Dumps pinned SPD identity mappings as stable JSON.'
+            dependsOn(project.tasks.named(oracle.classesTaskName))
+            classpath = oracle.runtimeClasspath
+            mainClass = 'com.shatteredpixel.shatteredpixeldungeon.tools.JavaOracle'
+            args(seed)
+        }
+    }
+}

@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+readonly EXPECTED_COMMIT="7b8b845a76fe76c6b7c031ae9e570852411f56db"
+readonly DEFAULT_SOURCE="/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon"
+
+tool_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source_dir="${SPD_SOURCE:-$DEFAULT_SOURCE}"
+output_path=""
+
+usage() {
+	cat >&2 <<'EOF'
+Usage: tools/java-oracle/run [--source PATH] [--output FILE] SEED
+
+Dumps SPD v3.3.8 identity mappings as stable JSON. The source checkout is read
+from SPD_SOURCE or the usual local-clone path, and must be pinned at 7b8b845a7.
+EOF
+}
+
+while (($# > 0)); do
+	case "$1" in
+		--source)
+			[[ $# -ge 2 ]] || { usage; exit 2; }
+			source_dir="$2"
+			shift 2
+			;;
+		--output)
+			[[ $# -ge 2 ]] || { usage; exit 2; }
+			output_path="$2"
+			shift 2
+			;;
+		-h|--help)
+			usage
+			exit 0
+			;;
+		--*)
+			echo "Unknown option: $1" >&2
+			usage
+			exit 2
+			;;
+		*)
+			break
+			;;
+	esac
+done
+
+[[ $# -eq 1 ]] || { usage; exit 2; }
+seed="$1"
+
+for command_name in git java tar; do
+	command -v "$command_name" >/dev/null || {
+		echo "Required command not found: $command_name" >&2
+		exit 1
+	}
+done
+
+[[ -x "$source_dir/gradlew" ]] || {
+	echo "Not an SPD checkout (gradlew is missing): $source_dir" >&2
+	exit 1
+}
+
+actual_commit="$(git -C "$source_dir" rev-parse HEAD)"
+if [[ "$actual_commit" != "$EXPECTED_COMMIT" ]]; then
+	echo "SPD checkout is not at the supported pin." >&2
+	echo "Expected: $EXPECTED_COMMIT" >&2
+	echo "Actual:   $actual_commit" >&2
+	exit 1
+fi
+
+work_dir="$(mktemp -d "${TMPDIR:-/tmp}/spd-java-oracle.XXXXXX")"
+cleanup() {
+	rm -rf "$work_dir"
+}
+trap cleanup EXIT
+
+snapshot_dir="$work_dir/spd"
+mkdir -p "$snapshot_dir"
+git -C "$source_dir" archive "$EXPECTED_COMMIT" | tar -x -C "$snapshot_dir"
+
+gradle_args=(
+	--no-daemon
+	--console plain
+	--quiet
+	--configure-on-demand
+	--init-script "$tool_dir/oracle.gradle"
+	-PoracleSourceDir="$tool_dir/src"
+	-PoracleSeed="$seed"
+	:core:javaOracleDump
+)
+
+if [[ -n "$output_path" ]]; then
+	mkdir -p "$(dirname "$output_path")"
+	temporary_output="$work_dir/oracle.json"
+	"$snapshot_dir/gradlew" -p "$snapshot_dir" "${gradle_args[@]}" >"$temporary_output"
+	mv "$temporary_output" "$output_path"
+else
+	"$snapshot_dir/gradlew" -p "$snapshot_dir" "${gradle_args[@]}"
+fi

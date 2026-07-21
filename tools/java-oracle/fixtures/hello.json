@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "spd": {
+    "version": "v3.3.8",
+    "commit": "7b8b845a7"
+  },
+  "input": {
+    "seed": "hello",
+    "numeric": 99162322,
+    "depths": []
+  },
+  "identities": {
+    "potions": [
+      { "item": "PotionOfStrength", "appearance": "turquoise" },
+      { "item": "PotionOfHealing", "appearance": "jade" },
+      { "item": "PotionOfMindVision", "appearance": "crimson" },
+      { "item": "PotionOfFrost", "appearance": "indigo" },
+      { "item": "PotionOfLiquidFlame", "appearance": "charcoal" },
+      { "item": "PotionOfToxicGas", "appearance": "silver" },
+      { "item": "PotionOfHaste", "appearance": "bistre" },
+      { "item": "PotionOfInvisibility", "appearance": "amber" },
+      { "item": "PotionOfLevitation", "appearance": "ivory" },
+      { "item": "PotionOfParalyticGas", "appearance": "golden" },
+      { "item": "PotionOfPurity", "appearance": "magenta" },
+      { "item": "PotionOfExperience", "appearance": "azure" }
+    ],
+    "scrolls": [
+      { "item": "ScrollOfUpgrade", "appearance": "MANNAZ" },
+      { "item": "ScrollOfIdentify", "appearance": "YNGVI" },
+      { "item": "ScrollOfRemoveCurse", "appearance": "KAUNAN" },
+      { "item": "ScrollOfMirrorImage", "appearance": "NAUDIZ" },
+      { "item": "ScrollOfRecharging", "appearance": "TIWAZ" },
+      { "item": "ScrollOfTeleportation", "appearance": "RAIDO" },
+      { "item": "ScrollOfLullaby", "appearance": "ODAL" },
+      { "item": "ScrollOfMagicMapping", "appearance": "BERKANAN" },
+      { "item": "ScrollOfRage", "appearance": "ISAZ" },
+      { "item": "ScrollOfRetribution", "appearance": "GYFU" },
+      { "item": "ScrollOfTerror", "appearance": "SOWILO" },
+      { "item": "ScrollOfTransmutation", "appearance": "LAGUZ" }
+    ],
+    "rings": [
+      { "item": "RingOfAccuracy", "appearance": "diamond" },
+      { "item": "RingOfArcana", "appearance": "sapphire" },
+      { "item": "RingOfElements", "appearance": "quartz" },
+      { "item": "RingOfEnergy", "appearance": "garnet" },
+      { "item": "RingOfEvasion", "appearance": "agate" },
+      { "item": "RingOfForce", "appearance": "emerald" },
+      { "item": "RingOfFuror", "appearance": "onyx" },
+      { "item": "RingOfHaste", "appearance": "tourmaline" },
+      { "item": "RingOfMight", "appearance": "ruby" },
+      { "item": "RingOfSharpshooting", "appearance": "opal" },
+      { "item": "RingOfTenacity", "appearance": "topaz" },
+      { "item": "RingOfWealth", "appearance": "amethyst" }
+    ]
+  }
+}
