@@ -1,9 +1,9 @@
 import { useStore } from '@nanostores/react'
 import { Info, Loader2, Search, X } from 'lucide-react'
-import { type FormEvent, useEffect } from 'react'
+import { type FormEvent, useEffect, useLayoutEffect, useRef } from 'react'
 
 import { DepthIcon } from '@/components/DepthIcon'
-import { FloorMapCanvas } from '@/components/FloorMapCanvas'
+import { FloorMapPreview } from '@/components/FloorMapPreview'
 import { ItemIcon } from '@/components/ItemIcon'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -121,6 +121,20 @@ function itemAppearance(
   return undefined
 }
 
+/** Drop "Potion of " / "Scroll of " / "Ring of " — tab already names the category. */
+function shortIdentityName(
+  name: string,
+  category: 'potion' | 'scroll' | 'ring'
+): string {
+  const prefix =
+    category === 'potion'
+      ? 'Potion of '
+      : category === 'scroll'
+        ? 'Scroll of '
+        : 'Ring of '
+  return name.startsWith(prefix) ? name.slice(prefix.length) : name
+}
+
 function IdentityGrid({
   entries,
   category,
@@ -129,26 +143,89 @@ function IdentityGrid({
   category: 'potion' | 'scroll' | 'ring'
 }) {
   return (
-    <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3 md:grid-cols-4">
-      {entries.map((e) => (
-        <div key={e.item} className="flex min-w-0 items-center gap-2">
-          <ItemIcon
-            classNameItem={e.item}
-            category={category}
-            appearance={e.appearance}
-            size={24}
-            title={e.name}
-            className="shrink-0"
-          />
-          <div className="min-w-0 leading-tight">
-            <div className="truncate text-sm font-medium">{e.name}</div>
-            <div className="text-muted-foreground truncate text-xs capitalize">
-              {appearanceDescription(category, e.appearance)}
+    <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+      {entries.map((e) => {
+        const shortName = shortIdentityName(e.name, category)
+        return (
+          <div key={e.item} className="flex min-w-0 items-center gap-2">
+            <ItemIcon
+              classNameItem={e.item}
+              category={category}
+              appearance={e.appearance}
+              size={24}
+              title={e.name}
+              className="shrink-0"
+            />
+            <div className="min-w-0 leading-tight">
+              <div className="truncate text-sm font-medium" title={e.name}>
+                {shortName}
+              </div>
+              <div className="text-muted-foreground truncate text-xs capitalize">
+                {appearanceDescription(category, e.appearance)}
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
+  )
+}
+
+function IdentitiesPanel({ identities }: { identities: IdentityMaps }) {
+  // Sticky under seed tabs (same offset as region tabs). Not using Card
+  // overflow-hidden so position:sticky on the outer wrapper stays valid.
+  return (
+    <section className="bg-card text-card-foreground ring-1 ring-foreground/10">
+      <div className="space-y-1 px-4 pt-4">
+        <h2 className="font-heading text-sm font-medium">Identities</h2>
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          Unidentified appearances for this seed (from run init RNG).
+        </p>
+      </div>
+      <div className="px-4 pt-3 pb-4">
+        <Tabs defaultValue="potions">
+          <TabsList className="h-auto w-full flex-wrap">
+            <TabsTrigger value="potions">Potions</TabsTrigger>
+            <TabsTrigger value="scrolls">Scrolls</TabsTrigger>
+            <TabsTrigger value="rings">Rings</TabsTrigger>
+          </TabsList>
+          <TabsContent value="potions" className="mt-3">
+            <IdentityGrid entries={identities.potions} category="potion" />
+          </TabsContent>
+          <TabsContent value="scrolls" className="mt-3">
+            <IdentityGrid entries={identities.scrolls} category="scroll" />
+          </TabsContent>
+          <TabsContent value="rings" className="mt-3">
+            <IdentityGrid entries={identities.rings} category="ring" />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </section>
+  )
+}
+
+function SeedInfoPanel({ report }: { report: SeedReport }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="font-mono">
+          {report.seed.code ?? report.seed.formatted}
+        </CardTitle>
+        <CardDescription>
+          Numeric:{' '}
+          <span className="text-foreground font-mono">
+            {report.seed.numeric}
+          </span>
+        </CardDescription>
+      </CardHeader>
+      {report.message && (
+        <CardContent>
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            {report.message}
+          </p>
+        </CardContent>
+      )}
+    </Card>
   )
 }
 
@@ -222,45 +299,11 @@ function FloorDetail({
   identities: IdentityMaps
   mapSpoilers: boolean
 }) {
-  return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
-        {floor.feeling && floor.feeling !== 'none' && (
-          <Badge variant="secondary" className="capitalize">
-            {floor.feeling}
-          </Badge>
-        )}
-        {floor.builder && (
-          <Badge variant="outline" className="font-mono text-xs">
-            {floor.builder}
-          </Badge>
-        )}
-        {floor.quests && floor.quests.length > 0 && (
-          <Badge variant="default" className="text-xs">
-            Quest
-          </Badge>
-        )}
-        {floor.map && mapSpoilers && (
-          <Badge variant="outline" className="font-mono text-xs">
-            {floor.map.width}×{floor.map.height} · {floor.map.tileset}
-          </Badge>
-        )}
-        {!floor.feeling &&
-          !floor.builder &&
-          !(floor.quests && floor.quests.length > 0) &&
-          !(floor.map && mapSpoilers) && (
-            <span className="text-muted-foreground text-xs">
-              Floor {floor.depth}
-            </span>
-          )}
-      </div>
+  const hasQuest = (floor.quests?.length ?? 0) > 0
+  const showMap = mapSpoilers && !!floor.map
 
-      {mapSpoilers && floor.map && (
-        <div className="overflow-x-auto">
-          <FloorMapCanvas map={floor.map} scale={2} />
-        </div>
-      )}
-
+  const details = (
+    <div className="min-w-0 flex-1 space-y-3">
       {floor.quests && floor.quests.length > 0 && (
         <div className="space-y-2">
           <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
@@ -278,6 +321,9 @@ function FloorDetail({
         <div className="space-y-1">
           <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
             Rooms
+            <span className="ml-1.5 font-mono font-normal tabular-nums normal-case">
+              ({floor.rooms.length})
+            </span>
           </p>
           <p className="text-sm leading-relaxed">
             {floor.rooms.map((r) => r.replace(/Room$/, '')).join(' · ')}
@@ -285,48 +331,94 @@ function FloorDetail({
         </div>
       )}
 
-      {floor.items.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No items listed.</p>
-      ) : (
-        <ul className="space-y-1.5 text-sm">
-          {floor.items.map((item, i) => {
-            const sourceLabel = formatItemSource(item.source)
-            const highlight = isHighlightSource(item.source)
-            return (
-              <li
-                key={`${floor.depth}-${i}`}
-                className="flex items-start gap-2"
-              >
-                <ItemIcon
-                  classNameItem={item.class_name}
-                  category={item.category}
-                  appearance={itemAppearance(item, identities)}
-                  size={16}
-                  title={item.name}
-                  className="mt-0.5"
-                />
-                <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-                  <span>{item.name}</span>
-                  {sourceLabel && (
-                    <Badge
-                      variant={highlight ? 'secondary' : 'outline'}
-                      className="h-5 px-1.5 py-0 text-[10px] font-normal"
-                      title={item.source ?? undefined}
-                    >
-                      {sourceLabel}
-                    </Badge>
-                  )}
-                </span>
-              </li>
-            )
-          })}
-        </ul>
-      )}
+      <div className="space-y-1">
+        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+          Items
+          <span className="ml-1.5 font-mono font-normal tabular-nums normal-case">
+            ({floor.items.length})
+          </span>
+        </p>
+        {floor.items.length === 0 ? (
+          <p className="text-muted-foreground text-sm">No items listed.</p>
+        ) : (
+          <ul className="space-y-1.5 text-sm">
+            {floor.items.map((item, i) => {
+              const sourceLabel = formatItemSource(item.source)
+              const highlight = isHighlightSource(item.source)
+              return (
+                <li
+                  key={`${floor.depth}-${i}`}
+                  className="flex items-start gap-2"
+                >
+                  <ItemIcon
+                    classNameItem={item.class_name}
+                    category={item.category}
+                    appearance={itemAppearance(item, identities)}
+                    size={16}
+                    title={item.name}
+                    className="mt-0.5"
+                  />
+                  <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                    <span>{item.name}</span>
+                    {sourceLabel && (
+                      <Badge
+                        variant={highlight ? 'secondary' : 'outline'}
+                        className="h-5 px-1.5 py-0 text-[10px] font-normal"
+                        title={item.source ?? undefined}
+                      >
+                        {sourceLabel}
+                      </Badge>
+                    )}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
     </div>
+  )
+
+  return (
+    <section className="space-y-3 border-b py-6 first:pt-0 last:border-b-0 last:pb-0">
+      <div className="flex flex-wrap items-center gap-2">
+        <DepthIcon feeling={floor.feeling} size={20} />
+        <span className="font-mono text-sm font-medium tabular-nums">
+          Floor {floor.depth}
+        </span>
+        {floor.feeling && floor.feeling !== 'none' && (
+          <Badge variant="secondary" className="capitalize">
+            {floor.feeling}
+          </Badge>
+        )}
+        {floor.builder && (
+          <Badge variant="outline" className="font-mono text-xs">
+            {floor.builder}
+          </Badge>
+        )}
+        {hasQuest && (
+          <Badge variant="default" className="text-xs">
+            Quest
+          </Badge>
+        )}
+        {showMap && floor.map && (
+          <Badge variant="outline" className="font-mono text-xs">
+            {floor.map.width}×{floor.map.height}
+          </Badge>
+        )}
+      </div>
+
+      <div className="flex items-start gap-3">
+        {details}
+        {showMap && floor.map && (
+          <FloorMapPreview map={floor.map} depth={floor.depth} />
+        )}
+      </div>
+    </section>
   )
 }
 
-function FloorsByRegion({
+function FloorsSection({
   floors,
   identities,
   mapSpoilers,
@@ -340,78 +432,68 @@ function FloorsByRegion({
 
   const defaultRegion = groups[0].region.id
 
+  // Not using Card: its default overflow-hidden kills position:sticky.
+  // Region tabs stick under the seed session bar (--seed-tabs-height from App).
   return (
-    <Tabs defaultValue={defaultRegion} className="gap-0">
-      <TabsList className="h-auto w-full flex-wrap sm:w-auto">
+    <section className="bg-card text-card-foreground ring-1 ring-foreground/10">
+      <div className="space-y-1 px-4 pt-4">
+        <h2 className="font-heading text-sm font-medium">Floors</h2>
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          Partial levelgen: layout, special/secret rooms, shops, crystal rooms,
+          and quest rewards when reported. Boss floors (5 / 10 / 15 / 20 / 25)
+          and Last Level (26) are hidden.
+          {mapSpoilers
+            ? ' Map thumbnails are 128×128 — click to expand.'
+            : ' Enable Floor maps to view layout thumbnails.'}
+        </p>
+      </div>
+
+      <Tabs
+        defaultValue={defaultRegion}
+        className="block gap-0 overflow-visible"
+      >
+        <div
+          className={cn(
+            'sticky z-10 border-b px-4 py-2',
+            'bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/90'
+          )}
+          style={{ top: 'var(--seed-tabs-height, 3rem)' }}
+        >
+          <TabsList className="h-auto w-full flex-wrap sm:w-auto">
+            {groups.map(({ region, floors: regionFloors }) => {
+              const lo = regionFloors[0].depth
+              const hi = regionFloors[regionFloors.length - 1].depth
+              return (
+                <TabsTrigger key={region.id} value={region.id}>
+                  {region.label}
+                  <span className="text-muted-foreground ml-1 hidden text-xs tabular-nums sm:inline">
+                    {lo}
+                    {hi !== lo ? `–${hi}` : ''}
+                  </span>
+                </TabsTrigger>
+              )
+            })}
+          </TabsList>
+        </div>
+
         {groups.map(({ region, floors: regionFloors }) => (
-          <TabsTrigger key={region.id} value={region.id}>
-            {region.label}
-            <span className="text-muted-foreground ml-1 text-xs tabular-nums">
-              {regionFloors[0].depth}
-              {regionFloors.length > 1
-                ? `–${regionFloors[regionFloors.length - 1].depth}`
-                : ''}
-            </span>
-          </TabsTrigger>
-        ))}
-      </TabsList>
-
-      {groups.map(({ region, floors: regionFloors }) => {
-        const defaultFloor = String(regionFloors[0].depth)
-        return (
-          <TabsContent key={region.id} value={region.id}>
-            <Tabs defaultValue={defaultFloor} className="gap-4">
-              <TabsList
-                variant="line"
-                className="h-auto w-full flex-wrap justify-start"
-              >
-                {regionFloors.map((floor) => {
-                  const hasQuest = (floor.quests?.length ?? 0) > 0
-                  const feelingLabel =
-                    floor.feeling && floor.feeling !== 'none'
-                      ? floor.feeling
-                      : null
-                  const titleParts = [
-                    `Floor ${floor.depth}`,
-                    feelingLabel,
-                    hasQuest ? 'quest' : null,
-                  ].filter(Boolean)
-                  return (
-                    <TabsTrigger
-                      key={floor.depth}
-                      value={String(floor.depth)}
-                      className="relative h-auto flex-col gap-0.5 px-2 py-1.5"
-                      title={titleParts.join(' · ')}
-                    >
-                      <DepthIcon feeling={floor.feeling} size={24} />
-                      <span className="font-mono text-xs leading-none tabular-nums">
-                        {floor.depth}
-                      </span>
-                      {hasQuest && (
-                        <span
-                          className="bg-primary absolute top-0.5 right-0.5 size-1.5 rounded-full"
-                          aria-hidden
-                        />
-                      )}
-                    </TabsTrigger>
-                  )
-                })}
-              </TabsList>
-
-              {regionFloors.map((floor) => (
-                <TabsContent key={floor.depth} value={String(floor.depth)}>
-                  <FloorDetail
-                    floor={floor}
-                    identities={identities}
-                    mapSpoilers={mapSpoilers}
-                  />
-                </TabsContent>
-              ))}
-            </Tabs>
+          <TabsContent
+            key={region.id}
+            value={region.id}
+            className="space-y-0 px-4 py-4"
+          >
+            {regionFloors.map((floor) => (
+              <FloorDetail
+                key={floor.depth}
+                floor={floor}
+                identities={identities}
+                mapSpoilers={mapSpoilers}
+              />
+            ))}
           </TabsContent>
-        )
-      })}
-    </Tabs>
+        ))}
+      </Tabs>
+    </section>
   )
 }
 
@@ -457,25 +539,6 @@ function SpoilerToggle({
 function EmptyAnalysisPlaceholder() {
   return (
     <div className="flex min-h-[min(60svh,28rem)] flex-col items-center justify-center gap-3 px-6 text-center">
-      <div
-        className="relative h-14 w-full max-w-xs opacity-40"
-        style={{ aspectRatio: '616/200' }}
-      >
-        <img
-          src="/assets/title.gif"
-          alt=""
-          className="absolute inset-0 h-full w-full object-contain"
-          style={{ imageRendering: 'pixelated' }}
-          aria-hidden
-        />
-        <img
-          src="/assets/title_overlay.png"
-          alt=""
-          className="absolute inset-0 h-full w-full object-contain"
-          style={{ imageRendering: 'pixelated' }}
-          aria-hidden
-        />
-      </div>
       <h2 className="font-heading text-base font-medium">
         No seeds analyzed yet
       </h2>
@@ -497,102 +560,45 @@ function SeedReportView({
   identitySpoilers: boolean
   mapSpoilers: boolean
 }) {
+  const hasFloors = report.floors.length > 0
+
   return (
     <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-mono">
-            {report.seed.code ?? report.seed.formatted}
-          </CardTitle>
-          <CardDescription className="space-y-1">
-            <span className="block">
-              Numeric:{' '}
-              <span className="text-foreground font-mono">
-                {report.seed.numeric}
-              </span>
-            </span>
-            <span className="block">
-              Status: <Badge variant="outline">{report.status}</Badge>
-            </span>
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {report.message && (
-            <Alert>
-              <AlertTitle>Partial analysis</AlertTitle>
-              <AlertDescription>{report.message}</AlertDescription>
-            </Alert>
-          )}
-          <p className="text-muted-foreground text-xs leading-relaxed">
-            Includes approximate special-room, shop, and crystal-room prizes
-            plus Ghost / Wandmaker / Blacksmith / Imp quest rewards. Painter
-            parity, figure-eight builder, and full createMobs are still
-            incomplete — treat high-value finds as leads, not guarantees.
-          </p>
-        </CardContent>
-      </Card>
+      <SeedInfoPanel report={report} />
 
-      {identitySpoilers && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Identities</CardTitle>
-            <CardDescription>
-              Unidentified appearances for this seed (from run init RNG).
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="potions">
-              <TabsList className="w-full sm:w-auto">
-                <TabsTrigger value="potions">Potions</TabsTrigger>
-                <TabsTrigger value="scrolls">Scrolls</TabsTrigger>
-                <TabsTrigger value="rings">Rings</TabsTrigger>
-              </TabsList>
-              <TabsContent value="potions" className="mt-4">
-                <IdentityGrid
-                  entries={report.identities.potions}
-                  category="potion"
-                />
-              </TabsContent>
-              <TabsContent value="scrolls" className="mt-4">
-                <IdentityGrid
-                  entries={report.identities.scrolls}
-                  category="scroll"
-                />
-              </TabsContent>
-              <TabsContent value="rings" className="mt-4">
-                <IdentityGrid
-                  entries={report.identities.rings}
-                  category="ring"
-                />
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      )}
-
-      {report.floors.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Floors</CardTitle>
-            <CardDescription>
-              Partial levelgen: layout, special/secret rooms, shops, crystal
-              rooms, and quest rewards when reported. Boss floors (5 / 10 / 15 /
-              20 / 25) and Last Level (26) are hidden. Floors with a quest show
-              a small indicator on the depth tab.
-              {mapSpoilers
-                ? ' Maps use original region tilesheets when available.'
-                : ' Enable Map spoilers to view floor maps.'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FloorsByRegion
+      {/* Floors + optional Identities right column (w-80 matches main menu). */}
+      <div
+        className={cn(
+          'flex flex-col gap-4',
+          identitySpoilers && 'lg:flex-row lg:items-start'
+        )}
+      >
+        {hasFloors && (
+          <div className="min-w-0 flex-1">
+            <FloorsSection
               floors={report.floors}
               identities={report.identities}
               mapSpoilers={mapSpoilers}
             />
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        )}
+
+        {identitySpoilers && (
+          <aside
+            className={cn(
+              // Same width as left main menu (`lg:w-80`).
+              'w-full shrink-0 lg:w-80',
+              // Stick under seed session tabs while floors scroll.
+              'lg:sticky lg:self-start lg:max-h-[calc(100svh-var(--seed-tabs-height,3rem))] lg:overflow-y-auto',
+              // Keep identities accessible when there are no floors.
+              !hasFloors && 'flex-1'
+            )}
+            style={{ top: 'var(--seed-tabs-height, 3rem)' }}
+          >
+            <IdentitiesPanel identities={report.identities} />
+          </aside>
+        )}
+      </div>
     </div>
   )
 }
@@ -642,6 +648,38 @@ function SessionPane({
   return null
 }
 
+/**
+ * Publish seed-tab bar height so region tabs stick beneath it.
+ * Re-runs when `active` flips (sessions mount/unmount the bar).
+ */
+function useSeedTabsHeight(
+  ref: { current: HTMLElement | null },
+  active: boolean
+) {
+  useLayoutEffect(() => {
+    if (!active) {
+      document.documentElement.style.removeProperty('--seed-tabs-height')
+      return
+    }
+    const el = ref.current
+    if (!el) return
+
+    const publish = () => {
+      document.documentElement.style.setProperty(
+        '--seed-tabs-height',
+        `${el.offsetHeight}px`
+      )
+    }
+    publish()
+    const ro = new ResizeObserver(publish)
+    ro.observe(el)
+    return () => {
+      ro.disconnect()
+      document.documentElement.style.removeProperty('--seed-tabs-height')
+    }
+  }, [ref, active])
+}
+
 export default function App() {
   const seedInput = useStore($seedInput)
   const sessions = useStore($sessions)
@@ -651,6 +689,8 @@ export default function App() {
   const meta = useStore($meta)
   const mapSpoilers = useStore($mapSpoilers)
   const identitySpoilers = useStore($identitySpoilers)
+  const seedTabsRef = useRef<HTMLDivElement>(null)
+  useSeedTabsHeight(seedTabsRef, sessions.length > 0)
 
   useEffect(() => {
     loadSpdMeta()
@@ -689,8 +729,8 @@ export default function App() {
               </div>
               <CardContent className="space-y-1 py-3">
                 <p className="text-muted-foreground text-xs leading-relaxed">
-                  Partial seed analysis via Rust WASM — layout, loot, and quest
-                  rewards (not full game parity).
+                  Partial seed analysis — layout, loot, and quest rewards (not
+                  full game parity).
                 </p>
                 {meta && (
                   <Badge variant="secondary" className="font-mono text-[10px]">
@@ -772,19 +812,10 @@ export default function App() {
               <SpoilerToggle
                 id="map-spoilers"
                 label="Floor maps"
-                info="Shows full floor minimaps with original region tilesheets. Heavily spoils layout before you play."
+                info="Shows 128×128 floor map thumbnails (click to expand). Heavily spoils layout before you play."
                 checked={mapSpoilers}
                 onCheckedChange={setMapSpoilers}
               />
-
-              {mapSpoilers && (
-                <Alert variant="destructive">
-                  <AlertTitle>Map spoilers on</AlertTitle>
-                  <AlertDescription>
-                    Floor maps reveal layout, entrances, exits, and room shapes.
-                  </AlertDescription>
-                </Alert>
-              )}
             </div>
           </div>
         </aside>
@@ -797,9 +828,12 @@ export default function App() {
             <Tabs
               value={activeId ?? sessions[0].id}
               onValueChange={setActiveSeed}
-              className="gap-0"
+              className="gap-0 overflow-visible"
             >
-              <div className="border-border bg-background/95 sticky top-0 z-10 border-b px-3 pt-3 pb-0 backdrop-blur supports-backdrop-filter:bg-background/80">
+              <div
+                ref={seedTabsRef}
+                className="border-border bg-background/95 sticky top-0 z-20 border-b px-3 pt-3 pb-0 backdrop-blur supports-backdrop-filter:bg-background/80"
+              >
                 <TabsList
                   variant="line"
                   className="h-auto w-full flex-wrap justify-start gap-1"

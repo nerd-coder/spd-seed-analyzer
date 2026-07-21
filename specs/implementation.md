@@ -98,12 +98,13 @@ bun run check:all    # biome + rust fmt/clippy
 | State | **nanostores** + `@nanostores/persistent` / `@nanostores/react` — all UI state in `web/src/stores/app.ts` |
 | Multi-seed tabs | Each analyzed seed is a closable tab; empty placeholder when none open; **max 10** open seeds (oldest dropped) |
 | Session restore | Open seed inputs persisted (`spd-analyzer-open-seeds` + active id); reports re-analyzed slowly on refresh (~350ms gap) |
-| Seed analyze UI | identities + floors + items; honest **partial** status copy (crystal rooms + quests mentioned, no parity claim) |
-| **Quest cards** | Floor quests parsed into title / type / rewards cards (Ghost, Wandmaker, Blacksmith, Imp); depth tabs show quest dot |
+| Seed analyze UI | Section order: **Floors → Identities → Seed info**; honest **partial** status copy |
+| **Floors UI** | Region tabs only (level range hidden on small screens); all depths listed flat per region; region tabs sticky under seed tabs (`--seed-tabs-height`) |
+| **Quest cards** | Floor quests parsed into title / type / rewards cards (Ghost, Wandmaker, Blacksmith, Imp); Quest badge on floor header |
 | **Item sources** | `lib/labels.ts` maps room/heap/quest tags (`CrystalVaultRoom`, `chest:heap`, `Blacksmith.Quest`, …) to readable badges |
 | **Item icons** | `ItemIcon` + `lib/item-icons.ts` crops `/assets/sprites/items.png` (ItemSpriteSheet indices); potions/scrolls/rings use identity appearance; shop bags/darts/Ankh/Alchemize + crystal-artifact classes covered |
 | **Spoiler toggles** | localStorage; identity table + map spoilers off by default; info-icon tooltips |
-| Map canvas | `tiles.ts` + region tilesheets under `/assets/environment/` |
+| Map preview | 128×128 thumbnail right of floor details (`FloorMapPreview`); click → shadcn Dialog expand; `FloorMapCanvas` supports `maxDisplay` fit |
 | Assets | Flattened to `web/public/assets/{environment,sprites,…}` (no nested `assets/assets`) |
 | App icon | `web/public/app_icon.jpg` |
 
