@@ -35,9 +35,11 @@ spd-seed-analyzer/
 │   │   └── assets/            # SPD asset tree (flattened)
 │   │       └── environment/tiles_*.png
 │   └── src/
-│       ├── App.tsx            # seed form, spoiler toggles, results
+│       ├── App.tsx            # thin shell: form, spoilers, session tabs
+│       ├── components/seed/   # Identities, Floors, SessionPane, …
 │       ├── components/FloorMapCanvas.tsx
-│       └── lib/{spd-wasm.ts,tiles.ts}
+│       ├── hooks/useSeedTabsHeight.ts
+│       └── lib/{spd-wasm.ts,tiles.ts,regions.ts,identity.ts}
 └── specs/implementation.md    # this file
 ```
 
@@ -80,13 +82,13 @@ bun run check:all    # biome + rust fmt/clippy
 | Loop builder | `builders/` | placeRoom, findFreeSpace, tunnels, branches |
 | Figure-eight | — | **Falls back to loop** (not parity) |
 | Minimal paint | `level/terrain.rs` | SPD Terrain IDs; walls/empty/doors/entrance/exit; solid/openSpace helpers |
-| Special-room prizes | `level/special_loot.rs` | Crypt/Armory/Library/Treasury/Pool/Storage/Runestone/Lab/Statue + Sentry/Traps/MagicalFire/Sacrifice/ToxicGas + Pit/Garden/MagicWell + secrets (Honeypot/Maze/Summoning/ChestChasm/Garden/Well); room-shuffle + placeDoors RNG; may `findPrizeItem` from itemsToSpawn |
+| Special-room prizes | `level/special_loot/` | Crypt/Armory/Library/Treasury/Pool/Storage/Runestone/Lab/Statue + Sentry/Traps/MagicalFire/Sacrifice/ToxicGas + Pit/Garden/MagicWell + secrets (Honeypot/Maze/Summoning/ChestChasm/Garden/Well); room-shuffle + placeDoors RNG; may `findPrizeItem` from itemsToSpawn |
 | Shop stock | `level/shop.rs` | `ShopRoom.generateItems` (FOR_SALE); bag pick hero-less (scroll holder first); generated post-build (not mid-setSize) |
 | Ghost quest | `quests/ghost.rs` | `Ghost.Quest.spawn` on sewers: chance, placement (approx openSpace), weapon/armor rewards |
 | Wandmaker quest | `quests/wandmaker.rs` | `spawnRoom` on prison 7–9 (before shuffle); two +1 wands; MassGrave/Ritual/RotGarden side-effects (approx) |
 | Blacksmith quest | `quests/blacksmith.rs` | `Blacksmith.Quest.spawn` on caves 12–14 (before shuffle); `generateRewards(true)` smith pool (2 weapons + missile + armor + optional enchant/glyph); room paint drops 2 equip |
 | Imp quest | `quests/imp.rs` | `Imp.Quest.spawn` on city 17–19 (before shuffle); cursed +2 ring reward generated at initRooms |
-| Crystal rooms | `level/special_loot.rs` | Vault (wand/ring/artifact crystal chests + mimic chance), Choice (pots/scrolls + chest), Path (3+3 consumables with dedup/sort) |
+| Crystal rooms | `level/special_loot/` (`crystal.rs`) | Vault (wand/ring/artifact crystal chests + mimic chance), Choice (pots/scrolls + chest), Path (3+3 consumables with dedup/sort) |
 | Main createItems | `level/create_items.rs` | nItems loop, heap types; drop cells use map origin |
 | Floor map export | `report.rs` `FloorMap` | width/height/tileset/tiles; items include `class_name` |
 
@@ -136,15 +138,15 @@ Status string: `"partial"`.
 ## Not done / next phases
 
 ### P1 — Special-room loot + quests (high value for seed-finder UX)
-- ~~Port `paint()` prize logic: Crypt, Armory, Library, Treasury, Statue, Pool, secrets~~ (partial; see `special_loot.rs`)  
+- ~~Port `paint()` prize logic: Crypt, Armory, Library, Treasury, Statue, Pool, secrets~~ (partial; see `level/special_loot/`)  
 - ~~Shop (FOR_SALE) stock~~ (approx; see `level/shop.rs`)  
 - ~~Ghost.Quest rewards~~ (see `quests/ghost.rs`)  
 - ~~Wandmaker.Quest~~ (see `quests/wandmaker.rs`; MassGrave loot + ritual candles + rot-garden RNG approx; RotGarden heart/lasher not ported)  
 - ~~Imp.Quest~~ (see `quests/imp.rs`; cursed +2 ring at initRooms; AmbitiousImpRoom paint is placement RNG only)  
-- ~~Crystal rooms~~ (Vault / Choice / Path prize gen in `special_loot.rs`; Path geometry not painted, placement RNG approximate)  
+- ~~Crystal rooms~~ (Vault / Choice / Path prize gen in `special_loot/crystal.rs`; Path geometry not painted, placement RNG approximate)  
 - ~~Blacksmith.Quest~~ (see `quests/blacksmith.rs`; smithRewards at initRooms; room paint equip drops; mining branch not ported)  
-- ~~Sentry / Traps / MagicalFire / Sacrifice / ToxicGas / SecretHoneypot prize RNG~~ (approx layout; keys into itemsToSpawn; see `special_loot.rs`)  
-- ~~PitRoom / GardenRoom / MagicWellRoom / SecretWellRoom / SecretGardenRoom / SecretMazeRoom / SecretSummoningRoom / SecretChestChasmRoom~~ (see `special_loot.rs`; maze layout RNG not fully ported so maze prize stream is approximate; Patch.generate burned for secret garden)  
+- ~~Sentry / Traps / MagicalFire / Sacrifice / ToxicGas / SecretHoneypot prize RNG~~ (approx layout; keys into itemsToSpawn; see `special_loot/hazards.rs`)  
+- ~~PitRoom / GardenRoom / MagicWellRoom / SecretWellRoom / SecretGardenRoom / SecretMazeRoom / SecretSummoningRoom / SecretChestChasmRoom~~ (see `special_loot/hazards.rs`; maze layout RNG not fully ported so maze prize stream is approximate; Patch.generate burned for secret garden)  
 - Remaining stubs / layout-only: WeakFloorRoom, DemonSpawnerRoom; SecretMaze full `Maze.generate` for prize-stream parity; RotGarden heart/lasher  
 - Golden tests vs Java oracle for a handful of seeds  
 
@@ -255,7 +257,7 @@ SPD is GPL-3.0. This project ports generation logic → treat as **GPL-3.0-or-la
 ## How to resume (clean context)
 
 1. Read this file + `README.md`  
-2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs` / `level/special_loot.rs` / `quests/{ghost,wandmaker,blacksmith,imp}.rs` / `level/shop.rs`  
+2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs` / `level/special_loot/` / `quests/{ghost,wandmaker,blacksmith,imp}.rs` / `level/shop.rs`  
 3. Next recommended work: **Java golden checks** (P6 oracle) when ready; or **P2 painter** water/grass/traps for drop-cell parity; optional **full Maze.generate** for SecretMaze prize-stream parity; WeakFloor/DemonSpawner are layout-only  
 4. Icons: `web/src/lib/item-icons.ts` + `components/ItemIcon.tsx` (items.png sheet)  
 5. Do not re-copy full asset tree; use `web/public/assets/` as flattened SPD assets  

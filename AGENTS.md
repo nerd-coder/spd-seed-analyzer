@@ -46,9 +46,11 @@ Use **rustup** cargo for wasm (`PATH` scripts prepend `$HOME/.cargo/bin`).
 - **GPL-AWARE** — SPD is GPL-3.0; ports of generation logic inherit that constraint for distribution.
 - **MIN-DIFF** — Prefer small, task-scoped diffs; no drive-by refactors.
 - **HAND-OFF** — After multi-step work, update `specs/implementation.md` when behavior or next steps change.
+- **SMALL-FILES** — Keep source files focused and reviewable. Soft target **≤ ~300 lines**; treat **~500 lines** as a hard ceiling for *new* growth (not an excuse to bloate existing files further). When a change would push a file past ~500, **extract a module first** (same package/`mod`, sibling component, or `lib/` helper) rather than appending. Split by **cohesive responsibility** (room family, UI panel, prize helpers), not arbitrary line cuts. Prefer many small modules + a thin orchestrator over god-files. Does **not** apply to generated output (`web/src/wasm/`), vendored assets, lockfiles, or third-party UI primitives under `web/src/components/ui/` unless we own substantial custom logic there. When expanding an already-oversized file (see known offenders below), budget extraction into the same task when practical.
 
 ## Do not
 
 - Commit generated `web/src/wasm/` (gitignored).
 - Panic-paths that become browser `"unreachable"` without bounds checks (see drop-cell occupancy).
 - Full asset re-imports unless requested.
+- Grow known god-files without extracting: especially `web/src/App.tsx`. (`level/special_loot/` was split; keep new room files focused.)
