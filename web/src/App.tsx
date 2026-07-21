@@ -1,5 +1,6 @@
+import { useStore } from '@nanostores/react'
 import { Info, Loader2, Search, X } from 'lucide-react'
-import { type FormEvent, useCallback, useEffect, useRef, useState } from 'react'
+import { type FormEvent, useEffect } from 'react'
 
 import { DepthIcon } from '@/components/DepthIcon'
 import { FloorMapCanvas } from '@/components/FloorMapCanvas'
@@ -31,117 +32,35 @@ import {
   type ParsedQuest,
   parseQuest,
 } from '@/lib/labels'
-import {
-  analyzeSeed,
-  type FloorReport,
-  getSpdMeta,
-  type IdentityEntry,
-  type IdentityMaps,
-  type SeedReport,
+import type {
+  FloorReport,
+  IdentityEntry,
+  IdentityMaps,
+  SeedReport,
 } from '@/lib/spd-wasm'
 import { cn } from '@/lib/utils'
-
-const MAP_SPOILERS_KEY = 'spd-analyzer-map-spoilers'
-const IDENTITY_SPOILERS_KEY = 'spd-analyzer-identity-spoilers'
-/** Migrated from pre-rename “Advanced mode”. */
-const LEGACY_ADVANCED_KEY = 'spd-analyzer-advanced-mode'
-/** Persisted open seed inputs (re-analyzed on load). */
-const SESSIONS_KEY = 'spd-analyzer-open-seeds'
-const ACTIVE_SEED_KEY = 'spd-analyzer-active-seed'
-
-/** Full main-path depth range (SPD clamps to 26). */
-const ANALYZE_FLOORS = 26
-/** Delay between sequential re-analyzes after refresh (ms). */
-const REANALYZE_GAP_MS = 350
-
-type SeedSession = {
-  /** Stable tab id (input key). */
-  id: string
-  /** Original user input used for analyze. */
-  input: string
-  status: 'pending' | 'loading' | 'ready' | 'error'
-  report: SeedReport | null
-  error: string | null
-}
-
-function readLocalFlag(key: string, fallback = false): boolean {
-  try {
-    const v = localStorage.getItem(key)
-    if (v === null) return fallback
-    return v === '1'
-  } catch {
-    return fallback
-  }
-}
-
-function writeLocalFlag(key: string, value: boolean) {
-  try {
-    localStorage.setItem(key, value ? '1' : '0')
-  } catch {
-    /* ignore */
-  }
-}
-
-function normalizeSeedInput(raw: string): string {
-  return raw.trim()
-}
-
-function sessionIdFor(input: string): string {
-  return normalizeSeedInput(input).toUpperCase()
-}
-
-function loadPersistedSeeds(): string[] {
-  try {
-    const raw = localStorage.getItem(SESSIONS_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw) as unknown
-    if (!Array.isArray(parsed)) return []
-    return parsed
-      .filter((s): s is string => typeof s === 'string')
-      .map(normalizeSeedInput)
-      .filter(Boolean)
-  } catch {
-    return []
-  }
-}
-
-function savePersistedSeeds(inputs: string[]) {
-  try {
-    localStorage.setItem(SESSIONS_KEY, JSON.stringify(inputs))
-  } catch {
-    /* ignore */
-  }
-}
-
-function loadActiveSeedId(): string | null {
-  try {
-    return localStorage.getItem(ACTIVE_SEED_KEY)
-  } catch {
-    return null
-  }
-}
-
-function saveActiveSeedId(id: string | null) {
-  try {
-    if (id) localStorage.setItem(ACTIVE_SEED_KEY, id)
-    else localStorage.removeItem(ACTIVE_SEED_KEY)
-  } catch {
-    /* ignore */
-  }
-}
-
-function sleep(ms: number) {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, ms)
-  })
-}
-
-function tabLabel(session: SeedSession): string {
-  if (session.report) {
-    return session.report.seed.code ?? session.report.seed.formatted
-  }
-  return session.input
-}
+import {
+  $activeSeedId,
+  $analyzing,
+  $formError,
+  $identitySpoilers,
+  $mapSpoilers,
+  $meta,
+  $seedInput,
+  $sessions,
+  analyzeDraftSeed,
+  closeSeedSession,
+  loadSpdMeta,
+  MAX_SAVED_SEEDS,
+  normalizeSeedInput,
+  type SeedSession,
+  setActiveSeed,
+  setIdentitySpoilers,
+  setMapSpoilers,
+  setSeedInput,
+  startSessionRehydrate,
+  tabLabel,
+} from '@/stores/app'
 
 /** SPD region bands (same as tileset_for_depth). */
 const REGIONS = [
@@ -562,7 +481,8 @@ function EmptyAnalysisPlaceholder() {
       </h2>
       <p className="text-muted-foreground max-w-sm text-sm leading-relaxed">
         Enter a seed in the left panel and click Analyze. Open seeds stay as
-        tabs until you close them, and are restored after a refresh.
+        tabs until you close them (max {MAX_SAVED_SEEDS}), and are restored
+        after a refresh.
       </p>
     </div>
   )
@@ -723,176 +643,24 @@ function SessionPane({
 }
 
 export default function App() {
-  const [seedInput, setSeedInput] = useState('')
-  const [sessions, setSessions] = useState<SeedSession[]>([])
-  const [activeId, setActiveId] = useState<string | null>(null)
-  const [analyzing, setAnalyzing] = useState(false)
-  const [formError, setFormError] = useState<string | null>(null)
-  const [meta, setMeta] = useState<{ version: string; commit: string } | null>(
-    null
-  )
-  const [mapSpoilers, setMapSpoilers] = useState(() => {
-    const legacy = readLocalFlag(LEGACY_ADVANCED_KEY)
-    return readLocalFlag(MAP_SPOILERS_KEY, legacy)
-  })
-  const [identitySpoilers, setIdentitySpoilers] = useState(() =>
-    readLocalFlag(IDENTITY_SPOILERS_KEY)
-  )
+  const seedInput = useStore($seedInput)
+  const sessions = useStore($sessions)
+  const activeId = useStore($activeSeedId)
+  const analyzing = useStore($analyzing)
+  const formError = useStore($formError)
+  const meta = useStore($meta)
+  const mapSpoilers = useStore($mapSpoilers)
+  const identitySpoilers = useStore($identitySpoilers)
 
-  const sessionsRef = useRef(sessions)
-  sessionsRef.current = sessions
-  const rehydrateDone = useRef(false)
-
-  const persistSessions = useCallback((list: SeedSession[]) => {
-    savePersistedSeeds(list.map((s) => s.input))
-  }, [])
-
-  const setActive = useCallback((id: string | null) => {
-    setActiveId(id)
-    saveActiveSeedId(id)
-  }, [])
-
-  const updateSession = useCallback(
-    (id: string, patch: Partial<SeedSession>) => {
-      setSessions((prev) => {
-        const next = prev.map((s) => (s.id === id ? { ...s, ...patch } : s))
-        return next
-      })
-    },
-    []
-  )
-
-  const runAnalyze = useCallback(
-    async (id: string, input: string) => {
-      updateSession(id, { status: 'loading', error: null })
-      try {
-        const report = await analyzeSeed(input, ANALYZE_FLOORS)
-        updateSession(id, { status: 'ready', report, error: null })
-        return true
-      } catch (err) {
-        updateSession(id, {
-          status: 'error',
-          report: null,
-          error: err instanceof Error ? err.message : String(err),
-        })
-        return false
-      }
-    },
-    [updateSession]
-  )
-
-  // Meta + restore open seeds and re-analyze them slowly.
   useEffect(() => {
-    getSpdMeta()
-      .then(setMeta)
-      .catch((e: unknown) => {
-        setFormError(e instanceof Error ? e.message : String(e))
-      })
+    loadSpdMeta()
+  }, [])
 
-    if (rehydrateDone.current) return
-    rehydrateDone.current = true
-
-    const saved = loadPersistedSeeds()
-    if (saved.length === 0) return
-
-    const restored: SeedSession[] = saved.map((input) => ({
-      id: sessionIdFor(input),
-      input,
-      status: 'pending' as const,
-      report: null,
-      error: null,
-    }))
-    setSessions(restored)
-
-    const preferred = loadActiveSeedId()
-    const active =
-      preferred && restored.some((s) => s.id === preferred)
-        ? preferred
-        : (restored[0]?.id ?? null)
-    setActive(active)
-
-    let cancelled = false
-    ;(async () => {
-      setAnalyzing(true)
-      for (let i = 0; i < restored.length; i++) {
-        if (cancelled) break
-        const s = restored[i]
-        // Skip if user already closed the tab during rehydrate.
-        if (!sessionsRef.current.some((x) => x.id === s.id)) continue
-        await runAnalyze(s.id, s.input)
-        if (i < restored.length - 1 && !cancelled) {
-          await sleep(REANALYZE_GAP_MS)
-        }
-      }
-      if (!cancelled) setAnalyzing(false)
-    })()
-
-    return () => {
-      cancelled = true
-    }
-  }, [runAnalyze, setActive])
-
-  function toggleMapSpoilers(next: boolean) {
-    setMapSpoilers(next)
-    writeLocalFlag(MAP_SPOILERS_KEY, next)
-  }
-
-  function toggleIdentitySpoilers(next: boolean) {
-    setIdentitySpoilers(next)
-    writeLocalFlag(IDENTITY_SPOILERS_KEY, next)
-  }
+  useEffect(() => startSessionRehydrate(), [])
 
   async function onAnalyze(e: FormEvent) {
     e.preventDefault()
-    const input = normalizeSeedInput(seedInput)
-    if (!input) return
-
-    setFormError(null)
-    const id = sessionIdFor(input)
-
-    const existing = sessions.find((s) => s.id === id)
-    if (existing) {
-      setActive(id)
-      if (existing.status === 'ready' || existing.status === 'loading') {
-        return
-      }
-      setAnalyzing(true)
-      await runAnalyze(id, existing.input)
-      setAnalyzing(false)
-      return
-    }
-
-    const session: SeedSession = {
-      id,
-      input,
-      status: 'loading',
-      report: null,
-      error: null,
-    }
-    setSessions((prev) => {
-      const next = [...prev, session]
-      persistSessions(next)
-      return next
-    })
-    setActive(id)
-    setSeedInput('')
-    setAnalyzing(true)
-    await runAnalyze(id, input)
-    setAnalyzing(false)
-  }
-
-  function closeSession(id: string) {
-    setSessions((prev) => {
-      const idx = prev.findIndex((s) => s.id === id)
-      if (idx < 0) return prev
-      const next = prev.filter((s) => s.id !== id)
-      persistSessions(next)
-      if (activeId === id) {
-        const fallback = next[idx] ?? next[idx - 1] ?? next[0] ?? null
-        setActive(fallback?.id ?? null)
-      }
-      return next
-    })
+    await analyzeDraftSeed()
   }
 
   return (
@@ -945,7 +713,8 @@ export default function App() {
                   className="font-mono uppercase"
                 />
                 <p className="text-muted-foreground text-[11px] leading-snug">
-                  Codes, numeric seeds, or free-text fun seeds.
+                  Codes, numeric seeds, or free-text fun seeds. Up to{' '}
+                  {MAX_SAVED_SEEDS} open seeds are kept (oldest dropped).
                 </p>
               </div>
               <Button
@@ -998,14 +767,14 @@ export default function App() {
                 label="Identities"
                 info="Reveals potion, scroll, and ring color/rune/gem → type mappings for the active seed."
                 checked={identitySpoilers}
-                onCheckedChange={toggleIdentitySpoilers}
+                onCheckedChange={setIdentitySpoilers}
               />
               <SpoilerToggle
                 id="map-spoilers"
                 label="Floor maps"
                 info="Shows full floor minimaps with original region tilesheets. Heavily spoils layout before you play."
                 checked={mapSpoilers}
-                onCheckedChange={toggleMapSpoilers}
+                onCheckedChange={setMapSpoilers}
               />
 
               {mapSpoilers && (
@@ -1027,7 +796,7 @@ export default function App() {
           ) : (
             <Tabs
               value={activeId ?? sessions[0].id}
-              onValueChange={setActive}
+              onValueChange={setActiveSeed}
               className="gap-0"
             >
               <div className="border-border bg-background/95 sticky top-0 z-10 border-b px-3 pt-3 pb-0 backdrop-blur supports-backdrop-filter:bg-background/80">
@@ -1036,30 +805,32 @@ export default function App() {
                   className="h-auto w-full flex-wrap justify-start gap-1"
                 >
                   {sessions.map((s) => (
-                    <TabsTrigger
+                    // Close control is a sibling of TabsTrigger (not nested —
+                    // TabsTrigger renders as <button>).
+                    <div
                       key={s.id}
-                      value={s.id}
-                      className="group/tab max-w-[12rem] gap-1 pr-1"
+                      className="group/seed-tab flex max-w-[14rem] items-center"
                     >
-                      {(s.status === 'loading' || s.status === 'pending') && (
-                        <Loader2 className="size-3 shrink-0 animate-spin" />
-                      )}
-                      <span className="truncate font-mono text-xs">
-                        {tabLabel(s)}
-                      </span>
+                      <TabsTrigger
+                        value={s.id}
+                        className="max-w-[12rem] gap-1 pr-1"
+                      >
+                        {(s.status === 'loading' || s.status === 'pending') && (
+                          <Loader2 className="size-3 shrink-0 animate-spin" />
+                        )}
+                        <span className="truncate font-mono text-xs">
+                          {tabLabel(s)}
+                        </span>
+                      </TabsTrigger>
                       <button
                         type="button"
-                        className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex size-5 shrink-0 items-center justify-center rounded-none opacity-60 group-hover/tab:opacity-100 group-data-active/tabs-trigger:opacity-100"
+                        className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex size-5 shrink-0 items-center justify-center rounded-none opacity-60 group-hover/seed-tab:opacity-100"
                         aria-label={`Close ${tabLabel(s)}`}
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          closeSession(s.id)
-                        }}
+                        onClick={() => closeSeedSession(s.id)}
                       >
                         <X className="size-3" />
                       </button>
-                    </TabsTrigger>
+                    </div>
                   ))}
                 </TabsList>
               </div>

@@ -95,8 +95,9 @@ bun run check:all    # biome + rust fmt/clippy
 |------|--------|
 | Layout | Two columns: sticky left **menu** (title card, seed form, Spoilers) + right **content** (seed tabs) |
 | shadcn | Preset `buFzq0e` (radix-lyra / Oxanium / phosphor registry); tooltips for spoiler info |
-| Multi-seed tabs | Each analyzed seed is a closable tab; empty placeholder when none open |
-| Session restore | Open seed inputs in `localStorage` (`spd-analyzer-open-seeds` + active id); on refresh re-analyze each slowly (gap ~350ms) |
+| State | **nanostores** + `@nanostores/persistent` / `@nanostores/react` — all UI state in `web/src/stores/app.ts` |
+| Multi-seed tabs | Each analyzed seed is a closable tab; empty placeholder when none open; **max 10** open seeds (oldest dropped) |
+| Session restore | Open seed inputs persisted (`spd-analyzer-open-seeds` + active id); reports re-analyzed slowly on refresh (~350ms gap) |
 | Seed analyze UI | identities + floors + items; honest **partial** status copy (crystal rooms + quests mentioned, no parity claim) |
 | **Quest cards** | Floor quests parsed into title / type / rewards cards (Ghost, Wandmaker, Blacksmith, Imp); depth tabs show quest dot |
 | **Item sources** | `lib/labels.ts` maps room/heap/quest tags (`CrystalVaultRoom`, `chest:heap`, `Blacksmith.Quest`, …) to readable badges |
@@ -223,7 +224,8 @@ Tiles are SPD `Terrain` values. Client maps to flat tilesheet indices (`web/src/
 - Legacy: `spd-analyzer-advanced-mode` is still read as a fallback for map spoilers.
 
 ### Open seed sessions (UI)
-- **List:** `localStorage["spd-analyzer-open-seeds"]` = JSON string array of seed inputs (order = tab order).
+- **Store:** `web/src/stores/app.ts` (`$savedSeedInputs`, `$activeSeedId`, `$sessions`, spoiler atoms, …).
+- **List:** `localStorage["spd-analyzer-open-seeds"]` = JSON string array of seed inputs (order = tab order), **max 10**.
 - **Active tab:** `localStorage["spd-analyzer-active-seed"]` = session id (normalized uppercase input).
 - Reports are **not** persisted (recomputed via WASM on load, sequentially with a short delay).
 
