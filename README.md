@@ -20,9 +20,7 @@ By default the UI aims to avoid ruining exploration:
 
 ## Support
 
-If this tool saves you a run (or a few dozen), consider sponsoring. It keeps the seed math honest and the project free for everyone who digs through the dungeon.
-
-<iframe src="https://github.com/sponsors/nerd-coder/button" title="Sponsor nerd-coder" height="32" width="114" style="border: 0; border-radius: 6px;"></iframe>
+If this tool saves you a run (or a few dozen), consider [sponsoring](https://github.com/sponsors/nerd-coder). It keeps the seed math honest and the project free for everyone who digs through the dungeon.
 
 ## License
 
