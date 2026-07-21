@@ -1,9 +1,11 @@
-# Java identity oracle
+# Java run oracle
 
 This tool produces deterministic JSON directly from the pinned Shattered Pixel
-Dungeon Java implementation. Its intentionally narrow first contract covers
-only the run-level potion, scroll, and ring identity mappings. It does **not**
-claim floor generation or full seed-finder parity.
+Dungeon Java implementation. Schema v1 covers run-level potion, scroll, and
+ring identity mappings. Schema v2 adds an intentionally narrow floor contract:
+the ordered depth-one `itemsToSpawn` queue at the exact pre-`build()` boundary.
+It does **not** claim room generation, final heap contents, or full seed-finder
+parity.
 
 ## Requirements
 
@@ -23,6 +25,7 @@ From the analyzer repository root:
 
 ```bash
 ./tools/java-oracle/run AAA-AAA-AAA
+./tools/java-oracle/run --depth 1 AAA-AAA-AAA
 ```
 
 If an older Java is the machine default, select a JDK 17 installation for the
@@ -48,6 +51,8 @@ the default when `--output` is omitted):
 ./tools/java-oracle/run --output tools/java-oracle/fixtures/abc-def-ghi.json ABC-DEF-GHI
 ./tools/java-oracle/run --output tools/java-oracle/fixtures/gfx-pzh-dch.json GFX-PZH-DCH
 ./tools/java-oracle/run --output tools/java-oracle/fixtures/hello.json hello
+./tools/java-oracle/run --depth 1 \
+  --output tools/java-oracle/fixtures/aaa-aaa-aaa-floor-1.json AAA-AAA-AAA
 ```
 
 The Rust golden consumer validates every `fixtures/*.json` file:
@@ -56,7 +61,9 @@ The Rust golden consumer validates every `fixtures/*.json` file:
 cargo test -p spd-core --test java_oracle_goldens
 ```
 
-## JSON contract (schema version 1)
+## JSON contracts
+
+### Schema version 1: identities
 
 ```json
 {
@@ -78,3 +85,31 @@ localization. `input.depths` is reserved and must remain empty while the oracle
 is identity-only. Additive fields may be introduced without changing
 `schema_version`; changing existing field meaning or ordering requires a new
 version.
+
+### Schema version 2: depth-one forced items
+
+Passing `--depth 1` emits the same identities plus:
+
+```json
+{
+  "schema_version": 2,
+  "input": { "seed": "AAA-AAA-AAA", "numeric": 0, "depths": [1] },
+  "floors": [{
+    "depth": 1,
+    "forced_items": [
+      { "class": "Food", "quantity": 1, "level": 0, "cursed": false }
+    ]
+  }]
+}
+```
+
+Only depth 1 is accepted. A recording `SewerLevel` snapshots the protected
+queue when the pinned `Level.create()` first enters `build()`, then stops via an
+internal sentinel before builder or painter RNG. This is the pre-room forced
+spawn queue, not a post-paint observation. The injected runtime uses SPD's own
+`gdxVersion` for the desktop native needed by icon-backed item constructors;
+no asset files or graphics context are loaded.
+
+The Rust golden compares this fixture with the surviving `source="forced"`
+slice in `analyze_seed(..., 1)`. It deliberately does not compare every placed
+floor item.

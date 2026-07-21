@@ -8,13 +8,14 @@ readonly DEFAULT_SOURCE="/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon"
 tool_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source_dir="${SPD_SOURCE:-$DEFAULT_SOURCE}"
 output_path=""
+depth=""
 
 usage() {
 	cat >&2 <<'EOF'
-Usage: tools/java-oracle/run [--source PATH] [--output FILE] SEED
+Usage: tools/java-oracle/run [--source PATH] [--output FILE] [--depth 1] SEED
 
-Dumps SPD v3.3.8 identity mappings as stable JSON. The source checkout is read
-from SPD_SOURCE or the usual local-clone path, and must be pinned at 7b8b845a7.
+Dumps SPD v3.3.8 run facts as stable JSON. With --depth 1, includes the pinned
+depth-one floor item slice. The source checkout must be pinned at 7b8b845a7.
 EOF
 }
 
@@ -28,6 +29,11 @@ while (($# > 0)); do
 		--output)
 			[[ $# -ge 2 ]] || { usage; exit 2; }
 			output_path="$2"
+			shift 2
+			;;
+		--depth)
+			[[ $# -ge 2 ]] || { usage; exit 2; }
+			depth="$2"
 			shift 2
 			;;
 		-h|--help)
@@ -47,6 +53,10 @@ done
 
 [[ $# -eq 1 ]] || { usage; exit 2; }
 seed="$1"
+if [[ -n "$depth" && "$depth" != "1" ]]; then
+	echo "The floor oracle currently supports only --depth 1" >&2
+	exit 2
+fi
 
 for command_name in git java tar; do
 	command -v "$command_name" >/dev/null || {
@@ -86,8 +96,12 @@ gradle_args=(
 	--init-script "$tool_dir/oracle.gradle"
 	-PoracleSourceDir="$tool_dir/src"
 	-PoracleSeed="$seed"
-	:core:javaOracleDump
 )
+
+if [[ -n "$depth" ]]; then
+	gradle_args+=(-PoracleDepth="$depth")
+fi
+gradle_args+=(:core:javaOracleDump)
 
 if [[ -n "$output_path" ]]; then
 	mkdir -p "$(dirname "$output_path")"

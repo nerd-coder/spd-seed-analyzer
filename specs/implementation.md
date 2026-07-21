@@ -1,6 +1,6 @@
 # SPD Seed Analyzer — Implementation Progress
 
-**Last updated:** 2026-07-21 (P4: pinned map rendering polish)
+**Last updated:** 2026-07-22 (P6: depth-one forced-item Java oracle)
 
 **Branch:** `main`  
 **Pinned SPD:** v3.3.8 @ `7b8b845a7`  
@@ -84,8 +84,8 @@ bun run check:all    # biome + rust fmt/clippy
 | Potion/scroll/ring IDs | `items/identities.rs` | UI tables |
 | Generator decks/tiers | `generator/` | random weapons/armor/missiles/artifacts + item.random |
 | Depth seeds / limited drops | `dungeon/` | pos/sou/stylus/stones/cata/lab |
-| Java identity oracle | `tools/java-oracle/` | Exact-pin, temporary headless SPD build; stable identity JSON without modifying the external clone |
-| Golden identity fixtures | `tools/java-oracle/fixtures/` + `crates/spd-core/tests/java_oracle_goldens.rs` | Four coded/free-form seeds; strict ordered potion/scroll/ring appearance parity |
+| Java run oracle | `tools/java-oracle/` | Exact-pin, temporary headless SPD build; schema v1 identities + schema v2 depth-one pre-build forced-item queue without modifying the external clone |
+| Golden Java fixtures | `tools/java-oracle/fixtures/` + `crates/spd-core/tests/java_oracle_goldens.rs` | Four identity seeds plus one tightly scoped depth-one forced-item fixture; strict ordered identity and forced class/curse parity |
 
 ### Levelgen (partial)
 | Area | Location | Notes |
@@ -173,7 +173,8 @@ Status string: `"partial"`.
 - ~~Sentry / Traps / MagicalFire / Sacrifice / ToxicGas / SecretHoneypot prize RNG~~ (approx layout; keys into itemsToSpawn; see `special_loot/hazards.rs`)  
 - ~~PitRoom / GardenRoom / MagicWellRoom / SecretWellRoom / SecretGardenRoom / SecretMazeRoom / SecretSummoningRoom / SecretChestChasmRoom~~ (see `special_loot/`; SecretMaze includes full pinned `Maze.generate` and farthest-cell selection; Patch.generate burned for secret garden)
 - ~~WeakFloorRoom / DemonSpawnerRoom / RotGardenRoom painter parity~~ (`special_loot/geometry/`; DemonSpawner is appended on Halls floors and refuses exit connections)
-- ~~Golden identity tests vs Java oracle for a handful of seeds~~ (`AAA-AAA-AAA`, `ABC-DEF-GHI`, `GFX-PZH-DCH`, `hello`); single-floor item goldens remain
+- ~~Golden identity tests vs Java oracle for a handful of seeds~~ (`AAA-AAA-AAA`, `ABC-DEF-GHI`, `GFX-PZH-DCH`, `hello`)
+- ~~First single-floor Java item golden~~ (schema v2 `AAA-AAA-AAA` depth 1; exact pre-build forced queue only, not room loot/final heaps)
 
 ### P2 — Painter parity
 - ~~Water/grass/trap placement RNG~~ (`level/patch.rs` + `level/painter/`; nTraps + sub-generator Long)  
@@ -204,8 +205,15 @@ Status string: `"partial"`.
 - Constraint search over seeds (any/all items by floor)  
 
 ### P6 — Correctness infrastructure
-- ~~`tools/java-oracle`: headless identity dump JSON from the exact pinned local SPD clone~~ (floor/item export remains a future schema extension)
+- ~~`tools/java-oracle`: headless identity dump JSON from the exact pinned local SPD clone~~
 - ~~Golden identity fixtures in repo~~ (four seeds; ordered potion/scroll/ring item + appearance parity)
+- ~~Schema v2 depth-one forced-item export~~ (records `itemsToSpawn` at the pinned `Level.create` pre-`build()` boundary, then stops before builder/painter RNG)
+- ~~Single-floor Rust/Java golden slice~~ (`AAA-AAA-AAA`, depth 1; ordered forced class/cursed parity, unit quantity + level-zero scope)
+
+Next correctness step: add a separately scoped oracle contract for final placed
+heap items after real room generation before using Java fixtures to claim broad
+floor-loot parity. The product-plan next phase remains **P5 seed finder** with
+the current honest `partial` status.
 
 ---
 
@@ -277,10 +285,12 @@ Tiles are SPD `Terrain` values. `tile_variance` is the isolated pinned `DungeonT
 
 ```bash
 cargo test -p spd-core
-# includes analyze_smoke coverage plus java_oracle_goldens identity parity
+# includes analyze_smoke coverage plus java_oracle_goldens identity/forced-item parity
 ```
 
-When adding features: prefer oracle comparisons for identity maps first, then single-floor items.
+When adding features: prefer oracle comparisons for identity maps first, then
+tightly scoped single-floor facts. Schema v2 currently covers only the
+depth-one pre-build forced queue, not final heaps.
 
 ---
 
@@ -294,7 +304,7 @@ SPD is GPL-3.0. This project ports generation logic → treat as **GPL-3.0-or-la
 
 1. Read this file + `README.md`  
 2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs` / `level/special_loot/` / `quests/{ghost,wandmaker,blacksmith,imp}.rs` / `level/shop.rs`  
-3. Next recommended work: extend the Java oracle to floor/item facts, then implement **P5 seed finder** constraints
+3. Next product phase: implement **P5 seed finder** constraints; next correctness slice: final placed-heap Java oracle facts
 4. Icons: `web/src/lib/item-icons.ts` + `components/ItemIcon.tsx` (items.png sheet)  
 5. Do not re-copy full asset tree; use `web/public/assets/` as flattened SPD assets  
 6. After Rust changes: `bun run build:wasm` (or `bun run dev`)  

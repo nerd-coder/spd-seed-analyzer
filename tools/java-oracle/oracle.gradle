@@ -10,6 +10,7 @@ gradle.beforeProject { project ->
     project.pluginManager.withPlugin('java-library') {
         def sourceDir = gradle.startParameter.projectProperties['oracleSourceDir']
         def seed = gradle.startParameter.projectProperties['oracleSeed']
+        def depth = gradle.startParameter.projectProperties['oracleDepth']
         if (sourceDir == null || seed == null) {
             throw new GradleException('javaOracleDump requires oracleSourceDir and oracleSeed')
         }
@@ -19,8 +20,12 @@ gradle.beforeProject { project ->
         def oracle = sourceSets.create('javaOracle') {
             java.srcDir(sourceDir)
             compileClasspath = main.output + main.compileClasspath
-            runtimeClasspath = output + main.runtimeClasspath
+            runtimeClasspath = output + main.runtimeClasspath +
+                    project.configurations[runtimeClasspathConfigurationName]
         }
+        project.dependencies.add(
+                oracle.runtimeOnlyConfigurationName,
+                "com.badlogicgames.gdx:gdx-platform:${project.rootProject.ext.gdxVersion}:natives-desktop")
 
         project.tasks.named(oracle.compileJavaTaskName) {
             dependsOn(project.tasks.named(main.classesTaskName))
@@ -33,6 +38,9 @@ gradle.beforeProject { project ->
             classpath = oracle.runtimeClasspath
             mainClass = 'com.shatteredpixel.shatteredpixeldungeon.tools.JavaOracle'
             args(seed)
+            if (depth != null) {
+                args(depth)
+            }
         }
     }
 }

@@ -17,7 +17,7 @@ import com.watabou.utils.Random;
 import java.util.ArrayList;
 import java.util.List;
 
-/** A deliberately small, headless oracle for seed-dependent identity mappings. */
+/** A deliberately small, headless oracle for seed-dependent run facts. */
 public final class JavaOracle {
 
 	private static final String SPD_VERSION = "v3.3.8";
@@ -27,20 +27,30 @@ public final class JavaOracle {
 	}
 
 	public static void main(String[] args) {
-		if (args.length != 1) {
-			System.err.println("Usage: JavaOracle SEED");
+		if (args.length < 1 || args.length > 2) {
+			System.err.println("Usage: JavaOracle SEED [DEPTH]");
 			System.exit(2);
 		}
 
 		String inputSeed = args[0];
 		long numericSeed = DungeonSeed.convertFromText(inputSeed);
+		Integer depth = args.length == 2 ? Integer.valueOf(args[1]) : null;
+		if (depth != null && depth != 1) {
+			System.err.println("The floor oracle currently supports only depth 1");
+			System.exit(2);
+		}
 
-		Random.pushGenerator(numericSeed + 1);
 		try {
-			// Keep this in Dungeon.init() order at the pinned commit.
-			Scroll.initLabels();
-			Potion.initColors();
-			Ring.initGems();
+			FloorOracle.FloorFacts floor = null;
+			if (depth == null) {
+				Random.pushGenerator(numericSeed + 1);
+				// Keep this in Dungeon.init() order at the pinned commit.
+				Scroll.initLabels();
+				Potion.initColors();
+				Ring.initGems();
+			} else {
+				floor = FloorOracle.generate(numericSeed);
+			}
 
 			Bundle identities = new Bundle();
 			Potion.save(identities);
@@ -50,7 +60,9 @@ public final class JavaOracle {
 			List<Identity> potions = identities(Generator.Category.POTION, identities);
 			List<Identity> scrolls = identities(Generator.Category.SCROLL, identities);
 			List<Identity> rings = identities(Generator.Category.RING, identities);
-			System.out.print(toJson(inputSeed, numericSeed, potions, scrolls, rings));
+			System.out.print(floor == null
+					? toJson(inputSeed, numericSeed, potions, scrolls, rings)
+					: toFloorJson(inputSeed, numericSeed, potions, scrolls, rings, floor));
 		} finally {
 			Random.resetGenerators();
 			Scroll.clearLabels();
@@ -93,6 +105,62 @@ public final class JavaOracle {
 		json.append("  }\n");
 		json.append("}\n");
 		return json.toString();
+	}
+
+	private static String toFloorJson(
+			String inputSeed,
+			long numericSeed,
+			List<Identity> potions,
+			List<Identity> scrolls,
+			List<Identity> rings,
+			FloorOracle.FloorFacts floor) {
+		StringBuilder json = new StringBuilder();
+		json.append("{\n");
+		json.append("  \"schema_version\": 2,\n");
+		json.append("  \"spd\": {\n");
+		json.append("    \"version\": \"").append(SPD_VERSION).append("\",\n");
+		json.append("    \"commit\": \"").append(SPD_COMMIT).append("\"\n");
+		json.append("  },\n");
+		json.append("  \"input\": {\n");
+		json.append("    \"seed\": \"").append(escape(inputSeed)).append("\",\n");
+		json.append("    \"numeric\": ").append(numericSeed).append(",\n");
+		json.append("    \"depths\": [").append(floor.depth).append("]\n");
+		json.append("  },\n");
+		json.append("  \"identities\": {\n");
+		appendIdentities(json, "potions", potions, true);
+		appendIdentities(json, "scrolls", scrolls, true);
+		appendIdentities(json, "rings", rings, false);
+		json.append("  },\n");
+		json.append("  \"floors\": [\n");
+		json.append("    {\n");
+		json.append("      \"depth\": ").append(floor.depth).append(",\n");
+		json.append("      \"forced_items\": [\n");
+		appendItems(json, floor.forcedItems, "        ");
+		json.append("      ]\n");
+		json.append("    }\n");
+		json.append("  ]\n");
+		json.append("}\n");
+		return json.toString();
+	}
+
+	private static void appendItems(
+			StringBuilder json, List<FloorOracle.ItemFact> items, String indent) {
+		for (int index = 0; index < items.size(); index++) {
+			json.append(indent).append("{ ");
+			appendItemFields(json, items.get(index));
+			json.append(" }");
+			if (index + 1 < items.size()) {
+				json.append(',');
+			}
+			json.append('\n');
+		}
+	}
+
+	private static void appendItemFields(StringBuilder json, FloorOracle.ItemFact item) {
+		json.append("\"class\": \"").append(escape(item.itemClass))
+				.append("\", \"quantity\": ").append(item.quantity)
+				.append(", \"level\": ").append(item.level)
+				.append(", \"cursed\": ").append(item.cursed);
 	}
 
 	private static void appendIdentities(
