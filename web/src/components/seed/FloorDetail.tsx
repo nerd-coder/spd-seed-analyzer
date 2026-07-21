@@ -77,6 +77,14 @@ export function FloorDetail({
                   />
                   <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
                     <span>{item.name}</span>
+                    {item.cursed && (
+                      <Badge
+                        variant="destructive"
+                        className="h-5 px-1.5 py-0 text-[10px] font-normal"
+                      >
+                        cursed
+                      </Badge>
+                    )}
                     {sourceLabel && (
                       <Badge
                         variant={highlight ? 'secondary' : 'outline'}

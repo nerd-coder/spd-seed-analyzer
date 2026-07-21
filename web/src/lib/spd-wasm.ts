@@ -29,6 +29,8 @@ export type ItemEntry = {
   /** Java simple class name for icon lookup. */
   class_name?: string | null
   category: string
+  /** Present when the item is cursed (chip in item list). */
+  cursed?: boolean
   source?: string | null
 }
 

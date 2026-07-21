@@ -1,6 +1,6 @@
 # SPD Seed Analyzer — Implementation Progress
 
-**Last updated:** 2026-07-21  
+**Last updated:** 2026-07-21 (CI: Cloudflare Worker SPA deploy)  
 **Branch:** `main`  
 **Pinned SPD:** v3.3.8 @ `7b8b845a7`  
 **Local game source:** `/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`
@@ -49,6 +49,7 @@ spd-seed-analyzer/
 bun install
 bun run dev          # wasm-pack + Vite (prefers $HOME/.cargo/bin for rustup)
 bun run build
+bun run deploy       # build + wrangler deploy (Cloudflare Worker SPA)
 bun run test:rust    # cargo test -p spd-core
 bun run build:wasm
 bun run check        # biome (TS/JS/CSS/JSON)
@@ -58,6 +59,14 @@ bun run check:all    # biome + rust fmt/clippy
 ```
 
 **Note:** mise/Homebrew `rustc` may lack `wasm32-unknown-unknown`; scripts prepend rustup’s cargo.
+
+### Deploy (Cloudflare Worker SPA)
+
+- Config: `web/wrangler.toml` — static assets from `web/dist`, `not_found_handling = "single-page-application"`
+- CI: `.github/workflows/ci.yaml` — on PR: check/build; on `main` push / `workflow_dispatch`: deploy
+- GitHub **Environment** `prod` secrets/vars:
+  - **Secret:** `CLOUDFLARE_API_TOKEN`
+  - **Vars:** `CLOUDFLARE_ACCOUNT_ID`, `WEB_WORKER_NAME` (required); `WEB_DOMAIN`, `WEB_URL` (optional custom domain)
 
 ---
 

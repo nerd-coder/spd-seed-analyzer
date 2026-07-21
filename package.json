@@ -10,6 +10,7 @@
     "build:wasm": "PATH=\"$HOME/.cargo/bin:$PATH\" wasm-pack build crates/spd-wasm --target web --out-dir ../../web/src/wasm --out-name spd_wasm",
     "dev": "bun run build:wasm && bun run --filter spd-seed-analyzer-web dev",
     "build": "bun run build:wasm && bun run --filter spd-seed-analyzer-web build",
+    "deploy": "bun run build && bun run --filter spd-seed-analyzer-web deploy",
     "preview": "bun run --filter spd-seed-analyzer-web preview",
     "test:rust": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo test -p spd-core",
     "check": "biome check",

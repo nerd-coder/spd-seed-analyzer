@@ -1,0 +1,8 @@
+# Cloudflare Worker — static SPA (Vite dist/)
+# Deploy: bun run deploy (from repo root) or wrangler deploy (from web/)
+name = "spd-seed-analyzer"
+compatibility_date = "2026-07-21"
+
+[assets]
+directory = "./dist"
+not_found_handling = "single-page-application"

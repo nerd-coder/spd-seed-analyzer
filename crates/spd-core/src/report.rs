@@ -49,6 +49,9 @@ pub struct ItemEntry {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub class_name: Option<String>,
     pub category: String,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub cursed: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
 }

@@ -67,10 +67,22 @@ impl LevelState {
             if is_blacklisted(it) {
                 continue;
             }
+            // Title includes a "cursed " prefix; report that as a structured flag
+            // and keep `name` free of it for chip-based UI.
+            let full_title = it.title();
+            let name = if it.cursed {
+                full_title
+                    .strip_prefix("cursed ")
+                    .unwrap_or(&full_title)
+                    .to_string()
+            } else {
+                full_title
+            };
             items.push(ItemEntry {
-                name: it.title(),
+                name,
                 class_name: Some(it.class_name.clone()),
                 category: format!("{:?}", it.category).to_ascii_lowercase(),
+                cursed: it.cursed,
                 source: it.source.clone(),
             });
         }

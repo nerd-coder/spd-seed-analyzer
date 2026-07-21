@@ -21,6 +21,7 @@ Pinned game: SPD **v3.3.8** @ `7b8b845a7` — local clone often at `/Users/toan/
 bun install
 bun run dev          # wasm-pack + Vite
 bun run build
+bun run deploy       # build + Cloudflare Worker SPA (wrangler)
 bun run test:rust    # cargo test -p spd-core
 bun run build:wasm
 bun run check        # biome check (TS/JS/CSS/JSON)
