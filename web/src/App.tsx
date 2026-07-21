@@ -5,6 +5,7 @@ import { type FormEvent, useEffect, useRef } from 'react'
 import { EmptyAnalysisPlaceholder } from '@/components/seed/EmptyAnalysisPlaceholder'
 import { SessionPane } from '@/components/seed/SessionPane'
 import { SpoilerToggle } from '@/components/seed/SpoilerToggle'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -71,7 +72,7 @@ export default function App() {
         {/* —— Main menu (sticky) —— */}
         <aside className="border-border bg-sidebar text-sidebar-foreground lg:sticky lg:top-0 lg:h-svh lg:w-80 lg:shrink-0 lg:overflow-y-auto lg:border-r">
           <div className="flex flex-col gap-4 p-4">
-            <Card size="sm" className="overflow-hidden py-0">
+            <Card size="sm" className="relative overflow-hidden py-0">
               <div
                 className="relative w-full bg-black"
                 style={{ aspectRatio: '616/200' }}
@@ -88,6 +89,10 @@ export default function App() {
                   className="absolute inset-0 h-full w-full object-contain"
                   style={{ imageRendering: 'pixelated' }}
                 />
+                {/* Mobile: theme control lives in the title panel */}
+                <div className="absolute top-2 right-2 z-10 lg:hidden">
+                  <ThemeToggle className="border-white/20 bg-black/55 text-white hover:bg-black/70 hover:text-white" />
+                </div>
               </div>
               <CardContent className="space-y-1 py-3">
                 <p className="text-muted-foreground text-xs leading-relaxed">
@@ -183,7 +188,13 @@ export default function App() {
         </aside>
 
         {/* —— Content panel —— */}
-        <main className="min-w-0 flex-1">
+        <main className="relative min-w-0 flex-1">
+          {/* Desktop: theme control at top-right of content panel */}
+          {sessions.length === 0 && (
+            <div className="absolute top-3 right-3 z-30 hidden lg:block">
+              <ThemeToggle />
+            </div>
+          )}
           {sessions.length === 0 ? (
             <EmptyAnalysisPlaceholder />
           ) : (
@@ -194,11 +205,11 @@ export default function App() {
             >
               <div
                 ref={seedTabsRef}
-                className="border-border bg-background/95 sticky top-0 z-20 border-b px-3 pt-3 pb-0 backdrop-blur supports-backdrop-filter:bg-background/80"
+                className="border-border bg-background/95 sticky top-0 z-20 flex items-start gap-2 border-b px-3 pt-3 pb-0 backdrop-blur supports-backdrop-filter:bg-background/80"
               >
                 <TabsList
                   variant="line"
-                  className="h-auto w-full flex-wrap justify-start gap-1"
+                  className="h-auto min-w-0 flex-1 flex-wrap justify-start gap-1"
                 >
                   {sessions.map((s) => (
                     // Close control is a sibling of TabsTrigger (not nested —
@@ -229,6 +240,7 @@ export default function App() {
                     </div>
                   ))}
                 </TabsList>
+                <ThemeToggle className="mt-0.5 mb-1.5 hidden shrink-0 lg:inline-flex" />
               </div>
 
               <div className="space-y-4 p-4 md:p-6">

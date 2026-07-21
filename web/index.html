@@ -6,6 +6,22 @@
     <link rel="apple-touch-icon" href="/app_icon.jpg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SPD Seed Analyzer</title>
+    <script>
+      // Apply persisted theme before paint to avoid light/dark flash.
+      ;(() => {
+        try {
+          const t = localStorage.getItem('spd-analyzer-theme') || 'system'
+          const dark =
+            t === 'dark' ||
+            (t === 'system' &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches)
+          if (dark) document.documentElement.classList.add('dark')
+          document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
+        } catch {
+          /* ignore */
+        }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -5,6 +5,7 @@
  * - `sessions` — seed tabs, analyze, rehydrate
  * - `spoilers` — map / identity spoiler flags
  * - `meta` — SPD version/commit from wasm
+ * - `theme` — light / dark / system preference
  *
  * Consumers should keep importing from `@/stores/app`.
  */
@@ -37,3 +38,12 @@ export {
   setIdentitySpoilers,
   setMapSpoilers,
 } from './spoilers'
+export {
+  $theme,
+  applyTheme,
+  cycleTheme,
+  initTheme,
+  resolvedTheme,
+  setTheme,
+  type Theme,
+} from './theme'
