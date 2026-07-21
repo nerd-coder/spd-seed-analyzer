@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Dices, Loader2, Search } from "lucide-react";
 
+import { FloorMapCanvas } from "@/components/FloorMapCanvas";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,12 +14,15 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   analyzeSeed,
   getSpdMeta,
   type IdentityEntry,
   type SeedReport,
 } from "@/lib/spd-wasm";
+
+const ADVANCED_KEY = "spd-analyzer-advanced-mode";
 
 function IdentityTable({
   title,
@@ -67,6 +71,13 @@ export default function App() {
   const [meta, setMeta] = useState<{ version: string; commit: string } | null>(
     null,
   );
+  const [advancedMode, setAdvancedMode] = useState(() => {
+    try {
+      return localStorage.getItem(ADVANCED_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     getSpdMeta()
@@ -75,6 +86,15 @@ export default function App() {
         setError(e instanceof Error ? e.message : String(e));
       });
   }, []);
+
+  function toggleAdvanced(next: boolean) {
+    setAdvancedMode(next);
+    try {
+      localStorage.setItem(ADVANCED_KEY, next ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }
 
   async function onAnalyze(e: FormEvent) {
     e.preventDefault();
@@ -144,6 +164,34 @@ export default function App() {
                 onChange={(e) => setFloors(Number(e.target.value) || 1)}
               />
             </div>
+
+            <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
+              <div className="space-y-1">
+                <Label htmlFor="advanced" className="text-sm font-medium">
+                  Advanced mode
+                </Label>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Shows full floor maps (spoilers). Can heavily affect how you
+                  experience a seeded run — leave off for item lists only.
+                </p>
+              </div>
+              <Switch
+                id="advanced"
+                checked={advancedMode}
+                onCheckedChange={toggleAdvanced}
+              />
+            </div>
+
+            {advancedMode && (
+              <Alert variant="destructive">
+                <AlertTitle>Spoiler warning</AlertTitle>
+                <AlertDescription>
+                  Floor maps reveal layout, entrances, exits, and room shapes
+                  before you play. Use only if you want that information.
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div>
               <Button type="submit" disabled={loading || !seed.trim()}>
                 {loading ? (
@@ -226,12 +274,17 @@ export default function App() {
                 <CardTitle>Floors</CardTitle>
                 <CardDescription>
                   Partial levelgen: layout builder + main floor drops.
-                  Special-room paint loot still incomplete.
+                  {advancedMode
+                    ? " Maps use original region tilesheets when available."
+                    : " Enable Advanced mode to view floor maps."}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-5">
                 {report.floors.map((floor) => (
-                  <div key={floor.depth} className="space-y-2 border-b pb-4 last:border-0 last:pb-0">
+                  <div
+                    key={floor.depth}
+                    className="space-y-2 border-b pb-4 last:border-0 last:pb-0"
+                  >
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-medium">Floor {floor.depth}</h3>
                       {floor.feeling && floor.feeling !== "none" && (
@@ -244,7 +297,20 @@ export default function App() {
                           {floor.builder}
                         </Badge>
                       )}
+                      {floor.map && advancedMode && (
+                        <Badge variant="outline" className="font-mono text-xs">
+                          {floor.map.width}×{floor.map.height} ·{" "}
+                          {floor.map.tileset}
+                        </Badge>
+                      )}
                     </div>
+
+                    {advancedMode && floor.map && (
+                      <div className="overflow-x-auto">
+                        <FloorMapCanvas map={floor.map} scale={2} />
+                      </div>
+                    )}
+
                     {floor.rooms && floor.rooms.length > 0 && (
                       <div className="space-y-1">
                         <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
@@ -259,7 +325,7 @@ export default function App() {
                     )}
                     {floor.items.length === 0 ? (
                       <p className="text-muted-foreground text-sm">
-                        No forced drops listed.
+                        No items listed.
                       </p>
                     ) : (
                       <ul className="list-disc space-y-0.5 pl-5 text-sm">

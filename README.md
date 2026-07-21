@@ -60,7 +60,28 @@ cd web && bunx shadcn@latest add <component>
 - [x] Partial levelgen (forced drops + feelings per floor)
 - [x] Room selection (`initRooms` + builder kind) for regular floors
 - [x] Loop builder placement + minimal paint + main `createItems` drops
+- [x] Floor map export (SPD terrain IDs) + Advanced mode canvas renderer
 - [ ] Figure-eight builder parity, full painters, special-room loot, quests
+
+### Advanced mode (maps)
+
+Floor minimaps are **hidden by default**. Enable **Advanced mode** in the UI
+to show canvas maps (spoilers).
+
+**Game assets** live under `web/public/assets/` (same layout as SPD `core/src/main/assets/`):
+
+```text
+web/public/assets/
+  environment/   # tilesheets, water, terrain features
+  sprites/
+  interfaces/
+  music/
+  sounds/
+  …
+web/public/app_icon.jpg
+```
+
+Map canvas loads `/assets/environment/tiles_{sewers,prison,caves,city,halls}.png`.
 
 ## License
 

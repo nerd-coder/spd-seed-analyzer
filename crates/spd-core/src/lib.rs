@@ -72,3 +72,25 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
         ),
     })
 }
+
+#[cfg(test)]
+mod analyze_smoke {
+    use super::*;
+
+    #[test]
+    fn analyze_seed_smoke() {
+        let r = analyze_seed("GFX-PZH-DCH", 4).expect("analyze");
+        eprintln!("status={} floors={}", r.status, r.floors.len());
+        for f in &r.floors {
+            eprintln!("  floor {} rooms={} items={} map={:?}", f.depth, f.rooms.len(), f.items.len(), f.map.as_ref().map(|m| (m.width, m.height, m.tileset.as_str())));
+        }
+    }
+
+    #[test]
+    fn analyze_several_seeds() {
+        for s in ["AAA-AAA-AAA", "JLY-ZYR-HET", "hello", "42"] {
+            let r = analyze_seed(s, 6);
+            assert!(r.is_ok(), "seed {s}: {:?}", r.err());
+        }
+    }
+}

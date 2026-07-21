@@ -53,6 +53,7 @@ pub struct LevelState {
     pub placed_items: Vec<GeneratedItem>,
     pub quests: Vec<String>,
     pub complete: bool,
+    pub map: Option<crate::report::FloorMap>,
 }
 
 impl LevelState {
@@ -78,6 +79,7 @@ impl LevelState {
             rooms: self.rooms.clone(),
             items,
             quests: self.quests.clone(),
+            map: self.map.clone(),
         }
     }
 }
@@ -189,6 +191,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
     let mut room_names = Vec::new();
     let mut build_ok = false;
     let mut placed_items = Vec::new();
+    let mut floor_map = None;
 
     if !dungeon.boss_level() && dungeon.branch == 0 && dungeon.depth <= 26 {
         let lab_needed = dungeon.lab_room_needed();
@@ -204,7 +207,6 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             &mut dungeon.rooms.pit_needed_depth,
         );
         builder = Some(floor.builder_kind);
-        room_names = floor.rooms.iter().map(|r| r.name.clone()).collect();
 
         // Inner build retry loop (same rooms, clear connections)
         build_ok = builders::build_rooms(
@@ -218,6 +220,12 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
 
         if build_ok {
             if let Some(map) = terrain::paint_minimal(&floor.rooms) {
+                floor_map = Some(crate::report::FloorMap {
+                    width: map.width as u32,
+                    height: map.height as u32,
+                    tileset: terrain::tileset_for_depth(dungeon.depth).to_string(),
+                    tiles: map.map.iter().map(|&t| t as u16).collect(),
+                });
                 let loot = create_items::create_items_main(
                     dungeon,
                     &floor.rooms,
@@ -225,28 +233,29 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                     feeling == Feeling::Large,
                     items_to_spawn,
                 );
-                // forced items already listed; avoid double-counting forced from items_to_spawn
                 for p in loot {
                     if p.item.source.as_deref() == Some("forced") {
-                        // already in forced_items
                         continue;
                     }
                     let mut item = p.item;
                     if item.source.is_none() {
                         item.source = Some(p.heap_type.into());
                     } else if p.heap_type != "heap" {
-                        item.source = Some(format!("{}:{}", p.heap_type, item.source.as_deref().unwrap_or("")));
+                        item.source = Some(format!(
+                            "{}:{}",
+                            p.heap_type,
+                            item.source.as_deref().unwrap_or("")
+                        ));
                     }
                     placed_items.push(item);
                 }
             }
         }
 
-        // refresh room names after connection rooms added
         room_names = floor
             .rooms
             .iter()
-            .filter(|r| !r.is_empty() || r.kind != crate::rooms::types::RoomKind::Connection)
+            .filter(|r| !r.is_empty())
             .map(|r| r.name.clone())
             .collect();
         let _ = clear_all_connections;
@@ -265,6 +274,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         placed_items,
         quests: Vec::new(),
         complete: build_ok,
+        map: floor_map,
     }
 }
 

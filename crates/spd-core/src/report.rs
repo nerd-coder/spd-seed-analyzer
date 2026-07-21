@@ -14,6 +14,17 @@ pub struct SeedInfo {
     pub formatted: String,
 }
 
+/// Floor map for canvas rendering (SPD terrain IDs + tileset key).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FloorMap {
+    pub width: u32,
+    pub height: u32,
+    /// Tileset key: `sewers` | `prison` | `caves` | `city` | `halls`
+    pub tileset: String,
+    /// Row-major SPD `Terrain` values
+    pub tiles: Vec<u16>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FloorReport {
     pub depth: u32,
@@ -26,6 +37,9 @@ pub struct FloorReport {
     pub rooms: Vec<String>,
     pub items: Vec<ItemEntry>,
     pub quests: Vec<String>,
+    /// Present when geometry build succeeded.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub map: Option<FloorMap>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

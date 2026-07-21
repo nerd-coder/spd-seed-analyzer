@@ -30,6 +30,13 @@ export type ItemEntry = {
   source?: string | null;
 };
 
+export type FloorMap = {
+  width: number;
+  height: number;
+  tileset: string;
+  tiles: number[];
+};
+
 export type FloorReport = {
   depth: number;
   feeling?: string | null;
@@ -37,6 +44,7 @@ export type FloorReport = {
   rooms?: string[];
   items: ItemEntry[];
   quests: string[];
+  map?: FloorMap | null;
 };
 
 export type SeedReport = {
