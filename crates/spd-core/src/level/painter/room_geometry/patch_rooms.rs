@@ -83,7 +83,7 @@ fn patch_params(style: PatchStyle, room: &Room) -> (f32, i32, bool, bool) {
     }
 }
 
-fn setup_patch(
+pub(super) fn setup_patch(
     room: &Room,
     room_index: usize,
     doors: &DoorMap,
@@ -93,14 +93,17 @@ fn setup_patch(
 ) -> Vec<bool> {
     let width = room.width() - 2;
     let height = room.height() - 2;
-    if !ensure_path || room.connected.is_empty() {
+    if !ensure_path {
         return patch::generate(width, height, fill, clustering, true);
     }
 
     let mut attempts = 0;
     loop {
         let mut mask = patch::generate(width, height, fill, clustering, true);
-        let mut start = None;
+        // PatchRoom initializes its pathfinder start from center() on every
+        // attempt, even though any connected door later overwrites it.
+        let center = room.as_rect().center_room();
+        let mut start = patch_index(room, center.x, center.y);
         for &other in &room.connected {
             let Some(door) = doors.get(room_index, other) else {
                 continue;
@@ -170,7 +173,7 @@ fn all_open_cells_reachable(mask: &[bool], width: i32, start: usize) -> bool {
         .all(|(&filled, seen)| filled || seen)
 }
 
-fn clean_diagonal_edges(mask: &mut [bool], width: i32) {
+pub(super) fn clean_diagonal_edges(mask: &mut [bool], width: i32) {
     let width = width as usize;
     for i in 0..mask.len().saturating_sub(width) {
         if !mask[i] {
@@ -344,7 +347,7 @@ fn fill_interior(map: &mut TerrainMap, room: &Room, terrain: i32) {
     }
 }
 
-fn fill_patch(map: &mut TerrainMap, room: &Room, mask: &[bool], terrain: i32) {
+pub(super) fn fill_patch(map: &mut TerrainMap, room: &Room, mask: &[bool], terrain: i32) {
     let patch_width = room.width() - 2;
     for y in (room.top + 1)..room.bottom {
         for x in (room.left + 1)..room.right {

@@ -6,6 +6,7 @@ mod caves_fissure;
 mod cell_block;
 mod chasm_bridge;
 mod circles;
+mod halls;
 mod hallway;
 mod library_hall;
 mod library_ring;
@@ -22,6 +23,8 @@ mod water_bridge;
 
 #[cfg(test)]
 mod city_tests;
+#[cfg(test)]
+mod halls_tests;
 #[cfg(test)]
 mod tests;
 
@@ -85,6 +88,11 @@ pub(super) fn paint(
         }
         "StatuesRoom" | "StatuesEntranceRoom" | "StatuesExitRoom" => statues::paint(map, room),
         "SegmentedLibraryRoom" => segmented_library::paint(map, room, room_index, doors),
+        "SkullsRoom" | "RitualRoom" | "RitualEntranceRoom" | "RitualExitRoom" => {
+            return Some(StandardPaintResult {
+                center_loot: halls::paint(map, room, room_index, doors),
+            });
+        }
         _ => return None,
     }
     Some(StandardPaintResult::default())

@@ -77,3 +77,26 @@ fn connected_patch_keeps_all_open_cells_reachable() {
     let start = patch_index(&rooms[0], door.x - 1, door.y).expect("inside door");
     assert!(all_open_cells_reachable(&mask, rooms[0].width() - 2, start));
 }
+
+#[test]
+fn connected_patch_consumes_center_jitter_before_door_start_on_retries() {
+    Random::push_generator_seeded(0xCE47);
+    let mut left = room("ChasmRoom", RoomKind::Standard);
+    left.right += 1;
+    left.bottom += 1;
+    let mut right = room("CaveRoom", RoomKind::Standard);
+    right.id = 1;
+    right.left = left.right;
+    right.right = right.left + 8;
+    right.bottom += 1;
+    left.connected.push(1);
+    right.connected.push(0);
+    let rooms = vec![left, right];
+    let mut doors = DoorMap::new();
+    place_doors_for_room(&rooms, 0, &mut doors);
+    let _ = setup_patch(&rooms[0], 0, &doors, 0.72, 3, true);
+    let next = Random::long();
+    Random::pop_generator();
+
+    assert_eq!(next, 5_706_832_454_276_186_911);
+}

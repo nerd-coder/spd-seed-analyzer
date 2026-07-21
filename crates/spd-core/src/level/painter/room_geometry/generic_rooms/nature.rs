@@ -105,6 +105,11 @@ pub(super) fn paint_aquarium(map: &mut TerrainMap, room: &Room) {
     }
 }
 
+pub(super) fn paint_grassy_grave(map: &mut TerrainMap, room: &Room) {
+    fill_room(map, room, WALL);
+    fill_margin(map, room, 1, GRASS);
+}
+
 fn draw_horizontal(map: &mut TerrainMap, left: i32, right: i32, y: i32, terrain: i32) {
     for x in left..=right {
         set(map, x, y, terrain);

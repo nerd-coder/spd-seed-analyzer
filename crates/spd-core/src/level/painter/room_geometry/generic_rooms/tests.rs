@@ -1,7 +1,7 @@
 use super::*;
 use crate::level::painter::DoorMap;
 use crate::level::terrain::{
-    self, BOOKSHELF, CHASM, EMPTY_SP, HIGH_GRASS, PEDESTAL, SECRET_TRAP, WATER,
+    self, BOOKSHELF, CHASM, EMPTY_SP, GRASS, HIGH_GRASS, PEDESTAL, SECRET_TRAP, WALL, WATER,
 };
 use crate::random::Random;
 use crate::rooms::types::RoomKind;
@@ -74,6 +74,14 @@ fn aquarium_paints_water_and_blocks_it_from_item_drops() {
         .count();
     assert_eq!(water, 16);
     assert_eq!(blocked_water, water);
+}
+
+#[test]
+fn grassy_grave_paints_a_grass_interior() {
+    let (map, _) = paint_room("GrassyGraveRoom", 8, 10, 1);
+    let room_floor = map.map.iter().filter(|&&terrain| terrain == GRASS).count();
+    assert_eq!(room_floor, 48);
+    assert!(map.map.iter().filter(|&&terrain| terrain == WALL).count() > 32);
 }
 
 #[test]

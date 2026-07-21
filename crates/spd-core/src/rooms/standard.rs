@@ -111,6 +111,7 @@ pub fn size_cat_probs(room_name: &str) -> [f32; 3] {
         "CavesFissureExitRoom" => [3., 1., 0.],
         "CircleWallEntranceRoom" | "CircleWallExitRoom" => [0., 1., 0.],
         "CellBlockEntranceRoom" | "CellBlockExitRoom" => [0., 1., 0.],
+        "RitualEntranceRoom" | "RitualExitRoom" => [0., 1., 0.],
         "CaveEntranceRoom" | "RuinsEntranceRoom" | "ChasmEntranceRoom" => [2., 1., 0.],
         _ => [1., 0., 0.],
     }
@@ -299,5 +300,13 @@ mod tests {
         assert_eq!(size_cat_probs("StatuesRoom"), [9., 3., 1.]);
         assert_eq!(size_cat_probs("StatuesExitRoom"), [3., 1., 0.]);
         assert_eq!(size_cat_probs("SegmentedLibraryRoom"), [0., 3., 1.]);
+    }
+
+    #[test]
+    fn halls_rooms_keep_pinned_size_weights() {
+        assert_eq!(size_cat_probs("SkullsRoom"), [0., 3., 1.]);
+        assert_eq!(size_cat_probs("RitualRoom"), [6., 3., 1.]);
+        assert_eq!(size_cat_probs("RitualEntranceRoom"), [0., 1., 0.]);
+        assert_eq!(size_cat_probs("RitualExitRoom"), [0., 1., 0.]);
     }
 }

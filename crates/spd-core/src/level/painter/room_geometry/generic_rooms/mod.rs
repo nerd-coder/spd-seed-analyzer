@@ -32,6 +32,10 @@ pub(super) fn paint(
             nature::paint_aquarium(map, room);
             Some(StandardPaintResult::default())
         }
+        "GrassyGraveRoom" => {
+            nature::paint_grassy_grave(map, room);
+            Some(StandardPaintResult::default())
+        }
         "PlatformRoom" => {
             structures::paint_platform(map, room, room_index, doors);
             Some(StandardPaintResult::default())

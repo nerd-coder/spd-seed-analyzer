@@ -386,6 +386,43 @@ mod tests {
     }
 
     #[test]
+    fn plants_and_grassy_graves_merge_with_grass_only_for_empty_requests() {
+        let grave = named_room(0, "GrassyGraveRoom", 1, 1, 9, 9);
+        let plants = named_room(1, "PlantsRoom", 9, 1, 17, 9);
+        let rooms = vec![grave, plants];
+        let start = Some(Point::new(9, 5));
+
+        let mut empty_merge = terrain::paint_minimal(&rooms).expect("empty merge map");
+        assert!(merge_rooms(
+            &mut empty_merge,
+            &rooms[0],
+            &rooms[1],
+            start,
+            22
+        ));
+        for y in 3..=7 {
+            assert_eq!(
+                empty_merge.map[empty_merge.point_to_cell(9, y).expect("merge strip")],
+                terrain::GRASS
+            );
+        }
+
+        let mut water_merge = terrain::paint_minimal(&rooms).expect("water merge map");
+        assert!(merge_rooms_with_terrain(
+            &mut water_merge,
+            &rooms[0],
+            &rooms[1],
+            start,
+            WATER,
+            22,
+        ));
+        assert_eq!(
+            water_merge.map[water_merge.point_to_cell(9, 5).expect("merge center")],
+            WATER
+        );
+    }
+
+    #[test]
     fn hallways_only_merge_together_and_keep_special_connector() {
         let mut hallway = named_room(0, "HallwayRoom", 1, 1, 8, 8);
         let mut entrance = named_room(1, "HallwayEntranceRoom", 8, 1, 15, 8);

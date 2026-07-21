@@ -1,5 +1,7 @@
 //! RNG-visible center loot for generic standard rooms.
 
+mod halls_graves;
+
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::geom::Point;
@@ -21,7 +23,11 @@ pub(super) fn paint_center_loot(
 ) -> Vec<PlacedLoot> {
     match (room.name.as_str(), center) {
         ("StudyRoom", Some(_)) => vec![study_prize(dungeon, items_to_spawn)],
+        ("RitualRoom", Some(center)) => {
+            halls_graves::ritual_prize(dungeon, map, center, items_to_spawn)
+        }
         ("RingRoom", Some(center)) => ring_prize(map, center, items_to_spawn),
+        ("GrassyGraveRoom", _) => halls_graves::grassy_graves(dungeon, room, map),
         ("SuspiciousChestRoom", _) => suspicious_chest(dungeon, room, map, items_to_spawn),
         _ => Vec::new(),
     }

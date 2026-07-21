@@ -98,6 +98,10 @@ pub fn dims_for_kind(kind: RoomKind, size_factor: i32, name: &str) -> (i32, i32,
         "LibraryRingEntranceRoom" | "LibraryRingExitRoom" => {
             return (min_w.max(13), max_w, min_h.max(13), max_h);
         }
+        "SkullsRoom" => return (min_w.max(7), max_w, min_h.max(7), max_h),
+        "RitualRoom" | "RitualEntranceRoom" | "RitualExitRoom" => {
+            return (min_w.max(9), max_w, min_h.max(9), max_h);
+        }
         _ => {}
     }
 
@@ -165,6 +169,14 @@ mod tests {
             (RoomKind::Standard, 1, "LibraryRingRoom", (9, 10, 9, 10)),
             (RoomKind::Exit, 2, "LibraryRingExitRoom", (13, 14, 13, 14)),
             (RoomKind::Entrance, 1, "StatuesEntranceRoom", (7, 10, 7, 10)),
+            (RoomKind::Standard, 1, "SkullsRoom", (7, 10, 7, 10)),
+            (RoomKind::Standard, 1, "RitualRoom", (9, 10, 9, 10)),
+            (
+                RoomKind::Entrance,
+                2,
+                "RitualEntranceRoom",
+                (10, 14, 10, 14),
+            ),
         ];
         for (kind, size, name, expected) in cases {
             assert_eq!(dims_for_kind(kind, size, name), expected, "{name}");
