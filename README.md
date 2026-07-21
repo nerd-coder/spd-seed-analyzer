@@ -4,9 +4,7 @@
 
 # SPD Seed Analyzer
 
-Browser-based **Shattered Pixel Dungeon** seed analyzer.
-
-Generation logic is ported from the official game so results match the same RNG. Target version is pinned below.
+Browser-based **Shattered Pixel Dungeon** seed analyzer. Generation logic is ported from the official game so results match the same RNG. Target version is pinned below.
 
 | Field | Value |
 |-------|--------|
@@ -17,7 +15,7 @@ Generation logic is ported from the official game so results match the same RNG.
 
 By default the UI aims to avoid ruining exploration:
 
-- **Show identities (spoilers)** — potion/scroll/ring color→type maps (off by default)
+- **Show identities** — potion/scroll/ring color→type maps (off by default)
 - **Map spoilers** — full floor minimaps with region tilesheets (off by default)
 
 ## Support
@@ -28,4 +26,4 @@ If this tool saves you a run (or a few dozen), consider sponsoring. It keeps the
 
 ## License
 
-GPL-3.0-or-later (derivative of Shattered Pixel Dungeon generation logic).
+GPL-3.0
