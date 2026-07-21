@@ -68,7 +68,7 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
         floors: floor_reports,
         status: "partial".to_string(),
         message: Some(
-            "Partial analysis: layout builder + special-room/shop loot (approx.) + Ghost/Wandmaker quest rewards + main createItems drops. Full createMobs, water/grass/trap painter, and figure-eight builder still incomplete — results may not match the game yet."
+            "Partial analysis: layout builder + special-room/shop loot (approx.) + Ghost/Wandmaker/Imp quest rewards + main createItems drops. Full createMobs, water/grass/trap painter, and figure-eight builder still incomplete — results may not match the game yet."
                 .to_string(),
         ),
     })
@@ -171,6 +171,48 @@ mod analyze_smoke {
             }
         }
         assert!(saw, "expected Wandmaker.Quest on at least one prison run");
+    }
+
+    #[test]
+    fn imp_quest_spawns_within_city() {
+        // Depth 19 always spawns if not yet placed on 17–18.
+        let mut saw = false;
+        for s in [
+            "GFX-PZH-DCH",
+            "AAA-AAA-AAA",
+            "hello",
+            "42",
+            "shattered",
+            "JLY-ZYR-HET",
+        ] {
+            let r = analyze_seed(s, 19).expect("analyze");
+            for f in &r.floors {
+                if f.quests.iter().any(|q| q.contains("Ambitious Imp"))
+                    || f.items
+                        .iter()
+                        .any(|i| i.source.as_deref() == Some("Imp.Quest"))
+                {
+                    saw = true;
+                    // Reward is always a cursed +2 (or more) ring
+                    let ring = f
+                        .items
+                        .iter()
+                        .find(|i| i.source.as_deref() == Some("Imp.Quest"));
+                    if let Some(ring) = ring {
+                        assert!(
+                            ring.name.contains("cursed") || ring.name.contains("Ring"),
+                            "imp reward: {}",
+                            ring.name
+                        );
+                    }
+                    break;
+                }
+            }
+            if saw {
+                break;
+            }
+        }
+        assert!(saw, "expected Imp.Quest on at least one city run");
     }
 
     #[test]

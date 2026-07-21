@@ -137,6 +137,11 @@ fn paint_special(
         "MassGraveRoom" => mass_grave_prizes(dungeon, room, items_to_spawn),
         "RitualSiteRoom" => ritual_site_setup(items_to_spawn),
         "RotGardenRoom" => rot_garden_setup(room, items_to_spawn),
+        // Imp quest room — NPC offset burns IntRange(-1,1); no prize items
+        "AmbitiousImpRoom" => {
+            let _ = Random::int_range_inclusive(-1, 1);
+            Vec::new()
+        }
         _ => Vec::new(),
     }
 }

@@ -1,7 +1,8 @@
 //! `RegularLevel.initRooms` + builder selection.
 
+use crate::generator::GeneratorState;
 use crate::level::Feeling;
-use crate::quests::{self, WandmakerQuestState};
+use crate::quests::{self, ImpQuestState, WandmakerQuestState};
 use crate::random::Random;
 use crate::rooms::room::{dims_for_kind, Room};
 use crate::rooms::secret;
@@ -66,8 +67,9 @@ fn room_from_spec(id: usize, spec: RoomSpec) -> Room {
 
 /// Full initRooms sequence for a regular (non-boss) floor.
 ///
-/// Prison floors also run `Wandmaker.Quest.spawnRoom` after base rooms and
-/// **before** shuffle (matches `PrisonLevel.initRooms`).
+/// Region quest rooms are added after base rooms and **before** shuffle:
+/// - Prison: `Wandmaker.Quest.spawnRoom`
+/// - City: `Imp.Quest.spawn` (also generates the ring reward immediately)
 #[allow(clippy::too_many_arguments)] // mirrors SPD RegularLevel.initRooms parameter surface
 pub fn init_rooms_regular(
     depth: i32,
@@ -80,6 +82,8 @@ pub fn init_rooms_regular(
     region_secrets: &mut [i32; 5],
     pit_needed_depth: &mut i32,
     wandmaker: &mut WandmakerQuestState,
+    imp: &mut ImpQuestState,
+    generator: &mut GeneratorState,
 ) -> FloorRooms {
     let (builder_kind, curve_intensity, curve_offset) = select_builder();
 
@@ -140,6 +144,8 @@ pub fn init_rooms_regular(
 
     // PrisonLevel.initRooms: Wandmaker.Quest.spawnRoom(super.initRooms())
     let _ = quests::try_spawn_wandmaker_room(wandmaker, depth, &mut specs);
+    // CityLevel.initRooms: Imp.Quest.spawn(super.initRooms()) — generates ring now
+    let _ = quests::try_spawn_imp(imp, generator, depth, &mut specs);
 
     Random::shuffle_vec(&mut specs);
 
@@ -171,6 +177,8 @@ mod tests {
         let mut lab = 0;
         let mut pit = -1;
         let mut wm = WandmakerQuestState::default();
+        let mut imp = ImpQuestState::default();
+        let mut gen = crate::generator::full_reset();
         let a = init_rooms_regular(
             2,
             Feeling::None,
@@ -182,6 +190,8 @@ mod tests {
             &mut reg,
             &mut pit,
             &mut wm,
+            &mut imp,
+            &mut gen,
         );
         Random::pop_generator();
 
@@ -192,6 +202,8 @@ mod tests {
         let mut lab = 0;
         let mut pit = -1;
         let mut wm = WandmakerQuestState::default();
+        let mut imp = ImpQuestState::default();
+        let mut gen = crate::generator::full_reset();
         let b = init_rooms_regular(
             2,
             Feeling::None,
@@ -203,6 +215,8 @@ mod tests {
             &mut reg,
             &mut pit,
             &mut wm,
+            &mut imp,
+            &mut gen,
         );
         Random::pop_generator();
 

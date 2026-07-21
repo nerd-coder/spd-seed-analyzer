@@ -216,8 +216,16 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             &mut dungeon.rooms.region_secrets,
             &mut dungeon.rooms.pit_needed_depth,
             &mut dungeon.wandmaker,
+            &mut dungeon.imp,
+            &mut dungeon.generator,
         );
         builder = Some(floor.builder_kind);
+
+        // Imp.Quest generates its ring during initRooms (before shuffle/build).
+        if let Some(imp) = quests::take_imp_pending(&mut dungeon.imp) {
+            quests.push(imp.summary.clone());
+            placed_items.push(imp.reward);
+        }
 
         // Inner build retry loop (same rooms, clear connections)
         build_ok = builders::build_rooms(

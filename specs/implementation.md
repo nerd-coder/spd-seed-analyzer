@@ -83,6 +83,7 @@ bun run check:all    # biome + rust fmt/clippy
 | Shop stock | `level/shop.rs` | `ShopRoom.generateItems` (FOR_SALE); bag pick hero-less (scroll holder first); generated post-build (not mid-setSize) |
 | Ghost quest | `quests/ghost.rs` | `Ghost.Quest.spawn` on sewers: chance, placement (approx openSpace), weapon/armor rewards |
 | Wandmaker quest | `quests/wandmaker.rs` | `spawnRoom` on prison 7–9 (before shuffle); two +1 wands; MassGrave/Ritual/RotGarden side-effects (approx) |
+| Imp quest | `quests/imp.rs` | `Imp.Quest.spawn` on city 17–19 (before shuffle); cursed +2 ring reward generated at initRooms |
 | Main createItems | `level/create_items.rs` | nItems loop, heap types; drop cells use map origin |
 | Floor map export | `report.rs` `FloorMap` | width/height/tileset/tiles; items include `class_name` |
 
@@ -111,7 +112,7 @@ Results are **partial**. Not game-parity yet because:
 2. Some special/secret rooms still stubbed (crystal rooms, sentry/traps/fire, …)  
 3. Shop stock timing is post-build (SPD generates during room `setSize`); bag choice is hero-less  
 4. Ghost quest rewards ported; placement uses minimal openSpace; full `createMobs` not ported  
-5. Wandmaker quest ported (room + wands); RotGarden full paint/mobs incomplete; Imp / Blacksmith not ported  
+5. Wandmaker + Imp quests ported; RotGarden full paint/mobs incomplete; Blacksmith not ported  
 6. Figure-eight builder incomplete  
 7. `randomDropCell` simplified vs full map flags  
 8. Sewer room-count tables used for all regions  
@@ -127,8 +128,9 @@ Status string: `"partial"`.
 - ~~Shop (FOR_SALE) stock~~ (approx; see `level/shop.rs`)  
 - ~~Ghost.Quest rewards~~ (see `quests/ghost.rs`)  
 - ~~Wandmaker.Quest~~ (see `quests/wandmaker.rs`; MassGrave loot + ritual candles + rot-garden RNG approx; RotGarden heart/lasher not ported)  
+- ~~Imp.Quest~~ (see `quests/imp.rs`; cursed +2 ring at initRooms; AmbitiousImpRoom paint is placement RNG only)  
 - Remaining: crystal rooms, sentry/traps/fire/sacrifice, honeypot secret fidelity  
-- Imp.Quest / Blacksmith.Quest reward generation at correct RNG points (`createMobs` order)  
+- Blacksmith.Quest reward generation at correct RNG points  
 - Golden tests vs Java oracle for a handful of seeds  
 
 ### P2 — Painter parity
@@ -230,8 +232,8 @@ SPD is GPL-3.0. This project ports generation logic → treat as **GPL-3.0-or-la
 ## How to resume (clean context)
 
 1. Read this file + `README.md`  
-2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs` / `level/special_loot.rs` / `quests/{ghost,wandmaker}.rs` / `level/shop.rs`  
-3. Next recommended work: **Imp.Quest** (city) or **crystal rooms** loot; then Blacksmith; **Java golden checks** when ready  
+2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs` / `level/special_loot.rs` / `quests/{ghost,wandmaker,imp}.rs` / `level/shop.rs`  
+3. Next recommended work: **crystal rooms** loot or **Blacksmith.Quest**; then **Java golden checks** when ready  
 4. Icons: `web/src/lib/item-icons.ts` + `components/ItemIcon.tsx` (items.png sheet)  
 5. Do not re-copy full asset tree; use `web/public/assets/` as flattened SPD assets  
 6. After Rust changes: `bun run build:wasm` (or `bun run dev`)  

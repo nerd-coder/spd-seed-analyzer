@@ -55,6 +55,7 @@ pub fn dungeon_from_run(run: RunState) -> DungeonState {
         items_to_spawn: Vec::new(),
         ghost: crate::quests::GhostQuestState::default(),
         wandmaker: crate::quests::WandmakerQuestState::default(),
+        imp: crate::quests::ImpQuestState::default(),
     }
 }
 
