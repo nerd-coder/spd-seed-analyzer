@@ -6,11 +6,13 @@
 //! results remain approximate vs full game parity.
 
 mod crystal;
-mod hazards;
+mod gardens;
+mod pit_secrets;
 mod placement;
 mod quest_rooms;
 mod secret_rooms;
 mod special_rooms;
+mod trap_rooms;
 
 #[cfg(test)]
 mod tests;
@@ -134,22 +136,22 @@ fn paint_special(
         "SecretLarderRoom" => secret_rooms::secret_larder(dungeon, room),
         "SecretHoardRoom" => secret_rooms::secret_hoard(dungeon, room),
         // Garden / well / pit / remaining secrets with portable prizes
-        "GardenRoom" => hazards::garden_prizes(room, items_to_spawn),
-        "SecretGardenRoom" => hazards::secret_garden_prizes(room),
-        "MagicWellRoom" => hazards::magic_well(items_to_spawn),
-        "SecretWellRoom" => hazards::secret_well(),
-        "PitRoom" => hazards::pit_prizes(dungeon, items_to_spawn),
-        "SecretMazeRoom" => vec![hazards::secret_maze_prize(dungeon)],
-        "SecretSummoningRoom" => vec![hazards::secret_summoning_prize(dungeon)],
-        "SecretChestChasmRoom" => hazards::secret_chest_chasm(dungeon, items_to_spawn),
+        "GardenRoom" => gardens::garden_prizes(room, items_to_spawn),
+        "SecretGardenRoom" => gardens::secret_garden_prizes(room),
+        "MagicWellRoom" => gardens::magic_well(items_to_spawn),
+        "SecretWellRoom" => gardens::secret_well(),
+        "PitRoom" => pit_secrets::pit_prizes(dungeon, items_to_spawn),
+        "SecretMazeRoom" => vec![pit_secrets::secret_maze_prize(dungeon)],
+        "SecretSummoningRoom" => vec![pit_secrets::secret_summoning_prize(dungeon)],
+        "SecretChestChasmRoom" => pit_secrets::secret_chest_chasm(dungeon, items_to_spawn),
         // Layout-only (no portable prize items)
         "WeakFloorRoom" | "DemonSpawnerRoom" => Vec::new(),
-        "SentryRoom" => vec![hazards::sentry_prize(dungeon, items_to_spawn)],
-        "TrapsRoom" => vec![hazards::traps_prize(dungeon, items_to_spawn)],
-        "MagicalFireRoom" => hazards::magical_fire_prizes(dungeon, room, items_to_spawn),
-        "SacrificeRoom" => vec![hazards::sacrifice_prize(dungeon, rooms, ri)],
-        "ToxicGasRoom" => hazards::toxic_gas_prizes(dungeon, room, items_to_spawn),
-        "SecretHoneypotRoom" => hazards::secret_honeypot(room),
+        "SentryRoom" => vec![trap_rooms::sentry_prize(dungeon, items_to_spawn)],
+        "TrapsRoom" => vec![trap_rooms::traps_prize(dungeon, items_to_spawn)],
+        "MagicalFireRoom" => trap_rooms::magical_fire_prizes(dungeon, room, items_to_spawn),
+        "SacrificeRoom" => vec![trap_rooms::sacrifice_prize(dungeon, rooms, ri)],
+        "ToxicGasRoom" => trap_rooms::toxic_gas_prizes(dungeon, room, items_to_spawn),
+        "SecretHoneypotRoom" => trap_rooms::secret_honeypot(room),
         "CrystalVaultRoom" => crystal::crystal_vault(dungeon, rooms, ri, items_to_spawn),
         "CrystalChoiceRoom" => crystal::crystal_choice(dungeon, room, items_to_spawn),
         "CrystalPathRoom" => crystal::crystal_path(dungeon, items_to_spawn),

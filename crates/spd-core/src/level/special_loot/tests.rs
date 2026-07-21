@@ -1,7 +1,10 @@
-use super::hazards::{
-    garden_prizes, magical_fire_prizes, magic_well, pit_prizes, sacrifice_prize,
-    secret_chest_chasm, secret_garden_prizes, secret_honeypot, secret_maze_prize,
-    secret_summoning_prize, sentry_prize, toxic_gas_prizes, traps_prize,
+use super::gardens::{garden_prizes, magic_well, secret_garden_prizes};
+use super::pit_secrets::{
+    pit_prizes, secret_chest_chasm, secret_maze_prize, secret_summoning_prize,
+};
+use super::trap_rooms::{
+    magical_fire_prizes, sacrifice_prize, secret_honeypot, sentry_prize, toxic_gas_prizes,
+    traps_prize,
 };
 use crate::items::model::ItemCategory;
 use crate::random::Random;
