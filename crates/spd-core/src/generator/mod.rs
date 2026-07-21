@@ -404,6 +404,21 @@ impl GeneratorState {
             }
         }
     }
+
+    /// `Category.defaultProbsTotal[i]` for a class (used by CrystalPath rarity sort).
+    pub fn default_prob_total(&self, cat: Category, class_name: &str) -> f32 {
+        let rt = &self.cats[cat.index()];
+        let Some(i) = rt.def.classes.iter().position(|&c| c == class_name) else {
+            return 0.0;
+        };
+        if let Some(ref total) = rt.default_probs_total {
+            return total.get(i).copied().unwrap_or(0.0);
+        }
+        if let Some(p) = rt.def.default_probs {
+            return p.get(i).copied().unwrap_or(0.0);
+        }
+        0.0
+    }
 }
 
 /// `Generator.fullReset()` entry used by run init.

@@ -27,7 +27,28 @@ import {
   type SeedReport,
 } from '@/lib/spd-wasm'
 
-const ADVANCED_KEY = 'spd-analyzer-advanced-mode'
+const MAP_SPOILERS_KEY = 'spd-analyzer-map-spoilers'
+const IDENTITY_SPOILERS_KEY = 'spd-analyzer-identity-spoilers'
+/** Migrated from pre-rename “Advanced mode”. */
+const LEGACY_ADVANCED_KEY = 'spd-analyzer-advanced-mode'
+
+function readLocalFlag(key: string, fallback = false): boolean {
+  try {
+    const v = localStorage.getItem(key)
+    if (v === null) return fallback
+    return v === '1'
+  } catch {
+    return fallback
+  }
+}
+
+function writeLocalFlag(key: string, value: boolean) {
+  try {
+    localStorage.setItem(key, value ? '1' : '0')
+  } catch {
+    /* ignore */
+  }
+}
 
 /** SPD region bands (same as tileset_for_depth). */
 const REGIONS = [
@@ -122,11 +143,11 @@ function IdentityGrid({
 function FloorDetail({
   floor,
   identities,
-  advancedMode,
+  mapSpoilers,
 }: {
   floor: FloorReport
   identities: IdentityMaps
-  advancedMode: boolean
+  mapSpoilers: boolean
 }) {
   return (
     <div className="space-y-3">
@@ -141,19 +162,19 @@ function FloorDetail({
             {floor.builder}
           </Badge>
         )}
-        {floor.map && advancedMode && (
+        {floor.map && mapSpoilers && (
           <Badge variant="outline" className="font-mono text-xs">
             {floor.map.width}×{floor.map.height} · {floor.map.tileset}
           </Badge>
         )}
-        {!floor.feeling && !floor.builder && !(floor.map && advancedMode) && (
+        {!floor.feeling && !floor.builder && !(floor.map && mapSpoilers) && (
           <span className="text-muted-foreground text-xs">
             Floor {floor.depth}
           </span>
         )}
       </div>
 
-      {advancedMode && floor.map && (
+      {mapSpoilers && floor.map && (
         <div className="overflow-x-auto">
           <FloorMapCanvas map={floor.map} scale={2} />
         </div>
@@ -221,11 +242,11 @@ function FloorDetail({
 function FloorsByRegion({
   floors,
   identities,
-  advancedMode,
+  mapSpoilers,
 }: {
   floors: FloorReport[]
   identities: IdentityMaps
-  advancedMode: boolean
+  mapSpoilers: boolean
 }) {
   const groups = groupFloorsByRegion(floors)
   if (groups.length === 0) return null
@@ -282,7 +303,7 @@ function FloorsByRegion({
                   <FloorDetail
                     floor={floor}
                     identities={identities}
-                    advancedMode={advancedMode}
+                    mapSpoilers={mapSpoilers}
                   />
                 </TabsContent>
               ))}
@@ -305,13 +326,13 @@ export default function App() {
   const [meta, setMeta] = useState<{ version: string; commit: string } | null>(
     null
   )
-  const [advancedMode, setAdvancedMode] = useState(() => {
-    try {
-      return localStorage.getItem(ADVANCED_KEY) === '1'
-    } catch {
-      return false
-    }
+  const [mapSpoilers, setMapSpoilers] = useState(() => {
+    const legacy = readLocalFlag(LEGACY_ADVANCED_KEY)
+    return readLocalFlag(MAP_SPOILERS_KEY, legacy)
   })
+  const [identitySpoilers, setIdentitySpoilers] = useState(() =>
+    readLocalFlag(IDENTITY_SPOILERS_KEY)
+  )
 
   useEffect(() => {
     getSpdMeta()
@@ -321,13 +342,14 @@ export default function App() {
       })
   }, [])
 
-  function toggleAdvanced(next: boolean) {
-    setAdvancedMode(next)
-    try {
-      localStorage.setItem(ADVANCED_KEY, next ? '1' : '0')
-    } catch {
-      /* ignore */
-    }
+  function toggleMapSpoilers(next: boolean) {
+    setMapSpoilers(next)
+    writeLocalFlag(MAP_SPOILERS_KEY, next)
+  }
+
+  function toggleIdentitySpoilers(next: boolean) {
+    setIdentitySpoilers(next)
+    writeLocalFlag(IDENTITY_SPOILERS_KEY, next)
   }
 
   async function onAnalyze(e: FormEvent) {
@@ -406,24 +428,46 @@ export default function App() {
               />
             </div>
 
-            <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
-              <div className="space-y-1">
-                <Label htmlFor="advanced" className="text-sm font-medium">
-                  Advanced mode
-                </Label>
-                <p className="text-muted-foreground text-xs leading-relaxed">
-                  Shows full floor maps (spoilers). Can heavily affect how you
-                  experience a seeded run — leave off for item lists only.
-                </p>
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
+                <div className="space-y-1">
+                  <Label
+                    htmlFor="identity-spoilers"
+                    className="text-sm font-medium"
+                  >
+                    Show identities (spoilers)
+                  </Label>
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    Reveals potion, scroll, and ring color/rune/gem → type
+                    mappings for this seed.
+                  </p>
+                </div>
+                <Switch
+                  id="identity-spoilers"
+                  checked={identitySpoilers}
+                  onCheckedChange={toggleIdentitySpoilers}
+                />
               </div>
-              <Switch
-                id="advanced"
-                checked={advancedMode}
-                onCheckedChange={toggleAdvanced}
-              />
+
+              <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
+                <div className="space-y-1">
+                  <Label htmlFor="map-spoilers" className="text-sm font-medium">
+                    Map spoilers
+                  </Label>
+                  <p className="text-muted-foreground text-xs leading-relaxed">
+                    Shows full floor maps. Can heavily affect how you experience
+                    a seeded run — leave off for item lists only.
+                  </p>
+                </div>
+                <Switch
+                  id="map-spoilers"
+                  checked={mapSpoilers}
+                  onCheckedChange={toggleMapSpoilers}
+                />
+              </div>
             </div>
 
-            {advancedMode && (
+            {mapSpoilers && (
               <Alert variant="destructive">
                 <AlertTitle>Spoiler warning</AlertTitle>
                 <AlertDescription>
@@ -479,41 +523,43 @@ export default function App() {
             )}
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Identities</CardTitle>
-              <CardDescription>
-                Unidentified appearances for this seed (from run init RNG).
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="potions">
-                <TabsList className="w-full sm:w-auto">
-                  <TabsTrigger value="potions">Potions</TabsTrigger>
-                  <TabsTrigger value="scrolls">Scrolls</TabsTrigger>
-                  <TabsTrigger value="rings">Rings</TabsTrigger>
-                </TabsList>
-                <TabsContent value="potions" className="mt-4">
-                  <IdentityGrid
-                    entries={report.identities.potions}
-                    category="potion"
-                  />
-                </TabsContent>
-                <TabsContent value="scrolls" className="mt-4">
-                  <IdentityGrid
-                    entries={report.identities.scrolls}
-                    category="scroll"
-                  />
-                </TabsContent>
-                <TabsContent value="rings" className="mt-4">
-                  <IdentityGrid
-                    entries={report.identities.rings}
-                    category="ring"
-                  />
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
+          {identitySpoilers && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Identities</CardTitle>
+                <CardDescription>
+                  Unidentified appearances for this seed (from run init RNG).
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="potions">
+                  <TabsList className="w-full sm:w-auto">
+                    <TabsTrigger value="potions">Potions</TabsTrigger>
+                    <TabsTrigger value="scrolls">Scrolls</TabsTrigger>
+                    <TabsTrigger value="rings">Rings</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="potions" className="mt-4">
+                    <IdentityGrid
+                      entries={report.identities.potions}
+                      category="potion"
+                    />
+                  </TabsContent>
+                  <TabsContent value="scrolls" className="mt-4">
+                    <IdentityGrid
+                      entries={report.identities.scrolls}
+                      category="scroll"
+                    />
+                  </TabsContent>
+                  <TabsContent value="rings" className="mt-4">
+                    <IdentityGrid
+                      entries={report.identities.rings}
+                      category="ring"
+                    />
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          )}
 
           {report.floors.length > 0 && (
             <Card>
@@ -522,16 +568,16 @@ export default function App() {
                 <CardDescription>
                   Partial levelgen: layout builder + main floor drops. Boss
                   floors (5 / 10 / 15 / 20 / 25) and Last Level (26) are hidden.
-                  {advancedMode
+                  {mapSpoilers
                     ? ' Maps use original region tilesheets when available.'
-                    : ' Enable Advanced mode to view floor maps.'}
+                    : ' Enable Map spoilers to view floor maps.'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <FloorsByRegion
                   floors={report.floors}
                   identities={report.identities}
-                  advancedMode={advancedMode}
+                  mapSpoilers={mapSpoilers}
                 />
               </CardContent>
             </Card>

@@ -68,7 +68,7 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
         floors: floor_reports,
         status: "partial".to_string(),
         message: Some(
-            "Partial analysis: layout builder + special-room/shop loot (approx.) + Ghost/Wandmaker/Imp quest rewards + main createItems drops. Full createMobs, water/grass/trap painter, and figure-eight builder still incomplete — results may not match the game yet."
+            "Partial analysis: layout builder + special-room/shop/crystal loot (approx.) + Ghost/Wandmaker/Blacksmith/Imp quest rewards + main createItems drops. Full createMobs, water/grass/trap painter, and figure-eight builder still incomplete — results may not match the game yet."
                 .to_string(),
         ),
     })
@@ -213,6 +213,80 @@ mod analyze_smoke {
             }
         }
         assert!(saw, "expected Imp.Quest on at least one city run");
+    }
+
+    #[test]
+    fn blacksmith_quest_spawns_within_caves() {
+        // Depth 14 always spawns if not yet placed on 12–13.
+        let mut saw = false;
+        for s in [
+            "GFX-PZH-DCH",
+            "AAA-AAA-AAA",
+            "hello",
+            "42",
+            "shattered",
+            "JLY-ZYR-HET",
+        ] {
+            let r = analyze_seed(s, 14).expect("analyze");
+            for f in &r.floors {
+                if f.quests.iter().any(|q| q.contains("Blacksmith"))
+                    || f.items
+                        .iter()
+                        .any(|i| i.source.as_deref() == Some("Blacksmith.Quest"))
+                {
+                    saw = true;
+                    let rewards: Vec<_> = f
+                        .items
+                        .iter()
+                        .filter(|i| i.source.as_deref() == Some("Blacksmith.Quest"))
+                        .collect();
+                    assert_eq!(
+                        rewards.len(),
+                        4,
+                        "expected 2 weapons + missile + armor, got {:?}",
+                        rewards
+                    );
+                    break;
+                }
+            }
+            if saw {
+                break;
+            }
+        }
+        assert!(saw, "expected Blacksmith.Quest on at least one caves run");
+    }
+
+    #[test]
+    fn crystal_vault_can_appear_with_prizes() {
+        // Over several seeds, at least one CrystalVaultRoom should yield prizes.
+        let mut saw = false;
+        for s in [
+            "GFX-PZH-DCH",
+            "AAA-AAA-AAA",
+            "hello",
+            "42",
+            "shattered",
+            "JLY-ZYR-HET",
+            "seedfinder",
+            "crystal",
+            "vault",
+            "12345",
+        ] {
+            let r = analyze_seed(s, 24).expect("analyze");
+            for f in &r.floors {
+                if f.items
+                    .iter()
+                    .any(|i| i.source.as_deref() == Some("CrystalVaultRoom"))
+                {
+                    saw = true;
+                    break;
+                }
+            }
+            if saw {
+                break;
+            }
+        }
+        assert!(saw, "expected CrystalVaultRoom prizes on at least one seed");
     }
 
     #[test]

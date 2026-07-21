@@ -332,11 +332,21 @@ pub fn dims_for_size_factor(size_factor: i32) -> (i32, i32, i32, i32) {
 }
 
 pub fn dims_for_kind(kind: RoomKind, size_factor: i32, name: &str) -> (i32, i32, i32, i32) {
-    // Quest rooms (overrides default special/standard mins)
+    // Quest / fixed-size specials (overrides default special/standard mins)
     match name {
         "MassGraveRoom" => return (7, 10, 7, 10),
         "RotGardenRoom" => return (10, 10, 10, 10),
         "AmbitiousImpRoom" => return (9, 9, 9, 9),
+        "BlacksmithRoom" => {
+            // StandardRoom with min 6
+            let (mw, xw, mh, xh) = dims_for_size_factor(size_factor);
+            return (mw.max(6), xw, mh.max(6), xh);
+        }
+        "CrystalVaultRoom" => return (7, 7, 7, 7),
+        "CrystalChoiceRoom" | "CrystalPathRoom" => {
+            // min 7; max stays special default 10
+            return (7, 10, 7, 10);
+        }
         "RitualSiteRoom" => {
             let (mw, xw, mh, xh) = dims_for_size_factor(size_factor);
             return (mw.max(9), xw, mh.max(9), xh);

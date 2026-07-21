@@ -2,7 +2,7 @@
 
 use crate::generator::GeneratorState;
 use crate::level::Feeling;
-use crate::quests::{self, ImpQuestState, WandmakerQuestState};
+use crate::quests::{self, BlacksmithQuestState, ImpQuestState, WandmakerQuestState};
 use crate::random::Random;
 use crate::rooms::room::{dims_for_kind, Room};
 use crate::rooms::secret;
@@ -69,6 +69,7 @@ fn room_from_spec(id: usize, spec: RoomSpec) -> Room {
 ///
 /// Region quest rooms are added after base rooms and **before** shuffle:
 /// - Prison: `Wandmaker.Quest.spawnRoom`
+/// - Caves: `Blacksmith.Quest.spawn` (also generates smithRewards immediately)
 /// - City: `Imp.Quest.spawn` (also generates the ring reward immediately)
 #[allow(clippy::too_many_arguments)] // mirrors SPD RegularLevel.initRooms parameter surface
 pub fn init_rooms_regular(
@@ -82,6 +83,7 @@ pub fn init_rooms_regular(
     region_secrets: &mut [i32; 5],
     pit_needed_depth: &mut i32,
     wandmaker: &mut WandmakerQuestState,
+    blacksmith: &mut BlacksmithQuestState,
     imp: &mut ImpQuestState,
     generator: &mut GeneratorState,
 ) -> FloorRooms {
@@ -144,6 +146,8 @@ pub fn init_rooms_regular(
 
     // PrisonLevel.initRooms: Wandmaker.Quest.spawnRoom(super.initRooms())
     let _ = quests::try_spawn_wandmaker_room(wandmaker, depth, &mut specs);
+    // CavesLevel.initRooms: Blacksmith.Quest.spawn — generates smithRewards now
+    let _ = quests::try_spawn_blacksmith(blacksmith, generator, depth, &mut specs);
     // CityLevel.initRooms: Imp.Quest.spawn(super.initRooms()) — generates ring now
     let _ = quests::try_spawn_imp(imp, generator, depth, &mut specs);
 
@@ -177,6 +181,7 @@ mod tests {
         let mut lab = 0;
         let mut pit = -1;
         let mut wm = WandmakerQuestState::default();
+        let mut bs = BlacksmithQuestState::default();
         let mut imp = ImpQuestState::default();
         let mut gen = crate::generator::full_reset();
         let a = init_rooms_regular(
@@ -190,6 +195,7 @@ mod tests {
             &mut reg,
             &mut pit,
             &mut wm,
+            &mut bs,
             &mut imp,
             &mut gen,
         );
@@ -202,6 +208,7 @@ mod tests {
         let mut lab = 0;
         let mut pit = -1;
         let mut wm = WandmakerQuestState::default();
+        let mut bs = BlacksmithQuestState::default();
         let mut imp = ImpQuestState::default();
         let mut gen = crate::generator::full_reset();
         let b = init_rooms_regular(
@@ -215,6 +222,7 @@ mod tests {
             &mut reg,
             &mut pit,
             &mut wm,
+            &mut bs,
             &mut imp,
             &mut gen,
         );

@@ -216,10 +216,30 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             &mut dungeon.rooms.region_secrets,
             &mut dungeon.rooms.pit_needed_depth,
             &mut dungeon.wandmaker,
+            &mut dungeon.blacksmith,
             &mut dungeon.imp,
             &mut dungeon.generator,
         );
         builder = Some(floor.builder_kind);
+
+        // Blacksmith.Quest generates smithRewards during initRooms (before shuffle/build).
+        if let Some(bs) = quests::take_blacksmith_pending(&mut dungeon.blacksmith) {
+            quests.push(bs.summary.clone());
+            for mut reward in bs.rewards {
+                // Apply stored enchant/glyph for display (SPD keeps them separate
+                // until the player picks the smith option — still useful in report).
+                if reward.category == crate::items::model::ItemCategory::Weapon {
+                    if let Some(ref e) = bs.smith_enchant {
+                        reward.enchantment = Some(e.clone());
+                    }
+                } else if reward.category == crate::items::model::ItemCategory::Armor {
+                    if let Some(ref g) = bs.smith_glyph {
+                        reward.enchantment = Some(g.clone());
+                    }
+                }
+                placed_items.push(reward);
+            }
+        }
 
         // Imp.Quest generates its ring during initRooms (before shuffle/build).
         if let Some(imp) = quests::take_imp_pending(&mut dungeon.imp) {
@@ -299,8 +319,10 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                         placed_items.push(ghost.armor);
                     }
                 }
-                if let Some(entrance) =
-                    floor.rooms.iter().find(|r| r.is_entrance() && !r.is_empty())
+                if let Some(entrance) = floor
+                    .rooms
+                    .iter()
+                    .find(|r| r.is_entrance() && !r.is_empty())
                 {
                     if let Some(wm) = quests::try_spawn_wandmaker(dungeon, entrance, &map) {
                         quests.push(wm.summary.clone());

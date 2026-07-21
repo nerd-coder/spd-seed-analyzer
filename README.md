@@ -13,10 +13,12 @@ Generation logic is ported from the official game so results match the same RNG.
 | SPD version | v3.3.8 |
 | SPD commit | `7b8b845a7` |
 
-### Advanced mode (maps)
+### Spoiler options
 
-Floor minimaps are **hidden by default**. Enable **Advanced mode** in the UI
-to show canvas maps (spoilers).
+By default the UI aims to avoid ruining exploration:
+
+- **Show identities (spoilers)** — potion/scroll/ring color→type maps (off by default)
+- **Map spoilers** — full floor minimaps with region tilesheets (off by default)
 
 ## Support
 

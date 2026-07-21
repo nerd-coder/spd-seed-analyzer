@@ -40,7 +40,7 @@ Use **rustup** cargo for wasm (`PATH` scripts prepend `$HOME/.cargo/bin`).
 - **BUN-WEB** — Package manager is Bun. UI: Vite + React + shadcn. Do not introduce npm/yarn as primary.
 - **WASM-REBUILD** — After Rust changes, rebuild wasm (`bun run build:wasm` / `dev`) before treating UI as verified.
 - **TEST-RUST** — Add/extend `spd-core` tests for RNG and analyze paths; keep smoke coverage on `analyze_seed`.
-- **ADV-MAP** — Floor maps are Advanced-mode spoilers. Keep default UX non-spoiler; map data may still be in the report.
+- **ADV-MAP** — Floor maps and identity tables are opt-in spoilers (`Map spoilers` / `Show identities`). Keep default UX non-spoiler; map/identity data may still be in the report.
 - **ASSETS-FLAT** — Assets live at `web/public/assets/{environment,sprites,…}`. No nested `assets/assets/`.
 - **PIN-SPD** — Target the pinned SPD version/commit; note version impact when porting from a newer tree.
 - **GPL-AWARE** — SPD is GPL-3.0; ports of generation logic inherit that constraint for distribution.

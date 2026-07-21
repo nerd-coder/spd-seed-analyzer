@@ -13,7 +13,8 @@ Browser seed analyzer for Shattered Pixel Dungeon:
 
 - **UI:** Bun + Vite + React + shadcn/ui  
 - **Engine:** Rust (`spd-core`) → WASM (`spd-wasm`)  
-- **Output:** Per-floor items + (Advanced mode) floor maps using original tilesheets  
+- **Output:** Per-floor items + (Map spoilers) floor maps using original tilesheets  
+
 
 Reference behavior: headless Java seed finders (`Dungeon.init` → `newLevel` per depth).
 
@@ -34,7 +35,7 @@ spd-seed-analyzer/
 │   │   └── assets/            # SPD asset tree (flattened)
 │   │       └── environment/tiles_*.png
 │   └── src/
-│       ├── App.tsx            # seed form, advanced mode, results
+│       ├── App.tsx            # seed form, spoiler toggles, results
 │       ├── components/FloorMapCanvas.tsx
 │       └── lib/{spd-wasm.ts,tiles.ts}
 └── specs/implementation.md    # this file
@@ -83,7 +84,9 @@ bun run check:all    # biome + rust fmt/clippy
 | Shop stock | `level/shop.rs` | `ShopRoom.generateItems` (FOR_SALE); bag pick hero-less (scroll holder first); generated post-build (not mid-setSize) |
 | Ghost quest | `quests/ghost.rs` | `Ghost.Quest.spawn` on sewers: chance, placement (approx openSpace), weapon/armor rewards |
 | Wandmaker quest | `quests/wandmaker.rs` | `spawnRoom` on prison 7–9 (before shuffle); two +1 wands; MassGrave/Ritual/RotGarden side-effects (approx) |
+| Blacksmith quest | `quests/blacksmith.rs` | `Blacksmith.Quest.spawn` on caves 12–14 (before shuffle); `generateRewards(true)` smith pool (2 weapons + missile + armor + optional enchant/glyph); room paint drops 2 equip |
 | Imp quest | `quests/imp.rs` | `Imp.Quest.spawn` on city 17–19 (before shuffle); cursed +2 ring reward generated at initRooms |
+| Crystal rooms | `level/special_loot.rs` | Vault (wand/ring/artifact crystal chests + mimic chance), Choice (pots/scrolls + chest), Path (3+3 consumables with dedup/sort) |
 | Main createItems | `level/create_items.rs` | nItems loop, heap types; drop cells use map origin |
 | Floor map export | `report.rs` `FloorMap` | width/height/tileset/tiles; items include `class_name` |
 
@@ -92,7 +95,7 @@ bun run check:all    # biome + rust fmt/clippy
 |------|--------|
 | Seed analyze UI | identities + floors + items |
 | **Item icons** | `ItemIcon` + `lib/item-icons.ts` crops `/assets/sprites/items.png` (ItemSpriteSheet indices); potions/scrolls/rings use identity appearance |
-| **Advanced mode** | localStorage; spoilers warning; shows canvas maps |
+| **Spoiler toggles** | localStorage; identity table + map spoilers off by default |
 | Map canvas | `tiles.ts` + region tilesheets under `/assets/environment/` |
 | Assets | Flattened to `web/public/assets/{environment,sprites,…}` (no nested `assets/assets`) |
 | App icon | `web/public/app_icon.jpg` |
@@ -109,10 +112,10 @@ bun run check:all    # biome + rust fmt/clippy
 Results are **partial**. Not game-parity yet because:
 
 1. Full `RegularPainter` (water/grass/traps) incomplete — special-room prizes approximate  
-2. Some special/secret rooms still stubbed (crystal rooms, sentry/traps/fire, …)  
+2. Some special/secret rooms still stubbed (sentry/traps/fire/sacrifice, honeypot fidelity, …)  
 3. Shop stock timing is post-build (SPD generates during room `setSize`); bag choice is hero-less  
 4. Ghost quest rewards ported; placement uses minimal openSpace; full `createMobs` not ported  
-5. Wandmaker + Imp quests ported; RotGarden full paint/mobs incomplete; Blacksmith not ported  
+5. Wandmaker + Blacksmith + Imp quests ported; RotGarden full paint/mobs incomplete; CrystalPath/Choice placement geometry approximate  
 6. Figure-eight builder incomplete  
 7. `randomDropCell` simplified vs full map flags  
 8. Sewer room-count tables used for all regions  
@@ -129,8 +132,9 @@ Status string: `"partial"`.
 - ~~Ghost.Quest rewards~~ (see `quests/ghost.rs`)  
 - ~~Wandmaker.Quest~~ (see `quests/wandmaker.rs`; MassGrave loot + ritual candles + rot-garden RNG approx; RotGarden heart/lasher not ported)  
 - ~~Imp.Quest~~ (see `quests/imp.rs`; cursed +2 ring at initRooms; AmbitiousImpRoom paint is placement RNG only)  
-- Remaining: crystal rooms, sentry/traps/fire/sacrifice, honeypot secret fidelity  
-- Blacksmith.Quest reward generation at correct RNG points  
+- ~~Crystal rooms~~ (Vault / Choice / Path prize gen in `special_loot.rs`; Path geometry not painted, placement RNG approximate)  
+- ~~Blacksmith.Quest~~ (see `quests/blacksmith.rs`; smithRewards at initRooms; room paint equip drops; mining branch not ported)  
+- Remaining: sentry/traps/fire/sacrifice prize rooms, honeypot secret fidelity  
 - Golden tests vs Java oracle for a handful of seeds  
 
 ### P2 — Painter parity
@@ -206,9 +210,10 @@ pushGenerator(seed); Long() × depth; result = Long(); pop
 ```
 Tiles are SPD `Terrain` values. Client maps to flat tilesheet indices (`web/src/lib/tiles.ts`).
 
-### Advanced mode
-- Key: `localStorage["spd-analyzer-advanced-mode"]` = `"1"` | `"0"`
-- Maps only rendered when advanced is on (data still returned from WASM)
+### Spoiler toggles (UI)
+- **Show identities (spoilers):** `localStorage["spd-analyzer-identity-spoilers"]` = `"1"` | `"0"` (default off). Hides the Identities card when off.
+- **Map spoilers:** `localStorage["spd-analyzer-map-spoilers"]` = `"1"` | `"0"` (default off). Maps only rendered when on (map data still returned from WASM).
+- Legacy: `spd-analyzer-advanced-mode` is still read as a fallback for map spoilers.
 
 ---
 
@@ -232,8 +237,8 @@ SPD is GPL-3.0. This project ports generation logic → treat as **GPL-3.0-or-la
 ## How to resume (clean context)
 
 1. Read this file + `README.md`  
-2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs` / `level/special_loot.rs` / `quests/{ghost,wandmaker,imp}.rs` / `level/shop.rs`  
-3. Next recommended work: **crystal rooms** loot or **Blacksmith.Quest**; then **Java golden checks** when ready  
+2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs` / `level/special_loot.rs` / `quests/{ghost,wandmaker,blacksmith,imp}.rs` / `level/shop.rs`  
+3. Next recommended work: **SentryRoom / TrapsRoom / MagicalFireRoom / SacrificeRoom** prizes (or **SecretHoneypot** fidelity); then **Java golden checks** when ready; painter water/grass/traps (P2) for drop-cell parity  
 4. Icons: `web/src/lib/item-icons.ts` + `components/ItemIcon.tsx` (items.png sheet)  
 5. Do not re-copy full asset tree; use `web/public/assets/` as flattened SPD assets  
 6. After Rust changes: `bun run build:wasm` (or `bun run dev`)  
