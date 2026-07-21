@@ -11,7 +11,6 @@ Generation logic is ported from the official game so results match the same RNG.
 |-------|--------|
 | SPD version | v3.3.8 |
 | SPD commit | `7b8b845a7` |
-| Local source | `/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon` |
 
 ## Prerequisites
 
