@@ -1,21 +1,21 @@
 //! Headless level generation.
 
+mod build;
 mod create_items;
+mod maze;
 mod painter;
 pub mod patch;
 mod shop;
 mod special_loot;
 mod terrain;
 
-use crate::builders::{self, BuilderParams};
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::quests;
 use crate::random::Random;
 use crate::report::{FloorReport, ItemEntry};
-use crate::rooms::init_rooms::{self, BuilderKind};
-use crate::rooms::room::clear_all_connections;
+use crate::rooms::init_rooms::BuilderKind;
 use crate::rooms::types::RoomKind;
 
 pub use create_items::PlacedLoot;
@@ -219,23 +219,23 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
     if dungeon.regular_level() {
         let lab_needed = dungeon.lab_room_needed();
         let shop = dungeon.shop_on_level();
-        let depth = dungeon.depth;
-        let mut floor = init_rooms::init_rooms_regular(
-            depth,
-            feeling,
-            shop,
-            lab_needed,
-            &mut dungeon.limited.lab_room,
-            &mut dungeon.rooms.specials,
-            &mut dungeon.rooms.secrets,
-            &mut dungeon.rooms.region_secrets,
-            &mut dungeon.rooms.pit_needed_depth,
-            &mut dungeon.wandmaker,
-            &mut dungeon.blacksmith,
-            &mut dungeon.imp,
-            &mut dungeon.generator,
-        );
+        let Some(floor) = build::regular_rooms(dungeon, feeling, shop, lab_needed) else {
+            Random::pop_generator();
+            return LevelState {
+                depth: dungeon.depth,
+                feeling,
+                builder,
+                rooms: room_names,
+                build_ok,
+                forced_items: forced,
+                placed_items,
+                quests,
+                complete: false,
+                map: floor_map,
+            };
+        };
         builder = Some(floor.builder_kind);
+        build_ok = true;
 
         // Blacksmith.Quest generates smithRewards during initRooms (before shuffle/build).
         if let Some(bs) = quests::take_blacksmith_pending(&mut dungeon.blacksmith) {
@@ -262,158 +262,146 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             placed_items.push(imp.reward);
         }
 
-        // Inner build retry loop (same rooms, clear connections)
-        build_ok = builders::build_rooms(
-            &mut floor.rooms,
-            floor.builder_kind,
-            floor.curve_intensity,
-            floor.curve_offset,
-            dungeon.depth,
-            50,
-        );
+        // RegularPainter: nTraps() is rolled when constructing the painter,
+        // before room shuffle / placeDoors / special paint.
+        let n_traps = painter::n_traps(dungeon.depth);
 
-        if build_ok {
-            // RegularPainter: nTraps() is rolled when constructing the painter,
-            // before room shuffle / placeDoors / special paint.
-            let n_traps = painter::n_traps(dungeon.depth);
-
-            let painted_map = if feeling == Feeling::Chasm {
-                terrain::paint_minimal_with_chasm(&floor.rooms, true)
-            } else {
-                terrain::paint_minimal(&floor.rooms)
-            };
-            if let Some(mut map) = painted_map {
-                // Shop stock: in SPD generated during setSize (mid-build). We run
-                // after build / before other special paint so Generator still
-                // advances before createItems (timing approximate).
-                if floor
-                    .rooms
-                    .iter()
-                    .any(|r| r.kind == RoomKind::Shop && !r.is_empty())
-                {
-                    for item in shop::generate_items(dungeon) {
-                        placed_items.push(item);
-                    }
-                }
-
-                // Special/secret room paint loot (before createItems; may consume itemsToSpawn).
-                // Includes RegularPainter shuffle + placeDoors + door-type upgrades.
-                let special = special_loot::special_room_loot(
-                    dungeon,
-                    &floor.rooms,
-                    &mut map,
-                    &mut items_to_spawn,
-                );
-                let special_loot::SpecialPaintResult {
-                    loot: special_loot_items,
-                    mut doors,
-                    paint_order,
-                } = special;
-                for p in special_loot_items {
-                    // Drop matching forced clones when a prize was pulled from itemsToSpawn.
-                    if p.item
-                        .source
-                        .as_deref()
-                        .is_some_and(|s| s.contains("Room") || s.contains("Secret"))
-                    {
-                        if let Some(pos) = forced.iter().position(|f| {
-                            f.class_name == p.item.class_name
-                                && f.source.as_deref() == Some("forced")
-                        }) {
-                            // Only remove once per prize consumption of unique forced types.
-                            if matches!(
-                                p.item.class_name.as_str(),
-                                "TrinketCatalyst"
-                                    | "PotionOfStrength"
-                                    | "ScrollOfUpgrade"
-                                    | "Stylus"
-                                    | "StoneOfEnchantment"
-                                    | "StoneOfIntuition"
-                            ) {
-                                forced.remove(pos);
-                            }
-                        }
-                    }
-                    placed_items.push(p.item);
-                }
-
-                // paintDoors: mergeRooms + hidden-door Float/Graph + terrain.
-                painter::paint_doors(
-                    &mut map,
-                    &floor.rooms,
-                    &paint_order,
-                    dungeon.depth,
-                    feeling,
-                    &mut doors,
-                );
-
-                // Water / grass / traps / decorate on a separate generator.
-                painter::paint_water_grass_traps(
-                    &mut map,
-                    &floor.rooms,
-                    &paint_order,
-                    &doors,
-                    dungeon.depth,
-                    feeling,
-                    n_traps,
-                );
-
-                floor_map = Some(crate::report::FloorMap {
-                    width: map.width as u32,
-                    height: map.height as u32,
-                    tileset: terrain::tileset_for_depth(dungeon.depth).to_string(),
-                    tiles: map.map.iter().map(|&t| t as u16).collect(),
-                });
-
-                // createMobs subset: Ghost (sewers) / Wandmaker (prison) before createItems.
-                // Full mob placement still not ported — createItems RNG remains approximate.
-                if let Some(exit) = floor.rooms.iter().find(|r| r.is_exit() && !r.is_empty()) {
-                    if let Some(ghost) = quests::try_spawn_ghost(dungeon, exit, &map) {
-                        quests.push(ghost.summary.clone());
-                        placed_items.push(ghost.weapon);
-                        placed_items.push(ghost.armor);
-                    }
-                }
-                if let Some(entrance) = floor
-                    .rooms
-                    .iter()
-                    .find(|r| r.is_entrance() && !r.is_empty())
-                {
-                    if let Some(wm) = quests::try_spawn_wandmaker(dungeon, entrance, &map) {
-                        quests.push(wm.summary.clone());
-                        placed_items.push(wm.wand1);
-                        placed_items.push(wm.wand2);
-                    }
-                }
-
-                let loot = create_items::create_items_main(
-                    dungeon,
-                    &floor.rooms,
-                    &map,
-                    feeling == Feeling::Large,
-                    items_to_spawn,
-                );
-                for p in loot {
-                    if p.item.source.as_deref() == Some("forced") {
-                        // Room paint may add to itemsToSpawn (e.g. Storage → PotionOfLiquidFlame).
-                        // Keep those in the report if not already listed under forced.
-                        if !forced.iter().any(|f| f.class_name == p.item.class_name) {
-                            forced.push(p.item);
-                        }
-                        continue;
-                    }
-                    let mut item = p.item;
-                    if item.source.is_none() {
-                        item.source = Some(p.heap_type.into());
-                    } else if p.heap_type != "heap" {
-                        item.source = Some(format!(
-                            "{}:{}",
-                            p.heap_type,
-                            item.source.as_deref().unwrap_or("")
-                        ));
-                    }
+        let painted_map = if feeling == Feeling::Chasm {
+            terrain::paint_minimal_with_chasm(&floor.rooms, true)
+        } else {
+            terrain::paint_minimal(&floor.rooms)
+        };
+        if let Some(mut map) = painted_map {
+            // Shop stock: in SPD generated during setSize (mid-build). We run
+            // after build / before other special paint so Generator still
+            // advances before createItems (timing approximate).
+            if floor
+                .rooms
+                .iter()
+                .any(|r| r.kind == RoomKind::Shop && !r.is_empty())
+            {
+                for item in shop::generate_items(dungeon) {
                     placed_items.push(item);
                 }
+            }
+
+            // Special/secret room paint loot (before createItems; may consume itemsToSpawn).
+            // Includes RegularPainter shuffle + placeDoors + door-type upgrades.
+            let special = special_loot::special_room_loot(
+                dungeon,
+                &floor.rooms,
+                &mut map,
+                &mut items_to_spawn,
+                feeling,
+            );
+            let special_loot::SpecialPaintResult {
+                loot: special_loot_items,
+                mut doors,
+                paint_order,
+            } = special;
+            for p in special_loot_items {
+                // Drop matching forced clones when a prize was pulled from itemsToSpawn.
+                if p.item
+                    .source
+                    .as_deref()
+                    .is_some_and(|s| s.contains("Room") || s.contains("Secret"))
+                {
+                    if let Some(pos) = forced.iter().position(|f| {
+                        f.class_name == p.item.class_name && f.source.as_deref() == Some("forced")
+                    }) {
+                        // Only remove once per prize consumption of unique forced types.
+                        if matches!(
+                            p.item.class_name.as_str(),
+                            "TrinketCatalyst"
+                                | "PotionOfStrength"
+                                | "ScrollOfUpgrade"
+                                | "Stylus"
+                                | "StoneOfEnchantment"
+                                | "StoneOfIntuition"
+                        ) {
+                            forced.remove(pos);
+                        }
+                    }
+                }
+                placed_items.push(p.item);
+            }
+
+            // paintDoors: mergeRooms + hidden-door Float/Graph + terrain.
+            painter::paint_doors(
+                &mut map,
+                &floor.rooms,
+                &paint_order,
+                dungeon.depth,
+                feeling,
+                &mut doors,
+            );
+
+            // Water / grass / traps / decorate on a separate generator.
+            painter::paint_water_grass_traps(
+                &mut map,
+                &floor.rooms,
+                &paint_order,
+                &doors,
+                dungeon.depth,
+                feeling,
+                n_traps,
+            );
+
+            floor_map = Some(crate::report::FloorMap {
+                width: map.width as u32,
+                height: map.height as u32,
+                tileset: terrain::tileset_for_depth(dungeon.depth).to_string(),
+                tiles: map.map.iter().map(|&t| t as u16).collect(),
+            });
+
+            // createMobs subset: Ghost (sewers) / Wandmaker (prison) before createItems.
+            // Full mob placement still not ported — createItems RNG remains approximate.
+            if let Some(exit) = floor.rooms.iter().find(|r| r.is_exit() && !r.is_empty()) {
+                if let Some(ghost) = quests::try_spawn_ghost(dungeon, exit, &map) {
+                    quests.push(ghost.summary.clone());
+                    placed_items.push(ghost.weapon);
+                    placed_items.push(ghost.armor);
+                }
+            }
+            if let Some(entrance) = floor
+                .rooms
+                .iter()
+                .find(|r| r.is_entrance() && !r.is_empty())
+            {
+                if let Some(wm) = quests::try_spawn_wandmaker(dungeon, entrance, &map) {
+                    quests.push(wm.summary.clone());
+                    placed_items.push(wm.wand1);
+                    placed_items.push(wm.wand2);
+                }
+            }
+
+            let loot = create_items::create_items_main(
+                dungeon,
+                &floor.rooms,
+                &map,
+                feeling == Feeling::Large,
+                items_to_spawn,
+            );
+            for p in loot {
+                if p.item.source.as_deref() == Some("forced") {
+                    // Room paint may add to itemsToSpawn (e.g. Storage → PotionOfLiquidFlame).
+                    // Keep those in the report if not already listed under forced.
+                    if !forced.iter().any(|f| f.class_name == p.item.class_name) {
+                        forced.push(p.item);
+                    }
+                    continue;
+                }
+                let mut item = p.item;
+                if item.source.is_none() {
+                    item.source = Some(p.heap_type.into());
+                } else if p.heap_type != "heap" {
+                    item.source = Some(format!(
+                        "{}:{}",
+                        p.heap_type,
+                        item.source.as_deref().unwrap_or("")
+                    ));
+                }
+                placed_items.push(item);
             }
         }
 
@@ -423,8 +411,6 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             .filter(|r| !r.is_empty())
             .map(|r| r.name.clone())
             .collect();
-        let _ = clear_all_connections;
-        let _ = BuilderParams::default();
     }
 
     Random::pop_generator();

@@ -183,7 +183,7 @@ fn random_drop_cell(rooms: &[Room], map: &TerrainMap, occupied: &mut [bool]) -> 
     let mut tries = 100;
     while tries > 0 {
         tries -= 1;
-        Random::shuffle_vec(&mut candidates);
+        Random::shuffle_list(&mut candidates);
         let room = &rooms[candidates[0]];
         if room.is_entrance() {
             continue;

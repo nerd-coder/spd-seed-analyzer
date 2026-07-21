@@ -22,9 +22,11 @@ use crate::dungeon::DungeonState;
 use crate::items::model::GeneratedItem;
 use crate::level::create_items::PlacedLoot;
 use crate::level::painter::{
-    apply_room_door_types, paint_standard_room, place_doors_for_room, DoorMap,
+    apply_room_door_types, paint_connection_room, paint_standard_room, place_doors_for_room,
+    DoorMap,
 };
 use crate::level::terrain::TerrainMap;
+use crate::level::Feeling;
 use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
@@ -47,6 +49,7 @@ pub fn special_room_loot(
     rooms: &[Room],
     map: &mut TerrainMap,
     items_to_spawn: &mut Vec<GeneratedItem>,
+    feeling: Feeling,
 ) -> SpecialPaintResult {
     let mut out = Vec::new();
     let mut doors = DoorMap::new();
@@ -59,7 +62,8 @@ pub fn special_room_loot(
     }
 
     let mut order: Vec<usize> = (0..rooms.len()).collect();
-    Random::shuffle_vec(&mut order);
+    // RegularPainter.paint shuffles its ArrayList with Collections.shuffle.
+    Random::shuffle_list(&mut order);
 
     for &ri in &order {
         place_doors_for_room(rooms, ri, &mut doors);
@@ -70,6 +74,9 @@ pub fn special_room_loot(
         }
         // Room.paint door-type upgrades (LOCKED / HIDDEN / REGULAR / …).
         apply_room_door_types(rooms, ri, &mut doors);
+        if room.kind == RoomKind::Connection {
+            paint_connection_room(map, rooms, ri, &doors, feeling == Feeling::Chasm);
+        }
         let standard_paint = paint_standard_room(
             map,
             rooms,

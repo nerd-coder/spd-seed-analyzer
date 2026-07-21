@@ -19,10 +19,10 @@ pub(super) fn crystal_vault(
 ) -> Vec<PlacedLoot> {
     let room = &rooms[ri];
     // prizeClasses rotate: shuffle then take/rotate twice
-    let mut prize_classes = [Category::Wand, Category::Ring, Category::Artifact];
-    Random::shuffle(&mut prize_classes);
+    let mut prize_classes = vec![Category::Wand, Category::Ring, Category::Artifact];
+    Random::shuffle_list(&mut prize_classes);
 
-    let mut take_prize = |classes: &mut [Category; 3]| -> GeneratedItem {
+    let mut take_prize = |classes: &mut Vec<Category>| -> GeneratedItem {
         let cat = classes[0];
         classes.rotate_left(1);
         // do { prize = Generator.random(cat) } while blocked — no challenges here

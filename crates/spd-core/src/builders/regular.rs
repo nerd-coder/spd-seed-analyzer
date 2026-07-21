@@ -1,8 +1,11 @@
-//! LoopBuilder + FigureEightBuilder + RegularBuilder helpers.
+//! Shared pinned-SPD `RegularBuilder` setup and branch placement.
 
-use crate::builders::place::{angle_between_rooms, find_neighbours, place_room};
+use std::collections::HashSet;
+
+use crate::builders::connection;
+use crate::builders::place::{angle_between_points, place_room};
 use crate::random::Random;
-use crate::rooms::room::{connect, Room, DIR_ALL};
+use crate::rooms::room::{Room, DIR_ALL};
 use crate::rooms::types::RoomKind;
 
 #[derive(Debug, Clone)]
@@ -26,48 +29,38 @@ impl Default for BuilderParams {
             branch_tunnel_chances: [1., 1., 0.],
             extra_connection_chance: 0.30,
             curve_exponent: 2,
-            curve_intensity: 0.0, // set by select_builder
+            curve_intensity: 0.0,
             curve_offset: 0.0,
         }
     }
 }
 
-fn connection_room(id: usize, depth: i32) -> Room {
-    let names = [
-        "TunnelRoom",
-        "BridgeRoom",
-        "PerimeterRoom",
-        "WalkwayRoom",
-        "RingTunnelRoom",
-        "RingBridgeRoom",
-    ];
-    let chances: &[f32] = match depth {
-        1..=4 => &[20., 1., 0., 2., 2., 1.],
-        5 | 21 => &[20., 0., 0., 0., 0., 0.],
-        6..=10 => &[0., 0., 22., 3., 0., 0.],
-        11..=15 => &[12., 0., 0., 5., 5., 3.],
-        16..=20 => &[0., 0., 18., 3., 3., 1.],
-        _ => &[15., 4., 0., 2., 3., 2.], // 22-26
-    };
-    let idx = Random::chances(chances) as usize;
-    Room::new(id, names[idx], RoomKind::Connection, 1, 16, 3, 10, 3, 10)
-}
-
-fn curve_equation(x: f64, exp: i32) -> f64 {
-    let e = exp as f64;
-    4f64.powf(2.0 * e) * ((x % 0.5) - 0.25).powf(2.0 * e + 1.0) + 0.25 + 0.5 * (2.0 * x).floor()
-}
-
-fn target_angle(percent_along: f32, params: &BuilderParams) -> f32 {
+pub(super) fn target_angle(percent_along: f32, params: &BuilderParams) -> f32 {
     let p = percent_along + params.curve_offset;
-    let ce = curve_equation(p as f64, params.curve_exponent) as f32;
-    360.0 * (params.curve_intensity * ce + (1.0 - params.curve_intensity) * p - params.curve_offset)
+    let exponent = params.curve_exponent as f64;
+    let curve = 4f64.powf(2.0 * exponent) * ((p as f64 % 0.5) - 0.25).powf(2.0 * exponent + 1.0)
+        + 0.25
+        + 0.5 * (2.0 * p as f64).floor();
+    // Java promotes only the curve term to double, keeps the linear term's
+    // float rounding, then casts the combined expression back to float.
+    let linear = (1.0f32 - params.curve_intensity) * p;
+    let mixed = params.curve_intensity as f64 * curve + linear as f64 - params.curve_offset as f64;
+    360.0f32 * mixed as f32
 }
 
-fn setup_rooms(rooms: &mut [Room]) -> Setup {
-    for r in rooms.iter_mut() {
-        r.set_empty();
-        r.clear_connections();
+pub(super) struct Setup {
+    pub entrance: Option<usize>,
+    pub exit: Option<usize>,
+    pub shop: Option<usize>,
+    pub main_path: Vec<usize>,
+    pub multi: Vec<usize>,
+    pub single: Vec<usize>,
+}
+
+pub(super) fn setup_rooms(rooms: &mut [Room], params: &BuilderParams) -> Setup {
+    for room in rooms.iter_mut() {
+        room.set_empty();
+        room.clear_connections();
     }
 
     let mut entrance = None;
@@ -75,49 +68,36 @@ fn setup_rooms(rooms: &mut [Room]) -> Setup {
     let mut shop = None;
     let mut multi = Vec::new();
     let mut single = Vec::new();
-
-    for r in rooms.iter() {
-        if r.is_entrance() {
-            entrance = Some(r.id);
-        } else if r.is_exit() {
-            exit = Some(r.id);
-        } else if r.kind == RoomKind::Shop && r.max_connections_all == 1 {
-            shop = Some(r.id);
-        } else if r.max_connections(DIR_ALL) > 1 {
-            multi.push(r.id);
-        } else if r.max_connections(DIR_ALL) == 1 {
-            single.push(r.id);
+    for room in rooms.iter() {
+        if room.is_entrance() {
+            entrance = Some(room.id);
+        } else if room.is_exit() {
+            exit = Some(room.id);
+        } else if room.kind == RoomKind::Shop && room.max_connections_all == 1 {
+            shop = Some(room.id);
+        } else if room.max_connections(DIR_ALL) > 1 {
+            multi.push(room.id);
+        } else if room.max_connections(DIR_ALL) == 1 {
+            single.push(room.id);
         }
     }
 
-    // weight larger rooms
-    let mut weighted = multi.clone();
-    for &id in &multi {
-        let w = rooms[id].connection_weight();
-        for _ in 1..w {
-            weighted.push(id);
-        }
-    }
-    Random::shuffle_vec(&mut weighted);
-    // dedupe preserving order (LinkedHashSet)
-    let mut seen = std::collections::HashSet::new();
-    multi.clear();
-    for id in weighted {
-        if seen.insert(id) {
-            multi.push(id);
-        }
-    }
-    Random::shuffle_vec(&mut multi);
+    weight_rooms(rooms, &mut multi);
+    Random::shuffle_list(&mut multi);
+    let mut seen = HashSet::new();
+    multi.retain(|id| seen.insert(*id));
+    Random::shuffle_list(&mut multi);
 
-    let mut rooms_on_main = (multi.len() as f32 * 0.25) as i32 + Random::chances(&[0., 0., 0., 1.]);
+    let mut rooms_on_main =
+        (multi.len() as f32 * params.path_length) as i32 + Random::chances(&params.path_len_jitter);
     let mut main_path = Vec::new();
     while rooms_on_main > 0 && !multi.is_empty() {
         let id = multi.remove(0);
-        if rooms[id].kind == RoomKind::Standard {
-            rooms_on_main -= rooms[id].size_factor;
+        rooms_on_main -= if rooms[id].kind == RoomKind::Standard {
+            rooms[id].size_factor
         } else {
-            rooms_on_main -= 1;
-        }
+            1
+        };
         main_path.push(id);
     }
 
@@ -131,18 +111,9 @@ fn setup_rooms(rooms: &mut [Room]) -> Setup {
     }
 }
 
-struct Setup {
-    entrance: Option<usize>,
-    exit: Option<usize>,
-    shop: Option<usize>,
-    main_path: Vec<usize>,
-    multi: Vec<usize>,
-    single: Vec<usize>,
-}
-
-fn weight_rooms_list(rooms: &[Room], list: &mut Vec<usize>) {
-    let base: Vec<usize> = list.clone();
-    for &id in &base {
+pub(super) fn weight_rooms(rooms: &[Room], list: &mut Vec<usize>) {
+    let original = list.clone();
+    for id in original {
         if rooms[id].kind == RoomKind::Standard {
             for _ in 1..rooms[id].connection_weight() {
                 list.push(id);
@@ -151,129 +122,166 @@ fn weight_rooms_list(rooms: &[Room], list: &mut Vec<usize>) {
     }
 }
 
-fn create_branches(
+#[derive(Clone, Copy)]
+pub(super) enum BranchAngles<'a> {
+    Around((f32, f32)),
+    FigureEight {
+        first_ids: &'a [usize],
+        first_center: (f32, f32),
+        second_center: (f32, f32),
+    },
+}
+
+impl BranchAngles<'_> {
+    fn next(self, rooms: &[Room], room: usize) -> f32 {
+        let center = match self {
+            Self::Around(center) => center,
+            Self::FigureEight {
+                first_ids,
+                first_center,
+                second_center,
+            } => {
+                if first_ids.contains(&room) {
+                    first_center
+                } else {
+                    second_center
+                }
+            }
+        };
+        let room_center = (
+            (rooms[room].left + rooms[room].right) as f32 / 2.0,
+            (rooms[room].top + rooms[room].bottom) as f32 / 2.0,
+        );
+        let mut to_center = angle_between_points(room_center, center);
+        if to_center < 0.0 {
+            to_center += 360.0;
+        }
+        let mut angle = Random::float_max(360.0);
+        for _ in 0..4 {
+            let candidate = Random::float_max(360.0);
+            if (to_center - candidate).abs() < (to_center - angle).abs() {
+                angle = candidate;
+            }
+        }
+        angle
+    }
+}
+
+fn disconnect_room(rooms: &mut [Room], id: usize) {
+    for room in rooms.iter_mut() {
+        room.connected.retain(|&other| other != id);
+        room.neighbours.retain(|&other| other != id);
+    }
+    if let Some(room) = rooms.get_mut(id) {
+        room.clear_connections();
+    }
+}
+
+pub(super) fn create_branches(
     rooms: &mut Vec<Room>,
     branchable: &mut Vec<usize>,
     rooms_to_branch: &[usize],
     conn_chances: &[f32],
     depth: i32,
+    angles: BranchAngles<'_>,
 ) -> bool {
     let mut i = 0;
     let mut failed = 0;
     let mut connection_chances = conn_chances.to_vec();
-
     while i < rooms_to_branch.len() {
-        if failed > 100 {
+        if failed > 100 || branchable.is_empty() {
             return false;
         }
-        let r = rooms_to_branch[i];
-        let mut connecting_this_branch: Vec<usize> = Vec::new();
+        let room = rooms_to_branch[i];
+        let branch_start = rooms.len();
+        let mut connecting = Vec::new();
 
-        let mut curr = loop {
-            let c = branchable[Random::int_max(branchable.len() as i32) as usize];
-            if rooms[r].kind == RoomKind::Secret && rooms[c].kind == RoomKind::Connection {
-                continue;
+        let mut curr = None;
+        // Valid regular layouts always have a non-connection main-path room.
+        // Bound the rejection loop so malformed callers cannot hang WASM.
+        for _ in 0..10_000 {
+            let candidate = branchable[Random::int_max(branchable.len() as i32) as usize];
+            if rooms[room].kind != RoomKind::Secret || rooms[candidate].kind != RoomKind::Connection
+            {
+                curr = Some(candidate);
+                break;
             }
-            break c;
+        }
+        let Some(mut curr) = curr else {
+            return false;
         };
 
-        let mut connecting_rooms = Random::chances(&connection_chances);
-        if connecting_rooms < 0 {
+        let mut connecting_count = Random::chances(&connection_chances);
+        if connecting_count == -1 {
             connection_chances = conn_chances.to_vec();
-            connecting_rooms = Random::chances(&connection_chances);
+            connecting_count = Random::chances(&connection_chances);
         }
-        connection_chances[connecting_rooms as usize] -= 1.0;
+        connection_chances[connecting_count as usize] -= 1.0;
 
-        for _ in 0..connecting_rooms {
-            let tid = rooms.len();
-            let is_secret = rooms[r].kind == RoomKind::Secret;
-            let t = if is_secret {
-                Room::new(
-                    tid,
-                    "MazeConnectionRoom",
-                    RoomKind::Connection,
-                    1,
-                    16,
-                    3,
-                    10,
-                    3,
-                    10,
-                )
+        for _ in 0..connecting_count {
+            let id = rooms.len();
+            rooms.push(if rooms[room].kind == RoomKind::Secret {
+                connection::maze(id)
             } else {
-                connection_room(tid, depth)
-            };
-            rooms.push(t);
-
-            let mut tries = 3;
-            let mut angle = -1.0f32;
-            while tries > 0 {
-                let ang = random_branch_angle_simple();
-                angle = place_room(rooms, curr, tid, ang);
-                tries -= 1;
-                if angle != -1.0 {
+                connection::create(id, depth)
+            });
+            let mut placed = false;
+            for _ in 0..3 {
+                let angle = angles.next(rooms, curr);
+                if place_room(rooms, curr, id, angle) != -1.0 {
+                    placed = true;
                     break;
                 }
             }
-            if angle == -1.0 {
-                rooms[tid].clear_connections();
-                for &c in &connecting_this_branch {
-                    rooms[c].clear_connections();
+            if !placed {
+                disconnect_room(rooms, id);
+                for &connection in &connecting {
+                    disconnect_room(rooms, connection);
                 }
-                // remove failed connection rooms from list end
-                for _ in 0..=connecting_this_branch.len() {
-                    // remove tid and connecting rooms added
-                }
-                // Pop the failed tunnel and connecting rooms we added this branch
-                let remove_count = connecting_this_branch.len() + 1;
-                for _ in 0..remove_count {
-                    rooms.pop();
-                }
-                connecting_this_branch.clear();
+                rooms.truncate(branch_start);
+                connecting.clear();
                 break;
-            } else {
-                connecting_this_branch.push(tid);
-                curr = tid;
             }
+            connecting.push(id);
+            curr = id;
         }
 
-        if connecting_this_branch.len() as i32 != connecting_rooms {
+        if connecting.len() as i32 != connecting_count {
             failed += 1;
             continue;
         }
 
-        let mut tries = 10;
-        let mut angle = -1.0f32;
-        while tries > 0 {
-            let ang = random_branch_angle_simple();
-            angle = place_room(rooms, curr, r, ang);
-            tries -= 1;
-            if angle != -1.0 {
+        let mut placed = false;
+        for _ in 0..10 {
+            let angle = angles.next(rooms, curr);
+            if place_room(rooms, curr, room, angle) != -1.0 {
+                placed = true;
                 break;
             }
         }
-        if angle == -1.0 {
-            rooms[r].clear_connections();
-            for &t in &connecting_this_branch {
-                rooms[t].clear_connections();
+        if !placed {
+            disconnect_room(rooms, room);
+            for &connection in &connecting {
+                disconnect_room(rooms, connection);
             }
-            // remove connecting rooms from rooms vec if they were only for this branch
-            // They were appended - remove them if still at end
+            rooms.truncate(branch_start);
             failed += 1;
             continue;
         }
 
-        for &j in &connecting_this_branch {
+        for &connection in &connecting {
             if Random::int_max(3) <= 1 {
-                branchable.push(j);
+                branchable.push(connection);
             }
         }
-        if rooms[r].max_connections(DIR_ALL) > 1 && Random::int_max(3) == 0 {
-            if rooms[r].kind == RoomKind::Standard {
-                for _ in 0..rooms[r].connection_weight() {
-                    branchable.push(r);
-                }
+        if rooms[room].max_connections(DIR_ALL) > 1 && Random::int_max(3) == 0 {
+            let copies = if rooms[room].kind == RoomKind::Standard {
+                rooms[room].connection_weight()
             } else {
-                branchable.push(r);
+                1
+            };
+            for _ in 0..copies {
+                branchable.push(room);
             }
         }
         i += 1;
@@ -281,157 +289,13 @@ fn create_branches(
     true
 }
 
-fn random_branch_angle_simple() -> f32 {
-    Random::float_max(360.0)
-}
-
-pub fn build_loop(rooms: &mut Vec<Room>, params: &BuilderParams, depth: i32) -> Option<()> {
-    let setup = setup_rooms(rooms);
-    let entrance = setup.entrance?;
-    let mut main_path = setup.main_path;
-    let multi = setup.multi;
-    let single = setup.single;
-    let shop = setup.shop;
-    let exit = setup.exit;
-
-    rooms[entrance].set_size();
-    rooms[entrance].set_pos(0, 0);
-
-    let start_angle = Random::float_max(360.0);
-
-    main_path.insert(0, entrance);
-    if let Some(ex) = exit {
-        let idx = main_path.len().div_ceil(2);
-        main_path.insert(idx, ex);
+pub(super) fn loop_center(rooms: &[Room], ids: &[usize]) -> (f32, f32) {
+    let mut center = (0.0, 0.0);
+    for &id in ids {
+        center.0 += (rooms[id].left + rooms[id].right) as f32 / 2.0;
+        center.1 += (rooms[id].top + rooms[id].bottom) as f32 / 2.0;
     }
-
-    // build loop with tunnels
-    let mut loop_ids: Vec<usize> = Vec::new();
-    let mut path_tunnels = params.path_tunnel_chances.to_vec();
-    for &rid in &main_path {
-        loop_ids.push(rid);
-        let mut tunnels = Random::chances(&path_tunnels);
-        if tunnels < 0 {
-            path_tunnels = params.path_tunnel_chances.to_vec();
-            tunnels = Random::chances(&path_tunnels);
-        }
-        path_tunnels[tunnels as usize] -= 1.0;
-        for _ in 0..tunnels {
-            let tid = rooms.len();
-            rooms.push(connection_room(tid, depth));
-            loop_ids.push(tid);
-        }
-    }
-
-    let mut prev = entrance;
-    for i in 1..loop_ids.len() {
-        let r = loop_ids[i];
-        let ta = start_angle + target_angle(i as f32 / loop_ids.len() as f32, params);
-        if place_room(rooms, prev, r, ta) != -1.0 {
-            prev = r;
-        } else {
-            return None;
-        }
-    }
-
-    // close loop
-    while !connect(rooms, prev, entrance) {
-        let tid = rooms.len();
-        rooms.push(connection_room(tid, depth));
-        let ang = angle_between_rooms(&rooms[prev], &rooms[entrance]);
-        if place_room(rooms, prev, tid, ang) == -1.0 {
-            return None;
-        }
-        loop_ids.push(tid);
-        prev = tid;
-    }
-
-    if let Some(sid) = shop {
-        let mut tries = 10;
-        let mut angle = -1.0f32;
-        while angle == -1.0 && tries >= 0 {
-            angle = place_room(rooms, entrance, sid, Random::float_max(360.0));
-            tries -= 1;
-        }
-        if angle == -1.0 {
-            return None;
-        }
-    }
-
-    let mut branchable = loop_ids.clone();
-    let mut rooms_to_branch = multi;
-    rooms_to_branch.extend(single);
-    weight_rooms_list(rooms, &mut branchable);
-    if !create_branches(
-        rooms,
-        &mut branchable,
-        &rooms_to_branch,
-        &params.branch_tunnel_chances,
-        depth,
-    ) {
-        return None;
-    }
-
-    find_neighbours(rooms);
-    // extra connections
-    let n = rooms.len();
-    for i in 0..n {
-        let neigh: Vec<usize> = rooms[i].neighbours.clone();
-        for n_id in neigh {
-            if !rooms[n_id].connected.contains(&i)
-                && Random::float() < params.extra_connection_chance
-            {
-                let _ = connect(rooms, i, n_id);
-            }
-        }
-    }
-
-    Some(())
-}
-
-pub fn build_figure_eight(rooms: &mut Vec<Room>, params: &BuilderParams, depth: i32) -> Option<()> {
-    // Figure-eight is complex; for now fall back to loop with same RNG shape params
-    // TODO: full FigureEightBuilder parity
-    // Still consume landmark selection RNG-ish by running loop path
-    build_loop(rooms, params, depth)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::random::Random;
-    use crate::rooms::room::dims_for_kind;
-    use crate::rooms::types::RoomKind;
-
-    #[test]
-    fn loop_build_smoke() {
-        Random::reset_generators();
-        Random::push_generator_seeded(12345);
-        let mut rooms = Vec::new();
-        // entrance, exit, 3 standards, 1 special
-        let specs = [
-            ("Entrance", RoomKind::Entrance, 1, 16),
-            ("Exit", RoomKind::Exit, 1, 16),
-            ("SewerPipeRoom", RoomKind::Standard, 1, 16),
-            ("RingRoom", RoomKind::Standard, 1, 16),
-            ("PlantsRoom", RoomKind::Standard, 1, 16),
-            ("CryptRoom", RoomKind::Special, 1, 1),
-        ];
-        for (i, (name, kind, sf, mc)) in specs.iter().enumerate() {
-            let (mw, xw, mh, xh) = dims_for_kind(*kind, *sf, name);
-            rooms.push(Room::new(i, *name, *kind, *sf, *mc, mw, xw, mh, xh));
-        }
-        let params = BuilderParams {
-            curve_intensity: 0.3,
-            ..Default::default()
-        };
-        let result = build_loop(&mut rooms, &params, 2);
-        Random::pop_generator();
-        // may fail occasionally; try multiple seeds
-        if result.is_none() {
-            // not a hard fail — placement is chance-based
-            return;
-        }
-        assert!(rooms.iter().any(|r| !r.is_empty() && r.is_entrance()));
-    }
+    center.0 /= ids.len() as f32;
+    center.1 /= ids.len() as f32;
+    center
 }

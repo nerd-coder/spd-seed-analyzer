@@ -33,7 +33,7 @@ pub fn init_for_run() -> (Vec<&'static str>, [i32; 5]) {
     }
 
     let mut run_secrets: Vec<&str> = ALL_SECRETS.to_vec();
-    Random::shuffle(&mut run_secrets);
+    Random::shuffle_list(&mut run_secrets);
     (run_secrets, region_secrets)
 }
 

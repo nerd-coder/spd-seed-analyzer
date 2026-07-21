@@ -1,6 +1,6 @@
 # SPD Seed Analyzer — Implementation Progress
 
-**Last updated:** 2026-07-21 (P1: remaining special/secret room painters)
+**Last updated:** 2026-07-21 (P3: builder + connection-room parity)
 
 **Branch:** `main`  
 **Pinned SPD:** v3.3.8 @ `7b8b845a7`  
@@ -90,8 +90,9 @@ bun run check:all    # biome + rust fmt/clippy
 |------|----------|--------|
 | `initRooms` | `rooms/init_rooms.rs` | entrance/exit/standard/special/secret + shuffle |
 | Room geometry | `rooms/room.rs` | connections, setSize (NormalIntRange); `Room.random` |
-| Loop builder | `builders/` | placeRoom, findFreeSpace, tunnels, branches |
-| Figure-eight | — | **Falls back to loop** (not parity) |
+| Regular builders | `builders/` | Pinned Loop + FigureEight placement, persistent landmark retries, centered branch angles, tunnels/branches, placeRoom/findFreeSpace |
+| Connection rooms | `level/painter/connection_rooms/` | Region-weighted Tunnel/Bridge/Perimeter/Walkway/Ring/Maze subclasses; dimensions, doors, chasm merges, geometry, and RNG-visible paint |
+| Build retries | `level/build.rs` | Inner attempts reuse shuffled rooms/builder state; outer attempts recreate builder + initRooms on painter rejection; browser-safe caps |
 | Minimal paint | `level/terrain.rs` | SPD Terrain IDs; walls/empty/doors/entrance/exit; solid/openSpace helpers |
 | Patch.generate | `level/patch.rs` | Full cellular water/grass mask (force fill-rate) |
 | Water/grass/traps/decorate | `level/painter/` | Region fill rates + trap tables; sub-generator after room paint; sewers/prison/city/caves/halls decorate (approx); drop cells reject item-destroying traps |
@@ -149,10 +150,9 @@ Results are **partial**. Not game-parity yet because:
 3. Shop stock timing is post-build (SPD generates during room `setSize`); bag choice is hero-less  
 4. Ghost quest rewards ported; placement uses minimal openSpace; full `createMobs` not ported  
 5. Wandmaker + Blacksmith + Imp quests are ported; RotGarden heart/lasher paint and occupancy are ported, but the analyzer does not export mobs; CrystalPath/Choice placement geometry remains approximate
-6. Figure-eight builder incomplete
-7. `randomDropCell` is still simplified (standard rooms + passable + trap filter; room-painted heap/mob occupancy only, incomplete `canPlaceItem` fidelity)
-8. Sewer room-count tables used for all regions
-9. Structural-room paint/transition rejection loops (including SewerPipe, WaterBridge, RegionDecoBridge, CavesFissure, Pillars, ChasmBridge, CellBlock, LibraryHall, RotGarden, and malformed SecretMaze wall selection) are capped at 10,000 attempts for browser safety; valid builder layouts are not expected to reach the cap. `Maze.generate` retains its pinned 2,500 consecutive-failure limit. Early guide pages use an isolated unseeded generator in SPD and remain omitted from reports.
+6. `randomDropCell` is still simplified (standard rooms + passable + trap filter; room-painted heap/mob occupancy only, incomplete `canPlaceItem` fidelity)
+7. Sewer room-count tables used for all regions
+8. Structural-room paint/transition rejection loops (including SewerPipe, WaterBridge, RegionDecoBridge, CavesFissure, Pillars, ChasmBridge, CellBlock, LibraryHall, RotGarden, MazeConnection center retries, and malformed SecretMaze wall selection), builder branch selection/stitching, and regular-level inner/outer build retries are capped at 10,000 attempts for browser safety; valid layouts are not expected to reach the cap. `Maze.generate` retains its pinned 2,500 consecutive-failure limit. On the malformed disconnected-special path only, the Rust painter preflights failure before Java's `nTraps`/room-shuffle/partial-paint RNG burns; normal successful layouts are unaffected. Early guide pages use an isolated unseeded generator in SPD and remain omitted from reports.
 
 Status string: `"partial"`.
 
@@ -185,12 +185,13 @@ Status string: `"partial"`.
 - ~~City structural-room geometry~~ (Hallway / LibraryHall / LibraryRing / Statues / SegmentedLibrary plus selected entrance/exit variants; exact merge, resize, bookshelf/statue, RNG, and transition behavior)
 - ~~Chasm feeling padding + CHASM terrain from caves merge~~
 - ~~Halls structural rooms + generic GrassyGrave~~ (Skulls / Ritual plus Ritual entrance/exit; tomb loot and Plants/GrassyGrave merges)
-- Improve connection corridors / remaining special room `paint()` geometry
+- ~~Connection corridor subclasses~~ (Tunnel/Bridge/Perimeter/Walkway/Ring/Maze geometry, doors, dimensions, and chasm merge overrides)
+- Improve remaining special room `paint()` geometry
 
 ### P3 — Builder parity
-- Full `FigureEightBuilder`  
-- Connection room variants fidelity  
-- Robust build retries matching `Level.create` outer loop when paint fails  
+- ~~Full `FigureEightBuilder`~~ (two loops, persistent landmark, shared tunnel deck, opposite placement, centered branch angles)
+- ~~Connection room variants fidelity~~ (including region-weighted creation and MazeConnection max-connections/hidden-door behavior)
+- ~~Robust build retries~~ (inner builder-state reuse + outer initRooms/builder recreation; browser-safe cap and rare malformed-paint caveat documented above)
 
 ### P4 — Map rendering polish
 - Autotiling / raised walls (DungeonTileSheet)  
@@ -289,7 +290,7 @@ SPD is GPL-3.0. This project ports generation logic → treat as **GPL-3.0-or-la
 
 1. Read this file + `README.md`  
 2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs` / `level/special_loot/` / `quests/{ghost,wandmaker,blacksmith,imp}.rs` / `level/shop.rs`  
-3. Next recommended work: **FigureEightBuilder**, connection-room variants, and outer build retries (P3), followed by **Java golden checks** (P6 oracle)
+3. Next recommended work: **Java golden checks** (P6 oracle), followed by map rendering polish and seed-finder constraints
 4. Icons: `web/src/lib/item-icons.ts` + `components/ItemIcon.tsx` (items.png sheet)  
 5. Do not re-copy full asset tree; use `web/public/assets/` as flattened SPD assets  
 6. After Rust changes: `bun run build:wasm` (or `bun run dev`)  

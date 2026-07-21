@@ -149,6 +149,7 @@ pub fn apply_room_door_types(rooms: &[Room], ri: usize, doors: &mut DoorMap) {
 fn door_type_for_room(room: &Room) -> DoorType {
     match room.kind {
         RoomKind::Secret => DoorType::Hidden,
+        RoomKind::Connection if room.name == "MazeConnectionRoom" => DoorType::Hidden,
         RoomKind::Connection => DoorType::Tunnel,
         RoomKind::Shop | RoomKind::Entrance | RoomKind::Exit | RoomKind::Standard => {
             DoorType::Regular

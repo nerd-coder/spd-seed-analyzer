@@ -6,7 +6,7 @@ use crate::level::terrain::{TerrainMap, GRASS, HIGH_GRASS, LOCKED_DOOR, WALL};
 use crate::random::Random;
 use crate::rooms::room::Room;
 
-use super::maze::distance_map;
+use crate::level::maze::distance_map;
 
 const GARDEN_RETRY_LIMIT: usize = 10_000;
 

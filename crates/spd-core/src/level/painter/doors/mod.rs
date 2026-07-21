@@ -280,6 +280,37 @@ mod tests {
     }
 
     #[test]
+    fn bridge_connection_variants_merge_only_with_chasm() {
+        for name in ["BridgeRoom", "WalkwayRoom", "RingBridgeRoom"] {
+            let mut left = box_room(0, RoomKind::Connection, 1, 1, 9, 9);
+            left.name = name.into();
+            let mut right = box_room(1, RoomKind::Connection, 9, 1, 17, 9);
+            right.name = name.into();
+            let rooms = vec![left, right];
+
+            let mut chasm = terrain::paint_minimal(&rooms).expect("chasm map");
+            assert!(merge_rooms_with_terrain(
+                &mut chasm,
+                &rooms[0],
+                &rooms[1],
+                Some(Point::new(9, 5)),
+                terrain::CHASM,
+                11,
+            ));
+
+            let mut region = terrain::paint_minimal(&rooms).expect("region map");
+            assert!(!merge_rooms_with_terrain(
+                &mut region,
+                &rooms[0],
+                &rooms[1],
+                Some(Point::new(9, 5)),
+                terrain::REGION_DECO,
+                11,
+            ));
+        }
+    }
+
+    #[test]
     fn paint_doors_can_hide_or_unlock() {
         Random::push_generator_seeded(99);
         let mut a = box_room(0, RoomKind::Standard, 1, 1, 8, 8);

@@ -155,7 +155,9 @@ pub fn init_rooms_regular(
         specs.push(RoomSpec::special("DemonSpawnerRoom"));
     }
 
-    Random::shuffle_vec(&mut specs);
+    // RegularLevel.build passes an ArrayList to Random.shuffle, which delegates
+    // to `Collections.shuffle` (backwards Fisher-Yates), not watabou's array helper.
+    Random::shuffle_list(&mut specs);
 
     let rooms: Vec<Room> = specs
         .into_iter()
@@ -234,6 +236,18 @@ mod tests {
 
         let names_a: Vec<_> = a.rooms.iter().map(|r| r.name.as_str()).collect();
         let names_b: Vec<_> = b.rooms.iter().map(|r| r.name.as_str()).collect();
+        assert_eq!(
+            names_a,
+            [
+                "SecretArtilleryRoom",
+                "SewerPipeRoom",
+                "WaterBridgeEntranceRoom",
+                "MagicWellRoom",
+                "RingExitRoom",
+                "WaterBridgeRoom",
+                "CircleBasinRoom",
+            ]
+        );
         assert_eq!(names_a, names_b);
         assert_eq!(a.builder_kind, b.builder_kind);
     }

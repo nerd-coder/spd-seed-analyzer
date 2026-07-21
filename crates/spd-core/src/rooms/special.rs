@@ -52,8 +52,8 @@ pub fn init_for_run() -> Vec<&'static str> {
     let mut run_equip: Vec<&str> = EQUIP_SPECIALS.to_vec();
     let mut run_cons: Vec<&str> = CONSUMABLE_SPECIALS.to_vec();
 
-    Random::shuffle(&mut run_equip);
-    Random::shuffle(&mut run_cons);
+    Random::shuffle_list(&mut run_equip);
+    Random::shuffle_list(&mut run_cons);
 
     let mut run_specials: Vec<&str> = Vec::new();
     run_specials.push(run_cons.remove(0));

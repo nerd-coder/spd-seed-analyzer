@@ -155,7 +155,7 @@ pub fn generate_items(dungeon: &mut DungeonState) -> Vec<GeneratedItem> {
 
     // Isolate shuffle from levelgen RNG (SPD: pushGenerator(Random.Long())).
     Random::push_generator_seeded(Random::long());
-    Random::shuffle_vec(&mut items);
+    Random::shuffle_list(&mut items);
     Random::pop_generator();
 
     items

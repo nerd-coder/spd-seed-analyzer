@@ -39,6 +39,14 @@ fn can_merge_at(
     merge_terrain: i32,
     depth: i32,
 ) -> bool {
+    if room.kind == RoomKind::Connection
+        && matches!(
+            room.name.as_str(),
+            "BridgeRoom" | "WalkwayRoom" | "RingBridgeRoom"
+        )
+    {
+        return merge_terrain == CHASM;
+    }
     if !is_mergeable_standard(room) {
         return false;
     }

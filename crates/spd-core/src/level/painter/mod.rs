@@ -4,6 +4,7 @@
 //! `nTraps()` on main stream (via [`n_traps`]) → room paint (elsewhere) →
 //! paintDoors (merge + hidden Graph) → `pushGenerator(Long)` → water/grass/traps/decorate → pop.
 
+mod connection_rooms;
 mod decorate;
 mod doors;
 mod params;
@@ -15,6 +16,7 @@ use crate::level::Feeling;
 use crate::random::Random;
 use crate::rooms::room::Room;
 
+pub(crate) use connection_rooms::paint as paint_connection_room;
 pub use doors::{apply_room_door_types, door_spots, paint_doors, place_doors_for_room, DoorMap};
 pub use params::n_traps;
 pub(crate) use room_geometry::paint_standard_room;
