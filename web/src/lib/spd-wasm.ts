@@ -39,6 +39,16 @@ export type FloorMap = {
   height: number
   tileset: string
   tiles: number[]
+  tile_variance: number[]
+  markers: MapMarker[]
+}
+
+export type MapMarkerKind = 'item' | 'mob'
+
+export type MapMarker = {
+  cell: number
+  kind: MapMarkerKind
+  label: string
 }
 
 export type FloorReport = {

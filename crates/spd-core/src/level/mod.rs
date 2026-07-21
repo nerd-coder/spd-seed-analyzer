@@ -14,7 +14,7 @@ use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::quests;
 use crate::random::Random;
-use crate::report::{FloorReport, ItemEntry};
+use crate::report::{FloorReport, ItemEntry, MapMarker, MapMarkerKind};
 use crate::rooms::init_rooms::BuilderKind;
 use crate::rooms::types::RoomKind;
 
@@ -347,13 +347,6 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 n_traps,
             );
 
-            floor_map = Some(crate::report::FloorMap {
-                width: map.width as u32,
-                height: map.height as u32,
-                tileset: terrain::tileset_for_depth(dungeon.depth).to_string(),
-                tiles: map.map.iter().map(|&t| t as u16).collect(),
-            });
-
             // createMobs subset: Ghost (sewers) / Wandmaker (prison) before createItems.
             // Full mob placement still not ported — createItems RNG remains approximate.
             if let Some(exit) = floor.rooms.iter().find(|r| r.is_exit() && !r.is_empty()) {
@@ -382,7 +375,33 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 feeling == Feeling::Large,
                 items_to_spawn,
             );
-            for p in loot {
+            let mut map_markers: Vec<MapMarker> = map
+                .known_mobs
+                .iter()
+                .enumerate()
+                .filter_map(|(cell, &label)| {
+                    label.map(|label| MapMarker {
+                        cell: cell as u32,
+                        kind: MapMarkerKind::Mob,
+                        label: label.to_string(),
+                    })
+                })
+                .collect();
+
+            for created in loot {
+                let p = created.loot;
+                if let Some(cell) = created.cell.filter(|&cell| cell < map.len()) {
+                    let (kind, label) = match p.heap_type {
+                        "mimic" => (MapMarkerKind::Mob, "Mimic".to_string()),
+                        "golden_mimic" => (MapMarkerKind::Mob, "Golden Mimic".to_string()),
+                        _ => (MapMarkerKind::Item, p.item.title()),
+                    };
+                    map_markers.push(MapMarker {
+                        cell: cell as u32,
+                        kind,
+                        label,
+                    });
+                }
                 if p.item.source.as_deref() == Some("forced") {
                     // Room paint may add to itemsToSpawn (e.g. Storage → PotionOfLiquidFlame).
                     // Keep those in the report if not already listed under forced.
@@ -403,6 +422,31 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 }
                 placed_items.push(item);
             }
+
+            // Some room painters know a heap cell but not which generated item belongs to it.
+            // Keep that distinction explicit and do not fabricate identity-to-cell pairings.
+            for (cell, &occupied) in map.heap_occupied.iter().enumerate() {
+                if occupied
+                    && cell < map.len()
+                    && !map_markers.iter().any(|marker| marker.cell == cell as u32)
+                {
+                    map_markers.push(MapMarker {
+                        cell: cell as u32,
+                        kind: MapMarkerKind::Item,
+                        label: "Room loot".to_string(),
+                    });
+                }
+            }
+            map_markers.sort_by_key(|marker| marker.cell);
+
+            floor_map = Some(crate::report::FloorMap {
+                width: map.width as u32,
+                height: map.height as u32,
+                tileset: terrain::tileset_for_depth(dungeon.depth).to_string(),
+                tiles: map.map.iter().map(|&t| t as u16).collect(),
+                tile_variance: tile_variance(map.len(), depth_seed),
+                markers: map_markers,
+            });
         }
 
         room_names = floor
@@ -429,6 +473,15 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
     }
 }
 
+/// Pinned `DungeonTileSheet.setupVariance`: a fresh seedCurDepth generator,
+/// intentionally isolated from the active level-generation RNG.
+fn tile_variance(len: usize, depth_seed: i64) -> Vec<u8> {
+    Random::push_generator_seeded(depth_seed);
+    let variance = (0..len).map(|_| Random::int_max(100) as u8).collect();
+    Random::pop_generator();
+    variance
+}
+
 pub fn analyze_floors(dungeon: &mut DungeonState, max_floors: u32) -> Vec<FloorReport> {
     let mut floors = Vec::new();
     let max = max_floors.clamp(1, 26) as i32;
@@ -439,4 +492,28 @@ pub fn analyze_floors(dungeon: &mut DungeonState, max_floors: u32) -> Vec<FloorR
         floors.push(level.to_floor_report());
     }
     floors
+}
+
+#[cfg(test)]
+mod map_report_tests {
+    use super::*;
+
+    #[test]
+    fn tile_variance_is_deterministic_and_does_not_consume_level_rng() {
+        Random::reset_generators();
+        Random::push_generator_seeded(77);
+        let first = Random::int();
+        let variance = tile_variance(8, 1234);
+        let after_variance = Random::int();
+        Random::pop_generator();
+
+        Random::reset_generators();
+        Random::push_generator_seeded(77);
+        assert_eq!(Random::int(), first);
+        assert_eq!(Random::int(), after_variance);
+        Random::pop_generator();
+
+        assert_eq!(variance, tile_variance(8, 1234));
+        assert!(variance.iter().all(|&value| value < 100));
+    }
 }

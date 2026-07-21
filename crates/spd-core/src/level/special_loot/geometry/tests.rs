@@ -97,6 +97,27 @@ fn rot_garden_places_heart_and_lashers_without_duplicate_key_rng() {
     assert!(map.map.contains(&HIGH_GRASS));
     let plants = map.mob_occupied.iter().filter(|&&v| v).count();
     assert!((1..=7).contains(&plants));
+    let known_plants: Vec<_> = map
+        .known_mobs
+        .iter()
+        .enumerate()
+        .filter_map(|(cell, &label)| label.map(|label| (cell, label)))
+        .collect();
+    assert_eq!(known_plants.len(), plants);
+    assert_eq!(
+        known_plants
+            .iter()
+            .filter(|(_, label)| *label == "Rot Heart")
+            .count(),
+        1
+    );
+    assert!(known_plants
+        .iter()
+        .filter(|(_, label)| *label != "Rot Heart")
+        .all(|(_, label)| *label == "Rot Lasher"));
+    assert!(known_plants
+        .iter()
+        .all(|&(cell, _)| map.mob_occupied[cell] && map.map[cell] == GRASS));
     assert!(map
         .map
         .iter()
@@ -120,6 +141,15 @@ fn demon_spawner_burns_center_jitter_and_blocks_ambient_paint() {
     Random::pop_generator();
 
     assert_eq!(map.mob_occupied.iter().filter(|&&v| v).count(), 1);
+    let known_spawner: Vec<_> = map
+        .known_mobs
+        .iter()
+        .enumerate()
+        .filter_map(|(cell, &label)| label.map(|label| (cell, label)))
+        .collect();
+    assert_eq!(known_spawner.len(), 1);
+    assert_eq!(known_spawner[0].1, "Demon Spawner");
+    assert!(map.mob_occupied[known_spawner[0].0]);
     assert!(map.map.contains(&EMPTY));
     for y in room.top..=room.bottom {
         for x in room.left..=room.right {

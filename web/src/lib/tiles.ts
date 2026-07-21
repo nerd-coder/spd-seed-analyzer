@@ -1,152 +1,200 @@
-/**
- * SPD terrain → tilesheet index mapping (flat visuals).
- * Tilesheets are 16×16 tiles of 16×16 px (see DungeonTileSheet / DungeonTilemap.SIZE).
- */
+import {
+  featureVisual,
+  lowerVisual,
+  raisedTerrainVisual,
+  SHEET_COLS,
+  TILE_PX,
+  wallVisual,
+} from '@/lib/dungeon-tile-visuals'
+import type { FloorMap, MapMarkerKind } from '@/lib/spd-wasm'
 
-export const TILE_PX = 16
-export const SHEET_COLS = 16
+export { TILE_PX } from '@/lib/dungeon-tile-visuals'
 
-/** SPD Terrain constants (subset used by analyzer maps). */
-export const Terrain = {
-  CHASM: 0,
-  EMPTY: 1,
-  GRASS: 2,
-  WALL: 4,
-  DOOR: 5,
-  OPEN_DOOR: 6,
-  ENTRANCE: 7,
-  EXIT: 8,
-  EMBERS: 9,
-  LOCKED_DOOR: 10,
-  WALL_DECO: 12,
-  EMPTY_SP: 14,
-  HIGH_GRASS: 15,
-  SECRET_DOOR: 16,
-  SECRET_TRAP: 17,
-  TRAP: 18,
-  INACTIVE_TRAP: 19,
-  EMPTY_DECO: 20,
-  WATER: 29,
-  REGION_DECO: 33,
-} as const
-
-/** 1-based (x,y) on the 16-wide sheet → linear index. */
-function xy(x: number, y: number): number {
-  return x - 1 + SHEET_COLS * (y - 1)
+export type MapAssets = {
+  tiles: HTMLImageElement
+  terrainFeatures: HTMLImageElement
+  water: HTMLImageElement
 }
 
-// Flat / simple visuals from DungeonTileSheet
-const FLOOR = xy(1, 1) // 0
-const FLOOR_SP = xy(1, 1) + 4 // 4
-const FLOOR_DECO = xy(1, 1) + 1 // 1 — lightly decorated floor
-const EMBERS = xy(1, 1) + 3
-const GRASS = xy(1, 1) + 2 // 2
-const HIGH_GRASS = xy(1, 1) + 3 // 3
-const ENTRANCE = xy(1, 1) + 16 // 16
-const EXIT = xy(1, 1) + 17 // 17
-const FLAT_WALL = xy(1, 4) // 48
-const FLAT_WALL_DECO = xy(1, 4) + 1 // 49
-const FLAT_DOOR = xy(1, 4) + 8 // 56
-const FLAT_DOOR_OPEN = xy(1, 4) + 9 // 57
-const FLAT_DOOR_LOCKED = xy(1, 4) + 10 // 58
-const FLAT_REGION_DECO = xy(1, 5) + 10
-const CHASM = xy(9, 2) // 24
-// water uses animated sheets in-game; fall back to floor tint via grass-ish slot
-const WATER_VIS = xy(1, 1) + 2
-// traps: small mark on floor
-const TRAP_VIS = xy(1, 1) + 5 // 5
-const SECRET_TRAP_VIS = FLOOR // invisible until revealed
-
-/** Map SPD Terrain id → tilesheet cell index. */
-export function terrainToSheetIndex(terrain: number): number {
-  switch (terrain) {
-    case Terrain.CHASM:
-      return CHASM
-    case Terrain.EMPTY:
-      return FLOOR
-    case Terrain.EMPTY_DECO:
-      return FLOOR_DECO
-    case Terrain.EMBERS:
-      return EMBERS
-    case Terrain.GRASS:
-      return GRASS
-    case Terrain.HIGH_GRASS:
-      return HIGH_GRASS
-    case Terrain.WALL:
-      return FLAT_WALL
-    case Terrain.WALL_DECO:
-      return FLAT_WALL_DECO
-    case Terrain.REGION_DECO:
-      return FLAT_REGION_DECO
-    case Terrain.SECRET_DOOR:
-      return FLAT_WALL // looks like wall until searched
-    case Terrain.DOOR:
-      return FLAT_DOOR
-    case Terrain.OPEN_DOOR:
-      return FLAT_DOOR_OPEN
-    case Terrain.ENTRANCE:
-      return ENTRANCE
-    case Terrain.EXIT:
-      return EXIT
-    case Terrain.LOCKED_DOOR:
-      return FLAT_DOOR_LOCKED
-    case Terrain.EMPTY_SP:
-      return FLOOR_SP
-    case Terrain.WATER:
-      return WATER_VIS
-    case Terrain.TRAP:
-    case Terrain.INACTIVE_TRAP:
-      return TRAP_VIS
-    case Terrain.SECRET_TRAP:
-      return SECRET_TRAP_VIS
-    default:
-      return FLOOR
-  }
-}
-
-export function tilesetUrl(tileset: string): string {
-  const key = ['sewers', 'prison', 'caves', 'city', 'halls'].includes(tileset)
-    ? tileset
-    : 'sewers'
-  return `/assets/environment/tiles_${key}.png`
-}
+type MarkerVisibility = Record<MapMarkerKind, boolean>
 
 const imageCache = new Map<string, Promise<HTMLImageElement>>()
 
-export function loadTileset(tileset: string): Promise<HTMLImageElement> {
-  const url = tilesetUrl(tileset)
-  let p = imageCache.get(url)
-  if (!p) {
-    p = new Promise((resolve, reject) => {
-      const img = new Image()
-      img.onload = () => resolve(img)
-      img.onerror = () => reject(new Error(`Failed to load tileset: ${url}`))
-      img.src = url
+function loadImage(url: string): Promise<HTMLImageElement> {
+  let promise = imageCache.get(url)
+  if (!promise) {
+    promise = new Promise((resolve, reject) => {
+      const image = new Image()
+      image.onload = () => resolve(image)
+      image.onerror = () =>
+        reject(new Error(`Failed to load map asset: ${url}`))
+      image.src = url
     })
-    imageCache.set(url, p)
+    imageCache.set(url, promise)
   }
-  return p
+  return promise
 }
 
-export function drawFloorMap(
-  ctx: CanvasRenderingContext2D,
-  img: HTMLImageElement,
-  width: number,
-  height: number,
-  tiles: number[],
-  scale: number
-): void {
-  const s = TILE_PX * scale
-  ctx.imageSmoothingEnabled = false
-  ctx.clearRect(0, 0, width * s, height * s)
+function regionIndex(tileset: string): number {
+  const index = ['sewers', 'prison', 'caves', 'city', 'halls'].indexOf(tileset)
+  return index < 0 ? 0 : index
+}
 
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const t = tiles[x + y * width] ?? Terrain.WALL
-      const sheet = terrainToSheetIndex(t)
-      const sx = (sheet % SHEET_COLS) * TILE_PX
-      const sy = Math.floor(sheet / SHEET_COLS) * TILE_PX
-      ctx.drawImage(img, sx, sy, TILE_PX, TILE_PX, x * s, y * s, s, s)
+export function loadMapAssets(tileset: string): Promise<MapAssets> {
+  const region = regionIndex(tileset)
+  const key = ['sewers', 'prison', 'caves', 'city', 'halls'][region]
+  return Promise.all([
+    loadImage(`/assets/environment/tiles_${key}.png`),
+    loadImage('/assets/environment/terrain_features.png'),
+    loadImage(`/assets/environment/water${region}.png`),
+  ]).then(([tiles, terrainFeatures, water]) => ({
+    tiles,
+    terrainFeatures,
+    water,
+  }))
+}
+
+function drawSheetTile(
+  ctx: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  visual: number,
+  cell: number,
+  width: number,
+  scale: number
+) {
+  const size = TILE_PX * scale
+  ctx.drawImage(
+    image,
+    (visual % SHEET_COLS) * TILE_PX,
+    Math.floor(visual / SHEET_COLS) * TILE_PX,
+    TILE_PX,
+    TILE_PX,
+    (cell % width) * size,
+    Math.floor(cell / width) * size,
+    size,
+    size
+  )
+}
+
+function drawMarkers(
+  ctx: CanvasRenderingContext2D,
+  map: FloorMap,
+  scale: number,
+  visibility: MarkerVisibility
+) {
+  const size = TILE_PX * scale
+  const radius = Math.max(2, 3 * scale)
+  ctx.lineWidth = Math.max(1, scale)
+  for (const marker of map.markers) {
+    if (
+      !visibility[marker.kind] ||
+      marker.cell < 0 ||
+      marker.cell >= map.tiles.length
+    )
+      continue
+    const x = (marker.cell % map.width) * size + size / 2
+    const y = Math.floor(marker.cell / map.width) * size + size / 2
+    ctx.beginPath()
+    if (marker.kind === 'item') {
+      ctx.moveTo(x, y - radius)
+      ctx.lineTo(x + radius, y)
+      ctx.lineTo(x, y + radius)
+      ctx.lineTo(x - radius, y)
+      ctx.closePath()
+      ctx.fillStyle = '#f5c451'
+    } else {
+      ctx.arc(x, y, radius, 0, Math.PI * 2)
+      ctx.fillStyle = '#ef6b66'
+    }
+    ctx.fill()
+    ctx.strokeStyle = '#171717'
+    ctx.stroke()
+  }
+}
+
+/** Build all non-water layers once; animated frames only composite this bitmap. */
+export function renderStaticMap(
+  assets: MapAssets,
+  map: FloorMap,
+  scale: number,
+  visibility: MarkerVisibility
+): HTMLCanvasElement {
+  const canvas = document.createElement('canvas')
+  canvas.width = map.width * TILE_PX * scale
+  canvas.height = map.height * TILE_PX * scale
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return canvas
+  ctx.imageSmoothingEnabled = false
+
+  const variance = map.tile_variance ?? []
+  for (let cell = 0; cell < map.tiles.length; cell++) {
+    const visual = lowerVisual(
+      map.tiles,
+      variance,
+      map.width,
+      map.tileset,
+      cell
+    )
+    if (visual != null)
+      drawSheetTile(ctx, assets.tiles, visual, cell, map.width, scale)
+  }
+  for (let cell = 0; cell < map.tiles.length; cell++) {
+    const visual = featureVisual(
+      map.tiles[cell],
+      map.tileset,
+      variance[cell] ?? 0
+    )
+    if (visual != null) {
+      drawSheetTile(ctx, assets.terrainFeatures, visual, cell, map.width, scale)
     }
   }
+  for (let cell = 0; cell < map.tiles.length; cell++) {
+    const raised = raisedTerrainVisual(map.tiles[cell], variance, cell)
+    if (raised != null)
+      drawSheetTile(ctx, assets.tiles, raised, cell, map.width, scale)
+    const wall = wallVisual(map.tiles, variance, map.width, cell)
+    if (wall != null)
+      drawSheetTile(ctx, assets.tiles, wall, cell, map.width, scale)
+  }
+  drawMarkers(ctx, map, scale, visibility)
+  return canvas
+}
+
+function drawWater(
+  ctx: CanvasRenderingContext2D,
+  water: HTMLImageElement,
+  width: number,
+  height: number,
+  scale: number,
+  offset: number
+) {
+  const tileWidth = water.naturalWidth * scale
+  const tileHeight = water.naturalHeight * scale
+  const yOffset = (((offset * scale) % tileHeight) + tileHeight) % tileHeight
+  for (let y = yOffset - tileHeight; y < height; y += tileHeight) {
+    for (let x = 0; x < width; x += tileWidth) {
+      ctx.drawImage(water, x, y, tileWidth, tileHeight)
+    }
+  }
+}
+
+/** Pinned GameScene water speed is 5 world pixels per second. */
+export function drawFloorMap(
+  ctx: CanvasRenderingContext2D,
+  assets: MapAssets,
+  staticMap: HTMLCanvasElement,
+  scale: number,
+  elapsedSeconds: number
+) {
+  ctx.imageSmoothingEnabled = false
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+  drawWater(
+    ctx,
+    assets.water,
+    ctx.canvas.width,
+    ctx.canvas.height,
+    scale,
+    -5 * elapsedSeconds
+  )
+  ctx.drawImage(staticMap, 0, 0)
 }

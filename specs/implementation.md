@@ -1,6 +1,6 @@
 # SPD Seed Analyzer — Implementation Progress
 
-**Last updated:** 2026-07-21 (P6: Java identity oracle + golden fixtures)
+**Last updated:** 2026-07-21 (P4: pinned map rendering polish)
 
 **Branch:** `main`  
 **Pinned SPD:** v3.3.8 @ `7b8b845a7`  
@@ -116,7 +116,7 @@ bun run check:all    # biome + rust fmt/clippy
 | Imp quest | `quests/imp.rs` | `Imp.Quest.spawn` on city 17–19 (before shuffle); cursed +2 ring reward generated at initRooms |
 | Crystal rooms | `level/special_loot/` (`crystal.rs`) | Vault (wand/ring/artifact crystal chests + mimic chance), Choice (pots/scrolls + chest), Path (3+3 consumables with dedup/sort) |
 | Main createItems | `level/create_items.rs` | nItems loop, heap types; drop cells use map origin |
-| Floor map export | `report.rs` `FloorMap` | width/height/tileset/tiles; items include `class_name` |
+| Floor map export | `report.rs` `FloorMap` | Terrain tiles + pinned tile variance; exact known item/room-mob marker cells (ambient mobs remain unported) |
 
 ### Frontend
 | Area | Notes |
@@ -132,7 +132,7 @@ bun run check:all    # biome + rust fmt/clippy
 | **Item sources** | `lib/labels.ts` maps room/heap/quest tags (`CrystalVaultRoom`, `chest:heap`, `Blacksmith.Quest`, …) to readable badges |
 | **Item icons** | `ItemIcon` + `lib/item-icons.ts` crops `/assets/sprites/items.png` (ItemSpriteSheet indices); potions/scrolls/rings use identity appearance; shop bags/darts/Ankh/Alchemize + crystal-artifact classes covered |
 | **Spoiler toggles** | localStorage; identity table + map spoilers off by default; info-icon tooltips |
-| Map preview | 128×128 thumbnail right of floor details (`FloorMapPreview`); click → shadcn Dialog expand; `FloorMapCanvas` supports `maxDisplay` fit |
+| Map preview | Pinned terrain/water/chasm autotiling + raised wall layers; region water texture scrolls at 5 px/s in expanded view with reduced-motion cleanup; exact known item/mob markers are separately opt-in inside the spoiler-gated dialog |
 | Assets | Flattened to `web/public/assets/{environment,sprites,…}` (no nested `assets/assets`) |
 | App icon | `web/public/app_icon.jpg` |
 
@@ -150,8 +150,8 @@ Results are **partial**. Not game-parity yet because:
 1. Water/grass/trap painter + paintDoors merge/Graph and the current generic/region structural standard-room inventory are ported, but special/secret geometry can still desync merge success
 2. Special/secret room geometry still incomplete (drop cells / trap instances approximate); prize item RNG for main specials is largely ported  
 3. Shop stock timing is post-build (SPD generates during room `setSize`); bag choice is hero-less  
-4. Ghost quest rewards ported; placement uses minimal openSpace; full `createMobs` not ported  
-5. Wandmaker + Blacksmith + Imp quests are ported; RotGarden heart/lasher paint and occupancy are ported, but the analyzer does not export mobs; CrystalPath/Choice placement geometry remains approximate
+4. Ghost quest rewards ported; placement uses minimal openSpace; full `createMobs` not ported (map markers include only exact cells known to room paint / `createItems`)
+5. Wandmaker + Blacksmith + Imp quests are ported; RotGarden heart/lasher paint, occupancy, and map markers are ported; CrystalPath/Choice placement geometry remains approximate
 6. `randomDropCell` is still simplified (standard rooms + passable + trap filter; room-painted heap/mob occupancy only, incomplete `canPlaceItem` fidelity)
 7. Sewer room-count tables used for all regions
 8. Structural-room paint/transition rejection loops (including SewerPipe, WaterBridge, RegionDecoBridge, CavesFissure, Pillars, ChasmBridge, CellBlock, LibraryHall, RotGarden, MazeConnection center retries, and malformed SecretMaze wall selection), builder branch selection/stitching, and regular-level inner/outer build retries are capped at 10,000 attempts for browser safety; valid layouts are not expected to reach the cap. `Maze.generate` retains its pinned 2,500 consecutive-failure limit. On the malformed disconnected-special path only, the Rust painter preflights failure before Java's `nTraps`/room-shuffle/partial-paint RNG burns; normal successful layouts are unaffected. Early guide pages use an isolated unseeded generator in SPD and remain omitted from reports.
@@ -196,9 +196,9 @@ Status string: `"partial"`.
 - ~~Robust build retries~~ (inner builder-state reuse + outer initRooms/builder recreation; browser-safe cap and rare malformed-paint caveat documented above)
 
 ### P4 — Map rendering polish
-- Autotiling / raised walls (DungeonTileSheet)  
-- Optional item/mob markers on canvas  
-- Water animation sheets  
+- ~~Autotiling / raised walls~~ (pinned `DungeonTileSheet`, `DungeonTerrainTilemap`, `RaisedTerrainTilemap`, and `DungeonWallsTilemap` selection with `setupVariance`)
+- ~~Optional item/mob markers on canvas~~ (off by default; exact `randomDropCell`, known room heap, RotGarden, DemonSpawner, and mimic cells only; full ambient mob generation remains unported)
+- ~~Region water animation~~ (`water0..water4` selected by region and scrolled at pinned 5 px/s; expanded view only, RAF cleanup + `prefers-reduced-motion`)
 
 ### P5 — Seed finder mode (post-v1)
 - Constraint search over seeds (any/all items by floor)  
@@ -253,10 +253,12 @@ pushGenerator(seed); Long() × depth; result = Long(); pop
   "width": 41,
   "height": 43,
   "tileset": "sewers",
-  "tiles": [4, 4, 1, 5, 7, 8, ...]
+  "tiles": [4, 4, 1, 5, 7, 8, ...],
+  "tile_variance": [12, 68, 97, 3, ...],
+  "markers": [{ "cell": 318, "kind": "item", "label": "Potion of Healing" }]
 }
 ```
-Tiles are SPD `Terrain` values. Client maps to flat tilesheet indices (`web/src/lib/tiles.ts`).
+Tiles are SPD `Terrain` values. `tile_variance` is the isolated pinned `DungeonTileSheet.setupVariance(seedCurDepth)` stream. Marker cells are row-major, bounds-checked, and limited to placements the partial engine actually knows. The client maps the terrain into the pinned lower/upper tilemap layers (`web/src/lib/dungeon-tile-visuals.ts`).
 
 ### Spoiler toggles (UI)
 - **Show identities (spoilers):** `localStorage["spd-analyzer-identity-spoilers"]` = `"1"` | `"0"` (default off). Hides the Identities card when off.
@@ -292,7 +294,7 @@ SPD is GPL-3.0. This project ports generation logic → treat as **GPL-3.0-or-la
 
 1. Read this file + `README.md`  
 2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs` / `level/special_loot/` / `quests/{ghost,wandmaker,blacksmith,imp}.rs` / `level/shop.rs`  
-3. Next recommended work: **P4 map rendering polish**, followed by extending the Java oracle to floor/item facts and seed-finder constraints
+3. Next recommended work: extend the Java oracle to floor/item facts, then implement **P5 seed finder** constraints
 4. Icons: `web/src/lib/item-icons.ts` + `components/ItemIcon.tsx` (items.png sheet)  
 5. Do not re-copy full asset tree; use `web/public/assets/` as flattened SPD assets  
 6. After Rust changes: `bun run build:wasm` (or `bun run dev`)  

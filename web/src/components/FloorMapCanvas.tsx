@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
+import { Terrain } from '@/lib/dungeon-tile-visuals'
 import type { FloorMap } from '@/lib/spd-wasm'
-import { drawFloorMap, loadTileset, TILE_PX } from '@/lib/tiles'
+import {
+  drawFloorMap,
+  loadMapAssets,
+  renderStaticMap,
+  TILE_PX,
+} from '@/lib/tiles'
 import { cn } from '@/lib/utils'
 
 type Props = {
@@ -14,6 +20,10 @@ type Props = {
   maxDisplay?: number
   className?: string
   canvasClassName?: string
+  /** Animate the region water texture; disabled for thumbnails to avoid many RAF loops. */
+  animateWater?: boolean
+  showItems?: boolean
+  showMobs?: boolean
 }
 
 export function FloorMapCanvas({
@@ -22,9 +32,13 @@ export function FloorMapCanvas({
   maxDisplay,
   className,
   canvasClassName,
+  animateWater = false,
+  showItems = false,
+  showMobs = false,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [error, setError] = useState<string | null>(null)
+  const [reducedMotion, setReducedMotion] = useState(false)
 
   const naturalW = map.width * TILE_PX * scale
   const naturalH = map.height * TILE_PX * scale
@@ -35,9 +49,30 @@ export function FloorMapCanvas({
     displayW = Math.max(1, Math.round(naturalW * fit))
     displayH = Math.max(1, Math.round(naturalH * fit))
   }
+  const hasWater = animateWater && map.tiles.includes(Terrain.WATER)
+  const visibleMarkerLabels = map.markers
+    .filter(
+      (marker) =>
+        (marker.kind === 'item' && showItems) ||
+        (marker.kind === 'mob' && showMobs)
+    )
+    .map((marker) => marker.label)
+  const markerDescription = visibleMarkerLabels.length
+    ? ` Visible markers: ${visibleMarkerLabels.join(', ')}.`
+    : ''
+
+  useEffect(() => {
+    if (!animateWater) return
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const update = () => setReducedMotion(media.matches)
+    update()
+    media.addEventListener?.('change', update)
+    return () => media.removeEventListener?.('change', update)
+  }, [animateWater])
 
   useEffect(() => {
     let cancelled = false
+    let requestId = 0
     setError(null)
     const canvas = canvasRef.current
     if (!canvas) return
@@ -45,12 +80,24 @@ export function FloorMapCanvas({
     canvas.width = naturalW
     canvas.height = naturalH
 
-    loadTileset(map.tileset)
-      .then((img) => {
+    loadMapAssets(map.tileset)
+      .then((assets) => {
         if (cancelled) return
         const ctx = canvas.getContext('2d')
         if (!ctx) return
-        drawFloorMap(ctx, img, map.width, map.height, map.tiles, scale)
+        const staticMap = renderStaticMap(assets, map, scale, {
+          item: showItems,
+          mob: showMobs,
+        })
+        const started = performance.now()
+        const frame = (now: number) => {
+          if (cancelled) return
+          drawFloorMap(ctx, assets, staticMap, scale, (now - started) / 1000)
+          if (hasWater && !reducedMotion) {
+            requestId = requestAnimationFrame(frame)
+          }
+        }
+        frame(started)
       })
       .catch((e: unknown) => {
         if (!cancelled) {
@@ -60,8 +107,18 @@ export function FloorMapCanvas({
 
     return () => {
       cancelled = true
+      cancelAnimationFrame(requestId)
     }
-  }, [map, scale, naturalW, naturalH])
+  }, [
+    map,
+    scale,
+    naturalW,
+    naturalH,
+    hasWater,
+    reducedMotion,
+    showItems,
+    showMobs,
+  ])
 
   return (
     <div className={cn('inline-flex items-center justify-center', className)}>
@@ -74,6 +131,9 @@ export function FloorMapCanvas({
         <canvas
           ref={canvasRef}
           className={cn('rounded-none border bg-black/80', canvasClassName)}
+          role="img"
+          aria-label={`Shattered Pixel Dungeon floor map.${markerDescription}`}
+          title={markerDescription.trim() || undefined}
           style={{
             width: displayW,
             height: displayH,

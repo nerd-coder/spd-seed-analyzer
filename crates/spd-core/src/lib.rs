@@ -93,7 +93,25 @@ mod analyze_smoke {
                     .as_ref()
                     .map(|m| (m.width, m.height, m.tileset.as_str()))
             );
+            if let Some(map) = &f.map {
+                assert_eq!(map.tiles.len(), (map.width * map.height) as usize);
+                assert_eq!(map.tile_variance.len(), map.tiles.len());
+                assert!(map.tile_variance.iter().all(|&value| value < 100));
+                assert!(
+                    map.markers
+                        .iter()
+                        .all(|marker| marker.cell < map.tiles.len() as u32),
+                    "all exported marker cells must be within the map"
+                );
+            }
         }
+        assert!(
+            r.floors
+                .iter()
+                .filter_map(|floor| floor.map.as_ref())
+                .any(|map| !map.markers.is_empty()),
+            "createItems should export at least one exact marker"
+        );
     }
 
     #[test]
@@ -376,6 +394,19 @@ mod analyze_smoke {
             assert!(
                 floor.rooms.iter().any(|room| room == "DemonSpawnerRoom"),
                 "missing demon spawner on depth {depth}"
+            );
+            let map = floor.map.as_ref().expect("Halls floor map");
+            let spawner = map
+                .markers
+                .iter()
+                .find(|marker| {
+                    marker.kind == crate::report::MapMarkerKind::Mob
+                        && marker.label == "Demon Spawner"
+                })
+                .unwrap_or_else(|| panic!("missing demon spawner marker on depth {depth}"));
+            assert!(
+                spawner.cell < map.tiles.len() as u32,
+                "out-of-bounds demon spawner marker on depth {depth}"
             );
         }
     }

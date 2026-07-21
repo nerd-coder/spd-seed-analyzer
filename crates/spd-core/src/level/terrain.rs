@@ -55,6 +55,8 @@ pub struct TerrainMap {
     pub character_allowed: Vec<bool>,
     /// Cells occupied by mobs placed during room paint.
     pub mob_occupied: Vec<bool>,
+    /// Exact known mob identity for room-painted cells. Full createMobs is not ported.
+    pub known_mobs: Vec<Option<&'static str>>,
     /// Cells occupied by heaps placed during room paint.
     pub heap_occupied: Vec<bool>,
     /// Parallel to `map`: trap destroys dropped items (randomDropCell filter).
@@ -276,6 +278,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
     let item_allowed = vec![true; len];
     let character_allowed = vec![true; len];
     let mob_occupied = vec![false; len];
+    let known_mobs = vec![None; len];
     let heap_occupied = vec![false; len];
     let trap_destroys_items = vec![false; len];
     let trap_names = vec![None; len];
@@ -293,6 +296,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
         item_allowed,
         character_allowed,
         mob_occupied,
+        known_mobs,
         heap_occupied,
         trap_destroys_items,
         trap_names,

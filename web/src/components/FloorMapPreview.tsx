@@ -1,5 +1,5 @@
-import { Maximize2 } from 'lucide-react'
-import { useMemo } from 'react'
+import { ArrowsOut } from '@phosphor-icons/react'
+import { useMemo, useState } from 'react'
 
 import { FloorMapCanvas } from '@/components/FloorMapCanvas'
 import {
@@ -10,6 +10,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import type { FloorMap } from '@/lib/spd-wasm'
 import { TILE_PX } from '@/lib/tiles'
 import { cn } from '@/lib/utils'
@@ -35,6 +37,14 @@ function fullscreenScale(map: FloorMap): number {
  */
 export function FloorMapPreview({ map, depth, className }: Props) {
   const expandScale = useMemo(() => fullscreenScale(map), [map])
+  const [showItems, setShowItems] = useState(false)
+  const [showMobs, setShowMobs] = useState(false)
+  const itemMarkers = map.markers.filter(
+    (marker) => marker.kind === 'item'
+  ).length
+  const mobMarkers = map.markers.filter(
+    (marker) => marker.kind === 'mob'
+  ).length
 
   return (
     <Dialog>
@@ -61,7 +71,7 @@ export function FloorMapPreview({ map, depth, className }: Props) {
             className="pointer-events-none absolute right-1 bottom-1 flex size-5 items-center justify-center bg-black/55 text-white opacity-70 transition-opacity group-hover:opacity-100"
             aria-hidden
           >
-            <Maximize2 className="size-3" />
+            <ArrowsOut size={12} />
           </span>
         </button>
       </DialogTrigger>
@@ -75,10 +85,43 @@ export function FloorMapPreview({ map, depth, className }: Props) {
             {map.width}×{map.height} · {map.tileset}
           </DialogDescription>
         </DialogHeader>
+        {map.markers.length > 0 && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            {itemMarkers > 0 && (
+              <Label htmlFor={`floor-${depth}-item-markers`}>
+                <Switch
+                  id={`floor-${depth}-item-markers`}
+                  size="sm"
+                  checked={showItems}
+                  onCheckedChange={setShowItems}
+                />
+                Items ({itemMarkers})
+              </Label>
+            )}
+            {mobMarkers > 0 && (
+              <Label htmlFor={`floor-${depth}-mob-markers`}>
+                <Switch
+                  id={`floor-${depth}-mob-markers`}
+                  size="sm"
+                  checked={showMobs}
+                  onCheckedChange={setShowMobs}
+                />
+                Known mobs ({mobMarkers})
+              </Label>
+            )}
+            <p className="w-full text-muted-foreground text-xs">
+              Markers cover engine-confirmed cells only; ambient mob generation
+              is not yet ported.
+            </p>
+          </div>
+        )}
         <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-black/80 p-2">
           <FloorMapCanvas
             map={map}
             scale={expandScale}
+            animateWater
+            showItems={showItems}
+            showMobs={showMobs}
             maxDisplay={
               typeof window !== 'undefined'
                 ? Math.min(window.innerWidth - 64, window.innerHeight - 160)

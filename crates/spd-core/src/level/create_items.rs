@@ -13,6 +13,13 @@ pub struct PlacedLoot {
     pub heap_type: &'static str,
 }
 
+#[derive(Debug, Clone)]
+pub struct CreatedLoot {
+    pub loot: PlacedLoot,
+    /// Exact `randomDropCell` result; absent for unplaced/unsupported late drops.
+    pub cell: Option<usize>,
+}
+
 /// Main createItems random drops + forced itemsToSpawn placement.
 /// Uses simplified randomDropCell (standard rooms only, passable empty).
 pub fn create_items_main(
@@ -21,7 +28,7 @@ pub fn create_items_main(
     map: &TerrainMap,
     feeling_large: bool,
     items_to_spawn: Vec<GeneratedItem>,
-) -> Vec<PlacedLoot> {
+) -> Vec<CreatedLoot> {
     let mut out = Vec::new();
     let mut occupied = map.heap_occupied.clone();
     for (occupied, &mob) in occupied.iter_mut().zip(&map.mob_occupied) {
@@ -57,9 +64,12 @@ pub fn create_items_main(
             5 => {
                 if dungeon.depth > 1 {
                     to_drop.source = Some("mimic".into());
-                    out.push(PlacedLoot {
-                        item: to_drop,
-                        heap_type: "mimic",
+                    out.push(CreatedLoot {
+                        loot: PlacedLoot {
+                            item: to_drop,
+                            heap_type: "mimic",
+                        },
+                        cell: Some(cell as usize),
                     });
                     continue;
                 }
@@ -94,26 +104,47 @@ pub fn create_items_main(
             }
         }
 
-        out.push(PlacedLoot {
-            item: to_drop,
-            heap_type,
+        out.push(CreatedLoot {
+            loot: PlacedLoot {
+                item: to_drop,
+                heap_type,
+            },
+            cell: Some(cell as usize),
         });
     }
 
     // place itemsToSpawn as heaps
     for mut item in items_to_spawn {
         item.source = Some("forced".into());
-        let _cell = random_drop_cell(rooms, map, &mut occupied);
+        let cell = random_drop_cell(rooms, map, &mut occupied);
+        let cell = (cell >= 0).then_some(cell as usize);
         if item.class_name == "TrinketCatalyst" {
-            out.push(PlacedLoot {
-                item,
-                heap_type: "locked_chest",
+            out.push(CreatedLoot {
+                loot: PlacedLoot {
+                    item,
+                    heap_type: "locked_chest",
+                },
+                cell,
             });
-            let _key_cell = random_drop_cell(rooms, map, &mut occupied);
+            let key_cell = random_drop_cell(rooms, map, &mut occupied);
+            if key_cell >= 0 {
+                let mut key = GeneratedItem::new("GoldenKey", ItemCategory::Other);
+                key.source = Some("forced".into());
+                out.push(CreatedLoot {
+                    loot: PlacedLoot {
+                        item: key,
+                        heap_type: "heap",
+                    },
+                    cell: Some(key_cell as usize),
+                });
+            }
         } else {
-            out.push(PlacedLoot {
-                item,
-                heap_type: "heap",
+            out.push(CreatedLoot {
+                loot: PlacedLoot {
+                    item,
+                    heap_type: "heap",
+                },
+                cell,
             });
         }
     }
@@ -150,9 +181,12 @@ pub fn create_items_main(
     for _ in 0..items {
         let mut it = dungeon.generator.random(dungeon.depth);
         it.source = Some("hidden".into());
-        out.push(PlacedLoot {
-            item: it,
-            heap_type: "hidden",
+        out.push(CreatedLoot {
+            loot: PlacedLoot {
+                item: it,
+                heap_type: "hidden",
+            },
+            cell: None,
         });
     }
     Random::pop_generator();

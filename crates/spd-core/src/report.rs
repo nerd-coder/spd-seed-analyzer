@@ -23,6 +23,26 @@ pub struct FloorMap {
     pub tileset: String,
     /// Row-major SPD `Terrain` values
     pub tiles: Vec<u16>,
+    /// SPD `DungeonTileSheet.setupVariance` values for deterministic tile alternates.
+    pub tile_variance: Vec<u8>,
+    /// Exact cells known to the partial generator; ambient mobs are not included.
+    #[serde(default)]
+    pub markers: Vec<MapMarker>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct MapMarker {
+    /// Row-major index into `FloorMap.tiles`.
+    pub cell: u32,
+    pub kind: MapMarkerKind,
+    pub label: String,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum MapMarkerKind {
+    Item,
+    Mob,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

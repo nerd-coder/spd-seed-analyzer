@@ -82,7 +82,7 @@ pub(super) fn paint(map: &mut TerrainMap, room: &Room, room_index: usize, doors:
     }
 
     let heart_cell = *Random::element(&candidates).expect("non-empty RotGarden candidates");
-    place_plant(map, heart_cell);
+    place_plant(map, heart_cell, "Rot Heart");
 
     let mut new_passable = passable.clone();
     for _ in 0..6 {
@@ -118,7 +118,7 @@ pub(super) fn paint(map: &mut TerrainMap, room: &Room, room_index: usize, doors:
         let Some(cell) = placed else {
             break;
         };
-        place_plant(map, cell);
+        place_plant(map, cell, "Rot Lasher");
     }
 
     // CIRCLE8 pairs: NW→N, NE→E, SE→S, SW→W.
@@ -210,8 +210,9 @@ fn valid_plant_pos(
     }
 }
 
-fn place_plant(map: &mut TerrainMap, cell: usize) {
+fn place_plant(map: &mut TerrainMap, cell: usize, label: &'static str) {
     map.mob_occupied[cell] = true;
+    map.known_mobs[cell] = Some(label);
     map.map[cell] = GRASS;
 }
 
