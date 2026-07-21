@@ -1,6 +1,6 @@
 # SPD Seed Analyzer — Implementation Progress
 
-**Last updated:** 2026-07-21 (P2: generic standard-room geometry)
+**Last updated:** 2026-07-21 (P2: caves structural-room geometry)
 
 **Branch:** `main`  
 **Pinned SPD:** v3.3.8 @ `7b8b845a7`  
@@ -97,6 +97,8 @@ bun run check:all    # biome + rust fmt/clippy
 | Water/grass/traps/decorate | `level/painter/` | Region fill rates + trap tables; sub-generator after room paint; sewers/prison/city/caves/halls decorate (approx); drop cells reject item-destroying traps |
 | paintDoors merge/Graph | `level/painter/doors.rs` | placeDoors element pick + door-type upgrades; mergeRooms for standard pairs; hidden-door Float + Graph connectivity; SECRET_DOOR/LOCKED_DOOR map tiles |
 | Standard room geometry | `level/painter/room_geometry/` | RegionDecoPatch/Cave/Ruins/Chasm/Burned plus Plants/Aquarium/Platform/Fissure/Striped/Study/SuspiciousChest/Minefield; patch validation, room-specific merges/placement masks, traps, center loot, and RNG-visible plant/fish/mimic behavior |
+| Caves structural geometry | `level/painter/room_geometry/region_rooms/` | RegionDecoBridge/CavesFissure/CirclePit/CircleWall plus selected entrance/exit variants; fissure path validation/bridges and transition placement |
+| Chasm/caves painter behavior | `level/{terrain.rs,painter/decorate.rs}` | Chasm-feeling two-cell padding + CHASM outside terrain; shuffled-order caves neighbour merges with CHASM/REGION_DECO and connection-aware corner decoration |
 | Special-room prizes | `level/special_loot/` | Crypt/Armory/Library/Treasury/Pool/Storage/Runestone/Lab/Statue + Sentry/Traps/MagicalFire/Sacrifice/ToxicGas + Pit/Garden/MagicWell + secrets (Honeypot/Maze/Summoning/ChestChasm/Garden/Well); room-shuffle + placeDoors RNG; may `findPrizeItem` from itemsToSpawn |
 | Shop stock | `level/shop.rs` | `ShopRoom.generateItems` (FOR_SALE); bag pick hero-less (scroll holder first); generated post-build (not mid-setSize) |
 | Ghost quest | `quests/ghost.rs` | `Ghost.Quest.spawn` on sewers: chance, placement (approx openSpace), weapon/armor rewards |
@@ -136,7 +138,7 @@ bun run check:all    # biome + rust fmt/clippy
 
 Results are **partial**. Not game-parity yet because:
 
-1. Water/grass/trap painter + paintDoors merge/Graph ported; generic standard-room painters are ported, but region-specific structural rooms and special/secret geometry can still desync merge success
+1. Water/grass/trap painter + paintDoors merge/Graph ported; generic and caves structural standard-room painters are ported, but sewers/prison/city/halls structural rooms and special/secret geometry can still desync merge success
 2. Special/secret room geometry still incomplete (drop cells / trap instances approximate); prize item RNG for main specials is largely ported  
 3. Shop stock timing is post-build (SPD generates during room `setSize`); bag choice is hero-less  
 4. Ghost quest rewards ported; placement uses minimal openSpace; full `createMobs` not ported  
@@ -167,12 +169,18 @@ Status string: `"partial"`.
 
 ### P2 — Painter parity
 - ~~Water/grass/trap placement RNG~~ (`level/patch.rs` + `level/painter/`; nTraps + sub-generator Long)  
-- ~~Region decorate (Sewer/Prison/City/Caves/Halls)~~ (partial: caves neighbour-merge / chasm region-deco skipped)  
+- ~~Region decorate (Sewer/Prison/City/Caves/Halls)~~ (partial overall; caves neighbour CHASM/REGION_DECO merges and connection-aware corner decoration are ported)
 - ~~paintDoors: mergeRooms + Graph hidden-door connectivity~~ (`level/painter/doors.rs`; door types from room paint table; merge depends on approximate interiors)  
 - ~~First standard PatchRoom geometry slice~~ (RegionDecoPatch / Cave / Ruins / Chasm / Burned, including matching entrance/exit variants; connected-patch path validation + Burned placement masks)
 - ~~Remaining generic standard-room geometry~~ (Plants / Aquarium / Platform / Fissure / Striped / Study / SuspiciousChest / Minefield; merge overrides, item masks, center loot, explosive traps, plant/fish/mimic RNG; aquarium mobs are not exported)
-- Improve connection corridors / remaining standard and special room `paint()` geometry
-- Chasm feeling padding + CHASM terrain from caves merge
+- ~~Caves structural-room geometry~~ (RegionDecoBridge / CavesFissure / CirclePit / CircleWall plus entrance/exit variants; explicit-terrain neighbour merge hooks)
+- ~~Chasm feeling padding + CHASM terrain from caves merge~~
+- Remaining structural standard-room inventory:
+  - Sewers: SewerPipe / Ring / WaterBridge / CircleBasin plus selected entrance/exit variants
+  - Prison: RegionDecoLine / Segmented / Pillars / ChasmBridge / CellBlock plus variants
+  - City: Hallway / LibraryHall / LibraryRing / Statues / SegmentedLibrary plus variants
+  - Halls: Skulls / Ritual plus Ritual entrance/exit; generic GrassyGrave is also still unpainted
+- Improve connection corridors / remaining special room `paint()` geometry
 
 ### P3 — Builder parity
 - Full `FigureEightBuilder`  

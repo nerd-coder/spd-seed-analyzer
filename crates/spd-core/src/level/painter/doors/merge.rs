@@ -1,7 +1,8 @@
 //! `RegularPainter.mergeRooms` for standard room pairs.
 
-use crate::geom::Point;
-use crate::level::terrain::{TerrainMap, CHASM, EMPTY, EMPTY_SP, GRASS};
+use crate::geom::{Point, Rect};
+use crate::level::terrain::{TerrainMap, CHASM, EMPTY, EMPTY_SP, GRASS, REGION_DECO_ALT};
+use crate::random::Random;
 use crate::rooms::room::{intersect, Room};
 use crate::rooms::types::RoomKind;
 
@@ -30,28 +31,66 @@ fn point_inside(room: &Room, from: Point, n: i32) -> Point {
     step
 }
 
-fn can_merge_at(map: &TerrainMap, room: &Room, p: Point) -> bool {
+fn can_merge_at(map: &TerrainMap, room: &Room, p: Point, merge_terrain: i32) -> bool {
     if !is_mergeable_standard(room) {
         return false;
     }
     let inside = point_inside(room, p, 1);
     match map.point_to_cell(inside.x, inside.y) {
-        Some(i) if room.name == "MinefieldRoom" => map.map[i] == EMPTY,
+        Some(i) if matches!(room.name.as_str(), "BurnedRoom" | "MinefieldRoom") => {
+            map.map[i] == EMPTY
+        }
+        Some(i)
+            if room.name == "CavesFissureRoom"
+                || room.name == "CavesFissureEntranceRoom"
+                || room.name == "CavesFissureExitRoom" =>
+        {
+            merge_terrain == CHASM || map.map[i] != CHASM
+        }
+        Some(i)
+            if matches!(
+                room.name.as_str(),
+                "RegionDecoBridgeRoom"
+                    | "RegionDecoBridgeEntranceRoom"
+                    | "RegionDecoBridgeExitRoom"
+            ) =>
+        {
+            map.map[i] != REGION_DECO_ALT
+        }
         Some(i) => !map.is_solid(i),
         None => false,
     }
 }
 
-fn merge_terrain(room: &Room, other: &Room) -> i32 {
+fn effective_merge_terrain(room: &Room, other: &Room, merge_terrain: i32) -> i32 {
     match room.name.as_str() {
-        "PlantsRoom" if matches!(other.name.as_str(), "PlantsRoom" | "GrassyGraveRoom") => GRASS,
-        "GrassyGraveRoom" if matches!(other.name.as_str(), "PlantsRoom" | "GrassyGraveRoom") => {
+        "PlantsRoom"
+            if merge_terrain == EMPTY
+                && matches!(other.name.as_str(), "PlantsRoom" | "GrassyGraveRoom") =>
+        {
             GRASS
         }
-        "PlatformRoom" if matches!(other.name.as_str(), "PlatformRoom" | "ChasmRoom") => CHASM,
-        "ChasmRoom" if matches!(other.name.as_str(), "ChasmRoom" | "PlatformRoom") => CHASM,
-        "StripedRoom" if other.name == "StripedRoom" => EMPTY_SP,
-        _ => EMPTY,
+        "GrassyGraveRoom"
+            if merge_terrain == EMPTY
+                && matches!(other.name.as_str(), "PlantsRoom" | "GrassyGraveRoom") =>
+        {
+            GRASS
+        }
+        "PlatformRoom"
+            if merge_terrain != CHASM
+                && room.connected.contains(&other.id)
+                && matches!(other.name.as_str(), "PlatformRoom" | "ChasmRoom") =>
+        {
+            CHASM
+        }
+        "ChasmRoom"
+            if merge_terrain == EMPTY
+                && matches!(other.name.as_str(), "ChasmRoom" | "PlatformRoom") =>
+        {
+            CHASM
+        }
+        "StripedRoom" if merge_terrain == EMPTY && other.name == "StripedRoom" => EMPTY_SP,
+        _ => merge_terrain,
     }
 }
 
@@ -59,21 +98,36 @@ fn merge_terrain(room: &Room, other: &Room) -> i32 {
 ///
 /// Uses watabou `Rect` math: `height() = bottom - top` (not inclusive).
 pub(super) fn merge_rooms(map: &mut TerrainMap, r: &Room, n: &Room, start: Option<Point>) -> bool {
+    merge_rooms_with_terrain(map, r, n, start, EMPTY)
+}
+
+pub(in crate::level::painter) fn merge_rooms_with_terrain(
+    map: &mut TerrainMap,
+    r: &Room,
+    n: &Room,
+    start: Option<Point>,
+    requested_terrain: i32,
+) -> bool {
     let inter = intersect(r, n);
-    let terrain = merge_terrain(r, n);
+    let terrain = effective_merge_terrain(r, n, requested_terrain);
     if inter.left == inter.right {
-        let mut top = start
-            .map(|p| p.y)
-            .unwrap_or_else(|| (inter.top + inter.bottom) / 2);
+        let merge_start = start.unwrap_or_else(|| random_rect_center(inter));
+        let mut top = merge_start.y;
         let mut bottom = top;
         let x = inter.left;
         let mut p = Point::new(x, top);
-        while top > inter.top && can_merge_at(map, n, p) && can_merge_at(map, r, p) {
+        while top > inter.top
+            && can_merge_at(map, n, p, requested_terrain)
+            && can_merge_at(map, r, p, requested_terrain)
+        {
             top -= 1;
             p.y -= 1;
         }
         p.y = bottom;
-        while bottom < inter.bottom && can_merge_at(map, n, p) && can_merge_at(map, r, p) {
+        while bottom < inter.bottom
+            && can_merge_at(map, n, p, requested_terrain)
+            && can_merge_at(map, r, p, requested_terrain)
+        {
             bottom += 1;
             p.y += 1;
         }
@@ -83,23 +137,28 @@ pub(super) fn merge_rooms(map: &mut TerrainMap, r: &Room, n: &Room, start: Optio
                     map.map[i] = terrain;
                 }
             }
-            paint_merge_connector(map, r, n, start, terrain);
+            paint_merge_connector(map, r, n, start, requested_terrain);
             return true;
         }
         false
     } else if inter.top == inter.bottom {
-        let mut left = start
-            .map(|p| p.x)
-            .unwrap_or_else(|| (inter.left + inter.right) / 2);
+        let merge_start = start.unwrap_or_else(|| random_rect_center(inter));
+        let mut left = merge_start.x;
         let mut right = left;
         let y = inter.top;
         let mut p = Point::new(left, y);
-        while left > inter.left && can_merge_at(map, n, p) && can_merge_at(map, r, p) {
+        while left > inter.left
+            && can_merge_at(map, n, p, requested_terrain)
+            && can_merge_at(map, r, p, requested_terrain)
+        {
             left -= 1;
             p.x -= 1;
         }
         p.x = right;
-        while right < inter.right && can_merge_at(map, n, p) && can_merge_at(map, r, p) {
+        while right < inter.right
+            && can_merge_at(map, n, p, requested_terrain)
+            && can_merge_at(map, r, p, requested_terrain)
+        {
             right += 1;
             p.x += 1;
         }
@@ -109,7 +168,7 @@ pub(super) fn merge_rooms(map: &mut TerrainMap, r: &Room, n: &Room, start: Optio
                     map.map[i] = terrain;
                 }
             }
-            paint_merge_connector(map, r, n, start, terrain);
+            paint_merge_connector(map, r, n, start, requested_terrain);
             return true;
         }
         false
@@ -118,19 +177,40 @@ pub(super) fn merge_rooms(map: &mut TerrainMap, r: &Room, n: &Room, start: Optio
     }
 }
 
+/// watabou `Rect.center()` consumes x jitter before y jitter, even when the
+/// caller only reads one coordinate.
+fn random_rect_center(rect: Rect) -> Point {
+    Point::new(
+        (rect.left + rect.right) / 2
+            + if rect.raw_width() % 2 == 0 {
+                Random::int_max(2)
+            } else {
+                0
+            },
+        (rect.top + rect.bottom) / 2
+            + if rect.raw_height() % 2 == 0 {
+                Random::int_max(2)
+            } else {
+                0
+            },
+    )
+}
+
 fn paint_merge_connector(
     map: &mut TerrainMap,
     room: &Room,
     other: &Room,
     door: Option<Point>,
-    terrain: i32,
+    requested_terrain: i32,
 ) {
-    if terrain != CHASM || !matches!(other.name.as_str(), "PlatformRoom" | "ChasmRoom") {
+    if !matches!(other.name.as_str(), "PlatformRoom" | "ChasmRoom") {
         return;
     }
     let connector = match room.name.as_str() {
-        "PlatformRoom" => EMPTY_SP,
-        "ChasmRoom" => EMPTY,
+        "PlatformRoom" if requested_terrain != CHASM && room.connected.contains(&other.id) => {
+            EMPTY_SP
+        }
+        "ChasmRoom" if requested_terrain == EMPTY => EMPTY,
         _ => return,
     };
     if let Some(door) = door {

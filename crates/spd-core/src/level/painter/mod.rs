@@ -24,6 +24,8 @@ pub(crate) use room_geometry::paint_standard_room;
 pub fn paint_water_grass_traps(
     map: &mut TerrainMap,
     rooms: &[Room],
+    paint_order: &[usize],
+    doors: &DoorMap,
     depth: i32,
     feeling: Feeling,
     n_traps: i32,
@@ -35,27 +37,36 @@ pub fn paint_water_grass_traps(
     let (grass_fill, grass_smooth) = params::grass_params(depth, feeling);
 
     if water_fill > 0.0 {
-        paint_water(map, rooms, water_fill, water_smooth);
+        paint_water(map, rooms, paint_order, water_fill, water_smooth);
     }
     if grass_fill > 0.0 {
-        paint_grass(map, rooms, grass_fill, grass_smooth);
+        paint_grass(map, rooms, paint_order, grass_fill, grass_smooth);
     }
     if n_traps > 0 {
-        paint_traps(map, rooms, depth, feeling, n_traps);
+        paint_traps(map, rooms, paint_order, depth, feeling, n_traps);
     }
 
-    decorate::decorate(map, rooms, depth);
+    decorate::decorate(map, rooms, paint_order, doors, depth);
 
     Random::pop_generator();
     map.recompute_passable();
 }
 
-fn paint_water(map: &mut TerrainMap, rooms: &[Room], fill: f32, smoothness: i32) {
+fn paint_water(
+    map: &mut TerrainMap,
+    rooms: &[Room],
+    paint_order: &[usize],
+    fill: f32,
+    smoothness: i32,
+) {
     let lake = patch::generate(map.width, map.height, fill, smoothness, true);
     if rooms.iter().any(|r| !r.is_empty()) {
-        for room in rooms.iter().filter(|r| !r.is_empty()) {
-            for y in room.top..=room.bottom {
-                for x in room.left..=room.right {
+        for &room_index in paint_order {
+            let Some(room) = rooms.get(room_index).filter(|r| !r.is_empty()) else {
+                continue;
+            };
+            for x in room.left..=room.right {
+                for y in room.top..=room.bottom {
                     // Room.canPlaceWater defaults true for all points in room rect.
                     if let Some(i) = map.point_to_cell(x, y) {
                         if lake.get(i).copied().unwrap_or(false)
@@ -77,14 +88,23 @@ fn paint_water(map: &mut TerrainMap, rooms: &[Room], fill: f32, smoothness: i32)
     }
 }
 
-fn paint_grass(map: &mut TerrainMap, rooms: &[Room], fill: f32, smoothness: i32) {
+fn paint_grass(
+    map: &mut TerrainMap,
+    rooms: &[Room],
+    paint_order: &[usize],
+    fill: f32,
+    smoothness: i32,
+) {
     let grass = patch::generate(map.width, map.height, fill, smoothness, true);
     let mut grass_cells: Vec<usize> = Vec::new();
 
     if rooms.iter().any(|r| !r.is_empty()) {
-        for room in rooms.iter().filter(|r| !r.is_empty()) {
-            for y in room.top..=room.bottom {
-                for x in room.left..=room.right {
+        for &room_index in paint_order {
+            let Some(room) = rooms.get(room_index).filter(|r| !r.is_empty()) else {
+                continue;
+            };
+            for x in room.left..=room.right {
+                for y in room.top..=room.bottom {
                     if let Some(i) = map.point_to_cell(x, y) {
                         if grass.get(i).copied().unwrap_or(false)
                             && map.grass_allowed[i]
@@ -145,15 +165,19 @@ fn paint_grass(map: &mut TerrainMap, rooms: &[Room], fill: f32, smoothness: i32)
 fn paint_traps(
     map: &mut TerrainMap,
     rooms: &[Room],
+    paint_order: &[usize],
     depth: i32,
     feeling: Feeling,
     mut n_traps: i32,
 ) {
     let mut valid: Vec<usize> = Vec::new();
     if rooms.iter().any(|r| !r.is_empty()) {
-        for room in rooms.iter().filter(|r| !r.is_empty()) {
-            for y in room.top..=room.bottom {
-                for x in room.left..=room.right {
+        for &room_index in paint_order {
+            let Some(room) = rooms.get(room_index).filter(|r| !r.is_empty()) else {
+                continue;
+            };
+            for x in room.left..=room.right {
+                for y in room.top..=room.bottom {
                     if let Some(i) = map.point_to_cell(x, y) {
                         if map.trap_allowed[i] && map.map[i] == EMPTY {
                             valid.push(i);
@@ -284,7 +308,15 @@ mod tests {
         let rooms = vec![a, b];
         let mut map = terrain::paint_minimal(&rooms).expect("map");
         let n = n_traps(3);
-        paint_water_grass_traps(&mut map, &rooms, 3, Feeling::None, n);
+        paint_water_grass_traps(
+            &mut map,
+            &rooms,
+            &[0, 1],
+            &DoorMap::new(),
+            3,
+            Feeling::None,
+            n,
+        );
         Random::pop_generator();
 
         let water = map.map.iter().filter(|&&t| t == WATER).count();

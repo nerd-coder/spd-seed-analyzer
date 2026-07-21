@@ -1,15 +1,24 @@
 //! Region-specific `decorate()` (visual terrain variance; consumes sub-generator RNG).
 
+mod caves;
+
 use crate::level::terrain::{TerrainMap, EMPTY, EMPTY_DECO, EMPTY_SP, WALL, WALL_DECO, WATER};
 use crate::random::Random;
 use crate::rooms::room::Room;
-use crate::rooms::types::RoomKind;
 
-pub fn decorate(map: &mut TerrainMap, rooms: &[Room], depth: i32) {
+use super::DoorMap;
+
+pub fn decorate(
+    map: &mut TerrainMap,
+    rooms: &[Room],
+    paint_order: &[usize],
+    doors: &DoorMap,
+    depth: i32,
+) {
     match depth {
         1..=5 => decorate_sewers(map),
         6..=10 => decorate_prison(map, rooms),
-        11..=15 => decorate_caves(map, rooms),
+        11..=15 => caves::decorate(map, rooms, paint_order, doors),
         16..=20 => decorate_city(map, depth),
         _ => decorate_halls(map),
     }
@@ -106,99 +115,6 @@ fn decorate_prison(map: &mut TerrainMap, _rooms: &[Room]) {
             map.map[i] = WALL_DECO;
         }
     }
-}
-
-/// `CavesPainter.decorate` subset: corner wall chance + empty deco + wall deco.
-/// Neighbour-merge CHASM/REGION_DECO skipped (needs full merge geometry).
-fn decorate_caves(map: &mut TerrainMap, rooms: &[Room]) {
-    let w = map.width;
-    for room in rooms.iter().filter(|r| !r.is_empty()) {
-        if room.kind != RoomKind::Standard {
-            continue;
-        }
-        if room.width() <= 4 || room.height() <= 4 {
-            continue;
-        }
-        let s = room.square();
-        // four corners — Random.Int(s) > 8 then maybe wall-fill
-        for (cx, cy, dx_wall, dy_wall) in [
-            (room.left + 1, room.top + 1, -1, -1),
-            (room.right - 1, room.top + 1, 1, -1),
-            (room.left + 1, room.bottom - 1, -1, 1),
-            (room.right - 1, room.bottom - 1, 1, 1),
-        ] {
-            if Random::int_max(s) <= 8 {
-                continue;
-            }
-            let Some(corner) = map.point_to_cell(cx, cy) else {
-                continue;
-            };
-            if map.is_solid(corner) {
-                continue;
-            }
-            let Some(side_x) = map.point_to_cell(cx + dx_wall, cy) else {
-                continue;
-            };
-            let Some(side_y) = map.point_to_cell(cx, cy + dy_wall) else {
-                continue;
-            };
-            if map.map[side_x] != WALL || map.map[side_y] != WALL {
-                continue;
-            }
-            map.map[corner] = WALL;
-            if corner < map.trap_destroys_items.len() {
-                map.trap_destroys_items[corner] = false;
-            }
-            if corner < map.trap_names.len() {
-                map.trap_names[corner] = None;
-            }
-            let _ = (dx_wall, dy_wall); // connection-value checks approx omitted
-        }
-    }
-
-    let l = map.map.len() as i32;
-    for i in (w + 1)..(l - w) {
-        let i = i as usize;
-        if map.map[i] != EMPTY {
-            continue;
-        }
-        let mut n = 0i32;
-        if map.map[i + 1] == WALL {
-            n += 1;
-        }
-        if map.map[i - 1] == WALL {
-            n += 1;
-        }
-        if map.map[i + w as usize] == WALL {
-            n += 1;
-        }
-        if map.map[i - w as usize] == WALL {
-            n += 1;
-        }
-        if Random::int_max(6) <= n {
-            map.map[i] = EMPTY_DECO;
-        }
-    }
-    // generateGold wall deco
-    for i in 0..(l - w) {
-        let i = i as usize;
-        let below = i + w as usize;
-        if map.map[i] == WALL && is_floorish(map.map[below]) && Random::int_max(4) == 0 {
-            map.map[i] = WALL_DECO;
-        }
-    }
-}
-
-fn is_floorish(t: i32) -> bool {
-    matches!(
-        t,
-        EMPTY
-            | EMPTY_DECO
-            | EMPTY_SP
-            | crate::level::terrain::GRASS
-            | crate::level::terrain::HIGH_GRASS
-            | WATER
-    )
 }
 
 /// `CityPainter.decorate`

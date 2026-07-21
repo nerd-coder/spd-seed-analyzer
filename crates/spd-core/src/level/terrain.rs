@@ -28,6 +28,7 @@ pub const EMPTY_DECO: i32 = 20;
 pub const BOOKSHELF: i32 = 27;
 pub const WATER: i32 = 29;
 pub const REGION_DECO: i32 = 33;
+pub const REGION_DECO_ALT: i32 = 34;
 
 #[derive(Debug, Clone)]
 pub struct TerrainMap {
@@ -75,7 +76,13 @@ impl TerrainMap {
     pub fn is_solid(&self, cell: usize) -> bool {
         matches!(
             self.map[cell],
-            WALL | WALL_DECO | BOOKSHELF | DOOR | LOCKED_DOOR | SECRET_DOOR | REGION_DECO
+            WALL | WALL_DECO
+                | BOOKSHELF
+                | DOOR
+                | LOCKED_DOOR
+                | SECRET_DOOR
+                | REGION_DECO
+                | REGION_DECO_ALT
         )
     }
 
@@ -163,6 +170,12 @@ pub fn tileset_for_depth(depth: i32) -> &'static str {
 /// Paint rooms as walls with empty interiors and door tiles on connections.
 /// Uses SPD terrain IDs so the client can render with original tilesheets.
 pub fn paint_minimal(rooms: &[Room]) -> Option<TerrainMap> {
+    paint_minimal_with_chasm(rooms, false)
+}
+
+/// RegularPainter's level bounds/default terrain. Chasm-feeling floors use two
+/// cells of padding and initialize the outside of rooms to chasm.
+pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<TerrainMap> {
     let placed: Vec<&Room> = rooms.iter().filter(|r| !r.is_empty()).collect();
     if placed.is_empty() {
         return None;
@@ -172,13 +185,13 @@ pub fn paint_minimal(rooms: &[Room]) -> Option<TerrainMap> {
     let max_r = placed.iter().map(|r| r.right).max()?;
     let max_b = placed.iter().map(|r| r.bottom).max()?;
 
-    let origin_x = min_l - 1;
-    let origin_y = min_t - 1;
-    let width = max_r - min_l + 3;
-    let height = max_b - min_t + 3;
+    let padding = if chasm_feeling { 2 } else { 1 };
+    let origin_x = min_l - padding;
+    let origin_y = min_t - padding;
+    let width = max_r - min_l + 1 + 2 * padding;
+    let height = max_b - min_t + 1 + 2 * padding;
     let len = (width * height) as usize;
-    // Outside rooms: solid wall (void is wall-like for minimap)
-    let mut map = vec![WALL; len];
+    let mut map = vec![if chasm_feeling { CHASM } else { WALL }; len];
 
     let idx = |x: i32, y: i32| ((x - origin_x) + (y - origin_y) * width) as usize;
 
@@ -266,4 +279,26 @@ pub fn paint_minimal(rooms: &[Room]) -> Option<TerrainMap> {
         trap_destroys_items,
         trap_names,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn chasm_feeling_adds_two_cell_chasm_padding() {
+        let mut room = Room::new(0, "EmptyRoom", RoomKind::Standard, 1, 4, 4, 10, 4, 10);
+        room.left = 5;
+        room.top = 7;
+        room.right = 11;
+        room.bottom = 13;
+
+        let normal = paint_minimal(std::slice::from_ref(&room)).expect("normal map");
+        let chasm = paint_minimal_with_chasm(&[room], true).expect("chasm map");
+        assert_eq!(chasm.width, normal.width + 2);
+        assert_eq!(chasm.height, normal.height + 2);
+        assert_eq!(chasm.origin_x, normal.origin_x - 1);
+        assert_eq!(chasm.origin_y, normal.origin_y - 1);
+        assert_eq!(chasm.map[0], CHASM);
+    }
 }

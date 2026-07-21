@@ -2,6 +2,7 @@
 
 mod generic_rooms;
 mod patch_rooms;
+mod region_rooms;
 
 use crate::generator::GeneratorState;
 use crate::geom::Point;
@@ -25,7 +26,9 @@ pub(crate) fn paint_standard_room(
     generator: &mut GeneratorState,
     depth: i32,
 ) -> StandardPaintResult {
-    if patch_rooms::paint(map, room, room_index, doors) {
+    if patch_rooms::paint(map, room, room_index, doors)
+        || region_rooms::paint(map, room, room_index, doors)
+    {
         StandardPaintResult::default()
     } else {
         generic_rooms::paint(map, room, room_index, doors, generator, depth).unwrap_or_default()

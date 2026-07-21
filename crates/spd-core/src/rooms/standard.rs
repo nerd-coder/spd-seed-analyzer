@@ -82,6 +82,8 @@ pub fn size_cat_probs(room_name: &str) -> [f32; 3] {
         "SewerPipeRoom" => [3., 2., 1.],
         "RingRoom" => [9., 3., 1.],
         "CircleBasinRoom" => [0., 3., 1.],
+        "RegionDecoBridgeRoom" => [2., 1., 0.],
+        "CircleWallRoom" => [0., 3., 1.],
         "PlantsRoom" | "AquariumRoom" => [3., 1., 0.],
         "PlatformRoom" | "FissureRoom" => [6., 3., 1.],
         "BurnedRoom" | "MinefieldRoom" => [4., 1., 0.],
@@ -98,6 +100,9 @@ pub fn size_cat_probs(room_name: &str) -> [f32; 3] {
         | "RingExitRoom"
         | "CircleBasinExitRoom" => [0., 1., 0.],
         "PillarsEntranceRoom" | "StatuesEntranceRoom" | "CavesFissureEntranceRoom" => [3., 1., 0.],
+        "RegionDecoBridgeEntranceRoom" | "RegionDecoBridgeExitRoom" => [2., 1., 0.],
+        "CavesFissureExitRoom" => [3., 1., 0.],
+        "CircleWallEntranceRoom" | "CircleWallExitRoom" => [0., 1., 0.],
         "CellBlockEntranceRoom" => [0., 1., 0.],
         "CaveEntranceRoom" | "RuinsEntranceRoom" | "ChasmEntranceRoom" => [2., 1., 0.],
         _ => [1., 0., 0.],
@@ -260,5 +265,8 @@ mod tests {
     fn cave_room_keeps_pinned_standard_size_weights() {
         assert_eq!(size_cat_probs("CaveRoom"), [4., 2., 1.]);
         assert_eq!(size_cat_probs("CaveEntranceRoom"), [2., 1., 0.]);
+        assert_eq!(size_cat_probs("RegionDecoBridgeRoom"), [2., 1., 0.]);
+        assert_eq!(size_cat_probs("CavesFissureExitRoom"), [3., 1., 0.]);
+        assert_eq!(size_cat_probs("CircleWallEntranceRoom"), [0., 1., 0.]);
     }
 }

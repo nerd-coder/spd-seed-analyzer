@@ -386,6 +386,26 @@ pub fn dims_for_kind(kind: RoomKind, size_factor: i32, name: &str) -> (i32, i32,
         "RegionDecoPatchRoom" | "CaveRoom" | "ChasmRoom" => {
             return (base_min_w.max(5), base_max_w, base_min_h.max(5), base_max_h);
         }
+        "RegionDecoBridgeRoom" => {
+            return (base_min_w.max(5), base_max_w, base_min_h.max(5), base_max_h);
+        }
+        "RegionDecoBridgeEntranceRoom" | "RegionDecoBridgeExitRoom" => {
+            return (base_min_w.max(8), base_max_w, base_min_h.max(8), base_max_h);
+        }
+        "CavesFissureRoom" | "CavesFissureEntranceRoom" | "CavesFissureExitRoom" => {
+            return (base_min_w.max(7), base_max_w, base_min_h.max(7), base_max_h);
+        }
+        "CirclePitRoom" => {
+            return (base_min_w.max(8), base_max_w, base_min_h.max(8), base_max_h);
+        }
+        "CircleWallEntranceRoom" | "CircleWallExitRoom" => {
+            return (
+                base_min_w.max(11),
+                base_max_w,
+                base_min_h.max(11),
+                base_max_h,
+            );
+        }
         _ => {}
     }
     match kind {
@@ -415,6 +435,18 @@ mod tests {
         assert_eq!(
             dims_for_kind(RoomKind::Exit, 2, "ChasmExitRoom"),
             (10, 14, 10, 14)
+        );
+        assert_eq!(
+            dims_for_kind(RoomKind::Entrance, 2, "RegionDecoBridgeEntranceRoom"),
+            (10, 14, 10, 14)
+        );
+        assert_eq!(
+            dims_for_kind(RoomKind::Standard, 1, "CavesFissureRoom"),
+            (7, 10, 7, 10)
+        );
+        assert_eq!(
+            dims_for_kind(RoomKind::Entrance, 2, "CircleWallEntranceRoom"),
+            (11, 14, 11, 14)
         );
     }
 

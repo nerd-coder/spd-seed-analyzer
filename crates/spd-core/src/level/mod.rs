@@ -276,7 +276,12 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             // before room shuffle / placeDoors / special paint.
             let n_traps = painter::n_traps(dungeon.depth);
 
-            if let Some(mut map) = terrain::paint_minimal(&floor.rooms) {
+            let painted_map = if feeling == Feeling::Chasm {
+                terrain::paint_minimal_with_chasm(&floor.rooms, true)
+            } else {
+                terrain::paint_minimal(&floor.rooms)
+            };
+            if let Some(mut map) = painted_map {
                 // Shop stock: in SPD generated during setSize (mid-build). We run
                 // after build / before other special paint so Generator still
                 // advances before createItems (timing approximate).
@@ -345,6 +350,8 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 painter::paint_water_grass_traps(
                     &mut map,
                     &floor.rooms,
+                    &paint_order,
+                    &doors,
                     dungeon.depth,
                     feeling,
                     n_traps,

@@ -18,6 +18,7 @@ use crate::rooms::types::RoomKind;
 
 pub use model::{apply_room_door_types, door_spots, place_doors_for_room, DoorMap, DoorType};
 
+pub(super) use merge::merge_rooms_with_terrain;
 use merge::{is_mergeable_standard, is_normal_size, merge_rooms};
 
 /// Graph edge: non-blocked door types (SPD `Room.edges`).
@@ -280,8 +281,10 @@ mod tests {
             ("ChasmRoom", "ChasmRoom", terrain::CHASM, terrain::EMPTY),
         ];
         for (left_name, right_name, merge_terrain, connector_terrain) in cases {
-            let left = named_room(0, left_name, 1, 1, 8, 8);
-            let right = named_room(1, right_name, 8, 1, 15, 8);
+            let mut left = named_room(0, left_name, 1, 1, 8, 8);
+            let mut right = named_room(1, right_name, 8, 1, 15, 8);
+            left.connected.push(1);
+            right.connected.push(0);
             let rooms = vec![left, right];
             let mut map = terrain::paint_minimal(&rooms).expect("map");
             let door = Point::new(8, 4);
@@ -294,20 +297,99 @@ mod tests {
     }
 
     #[test]
-    fn minefield_only_merges_through_empty_interior() {
-        let left = named_room(0, "MinefieldRoom", 1, 1, 8, 8);
-        let right = named_room(1, "EmptyRoom", 8, 1, 15, 8);
+    fn minefield_and_burned_only_merge_through_empty_interior() {
+        for room_name in ["MinefieldRoom", "BurnedRoom"] {
+            let left = named_room(0, room_name, 1, 1, 8, 8);
+            let right = named_room(1, "EmptyRoom", 8, 1, 15, 8);
+            let rooms = vec![left, right];
+            let mut map = terrain::paint_minimal(&rooms).expect("map");
+            assert!(merge_rooms(
+                &mut map,
+                &rooms[0],
+                &rooms[1],
+                Some(Point::new(8, 4))
+            ));
+
+            let mut blocked = terrain::paint_minimal(&rooms).expect("blocked map");
+            for y in 1..=8 {
+                let cell = blocked.point_to_cell(7, y).expect("room interior");
+                blocked.map[cell] = terrain::EMBERS;
+            }
+            assert!(!merge_rooms(
+                &mut blocked,
+                &rooms[0],
+                &rooms[1],
+                Some(Point::new(8, 4))
+            ));
+        }
+    }
+
+    #[test]
+    fn caves_explicit_chasm_merge_can_cross_fissure_edges() {
+        let left = named_room(0, "CavesFissureRoom", 1, 1, 8, 8);
+        let right = named_room(1, "CircleWallRoom", 8, 1, 15, 8);
         let rooms = vec![left, right];
         let mut map = terrain::paint_minimal(&rooms).expect("map");
-        for y in 1..=8 {
-            let cell = map.point_to_cell(7, y).expect("inside minefield");
-            map.map[cell] = terrain::EMBERS;
+        for y in 2..8 {
+            let cell = map.point_to_cell(7, y).expect("fissure edge");
+            map.map[cell] = terrain::CHASM;
         }
-        assert!(!merge_rooms(
+
+        assert!(merge_rooms_with_terrain(
             &mut map,
             &rooms[0],
             &rooms[1],
-            Some(Point::new(8, 4))
+            None,
+            terrain::CHASM,
         ));
+        let middle = map.point_to_cell(8, 4).expect("merge strip");
+        assert_eq!(map.map[middle], terrain::CHASM);
+    }
+
+    #[test]
+    fn null_start_consumes_both_rect_center_jitter_rolls() {
+        let left = named_room(0, "CircleWallRoom", 1, 1, 8, 9);
+        let right = named_room(1, "CirclePitRoom", 8, 1, 15, 9);
+        let rooms = vec![left, right];
+        let mut map = terrain::paint_minimal(&rooms).expect("map");
+
+        Random::push_generator_seeded(0xCE47E2);
+        let _unused_x_jitter = Random::int_max(2);
+        let _used_y_jitter = Random::int_max(2);
+        let expected_next = Random::int();
+        Random::pop_generator();
+
+        Random::push_generator_seeded(0xCE47E2);
+        assert!(merge_rooms_with_terrain(
+            &mut map,
+            &rooms[0],
+            &rooms[1],
+            None,
+            terrain::CHASM,
+        ));
+        let actual_next = Random::int();
+        Random::pop_generator();
+        assert_eq!(actual_next, expected_next);
+    }
+
+    #[test]
+    fn explicit_chasm_merge_does_not_paint_chasm_room_empty_connector() {
+        let mut left = named_room(0, "ChasmRoom", 1, 1, 8, 8);
+        let mut right = named_room(1, "PlatformRoom", 8, 1, 15, 8);
+        left.connected.push(1);
+        right.connected.push(0);
+        let rooms = vec![left, right];
+        let mut map = terrain::paint_minimal(&rooms).expect("map");
+        let door = Point::new(8, 4);
+
+        assert!(merge_rooms_with_terrain(
+            &mut map,
+            &rooms[0],
+            &rooms[1],
+            Some(door),
+            terrain::CHASM,
+        ));
+        let connector = map.point_to_cell(door.x, door.y).expect("connector");
+        assert_eq!(map.map[connector], terrain::CHASM);
     }
 }
