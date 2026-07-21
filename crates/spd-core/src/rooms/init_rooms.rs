@@ -64,6 +64,7 @@ fn room_from_spec(id: usize, spec: RoomSpec) -> Room {
 }
 
 /// Full initRooms sequence for a regular (non-boss) floor.
+#[allow(clippy::too_many_arguments)] // mirrors SPD RegularLevel.initRooms parameter surface
 pub fn init_rooms_regular(
     depth: i32,
     feeling: Feeling,

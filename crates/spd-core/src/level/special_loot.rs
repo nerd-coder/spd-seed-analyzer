@@ -60,7 +60,7 @@ fn place_doors_rng(rooms: &[Room], ri: usize, doors_placed: &mut Vec<(usize, usi
     for &ni in &room.connected {
         let a = ri.min(ni);
         let b = ri.max(ni);
-        if doors_placed.iter().any(|&p| p == (a, b)) {
+        if doors_placed.contains(&(a, b)) {
             continue;
         }
         let other = &rooms[ni];
@@ -654,13 +654,10 @@ fn burn_drop_pos(room: &Room, occupied: &mut Vec<(i32, i32)>) {
 }
 
 fn burn_terrain_pos(room: &Room, _water: bool) {
-    // simplified: keep rolling until "ok"
-    for _ in 0..30 {
-        let _x = Random::int_range_inclusive(room.left + 1, room.right - 1);
-        let _y = Random::int_range_inclusive(room.top + 1, room.bottom - 1);
-        // always accept first (map terrain not fully painted)
-        break;
-    }
+    // simplified: consume the same RNG shape as a single accepted roll
+    // (full map terrain not painted yet)
+    let _x = Random::int_range_inclusive(room.left + 1, room.right - 1);
+    let _y = Random::int_range_inclusive(room.top + 1, room.bottom - 1);
 }
 
 fn find_prize_item(
@@ -682,13 +679,10 @@ fn find_prize_item(
             let idx = Random::int_max(items_to_spawn.len() as i32) as usize;
             Some(items_to_spawn.remove(idx))
         }
-        Some(class) => {
-            if let Some(i) = items_to_spawn.iter().position(|it| it.class_name == class) {
-                Some(items_to_spawn.remove(i))
-            } else {
-                None
-            }
-        }
+        Some(class) => items_to_spawn
+            .iter()
+            .position(|it| it.class_name == class)
+            .map(|i| items_to_spawn.remove(i)),
     }
 }
 
@@ -696,9 +690,8 @@ fn find_prize_item_category(
     items_to_spawn: &mut Vec<GeneratedItem>,
     cat: ItemCategory,
 ) -> Option<GeneratedItem> {
-    if let Some(i) = items_to_spawn.iter().position(|it| it.category == cat) {
-        Some(items_to_spawn.remove(i))
-    } else {
-        None
-    }
+    items_to_spawn
+        .iter()
+        .position(|it| it.category == cat)
+        .map(|i| items_to_spawn.remove(i))
 }

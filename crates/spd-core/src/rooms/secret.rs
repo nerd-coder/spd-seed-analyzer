@@ -38,11 +38,18 @@ pub fn init_for_run() -> (Vec<&'static str>, [i32; 5]) {
 }
 
 /// `SecretRoom.secretsForFloor` — mutates region counters.
+///
+/// Only valid for RegularLevel depths in regions 0–4 (depth 2–24, excluding bosses).
+/// Depth 26 (`LastLevel`) yields region 5; Java never calls this there — we return 0.
 pub fn secrets_for_floor(depth: i32, region_secrets: &mut [i32; 5]) -> i32 {
     if depth == 1 {
         return 0;
     }
     let region = (depth / 5) as usize;
+    // regionSecretsThisRun is length 5 (Sewers…Halls). Depth ≥ 25 is boss/last.
+    if region >= region_secrets.len() {
+        return 0;
+    }
     let floor = depth % 5;
     let floors_left = 5 - floor;
 

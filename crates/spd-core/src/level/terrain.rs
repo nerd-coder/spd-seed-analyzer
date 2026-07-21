@@ -4,6 +4,8 @@ use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
 
 // Match `com.shatteredpixel.shatteredpixeldungeon.levels.Terrain`
+// (some IDs reserved for full painter parity)
+#[allow(dead_code)]
 pub const CHASM: i32 = 0;
 pub const EMPTY: i32 = 1;
 pub const GRASS: i32 = 2;
@@ -12,6 +14,7 @@ pub const DOOR: i32 = 5;
 pub const OPEN_DOOR: i32 = 6;
 pub const ENTRANCE: i32 = 7;
 pub const EXIT: i32 = 8;
+#[allow(dead_code)]
 pub const LOCKED_DOOR: i32 = 10;
 pub const EMPTY_SP: i32 = 14;
 pub const WATER: i32 = 29;
@@ -31,6 +34,10 @@ pub struct TerrainMap {
 impl TerrainMap {
     pub fn len(&self) -> usize {
         self.map.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.map.is_empty()
     }
 
     pub fn point_to_cell(&self, x: i32, y: i32) -> Option<usize> {

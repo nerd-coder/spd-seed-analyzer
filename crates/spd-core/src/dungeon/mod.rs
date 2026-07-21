@@ -33,8 +33,22 @@ impl DungeonState {
         matches!(self.depth, 6 | 11 | 16)
     }
 
+    /// Boss depths: Goo / Tengu / DM-300 / Dwarf King / Yog (not RegularLevel).
     pub fn boss_level(&self) -> bool {
         matches!(self.depth, 5 | 10 | 15 | 20 | 25)
+    }
+
+    /// Depth 26 is `LastLevel` in SPD (Amulet chamber) — not a RegularLevel.
+    pub fn last_level(&self) -> bool {
+        self.depth == 26
+    }
+
+    /// True for main-path RegularLevel depths (1–4, 6–9, 11–14, 16–19, 21–24).
+    pub fn regular_level(&self) -> bool {
+        self.branch == 0
+            && !self.boss_level()
+            && !self.last_level()
+            && (1..=24).contains(&self.depth)
     }
 
     pub fn pos_needed(&mut self) -> bool {

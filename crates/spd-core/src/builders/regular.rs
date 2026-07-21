@@ -59,7 +59,7 @@ fn curve_equation(x: f64, exp: i32) -> f64 {
 }
 
 fn target_angle(percent_along: f32, params: &BuilderParams) -> f32 {
-    let mut p = percent_along + params.curve_offset;
+    let p = percent_along + params.curve_offset;
     let ce = curve_equation(p as f64, params.curve_exponent) as f32;
     360.0 * (params.curve_intensity * ce + (1.0 - params.curve_intensity) * p - params.curve_offset)
 }
@@ -301,7 +301,7 @@ pub fn build_loop(rooms: &mut Vec<Room>, params: &BuilderParams, depth: i32) -> 
 
     main_path.insert(0, entrance);
     if let Some(ex) = exit {
-        let idx = (main_path.len() + 1) / 2;
+        let idx = main_path.len().div_ceil(2);
         main_path.insert(idx, ex);
     }
 
@@ -421,8 +421,10 @@ mod tests {
             let (mw, xw, mh, xh) = dims_for_kind(*kind, *sf, name);
             rooms.push(Room::new(i, *name, *kind, *sf, *mc, mw, xw, mh, xh));
         }
-        let mut params = BuilderParams::default();
-        params.curve_intensity = 0.3;
+        let params = BuilderParams {
+            curve_intensity: 0.3,
+            ..Default::default()
+        };
         let result = build_loop(&mut rooms, &params, 2);
         Random::pop_generator();
         // may fail occasionally; try multiple seeds

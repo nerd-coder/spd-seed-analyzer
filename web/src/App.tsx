@@ -38,8 +38,8 @@ const REGIONS = [
   { id: 'halls', label: 'Halls', min: 21, max: 26 },
 ] as const
 
-/** Boss depths (region bosses) — omitted from the Floors UI. */
-const BOSS_DEPTHS = new Set([5, 10, 15, 20])
+/** Non-regular depths (bosses + LastLevel) — omitted from the Floors UI. */
+const BOSS_DEPTHS = new Set([5, 10, 15, 20, 25, 26])
 
 function groupFloorsByRegion(floors: FloorReport[]) {
   return REGIONS.map((region) => ({
@@ -277,9 +277,11 @@ function FloorsByRegion({
   )
 }
 
+/** Full main-path depth range (SPD clamps to 26). */
+const ANALYZE_FLOORS = 26
+
 export default function App() {
   const [seed, setSeed] = useState('GFX-PZH-DCH')
-  const [floors, setFloors] = useState(24)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [report, setReport] = useState<SeedReport | null>(null)
@@ -316,7 +318,7 @@ export default function App() {
     setLoading(true)
     setError(null)
     try {
-      const result = await analyzeSeed(seed.trim(), floors)
+      const result = await analyzeSeed(seed.trim(), ANALYZE_FLOORS)
       setReport(result)
     } catch (err) {
       setReport(null)
@@ -366,17 +368,6 @@ export default function App() {
                 autoComplete="off"
                 spellCheck={false}
                 className="font-mono uppercase"
-              />
-            </div>
-            <div className="grid max-w-[10rem] gap-2">
-              <Label htmlFor="floors">Floors</Label>
-              <Input
-                id="floors"
-                type="number"
-                min={1}
-                max={26}
-                value={floors}
-                onChange={(e) => setFloors(Number(e.target.value) || 1)}
               />
             </div>
 
@@ -495,7 +486,7 @@ export default function App() {
                 <CardTitle>Floors</CardTitle>
                 <CardDescription>
                   Partial levelgen: layout builder + main floor drops. Boss
-                  floors (5 / 10 / 15 / 20) are hidden.
+                  floors (5 / 10 / 15 / 20 / 25) and Last Level (26) are hidden.
                   {advancedMode
                     ? ' Maps use original region tilesheets when available.'
                     : ' Enable Advanced mode to view floor maps.'}

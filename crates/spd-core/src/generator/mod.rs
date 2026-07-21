@@ -252,8 +252,8 @@ impl GeneratorState {
             let rt = &self.cats[idx];
             (rt.seed, rt.dropped)
         };
-        if seed.is_some() {
-            Random::push_generator_seeded(seed.unwrap());
+        if let Some(s) = seed {
+            Random::push_generator_seeded(s);
             for _ in 0..dropped {
                 Random::long();
             }
@@ -265,8 +265,8 @@ impl GeneratorState {
                 Random::pop_generator();
             }
             self.reset_cat(cat);
-            if seed.is_some() {
-                Random::push_generator_seeded(seed.unwrap());
+            if let Some(s) = seed {
+                Random::push_generator_seeded(s);
                 for _ in 0..self.cats[idx].dropped {
                     Random::long();
                 }

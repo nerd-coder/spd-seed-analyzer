@@ -26,49 +26,30 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --font-sans: "Pixelify Sans", sans-serif;
 }
 
-:root {
-  --radius: 0.625rem;
-  --background: oklch(0.985 0.002 247);
-  --foreground: oklch(0.18 0.02 265);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.02 265);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.02 265);
-  --primary: oklch(0.42 0.1 155);
-  --primary-foreground: oklch(0.98 0.01 155);
-  --secondary: oklch(0.95 0.01 265);
-  --secondary-foreground: oklch(0.28 0.03 265);
-  --muted: oklch(0.95 0.01 265);
-  --muted-foreground: oklch(0.5 0.02 265);
-  --accent: oklch(0.94 0.03 155);
-  --accent-foreground: oklch(0.28 0.06 155);
-  --destructive: oklch(0.55 0.2 25);
-  --border: oklch(0.9 0.01 265);
-  --input: oklch(0.9 0.01 265);
-  --ring: oklch(0.42 0.1 155);
-}
-
+:root,
 .dark {
-  --background: oklch(0.16 0.02 265);
-  --foreground: oklch(0.96 0.01 265);
-  --card: oklch(0.2 0.02 265);
-  --card-foreground: oklch(0.96 0.01 265);
-  --popover: oklch(0.2 0.02 265);
-  --popover-foreground: oklch(0.96 0.01 265);
-  --primary: oklch(0.72 0.12 155);
-  --primary-foreground: oklch(0.16 0.03 155);
-  --secondary: oklch(0.26 0.02 265);
-  --secondary-foreground: oklch(0.96 0.01 265);
-  --muted: oklch(0.26 0.02 265);
-  --muted-foreground: oklch(0.7 0.02 265);
-  --accent: oklch(0.28 0.04 155);
-  --accent-foreground: oklch(0.96 0.01 155);
-  --destructive: oklch(0.65 0.18 25);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.72 0.12 155);
+  --radius: 0.625rem;
+  --background: #12151a;
+  --foreground: #eaeaea;
+  --card: #252a34;
+  --card-foreground: #eaeaea;
+  --popover: #252a34;
+  --popover-foreground: #eaeaea;
+  --primary: #00c040;
+  --primary-foreground: #ffffff;
+  --secondary: #3d4144;
+  --secondary-foreground: #eaeaea;
+  --muted: #1f242c;
+  --muted-foreground: #aaaeb0;
+  --accent: #51555d;
+  --accent-foreground: #00c040;
+  --destructive: #d65652;
+  --border: #51555d;
+  --input: #51555d;
+  --ring: #00c040;
 }
 
 @layer base {

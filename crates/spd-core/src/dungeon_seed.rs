@@ -59,7 +59,7 @@ impl DungeonSeed {
 
     /// Takes a long value and converts to `ABC-DEF-GHI`.
     pub fn convert_to_code(seed: i64) -> Result<String, SeedError> {
-        if seed < 0 || seed >= TOTAL_SEEDS {
+        if !(0..TOTAL_SEEDS).contains(&seed) {
             return Err(SeedError::OutOfRange);
         }
 

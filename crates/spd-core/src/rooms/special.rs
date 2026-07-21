@@ -123,7 +123,7 @@ impl SpecialFloorState {
             return RoomSpec::special("PitRoom");
         }
 
-        if self.floor_specials.iter().any(|t| *t == "LaboratoryRoom") {
+        if self.floor_specials.contains(&"LaboratoryRoom") {
             self.use_type(run_specials, "LaboratoryRoom");
             return RoomSpec::special("LaboratoryRoom");
         }

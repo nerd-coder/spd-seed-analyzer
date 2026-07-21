@@ -155,13 +155,13 @@ impl Random {
     }
 
     /// `Random.oneOf(T...)` / pick uniform element (panics if empty).
-    pub fn one_of<'a, T>(items: &'a [T]) -> &'a T {
+    pub fn one_of<T>(items: &[T]) -> &T {
         assert!(!items.is_empty(), "Random::one_of on empty slice");
         &items[Self::int_max(items.len() as i32) as usize]
     }
 
     /// `Random.element(Collection)` — returns None if empty.
-    pub fn element<'a, T>(items: &'a [T]) -> Option<&'a T> {
+    pub fn element<T>(items: &[T]) -> Option<&T> {
         if items.is_empty() {
             None
         } else {

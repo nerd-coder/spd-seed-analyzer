@@ -101,4 +101,25 @@ mod analyze_smoke {
             assert!(r.is_ok(), "seed {s}: {:?}", r.err());
         }
     }
+
+    /// UI requests 26 floors; depth 26 is LastLevel (not RegularLevel).
+    /// Previously panicked in secrets_for_floor (region index 5) → WASM "unreachable".
+    #[test]
+    fn analyze_full_run_no_panic() {
+        for s in ["GFX-PZH-DCH", "AAA-AAA-AAA", "hello", "42", "shattered"] {
+            let r = analyze_seed(s, 26).unwrap_or_else(|e| panic!("seed {s}: {e:?}"));
+            assert_eq!(r.floors.len(), 26, "seed {s}");
+            // Boss floors + last level have no regular map/items yet
+            for depth in [5u32, 10, 15, 20, 25, 26] {
+                let f = r.floors.iter().find(|f| f.depth == depth).expect("depth");
+                assert!(
+                    f.map.is_none(),
+                    "depth {depth} should skip RegularLevel paint"
+                );
+            }
+            // A mid Halls floor should still generate
+            let f24 = r.floors.iter().find(|f| f.depth == 24).expect("24");
+            assert!(f24.map.is_some() || !f24.rooms.is_empty() || f24.builder.is_some());
+        }
+    }
 }

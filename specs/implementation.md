@@ -94,7 +94,8 @@ bun run check:all    # biome + rust fmt/clippy
 | App icon | `web/public/app_icon.jpg` |
 
 ### Bugs fixed recently
-- **WASM `"unreachable"`:** `create_items` used synthetic cell ids `x + y*1000` into `occupied[]` → OOB panic. Fixed via `TerrainMap::point_to_cell`.
+- **WASM `"unreachable"` (depth 26):** UI always analyzes 26 floors. Depth 26 is SPD `LastLevel` (not RegularLevel); `secrets_for_floor` used `region = depth/5 == 5` into a 5-slot array → OOB panic → browser `"unreachable"`. Fixed by skipping non-regular depths (`regular_level()`: bosses 5/10/15/20/25 + last 26) and bounds-guarding `secrets_for_floor`.
+- **WASM `"unreachable"` (drop cells):** `create_items` used synthetic cell ids `x + y*1000` into `occupied[]` → OOB panic. Fixed via `TerrainMap::point_to_cell`.
 - Awkward `public/assets/assets/` nesting flattened.
 
 ---

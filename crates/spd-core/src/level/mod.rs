@@ -111,7 +111,8 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
     let mut feeling = Feeling::None;
     let mut items_to_spawn: Vec<GeneratedItem> = Vec::new();
 
-    if !dungeon.boss_level() && dungeon.branch == 0 {
+    // Forced drops + feelings only on RegularLevel (not boss / LastLevel).
+    if dungeon.regular_level() {
         let mut food = dungeon
             .generator
             .random_category(Category::Food, dungeon.depth);
@@ -195,7 +196,8 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
     let mut placed_items = Vec::new();
     let mut floor_map = None;
 
-    if !dungeon.boss_level() && dungeon.branch == 0 && dungeon.depth <= 26 {
+    // RegularLevel only — bosses + depth 26 LastLevel use dedicated layouts in SPD.
+    if dungeon.regular_level() {
         let lab_needed = dungeon.lab_room_needed();
         let mut floor = init_rooms::init_rooms_regular(
             dungeon.depth,

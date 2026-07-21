@@ -19,10 +19,12 @@ pub fn build_rooms(
     depth: i32,
     max_tries: u32,
 ) -> bool {
-    let mut params = BuilderParams::default();
-    params.curve_exponent = 2;
-    params.curve_intensity = intensity % 1.0;
-    params.curve_offset = offset % 0.5;
+    let params = BuilderParams {
+        curve_exponent: 2,
+        curve_intensity: intensity % 1.0,
+        curve_offset: offset % 0.5,
+        ..Default::default()
+    };
 
     for _ in 0..max_tries {
         clear_all_connections(rooms);
@@ -37,10 +39,9 @@ pub fn build_rooms(
 
         let ok = match kind {
             BuilderKind::Loop => regular::build_loop(rooms, &params, depth).is_some(),
+            // Full figure-eight not complete; falls back to loop (connected map for loot).
             BuilderKind::FigureEight => {
-                // Full figure-eight not complete; use loop placement with same params
-                // (still produces a connected map for createItems development)
-                regular::build_loop(rooms, &params, depth).is_some()
+                regular::build_figure_eight(rooms, &params, depth).is_some()
             }
         };
         if ok {

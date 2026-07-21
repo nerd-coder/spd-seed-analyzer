@@ -30,6 +30,7 @@ pub struct Room {
 }
 
 impl Room {
+    #[allow(clippy::too_many_arguments)] // mirrors SPD Room geometry fields at construction
     pub fn new(
         id: usize,
         name: impl Into<String>,
@@ -189,13 +190,14 @@ impl Room {
         for &oid in &self.connected {
             let other = &rooms[oid];
             let i = intersect(self, other);
-            if direction == DIR_LEFT && i.raw_width() == 0 && i.left == self.left {
-                total += 1;
-            } else if direction == DIR_TOP && i.raw_height() == 0 && i.top == self.top {
-                total += 1;
-            } else if direction == DIR_RIGHT && i.raw_width() == 0 && i.right == self.right {
-                total += 1;
-            } else if direction == DIR_BOTTOM && i.raw_height() == 0 && i.bottom == self.bottom {
+            let matches = match direction {
+                DIR_LEFT => i.raw_width() == 0 && i.left == self.left,
+                DIR_TOP => i.raw_height() == 0 && i.top == self.top,
+                DIR_RIGHT => i.raw_width() == 0 && i.right == self.right,
+                DIR_BOTTOM => i.raw_height() == 0 && i.bottom == self.bottom,
+                _ => false,
+            };
+            if matches {
                 total += 1;
             }
         }
@@ -283,26 +285,13 @@ pub fn add_neighbour(rooms: &mut [Room], a: usize, b: usize) -> bool {
 
 pub fn connect(rooms: &mut [Room], a: usize, b: usize) -> bool {
     let has_n = rooms[a].neighbours.contains(&b);
-    let can = {
-        let ok_n = has_n || {
-            // need add_neighbour check without borrow issues
-            true
-        };
-        ok_n
-    };
-    let _ = can;
     if !has_n && !add_neighbour(rooms, a, b) {
         return false;
     }
     if rooms[a].connected.contains(&b) {
         return false;
     }
-    // can_connect_rooms needs immutable view
-    let allowed = {
-        // Temporarily clone needed fields is hard; use indices carefully
-        can_connect_pair(rooms, a, b)
-    };
-    if !allowed {
+    if !can_connect_pair(rooms, a, b) {
         return false;
     }
     rooms[a].connected.push(b);

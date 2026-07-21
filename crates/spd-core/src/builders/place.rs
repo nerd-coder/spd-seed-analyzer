@@ -139,7 +139,7 @@ pub fn find_free_space(start: Point, collision: &[Room], max_size: i32) -> Rect 
 
 /// Place `next` next to `prev` at approximately `angle` degrees. Returns angle or -1.
 /// `next` is identified by index into `rooms` which must include all collision rooms + next.
-pub fn place_room(rooms: &mut Vec<Room>, prev: usize, next: usize, mut angle: f32) -> f32 {
+pub fn place_room(rooms: &mut [Room], prev: usize, next: usize, mut angle: f32) -> f32 {
     angle %= 360.0;
     if angle < 0.0 {
         angle += 360.0;
@@ -154,7 +154,7 @@ pub fn place_room(rooms: &mut Vec<Room>, prev: usize, next: usize, mut angle: f3
     let b = prev_center.1 as f64 - m * prev_center.0 as f64;
 
     let (direction, mut start) = if m.abs() >= 1.0 {
-        if angle < 90.0 || angle > 270.0 {
+        if !(90.0..=270.0).contains(&angle) {
             let x = ((rooms[prev].top as f64 - b) / m).round() as i32;
             (DIR_TOP, Point::new(x, rooms[prev].top))
         } else {
