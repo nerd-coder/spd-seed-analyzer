@@ -1,5 +1,5 @@
-import { Loader2, Search } from 'lucide-react'
-import { type FormEvent, useEffect, useState } from 'react'
+import { Info, Loader2, Search, X } from 'lucide-react'
+import { type FormEvent, useCallback, useEffect, useRef, useState } from 'react'
 
 import { DepthIcon } from '@/components/DepthIcon'
 import { FloorMapCanvas } from '@/components/FloorMapCanvas'
@@ -16,8 +16,15 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import {
   formatItemSource,
   isHighlightSource,
@@ -38,6 +45,24 @@ const MAP_SPOILERS_KEY = 'spd-analyzer-map-spoilers'
 const IDENTITY_SPOILERS_KEY = 'spd-analyzer-identity-spoilers'
 /** Migrated from pre-rename “Advanced mode”. */
 const LEGACY_ADVANCED_KEY = 'spd-analyzer-advanced-mode'
+/** Persisted open seed inputs (re-analyzed on load). */
+const SESSIONS_KEY = 'spd-analyzer-open-seeds'
+const ACTIVE_SEED_KEY = 'spd-analyzer-active-seed'
+
+/** Full main-path depth range (SPD clamps to 26). */
+const ANALYZE_FLOORS = 26
+/** Delay between sequential re-analyzes after refresh (ms). */
+const REANALYZE_GAP_MS = 350
+
+type SeedSession = {
+  /** Stable tab id (input key). */
+  id: string
+  /** Original user input used for analyze. */
+  input: string
+  status: 'pending' | 'loading' | 'ready' | 'error'
+  report: SeedReport | null
+  error: string | null
+}
 
 function readLocalFlag(key: string, fallback = false): boolean {
   try {
@@ -55,6 +80,67 @@ function writeLocalFlag(key: string, value: boolean) {
   } catch {
     /* ignore */
   }
+}
+
+function normalizeSeedInput(raw: string): string {
+  return raw.trim()
+}
+
+function sessionIdFor(input: string): string {
+  return normalizeSeedInput(input).toUpperCase()
+}
+
+function loadPersistedSeeds(): string[] {
+  try {
+    const raw = localStorage.getItem(SESSIONS_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter((s): s is string => typeof s === 'string')
+      .map(normalizeSeedInput)
+      .filter(Boolean)
+  } catch {
+    return []
+  }
+}
+
+function savePersistedSeeds(inputs: string[]) {
+  try {
+    localStorage.setItem(SESSIONS_KEY, JSON.stringify(inputs))
+  } catch {
+    /* ignore */
+  }
+}
+
+function loadActiveSeedId(): string | null {
+  try {
+    return localStorage.getItem(ACTIVE_SEED_KEY)
+  } catch {
+    return null
+  }
+}
+
+function saveActiveSeedId(id: string | null) {
+  try {
+    if (id) localStorage.setItem(ACTIVE_SEED_KEY, id)
+    else localStorage.removeItem(ACTIVE_SEED_KEY)
+  } catch {
+    /* ignore */
+  }
+}
+
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms)
+  })
+}
+
+function tabLabel(session: SeedSession): string {
+  if (session.report) {
+    return session.report.seed.code ?? session.report.seed.formatted
+  }
+  return session.input
 }
 
 /** SPD region bands (same as tileset_for_depth). */
@@ -180,7 +266,10 @@ function QuestCard({ quest }: { quest: string }) {
   const styles = QUEST_KIND_STYLES[parsed.kind]
   return (
     <div
-      className={cn('rounded-lg border px-3 py-2.5 space-y-1.5', styles.border)}
+      className={cn(
+        'space-y-1.5 rounded-none border px-3 py-2.5',
+        styles.border
+      )}
     >
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="outline" className={cn('font-medium', styles.badge)}>
@@ -192,7 +281,7 @@ function QuestCard({ quest }: { quest: string }) {
       </div>
       {parsed.rewards && (
         <p className="text-sm leading-snug">
-          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase mr-1.5">
+          <span className="text-muted-foreground mr-1.5 text-xs font-medium tracking-wide uppercase">
             Rewards
           </span>
           {parsed.rewards}
@@ -297,12 +386,12 @@ function FloorDetail({
                   title={item.name}
                   className="mt-0.5"
                 />
-                <span className="min-w-0 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
                   <span>{item.name}</span>
                   {sourceLabel && (
                     <Badge
                       variant={highlight ? 'secondary' : 'outline'}
-                      className="font-normal text-[10px] px-1.5 py-0 h-5"
+                      className="h-5 px-1.5 py-0 text-[10px] font-normal"
                       title={item.source ?? undefined}
                     >
                       {sourceLabel}
@@ -334,11 +423,11 @@ function FloorsByRegion({
 
   return (
     <Tabs defaultValue={defaultRegion} className="gap-0">
-      <TabsList className="w-full flex-wrap h-auto sm:w-auto">
+      <TabsList className="h-auto w-full flex-wrap sm:w-auto">
         {groups.map(({ region, floors: regionFloors }) => (
           <TabsTrigger key={region.id} value={region.id}>
             {region.label}
-            <span className="text-muted-foreground ml-1 tabular-nums text-xs">
+            <span className="text-muted-foreground ml-1 text-xs tabular-nums">
               {regionFloors[0].depth}
               {regionFloors.length > 1
                 ? `–${regionFloors[regionFloors.length - 1].depth}`
@@ -372,12 +461,11 @@ function FloorsByRegion({
                     <TabsTrigger
                       key={floor.depth}
                       value={String(floor.depth)}
-                      className="h-auto flex-col gap-0.5 px-2 py-1.5 relative"
+                      className="relative h-auto flex-col gap-0.5 px-2 py-1.5"
                       title={titleParts.join(' · ')}
                     >
-                      {/* MenuPane-style: feeling depth icon above the number */}
                       <DepthIcon feeling={floor.feeling} size={24} />
-                      <span className="font-mono text-xs tabular-nums leading-none">
+                      <span className="font-mono text-xs leading-none tabular-nums">
                         {floor.depth}
                       </span>
                       {hasQuest && (
@@ -408,14 +496,238 @@ function FloorsByRegion({
   )
 }
 
-/** Full main-path depth range (SPD clamps to 26). */
-const ANALYZE_FLOORS = 26
+function SpoilerToggle({
+  id,
+  label,
+  info,
+  checked,
+  onCheckedChange,
+}: {
+  id: string
+  label: string
+  info: string
+  checked: boolean
+  onCheckedChange: (next: boolean) => void
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-1.5">
+        <Label htmlFor={id} className="text-sm font-medium">
+          {label}
+        </Label>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              className="text-muted-foreground hover:text-foreground inline-flex size-5 shrink-0 items-center justify-center rounded-none outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              aria-label={`About ${label}`}
+            >
+              <Info className="size-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="max-w-56 text-left">
+            {info}
+          </TooltipContent>
+        </Tooltip>
+      </div>
+      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} />
+    </div>
+  )
+}
+
+function EmptyAnalysisPlaceholder() {
+  return (
+    <div className="flex min-h-[min(60svh,28rem)] flex-col items-center justify-center gap-3 px-6 text-center">
+      <div
+        className="relative h-14 w-full max-w-xs opacity-40"
+        style={{ aspectRatio: '616/200' }}
+      >
+        <img
+          src="/assets/title.gif"
+          alt=""
+          className="absolute inset-0 h-full w-full object-contain"
+          style={{ imageRendering: 'pixelated' }}
+          aria-hidden
+        />
+        <img
+          src="/assets/title_overlay.png"
+          alt=""
+          className="absolute inset-0 h-full w-full object-contain"
+          style={{ imageRendering: 'pixelated' }}
+          aria-hidden
+        />
+      </div>
+      <h2 className="font-heading text-base font-medium">
+        No seeds analyzed yet
+      </h2>
+      <p className="text-muted-foreground max-w-sm text-sm leading-relaxed">
+        Enter a seed in the left panel and click Analyze. Open seeds stay as
+        tabs until you close them, and are restored after a refresh.
+      </p>
+    </div>
+  )
+}
+
+function SeedReportView({
+  report,
+  identitySpoilers,
+  mapSpoilers,
+}: {
+  report: SeedReport
+  identitySpoilers: boolean
+  mapSpoilers: boolean
+}) {
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-mono">
+            {report.seed.code ?? report.seed.formatted}
+          </CardTitle>
+          <CardDescription className="space-y-1">
+            <span className="block">
+              Numeric:{' '}
+              <span className="text-foreground font-mono">
+                {report.seed.numeric}
+              </span>
+            </span>
+            <span className="block">
+              Status: <Badge variant="outline">{report.status}</Badge>
+            </span>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {report.message && (
+            <Alert>
+              <AlertTitle>Partial analysis</AlertTitle>
+              <AlertDescription>{report.message}</AlertDescription>
+            </Alert>
+          )}
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            Includes approximate special-room, shop, and crystal-room prizes
+            plus Ghost / Wandmaker / Blacksmith / Imp quest rewards. Painter
+            parity, figure-eight builder, and full createMobs are still
+            incomplete — treat high-value finds as leads, not guarantees.
+          </p>
+        </CardContent>
+      </Card>
+
+      {identitySpoilers && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Identities</CardTitle>
+            <CardDescription>
+              Unidentified appearances for this seed (from run init RNG).
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="potions">
+              <TabsList className="w-full sm:w-auto">
+                <TabsTrigger value="potions">Potions</TabsTrigger>
+                <TabsTrigger value="scrolls">Scrolls</TabsTrigger>
+                <TabsTrigger value="rings">Rings</TabsTrigger>
+              </TabsList>
+              <TabsContent value="potions" className="mt-4">
+                <IdentityGrid
+                  entries={report.identities.potions}
+                  category="potion"
+                />
+              </TabsContent>
+              <TabsContent value="scrolls" className="mt-4">
+                <IdentityGrid
+                  entries={report.identities.scrolls}
+                  category="scroll"
+                />
+              </TabsContent>
+              <TabsContent value="rings" className="mt-4">
+                <IdentityGrid
+                  entries={report.identities.rings}
+                  category="ring"
+                />
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      )}
+
+      {report.floors.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Floors</CardTitle>
+            <CardDescription>
+              Partial levelgen: layout, special/secret rooms, shops, crystal
+              rooms, and quest rewards when reported. Boss floors (5 / 10 / 15 /
+              20 / 25) and Last Level (26) are hidden. Floors with a quest show
+              a small indicator on the depth tab.
+              {mapSpoilers
+                ? ' Maps use original region tilesheets when available.'
+                : ' Enable Map spoilers to view floor maps.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FloorsByRegion
+              floors={report.floors}
+              identities={report.identities}
+              mapSpoilers={mapSpoilers}
+            />
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+}
+
+function SessionPane({
+  session,
+  identitySpoilers,
+  mapSpoilers,
+}: {
+  session: SeedSession
+  identitySpoilers: boolean
+  mapSpoilers: boolean
+}) {
+  if (session.status === 'pending' || session.status === 'loading') {
+    return (
+      <div className="flex min-h-[12rem] flex-col items-center justify-center gap-2 py-12">
+        <Loader2 className="text-muted-foreground size-6 animate-spin" />
+        <p className="text-muted-foreground text-sm">
+          Analyzing{' '}
+          <span className="text-foreground font-mono">{session.input}</span>…
+        </p>
+      </div>
+    )
+  }
+
+  if (session.status === 'error') {
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>Analysis failed</AlertTitle>
+        <AlertDescription>
+          {session.error ?? 'Unknown error analyzing this seed.'}
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
+  if (session.report) {
+    return (
+      <SeedReportView
+        report={session.report}
+        identitySpoilers={identitySpoilers}
+        mapSpoilers={mapSpoilers}
+      />
+    )
+  }
+
+  return null
+}
 
 export default function App() {
-  const [seed, setSeed] = useState('GFX-PZH-DCH')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [report, setReport] = useState<SeedReport | null>(null)
+  const [seedInput, setSeedInput] = useState('')
+  const [sessions, setSessions] = useState<SeedSession[]>([])
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
   const [meta, setMeta] = useState<{ version: string; commit: string } | null>(
     null
   )
@@ -427,13 +739,98 @@ export default function App() {
     readLocalFlag(IDENTITY_SPOILERS_KEY)
   )
 
+  const sessionsRef = useRef(sessions)
+  sessionsRef.current = sessions
+  const rehydrateDone = useRef(false)
+
+  const persistSessions = useCallback((list: SeedSession[]) => {
+    savePersistedSeeds(list.map((s) => s.input))
+  }, [])
+
+  const setActive = useCallback((id: string | null) => {
+    setActiveId(id)
+    saveActiveSeedId(id)
+  }, [])
+
+  const updateSession = useCallback(
+    (id: string, patch: Partial<SeedSession>) => {
+      setSessions((prev) => {
+        const next = prev.map((s) => (s.id === id ? { ...s, ...patch } : s))
+        return next
+      })
+    },
+    []
+  )
+
+  const runAnalyze = useCallback(
+    async (id: string, input: string) => {
+      updateSession(id, { status: 'loading', error: null })
+      try {
+        const report = await analyzeSeed(input, ANALYZE_FLOORS)
+        updateSession(id, { status: 'ready', report, error: null })
+        return true
+      } catch (err) {
+        updateSession(id, {
+          status: 'error',
+          report: null,
+          error: err instanceof Error ? err.message : String(err),
+        })
+        return false
+      }
+    },
+    [updateSession]
+  )
+
+  // Meta + restore open seeds and re-analyze them slowly.
   useEffect(() => {
     getSpdMeta()
       .then(setMeta)
       .catch((e: unknown) => {
-        setError(e instanceof Error ? e.message : String(e))
+        setFormError(e instanceof Error ? e.message : String(e))
       })
-  }, [])
+
+    if (rehydrateDone.current) return
+    rehydrateDone.current = true
+
+    const saved = loadPersistedSeeds()
+    if (saved.length === 0) return
+
+    const restored: SeedSession[] = saved.map((input) => ({
+      id: sessionIdFor(input),
+      input,
+      status: 'pending' as const,
+      report: null,
+      error: null,
+    }))
+    setSessions(restored)
+
+    const preferred = loadActiveSeedId()
+    const active =
+      preferred && restored.some((s) => s.id === preferred)
+        ? preferred
+        : (restored[0]?.id ?? null)
+    setActive(active)
+
+    let cancelled = false
+    ;(async () => {
+      setAnalyzing(true)
+      for (let i = 0; i < restored.length; i++) {
+        if (cancelled) break
+        const s = restored[i]
+        // Skip if user already closed the tab during rehydrate.
+        if (!sessionsRef.current.some((x) => x.id === s.id)) continue
+        await runAnalyze(s.id, s.input)
+        if (i < restored.length - 1 && !cancelled) {
+          await sleep(REANALYZE_GAP_MS)
+        }
+      }
+      if (!cancelled) setAnalyzing(false)
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [runAnalyze, setActive])
 
   function toggleMapSpoilers(next: boolean) {
     setMapSpoilers(next)
@@ -447,246 +844,241 @@ export default function App() {
 
   async function onAnalyze(e: FormEvent) {
     e.preventDefault()
-    setLoading(true)
-    setError(null)
-    try {
-      const result = await analyzeSeed(seed.trim(), ANALYZE_FLOORS)
-      setReport(result)
-    } catch (err) {
-      setReport(null)
-      setError(err instanceof Error ? err.message : String(err))
-    } finally {
-      setLoading(false)
+    const input = normalizeSeedInput(seedInput)
+    if (!input) return
+
+    setFormError(null)
+    const id = sessionIdFor(input)
+
+    const existing = sessions.find((s) => s.id === id)
+    if (existing) {
+      setActive(id)
+      if (existing.status === 'ready' || existing.status === 'loading') {
+        return
+      }
+      setAnalyzing(true)
+      await runAnalyze(id, existing.input)
+      setAnalyzing(false)
+      return
     }
+
+    const session: SeedSession = {
+      id,
+      input,
+      status: 'loading',
+      report: null,
+      error: null,
+    }
+    setSessions((prev) => {
+      const next = [...prev, session]
+      persistSessions(next)
+      return next
+    })
+    setActive(id)
+    setSeedInput('')
+    setAnalyzing(true)
+    await runAnalyze(id, input)
+    setAnalyzing(false)
+  }
+
+  function closeSession(id: string) {
+    setSessions((prev) => {
+      const idx = prev.findIndex((s) => s.id === id)
+      if (idx < 0) return prev
+      const next = prev.filter((s) => s.id !== id)
+      persistSessions(next)
+      if (activeId === id) {
+        const fallback = next[idx] ?? next[idx - 1] ?? next[0] ?? null
+        setActive(fallback?.id ?? null)
+      }
+      return next
+    })
   }
 
   return (
-    <div className="mx-auto flex min-h-svh w-full max-w-4xl flex-col gap-6 px-4 py-10">
-      <header className="space-y-4">
-        <div className="flex flex-col">
-          <div className="flex flex-wrap items-end gap-3">
-            <div
-              className="relative h-16 md:h-20"
-              style={{ aspectRatio: '616/200' }}
-            >
-              <img
-                src="/assets/title.gif"
-                alt="Shattered Pixel Dungeon"
-                className="absolute inset-0 h-full w-full object-contain"
-                style={{ imageRendering: 'pixelated' }}
-              />
-              <img
-                src="/assets/title_overlay.png"
-                alt="SEED Analyzer"
-                className="absolute inset-0 h-full w-full object-contain"
-                style={{ imageRendering: 'pixelated' }}
-              />
-            </div>
-            {meta && (
-              <Badge
-                variant="secondary"
-                className="font-mono text-xs mb-1 md:mb-2"
+    <TooltipProvider delayDuration={200}>
+      <div className="bg-background flex min-h-svh w-full flex-col lg:flex-row">
+        {/* —— Main menu (sticky) —— */}
+        <aside className="border-border bg-sidebar text-sidebar-foreground lg:sticky lg:top-0 lg:h-svh lg:w-80 lg:shrink-0 lg:overflow-y-auto lg:border-r">
+          <div className="flex flex-col gap-4 p-4">
+            <Card size="sm" className="overflow-hidden py-0">
+              <div
+                className="relative w-full bg-black"
+                style={{ aspectRatio: '616/200' }}
               >
-                v{meta.version}@{meta.commit}
-              </Badge>
-            )}
-          </div>
-        </div>
-        <p className="text-muted-foreground text-sm max-w-xl">
-          Enter a Shattered Pixel Dungeon seed to inspect generation data
-          (layout, special-room loot, crystal rooms, quest rewards).
-          Calculations run in Rust via WebAssembly. Analysis is still partial —
-          not full game parity.
-        </p>
-      </header>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Seed</CardTitle>
-          <CardDescription>
-            Accepts codes like <code className="font-mono">ABC-DEF-GHI</code>,
-            numeric seeds, or free-text fun seeds.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={onAnalyze} className="flex flex-col gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="seed">Seed</Label>
-              <Input
-                id="seed"
-                value={seed}
-                onChange={(e) => setSeed(e.target.value)}
-                placeholder="XXX-XXX-XXX"
-                autoComplete="off"
-                spellCheck={false}
-                className="font-mono uppercase"
-              />
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
-                <div className="space-y-1">
-                  <Label
-                    htmlFor="identity-spoilers"
-                    className="text-sm font-medium"
-                  >
-                    Show identities (spoilers)
-                  </Label>
-                  <p className="text-muted-foreground text-xs leading-relaxed">
-                    Reveals potion, scroll, and ring color/rune/gem → type
-                    mappings for this seed.
-                  </p>
-                </div>
-                <Switch
-                  id="identity-spoilers"
-                  checked={identitySpoilers}
-                  onCheckedChange={toggleIdentitySpoilers}
+                <img
+                  src="/assets/title.gif"
+                  alt="Shattered Pixel Dungeon"
+                  className="absolute inset-0 h-full w-full object-contain"
+                  style={{ imageRendering: 'pixelated' }}
+                />
+                <img
+                  src="/assets/title_overlay.png"
+                  alt="SEED Analyzer"
+                  className="absolute inset-0 h-full w-full object-contain"
+                  style={{ imageRendering: 'pixelated' }}
                 />
               </div>
+              <CardContent className="space-y-1 py-3">
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Partial seed analysis via Rust WASM — layout, loot, and quest
+                  rewards (not full game parity).
+                </p>
+                {meta && (
+                  <Badge variant="secondary" className="font-mono text-[10px]">
+                    v{meta.version}@{meta.commit}
+                  </Badge>
+                )}
+              </CardContent>
+            </Card>
 
-              <div className="flex items-start justify-between gap-4 rounded-lg border p-3">
-                <div className="space-y-1">
-                  <Label htmlFor="map-spoilers" className="text-sm font-medium">
-                    Map spoilers
-                  </Label>
-                  <p className="text-muted-foreground text-xs leading-relaxed">
-                    Shows full floor maps. Can heavily affect how you experience
-                    a seeded run — leave off for item lists only.
-                  </p>
-                </div>
-                <Switch
-                  id="map-spoilers"
-                  checked={mapSpoilers}
-                  onCheckedChange={toggleMapSpoilers}
+            <form onSubmit={onAnalyze} className="space-y-3">
+              <div className="grid gap-1.5">
+                <Label htmlFor="seed">Seed</Label>
+                <Input
+                  id="seed"
+                  value={seedInput}
+                  onChange={(e) => setSeedInput(e.target.value)}
+                  placeholder="XXX-XXX-XXX"
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="font-mono uppercase"
                 />
+                <p className="text-muted-foreground text-[11px] leading-snug">
+                  Codes, numeric seeds, or free-text fun seeds.
+                </p>
               </div>
-            </div>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={analyzing || !normalizeSeedInput(seedInput)}
+              >
+                {analyzing ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Search data-icon="inline-start" />
+                )}
+                Analyze
+              </Button>
+            </form>
 
-            {mapSpoilers && (
+            {formError && (
               <Alert variant="destructive">
-                <AlertTitle>Spoiler warning</AlertTitle>
-                <AlertDescription>
-                  Floor maps reveal layout, entrances, exits, and room shapes
-                  before you play. Use only if you want that information.
-                </AlertDescription>
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{formError}</AlertDescription>
               </Alert>
             )}
 
-            <div>
-              <Button type="submit" disabled={loading || !seed.trim()}>
-                {loading ? <Loader2 className="animate-spin" /> : <Search />}
-                Analyze
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+            <Separator />
 
-      {error && (
-        <Alert variant="destructive">
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+            <div className="space-y-3">
+              <div className="flex items-center gap-1.5">
+                <p className="text-xs font-medium tracking-wide uppercase">
+                  Spoilers
+                </p>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:text-foreground inline-flex size-5 items-center justify-center outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      aria-label="About spoilers"
+                    >
+                      <Info className="size-3.5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="max-w-56 text-left">
+                    These options reveal seed secrets. Leave them off if you
+                    want to keep exploration surprises.
+                  </TooltipContent>
+                </Tooltip>
+              </div>
 
-      {report && (
-        <>
-          <Card>
-            <CardHeader>
-              <CardTitle className="font-mono">
-                {report.seed.code ?? report.seed.formatted}
-              </CardTitle>
-              <CardDescription className="space-y-1">
-                <span className="block">
-                  Numeric:{' '}
-                  <span className="font-mono text-foreground">
-                    {report.seed.numeric}
-                  </span>
-                </span>
-                <span className="block">
-                  Status: <Badge variant="outline">{report.status}</Badge>
-                </span>
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {report.message && (
-                <Alert>
-                  <AlertTitle>Partial analysis</AlertTitle>
-                  <AlertDescription>{report.message}</AlertDescription>
+              <SpoilerToggle
+                id="identity-spoilers"
+                label="Identities"
+                info="Reveals potion, scroll, and ring color/rune/gem → type mappings for the active seed."
+                checked={identitySpoilers}
+                onCheckedChange={toggleIdentitySpoilers}
+              />
+              <SpoilerToggle
+                id="map-spoilers"
+                label="Floor maps"
+                info="Shows full floor minimaps with original region tilesheets. Heavily spoils layout before you play."
+                checked={mapSpoilers}
+                onCheckedChange={toggleMapSpoilers}
+              />
+
+              {mapSpoilers && (
+                <Alert variant="destructive">
+                  <AlertTitle>Map spoilers on</AlertTitle>
+                  <AlertDescription>
+                    Floor maps reveal layout, entrances, exits, and room shapes.
+                  </AlertDescription>
                 </Alert>
               )}
-              <p className="text-muted-foreground text-xs leading-relaxed">
-                Includes approximate special-room, shop, and crystal-room prizes
-                plus Ghost / Wandmaker / Blacksmith / Imp quest rewards. Painter
-                parity, figure-eight builder, and full createMobs are still
-                incomplete — treat high-value finds as leads, not guarantees.
-              </p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+        </aside>
 
-          {identitySpoilers && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Identities</CardTitle>
-                <CardDescription>
-                  Unidentified appearances for this seed (from run init RNG).
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="potions">
-                  <TabsList className="w-full sm:w-auto">
-                    <TabsTrigger value="potions">Potions</TabsTrigger>
-                    <TabsTrigger value="scrolls">Scrolls</TabsTrigger>
-                    <TabsTrigger value="rings">Rings</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="potions" className="mt-4">
-                    <IdentityGrid
-                      entries={report.identities.potions}
-                      category="potion"
-                    />
-                  </TabsContent>
-                  <TabsContent value="scrolls" className="mt-4">
-                    <IdentityGrid
-                      entries={report.identities.scrolls}
-                      category="scroll"
-                    />
-                  </TabsContent>
-                  <TabsContent value="rings" className="mt-4">
-                    <IdentityGrid
-                      entries={report.identities.rings}
-                      category="ring"
-                    />
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          )}
+        {/* —— Content panel —— */}
+        <main className="min-w-0 flex-1">
+          {sessions.length === 0 ? (
+            <EmptyAnalysisPlaceholder />
+          ) : (
+            <Tabs
+              value={activeId ?? sessions[0].id}
+              onValueChange={setActive}
+              className="gap-0"
+            >
+              <div className="border-border bg-background/95 sticky top-0 z-10 border-b px-3 pt-3 pb-0 backdrop-blur supports-backdrop-filter:bg-background/80">
+                <TabsList
+                  variant="line"
+                  className="h-auto w-full flex-wrap justify-start gap-1"
+                >
+                  {sessions.map((s) => (
+                    <TabsTrigger
+                      key={s.id}
+                      value={s.id}
+                      className="group/tab max-w-[12rem] gap-1 pr-1"
+                    >
+                      {(s.status === 'loading' || s.status === 'pending') && (
+                        <Loader2 className="size-3 shrink-0 animate-spin" />
+                      )}
+                      <span className="truncate font-mono text-xs">
+                        {tabLabel(s)}
+                      </span>
+                      <button
+                        type="button"
+                        className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex size-5 shrink-0 items-center justify-center rounded-none opacity-60 group-hover/tab:opacity-100 group-data-active/tabs-trigger:opacity-100"
+                        aria-label={`Close ${tabLabel(s)}`}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          closeSession(s.id)
+                        }}
+                      >
+                        <X className="size-3" />
+                      </button>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
 
-          {report.floors.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Floors</CardTitle>
-                <CardDescription>
-                  Partial levelgen: layout, special/secret rooms, shops, crystal
-                  rooms, and quest rewards when reported. Boss floors (5 / 10 /
-                  15 / 20 / 25) and Last Level (26) are hidden. Floors with a
-                  quest show a small indicator on the depth tab.
-                  {mapSpoilers
-                    ? ' Maps use original region tilesheets when available.'
-                    : ' Enable Map spoilers to view floor maps.'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <FloorsByRegion
-                  floors={report.floors}
-                  identities={report.identities}
-                  mapSpoilers={mapSpoilers}
-                />
-              </CardContent>
-            </Card>
+              <div className="space-y-4 p-4 md:p-6">
+                {sessions.map((s) => (
+                  <TabsContent key={s.id} value={s.id} className="mt-0">
+                    <SessionPane
+                      session={s}
+                      identitySpoilers={identitySpoilers}
+                      mapSpoilers={mapSpoilers}
+                    />
+                  </TabsContent>
+                ))}
+              </div>
+            </Tabs>
           )}
-        </>
-      )}
-    </div>
+        </main>
+      </div>
+    </TooltipProvider>
   )
 }

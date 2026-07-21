@@ -93,11 +93,15 @@ bun run check:all    # biome + rust fmt/clippy
 ### Frontend
 | Area | Notes |
 |------|--------|
+| Layout | Two columns: sticky left **menu** (title card, seed form, Spoilers) + right **content** (seed tabs) |
+| shadcn | Preset `buFzq0e` (radix-lyra / Oxanium / phosphor registry); tooltips for spoiler info |
+| Multi-seed tabs | Each analyzed seed is a closable tab; empty placeholder when none open |
+| Session restore | Open seed inputs in `localStorage` (`spd-analyzer-open-seeds` + active id); on refresh re-analyze each slowly (gap ~350ms) |
 | Seed analyze UI | identities + floors + items; honest **partial** status copy (crystal rooms + quests mentioned, no parity claim) |
 | **Quest cards** | Floor quests parsed into title / type / rewards cards (Ghost, Wandmaker, Blacksmith, Imp); depth tabs show quest dot |
 | **Item sources** | `lib/labels.ts` maps room/heap/quest tags (`CrystalVaultRoom`, `chest:heap`, `Blacksmith.Quest`, …) to readable badges |
 | **Item icons** | `ItemIcon` + `lib/item-icons.ts` crops `/assets/sprites/items.png` (ItemSpriteSheet indices); potions/scrolls/rings use identity appearance; shop bags/darts/Ankh/Alchemize + crystal-artifact classes covered |
-| **Spoiler toggles** | localStorage; identity table + map spoilers off by default |
+| **Spoiler toggles** | localStorage; identity table + map spoilers off by default; info-icon tooltips |
 | Map canvas | `tiles.ts` + region tilesheets under `/assets/environment/` |
 | Assets | Flattened to `web/public/assets/{environment,sprites,…}` (no nested `assets/assets`) |
 | App icon | `web/public/app_icon.jpg` |
@@ -217,6 +221,11 @@ Tiles are SPD `Terrain` values. Client maps to flat tilesheet indices (`web/src/
 - **Show identities (spoilers):** `localStorage["spd-analyzer-identity-spoilers"]` = `"1"` | `"0"` (default off). Hides the Identities card when off.
 - **Map spoilers:** `localStorage["spd-analyzer-map-spoilers"]` = `"1"` | `"0"` (default off). Maps only rendered when on (map data still returned from WASM).
 - Legacy: `spd-analyzer-advanced-mode` is still read as a fallback for map spoilers.
+
+### Open seed sessions (UI)
+- **List:** `localStorage["spd-analyzer-open-seeds"]` = JSON string array of seed inputs (order = tab order).
+- **Active tab:** `localStorage["spd-analyzer-active-seed"]` = session id (normalized uppercase input).
+- Reports are **not** persisted (recomputed via WASM on load, sequentially with a short delay).
 
 ---
 
