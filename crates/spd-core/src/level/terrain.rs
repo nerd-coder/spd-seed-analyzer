@@ -104,20 +104,12 @@ pub fn paint_minimal(rooms: &[Room]) -> Option<TerrainMap> {
             let it = r.top.max(o.top);
             let ib = r.bottom.min(o.bottom);
             if il == ir {
-                let y = if ib - it >= 2 {
-                    (it + ib) / 2
-                } else {
-                    it
-                };
+                let y = if ib - it >= 2 { (it + ib) / 2 } else { it };
                 if (r.left..=r.right).contains(&il) && (r.top..=r.bottom).contains(&y) {
                     map[idx(il, y)] = DOOR;
                 }
             } else if it == ib {
-                let x = if ir - il >= 2 {
-                    (il + ir) / 2
-                } else {
-                    il
-                };
+                let x = if ir - il >= 2 { (il + ir) / 2 } else { il };
                 if (r.left..=r.right).contains(&x) && (r.top..=r.bottom).contains(&it) {
                     map[idx(x, it)] = DOOR;
                 }

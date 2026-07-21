@@ -52,18 +52,8 @@ pub const SCROLL_ITEMS: &[&str] = &[
 
 /// `Scroll.runes` LinkedHashMap keys.
 pub const SCROLL_RUNES: &[&str] = &[
-    "KAUNAN",
-    "SOWILO",
-    "LAGUZ",
-    "YNGVI",
-    "GYFU",
-    "RAIDO",
-    "ISAZ",
-    "MANNAZ",
-    "NAUDIZ",
-    "BERKANAN",
-    "ODAL",
-    "TIWAZ",
+    "KAUNAN", "SOWILO", "LAGUZ", "YNGVI", "GYFU", "RAIDO", "ISAZ", "MANNAZ", "NAUDIZ", "BERKANAN",
+    "ODAL", "TIWAZ",
 ];
 
 /// `Generator.Category.RING.classes`.

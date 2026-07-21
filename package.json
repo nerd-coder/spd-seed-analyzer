@@ -2,13 +2,28 @@
   "name": "spd-seed-analyzer",
   "private": true,
   "version": "0.1.0",
-  "workspaces": ["web"],
+  "type": "module",
+  "workspaces": [
+    "web"
+  ],
   "scripts": {
     "build:wasm": "PATH=\"$HOME/.cargo/bin:$PATH\" wasm-pack build crates/spd-wasm --target web --out-dir ../../web/src/wasm --out-name spd_wasm",
     "dev": "bun run build:wasm && bun run --filter spd-seed-analyzer-web dev",
     "build": "bun run build:wasm && bun run --filter spd-seed-analyzer-web build",
     "preview": "bun run --filter spd-seed-analyzer-web preview",
     "test:rust": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo test -p spd-core",
-    "lint": "bun run --filter spd-seed-analyzer-web lint"
+    "check": "biome check",
+    "check:fix": "biome check --fix",
+    "check:rust": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo fmt --all -- --check && PATH=\"$HOME/.cargo/bin:$PATH\" cargo clippy --workspace --all-targets -- -D warnings",
+    "check:all": "bun run check && bun run check:rust",
+    "format": "bun run format:ts && bun run format:rust",
+    "format:ts": "biome format --write .",
+    "format:rust": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo fmt --all",
+    "lint": "bun run lint:ts && bun run lint:rust",
+    "lint:ts": "biome lint .",
+    "lint:rust": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo clippy --workspace --all-targets -- -D warnings"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.3"
   }
 }

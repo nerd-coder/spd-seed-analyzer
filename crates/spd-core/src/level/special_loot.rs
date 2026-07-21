@@ -311,17 +311,22 @@ fn treasury_prizes(
     let mut occupied = Vec::new();
     for _ in 0..n {
         burn_drop_pos(room, &mut occupied);
-        let mut item = find_prize_item(items_to_spawn, Some("TrinketCatalyst")).unwrap_or_else(|| {
-            let mut g = GeneratedItem::new("Gold", ItemCategory::Gold);
-            randomize_item(&mut g, dungeon.depth);
-            g
-        });
+        let mut item =
+            find_prize_item(items_to_spawn, Some("TrinketCatalyst")).unwrap_or_else(|| {
+                let mut g = GeneratedItem::new("Gold", ItemCategory::Gold);
+                randomize_item(&mut g, dungeon.depth);
+                g
+            });
         let heap_type = if heap_chest && dungeon.depth > 1 && Random::float() < mimic_chance {
             item.source = Some("TreasuryRoom:mimic".into());
             "mimic"
         } else {
             item.source = Some("TreasuryRoom".into());
-            if heap_chest { "chest" } else { "heap" }
+            if heap_chest {
+                "chest"
+            } else {
+                "heap"
+            }
         };
         out.push(PlacedLoot { item, heap_type });
     }
@@ -371,7 +376,9 @@ fn pool_equip(dungeon: &mut DungeonState) -> GeneratedItem {
     let floor = (dungeon.depth / 5) + 1;
     match Random::int_max(5) {
         0 | 1 => dungeon.generator.random_weapon(floor, false, dungeon.depth),
-        2 => dungeon.generator.random_missile(floor, false, dungeon.depth),
+        2 => dungeon
+            .generator
+            .random_missile(floor, false, dungeon.depth),
         _ => dungeon.generator.random_armor(floor, dungeon.depth),
     }
 }
@@ -519,11 +526,12 @@ fn secret_library(
     let mut occupied = Vec::new();
     for _ in 0..n {
         burn_drop_pos(room, &mut occupied);
-        let mut item = find_prize_item(items_to_spawn, Some("TrinketCatalyst")).unwrap_or_else(|| {
-            dungeon
-                .generator
-                .random_category(Category::Scroll, dungeon.depth)
-        });
+        let mut item =
+            find_prize_item(items_to_spawn, Some("TrinketCatalyst")).unwrap_or_else(|| {
+                dungeon
+                    .generator
+                    .random_category(Category::Scroll, dungeon.depth)
+            });
         item.source = Some("SecretLibraryRoom".into());
         out.push(PlacedLoot {
             item,
@@ -543,11 +551,12 @@ fn secret_runestone(
     let mut occupied = Vec::new();
     for _ in 0..n {
         burn_drop_pos(room, &mut occupied);
-        let mut item = find_prize_item(items_to_spawn, Some("TrinketCatalyst")).unwrap_or_else(|| {
-            dungeon
-                .generator
-                .random_category(Category::Stone, dungeon.depth)
-        });
+        let mut item =
+            find_prize_item(items_to_spawn, Some("TrinketCatalyst")).unwrap_or_else(|| {
+                dungeon
+                    .generator
+                    .random_category(Category::Stone, dungeon.depth)
+            });
         item.source = Some("SecretRunestoneRoom".into());
         out.push(PlacedLoot {
             item,

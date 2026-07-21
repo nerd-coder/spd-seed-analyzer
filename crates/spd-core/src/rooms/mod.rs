@@ -7,8 +7,8 @@ pub mod special;
 pub mod standard;
 pub mod types;
 
-use special::init_for_run as special_init;
 use secret::init_for_run as secret_init;
+use special::init_for_run as special_init;
 
 /// Run-level room deck state after `initForRun`.
 #[derive(Debug, Clone)]

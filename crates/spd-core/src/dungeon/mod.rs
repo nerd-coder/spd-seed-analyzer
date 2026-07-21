@@ -5,8 +5,8 @@ mod limited_drops;
 pub use limited_drops::LimitedDrops;
 
 use crate::generator::GeneratorState;
-use crate::items::IdentityMaps;
 use crate::items::model::GeneratedItem;
+use crate::items::IdentityMaps;
 use crate::random::Random;
 use crate::rooms::RoomRunState;
 

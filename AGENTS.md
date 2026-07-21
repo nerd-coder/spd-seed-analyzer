@@ -23,6 +23,11 @@ bun run dev          # wasm-pack + Vite
 bun run build
 bun run test:rust    # cargo test -p spd-core
 bun run build:wasm
+bun run check        # biome check (TS/JS/CSS/JSON)
+bun run check:fix    # biome check --fix
+bun run format       # biome format + cargo fmt
+bun run lint         # biome lint + cargo clippy -D warnings
+bun run check:all    # biome + rust fmt/clippy checks
 ```
 
 Use **rustup** cargo for wasm (`PATH` scripts prepend `$HOME/.cargo/bin`).

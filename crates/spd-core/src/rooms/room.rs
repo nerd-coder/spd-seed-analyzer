@@ -159,10 +159,7 @@ impl Room {
         }
         self.set_size();
         if self.width() > w || self.height() > h {
-            self.resize(
-                self.width().min(w) - 1,
-                self.height().min(h) - 1,
-            );
+            self.resize(self.width().min(w) - 1, self.height().min(h) - 1);
         }
         true
     }

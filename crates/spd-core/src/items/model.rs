@@ -91,11 +91,7 @@ fn humanize_class(name: &str) -> String {
         if i > 0 && ch.is_uppercase() {
             out.push(' ');
         }
-        out.push(if i == 0 {
-            ch.to_ascii_lowercase()
-        } else {
-            ch
-        });
+        out.push(if i == 0 { ch.to_ascii_lowercase() } else { ch });
     }
     // First letter lower for seed-finder style ("projecting crossbow")
     if let Some(first) = out.chars().next() {

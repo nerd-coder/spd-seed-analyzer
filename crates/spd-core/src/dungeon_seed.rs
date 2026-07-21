@@ -117,9 +117,7 @@ impl DungeonSeed {
         let mut total: i64 = 0;
         for c in input_text.chars() {
             // Java char is UTF-16 code unit; for BMP this matches
-            total = total
-                .wrapping_mul(31)
-                .wrapping_add(c as u32 as i64);
+            total = total.wrapping_mul(31).wrapping_add(c as u32 as i64);
         }
         if total < 0 {
             total = total.wrapping_add(i64::MAX);
@@ -209,7 +207,11 @@ mod tests {
     fn many_round_trips() {
         for seed in [1, 26, 26 * 26, 999_999, 1_000_000_000, TOTAL_SEEDS / 2] {
             let code = DungeonSeed::convert_to_code(seed).unwrap();
-            assert_eq!(DungeonSeed::convert_from_code(&code).unwrap(), seed, "seed {seed} code {code}");
+            assert_eq!(
+                DungeonSeed::convert_from_code(&code).unwrap(),
+                seed,
+                "seed {seed} code {code}"
+            );
         }
     }
 }

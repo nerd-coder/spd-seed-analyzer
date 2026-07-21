@@ -50,17 +50,7 @@ fn connection_room(id: usize, depth: i32) -> Room {
         _ => &[15., 4., 0., 2., 3., 2.], // 22-26
     };
     let idx = Random::chances(chances) as usize;
-    Room::new(
-        id,
-        names[idx],
-        RoomKind::Connection,
-        1,
-        16,
-        3,
-        10,
-        3,
-        10,
-    )
+    Room::new(id, names[idx], RoomKind::Connection, 1, 16, 3, 10, 3, 10)
 }
 
 fn curve_equation(x: f64, exp: i32) -> f64 {
@@ -71,9 +61,7 @@ fn curve_equation(x: f64, exp: i32) -> f64 {
 fn target_angle(percent_along: f32, params: &BuilderParams) -> f32 {
     let mut p = percent_along + params.curve_offset;
     let ce = curve_equation(p as f64, params.curve_exponent) as f32;
-    360.0
-        * (params.curve_intensity * ce + (1.0 - params.curve_intensity) * p
-            - params.curve_offset)
+    360.0 * (params.curve_intensity * ce + (1.0 - params.curve_intensity) * p - params.curve_offset)
 }
 
 fn setup_rooms(rooms: &mut [Room]) -> Setup {
@@ -121,8 +109,7 @@ fn setup_rooms(rooms: &mut [Room]) -> Setup {
     }
     Random::shuffle_vec(&mut multi);
 
-    let mut rooms_on_main =
-        (multi.len() as f32 * 0.25) as i32 + Random::chances(&[0., 0., 0., 1.]);
+    let mut rooms_on_main = (multi.len() as f32 * 0.25) as i32 + Random::chances(&[0., 0., 0., 1.]);
     let mut main_path = Vec::new();
     while rooms_on_main > 0 && !multi.is_empty() {
         let id = multi.remove(0);
@@ -201,7 +188,17 @@ fn create_branches(
             let tid = rooms.len();
             let is_secret = rooms[r].kind == RoomKind::Secret;
             let t = if is_secret {
-                Room::new(tid, "MazeConnectionRoom", RoomKind::Connection, 1, 16, 3, 10, 3, 10)
+                Room::new(
+                    tid,
+                    "MazeConnectionRoom",
+                    RoomKind::Connection,
+                    1,
+                    16,
+                    3,
+                    10,
+                    3,
+                    10,
+                )
             } else {
                 connection_room(tid, depth)
             };
@@ -381,7 +378,8 @@ pub fn build_loop(rooms: &mut Vec<Room>, params: &BuilderParams, depth: i32) -> 
     for i in 0..n {
         let neigh: Vec<usize> = rooms[i].neighbours.clone();
         for n_id in neigh {
-            if !rooms[n_id].connected.contains(&i) && Random::float() < params.extra_connection_chance
+            if !rooms[n_id].connected.contains(&i)
+                && Random::float() < params.extra_connection_chance
             {
                 let _ = connect(rooms, i, n_id);
             }

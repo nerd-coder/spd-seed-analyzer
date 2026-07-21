@@ -1,45 +1,45 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { Dices, Loader2, Search } from "lucide-react";
+import { Dices, Loader2, Search } from 'lucide-react'
+import { type FormEvent, useEffect, useState } from 'react'
 
-import { DepthIcon } from "@/components/DepthIcon";
-import { FloorMapCanvas } from "@/components/FloorMapCanvas";
-import { ItemIcon } from "@/components/ItemIcon";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { DepthIcon } from '@/components/DepthIcon'
+import { FloorMapCanvas } from '@/components/FloorMapCanvas'
+import { ItemIcon } from '@/components/ItemIcon'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   analyzeSeed,
-  getSpdMeta,
   type FloorReport,
+  getSpdMeta,
   type IdentityEntry,
   type IdentityMaps,
   type SeedReport,
-} from "@/lib/spd-wasm";
+} from '@/lib/spd-wasm'
 
-const ADVANCED_KEY = "spd-analyzer-advanced-mode";
+const ADVANCED_KEY = 'spd-analyzer-advanced-mode'
 
 /** SPD region bands (same as tileset_for_depth). */
 const REGIONS = [
-  { id: "sewers", label: "Sewers", min: 1, max: 5 },
-  { id: "prison", label: "Prison", min: 6, max: 10 },
-  { id: "caves", label: "Caves", min: 11, max: 15 },
-  { id: "city", label: "City", min: 16, max: 20 },
-  { id: "halls", label: "Halls", min: 21, max: 26 },
-] as const;
+  { id: 'sewers', label: 'Sewers', min: 1, max: 5 },
+  { id: 'prison', label: 'Prison', min: 6, max: 10 },
+  { id: 'caves', label: 'Caves', min: 11, max: 15 },
+  { id: 'city', label: 'City', min: 16, max: 20 },
+  { id: 'halls', label: 'Halls', min: 21, max: 26 },
+] as const
 
 /** Boss depths (region bosses) — omitted from the Floors UI. */
-const BOSS_DEPTHS = new Set([5, 10, 15, 20]);
+const BOSS_DEPTHS = new Set([5, 10, 15, 20])
 
 function groupFloorsByRegion(floors: FloorReport[]) {
   return REGIONS.map((region) => ({
@@ -49,51 +49,51 @@ function groupFloorsByRegion(floors: FloorReport[]) {
         (f) =>
           f.depth >= region.min &&
           f.depth <= region.max &&
-          !BOSS_DEPTHS.has(f.depth),
+          !BOSS_DEPTHS.has(f.depth)
       )
       .sort((a, b) => a.depth - b.depth),
-  })).filter((g) => g.floors.length > 0);
+  })).filter((g) => g.floors.length > 0)
 }
 
 function appearanceDescription(
-  category: "potion" | "scroll" | "ring",
-  appearance: string,
+  category: 'potion' | 'scroll' | 'ring',
+  appearance: string
 ): string {
-  const label = appearance.toLowerCase();
+  const label = appearance.toLowerCase()
   switch (category) {
-    case "potion":
-      return `${label} potion`;
-    case "scroll":
-      return `${label} rune`;
-    case "ring":
-      return `${label} gem`;
+    case 'potion':
+      return `${label} potion`
+    case 'scroll':
+      return `${label} rune`
+    case 'ring':
+      return `${label} gem`
   }
 }
 
 function itemAppearance(
   item: { category: string; class_name?: string | null },
-  identities: IdentityMaps,
+  identities: IdentityMaps
 ): string | undefined {
-  if (item.category === "potion") {
+  if (item.category === 'potion') {
     return identities.potions.find((p) => p.item === item.class_name)
-      ?.appearance;
+      ?.appearance
   }
-  if (item.category === "scroll") {
+  if (item.category === 'scroll') {
     return identities.scrolls.find((s) => s.item === item.class_name)
-      ?.appearance;
+      ?.appearance
   }
-  if (item.category === "ring") {
-    return identities.rings.find((r) => r.item === item.class_name)?.appearance;
+  if (item.category === 'ring') {
+    return identities.rings.find((r) => r.item === item.class_name)?.appearance
   }
-  return undefined;
+  return undefined
 }
 
 function IdentityGrid({
   entries,
   category,
 }: {
-  entries: IdentityEntry[];
-  category: "potion" | "scroll" | "ring";
+  entries: IdentityEntry[]
+  category: 'potion' | 'scroll' | 'ring'
 }) {
   return (
     <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3 md:grid-cols-4">
@@ -116,7 +116,7 @@ function IdentityGrid({
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 function FloorDetail({
@@ -124,14 +124,14 @@ function FloorDetail({
   identities,
   advancedMode,
 }: {
-  floor: FloorReport;
-  identities: IdentityMaps;
-  advancedMode: boolean;
+  floor: FloorReport
+  identities: IdentityMaps
+  advancedMode: boolean
 }) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        {floor.feeling && floor.feeling !== "none" && (
+        {floor.feeling && floor.feeling !== 'none' && (
           <Badge variant="secondary" className="capitalize">
             {floor.feeling}
           </Badge>
@@ -165,7 +165,7 @@ function FloorDetail({
             Rooms
           </p>
           <p className="text-sm leading-relaxed">
-            {floor.rooms.map((r) => r.replace(/Room$/, "")).join(" · ")}
+            {floor.rooms.map((r) => r.replace(/Room$/, '')).join(' · ')}
           </p>
         </div>
       )}
@@ -175,10 +175,7 @@ function FloorDetail({
       ) : (
         <ul className="space-y-1 text-sm">
           {floor.items.map((item, i) => (
-            <li
-              key={`${floor.depth}-${i}`}
-              className="flex items-start gap-2"
-            >
+            <li key={`${floor.depth}-${i}`} className="flex items-start gap-2">
               <ItemIcon
                 classNameItem={item.class_name}
                 category={item.category}
@@ -191,7 +188,7 @@ function FloorDetail({
                 <span>{item.name}</span>
                 {item.source && (
                   <span className="text-muted-foreground">
-                    {" "}
+                    {' '}
                     ({item.source})
                   </span>
                 )}
@@ -201,7 +198,7 @@ function FloorDetail({
         </ul>
       )}
     </div>
-  );
+  )
 }
 
 function FloorsByRegion({
@@ -209,14 +206,14 @@ function FloorsByRegion({
   identities,
   advancedMode,
 }: {
-  floors: FloorReport[];
-  identities: IdentityMaps;
-  advancedMode: boolean;
+  floors: FloorReport[]
+  identities: IdentityMaps
+  advancedMode: boolean
 }) {
-  const groups = groupFloorsByRegion(floors);
-  if (groups.length === 0) return null;
+  const groups = groupFloorsByRegion(floors)
+  if (groups.length === 0) return null
 
-  const defaultRegion = groups[0].region.id;
+  const defaultRegion = groups[0].region.id
 
   return (
     <Tabs defaultValue={defaultRegion} className="gap-0">
@@ -228,14 +225,14 @@ function FloorsByRegion({
               {regionFloors[0].depth}
               {regionFloors.length > 1
                 ? `–${regionFloors[regionFloors.length - 1].depth}`
-                : ""}
+                : ''}
             </span>
           </TabsTrigger>
         ))}
       </TabsList>
 
       {groups.map(({ region, floors: regionFloors }) => {
-        const defaultFloor = String(regionFloors[0].depth);
+        const defaultFloor = String(regionFloors[0].depth)
         return (
           <TabsContent key={region.id} value={region.id}>
             <Tabs defaultValue={defaultFloor} className="gap-4">
@@ -249,7 +246,7 @@ function FloorsByRegion({
                     value={String(floor.depth)}
                     className="h-auto flex-col gap-0.5 px-2 py-1.5"
                     title={
-                      floor.feeling && floor.feeling !== "none"
+                      floor.feeling && floor.feeling !== 'none'
                         ? `Floor ${floor.depth} · ${floor.feeling}`
                         : `Floor ${floor.depth}`
                     }
@@ -274,58 +271,58 @@ function FloorsByRegion({
               ))}
             </Tabs>
           </TabsContent>
-        );
+        )
       })}
     </Tabs>
-  );
+  )
 }
 
 export default function App() {
-  const [seed, setSeed] = useState("GFX-PZH-DCH");
-  const [floors, setFloors] = useState(24);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [report, setReport] = useState<SeedReport | null>(null);
+  const [seed, setSeed] = useState('GFX-PZH-DCH')
+  const [floors, setFloors] = useState(24)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [report, setReport] = useState<SeedReport | null>(null)
   const [meta, setMeta] = useState<{ version: string; commit: string } | null>(
-    null,
-  );
+    null
+  )
   const [advancedMode, setAdvancedMode] = useState(() => {
     try {
-      return localStorage.getItem(ADVANCED_KEY) === "1";
+      return localStorage.getItem(ADVANCED_KEY) === '1'
     } catch {
-      return false;
+      return false
     }
-  });
+  })
 
   useEffect(() => {
     getSpdMeta()
       .then(setMeta)
       .catch((e: unknown) => {
-        setError(e instanceof Error ? e.message : String(e));
-      });
-  }, []);
+        setError(e instanceof Error ? e.message : String(e))
+      })
+  }, [])
 
   function toggleAdvanced(next: boolean) {
-    setAdvancedMode(next);
+    setAdvancedMode(next)
     try {
-      localStorage.setItem(ADVANCED_KEY, next ? "1" : "0");
+      localStorage.setItem(ADVANCED_KEY, next ? '1' : '0')
     } catch {
       /* ignore */
     }
   }
 
   async function onAnalyze(e: FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
     try {
-      const result = await analyzeSeed(seed.trim(), floors);
-      setReport(result);
+      const result = await analyzeSeed(seed.trim(), floors)
+      setReport(result)
     } catch (err) {
-      setReport(null);
-      setError(err instanceof Error ? err.message : String(err));
+      setReport(null)
+      setError(err instanceof Error ? err.message : String(err))
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
@@ -412,11 +409,7 @@ export default function App() {
 
             <div>
               <Button type="submit" disabled={loading || !seed.trim()}>
-                {loading ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  <Search />
-                )}
+                {loading ? <Loader2 className="animate-spin" /> : <Search />}
                 Analyze
               </Button>
             </div>
@@ -440,7 +433,7 @@ export default function App() {
               </CardTitle>
               <CardDescription className="space-y-1">
                 <span className="block">
-                  Numeric:{" "}
+                  Numeric:{' '}
                   <span className="font-mono text-foreground">
                     {report.seed.numeric}
                   </span>
@@ -504,8 +497,8 @@ export default function App() {
                   Partial levelgen: layout builder + main floor drops. Boss
                   floors (5 / 10 / 15 / 20) are hidden.
                   {advancedMode
-                    ? " Maps use original region tilesheets when available."
-                    : " Enable Advanced mode to view floor maps."}
+                    ? ' Maps use original region tilesheets when available.'
+                    : ' Enable Advanced mode to view floor maps.'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -520,5 +513,5 @@ export default function App() {
         </>
       )}
     </div>
-  );
+  )
 }

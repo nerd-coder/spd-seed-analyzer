@@ -20,7 +20,7 @@ pub use items::IdentityMaps;
 pub use java_random::JavaRandom;
 pub use random::Random;
 pub use report::{AnalyzeError, FloorReport, SeedInfo, SeedReport};
-pub use run::{RunState, dungeon_from_run, init_run};
+pub use run::{dungeon_from_run, init_run, RunState};
 
 /// Pinned SPD version this port targets (from local clone at scaffold time).
 pub const SPD_VERSION: &str = "v3.3.8";
@@ -82,7 +82,15 @@ mod analyze_smoke {
         let r = analyze_seed("GFX-PZH-DCH", 4).expect("analyze");
         eprintln!("status={} floors={}", r.status, r.floors.len());
         for f in &r.floors {
-            eprintln!("  floor {} rooms={} items={} map={:?}", f.depth, f.rooms.len(), f.items.len(), f.map.as_ref().map(|m| (m.width, m.height, m.tileset.as_str())));
+            eprintln!(
+                "  floor {} rooms={} items={} map={:?}",
+                f.depth,
+                f.rooms.len(),
+                f.items.len(),
+                f.map
+                    .as_ref()
+                    .map(|m| (m.width, m.height, m.tileset.as_str()))
+            );
         }
     }
 

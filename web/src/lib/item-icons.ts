@@ -1,11 +1,11 @@
 /** SPD ItemSpriteSheet indices for items.png (16x16 cells, 16 cols, 256x512). */
 export const ITEM_SHEET = {
-  url: "/assets/sprites/items.png",
+  url: '/assets/sprites/items.png',
   size: 16,
   cols: 16,
   width: 256,
   height: 512,
-} as const;
+} as const
 
 /** Known class_name → sheet index. Potions/scrolls/rings use appearance maps. */
 export const CLASS_ICON: Record<string, number> = {
@@ -144,7 +144,7 @@ export const CLASS_ICON: Record<string, number> = {
   Whip: 117,
   WondrousResin: 281,
   WornShortsword: 96,
-};
+}
 
 export const POTION_COLOR_ICON: Record<string, number> = {
   crimson: 352,
@@ -159,7 +159,7 @@ export const POTION_COLOR_ICON: Record<string, number> = {
   charcoal: 361,
   silver: 362,
   ivory: 363,
-};
+}
 
 export const SCROLL_RUNE_ICON: Record<string, number> = {
   KAUNAN: 304,
@@ -186,7 +186,7 @@ export const SCROLL_RUNE_ICON: Record<string, number> = {
   odal: 314,
   TIWAZ: 315,
   tiwaz: 315,
-};
+}
 
 export const RING_GEM_ICON: Record<string, number> = {
   garnet: 224,
@@ -201,7 +201,7 @@ export const RING_GEM_ICON: Record<string, number> = {
   quartz: 233,
   agate: 234,
   diamond: 235,
-};
+}
 
 export const CATEGORY_HOLDER: Record<string, number> = {
   weapon: 1,
@@ -218,59 +218,59 @@ export const CATEGORY_HOLDER: Record<string, number> = {
   stone: 13,
   gold: 18,
   other: 0,
-};
+}
 
 /** Potion class order matches Generator / Potion.colors insertion. */
 const POTION_CLASSES = [
-  "PotionOfStrength",
-  "PotionOfHealing",
-  "PotionOfMindVision",
-  "PotionOfFrost",
-  "PotionOfLiquidFlame",
-  "PotionOfToxicGas",
-  "PotionOfHaste",
-  "PotionOfInvisibility",
-  "PotionOfLevitation",
-  "PotionOfParalyticGas",
-  "PotionOfPurity",
-  "PotionOfExperience",
-] as const;
+  'PotionOfStrength',
+  'PotionOfHealing',
+  'PotionOfMindVision',
+  'PotionOfFrost',
+  'PotionOfLiquidFlame',
+  'PotionOfToxicGas',
+  'PotionOfHaste',
+  'PotionOfInvisibility',
+  'PotionOfLevitation',
+  'PotionOfParalyticGas',
+  'PotionOfPurity',
+  'PotionOfExperience',
+] as const
 
 const SCROLL_CLASSES = [
-  "ScrollOfUpgrade",
-  "ScrollOfIdentify",
-  "ScrollOfRemoveCurse",
-  "ScrollOfMirrorImage",
-  "ScrollOfRecharging",
-  "ScrollOfTeleportation",
-  "ScrollOfLullaby",
-  "ScrollOfMagicMapping",
-  "ScrollOfRage",
-  "ScrollOfRetribution",
-  "ScrollOfTerror",
-  "ScrollOfTransmutation",
-] as const;
+  'ScrollOfUpgrade',
+  'ScrollOfIdentify',
+  'ScrollOfRemoveCurse',
+  'ScrollOfMirrorImage',
+  'ScrollOfRecharging',
+  'ScrollOfTeleportation',
+  'ScrollOfLullaby',
+  'ScrollOfMagicMapping',
+  'ScrollOfRage',
+  'ScrollOfRetribution',
+  'ScrollOfTerror',
+  'ScrollOfTransmutation',
+] as const
 
 const RING_CLASSES = [
-  "RingOfAccuracy",
-  "RingOfArcana",
-  "RingOfElements",
-  "RingOfEnergy",
-  "RingOfEvasion",
-  "RingOfForce",
-  "RingOfFuror",
-  "RingOfHaste",
-  "RingOfMight",
-  "RingOfSharpshooting",
-  "RingOfTenacity",
-  "RingOfWealth",
-] as const;
+  'RingOfAccuracy',
+  'RingOfArcana',
+  'RingOfElements',
+  'RingOfEnergy',
+  'RingOfEvasion',
+  'RingOfForce',
+  'RingOfFuror',
+  'RingOfHaste',
+  'RingOfMight',
+  'RingOfSharpshooting',
+  'RingOfTenacity',
+  'RingOfWealth',
+] as const
 
 export type IconResolveOpts = {
   /** Unidentified potion color / scroll rune / ring gem. */
-  appearance?: string | null;
-  category?: string | null;
-};
+  appearance?: string | null
+  category?: string | null
+}
 
 /**
  * Resolve an `items.png` sheet index for a class name (and optional appearance).
@@ -278,74 +278,75 @@ export type IconResolveOpts = {
  */
 export function resolveItemIconIndex(
   className: string | null | undefined,
-  opts: IconResolveOpts = {},
+  opts: IconResolveOpts = {}
 ): number {
-  const cat = (opts.category ?? "").toLowerCase();
-  const appearance = opts.appearance?.toLowerCase() ?? null;
+  const cat = (opts.category ?? '').toLowerCase()
+  const appearance = opts.appearance?.toLowerCase() ?? null
 
   if (className) {
     if (CLASS_ICON[className] != null) {
-      return CLASS_ICON[className];
+      return CLASS_ICON[className]
     }
-    if (className.startsWith("PotionOf") || cat === "potion") {
+    if (className.startsWith('PotionOf') || cat === 'potion') {
       if (appearance && POTION_COLOR_ICON[appearance] != null) {
-        return POTION_COLOR_ICON[appearance];
+        return POTION_COLOR_ICON[appearance]
       }
-      return CATEGORY_HOLDER.potion;
+      return CATEGORY_HOLDER.potion
     }
-    if (className.startsWith("ScrollOf") || cat === "scroll") {
+    if (className.startsWith('ScrollOf') || cat === 'scroll') {
       if (appearance && SCROLL_RUNE_ICON[appearance] != null) {
-        return SCROLL_RUNE_ICON[appearance];
+        return SCROLL_RUNE_ICON[appearance]
       }
       // uppercase rune keys too
       if (opts.appearance && SCROLL_RUNE_ICON[opts.appearance] != null) {
-        return SCROLL_RUNE_ICON[opts.appearance];
+        return SCROLL_RUNE_ICON[opts.appearance]
       }
-      return CATEGORY_HOLDER.scroll;
+      return CATEGORY_HOLDER.scroll
     }
-    if (className.startsWith("RingOf") || cat === "ring") {
+    if (className.startsWith('RingOf') || cat === 'ring') {
       if (appearance && RING_GEM_ICON[appearance] != null) {
-        return RING_GEM_ICON[appearance];
+        return RING_GEM_ICON[appearance]
       }
-      return CATEGORY_HOLDER.ring;
+      return CATEGORY_HOLDER.ring
     }
     // DoubleBomb shares bomb art
-    if (className === "DoubleBomb") return CLASS_ICON.Bomb ?? CATEGORY_HOLDER.other;
+    if (className === 'DoubleBomb')
+      return CLASS_ICON.Bomb ?? CATEGORY_HOLDER.other
   }
 
   if (cat && CATEGORY_HOLDER[cat] != null) {
-    return CATEGORY_HOLDER[cat];
+    return CATEGORY_HOLDER[cat]
   }
-  return CATEGORY_HOLDER.other;
+  return CATEGORY_HOLDER.other
 }
 
 /** Background style for a 16×16 cell on items.png (pixel-art, no smoothing). */
 export function itemIconStyle(
   index: number,
-  displayPx = 16,
+  displayPx = 16
 ): {
-  width: number;
-  height: number;
-  backgroundImage: string;
-  backgroundRepeat: "no-repeat";
-  backgroundSize: string;
-  backgroundPosition: string;
-  imageRendering: "pixelated";
-  flexShrink: number;
+  width: number
+  height: number
+  backgroundImage: string
+  backgroundRepeat: 'no-repeat'
+  backgroundSize: string
+  backgroundPosition: string
+  imageRendering: 'pixelated'
+  flexShrink: number
 } {
-  const col = index % ITEM_SHEET.cols;
-  const row = Math.floor(index / ITEM_SHEET.cols);
-  const scale = displayPx / ITEM_SHEET.size;
+  const col = index % ITEM_SHEET.cols
+  const row = Math.floor(index / ITEM_SHEET.cols)
+  const scale = displayPx / ITEM_SHEET.size
   return {
     width: displayPx,
     height: displayPx,
     backgroundImage: `url(${ITEM_SHEET.url})`,
-    backgroundRepeat: "no-repeat",
+    backgroundRepeat: 'no-repeat',
     backgroundSize: `${ITEM_SHEET.width * scale}px ${ITEM_SHEET.height * scale}px`,
     backgroundPosition: `-${col * displayPx}px -${row * displayPx}px`,
-    imageRendering: "pixelated",
+    imageRendering: 'pixelated',
     flexShrink: 0,
-  };
+  }
 }
 
-export { POTION_CLASSES, SCROLL_CLASSES, RING_CLASSES };
+export { POTION_CLASSES, RING_CLASSES, SCROLL_CLASSES }

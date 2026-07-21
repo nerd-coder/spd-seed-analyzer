@@ -4,10 +4,10 @@ mod categories;
 
 pub use categories::{FLOOR_SET_TIER_PROBS, MIS_TIERS, WEP_TIERS};
 
-use categories::CategoryDef;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::items::randomize::randomize_item;
 use crate::random::Random;
+use categories::CategoryDef;
 
 /// Categories in `Generator.Category.values()` declaration order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -315,7 +315,12 @@ impl GeneratorState {
         item
     }
 
-    pub fn random_weapon(&mut self, floor_set: i32, use_defaults: bool, depth: i32) -> GeneratedItem {
+    pub fn random_weapon(
+        &mut self,
+        floor_set: i32,
+        use_defaults: bool,
+        depth: i32,
+    ) -> GeneratedItem {
         let floor_set = floor_set.clamp(0, FLOOR_SET_TIER_PROBS.len() as i32 - 1) as usize;
         let tier = Random::chances(&FLOOR_SET_TIER_PROBS[floor_set]) as usize;
         let tier_cat = WEP_TIERS[tier];
@@ -326,7 +331,12 @@ impl GeneratorState {
         }
     }
 
-    pub fn random_missile(&mut self, floor_set: i32, use_defaults: bool, depth: i32) -> GeneratedItem {
+    pub fn random_missile(
+        &mut self,
+        floor_set: i32,
+        use_defaults: bool,
+        depth: i32,
+    ) -> GeneratedItem {
         let floor_set = floor_set.clamp(0, FLOOR_SET_TIER_PROBS.len() as i32 - 1) as usize;
         let tier = Random::chances(&FLOOR_SET_TIER_PROBS[floor_set]) as usize;
         let tier_cat = MIS_TIERS[tier];

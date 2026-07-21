@@ -2,7 +2,7 @@
 
 use crate::dungeon::{DungeonState, LimitedDrops};
 use crate::generator::{self, GeneratorState};
-use crate::items::{IdentityMaps, init_identities};
+use crate::items::{init_identities, IdentityMaps};
 use crate::random::Random;
 use crate::rooms::{self, RoomRunState};
 
@@ -68,7 +68,10 @@ mod tests {
         assert_eq!(a.rooms.specials, b.rooms.specials);
         assert_eq!(a.rooms.secrets, b.rooms.secrets);
         assert_eq!(a.rooms.region_secrets, b.rooms.region_secrets);
-        assert_eq!(a.generator.using_first_deck(), b.generator.using_first_deck());
+        assert_eq!(
+            a.generator.using_first_deck(),
+            b.generator.using_first_deck()
+        );
     }
 
     #[test]

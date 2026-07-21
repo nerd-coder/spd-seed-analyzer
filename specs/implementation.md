@@ -48,6 +48,10 @@ bun run dev          # wasm-pack + Vite (prefers $HOME/.cargo/bin for rustup)
 bun run build
 bun run test:rust    # cargo test -p spd-core
 bun run build:wasm
+bun run check        # biome (TS/JS/CSS/JSON)
+bun run format       # biome format + cargo fmt
+bun run lint         # biome lint + cargo clippy -D warnings
+bun run check:all    # biome + rust fmt/clippy
 ```
 
 **Note:** mise/Homebrew `rustc` may lack `wasm32-unknown-unknown`; scripts prepend rustup’s cargo.

@@ -230,16 +230,15 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 });
 
                 // Special/secret room paint loot (before createItems; may consume itemsToSpawn).
-                let special = special_loot::special_room_loot(
-                    dungeon,
-                    &floor.rooms,
-                    &mut items_to_spawn,
-                );
+                let special =
+                    special_loot::special_room_loot(dungeon, &floor.rooms, &mut items_to_spawn);
                 for p in special {
                     // Drop matching forced clones when a prize was pulled from itemsToSpawn.
-                    if p.item.source.as_deref().is_some_and(|s| {
-                        s.contains("Room") || s.contains("Secret")
-                    }) {
+                    if p.item
+                        .source
+                        .as_deref()
+                        .is_some_and(|s| s.contains("Room") || s.contains("Secret"))
+                    {
                         if let Some(pos) = forced.iter().position(|f| {
                             f.class_name == p.item.class_name
                                 && f.source.as_deref() == Some("forced")
@@ -272,10 +271,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                     if p.item.source.as_deref() == Some("forced") {
                         // Room paint may add to itemsToSpawn (e.g. Storage → PotionOfLiquidFlame).
                         // Keep those in the report if not already listed under forced.
-                        if !forced
-                            .iter()
-                            .any(|f| f.class_name == p.item.class_name)
-                        {
+                        if !forced.iter().any(|f| f.class_name == p.item.class_name) {
                             forced.push(p.item);
                         }
                         continue;

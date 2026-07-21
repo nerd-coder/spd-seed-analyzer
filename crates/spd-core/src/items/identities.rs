@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::catalog::{
-    POTION_COLORS, POTION_ITEMS, RING_GEMS, RING_ITEMS, SCROLL_ITEMS, SCROLL_RUNES, display_name,
+    display_name, POTION_COLORS, POTION_ITEMS, RING_GEMS, RING_ITEMS, SCROLL_ITEMS, SCROLL_RUNES,
 };
 use super::status_handler::assign_labels;
 

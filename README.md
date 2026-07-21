@@ -47,6 +47,12 @@ cd web && bunx shadcn@latest add <component>
 | `bun run build:wasm` | WASM only |
 | `bun run test:rust` | `cargo test -p spd-core` |
 | `bun run preview` | Preview production build |
+| `bun run check` | Biome format + lint (TS/JS/CSS/JSON) |
+| `bun run check:fix` | Auto-fix Biome issues |
+| `bun run format` | Format TS (Biome) + Rust (`cargo fmt`) |
+| `bun run lint` | Lint TS (Biome) + Rust (`cargo clippy -D warnings`) |
+| `bun run check:rust` | `cargo fmt --check` + clippy |
+| `bun run check:all` | Biome + Rust format/lint checks |
 
 ## Status
 
