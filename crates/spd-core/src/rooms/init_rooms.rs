@@ -1,17 +1,19 @@
-//! `RegularLevel.initRooms` + sewer standard/special counts.
+//! `RegularLevel.initRooms` + builder selection.
 
 use crate::level::Feeling;
 use crate::random::Random;
+use crate::rooms::room::{dims_for_kind, Room};
 use crate::rooms::secret;
 use crate::rooms::special::SpecialFloorState;
 use crate::rooms::standard;
 use crate::rooms::types::RoomSpec;
 
-/// Floor room list after `initRooms` (before builder placement).
 #[derive(Debug, Clone)]
 pub struct FloorRooms {
-    pub rooms: Vec<RoomSpec>,
+    pub rooms: Vec<Room>,
     pub builder_kind: BuilderKind,
+    pub curve_intensity: f32,
+    pub curve_offset: f32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -20,38 +22,48 @@ pub enum BuilderKind {
     FigureEight,
 }
 
-/// SewerLevel.standardRooms
 fn sewer_standard_rooms(force_max: bool) -> i32 {
     if force_max {
         return 6;
     }
-    // 4 to 6, average 5
     4 + Random::chances(&[1., 3., 1.])
 }
 
-/// SewerLevel.specialRooms
 fn sewer_special_rooms(force_max: bool) -> i32 {
     if force_max {
         return 2;
     }
-    // 1 to 2, average 1.8
     1 + Random::chances(&[1., 4.])
 }
 
-/// `RegularLevel.builder()` — consumes RNG for builder choice / shape.
-pub fn select_builder() -> BuilderKind {
+/// `RegularLevel.builder()` — returns kind + loop shape params.
+pub fn select_builder() -> (BuilderKind, f32, f32) {
     if Random::int_max(2) == 0 {
-        let _ = Random::float_range(0.0, 0.65);
-        let _ = Random::float_range(0.0, 0.50);
-        BuilderKind::Loop
+        let intensity = Random::float_range(0.0, 0.65);
+        let offset = Random::float_range(0.0, 0.50);
+        (BuilderKind::Loop, intensity, offset)
     } else {
-        let _ = Random::float_range(0.3, 0.8);
-        // offset fixed 0f — no second random
-        BuilderKind::FigureEight
+        let intensity = Random::float_range(0.3, 0.8);
+        (BuilderKind::FigureEight, intensity, 0.0)
     }
 }
 
-/// Full initRooms sequence for a regular (non-boss) sewer-style floor.
+fn room_from_spec(id: usize, spec: RoomSpec) -> Room {
+    let (mw, xw, mh, xh) = dims_for_kind(spec.kind, spec.size_factor, &spec.name);
+    Room::new(
+        id,
+        spec.name,
+        spec.kind,
+        spec.size_factor,
+        spec.max_connections,
+        mw,
+        xw,
+        mh,
+        xh,
+    )
+}
+
+/// Full initRooms sequence for a regular (non-boss) floor.
 pub fn init_rooms_regular(
     depth: i32,
     feeling: Feeling,
@@ -63,12 +75,11 @@ pub fn init_rooms_regular(
     region_secrets: &mut [i32; 5],
     pit_needed_depth: &mut i32,
 ) -> FloorRooms {
-    // builder chosen first in build()
-    let builder_kind = select_builder();
+    let (builder_kind, curve_intensity, curve_offset) = select_builder();
 
-    let mut rooms = Vec::new();
-    rooms.push(standard::create_entrance(depth));
-    rooms.push(standard::create_exit(depth));
+    let mut specs: Vec<RoomSpec> = Vec::new();
+    specs.push(standard::create_entrance(depth));
+    specs.push(standard::create_exit(depth));
 
     let force_max = feeling == Feeling::Large;
     let mut standards = sewer_standard_rooms(force_max);
@@ -76,8 +87,6 @@ pub fn init_rooms_regular(
         standards = (standards as f32 * 1.5).ceil() as i32;
     }
 
-    // Java: for (i=0; i<standards; i++) { create; setSizeCat(standards-i); i += sizeFactor()-1; }
-    // net: i increases by sizeFactor each accepted room
     let mut i = 0;
     while i < standards {
         let (name, size_factor) = loop {
@@ -86,12 +95,12 @@ pub fn init_rooms_regular(
                 break (name, sf);
             }
         };
-        rooms.push(RoomSpec::standard(name, size_factor));
+        specs.push(RoomSpec::standard(name, size_factor));
         i += size_factor;
     }
 
     if shop_on_level {
-        rooms.push(RoomSpec::shop());
+        specs.push(RoomSpec::shop());
     }
 
     let mut specials = sewer_special_rooms(force_max);
@@ -110,7 +119,7 @@ pub fn init_rooms_regular(
         if room.name == "PitRoom" {
             specials += 1;
         }
-        rooms.push(room);
+        specs.push(room);
         si += 1;
     }
     *pit_needed_depth = special_floor.pit_needed_depth;
@@ -120,15 +129,22 @@ pub fn init_rooms_regular(
         secrets += 1;
     }
     for _ in 0..secrets {
-        rooms.push(secret::create_room(run_secrets));
+        specs.push(secret::create_room(run_secrets));
     }
 
-    // Random.shuffle(initRooms)
-    Random::shuffle_vec(&mut rooms);
+    Random::shuffle_vec(&mut specs);
+
+    let rooms: Vec<Room> = specs
+        .into_iter()
+        .enumerate()
+        .map(|(id, s)| room_from_spec(id, s))
+        .collect();
 
     FloorRooms {
         rooms,
         builder_kind,
+        curve_intensity,
+        curve_offset,
     }
 }
 

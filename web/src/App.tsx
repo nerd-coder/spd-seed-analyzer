@@ -225,8 +225,8 @@ export default function App() {
               <CardHeader>
                 <CardTitle>Floors</CardTitle>
                 <CardDescription>
-                  Partial data: forced drops, feelings, and room selection
-                  (full loot pending).
+                  Partial levelgen: layout builder + main floor drops.
+                  Special-room paint loot still incomplete.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-5">

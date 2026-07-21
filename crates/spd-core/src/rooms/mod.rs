@@ -1,6 +1,7 @@
 //! Room deck init and floor room selection.
 
 pub mod init_rooms;
+pub mod room;
 pub mod secret;
 pub mod special;
 pub mod standard;

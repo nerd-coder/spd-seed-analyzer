@@ -131,6 +131,11 @@ impl Random {
         min + Self::int_max(max - min + 1)
     }
 
+    /// Triangularly distributed int in `[min, max]` inclusive (`NormalIntRange`).
+    pub fn normal_int_range(min: i32, max: i32) -> i32 {
+        min + ((Self::float() + Self::float()) * (max - min + 1) as f32 / 2.0) as i32
+    }
+
     /// Full-range long.
     pub fn long() -> i64 {
         Self::long_stack(true)

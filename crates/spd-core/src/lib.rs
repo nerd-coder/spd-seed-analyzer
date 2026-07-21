@@ -2,6 +2,7 @@
 //!
 //! Target game source: local clone of 00-Evan/shattered-pixel-dungeon (see README).
 
+pub mod builders;
 pub mod dungeon;
 pub mod dungeon_seed;
 pub mod generator;
@@ -66,7 +67,7 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
         floors: floor_reports,
         status: "partial".to_string(),
         message: Some(
-            "Showing forced drops, feelings, and room selection (initRooms). Geometry build, special-room loot, and createItems are not ported yet."
+            "Partial analysis: room layout builder + main createItems drops. Special-room paint loot, quests, and full painter traps/water still incomplete — results may not match the game yet."
                 .to_string(),
         ),
     })

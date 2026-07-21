@@ -59,7 +59,8 @@ cd web && bunx shadcn@latest add <component>
 - [x] Item generator (decks, tiers, enchants/glyphs, item.random)
 - [x] Partial levelgen (forced drops + feelings per floor)
 - [x] Room selection (`initRooms` + builder kind) for regular floors
-- [ ] Geometry build / painters / createItems (heaps, mobs, quests)
+- [x] Loop builder placement + minimal paint + main `createItems` drops
+- [ ] Figure-eight builder parity, full painters, special-room loot, quests
 
 ## License
 
