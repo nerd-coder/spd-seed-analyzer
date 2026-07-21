@@ -80,7 +80,7 @@ bun run check:all    # biome + rust fmt/clippy
 | Loop builder | `builders/` | placeRoom, findFreeSpace, tunnels, branches |
 | Figure-eight | — | **Falls back to loop** (not parity) |
 | Minimal paint | `level/terrain.rs` | SPD Terrain IDs; walls/empty/doors/entrance/exit; solid/openSpace helpers |
-| Special-room prizes | `level/special_loot.rs` | Crypt/Armory/Library/Treasury/Pool/Storage/Runestone/Lab/Statue + several secrets; room-shuffle + placeDoors RNG; may `findPrizeItem` from itemsToSpawn |
+| Special-room prizes | `level/special_loot.rs` | Crypt/Armory/Library/Treasury/Pool/Storage/Runestone/Lab/Statue + Sentry/Traps/MagicalFire/Sacrifice/ToxicGas + secrets (incl. Honeypot); room-shuffle + placeDoors RNG; may `findPrizeItem` from itemsToSpawn |
 | Shop stock | `level/shop.rs` | `ShopRoom.generateItems` (FOR_SALE); bag pick hero-less (scroll holder first); generated post-build (not mid-setSize) |
 | Ghost quest | `quests/ghost.rs` | `Ghost.Quest.spawn` on sewers: chance, placement (approx openSpace), weapon/armor rewards |
 | Wandmaker quest | `quests/wandmaker.rs` | `spawnRoom` on prison 7–9 (before shuffle); two +1 wands; MassGrave/Ritual/RotGarden side-effects (approx) |
@@ -93,8 +93,10 @@ bun run check:all    # biome + rust fmt/clippy
 ### Frontend
 | Area | Notes |
 |------|--------|
-| Seed analyze UI | identities + floors + items |
-| **Item icons** | `ItemIcon` + `lib/item-icons.ts` crops `/assets/sprites/items.png` (ItemSpriteSheet indices); potions/scrolls/rings use identity appearance |
+| Seed analyze UI | identities + floors + items; honest **partial** status copy (crystal rooms + quests mentioned, no parity claim) |
+| **Quest cards** | Floor quests parsed into title / type / rewards cards (Ghost, Wandmaker, Blacksmith, Imp); depth tabs show quest dot |
+| **Item sources** | `lib/labels.ts` maps room/heap/quest tags (`CrystalVaultRoom`, `chest:heap`, `Blacksmith.Quest`, …) to readable badges |
+| **Item icons** | `ItemIcon` + `lib/item-icons.ts` crops `/assets/sprites/items.png` (ItemSpriteSheet indices); potions/scrolls/rings use identity appearance; shop bags/darts/Ankh/Alchemize + crystal-artifact classes covered |
 | **Spoiler toggles** | localStorage; identity table + map spoilers off by default |
 | Map canvas | `tiles.ts` + region tilesheets under `/assets/environment/` |
 | Assets | Flattened to `web/public/assets/{environment,sprites,…}` (no nested `assets/assets`) |
@@ -112,7 +114,7 @@ bun run check:all    # biome + rust fmt/clippy
 Results are **partial**. Not game-parity yet because:
 
 1. Full `RegularPainter` (water/grass/traps) incomplete — special-room prizes approximate  
-2. Some special/secret rooms still stubbed (sentry/traps/fire/sacrifice, honeypot fidelity, …)  
+2. Special/secret room geometry still incomplete (drop cells / trap instances approximate); prize item RNG for main specials is largely ported  
 3. Shop stock timing is post-build (SPD generates during room `setSize`); bag choice is hero-less  
 4. Ghost quest rewards ported; placement uses minimal openSpace; full `createMobs` not ported  
 5. Wandmaker + Blacksmith + Imp quests ported; RotGarden full paint/mobs incomplete; CrystalPath/Choice placement geometry approximate  
@@ -134,7 +136,8 @@ Status string: `"partial"`.
 - ~~Imp.Quest~~ (see `quests/imp.rs`; cursed +2 ring at initRooms; AmbitiousImpRoom paint is placement RNG only)  
 - ~~Crystal rooms~~ (Vault / Choice / Path prize gen in `special_loot.rs`; Path geometry not painted, placement RNG approximate)  
 - ~~Blacksmith.Quest~~ (see `quests/blacksmith.rs`; smithRewards at initRooms; room paint equip drops; mining branch not ported)  
-- Remaining: sentry/traps/fire/sacrifice prize rooms, honeypot secret fidelity  
+- ~~Sentry / Traps / MagicalFire / Sacrifice / ToxicGas / SecretHoneypot prize RNG~~ (approx layout; keys into itemsToSpawn; see `special_loot.rs`)  
+- Remaining specials with limited/no portable prizes: Garden/WeakFloor/MagicWell/Pit/DemonSpawner (stub or RNG-only); secret maze/well/summoning/chest-chasm fidelity  
 - Golden tests vs Java oracle for a handful of seeds  
 
 ### P2 — Painter parity

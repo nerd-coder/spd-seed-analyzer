@@ -132,10 +132,12 @@ fn paint_special(
             Vec::new()
         }
         "WeakFloorRoom" | "MagicWellRoom" | "PitRoom" => Vec::new(),
-        "SentryRoom" | "ToxicGasRoom" | "MagicalFireRoom" | "TrapsRoom" | "SacrificeRoom" => {
-            // Complex trap/mob rooms — prize generation deferred; no RNG burn (may desync).
-            Vec::new()
-        }
+        "SentryRoom" => vec![sentry_prize(dungeon, items_to_spawn)],
+        "TrapsRoom" => vec![traps_prize(dungeon, items_to_spawn)],
+        "MagicalFireRoom" => magical_fire_prizes(dungeon, room, items_to_spawn),
+        "SacrificeRoom" => vec![sacrifice_prize(dungeon, rooms, ri)],
+        "ToxicGasRoom" => toxic_gas_prizes(dungeon, room, items_to_spawn),
+        "SecretHoneypotRoom" => secret_honeypot(room),
         "CrystalVaultRoom" => crystal_vault(dungeon, rooms, ri, items_to_spawn),
         "CrystalChoiceRoom" => crystal_choice(dungeon, room, items_to_spawn),
         "CrystalPathRoom" => crystal_path(dungeon, items_to_spawn),
@@ -1009,6 +1011,265 @@ fn garden_rng(room: &Room) {
     }
 }
 
+// --- sentry / traps / fire / sacrifice / toxic gas / honeypot ---
+
+/// `SentryRoom.paint` prize — chest equip or findPrizeItem + PotionOfHaste.
+fn sentry_prize(dungeon: &mut DungeonState, items_to_spawn: &mut Vec<GeneratedItem>) -> PlacedLoot {
+    // Layout (center/sentry/treasure) is geometric from entrance — no RNG before prize.
+    let mut prize = if Random::int_max(2) == 0 {
+        find_prize_item(items_to_spawn, None).unwrap_or_else(|| sentry_equip(dungeon))
+    } else {
+        sentry_equip(dungeon)
+    };
+    prize.cursed = false;
+    if is_curse_enchant(&prize) {
+        prize.enchantment = None;
+    }
+    if Random::int_max(3) == 0 {
+        prize.level += 1;
+    }
+    prize.source = Some("SentryRoom".into());
+    items_to_spawn.push(GeneratedItem::new("PotionOfHaste", ItemCategory::Potion));
+    PlacedLoot {
+        item: prize,
+        heap_type: "chest",
+    }
+}
+
+fn sentry_equip(dungeon: &mut DungeonState) -> GeneratedItem {
+    let floor = (dungeon.depth / 5) + 1;
+    // Random.Int(5): 0,1 weapon; 2 missile; 3,4 armor
+    match Random::int_max(5) {
+        0 | 1 => dungeon.generator.random_weapon(floor, false, dungeon.depth),
+        2 => dungeon
+            .generator
+            .random_missile(floor, false, dungeon.depth),
+        _ => dungeon.generator.random_armor(floor, dungeon.depth),
+    }
+}
+
+/// `TrapsRoom.paint` — trap class RNG then chest prize + PotionOfLevitation.
+fn traps_prize(dungeon: &mut DungeonState, items_to_spawn: &mut Vec<GeneratedItem>) -> PlacedLoot {
+    // Trap class selection (layout only; no trap instances in report).
+    // Int(4)==0 → chasm (null traps); else oneOf(levelTraps[depth/5]).
+    if Random::int_max(4) != 0 {
+        let region = (dungeon.depth / 5).clamp(0, 4) as usize;
+        let n = TRAPS_ROOM_TRAP_COUNTS[region];
+        let _ = Random::int_max(n);
+    }
+
+    // Pedestal vs free chest: Random.Int(3) == 0 skips pedestal (geometry only).
+    let _ = Random::int_max(3);
+
+    let mut prize = if Random::int_max(3) != 0 {
+        find_prize_item(items_to_spawn, None).unwrap_or_else(|| traps_equip(dungeon))
+    } else {
+        traps_equip(dungeon)
+    };
+    prize.cursed = false;
+    if is_curse_enchant(&prize) {
+        prize.enchantment = None;
+    }
+    if Random::int_max(3) == 0 {
+        prize.level += 1;
+    }
+    prize.source = Some("TrapsRoom".into());
+    items_to_spawn.push(GeneratedItem::new(
+        "PotionOfLevitation",
+        ItemCategory::Potion,
+    ));
+    PlacedLoot {
+        item: prize,
+        heap_type: "chest",
+    }
+}
+
+/// Counts for `TrapsRoom.levelTraps` oneOf per region (sewers…halls).
+const TRAPS_ROOM_TRAP_COUNTS: [i32; 5] = [3, 3, 3, 3, 1];
+
+fn traps_equip(dungeon: &mut DungeonState) -> GeneratedItem {
+    let floor = (dungeon.depth / 5) + 1;
+    if Random::int_max(2) == 0 {
+        dungeon.generator.random_weapon(floor, false, dungeon.depth)
+    } else {
+        dungeon.generator.random_armor(floor, dungeon.depth)
+    }
+}
+
+/// `MagicalFireRoom.paint` — 3–4 honeypot/consumable drops + PotionOfFrost.
+fn magical_fire_prizes(
+    dungeon: &mut DungeonState,
+    room: &Room,
+    items_to_spawn: &mut Vec<GeneratedItem>,
+) -> Vec<PlacedLoot> {
+    // Fire wall geometry from entrance — no RNG. behindFire drops use random(0).
+    let mut honey = Random::int_max(2) == 0;
+    let n = Random::int_range_inclusive(3, 4);
+    let mut out = Vec::new();
+    let mut occupied = Vec::new();
+    for _ in 0..n {
+        burn_drop_pos_margin(room, 0, &mut occupied);
+        let mut item = if honey {
+            honey = false;
+            GeneratedItem::new("Honeypot", ItemCategory::Other)
+        } else {
+            // Same prize table as StorageRoom / MagicalFireRoom.prize
+            storage_prize(dungeon, items_to_spawn)
+        };
+        item.source = Some("MagicalFireRoom".into());
+        out.push(PlacedLoot {
+            item,
+            heap_type: "heap",
+        });
+    }
+    items_to_spawn.push(GeneratedItem::new("PotionOfFrost", ItemCategory::Potion));
+    out
+}
+
+/// `SacrificeRoom.paint` — cursed upgraded weapon on sacrificial fire.
+fn sacrifice_prize(dungeon: &mut DungeonState, rooms: &[Room], ri: usize) -> PlacedLoot {
+    // Center offset when door is mid-wall aligned with room center.
+    burn_sacrifice_center_offset(rooms, ri);
+
+    // 1 floor set higher than normal
+    let mut prize = dungeon
+        .generator
+        .random_weapon((dungeon.depth / 5) + 1, false, dungeon.depth);
+
+    // Always generate curse (parchment scrap isolation), matching CryptRoom pattern.
+    let curse = enchants::random_weapon_curse(None).to_string();
+    if !prize.cursed {
+        prize.level += 1;
+        if !is_good_weapon_enchant(&prize) {
+            prize.enchantment = Some(curse);
+        }
+    }
+    prize.cursed = true;
+    prize.source = Some("SacrificeRoom".into());
+    PlacedLoot {
+        item: prize,
+        heap_type: "sacrificial",
+    }
+}
+
+fn is_good_weapon_enchant(item: &GeneratedItem) -> bool {
+    match item.enchantment.as_deref() {
+        Some(e) => !matches!(
+            e,
+            "Annoying"
+                | "Displacing"
+                | "Dazzling"
+                | "Explosive"
+                | "Sacrificial"
+                | "Wayward"
+                | "Polarized"
+                | "Friendly"
+        ),
+        None => false,
+    }
+}
+
+/// Burn `Random.Int(2)` center nudge when entrance is mid-edge (SacrificeRoom).
+fn burn_sacrifice_center_offset(rooms: &[Room], ri: usize) {
+    let room = &rooms[ri];
+    if room.is_empty() {
+        return;
+    }
+    let c = Point::new((room.left + room.right) / 2, (room.top + room.bottom) / 2);
+    let Some(door) = vault_entrance_cell(rooms, ri) else {
+        return;
+    };
+    let side_door = (door.x == room.left || door.x == room.right) && door.y == c.y;
+    let end_door = (door.y == room.top || door.y == room.bottom) && door.x == c.x;
+    if side_door || end_door {
+        let _ = Random::int_max(2);
+    }
+}
+
+/// `ToxicGasRoom.paint` — skeleton 2×gold + 2 chests (cata/gold) + trap placement RNG.
+fn toxic_gas_prizes(
+    dungeon: &mut DungeonState,
+    room: &Room,
+    items_to_spawn: &mut Vec<GeneratedItem>,
+) -> Vec<PlacedLoot> {
+    // Vent traps: min(w-2, h-2) placements at random(2) on EMPTY (approx unique).
+    let traps = (room.width() - 2).min(room.height() - 2).max(0);
+    let mut occupied = Vec::new();
+    for _ in 0..traps {
+        burn_drop_pos_margin(room, 2, &mut occupied);
+    }
+
+    // 8 candidate gold positions at random(2); furthest becomes skeleton (trueDistance
+    // pick is pure geometry — no extra RNG).
+    for _ in 0..8 {
+        burn_drop_pos_margin(room, 2, &mut occupied);
+    }
+
+    let mut out = Vec::new();
+
+    // Main gold ×2 on skeleton heap (blacklisted from report; still for RNG parity).
+    let mut main = GeneratedItem::new("Gold", ItemCategory::Gold);
+    randomize_item(&mut main, dungeon.depth);
+    main.quantity = main.quantity.saturating_mul(2);
+    main.source = Some("ToxicGasRoom".into());
+    out.push(PlacedLoot {
+        item: main,
+        heap_type: "skeleton",
+    });
+
+    // Two chests: TrinketCatalyst prize item or random gold
+    for _ in 0..2 {
+        let mut item =
+            find_prize_item(items_to_spawn, Some("TrinketCatalyst")).unwrap_or_else(|| {
+                let mut g = GeneratedItem::new("Gold", ItemCategory::Gold);
+                randomize_item(&mut g, dungeon.depth);
+                g
+            });
+        item.source = Some("ToxicGasRoom".into());
+        out.push(PlacedLoot {
+            item,
+            heap_type: "chest",
+        });
+    }
+
+    items_to_spawn.push(GeneratedItem::new("PotionOfPurity", ItemCategory::Potion));
+    out
+}
+
+/// `SecretHoneypotRoom.paint` — shattered pot (geom) + honeypot + Bomb.random().
+fn secret_honeypot(room: &Room) -> Vec<PlacedLoot> {
+    // brokenPotPos is geometric midpoint of center and entrance — no RNG.
+    // Bee spawn does not consume loot RNG.
+    let mut out = Vec::new();
+    let mut occupied = Vec::new();
+
+    // Shattered pot reported as Honeypot.ShatteredPot for identity
+    let mut shattered = GeneratedItem::new("ShatteredPot", ItemCategory::Other);
+    shattered.source = Some("SecretHoneypotRoom".into());
+    out.push(PlacedLoot {
+        item: shattered,
+        heap_type: "heap",
+    });
+
+    burn_drop_pos(room, &mut occupied);
+    let mut honey = GeneratedItem::new("Honeypot", ItemCategory::Other);
+    honey.source = Some("SecretHoneypotRoom".into());
+    out.push(PlacedLoot {
+        item: honey,
+        heap_type: "heap",
+    });
+
+    burn_drop_pos(room, &mut occupied);
+    let mut bomb = bomb_random();
+    bomb.source = Some("SecretHoneypotRoom".into());
+    out.push(PlacedLoot {
+        item: bomb,
+        heap_type: "heap",
+    });
+
+    out
+}
+
 /// Consume Room.random()-style placement until unique cell (cap tries).
 fn burn_drop_pos(room: &Room, occupied: &mut Vec<(i32, i32)>) {
     burn_drop_pos_margin(room, 1, occupied);
@@ -1070,4 +1331,146 @@ fn find_prize_item_category(
         .iter()
         .position(|it| it.category == cat)
         .map(|i| items_to_spawn.remove(i))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::rooms::types::RoomKind;
+    use crate::run::{dungeon_from_run, init_run};
+
+    fn test_room(name: &str, w: i32, h: i32) -> Room {
+        let mut r = Room::new(0, name, RoomKind::Special, 1, 3, w, w + 2, h, h + 2);
+        r.left = 0;
+        r.top = 0;
+        r.right = w;
+        r.bottom = h;
+        r
+    }
+
+    #[test]
+    fn sacrifice_prize_is_cursed_weapon() {
+        Random::reset_generators();
+        let run = init_run(42);
+        Random::push_generator_seeded(12345);
+        let mut d = dungeon_from_run(run);
+        d.depth = 6;
+        let room = test_room("SacrificeRoom", 7, 7);
+        let loot = sacrifice_prize(&mut d, &[room], 0);
+        Random::pop_generator();
+
+        assert_eq!(loot.item.source.as_deref(), Some("SacrificeRoom"));
+        assert_eq!(loot.heap_type, "sacrificial");
+        assert!(loot.item.cursed);
+        assert_eq!(loot.item.category, ItemCategory::Weapon);
+        // uncursed weapons get a free upgrade before the curse is forced
+        assert!(loot.item.level >= 1 || loot.item.enchantment.is_some());
+    }
+
+    #[test]
+    fn sentry_prize_deterministic() {
+        Random::reset_generators();
+        let run = init_run(7);
+        Random::push_generator_seeded(777);
+        let mut d = dungeon_from_run(run.clone());
+        d.depth = 8;
+        let mut spawn = Vec::new();
+        let a = sentry_prize(&mut d, &mut spawn);
+        Random::pop_generator();
+
+        Random::reset_generators();
+        Random::push_generator_seeded(777);
+        let mut d2 = dungeon_from_run(run);
+        d2.depth = 8;
+        let mut spawn2 = Vec::new();
+        let b = sentry_prize(&mut d2, &mut spawn2);
+        Random::pop_generator();
+
+        assert_eq!(a.item.class_name, b.item.class_name);
+        assert_eq!(a.item.level, b.item.level);
+        assert_eq!(a.item.cursed, false);
+        assert_eq!(a.item.source.as_deref(), Some("SentryRoom"));
+        assert_eq!(spawn.len(), 1);
+        assert_eq!(spawn[0].class_name, "PotionOfHaste");
+    }
+
+    #[test]
+    fn traps_prize_adds_levitation() {
+        Random::reset_generators();
+        let run = init_run(99);
+        Random::push_generator_seeded(55);
+        let mut d = dungeon_from_run(run);
+        d.depth = 11;
+        let mut spawn = Vec::new();
+        let loot = traps_prize(&mut d, &mut spawn);
+        Random::pop_generator();
+
+        assert_eq!(loot.item.source.as_deref(), Some("TrapsRoom"));
+        assert_eq!(loot.heap_type, "chest");
+        assert!(!loot.item.cursed);
+        assert_eq!(spawn[0].class_name, "PotionOfLevitation");
+    }
+
+    #[test]
+    fn magical_fire_drops_and_frost() {
+        Random::reset_generators();
+        let run = init_run(3);
+        Random::push_generator_seeded(9);
+        let mut d = dungeon_from_run(run);
+        d.depth = 4;
+        let room = test_room("MagicalFireRoom", 9, 9);
+        let mut spawn = Vec::new();
+        let loot = magical_fire_prizes(&mut d, &room, &mut spawn);
+        Random::pop_generator();
+
+        assert!((3..=4).contains(&loot.len()));
+        assert!(loot
+            .iter()
+            .all(|p| p.item.source.as_deref() == Some("MagicalFireRoom")));
+        assert_eq!(
+            spawn.last().map(|i| i.class_name.as_str()),
+            Some("PotionOfFrost")
+        );
+    }
+
+    #[test]
+    fn secret_honeypot_has_pot_honey_bomb() {
+        Random::reset_generators();
+        Random::push_generator_seeded(1);
+        let room = test_room("SecretHoneypotRoom", 7, 7);
+        let loot = secret_honeypot(&room);
+        Random::pop_generator();
+
+        assert_eq!(loot.len(), 3);
+        assert_eq!(loot[0].item.class_name, "ShatteredPot");
+        assert_eq!(loot[1].item.class_name, "Honeypot");
+        assert!(
+            loot[2].item.class_name == "Bomb" || loot[2].item.class_name == "DoubleBomb",
+            "got {}",
+            loot[2].item.class_name
+        );
+    }
+
+    #[test]
+    fn toxic_gas_burns_layout_and_adds_purity() {
+        Random::reset_generators();
+        let run = init_run(12);
+        Random::push_generator_seeded(88);
+        let mut d = dungeon_from_run(run);
+        d.depth = 7;
+        let room = test_room("ToxicGasRoom", 9, 9);
+        let mut spawn = Vec::new();
+        let loot = toxic_gas_prizes(&mut d, &room, &mut spawn);
+        Random::pop_generator();
+
+        // skeleton gold + 2 chests
+        assert_eq!(loot.len(), 3);
+        assert_eq!(loot[0].heap_type, "skeleton");
+        assert_eq!(loot[1].heap_type, "chest");
+        assert_eq!(loot[2].heap_type, "chest");
+        assert_eq!(
+            spawn.last().map(|i| i.class_name.as_str()),
+            Some("PotionOfPurity")
+        );
+    }
 }

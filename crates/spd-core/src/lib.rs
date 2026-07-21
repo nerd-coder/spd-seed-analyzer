@@ -290,6 +290,55 @@ mod analyze_smoke {
     }
 
     #[test]
+    fn special_trap_rooms_can_yield_prizes() {
+        // Sentry/Traps/MagicalFire/Sacrifice/ToxicGas/SecretHoneypot — at least one source.
+        const SOURCES: &[&str] = &[
+            "SentryRoom",
+            "TrapsRoom",
+            "MagicalFireRoom",
+            "SacrificeRoom",
+            "ToxicGasRoom",
+            "SecretHoneypotRoom",
+        ];
+        let mut saw = false;
+        for s in [
+            "GFX-PZH-DCH",
+            "AAA-AAA-AAA",
+            "hello",
+            "42",
+            "shattered",
+            "JLY-ZYR-HET",
+            "seedfinder",
+            "traps",
+            "sentry",
+            "fire",
+            "sacrifice",
+            "12345",
+            "98765",
+            "honey",
+        ] {
+            let r = analyze_seed(s, 24).expect("analyze");
+            for f in &r.floors {
+                if f.items.iter().any(|i| {
+                    i.source
+                        .as_deref()
+                        .is_some_and(|src| SOURCES.contains(&src))
+                }) {
+                    saw = true;
+                    break;
+                }
+            }
+            if saw {
+                break;
+            }
+        }
+        assert!(
+            saw,
+            "expected at least one of {SOURCES:?} prizes across sample seeds"
+        );
+    }
+
+    #[test]
     fn analyze_several_seeds() {
         for s in ["AAA-AAA-AAA", "JLY-ZYR-HET", "hello", "42"] {
             let r = analyze_seed(s, 6);

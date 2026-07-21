@@ -19,6 +19,12 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
+  formatItemSource,
+  isHighlightSource,
+  type ParsedQuest,
+  parseQuest,
+} from '@/lib/labels'
+import {
   analyzeSeed,
   type FloorReport,
   getSpdMeta,
@@ -26,6 +32,7 @@ import {
   type IdentityMaps,
   type SeedReport,
 } from '@/lib/spd-wasm'
+import { cn } from '@/lib/utils'
 
 const MAP_SPOILERS_KEY = 'spd-analyzer-map-spoilers'
 const IDENTITY_SPOILERS_KEY = 'spd-analyzer-identity-spoilers'
@@ -140,6 +147,64 @@ function IdentityGrid({
   )
 }
 
+const QUEST_KIND_STYLES: Record<
+  ParsedQuest['kind'],
+  { badge: string; border: string }
+> = {
+  ghost: {
+    badge: 'bg-sky-500/15 text-sky-800 dark:text-sky-200 border-sky-500/30',
+    border: 'border-sky-500/25 bg-sky-500/5',
+  },
+  wandmaker: {
+    badge:
+      'bg-violet-500/15 text-violet-800 dark:text-violet-200 border-violet-500/30',
+    border: 'border-violet-500/25 bg-violet-500/5',
+  },
+  blacksmith: {
+    badge:
+      'bg-amber-500/15 text-amber-900 dark:text-amber-200 border-amber-500/30',
+    border: 'border-amber-500/25 bg-amber-500/5',
+  },
+  imp: {
+    badge: 'bg-rose-500/15 text-rose-800 dark:text-rose-200 border-rose-500/30',
+    border: 'border-rose-500/25 bg-rose-500/5',
+  },
+  other: {
+    badge: '',
+    border: 'border-border bg-muted/40',
+  },
+}
+
+function QuestCard({ quest }: { quest: string }) {
+  const parsed = parseQuest(quest)
+  const styles = QUEST_KIND_STYLES[parsed.kind]
+  return (
+    <div
+      className={cn('rounded-lg border px-3 py-2.5 space-y-1.5', styles.border)}
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="outline" className={cn('font-medium', styles.badge)}>
+          {parsed.title}
+        </Badge>
+        {parsed.detail && (
+          <span className="text-muted-foreground text-xs">{parsed.detail}</span>
+        )}
+      </div>
+      {parsed.rewards && (
+        <p className="text-sm leading-snug">
+          <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase mr-1.5">
+            Rewards
+          </span>
+          {parsed.rewards}
+        </p>
+      )}
+      {!parsed.rewards && (
+        <p className="text-muted-foreground text-xs">{parsed.raw}</p>
+      )}
+    </div>
+  )
+}
+
 function FloorDetail({
   floor,
   identities,
@@ -162,21 +227,42 @@ function FloorDetail({
             {floor.builder}
           </Badge>
         )}
+        {floor.quests && floor.quests.length > 0 && (
+          <Badge variant="default" className="text-xs">
+            Quest
+          </Badge>
+        )}
         {floor.map && mapSpoilers && (
           <Badge variant="outline" className="font-mono text-xs">
             {floor.map.width}×{floor.map.height} · {floor.map.tileset}
           </Badge>
         )}
-        {!floor.feeling && !floor.builder && !(floor.map && mapSpoilers) && (
-          <span className="text-muted-foreground text-xs">
-            Floor {floor.depth}
-          </span>
-        )}
+        {!floor.feeling &&
+          !floor.builder &&
+          !(floor.quests && floor.quests.length > 0) &&
+          !(floor.map && mapSpoilers) && (
+            <span className="text-muted-foreground text-xs">
+              Floor {floor.depth}
+            </span>
+          )}
       </div>
 
       {mapSpoilers && floor.map && (
         <div className="overflow-x-auto">
           <FloorMapCanvas map={floor.map} scale={2} />
+        </div>
+      )}
+
+      {floor.quests && floor.quests.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            Quests
+          </p>
+          <div className="space-y-2">
+            {floor.quests.map((q, i) => (
+              <QuestCard key={`${floor.depth}-quest-${i}`} quest={q} />
+            ))}
+          </div>
         </div>
       )}
 
@@ -191,48 +277,41 @@ function FloorDetail({
         </div>
       )}
 
-      {floor.quests && floor.quests.length > 0 && (
-        <div className="space-y-1">
-          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            Quests
-          </p>
-          <ul className="space-y-1 text-sm">
-            {floor.quests.map((q, i) => (
-              <li key={`${floor.depth}-quest-${i}`}>
-                <Badge variant="secondary" className="font-normal">
-                  {q}
-                </Badge>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
       {floor.items.length === 0 ? (
         <p className="text-muted-foreground text-sm">No items listed.</p>
       ) : (
-        <ul className="space-y-1 text-sm">
-          {floor.items.map((item, i) => (
-            <li key={`${floor.depth}-${i}`} className="flex items-start gap-2">
-              <ItemIcon
-                classNameItem={item.class_name}
-                category={item.category}
-                appearance={itemAppearance(item, identities)}
-                size={16}
-                title={item.name}
-                className="mt-0.5"
-              />
-              <span>
-                <span>{item.name}</span>
-                {item.source && (
-                  <span className="text-muted-foreground">
-                    {' '}
-                    ({item.source})
-                  </span>
-                )}
-              </span>
-            </li>
-          ))}
+        <ul className="space-y-1.5 text-sm">
+          {floor.items.map((item, i) => {
+            const sourceLabel = formatItemSource(item.source)
+            const highlight = isHighlightSource(item.source)
+            return (
+              <li
+                key={`${floor.depth}-${i}`}
+                className="flex items-start gap-2"
+              >
+                <ItemIcon
+                  classNameItem={item.class_name}
+                  category={item.category}
+                  appearance={itemAppearance(item, identities)}
+                  size={16}
+                  title={item.name}
+                  className="mt-0.5"
+                />
+                <span className="min-w-0 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                  <span>{item.name}</span>
+                  {sourceLabel && (
+                    <Badge
+                      variant={highlight ? 'secondary' : 'outline'}
+                      className="font-normal text-[10px] px-1.5 py-0 h-5"
+                      title={item.source ?? undefined}
+                    >
+                      {sourceLabel}
+                    </Badge>
+                  )}
+                </span>
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>
@@ -278,24 +357,38 @@ function FloorsByRegion({
                 variant="line"
                 className="h-auto w-full flex-wrap justify-start"
               >
-                {regionFloors.map((floor) => (
-                  <TabsTrigger
-                    key={floor.depth}
-                    value={String(floor.depth)}
-                    className="h-auto flex-col gap-0.5 px-2 py-1.5"
-                    title={
-                      floor.feeling && floor.feeling !== 'none'
-                        ? `Floor ${floor.depth} · ${floor.feeling}`
-                        : `Floor ${floor.depth}`
-                    }
-                  >
-                    {/* MenuPane-style: feeling depth icon above the number */}
-                    <DepthIcon feeling={floor.feeling} size={24} />
-                    <span className="font-mono text-xs tabular-nums leading-none">
-                      {floor.depth}
-                    </span>
-                  </TabsTrigger>
-                ))}
+                {regionFloors.map((floor) => {
+                  const hasQuest = (floor.quests?.length ?? 0) > 0
+                  const feelingLabel =
+                    floor.feeling && floor.feeling !== 'none'
+                      ? floor.feeling
+                      : null
+                  const titleParts = [
+                    `Floor ${floor.depth}`,
+                    feelingLabel,
+                    hasQuest ? 'quest' : null,
+                  ].filter(Boolean)
+                  return (
+                    <TabsTrigger
+                      key={floor.depth}
+                      value={String(floor.depth)}
+                      className="h-auto flex-col gap-0.5 px-2 py-1.5 relative"
+                      title={titleParts.join(' · ')}
+                    >
+                      {/* MenuPane-style: feeling depth icon above the number */}
+                      <DepthIcon feeling={floor.feeling} size={24} />
+                      <span className="font-mono text-xs tabular-nums leading-none">
+                        {floor.depth}
+                      </span>
+                      {hasQuest && (
+                        <span
+                          className="bg-primary absolute top-0.5 right-0.5 size-1.5 rounded-full"
+                          aria-hidden
+                        />
+                      )}
+                    </TabsTrigger>
+                  )
+                })}
               </TabsList>
 
               {regionFloors.map((floor) => (
@@ -400,8 +493,10 @@ export default function App() {
           </div>
         </div>
         <p className="text-muted-foreground text-sm max-w-xl">
-          Enter a Shattered Pixel Dungeon seed to inspect generation data.
-          Calculations run in Rust via WebAssembly.
+          Enter a Shattered Pixel Dungeon seed to inspect generation data
+          (layout, special-room loot, crystal rooms, quest rewards).
+          Calculations run in Rust via WebAssembly. Analysis is still partial —
+          not full game parity.
         </p>
       </header>
 
@@ -513,14 +608,20 @@ export default function App() {
                 </span>
               </CardDescription>
             </CardHeader>
-            {report.message && (
-              <CardContent>
+            <CardContent className="space-y-3">
+              {report.message && (
                 <Alert>
-                  <AlertTitle>Progress</AlertTitle>
+                  <AlertTitle>Partial analysis</AlertTitle>
                   <AlertDescription>{report.message}</AlertDescription>
                 </Alert>
-              </CardContent>
-            )}
+              )}
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                Includes approximate special-room, shop, and crystal-room prizes
+                plus Ghost / Wandmaker / Blacksmith / Imp quest rewards. Painter
+                parity, figure-eight builder, and full createMobs are still
+                incomplete — treat high-value finds as leads, not guarantees.
+              </p>
+            </CardContent>
           </Card>
 
           {identitySpoilers && (
@@ -566,8 +667,10 @@ export default function App() {
               <CardHeader>
                 <CardTitle>Floors</CardTitle>
                 <CardDescription>
-                  Partial levelgen: layout builder + main floor drops. Boss
-                  floors (5 / 10 / 15 / 20 / 25) and Last Level (26) are hidden.
+                  Partial levelgen: layout, special/secret rooms, shops, crystal
+                  rooms, and quest rewards when reported. Boss floors (5 / 10 /
+                  15 / 20 / 25) and Last Level (26) are hidden. Floors with a
+                  quest show a small indicator on the depth tab.
                   {mapSpoilers
                     ? ' Maps use original region tilesheets when available.'
                     : ' Enable Map spoilers to view floor maps.'}
