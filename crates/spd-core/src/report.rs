@@ -45,6 +45,9 @@ pub struct FloorReport {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ItemEntry {
     pub name: String,
+    /// Java simple class name (e.g. `Sword`, `PotionOfHealing`) for icons/lookup.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub class_name: Option<String>,
     pub category: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,

@@ -67,7 +67,7 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
         floors: floor_reports,
         status: "partial".to_string(),
         message: Some(
-            "Partial analysis: room layout builder + main createItems drops. Special-room paint loot, quests, and full painter traps/water still incomplete — results may not match the game yet."
+            "Partial analysis: layout builder + special-room prize loot (approx.) + main createItems drops. Quests, full water/grass/trap painter, and figure-eight builder still incomplete — results may not match the game yet."
                 .to_string(),
         ),
     })

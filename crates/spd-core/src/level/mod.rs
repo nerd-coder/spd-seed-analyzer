@@ -1,6 +1,7 @@
 //! Headless level generation.
 
 mod create_items;
+mod special_loot;
 mod terrain;
 
 use crate::builders::{self, BuilderParams};
@@ -65,6 +66,7 @@ impl LevelState {
             }
             items.push(ItemEntry {
                 name: it.title(),
+                class_name: Some(it.class_name.clone()),
                 category: format!("{:?}", it.category).to_ascii_lowercase(),
                 source: it.source.clone(),
             });
@@ -226,6 +228,39 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                     tileset: terrain::tileset_for_depth(dungeon.depth).to_string(),
                     tiles: map.map.iter().map(|&t| t as u16).collect(),
                 });
+
+                // Special/secret room paint loot (before createItems; may consume itemsToSpawn).
+                let special = special_loot::special_room_loot(
+                    dungeon,
+                    &floor.rooms,
+                    &mut items_to_spawn,
+                );
+                for p in special {
+                    // Drop matching forced clones when a prize was pulled from itemsToSpawn.
+                    if p.item.source.as_deref().is_some_and(|s| {
+                        s.contains("Room") || s.contains("Secret")
+                    }) {
+                        if let Some(pos) = forced.iter().position(|f| {
+                            f.class_name == p.item.class_name
+                                && f.source.as_deref() == Some("forced")
+                        }) {
+                            // Only remove once per prize consumption of unique forced types.
+                            if matches!(
+                                p.item.class_name.as_str(),
+                                "TrinketCatalyst"
+                                    | "PotionOfStrength"
+                                    | "ScrollOfUpgrade"
+                                    | "Stylus"
+                                    | "StoneOfEnchantment"
+                                    | "StoneOfIntuition"
+                            ) {
+                                forced.remove(pos);
+                            }
+                        }
+                    }
+                    placed_items.push(p.item);
+                }
+
                 let loot = create_items::create_items_main(
                     dungeon,
                     &floor.rooms,
@@ -235,6 +270,14 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 );
                 for p in loot {
                     if p.item.source.as_deref() == Some("forced") {
+                        // Room paint may add to itemsToSpawn (e.g. Storage → PotionOfLiquidFlame).
+                        // Keep those in the report if not already listed under forced.
+                        if !forced
+                            .iter()
+                            .any(|f| f.class_name == p.item.class_name)
+                        {
+                            forced.push(p.item);
+                        }
                         continue;
                     }
                     let mut item = p.item;

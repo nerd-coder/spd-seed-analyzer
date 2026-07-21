@@ -154,6 +154,21 @@ impl Random {
         result % max
     }
 
+    /// `Random.oneOf(T...)` / pick uniform element (panics if empty).
+    pub fn one_of<'a, T>(items: &'a [T]) -> &'a T {
+        assert!(!items.is_empty(), "Random::one_of on empty slice");
+        &items[Self::int_max(items.len() as i32) as usize]
+    }
+
+    /// `Random.element(Collection)` — returns None if empty.
+    pub fn element<'a, T>(items: &'a [T]) -> Option<&'a T> {
+        if items.is_empty() {
+            None
+        } else {
+            Some(&items[Self::int_max(items.len() as i32) as usize])
+        }
+    }
+
     /// Weighted index from chances array. Negative weights treated as 0. Returns -1 if sum <= 0.
     pub fn chances(chances: &[f32]) -> i32 {
         let mut sum = 0.0f32;

@@ -1,7 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Dices, Loader2, Search } from "lucide-react";
 
+import { DepthIcon } from "@/components/DepthIcon";
 import { FloorMapCanvas } from "@/components/FloorMapCanvas";
+import { ItemIcon } from "@/components/ItemIcon";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,50 +17,266 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   analyzeSeed,
   getSpdMeta,
+  type FloorReport,
   type IdentityEntry,
+  type IdentityMaps,
   type SeedReport,
 } from "@/lib/spd-wasm";
 
 const ADVANCED_KEY = "spd-analyzer-advanced-mode";
 
-function IdentityTable({
-  title,
+/** SPD region bands (same as tileset_for_depth). */
+const REGIONS = [
+  { id: "sewers", label: "Sewers", min: 1, max: 5 },
+  { id: "prison", label: "Prison", min: 6, max: 10 },
+  { id: "caves", label: "Caves", min: 11, max: 15 },
+  { id: "city", label: "City", min: 16, max: 20 },
+  { id: "halls", label: "Halls", min: 21, max: 26 },
+] as const;
+
+/** Boss depths (region bosses) — omitted from the Floors UI. */
+const BOSS_DEPTHS = new Set([5, 10, 15, 20]);
+
+function groupFloorsByRegion(floors: FloorReport[]) {
+  return REGIONS.map((region) => ({
+    region,
+    floors: floors
+      .filter(
+        (f) =>
+          f.depth >= region.min &&
+          f.depth <= region.max &&
+          !BOSS_DEPTHS.has(f.depth),
+      )
+      .sort((a, b) => a.depth - b.depth),
+  })).filter((g) => g.floors.length > 0);
+}
+
+function appearanceDescription(
+  category: "potion" | "scroll" | "ring",
+  appearance: string,
+): string {
+  const label = appearance.toLowerCase();
+  switch (category) {
+    case "potion":
+      return `${label} potion`;
+    case "scroll":
+      return `${label} rune`;
+    case "ring":
+      return `${label} gem`;
+  }
+}
+
+function itemAppearance(
+  item: { category: string; class_name?: string | null },
+  identities: IdentityMaps,
+): string | undefined {
+  if (item.category === "potion") {
+    return identities.potions.find((p) => p.item === item.class_name)
+      ?.appearance;
+  }
+  if (item.category === "scroll") {
+    return identities.scrolls.find((s) => s.item === item.class_name)
+      ?.appearance;
+  }
+  if (item.category === "ring") {
+    return identities.rings.find((r) => r.item === item.class_name)?.appearance;
+  }
+  return undefined;
+}
+
+function IdentityGrid({
   entries,
-  appearanceLabel,
+  category,
 }: {
-  title: string;
   entries: IdentityEntry[];
-  appearanceLabel: string;
+  category: "potion" | "scroll" | "ring";
 }) {
   return (
-    <div className="space-y-2">
-      <h3 className="text-sm font-medium">{title}</h3>
-      <div className="overflow-x-auto rounded-md border">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50 text-muted-foreground">
-            <tr>
-              <th className="px-3 py-2 text-left font-medium">Item</th>
-              <th className="px-3 py-2 text-left font-medium">
-                {appearanceLabel}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {entries.map((e) => (
-              <tr key={e.item} className="border-t">
-                <td className="px-3 py-1.5">{e.name}</td>
-                <td className="px-3 py-1.5 font-mono text-xs capitalize">
-                  {e.appearance.toLowerCase()}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3 md:grid-cols-4">
+      {entries.map((e) => (
+        <div key={e.item} className="flex min-w-0 items-center gap-2">
+          <ItemIcon
+            classNameItem={e.item}
+            category={category}
+            appearance={e.appearance}
+            size={24}
+            title={e.name}
+            className="shrink-0"
+          />
+          <div className="min-w-0 leading-tight">
+            <div className="truncate text-sm font-medium">{e.name}</div>
+            <div className="text-muted-foreground truncate text-xs capitalize">
+              {appearanceDescription(category, e.appearance)}
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
+  );
+}
+
+function FloorDetail({
+  floor,
+  identities,
+  advancedMode,
+}: {
+  floor: FloorReport;
+  identities: IdentityMaps;
+  advancedMode: boolean;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        {floor.feeling && floor.feeling !== "none" && (
+          <Badge variant="secondary" className="capitalize">
+            {floor.feeling}
+          </Badge>
+        )}
+        {floor.builder && (
+          <Badge variant="outline" className="font-mono text-xs">
+            {floor.builder}
+          </Badge>
+        )}
+        {floor.map && advancedMode && (
+          <Badge variant="outline" className="font-mono text-xs">
+            {floor.map.width}×{floor.map.height} · {floor.map.tileset}
+          </Badge>
+        )}
+        {!floor.feeling && !floor.builder && !(floor.map && advancedMode) && (
+          <span className="text-muted-foreground text-xs">
+            Floor {floor.depth}
+          </span>
+        )}
+      </div>
+
+      {advancedMode && floor.map && (
+        <div className="overflow-x-auto">
+          <FloorMapCanvas map={floor.map} scale={2} />
+        </div>
+      )}
+
+      {floor.rooms && floor.rooms.length > 0 && (
+        <div className="space-y-1">
+          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            Rooms
+          </p>
+          <p className="text-sm leading-relaxed">
+            {floor.rooms.map((r) => r.replace(/Room$/, "")).join(" · ")}
+          </p>
+        </div>
+      )}
+
+      {floor.items.length === 0 ? (
+        <p className="text-muted-foreground text-sm">No items listed.</p>
+      ) : (
+        <ul className="space-y-1 text-sm">
+          {floor.items.map((item, i) => (
+            <li
+              key={`${floor.depth}-${i}`}
+              className="flex items-start gap-2"
+            >
+              <ItemIcon
+                classNameItem={item.class_name}
+                category={item.category}
+                appearance={itemAppearance(item, identities)}
+                size={16}
+                title={item.name}
+                className="mt-0.5"
+              />
+              <span>
+                <span>{item.name}</span>
+                {item.source && (
+                  <span className="text-muted-foreground">
+                    {" "}
+                    ({item.source})
+                  </span>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function FloorsByRegion({
+  floors,
+  identities,
+  advancedMode,
+}: {
+  floors: FloorReport[];
+  identities: IdentityMaps;
+  advancedMode: boolean;
+}) {
+  const groups = groupFloorsByRegion(floors);
+  if (groups.length === 0) return null;
+
+  const defaultRegion = groups[0].region.id;
+
+  return (
+    <Tabs defaultValue={defaultRegion} className="gap-0">
+      <TabsList className="w-full flex-wrap h-auto sm:w-auto">
+        {groups.map(({ region, floors: regionFloors }) => (
+          <TabsTrigger key={region.id} value={region.id}>
+            {region.label}
+            <span className="text-muted-foreground ml-1 tabular-nums text-xs">
+              {regionFloors[0].depth}
+              {regionFloors.length > 1
+                ? `–${regionFloors[regionFloors.length - 1].depth}`
+                : ""}
+            </span>
+          </TabsTrigger>
+        ))}
+      </TabsList>
+
+      {groups.map(({ region, floors: regionFloors }) => {
+        const defaultFloor = String(regionFloors[0].depth);
+        return (
+          <TabsContent key={region.id} value={region.id}>
+            <Tabs defaultValue={defaultFloor} className="gap-4">
+              <TabsList
+                variant="line"
+                className="h-auto w-full flex-wrap justify-start"
+              >
+                {regionFloors.map((floor) => (
+                  <TabsTrigger
+                    key={floor.depth}
+                    value={String(floor.depth)}
+                    className="h-auto flex-col gap-0.5 px-2 py-1.5"
+                    title={
+                      floor.feeling && floor.feeling !== "none"
+                        ? `Floor ${floor.depth} · ${floor.feeling}`
+                        : `Floor ${floor.depth}`
+                    }
+                  >
+                    {/* MenuPane-style: feeling depth icon above the number */}
+                    <DepthIcon feeling={floor.feeling} size={24} />
+                    <span className="font-mono text-xs tabular-nums leading-none">
+                      {floor.depth}
+                    </span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+
+              {regionFloors.map((floor) => (
+                <TabsContent key={floor.depth} value={String(floor.depth)}>
+                  <FloorDetail
+                    floor={floor}
+                    identities={identities}
+                    advancedMode={advancedMode}
+                  />
+                </TabsContent>
+              ))}
+            </Tabs>
+          </TabsContent>
+        );
+      })}
+    </Tabs>
   );
 }
 
@@ -112,7 +330,7 @@ export default function App() {
   }
 
   return (
-    <div className="mx-auto flex min-h-svh w-full max-w-3xl flex-col gap-6 px-4 py-10">
+    <div className="mx-auto flex min-h-svh w-full max-w-4xl flex-col gap-6 px-4 py-10">
       <header className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">
           <Dices className="size-7 text-primary" />
@@ -249,22 +467,32 @@ export default function App() {
                 Unidentified appearances for this seed (from run init RNG).
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <IdentityTable
-                title="Potions"
-                entries={report.identities.potions}
-                appearanceLabel="Color"
-              />
-              <IdentityTable
-                title="Scrolls"
-                entries={report.identities.scrolls}
-                appearanceLabel="Rune"
-              />
-              <IdentityTable
-                title="Rings"
-                entries={report.identities.rings}
-                appearanceLabel="Gem"
-              />
+            <CardContent>
+              <Tabs defaultValue="potions">
+                <TabsList className="w-full sm:w-auto">
+                  <TabsTrigger value="potions">Potions</TabsTrigger>
+                  <TabsTrigger value="scrolls">Scrolls</TabsTrigger>
+                  <TabsTrigger value="rings">Rings</TabsTrigger>
+                </TabsList>
+                <TabsContent value="potions" className="mt-4">
+                  <IdentityGrid
+                    entries={report.identities.potions}
+                    category="potion"
+                  />
+                </TabsContent>
+                <TabsContent value="scrolls" className="mt-4">
+                  <IdentityGrid
+                    entries={report.identities.scrolls}
+                    category="scroll"
+                  />
+                </TabsContent>
+                <TabsContent value="rings" className="mt-4">
+                  <IdentityGrid
+                    entries={report.identities.rings}
+                    category="ring"
+                  />
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
 
@@ -273,77 +501,19 @@ export default function App() {
               <CardHeader>
                 <CardTitle>Floors</CardTitle>
                 <CardDescription>
-                  Partial levelgen: layout builder + main floor drops.
+                  Partial levelgen: layout builder + main floor drops. Boss
+                  floors (5 / 10 / 15 / 20) are hidden.
                   {advancedMode
                     ? " Maps use original region tilesheets when available."
                     : " Enable Advanced mode to view floor maps."}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-5">
-                {report.floors.map((floor) => (
-                  <div
-                    key={floor.depth}
-                    className="space-y-2 border-b pb-4 last:border-0 last:pb-0"
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-medium">Floor {floor.depth}</h3>
-                      {floor.feeling && floor.feeling !== "none" && (
-                        <Badge variant="secondary" className="capitalize">
-                          {floor.feeling}
-                        </Badge>
-                      )}
-                      {floor.builder && (
-                        <Badge variant="outline" className="font-mono text-xs">
-                          {floor.builder}
-                        </Badge>
-                      )}
-                      {floor.map && advancedMode && (
-                        <Badge variant="outline" className="font-mono text-xs">
-                          {floor.map.width}×{floor.map.height} ·{" "}
-                          {floor.map.tileset}
-                        </Badge>
-                      )}
-                    </div>
-
-                    {advancedMode && floor.map && (
-                      <div className="overflow-x-auto">
-                        <FloorMapCanvas map={floor.map} scale={2} />
-                      </div>
-                    )}
-
-                    {floor.rooms && floor.rooms.length > 0 && (
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
-                          Rooms
-                        </p>
-                        <p className="text-sm leading-relaxed">
-                          {floor.rooms
-                            .map((r) => r.replace(/Room$/, ""))
-                            .join(" · ")}
-                        </p>
-                      </div>
-                    )}
-                    {floor.items.length === 0 ? (
-                      <p className="text-muted-foreground text-sm">
-                        No items listed.
-                      </p>
-                    ) : (
-                      <ul className="list-disc space-y-0.5 pl-5 text-sm">
-                        {floor.items.map((item, i) => (
-                          <li key={`${floor.depth}-${i}`}>
-                            <span>{item.name}</span>
-                            {item.source && (
-                              <span className="text-muted-foreground">
-                                {" "}
-                                ({item.source})
-                              </span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ))}
+              <CardContent>
+                <FloorsByRegion
+                  floors={report.floors}
+                  identities={report.identities}
+                  advancedMode={advancedMode}
+                />
               </CardContent>
             </Card>
           )}

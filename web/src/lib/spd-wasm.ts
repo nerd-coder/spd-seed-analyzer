@@ -26,6 +26,8 @@ export type IdentityMaps = {
 
 export type ItemEntry = {
   name: string;
+  /** Java simple class name for icon lookup. */
+  class_name?: string | null;
   category: string;
   source?: string | null;
 };

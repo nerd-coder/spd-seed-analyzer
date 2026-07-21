@@ -75,13 +75,15 @@ bun run build:wasm
 | Loop builder | `builders/` | placeRoom, findFreeSpace, tunnels, branches |
 | Figure-eight | — | **Falls back to loop** (not parity) |
 | Minimal paint | `level/terrain.rs` | SPD Terrain IDs; walls/empty/doors/entrance/exit |
+| Special-room prizes | `level/special_loot.rs` | Crypt/Armory/Library/Treasury/Pool/Storage/Runestone/Lab/Statue + several secrets; room-shuffle + placeDoors RNG; may `findPrizeItem` from itemsToSpawn |
 | Main createItems | `level/create_items.rs` | nItems loop, heap types; drop cells use map origin |
-| Floor map export | `report.rs` `FloorMap` | width/height/tileset/tiles |
+| Floor map export | `report.rs` `FloorMap` | width/height/tileset/tiles; items include `class_name` |
 
 ### Frontend
 | Area | Notes |
 |------|--------|
 | Seed analyze UI | identities + floors + items |
+| **Item icons** | `ItemIcon` + `lib/item-icons.ts` crops `/assets/sprites/items.png` (ItemSpriteSheet indices); potions/scrolls/rings use identity appearance |
 | **Advanced mode** | localStorage; spoilers warning; shows canvas maps |
 | Map canvas | `tiles.ts` + region tilesheets under `/assets/environment/` |
 | Assets | Flattened to `web/public/assets/{environment,sprites,…}` (no nested `assets/assets`) |
@@ -97,11 +99,11 @@ bun run build:wasm
 
 Results are **partial**. Not game-parity yet because:
 
-1. Full `RegularPainter` (water/grass/traps) incomplete  
-2. Special/secret **room paint loot** (crypt, armory, statue, …) not ported  
+1. Full `RegularPainter` (water/grass/traps) incomplete — special-room prizes approximate  
+2. Some special/secret rooms still stubbed (crystal rooms, sentry/traps/fire, shop stock, …)  
 3. Quests (Ghost / Wandmaker / Imp / …) not ported  
 4. Figure-eight builder incomplete  
-5. `createMobs` (statues, mimics as mobs) incomplete  
+5. `createMobs` (statues listed as loot only; mimics simplified) incomplete  
 6. `randomDropCell` simplified vs full map flags  
 7. Sewer room-count tables used for all regions  
 
@@ -112,12 +114,13 @@ Status string: `"partial"`.
 ## Not done / next phases
 
 ### P1 — Special-room loot + quests (high value for seed-finder UX)
-- Port `paint()` prize logic: Crypt, Armory, Library, Treasury, Statue, Pool, Shop (filter FOR_SALE), secrets  
+- ~~Port `paint()` prize logic: Crypt, Armory, Library, Treasury, Statue, Pool, secrets~~ (partial; see `special_loot.rs`)  
+- Remaining: Shop (FOR_SALE), crystal rooms, sentry/traps/fire/sacrifice, honeypot secret fidelity  
 - Ghost.Quest / Wandmaker.Quest / Imp.Quest reward generation at correct RNG points (`createMobs` order)  
 - Golden tests vs Java oracle for a handful of seeds  
 
 ### P2 — Painter parity
-- Water/grass/trap placement RNG  
+- Water/grass/trap placement RNG (affects special-room drop-cell parity)  
 - Region-specific painters (SewerPainter, …)  
 - Improve door placement / connection corridors  
 
@@ -215,7 +218,9 @@ SPD is GPL-3.0. This project ports generation logic → treat as **GPL-3.0-or-la
 ## How to resume (clean context)
 
 1. Read this file + `README.md`  
-2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs`  
-3. Next recommended work: **P1 special-room paint loot + Ghost quest** with Java golden checks  
-4. Do not re-copy full asset tree; use `web/public/assets/` as flattened SPD assets  
-5. After Rust changes: `bun run build:wasm` (or `bun run dev`)  
+2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs` / `level/special_loot.rs`  
+3. Next recommended work: remaining special rooms (Shop, crystal) + **Ghost quest** + Java golden checks  
+4. Icons: `web/src/lib/item-icons.ts` + `components/ItemIcon.tsx` (items.png sheet)  
+5. Do not re-copy full asset tree; use `web/public/assets/` as flattened SPD assets  
+6. After Rust changes: `bun run build:wasm` (or `bun run dev`)  
+7. Dev dump: `cargo run -p spd-core --example dump_seed -- SEED FLOORS`  
