@@ -5,6 +5,7 @@
 pub mod dungeon;
 pub mod dungeon_seed;
 pub mod generator;
+pub mod geom;
 pub mod items;
 pub mod java_random;
 pub mod level;
@@ -65,7 +66,7 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
         floors: floor_reports,
         status: "partial".to_string(),
         message: Some(
-            "Showing forced drops and level feelings only. Full floor loot (rooms, mobs, quests) is not ported yet."
+            "Showing forced drops, feelings, and room selection (initRooms). Geometry build, special-room loot, and createItems are not ported yet."
                 .to_string(),
         ),
     })

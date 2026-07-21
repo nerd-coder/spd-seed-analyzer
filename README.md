@@ -58,7 +58,8 @@ cd web && bunx shadcn@latest add <component>
 - [x] Run init (potion/scroll/ring identity maps + room/generator deck RNG)
 - [x] Item generator (decks, tiers, enchants/glyphs, item.random)
 - [x] Partial levelgen (forced drops + feelings per floor)
-- [ ] Full headless levelgen (rooms, heaps, mobs, quests)
+- [x] Room selection (`initRooms` + builder kind) for regular floors
+- [ ] Geometry build / painters / createItems (heaps, mobs, quests)
 
 ## License
 

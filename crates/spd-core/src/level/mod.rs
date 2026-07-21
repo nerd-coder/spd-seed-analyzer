@@ -1,10 +1,11 @@
-//! Headless level generation (partial — forced drops + feeling so far).
+//! Headless level generation (partial — forced drops, feelings, room selection).
 
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::random::Random;
 use crate::report::{FloorReport, ItemEntry};
+use crate::rooms::init_rooms::{self, BuilderKind, FloorRooms};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Feeling {
@@ -37,6 +38,8 @@ impl Feeling {
 pub struct LevelState {
     pub depth: i32,
     pub feeling: Feeling,
+    pub builder: Option<BuilderKind>,
+    pub rooms: Vec<String>,
     /// Forced drops rolled at the start of `Level.create` (food, SoU, etc.).
     pub forced_items: Vec<GeneratedItem>,
     /// Placeholder until full room/item placement is ported.
@@ -61,6 +64,11 @@ impl LevelState {
         FloorReport {
             depth: self.depth as u32,
             feeling: Some(self.feeling.as_str().to_string()),
+            builder: self.builder.map(|b| match b {
+                BuilderKind::Loop => "loop".to_string(),
+                BuilderKind::FigureEight => "figure_eight".to_string(),
+            }),
+            rooms: self.rooms.clone(),
             items,
             quests: self.quests.clone(),
         }
@@ -83,8 +91,11 @@ fn is_blacklisted(it: &GeneratedItem) -> bool {
     )
 }
 
-/// Partial `Level.create()` — rolls forced drops and feeling under depth seed.
-/// Full build/createItems not yet implemented (`complete = false`).
+/// Partial `Level.create()`:
+/// 1. Forced drops + feeling
+/// 2. For regular floors: builder selection + `initRooms` + shuffle
+///
+/// Geometry build / paint / createItems not yet implemented.
 pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
     let depth_seed = dungeon.seed_cur_depth();
     Random::push_generator_seeded(depth_seed);
@@ -93,8 +104,9 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
     let mut feeling = Feeling::None;
 
     if !dungeon.boss_level() && dungeon.branch == 0 {
-        // food
-        let mut food = dungeon.generator.random_category(Category::Food, dungeon.depth);
+        let mut food = dungeon
+            .generator
+            .random_category(Category::Food, dungeon.depth);
         food.source = Some("forced".into());
         forced.push(food);
 
@@ -106,7 +118,6 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         }
         if dungeon.sou_needed() {
             dungeon.limited.upgrade_scrolls += 1;
-            // Forbidden runes challenge not used (challenges=0)
             let mut sou = GeneratedItem::new("ScrollOfUpgrade", ItemCategory::Scroll);
             sou.source = Some("forced".into());
             forced.push(sou);
@@ -137,7 +148,6 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         }
 
         if dungeon.depth > 1 {
-            // 50% chance of feeling (~7.15% each of 7 feelings via Int(14))
             match Random::int_max(14) {
                 0 => feeling = Feeling::Chasm,
                 1 => feeling = Feeling::Water,
@@ -154,27 +164,42 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 5 => feeling = Feeling::Traps,
                 6 => feeling = Feeling::Secrets,
                 _ => {
-                    // MossyClump / TrapMechanism override — no trinket => 0 chance
-                    // still consume Floats only if multipliers > 0; both return 0 without trinket
-                    // Java still evaluates:
-                    // if (Random.Float() < MossyClump.overrideNormalLevelChance()) ...
-                    // else if (Random.Float() < TrapMechanism.overrideNormalLevelChance()) ...
-                    // When both chances are 0, first Float is still consumed!
-                    let _ = Random::float(); // mossy check
-                    // second Float only if first fails — 0.0 < 0.0 is false, so second runs
-                    let _ = Random::float(); // trap mechanism check
+                    let _ = Random::float();
+                    let _ = Random::float();
                     feeling = Feeling::None;
                 }
             }
         }
     }
 
-    // build / createMobs / createItems not yet ported
+    let mut builder = None;
+    let mut room_names = Vec::new();
+
+    // Regular main-path floors only (sewers-style counts for all regions for now)
+    if !dungeon.boss_level() && dungeon.branch == 0 && dungeon.depth <= 26 {
+        let lab_needed = dungeon.lab_room_needed();
+        let floor: FloorRooms = init_rooms::init_rooms_regular(
+            dungeon.depth,
+            feeling,
+            dungeon.shop_on_level(),
+            lab_needed,
+            &mut dungeon.limited.lab_room,
+            &mut dungeon.rooms.specials,
+            &mut dungeon.rooms.secrets,
+            &mut dungeon.rooms.region_secrets,
+            &mut dungeon.rooms.pit_needed_depth,
+        );
+        builder = Some(floor.builder_kind);
+        room_names = floor.rooms.into_iter().map(|r| r.name).collect();
+    }
+
     Random::pop_generator();
 
     LevelState {
         depth: dungeon.depth,
         feeling,
+        builder,
+        rooms: room_names,
         forced_items: forced,
         placed_items: Vec::new(),
         quests: Vec::new(),

@@ -183,6 +183,11 @@ impl Random {
         }
     }
 
+    /// Shuffle a `Vec` in place (same algorithm as array shuffle).
+    pub fn shuffle_vec<T>(vec: &mut Vec<T>) {
+        Self::shuffle(vec.as_mut_slice());
+    }
+
     /// Number of generators on the stack (for tests).
     #[cfg(test)]
     pub fn stack_len() -> usize {

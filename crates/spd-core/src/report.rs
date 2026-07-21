@@ -19,6 +19,11 @@ pub struct FloorReport {
     pub depth: u32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub feeling: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub builder: Option<String>,
+    /// Room types selected by `initRooms` (order after shuffle).
+    #[serde(default)]
+    pub rooms: Vec<String>,
     pub items: Vec<ItemEntry>,
     pub quests: Vec<String>,
 }

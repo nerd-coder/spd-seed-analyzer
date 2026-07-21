@@ -225,8 +225,8 @@ export default function App() {
               <CardHeader>
                 <CardTitle>Floors</CardTitle>
                 <CardDescription>
-                  Partial data: forced drops and feelings only (room loot
-                  pending).
+                  Partial data: forced drops, feelings, and room selection
+                  (full loot pending).
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-5">
@@ -239,7 +239,24 @@ export default function App() {
                           {floor.feeling}
                         </Badge>
                       )}
+                      {floor.builder && (
+                        <Badge variant="outline" className="font-mono text-xs">
+                          {floor.builder}
+                        </Badge>
+                      )}
                     </div>
+                    {floor.rooms && floor.rooms.length > 0 && (
+                      <div className="space-y-1">
+                        <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+                          Rooms
+                        </p>
+                        <p className="text-sm leading-relaxed">
+                          {floor.rooms
+                            .map((r) => r.replace(/Room$/, ""))
+                            .join(" · ")}
+                        </p>
+                      </div>
+                    )}
                     {floor.items.length === 0 ? (
                       <p className="text-muted-foreground text-sm">
                         No forced drops listed.
