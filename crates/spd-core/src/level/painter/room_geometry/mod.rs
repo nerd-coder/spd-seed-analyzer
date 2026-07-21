@@ -20,16 +20,17 @@ pub(crate) struct StandardPaintResult {
 /// Paint a supported standard-room family in RegularPainter room order.
 pub(crate) fn paint_standard_room(
     map: &mut TerrainMap,
+    rooms: &[Room],
     room: &Room,
     room_index: usize,
     doors: &DoorMap,
     generator: &mut GeneratorState,
     depth: i32,
 ) -> StandardPaintResult {
-    if patch_rooms::paint(map, room, room_index, doors)
-        || region_rooms::paint(map, room, room_index, doors)
-    {
+    if patch_rooms::paint(map, room, room_index, doors) {
         StandardPaintResult::default()
+    } else if let Some(result) = region_rooms::paint(map, rooms, room, room_index, doors, depth) {
+        result
     } else {
         generic_rooms::paint(map, room, room_index, doors, generator, depth).unwrap_or_default()
     }

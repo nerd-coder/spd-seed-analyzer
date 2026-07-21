@@ -1,7 +1,7 @@
 //! `RegularPainter.mergeRooms` for standard room pairs.
 
 use crate::geom::{Point, Rect};
-use crate::level::terrain::{TerrainMap, CHASM, EMPTY, EMPTY_SP, GRASS, REGION_DECO_ALT};
+use crate::level::terrain::{TerrainMap, CHASM, EMPTY, EMPTY_SP, GRASS, REGION_DECO_ALT, WATER};
 use crate::random::Random;
 use crate::rooms::room::{intersect, Room};
 use crate::rooms::types::RoomKind;
@@ -31,12 +31,22 @@ fn point_inside(room: &Room, from: Point, n: i32) -> Point {
     step
 }
 
-fn can_merge_at(map: &TerrainMap, room: &Room, p: Point, merge_terrain: i32) -> bool {
+fn can_merge_at(map: &TerrainMap, room: &Room, p: Point, merge_terrain: i32, depth: i32) -> bool {
     if !is_mergeable_standard(room) {
         return false;
     }
     let inside = point_inside(room, p, 1);
     match map.point_to_cell(inside.x, inside.y) {
+        Some(_) if room.name == "SewerPipeRoom" => false,
+        Some(_) if room.name == "WaterBridgeEntranceRoom" && depth <= 2 => false,
+        Some(i)
+            if matches!(
+                room.name.as_str(),
+                "WaterBridgeRoom" | "WaterBridgeEntranceRoom" | "WaterBridgeExitRoom"
+            ) =>
+        {
+            map.map[i] != WATER
+        }
         Some(i) if matches!(room.name.as_str(), "BurnedRoom" | "MinefieldRoom") => {
             map.map[i] == EMPTY
         }
@@ -97,8 +107,14 @@ fn effective_merge_terrain(room: &Room, other: &Room, merge_terrain: i32) -> i32
 /// Open a shared wall strip with the iterated room's merge terrain when wide enough.
 ///
 /// Uses watabou `Rect` math: `height() = bottom - top` (not inclusive).
-pub(super) fn merge_rooms(map: &mut TerrainMap, r: &Room, n: &Room, start: Option<Point>) -> bool {
-    merge_rooms_with_terrain(map, r, n, start, EMPTY)
+pub(super) fn merge_rooms(
+    map: &mut TerrainMap,
+    r: &Room,
+    n: &Room,
+    start: Option<Point>,
+    depth: i32,
+) -> bool {
+    merge_rooms_with_terrain(map, r, n, start, EMPTY, depth)
 }
 
 pub(in crate::level::painter) fn merge_rooms_with_terrain(
@@ -107,6 +123,7 @@ pub(in crate::level::painter) fn merge_rooms_with_terrain(
     n: &Room,
     start: Option<Point>,
     requested_terrain: i32,
+    depth: i32,
 ) -> bool {
     let inter = intersect(r, n);
     let terrain = effective_merge_terrain(r, n, requested_terrain);
@@ -117,16 +134,16 @@ pub(in crate::level::painter) fn merge_rooms_with_terrain(
         let x = inter.left;
         let mut p = Point::new(x, top);
         while top > inter.top
-            && can_merge_at(map, n, p, requested_terrain)
-            && can_merge_at(map, r, p, requested_terrain)
+            && can_merge_at(map, n, p, requested_terrain, depth)
+            && can_merge_at(map, r, p, requested_terrain, depth)
         {
             top -= 1;
             p.y -= 1;
         }
         p.y = bottom;
         while bottom < inter.bottom
-            && can_merge_at(map, n, p, requested_terrain)
-            && can_merge_at(map, r, p, requested_terrain)
+            && can_merge_at(map, n, p, requested_terrain, depth)
+            && can_merge_at(map, r, p, requested_terrain, depth)
         {
             bottom += 1;
             p.y += 1;
@@ -148,16 +165,16 @@ pub(in crate::level::painter) fn merge_rooms_with_terrain(
         let y = inter.top;
         let mut p = Point::new(left, y);
         while left > inter.left
-            && can_merge_at(map, n, p, requested_terrain)
-            && can_merge_at(map, r, p, requested_terrain)
+            && can_merge_at(map, n, p, requested_terrain, depth)
+            && can_merge_at(map, r, p, requested_terrain, depth)
         {
             left -= 1;
             p.x -= 1;
         }
         p.x = right;
         while right < inter.right
-            && can_merge_at(map, n, p, requested_terrain)
-            && can_merge_at(map, r, p, requested_terrain)
+            && can_merge_at(map, n, p, requested_terrain, depth)
+            && can_merge_at(map, r, p, requested_terrain, depth)
         {
             right += 1;
             p.x += 1;

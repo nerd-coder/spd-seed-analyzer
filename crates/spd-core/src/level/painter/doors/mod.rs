@@ -10,7 +10,7 @@ mod model;
 use std::collections::{HashMap, VecDeque};
 
 use crate::geom::Point;
-use crate::level::terrain::{TerrainMap, DOOR, EMPTY, LOCKED_DOOR, SECRET_DOOR, WALL};
+use crate::level::terrain::{TerrainMap, DOOR, EMPTY, LOCKED_DOOR, SECRET_DOOR, WALL, WATER};
 use crate::level::Feeling;
 use crate::random::Random;
 use crate::rooms::room::Room;
@@ -108,7 +108,7 @@ pub fn paint_doors(
                 && is_mergeable_standard(&rooms[ri])
                 && is_mergeable_standard(&rooms[ni]);
 
-            if can_try_merge && merge_rooms(map, &rooms[ri], &rooms[ni], start) {
+            if can_try_merge && merge_rooms(map, &rooms[ri], &rooms[ni], start, depth) {
                 if is_normal_size(&rooms[ri]) {
                     room_merges.insert(ri, ni);
                 }
@@ -166,7 +166,8 @@ pub fn paint_doors(
             };
             let terrain = match dtype {
                 DoorType::Empty => EMPTY,
-                DoorType::Tunnel | DoorType::Water => EMPTY,
+                DoorType::Tunnel => EMPTY,
+                DoorType::Water => WATER,
                 DoorType::Unlocked | DoorType::Regular => DOOR,
                 DoorType::Hidden => SECRET_DOOR,
                 DoorType::Barricade => WALL,
@@ -221,6 +222,47 @@ mod tests {
     }
 
     #[test]
+    fn connected_sewer_pipes_upgrade_their_shared_door_to_water() {
+        Random::push_generator_seeded(0x515E);
+        let mut a = named_room(0, "SewerPipeRoom", 1, 1, 9, 9);
+        let mut b = named_room(1, "SewerPipeRoom", 9, 1, 17, 9);
+        a.connected.push(1);
+        b.connected.push(0);
+        let rooms = vec![a, b];
+        let mut doors = DoorMap::new();
+        place_doors_for_room(&rooms, 0, &mut doors);
+        apply_room_door_types(&rooms, 0, &mut doors);
+        Random::pop_generator();
+        assert_eq!(doors.get(0, 1).expect("door").door_type, DoorType::Water);
+    }
+
+    #[test]
+    fn water_bridge_entrance_merge_is_depth_gated_and_avoids_water() {
+        let left = named_room(0, "WaterBridgeEntranceRoom", 1, 1, 9, 9);
+        let right = named_room(1, "EmptyRoom", 9, 1, 17, 9);
+        let rooms = vec![left, right];
+        let start = Some(Point::new(9, 5));
+        let mut early = terrain::paint_minimal(&rooms).expect("early map");
+        assert!(!merge_rooms(&mut early, &rooms[0], &rooms[1], start, 2));
+
+        let mut later = terrain::paint_minimal(&rooms).expect("later map");
+        assert!(merge_rooms(&mut later, &rooms[0], &rooms[1], start, 3));
+
+        let mut water_blocked = terrain::paint_minimal(&rooms).expect("water map");
+        for y in 1..=9 {
+            let cell = water_blocked.point_to_cell(8, y).expect("inside edge");
+            water_blocked.map[cell] = WATER;
+        }
+        assert!(!merge_rooms(
+            &mut water_blocked,
+            &rooms[0],
+            &rooms[1],
+            start,
+            3
+        ));
+    }
+
+    #[test]
     fn paint_doors_can_hide_or_unlock() {
         Random::push_generator_seeded(99);
         let mut a = box_room(0, RoomKind::Standard, 1, 1, 8, 8);
@@ -234,7 +276,7 @@ mod tests {
         let mut doors = DoorMap::new();
         for i in 0..3 {
             place_doors_for_room(&rooms, i, &mut doors);
-            apply_room_door_types(&rooms[i], i, &mut doors);
+            apply_room_door_types(&rooms, i, &mut doors);
         }
         let mut map = terrain::paint_minimal(&rooms).expect("map");
         paint_doors(&mut map, &rooms, &[0, 1, 2], 10, Feeling::None, &mut doors);
@@ -288,7 +330,7 @@ mod tests {
             let rooms = vec![left, right];
             let mut map = terrain::paint_minimal(&rooms).expect("map");
             let door = Point::new(8, 4);
-            assert!(merge_rooms(&mut map, &rooms[0], &rooms[1], Some(door)));
+            assert!(merge_rooms(&mut map, &rooms[0], &rooms[1], Some(door), 3));
             let connector = map.point_to_cell(door.x, door.y).expect("door cell");
             let strip = map.point_to_cell(door.x, door.y - 1).expect("merge strip");
             assert_eq!(map.map[connector], connector_terrain);
@@ -307,7 +349,8 @@ mod tests {
                 &mut map,
                 &rooms[0],
                 &rooms[1],
-                Some(Point::new(8, 4))
+                Some(Point::new(8, 4)),
+                3,
             ));
 
             let mut blocked = terrain::paint_minimal(&rooms).expect("blocked map");
@@ -319,7 +362,8 @@ mod tests {
                 &mut blocked,
                 &rooms[0],
                 &rooms[1],
-                Some(Point::new(8, 4))
+                Some(Point::new(8, 4)),
+                3,
             ));
         }
     }
@@ -341,6 +385,7 @@ mod tests {
             &rooms[1],
             None,
             terrain::CHASM,
+            11,
         ));
         let middle = map.point_to_cell(8, 4).expect("merge strip");
         assert_eq!(map.map[middle], terrain::CHASM);
@@ -366,6 +411,7 @@ mod tests {
             &rooms[1],
             None,
             terrain::CHASM,
+            11,
         ));
         let actual_next = Random::int();
         Random::pop_generator();
@@ -388,6 +434,7 @@ mod tests {
             &rooms[1],
             Some(door),
             terrain::CHASM,
+            11,
         ));
         let connector = map.point_to_cell(door.x, door.y).expect("connector");
         assert_eq!(map.map[connector], terrain::CHASM);

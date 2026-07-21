@@ -4,6 +4,8 @@ use crate::geom::{Point, Rect};
 use crate::random::Random;
 use crate::rooms::types::RoomKind;
 
+pub use super::dimensions::{dims_for_kind, dims_for_size_factor};
+
 pub const DIR_ALL: i32 = 0;
 pub const DIR_LEFT: i32 = 1;
 pub const DIR_TOP: i32 = 2;
@@ -122,6 +124,17 @@ impl Room {
     pub fn resize(&mut self, w: i32, h: i32) {
         self.right = self.left + w;
         self.bottom = self.top + h;
+        if matches!(
+            self.name.as_str(),
+            "CircleBasinRoom" | "CircleBasinEntranceRoom" | "CircleBasinExitRoom"
+        ) {
+            if self.width() % 2 == 0 {
+                self.right -= 1;
+            }
+            if self.height() % 2 == 0 {
+                self.bottom -= 1;
+            }
+        }
     }
 
     /// SPD `Room.random()` — point inset by 1 tile from walls.
@@ -231,7 +244,15 @@ impl Room {
     }
 
     pub fn can_connect_point(&self, p: Point) -> bool {
-        (p.x == self.left || p.x == self.right) != (p.y == self.top || p.y == self.bottom)
+        let on_one_edge =
+            (p.x == self.left || p.x == self.right) != (p.y == self.top || p.y == self.bottom);
+        if self.name == "SewerPipeRoom" {
+            on_one_edge
+                && ((p.x > self.left + 1 && p.x < self.right - 1)
+                    || (p.y > self.top + 1 && p.y < self.bottom - 1))
+        } else {
+            on_one_edge
+        }
     }
 
     pub fn can_connect_dir(&self, direction: i32, rooms: &[Room]) -> bool {
@@ -327,146 +348,29 @@ pub fn clear_all_connections(rooms: &mut [Room]) {
     }
 }
 
-/// Dimensions from size category (standard rooms).
-pub fn dims_for_size_factor(size_factor: i32) -> (i32, i32, i32, i32) {
-    match size_factor {
-        2 => (10, 14, 10, 14), // LARGE
-        3 => (14, 18, 14, 18), // GIANT
-        _ => (4, 10, 4, 10),   // NORMAL
-    }
-}
-
-pub fn dims_for_kind(kind: RoomKind, size_factor: i32, name: &str) -> (i32, i32, i32, i32) {
-    // Quest / fixed-size specials (overrides default special/standard mins)
-    match name {
-        "MassGraveRoom" => return (7, 10, 7, 10),
-        "RotGardenRoom" => return (10, 10, 10, 10),
-        "AmbitiousImpRoom" => return (9, 9, 9, 9),
-        "BlacksmithRoom" => {
-            // StandardRoom with min 6
-            let (mw, xw, mh, xh) = dims_for_size_factor(size_factor);
-            return (mw.max(6), xw, mh.max(6), xh);
-        }
-        "CrystalVaultRoom" => return (7, 7, 7, 7),
-        "CrystalChoiceRoom" | "CrystalPathRoom" => {
-            // min 7; max stays special default 10
-            return (7, 10, 7, 10);
-        }
-        "SecretMazeRoom" => return (14, 18, 14, 18),
-        "SecretChestChasmRoom" => return (8, 9, 8, 9),
-        "SecretSummoningRoom" => return (5, 8, 5, 8),
-        "PitRoom" => return (6, 9, 6, 9),
-        "RitualSiteRoom" => {
-            let (mw, xw, mh, xh) = dims_for_size_factor(size_factor);
-            return (mw.max(9), xw, mh.max(9), xh);
-        }
-        _ => {}
-    }
-    let (base_min_w, base_max_w, base_min_h, base_max_h) = dims_for_size_factor(size_factor);
-    match name {
-        "PlantsRoom" | "FissureRoom" | "SuspiciousChestRoom" => {
-            return (base_min_w.max(5), base_max_w, base_min_h.max(5), base_max_h);
-        }
-        "PlatformRoom" => {
-            return (base_min_w.max(6), base_max_w, base_min_h.max(6), base_max_h);
-        }
-        "AquariumRoom" | "StudyRoom" => {
-            return (base_min_w.max(7), base_max_w, base_min_h.max(7), base_max_h);
-        }
-        "RegionDecoPatchEntranceRoom"
-        | "RegionDecoPatchExitRoom"
-        | "CaveEntranceRoom"
-        | "CaveExitRoom"
-        | "RuinsEntranceRoom"
-        | "RuinsExitRoom"
-        | "ChasmEntranceRoom"
-        | "ChasmExitRoom" => {
-            return (base_min_w.max(7), base_max_w, base_min_h.max(7), base_max_h);
-        }
-        "RegionDecoPatchRoom" | "CaveRoom" | "ChasmRoom" => {
-            return (base_min_w.max(5), base_max_w, base_min_h.max(5), base_max_h);
-        }
-        "RegionDecoBridgeRoom" => {
-            return (base_min_w.max(5), base_max_w, base_min_h.max(5), base_max_h);
-        }
-        "RegionDecoBridgeEntranceRoom" | "RegionDecoBridgeExitRoom" => {
-            return (base_min_w.max(8), base_max_w, base_min_h.max(8), base_max_h);
-        }
-        "CavesFissureRoom" | "CavesFissureEntranceRoom" | "CavesFissureExitRoom" => {
-            return (base_min_w.max(7), base_max_w, base_min_h.max(7), base_max_h);
-        }
-        "CirclePitRoom" => {
-            return (base_min_w.max(8), base_max_w, base_min_h.max(8), base_max_h);
-        }
-        "CircleWallEntranceRoom" | "CircleWallExitRoom" => {
-            return (
-                base_min_w.max(11),
-                base_max_w,
-                base_min_h.max(11),
-                base_max_h,
-            );
-        }
-        _ => {}
-    }
-    match kind {
-        RoomKind::Connection => (3, 10, 3, 10),
-        RoomKind::Special | RoomKind::Secret | RoomKind::Shop => (5, 10, 5, 10),
-        RoomKind::Entrance | RoomKind::Exit => {
-            (base_min_w.max(5), base_max_w, base_min_h.max(5), base_max_h)
-        }
-        RoomKind::Standard => (base_min_w, base_max_w, base_min_h, base_max_h),
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn patch_room_dimension_overrides_match_subclasses() {
-        assert_eq!(
-            dims_for_kind(RoomKind::Standard, 1, "CaveRoom"),
-            (5, 10, 5, 10)
+    fn sewer_resize_and_connection_overrides_match_subclasses() {
+        let mut basin = Room::new(
+            0,
+            "CircleBasinRoom",
+            RoomKind::Standard,
+            2,
+            16,
+            11,
+            14,
+            11,
+            14,
         );
-        assert_eq!(
-            dims_for_kind(RoomKind::Entrance, 1, "CaveEntranceRoom"),
-            (7, 10, 7, 10)
-        );
-        assert_eq!(
-            dims_for_kind(RoomKind::Exit, 2, "ChasmExitRoom"),
-            (10, 14, 10, 14)
-        );
-        assert_eq!(
-            dims_for_kind(RoomKind::Entrance, 2, "RegionDecoBridgeEntranceRoom"),
-            (10, 14, 10, 14)
-        );
-        assert_eq!(
-            dims_for_kind(RoomKind::Standard, 1, "CavesFissureRoom"),
-            (7, 10, 7, 10)
-        );
-        assert_eq!(
-            dims_for_kind(RoomKind::Entrance, 2, "CircleWallEntranceRoom"),
-            (11, 14, 11, 14)
-        );
-    }
+        basin.resize(11, 13); // requested inclusive size 12×14
+        assert_eq!((basin.width(), basin.height()), (11, 13));
 
-    #[test]
-    fn generic_standard_room_dimension_overrides_match_subclasses() {
-        assert_eq!(
-            dims_for_kind(RoomKind::Standard, 1, "PlantsRoom"),
-            (5, 10, 5, 10)
-        );
-        assert_eq!(
-            dims_for_kind(RoomKind::Standard, 1, "PlatformRoom"),
-            (6, 10, 6, 10)
-        );
-        assert_eq!(
-            dims_for_kind(RoomKind::Standard, 1, "AquariumRoom"),
-            (7, 10, 7, 10)
-        );
-        assert_eq!(
-            dims_for_kind(RoomKind::Standard, 2, "StudyRoom"),
-            (10, 14, 10, 14)
-        );
+        let mut pipe = Room::new(0, "SewerPipeRoom", RoomKind::Standard, 1, 16, 7, 10, 7, 10);
+        pipe.resize(8, 8);
+        assert!(!pipe.can_connect_point(Point::new(pipe.left, pipe.top + 1)));
+        assert!(pipe.can_connect_point(Point::new(pipe.left, pipe.top + 2)));
     }
 }

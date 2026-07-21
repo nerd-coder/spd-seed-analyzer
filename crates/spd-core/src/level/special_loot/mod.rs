@@ -68,9 +68,16 @@ pub fn special_room_loot(
             continue;
         }
         // Room.paint door-type upgrades (LOCKED / HIDDEN / REGULAR / …).
-        apply_room_door_types(room, ri, &mut doors);
-        let standard_paint =
-            paint_standard_room(map, room, ri, &doors, &mut dungeon.generator, dungeon.depth);
+        apply_room_door_types(rooms, ri, &mut doors);
+        let standard_paint = paint_standard_room(
+            map,
+            rooms,
+            room,
+            ri,
+            &doors,
+            &mut dungeon.generator,
+            dungeon.depth,
+        );
         let mut standard_loot = standard_rooms::paint_center_loot(
             dungeon,
             room,

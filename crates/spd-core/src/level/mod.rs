@@ -20,6 +20,7 @@ use crate::rooms::types::RoomKind;
 
 pub use create_items::PlacedLoot;
 pub use terrain::TerrainMap;
+pub(crate) use terrain::{ENTRANCE, ENTRANCE_SP, EXIT};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Feeling {

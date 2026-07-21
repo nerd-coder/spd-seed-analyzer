@@ -21,9 +21,29 @@ pub(super) fn paint_center_loot(
 ) -> Vec<PlacedLoot> {
     match (room.name.as_str(), center) {
         ("StudyRoom", Some(_)) => vec![study_prize(dungeon, items_to_spawn)],
+        ("RingRoom", Some(center)) => ring_prize(map, center, items_to_spawn),
         ("SuspiciousChestRoom", _) => suspicious_chest(dungeon, room, map, items_to_spawn),
         _ => Vec::new(),
     }
+}
+
+fn ring_prize(
+    map: &mut TerrainMap,
+    center: Point,
+    items_to_spawn: &mut Vec<GeneratedItem>,
+) -> Vec<PlacedLoot> {
+    let Some(mut prize) = find_prize_item(items_to_spawn, None) else {
+        return Vec::new();
+    };
+    prize.source = Some("RingRoom".into());
+    if let Some(cell) = map.point_to_cell(center.x, center.y) {
+        // Java's heap occupies the center only when `findPrizeItem` succeeded.
+        map.item_allowed[cell] = false;
+    }
+    vec![PlacedLoot {
+        item: prize,
+        heap_type: "heap",
+    }]
 }
 
 fn study_prize(dungeon: &mut DungeonState, items_to_spawn: &mut Vec<GeneratedItem>) -> PlacedLoot {
@@ -188,5 +208,36 @@ mod tests {
         }));
         assert!(loot.iter().all(|drop| drop.heap_type == "mimic"));
         assert_eq!(map.map.iter().filter(|&&tile| tile == PEDESTAL).count(), 1);
+    }
+
+    #[test]
+    fn ring_center_only_becomes_occupied_when_prize_exists() {
+        Random::reset_generators();
+        let run = init_run(4);
+        let room = room("RingRoom");
+        let center = Point::new(5, 5);
+
+        let mut dungeon = dungeon_from_run(run.clone());
+        dungeon.depth = 3;
+        let mut ring_map = map(&room);
+        let cell = ring_map.point_to_cell(center.x, center.y).expect("center");
+        let mut items = vec![GeneratedItem::new("Food", ItemCategory::Food)];
+        let loot = paint_center_loot(&mut dungeon, &room, &mut ring_map, Some(center), &mut items);
+        assert_eq!(loot.len(), 1);
+        assert_eq!(loot[0].item.source.as_deref(), Some("RingRoom"));
+        assert!(!ring_map.item_allowed[cell]);
+
+        let mut dungeon = dungeon_from_run(run);
+        dungeon.depth = 3;
+        let mut empty_map = map(&room);
+        let loot = paint_center_loot(
+            &mut dungeon,
+            &room,
+            &mut empty_map,
+            Some(center),
+            &mut Vec::new(),
+        );
+        assert!(loot.is_empty());
+        assert!(empty_map.item_allowed[cell]);
     }
 }

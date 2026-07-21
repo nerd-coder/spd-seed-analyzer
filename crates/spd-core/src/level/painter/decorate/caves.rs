@@ -38,7 +38,7 @@ fn merge_neighbours(map: &mut TerrainMap, rooms: &[Room], paint_order: &[usize])
                     CHASM
                 };
                 let _ = super::super::doors::merge_rooms_with_terrain(
-                    map, room, neighbour, None, terrain,
+                    map, room, neighbour, None, terrain, 11,
                 );
             }
         }

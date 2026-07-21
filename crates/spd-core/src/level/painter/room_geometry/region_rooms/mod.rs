@@ -1,9 +1,14 @@
 //! Region-specific structural standard rooms.
 
+mod basin;
 mod bridge;
 mod caves_fissure;
 mod circles;
 mod pathing;
+mod ring;
+mod sewer_pipe;
+mod standard_bridge;
+mod water_bridge;
 
 #[cfg(test)]
 mod tests;
@@ -14,9 +19,29 @@ use crate::random::Random;
 use crate::rooms::room::Room;
 
 use super::super::DoorMap;
+use super::StandardPaintResult;
 
-pub(super) fn paint(map: &mut TerrainMap, room: &Room, room_index: usize, doors: &DoorMap) -> bool {
+pub(super) fn paint(
+    map: &mut TerrainMap,
+    rooms: &[Room],
+    room: &Room,
+    room_index: usize,
+    doors: &DoorMap,
+    depth: i32,
+) -> Option<StandardPaintResult> {
     match room.name.as_str() {
+        "SewerPipeRoom" => sewer_pipe::paint(map, rooms, room, room_index, doors),
+        "WaterBridgeRoom" | "WaterBridgeEntranceRoom" | "WaterBridgeExitRoom" => {
+            water_bridge::paint(map, room, room_index, doors, depth)
+        }
+        "RingRoom" | "RingEntranceRoom" | "RingExitRoom" => {
+            return Some(StandardPaintResult {
+                center_loot: ring::paint(map, room),
+            });
+        }
+        "CircleBasinRoom" | "CircleBasinEntranceRoom" | "CircleBasinExitRoom" => {
+            basin::paint(map, room, room_index, doors)
+        }
         "RegionDecoBridgeRoom" | "RegionDecoBridgeEntranceRoom" | "RegionDecoBridgeExitRoom" => {
             bridge::paint(map, room, room_index, doors)
         }
@@ -26,9 +51,9 @@ pub(super) fn paint(map: &mut TerrainMap, room: &Room, room_index: usize, doors:
         "CirclePitRoom" | "CircleWallRoom" | "CircleWallEntranceRoom" | "CircleWallExitRoom" => {
             circles::paint(map, room, room_index, doors)
         }
-        _ => return false,
+        _ => return None,
     }
-    true
+    Some(StandardPaintResult::default())
 }
 
 fn set(map: &mut TerrainMap, x: i32, y: i32, terrain: i32) {

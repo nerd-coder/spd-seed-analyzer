@@ -118,13 +118,24 @@ pub fn place_doors_for_room(rooms: &[Room], ri: usize, doors: &mut DoorMap) {
 }
 
 /// After room "paint": upgrade door types the way each room's `paint` does.
-pub fn apply_room_door_types(room: &Room, ri: usize, doors: &mut DoorMap) {
+pub fn apply_room_door_types(rooms: &[Room], ri: usize, doors: &mut DoorMap) {
+    let Some(room) = rooms.get(ri) else {
+        return;
+    };
     if room.is_empty() {
         return;
     }
-    let upgrade = door_type_for_room(room);
     for &ni in &room.connected {
         if let Some(d) = doors.get_mut(ri, ni) {
+            let upgrade = if room.name == "SewerPipeRoom"
+                && rooms
+                    .get(ni)
+                    .is_some_and(|other| other.name == "SewerPipeRoom")
+            {
+                DoorType::Water
+            } else {
+                door_type_for_room(room)
+            };
             d.set(upgrade);
         }
     }

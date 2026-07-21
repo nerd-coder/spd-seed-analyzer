@@ -93,6 +93,9 @@ pub fn try_spawn_ghost(
         if map.is_solid(cell) {
             continue;
         }
+        if !map.character_allowed.get(cell).copied().unwrap_or(false) {
+            continue;
+        }
         if !map.is_open_space(cell) {
             continue;
         }
@@ -183,6 +186,16 @@ fn generate_rewards(dungeon: &mut DungeonState) -> (GeneratedItem, GeneratedItem
 }
 
 fn exit_center_cell(room: &Room, map: &TerrainMap) -> Option<usize> {
+    for y in room.top..=room.bottom {
+        for x in room.left..=room.right {
+            let Some(cell) = map.point_to_cell(x, y) else {
+                continue;
+            };
+            if map.map[cell] == crate::level::EXIT {
+                return Some(cell);
+            }
+        }
+    }
     let cx = (room.left + room.right) / 2;
     let cy = (room.top + room.bottom) / 2;
     map.point_to_cell(cx, cy)

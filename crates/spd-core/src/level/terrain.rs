@@ -29,6 +29,7 @@ pub const BOOKSHELF: i32 = 27;
 pub const WATER: i32 = 29;
 pub const REGION_DECO: i32 = 33;
 pub const REGION_DECO_ALT: i32 = 34;
+pub const ENTRANCE_SP: i32 = 37;
 
 #[derive(Debug, Clone)]
 pub struct TerrainMap {
@@ -48,6 +49,8 @@ pub struct TerrainMap {
     pub trap_allowed: Vec<bool>,
     /// Room-specific `canPlaceItem` mask used by `randomDropCell`.
     pub item_allowed: Vec<bool>,
+    /// Room-specific `canPlaceCharacter` mask used by mob/NPC placement.
+    pub character_allowed: Vec<bool>,
     /// Parallel to `map`: trap destroys dropped items (randomDropCell filter).
     pub trap_destroys_items: Vec<bool>,
     /// Optional trap class name for debugging / future UI.
@@ -145,6 +148,7 @@ pub fn is_passable_tile(t: i32) -> bool {
             | DOOR
             | OPEN_DOOR
             | ENTRANCE
+            | ENTRANCE_SP
             | EXIT
             | PEDESTAL
             | EMPTY_SP
@@ -262,6 +266,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
     let grass_allowed = vec![true; len];
     let trap_allowed = vec![true; len];
     let item_allowed = vec![true; len];
+    let character_allowed = vec![true; len];
     let trap_destroys_items = vec![false; len];
     let trap_names = vec![None; len];
 
@@ -276,6 +281,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
         grass_allowed,
         trap_allowed,
         item_allowed,
+        character_allowed,
         trap_destroys_items,
         trap_names,
     })

@@ -63,7 +63,7 @@ fn paint_circle_base(map: &mut TerrainMap, room: &Room, room_index: usize, doors
     }
 }
 
-fn fill_ellipse(map: &mut TerrainMap, room: &Room, margin: i32, terrain: i32) {
+pub(super) fn fill_ellipse(map: &mut TerrainMap, room: &Room, margin: i32, terrain: i32) {
     let x = room.left + margin;
     let y = room.top + margin;
     let width = room.width() - margin * 2;
@@ -92,7 +92,7 @@ fn fill_ellipse(map: &mut TerrainMap, room: &Room, margin: i32, terrain: i32) {
     }
 }
 
-fn draw_line(map: &mut TerrainMap, from: Point, to: Point, terrain: i32) {
+pub(super) fn draw_line(map: &mut TerrainMap, from: Point, to: Point, terrain: i32) {
     let mut x = from.x as f32;
     let mut y = from.y as f32;
     let mut dx = (to.x - from.x) as f32;

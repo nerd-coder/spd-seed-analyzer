@@ -174,6 +174,9 @@ fn place_wandmaker(room: &Room, map: &TerrainMap) {
         if map.is_solid(cell) {
             continue;
         }
+        if !map.character_allowed.get(cell).copied().unwrap_or(false) {
+            continue;
+        }
         // Reject EMPTY_SP and non-passable (approx passable = !solid for painted tiles)
         if !map.passable.get(cell).copied().unwrap_or(false) {
             continue;
@@ -244,6 +247,19 @@ fn upgrade_wand(wand: &mut GeneratedItem) {
 }
 
 fn entrance_center_cell(room: &Room, map: &TerrainMap) -> Option<usize> {
+    for y in room.top..=room.bottom {
+        for x in room.left..=room.right {
+            let Some(cell) = map.point_to_cell(x, y) else {
+                continue;
+            };
+            if matches!(
+                map.map[cell],
+                crate::level::ENTRANCE | crate::level::ENTRANCE_SP
+            ) {
+                return Some(cell);
+            }
+        }
+    }
     let cx = (room.left + room.right) / 2;
     let cy = (room.top + room.bottom) / 2;
     map.point_to_cell(cx, cy)
