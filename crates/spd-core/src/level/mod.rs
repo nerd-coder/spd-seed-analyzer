@@ -291,10 +291,15 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 }
 
                 // Special/secret room paint loot (before createItems; may consume itemsToSpawn).
-                // Includes RegularPainter shuffle + placeDoors RNG.
+                // Includes RegularPainter shuffle + placeDoors + door-type upgrades.
                 let special =
                     special_loot::special_room_loot(dungeon, &floor.rooms, &mut items_to_spawn);
-                for p in special {
+                let special_loot::SpecialPaintResult {
+                    loot: special_loot_items,
+                    mut doors,
+                    paint_order,
+                } = special;
+                for p in special_loot_items {
                     // Drop matching forced clones when a prize was pulled from itemsToSpawn.
                     if p.item
                         .source
@@ -322,8 +327,15 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                     placed_items.push(p.item);
                 }
 
-                // paintDoors main-stream RNG (hidden-door Float per connection; merge skipped).
-                painter::paint_doors_rng(dungeon.depth, feeling, &floor.rooms);
+                // paintDoors: mergeRooms + hidden-door Float/Graph + terrain.
+                painter::paint_doors(
+                    &mut map,
+                    &floor.rooms,
+                    &paint_order,
+                    dungeon.depth,
+                    feeling,
+                    &mut doors,
+                );
 
                 // Water / grass / traps / decorate on a separate generator.
                 painter::paint_water_grass_traps(

@@ -20,6 +20,7 @@ export const Terrain = {
   WALL_DECO: 12,
   EMPTY_SP: 14,
   HIGH_GRASS: 15,
+  SECRET_DOOR: 16,
   SECRET_TRAP: 17,
   TRAP: 18,
   EMPTY_DECO: 20,
@@ -68,6 +69,8 @@ export function terrainToSheetIndex(terrain: number): number {
       return FLAT_WALL
     case Terrain.WALL_DECO:
       return FLAT_WALL_DECO
+    case Terrain.SECRET_DOOR:
+      return FLAT_WALL // looks like wall until searched
     case Terrain.DOOR:
       return FLAT_DOOR
     case Terrain.OPEN_DOOR:

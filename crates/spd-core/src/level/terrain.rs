@@ -14,6 +14,8 @@ pub const OPEN_DOOR: i32 = 6;
 pub const ENTRANCE: i32 = 7;
 pub const EXIT: i32 = 8;
 pub const LOCKED_DOOR: i32 = 10;
+/// SPD `Terrain.SECRET_DOOR` — hidden wall door.
+pub const SECRET_DOOR: i32 = 16;
 pub const WALL_DECO: i32 = 12;
 pub const EMPTY_SP: i32 = 14;
 pub const HIGH_GRASS: i32 = 15;
@@ -58,7 +60,10 @@ impl TerrainMap {
 
     /// Approximate SPD `Terrain.SOLID` flag for painted tiles.
     pub fn is_solid(&self, cell: usize) -> bool {
-        matches!(self.map[cell], WALL | WALL_DECO | DOOR | LOCKED_DOOR)
+        matches!(
+            self.map[cell],
+            WALL | WALL_DECO | DOOR | LOCKED_DOOR | SECRET_DOOR
+        )
     }
 
     pub fn recompute_passable(&mut self) {

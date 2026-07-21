@@ -2,9 +2,10 @@
 //!
 //! Matches SPD `RegularPainter.paint` tail:
 //! `nTraps()` on main stream (via [`n_traps`]) → room paint (elsewhere) →
-//! optional paintDoors RNG → `pushGenerator(Long)` → water/grass/traps/decorate → pop.
+//! paintDoors (merge + hidden Graph) → `pushGenerator(Long)` → water/grass/traps/decorate → pop.
 
 mod decorate;
+mod doors;
 mod params;
 
 use crate::level::patch;
@@ -13,38 +14,10 @@ use crate::level::Feeling;
 use crate::random::Random;
 use crate::rooms::room::Room;
 
+pub use doors::{
+    apply_room_door_types, door_spots, paint_doors, place_doors_for_room, DoorMap,
+};
 pub use params::n_traps;
-
-/// Approximate `paintDoors` main-stream RNG: one `Float` per undirected connection
-/// when evaluating hidden-door chance (merge-room path skipped — may desync slightly).
-pub fn paint_doors_rng(depth: i32, feeling: Feeling, rooms: &[Room]) {
-    let mut hidden_door_chance = if depth > 1 {
-        (depth as f32 / 20.0).min(1.0)
-    } else {
-        0.0
-    };
-    if feeling == Feeling::Secrets {
-        hidden_door_chance = (0.5 + hidden_door_chance) / 2.0;
-    }
-
-    let mut seen: Vec<(usize, usize)> = Vec::new();
-    for (ri, room) in rooms.iter().enumerate() {
-        if room.is_empty() {
-            continue;
-        }
-        for &ni in &room.connected {
-            let a = ri.min(ni);
-            let b = ri.max(ni);
-            if seen.contains(&(a, b)) {
-                continue;
-            }
-            seen.push((a, b));
-            // Always REGULAR doors in our builder path → Float vs hidden chance.
-            let _ = Random::float() < hidden_door_chance;
-            // Graph connectivity checks do not consume RNG.
-        }
-    }
-}
 
 /// Water + grass + traps + region decorate under a separate generator
 /// (`Random.pushGenerator(Random.Long())` … `pop`), matching RegularPainter.

@@ -1,9 +1,8 @@
 //! Special / secret room prize generation (partial paint loot).
 //!
 //! Called after minimal geometry paint and **before** `createItems`, matching
-//! RegularPainter room paint order (shuffle rooms → placeDoors RNG → room prizes).
-//! Placement loops consume RNG; layout water/grass/traps still incomplete so
-//! results remain approximate vs full game parity.
+//! RegularPainter room paint order (shuffle rooms → placeDoors → room prizes).
+//! Returns door map + paint order for subsequent `paintDoors`.
 
 mod crystal;
 mod gardens;
@@ -18,12 +17,23 @@ mod trap_rooms;
 mod tests;
 
 use crate::dungeon::DungeonState;
-use crate::geom::Point;
 use crate::items::model::GeneratedItem;
 use crate::level::create_items::PlacedLoot;
+use crate::level::painter::{apply_room_door_types, place_doors_for_room, DoorMap};
 use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
+
+// Re-export for crystal path door placement.
+pub(super) use crate::level::painter::door_spots;
+
+/// Result of special-room paint pass (prizes + doors for `paintDoors`).
+pub struct SpecialPaintResult {
+    pub loot: Vec<PlacedLoot>,
+    pub doors: DoorMap,
+    /// Room indices in RegularPainter shuffle order (for `paintDoors` iteration).
+    pub paint_order: Vec<usize>,
+}
 
 /// Generate special/secret room prizes; may consume items from `items_to_spawn`
 /// via `findPrizeItem` (TrinketCatalyst, forced potions, etc.).
@@ -31,24 +41,30 @@ pub fn special_room_loot(
     dungeon: &mut DungeonState,
     rooms: &[Room],
     items_to_spawn: &mut Vec<GeneratedItem>,
-) -> Vec<PlacedLoot> {
+) -> SpecialPaintResult {
     let mut out = Vec::new();
+    let mut doors = DoorMap::new();
     if rooms.is_empty() {
-        return out;
+        return SpecialPaintResult {
+            loot: out,
+            doors,
+            paint_order: Vec::new(),
+        };
     }
 
     let mut order: Vec<usize> = (0..rooms.len()).collect();
     Random::shuffle_vec(&mut order);
 
-    // placeDoors-style RNG for each undirected connection (door cell pick).
-    let mut doors_placed: Vec<(usize, usize)> = Vec::new();
     for &ri in &order {
-        place_doors_rng(rooms, ri, &mut doors_placed);
+        place_doors_for_room(rooms, ri, &mut doors);
 
         let room = &rooms[ri];
         if room.is_empty() {
             continue;
         }
+        // Room.paint door-type upgrades (LOCKED / HIDDEN / REGULAR / …).
+        apply_room_door_types(room, ri, &mut doors);
+
         match room.kind {
             RoomKind::Special | RoomKind::Secret => {
                 let mut loot = paint_special(dungeon, rooms, ri, items_to_spawn);
@@ -67,48 +83,11 @@ pub fn special_room_loot(
         }
     }
 
-    out
-}
-
-fn place_doors_rng(rooms: &[Room], ri: usize, doors_placed: &mut Vec<(usize, usize)>) {
-    let room = &rooms[ri];
-    for &ni in &room.connected {
-        let a = ri.min(ni);
-        let b = ri.max(ni);
-        if doors_placed.contains(&(a, b)) {
-            continue;
-        }
-        let other = &rooms[ni];
-        if other.is_empty() {
-            continue;
-        }
-        let spots = door_spots(room, other);
-        if !spots.is_empty() {
-            let _ = Random::element(&spots);
-        }
-        doors_placed.push((a, b));
+    SpecialPaintResult {
+        loot: out,
+        doors,
+        paint_order: order,
     }
-}
-
-pub(super) fn door_spots(a: &Room, b: &Room) -> Vec<Point> {
-    let left = a.left.max(b.left);
-    let right = a.right.min(b.right);
-    let top = a.top.max(b.top);
-    let bottom = a.bottom.min(b.bottom);
-    let mut spots = Vec::new();
-    for x in left..=right {
-        for y in top..=bottom {
-            let p = Point::new(x, y);
-            if can_connect(a, p) && can_connect(b, p) {
-                spots.push(p);
-            }
-        }
-    }
-    spots
-}
-
-fn can_connect(r: &Room, p: Point) -> bool {
-    (p.x == r.left || p.x == r.right) != (p.y == r.top || p.y == r.bottom)
 }
 
 fn paint_special(
