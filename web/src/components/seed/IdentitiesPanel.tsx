@@ -11,7 +11,7 @@ function IdentityGrid({
   category: 'potion' | 'scroll' | 'ring'
 }) {
   return (
-    <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+    <div className="grid grid-cols-3 gap-x-3 gap-y-2">
       {entries.map((e) => {
         const shortName = shortIdentityName(e.name, category)
         return (
@@ -40,8 +40,6 @@ function IdentityGrid({
 }
 
 export function IdentitiesPanel({ identities }: { identities: IdentityMaps }) {
-  // Sticky under seed tabs (same offset as region tabs). Not using Card
-  // overflow-hidden so position:sticky on the outer wrapper stays valid.
   return (
     <section className="bg-card text-card-foreground ring-1 ring-foreground/10">
       <div className="space-y-1 px-4 pt-4">

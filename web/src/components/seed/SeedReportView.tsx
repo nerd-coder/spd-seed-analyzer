@@ -17,41 +17,24 @@ export function SeedReportView({
 
   return (
     <div className="space-y-4">
-      <SeedInfoPanel report={report} />
-
-      {/* Floors + optional Identities right column (w-80 matches main menu). */}
+      {/* Seed info + optional Identities share a 50/50 top row. */}
       <div
         className={cn(
-          'flex flex-col gap-4',
-          identitySpoilers && 'lg:flex-row lg:items-start'
+          'grid gap-4',
+          identitySpoilers && 'lg:grid-cols-2 lg:items-start'
         )}
       >
-        {hasFloors && (
-          <div className="min-w-0 flex-1">
-            <FloorsSection
-              floors={report.floors}
-              identities={report.identities}
-              mapSpoilers={mapSpoilers}
-            />
-          </div>
-        )}
-
-        {identitySpoilers && (
-          <aside
-            className={cn(
-              // Same width as left main menu (`lg:w-80`).
-              'w-full shrink-0 lg:w-80',
-              // Stick under seed session tabs while floors scroll.
-              'lg:sticky lg:self-start lg:max-h-[calc(100svh-var(--seed-tabs-height,3rem))] lg:overflow-y-auto',
-              // Keep identities accessible when there are no floors.
-              !hasFloors && 'flex-1'
-            )}
-            style={{ top: 'var(--seed-tabs-height, 3rem)' }}
-          >
-            <IdentitiesPanel identities={report.identities} />
-          </aside>
-        )}
+        <SeedInfoPanel report={report} />
+        {identitySpoilers && <IdentitiesPanel identities={report.identities} />}
       </div>
+
+      {hasFloors && (
+        <FloorsSection
+          floors={report.floors}
+          identities={report.identities}
+          mapSpoilers={mapSpoilers}
+        />
+      )}
     </div>
   )
 }
