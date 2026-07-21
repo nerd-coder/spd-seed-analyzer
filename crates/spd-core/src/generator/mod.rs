@@ -219,7 +219,8 @@ impl GeneratorState {
         }
     }
 
-    fn random_using_defaults(&mut self, cat: Category, depth: i32) -> GeneratedItem {
+    /// `Generator.randomUsingDefaults(cat)`.
+    pub fn random_using_defaults(&mut self, cat: Category, depth: i32) -> GeneratedItem {
         match cat {
             Category::Weapon => self.random_weapon(depth / 5, true, depth),
             Category::Missile => self.random_missile(depth / 5, true, depth),

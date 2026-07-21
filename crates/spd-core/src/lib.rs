@@ -10,6 +10,7 @@ pub mod geom;
 pub mod items;
 pub mod java_random;
 pub mod level;
+pub mod quests;
 pub mod random;
 pub mod report;
 pub mod rooms;
@@ -67,7 +68,7 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
         floors: floor_reports,
         status: "partial".to_string(),
         message: Some(
-            "Partial analysis: layout builder + special-room prize loot (approx.) + main createItems drops. Quests, full water/grass/trap painter, and figure-eight builder still incomplete — results may not match the game yet."
+            "Partial analysis: layout builder + special-room/shop loot (approx.) + Ghost quest rewards + main createItems drops. Full createMobs, water/grass/trap painter, and figure-eight builder still incomplete — results may not match the game yet."
                 .to_string(),
         ),
     })
@@ -83,15 +84,63 @@ mod analyze_smoke {
         eprintln!("status={} floors={}", r.status, r.floors.len());
         for f in &r.floors {
             eprintln!(
-                "  floor {} rooms={} items={} map={:?}",
+                "  floor {} rooms={} items={} quests={:?} map={:?}",
                 f.depth,
                 f.rooms.len(),
                 f.items.len(),
+                f.quests,
                 f.map
                     .as_ref()
                     .map(|m| (m.width, m.height, m.tileset.as_str()))
             );
         }
+    }
+
+    #[test]
+    fn ghost_quest_spawns_within_sewers_sometime() {
+        // Depth 4 always rolls Int(1)==0 if not yet spawned; over many seeds we
+        // should see at least one Ghost.Quest reward before floor 5.
+        let mut saw_ghost = false;
+        for s in [
+            "GFX-PZH-DCH",
+            "AAA-AAA-AAA",
+            "hello",
+            "42",
+            "shattered",
+            "JLY-ZYR-HET",
+        ] {
+            let r = analyze_seed(s, 4).expect("analyze");
+            for f in &r.floors {
+                if f.quests.iter().any(|q| q.contains("Sad Ghost"))
+                    || f.items
+                        .iter()
+                        .any(|i| i.source.as_deref() == Some("Ghost.Quest"))
+                {
+                    saw_ghost = true;
+                    break;
+                }
+            }
+            if saw_ghost {
+                break;
+            }
+        }
+        assert!(saw_ghost, "expected Ghost.Quest on at least one sewer run");
+    }
+
+    #[test]
+    fn shop_stock_on_floor_6() {
+        let r = analyze_seed("GFX-PZH-DCH", 6).expect("analyze");
+        let f6 = r.floors.iter().find(|f| f.depth == 6).expect("floor 6");
+        let shop: Vec<_> = f6
+            .items
+            .iter()
+            .filter(|i| i.source.as_deref() == Some("ShopRoom"))
+            .collect();
+        assert!(
+            !shop.is_empty(),
+            "expected ShopRoom stock on depth 6, rooms={:?}",
+            f6.rooms
+        );
     }
 
     #[test]

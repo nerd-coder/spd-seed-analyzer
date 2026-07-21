@@ -1,4 +1,4 @@
-import { Dices, Loader2, Search } from 'lucide-react'
+import { Loader2, Search } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 
 import { DepthIcon } from '@/components/DepthIcon'
@@ -170,6 +170,23 @@ function FloorDetail({
         </div>
       )}
 
+      {floor.quests && floor.quests.length > 0 && (
+        <div className="space-y-1">
+          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            Quests
+          </p>
+          <ul className="space-y-1 text-sm">
+            {floor.quests.map((q, i) => (
+              <li key={`${floor.depth}-quest-${i}`}>
+                <Badge variant="secondary" className="font-normal">
+                  {q}
+                </Badge>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {floor.items.length === 0 ? (
         <p className="text-muted-foreground text-sm">No items listed.</p>
       ) : (
@@ -330,19 +347,37 @@ export default function App() {
 
   return (
     <div className="mx-auto flex min-h-svh w-full max-w-4xl flex-col gap-6 px-4 py-10">
-      <header className="space-y-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <Dices className="size-7 text-primary" />
-          <h1 className="text-2xl font-semibold tracking-tight">
-            SPD Seed Analyzer
-          </h1>
-          {meta && (
-            <Badge variant="secondary" className="font-mono text-xs">
-              SPD {meta.version}@{meta.commit}
-            </Badge>
-          )}
+      <header className="space-y-4">
+        <div className="flex flex-col">
+          <div className="flex flex-wrap items-end gap-3">
+            <div
+              className="relative h-16 md:h-20"
+              style={{ aspectRatio: '616/200' }}
+            >
+              <img
+                src="/assets/title.gif"
+                alt="Shattered Pixel Dungeon"
+                className="absolute inset-0 h-full w-full object-contain"
+                style={{ imageRendering: 'pixelated' }}
+              />
+              <img
+                src="/assets/title_overlay.png"
+                alt="SEED Analyzer"
+                className="absolute inset-0 h-full w-full object-contain"
+                style={{ imageRendering: 'pixelated' }}
+              />
+            </div>
+            {meta && (
+              <Badge
+                variant="secondary"
+                className="font-mono text-xs mb-1 md:mb-2"
+              >
+                v{meta.version}@{meta.commit}
+              </Badge>
+            )}
+          </div>
         </div>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-sm max-w-xl">
           Enter a Shattered Pixel Dungeon seed to inspect generation data.
           Calculations run in Rust via WebAssembly.
         </p>

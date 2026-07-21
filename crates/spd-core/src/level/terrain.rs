@@ -48,6 +48,54 @@ impl TerrainMap {
         }
         Some((lx + ly * self.width) as usize)
     }
+
+    /// Approximate SPD `Terrain.SOLID` flag for painted tiles.
+    pub fn is_solid(&self, cell: usize) -> bool {
+        matches!(self.map[cell], WALL | DOOR | LOCKED_DOOR)
+    }
+
+    /// Approximate SPD `openSpace`: not solid, and some diagonal corner pair is open.
+    pub fn is_open_space(&self, cell: usize) -> bool {
+        if self.is_solid(cell) {
+            return false;
+        }
+        let w = self.width as usize;
+        let x = cell % w;
+        let y = cell / w;
+        // CIRCLE8: N, NE, E, SE, S, SW, W, NW — diagonals at odd indices
+        let deltas: [(i32, i32); 8] = [
+            (0, -1),
+            (1, -1),
+            (1, 0),
+            (1, 1),
+            (0, 1),
+            (-1, 1),
+            (-1, 0),
+            (-1, -1),
+        ];
+        for j in (1..8).step_by(2) {
+            let (dx, dy) = deltas[j];
+            if self.neighbor_solid(x, y, dx, dy) {
+                continue;
+            }
+            let (dx1, dy1) = deltas[(j + 1) % 8];
+            let (dx2, dy2) = deltas[(j + 2) % 8];
+            if !self.neighbor_solid(x, y, dx1, dy1) && !self.neighbor_solid(x, y, dx2, dy2) {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn neighbor_solid(&self, x: usize, y: usize, dx: i32, dy: i32) -> bool {
+        let nx = x as i32 + dx;
+        let ny = y as i32 + dy;
+        if nx < 0 || ny < 0 || nx >= self.width || ny >= self.height {
+            return true;
+        }
+        let cell = (nx + ny * self.width) as usize;
+        self.is_solid(cell)
+    }
 }
 
 /// Region tileset key for frontend asset lookup.

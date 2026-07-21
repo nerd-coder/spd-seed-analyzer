@@ -7,6 +7,7 @@ pub use limited_drops::LimitedDrops;
 use crate::generator::GeneratorState;
 use crate::items::model::GeneratedItem;
 use crate::items::IdentityMaps;
+use crate::quests::GhostQuestState;
 use crate::random::Random;
 use crate::rooms::RoomRunState;
 
@@ -22,6 +23,7 @@ pub struct DungeonState {
     pub limited: LimitedDrops,
     /// Items forced onto the next level (`Level.itemsToSpawn`).
     pub items_to_spawn: Vec<GeneratedItem>,
+    pub ghost: GhostQuestState,
 }
 
 impl DungeonState {

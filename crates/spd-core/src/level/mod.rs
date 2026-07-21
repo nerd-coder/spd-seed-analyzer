@@ -1,6 +1,7 @@
 //! Headless level generation.
 
 mod create_items;
+mod shop;
 mod special_loot;
 mod terrain;
 
@@ -8,10 +9,12 @@ use crate::builders::{self, BuilderParams};
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
+use crate::quests;
 use crate::random::Random;
 use crate::report::{FloorReport, ItemEntry};
 use crate::rooms::init_rooms::{self, BuilderKind};
 use crate::rooms::room::clear_all_connections;
+use crate::rooms::types::RoomKind;
 
 pub use create_items::PlacedLoot;
 pub use terrain::TerrainMap;
@@ -195,6 +198,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
     let mut build_ok = false;
     let mut placed_items = Vec::new();
     let mut floor_map = None;
+    let mut quests = Vec::new();
 
     // RegularLevel only — bosses + depth 26 LastLevel use dedicated layouts in SPD.
     if dungeon.regular_level() {
@@ -231,6 +235,19 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                     tiles: map.map.iter().map(|&t| t as u16).collect(),
                 });
 
+                // Shop stock: in SPD generated during setSize (mid-build). We run
+                // after build / before other special paint so Generator still
+                // advances before createItems (timing approximate).
+                if floor
+                    .rooms
+                    .iter()
+                    .any(|r| r.kind == RoomKind::Shop && !r.is_empty())
+                {
+                    for item in shop::generate_items(dungeon) {
+                        placed_items.push(item);
+                    }
+                }
+
                 // Special/secret room paint loot (before createItems; may consume itemsToSpawn).
                 let special =
                     special_loot::special_room_loot(dungeon, &floor.rooms, &mut items_to_spawn);
@@ -260,6 +277,16 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                         }
                     }
                     placed_items.push(p.item);
+                }
+
+                // createMobs subset: Ghost.Quest.spawn on sewer floors (before createItems).
+                // Full mob placement still not ported — createItems RNG remains approximate.
+                if let Some(exit) = floor.rooms.iter().find(|r| r.is_exit() && !r.is_empty()) {
+                    if let Some(ghost) = quests::try_spawn_ghost(dungeon, exit, &map) {
+                        quests.push(ghost.summary.clone());
+                        placed_items.push(ghost.weapon);
+                        placed_items.push(ghost.armor);
+                    }
                 }
 
                 let loot = create_items::create_items_main(
@@ -313,7 +340,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         build_ok,
         forced_items: forced,
         placed_items,
-        quests: Vec::new(),
+        quests,
         complete: build_ok,
         map: floor_map,
     }

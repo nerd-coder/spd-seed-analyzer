@@ -9,10 +9,19 @@ pub struct LimitedDrops {
     pub int_stone: bool,
     pub trinket_cata: bool,
     pub lab_room: i32,
+    /// Hero always starts with a velvet pouch → treated as already dropped.
+    pub velvet_pouch: bool,
+    pub scroll_holder: bool,
+    pub potion_bandolier: bool,
+    pub magical_holster: bool,
 }
 
 impl LimitedDrops {
     pub fn reset() -> Self {
-        Self::default()
+        Self {
+            // All heroes start with VelvetPouch (SPD HeroClass).
+            velvet_pouch: true,
+            ..Self::default()
+        }
     }
 }

@@ -119,6 +119,19 @@ impl Room {
         self.bottom = self.top + h;
     }
 
+    /// SPD `Room.random()` — point inset by 1 tile from walls.
+    pub fn random(&self) -> Point {
+        self.random_margin(1)
+    }
+
+    /// SPD `Room.random(m)`.
+    pub fn random_margin(&self, m: i32) -> Point {
+        Point::new(
+            Random::int_range_inclusive(self.left + m, self.right - m),
+            Random::int_range_inclusive(self.top + m, self.bottom - m),
+        )
+    }
+
     pub fn min_width(&self) -> i32 {
         self.min_w
     }

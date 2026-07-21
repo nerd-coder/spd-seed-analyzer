@@ -20,6 +20,9 @@ fn main() {
             f.depth, f.feeling, f.builder
         );
         println!("  rooms: {}", f.rooms.join(", "));
+        if !f.quests.is_empty() {
+            println!("  quests: {}", f.quests.join(" | "));
+        }
         for it in f.items {
             println!(
                 "  [{:<10}] {:<40} class={:?} source={:?}",

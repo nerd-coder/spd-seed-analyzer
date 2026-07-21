@@ -75,11 +75,13 @@ bun run check:all    # biome + rust fmt/clippy
 | Area | Location | Notes |
 |------|----------|--------|
 | `initRooms` | `rooms/init_rooms.rs` | entrance/exit/standard/special/secret + shuffle |
-| Room geometry | `rooms/room.rs` | connections, setSize (NormalIntRange) |
+| Room geometry | `rooms/room.rs` | connections, setSize (NormalIntRange); `Room.random` |
 | Loop builder | `builders/` | placeRoom, findFreeSpace, tunnels, branches |
 | Figure-eight | — | **Falls back to loop** (not parity) |
-| Minimal paint | `level/terrain.rs` | SPD Terrain IDs; walls/empty/doors/entrance/exit |
+| Minimal paint | `level/terrain.rs` | SPD Terrain IDs; walls/empty/doors/entrance/exit; solid/openSpace helpers |
 | Special-room prizes | `level/special_loot.rs` | Crypt/Armory/Library/Treasury/Pool/Storage/Runestone/Lab/Statue + several secrets; room-shuffle + placeDoors RNG; may `findPrizeItem` from itemsToSpawn |
+| Shop stock | `level/shop.rs` | `ShopRoom.generateItems` (FOR_SALE); bag pick hero-less (scroll holder first); generated post-build (not mid-setSize) |
+| Ghost quest | `quests/ghost.rs` | `Ghost.Quest.spawn` on sewers: chance, placement (approx openSpace), weapon/armor rewards |
 | Main createItems | `level/create_items.rs` | nItems loop, heap types; drop cells use map origin |
 | Floor map export | `report.rs` `FloorMap` | width/height/tileset/tiles; items include `class_name` |
 
@@ -105,12 +107,13 @@ bun run check:all    # biome + rust fmt/clippy
 Results are **partial**. Not game-parity yet because:
 
 1. Full `RegularPainter` (water/grass/traps) incomplete — special-room prizes approximate  
-2. Some special/secret rooms still stubbed (crystal rooms, sentry/traps/fire, shop stock, …)  
-3. Quests (Ghost / Wandmaker / Imp / …) not ported  
-4. Figure-eight builder incomplete  
-5. `createMobs` (statues listed as loot only; mimics simplified) incomplete  
-6. `randomDropCell` simplified vs full map flags  
-7. Sewer room-count tables used for all regions  
+2. Some special/secret rooms still stubbed (crystal rooms, sentry/traps/fire, …)  
+3. Shop stock timing is post-build (SPD generates during room `setSize`); bag choice is hero-less  
+4. Ghost quest rewards ported; placement uses minimal openSpace; full `createMobs` not ported  
+5. Wandmaker / Imp / Blacksmith quests not ported  
+6. Figure-eight builder incomplete  
+7. `randomDropCell` simplified vs full map flags  
+8. Sewer room-count tables used for all regions  
 
 Status string: `"partial"`.
 
@@ -120,8 +123,10 @@ Status string: `"partial"`.
 
 ### P1 — Special-room loot + quests (high value for seed-finder UX)
 - ~~Port `paint()` prize logic: Crypt, Armory, Library, Treasury, Statue, Pool, secrets~~ (partial; see `special_loot.rs`)  
-- Remaining: Shop (FOR_SALE), crystal rooms, sentry/traps/fire/sacrifice, honeypot secret fidelity  
-- Ghost.Quest / Wandmaker.Quest / Imp.Quest reward generation at correct RNG points (`createMobs` order)  
+- ~~Shop (FOR_SALE) stock~~ (approx; see `level/shop.rs`)  
+- ~~Ghost.Quest rewards~~ (see `quests/ghost.rs`)  
+- Remaining: crystal rooms, sentry/traps/fire/sacrifice, honeypot secret fidelity  
+- Wandmaker.Quest / Imp.Quest reward generation at correct RNG points (`createMobs` order)  
 - Golden tests vs Java oracle for a handful of seeds  
 
 ### P2 — Painter parity
@@ -223,8 +228,8 @@ SPD is GPL-3.0. This project ports generation logic → treat as **GPL-3.0-or-la
 ## How to resume (clean context)
 
 1. Read this file + `README.md`  
-2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs` / `level/special_loot.rs`  
-3. Next recommended work: remaining special rooms (Shop, crystal) + **Ghost quest** + Java golden checks  
+2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs` / `level/special_loot.rs` / `quests/ghost.rs` / `level/shop.rs`  
+3. Next recommended work: **Wandmaker quest** (prison) + crystal rooms + Java golden checks; then Imp  
 4. Icons: `web/src/lib/item-icons.ts` + `components/ItemIcon.tsx` (items.png sheet)  
 5. Do not re-copy full asset tree; use `web/public/assets/` as flattened SPD assets  
 6. After Rust changes: `bun run build:wasm` (or `bun run dev`)  

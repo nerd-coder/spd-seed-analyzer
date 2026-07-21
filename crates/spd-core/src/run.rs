@@ -53,6 +53,7 @@ pub fn dungeon_from_run(run: RunState) -> DungeonState {
         generator: run.generator,
         limited: LimitedDrops::reset(),
         items_to_spawn: Vec::new(),
+        ghost: crate::quests::GhostQuestState::default(),
     }
 }
 
