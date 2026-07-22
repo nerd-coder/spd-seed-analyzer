@@ -1,10 +1,8 @@
 # Visual regression fixtures
 
 These screenshots are reference compositions captured from pinned Shattered
-Pixel Dungeon v3.3.8 (`7b8b845a7`) for seed `HKT-JZN-XQQ`:
-
-- `HKT-JZN-XQQ_F1.png` — floor 1
-- `HKT-JZN-XQQ_F6.png` — floor 6
+Pixel Dungeon v3.3.8 (`7b8b845a7`). Name each fixture
+`<seed>_<floor>.png`.
 
 Preserve the source images unchanged. Their hero positions reflect
 post-generation gameplay state and are not deterministic outputs of

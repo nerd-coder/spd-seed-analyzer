@@ -113,9 +113,8 @@ depth-one entrance room from trap placement, and flattening tall or furrowed
 grass under late item drops. Armory and Treasury painters now retain exact heap
 cells and ordered item stacks for the structured report.
 
-The committed screenshots `specs/fixtures/visual/HKT-JZN-XQQ_F1.png` and
-`specs/fixtures/visual/HKT-JZN-XQQ_F6.png` are visual-regression references for
-floors 1 and 6.
+Committed screenshots in `specs/fixtures/visual/`, named
+`<seed>_<floor>.png`, are visual-regression references.
 Their hero positions are post-generation gameplay state, not seed-derived
 `Level.create()` output; frontend comparisons must treat the hero as a fixed
 reference overlay or exclude it from the deterministic contract. Floor-1
@@ -312,13 +311,11 @@ already — this gap is specifically the room-shape predicate.
 
 1. **Next phase — HKT browser-render parity.** Rebuild WASM, render
    `HKT-JZN-XQQ` floor 1 in the browser, and compare the frontend's asset
-   composition against the committed
-   `specs/fixtures/visual/HKT-JZN-XQQ_F1.png` reference.
+   composition against the corresponding committed visual fixture.
    Correct tile selection/layering, transitions, traps, mobs, heaps, and
    viewport composition without reimplementing RNG in the UI.
 2. Add pinned core facts for `HKT-JZN-XQQ` floor 6 and compare its browser
-   rendering against the committed
-   `specs/fixtures/visual/HKT-JZN-XQQ_F6.png` reference.
+   rendering against the corresponding committed visual fixture.
 3. Extend schema-v3 coverage to still more depth-one room sets. Five exact
    lifecycles are strong regression fixtures, not evidence that every
    depth-one combination is exact.
