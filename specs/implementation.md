@@ -1,23 +1,26 @@
-# SPD Seed Analyzer — Implementation Progress
+# SPD Seed Analyzer — Implementation Plan
 
-**Last updated:** 2026-07-22 (P6: final placed-heap oracle contract; docs synced to mode/sidebar UI + commands dedup)
-
-**Branch:** `main`  
-**Pinned SPD:** v3.3.8 @ `7b8b845a7`  
-**Local game source:** `/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`
-
----
+**Last updated:** 2026-07-22
+**Branch:** `main`
+**Pinned SPD:** v3.3.8 @ `7b8b845a7`
+**Local game source:** `/Users/toan/code/00-Evan/shattered-pixel-dungeon`
+  (⚠ `tools/java-oracle/run`'s `DEFAULT_SOURCE` still points at the stale
+  `/Users/toan/code/repos/00-Evan/...` path — pass `SPD_SOURCE=...` or fix the
+  default before relying on it)
 
 ## Goal
 
-Browser seed analyzer for Shattered Pixel Dungeon:
+Browser seed analyzer for Shattered Pixel Dungeon — **Bun/Vite/React UI** over
+a **Rust (`spd-core`) → WASM (`spd-wasm`)** dungeon-generation engine, ported
+from the headless Java algorithm (`Dungeon.init` → `newLevel` per depth).
 
-- **UI:** Bun + Vite + React + shadcn/ui  
-- **Engine:** Rust (`spd-core`) → WASM (`spd-wasm`)  
-- **Output:** Per-floor items + (Map spoilers) floor maps using original tilesheets  
+**The single goal that matters right now: make the Rust port an exact,
+call-for-call RNG match of the pinned Java engine**, not an approximation.
+Everything below is written to serve that goal — what's already exact, and
+precisely what still diverges.
 
-
-Reference behavior: headless Java seed finders (`Dungeon.init` → `newLevel` per depth).
+For commands, CI parity, and repo conventions see `AGENTS.md`. This file is
+implementation state + the parity punch list, not a command reference.
 
 ---
 
@@ -25,196 +28,180 @@ Reference behavior: headless Java seed finders (`Dungeon.init` → `newLevel` pe
 
 ```text
 spd-seed-analyzer/
-├── Cargo.toml                 # workspace
-├── package.json               # Bun scripts (build:wasm, dev, build)
 ├── crates/
-│   ├── spd-core/              # pure Rust generation logic
-│   └── spd-wasm/              # wasm-bindgen façade
-├── web/                       # Vite app
-│   ├── public/
-│   │   ├── app_icon.jpg
-│   │   └── assets/            # SPD asset tree (flattened)
-│   │       └── environment/tiles_*.png
-│   └── src/
-│       ├── App.tsx                    # thin shell: mode tabs + sidebar + workspace
-│       ├── components/
-│       │   ├── AppSidebar.tsx         # title card, mode tabs, seed form / finder blurb
-│       │   ├── AnalyzerWorkspace.tsx  # seed tabs + SessionPane host
-│       │   ├── AppFloatingAction.tsx  # SettingsButton (spoilers) + ThemeToggle
-│       │   ├── SiteFooter.tsx
-│       │   ├── seed/                  # Identities, Floors, SessionPane, …
-│       │   └── finder/                # Seed-finder mode: form, constraints, results
-│       ├── stores/                    # app.ts re-exports sessions/spoilers/meta/theme + $mode
-│       ├── hooks/useSeedTabsHeight.ts
-│       └── lib/{spd-wasm.ts,tiles.ts,regions.ts,identity.ts,labels.ts,item-icons.ts,…}
-└── specs/implementation.md    # this file
+│   ├── spd-core/              # pure Rust generation logic (this is the focus)
+│   │   ├── src/level/          # per-floor build/paint/createItems/createMobs(missing)
+│   │   ├── src/level/special_loot/  # special/secret room prize RNG
+│   │   ├── src/quests/         # Ghost/Wandmaker/Blacksmith/Imp
+│   │   └── tests/java_oracle_goldens.rs + fixtures/  # Java-vs-Rust parity tests
+│   └── spd-wasm/               # thin wasm-bindgen façade
+├── web/                        # Vite app (UI is stable; not the current focus)
+├── tools/java-oracle/          # headless Java oracle: dumps ground-truth JSON
+│   └── fixtures/                # committed golden fixtures, schema v1/v2/v3
+└── specs/implementation.md     # this file
 ```
 
-### Commands
+---
 
-See `AGENTS.md` for the full command list and CI parity steps.
+## Current state
 
-### Deploy (Cloudflare Worker SPA)
+**Foundations — solid, oracle-tested.** `java.util.Random` LCG, watabou
+`Random` stack (push/pop, scrambleSeed, chances, shuffle, NormalIntRange),
+seed codes, run init (`seed+1`) identities (potion/scroll/ring), generator
+decks/tiers, depth seeds / limited drops. Golden fixtures in
+`tools/java-oracle/fixtures/` + `crates/spd-core/tests/java_oracle_goldens.rs`
+confirm exact identity parity across four seeds.
 
-- Config: `web/wrangler.toml` — static assets from `web/dist`, `not_found_handling = "single-page-application"`
-- CI: `.github/workflows/ci.yaml` — on PR: check/build; on `main` push / `workflow_dispatch`: deploy  
-  - Actions pins: `actions/checkout@v7`, `actions/cache@v6`, `oven-sh/setup-bun@v2.2.0`, `Swatinem/rust-cache@v2.9.1`, `qmaru/wasm-pack-action@v0.6.0`, `dtolnay/rust-toolchain@stable`
-- GitHub **Environment** `prod` secrets/vars:
-  - **Secret:** `CLOUDFLARE_API_TOKEN`
-  - **Vars:** `CLOUDFLARE_ACCOUNT_ID`, `WEB_WORKER_NAME` (required); `WEB_DOMAIN`, `WEB_URL` (optional custom domain)
+**Levelgen — ported broadly, diverges in RNG-stream order.** Room init,
+geometry, both builders (Loop/FigureEight), all connection-room subclasses,
+water/grass/trap painter, `paintDoors` merge/Graph, every region's
+structural + standard room geometry, special/secret room prize logic, shop
+stock, all four quests, crystal rooms, the main `createItems` drop loop, and
+floor-map export are all implemented. The known problem is **RNG call order
+during and after `createItems`** — see gaps below. This is why the schema-v3
+final-heaps oracle test (`java_oracle_goldens/final_heaps.rs`) explicitly
+documents a mismatch instead of asserting equality.
+
+**Frontend — functionally complete for a `partial` engine, not the current
+focus.** Analyze + Find-seeds modes, multi-seed session tabs, spoiler
+toggles, map rendering with autotiling, bounded seed-constraint search. See
+git history / `AGENTS.md` for UI details; no open frontend work is blocking
+parity.
+
+**Correctness infra — the tool that will prove parity.**
+`tools/java-oracle/` runs the *actual pinned Java source* headlessly and
+dumps JSON: schema v1 (run identities), v2 (depth-one pre-build forced-item
+queue), v3 (final placed heaps after real `Level.create()`, ordered by cell,
+full item/heap facts, no report-shaped filtering). Regenerate fixtures with
+the exact commands in `tools/java-oracle/README.md`. This is the intended
+mechanism for closing every gap below — add or extend a fixture, then make
+the Rust side match it exactly.
 
 ---
 
-## What works (done)
+## What's lacking for exact parity
 
-### Foundations
-| Area | Location | Notes |
-|------|----------|--------|
-| `java.util.Random` LCG | `java_random.rs` | OpenJDK-compatible |
-| watabou `Random` stack | `random.rs` | push/pop, scrambleSeed (MX3), chances, shuffle, NormalIntRange |
-| `DungeonSeed` | `dungeon_seed.rs` | codes, numeric, fun-text seeds |
-| Run init (`seed+1`) | `run.rs` | identities + room decks + generator fullReset |
-| Potion/scroll/ring IDs | `items/identities.rs` | UI tables |
-| Generator decks/tiers | `generator/` | random weapons/armor/missiles/artifacts + item.random |
-| Depth seeds / limited drops | `dungeon/` | pos/sou/stylus/stones/cata/lab |
-| Java run oracle | `tools/java-oracle/` | Exact-pin, temporary headless SPD build; schema v1 identities + schema v2 depth-one pre-build forced-item queue + separately scoped schema v3 depth-one final heaps after real `Level.create()`, without modifying the external clone |
-| Golden Java fixtures | `tools/java-oracle/fixtures/` + `crates/spd-core/tests/java_oracle_goldens.rs` | Four identity seeds, one tightly scoped depth-one forced-item fixture, and one exact-pin final-heaps fixture; strict identity/forced parity plus explicit schema-v3 shape and known Rust mismatch characterization |
-| Seed constraint search | `search.rs` + `spd-wasm::search_seeds` | Bounded/resumable ascending numeric ranges; ANY/ALL exact item classes over inclusive floor windows; per-constraint evidence; explicit `partial` status; no wraparound |
+Verified against the pinned Java source
+(`/Users/toan/code/00-Evan/shattered-pixel-dungeon`) and against the existing
+schema-v3 fixture (`aaa-aaa-aaa-final-heaps-floor-1.json`, seed
+`AAA-AAA-AAA` depth 1), whose Java-visible projection
+`[Food, PotionOfHealing, PotionOfInvisibility, ScaleArmor, ScrollOfRage,
+ScrollOfRecharging, StoneOfAggression, StoneOfBlink]` currently comes out of
+Rust as `[Food, StoneOfAggression, StoneOfBlink, StoneOfDeepSleep,
+ThrowingHammer]`. These three bugs compound on the same RNG stream — fixing
+one alone will not flip that test green, but each is independently correct
+and unit-testable.
 
-### Levelgen (partial)
-| Area | Location | Notes |
-|------|----------|--------|
-| `initRooms` | `rooms/init_rooms.rs` | entrance/exit/standard/special/secret + shuffle |
-| Room geometry | `rooms/room.rs` | connections, setSize (NormalIntRange); `Room.random` |
-| Regular builders | `builders/` | Pinned Loop + FigureEight placement, persistent landmark retries, centered branch angles, tunnels/branches, placeRoom/findFreeSpace |
-| Connection rooms | `level/painter/connection_rooms/` | Region-weighted Tunnel/Bridge/Perimeter/Walkway/Ring/Maze subclasses; dimensions, doors, chasm merges, geometry, and RNG-visible paint |
-| Build retries | `level/build.rs` | Inner attempts reuse shuffled rooms/builder state; outer attempts recreate builder + initRooms on painter rejection; browser-safe caps |
-| Minimal paint | `level/terrain.rs` | SPD Terrain IDs; walls/empty/doors/entrance/exit; solid/openSpace helpers |
-| Patch.generate | `level/patch.rs` | Full cellular water/grass mask (force fill-rate) |
-| Water/grass/traps/decorate | `level/painter/` | Region fill rates + trap tables; sub-generator after room paint; sewers/prison/city/caves/halls decorate (approx); drop cells reject item-destroying traps |
-| paintDoors merge/Graph | `level/painter/doors.rs` | placeDoors element pick + door-type upgrades; mergeRooms for standard pairs; hidden-door Float + Graph connectivity; SECRET_DOOR/LOCKED_DOOR map tiles |
-| Standard room geometry | `level/painter/room_geometry/` | RegionDecoPatch/Cave/Ruins/Chasm/Burned plus Plants/Aquarium/Platform/Fissure/Striped/Study/SuspiciousChest/Minefield; patch validation, room-specific merges/placement masks, traps, center loot, and RNG-visible plant/fish/mimic behavior |
-| Caves structural geometry | `level/painter/room_geometry/region_rooms/` | RegionDecoBridge/CavesFissure/CirclePit/CircleWall plus selected entrance/exit variants; fissure path validation/bridges and transition placement |
-| Sewer structural geometry | `level/painter/room_geometry/region_rooms/` | SewerPipe/Ring/WaterBridge/CircleBasin plus selected entrance/exit variants; pipe WATER doors, bridge placement masks/depth gates, Ring forced-prize consumption, odd basin sizing, and transition placement |
-| Prison structural geometry | `level/painter/room_geometry/region_rooms/` | RegionDecoLine/Segmented/Pillars/ChasmBridge/CellBlock plus selected entrance/exit variants; recursive segmentation, CHASM bridge merge/placement policy, cell-block doors, exact size tables, and transition placement |
-| City structural geometry | `level/painter/room_geometry/region_rooms/` | Hallway/LibraryHall/LibraryRing/Statues/SegmentedLibrary plus selected entrance/exit variants; hallway-only merges, bookshelf recursion, giant-ring resize/cross, statue terrain, and transition placement |
-| Halls structural geometry | `level/painter/room_geometry/region_rooms/` | Skulls/Ritual plus Ritual entrance/exit variants; exact ellipse/altar geometry, shared PatchRoom path RNG, ritual prize consumption, and transition placement |
-| Grassy-grave geometry | `level/painter/room_geometry/generic_rooms/` | Grass interior, interleaved tomb positions and prize/Gold generation, occupied item masks, and Plants/GrassyGrave merge terrain |
-| Chasm/caves painter behavior | `level/{terrain.rs,painter/decorate.rs}` | Chasm-feeling two-cell padding + CHASM outside terrain; shuffled-order caves neighbour merges with CHASM/REGION_DECO and connection-aware corner decoration |
-| Special-room prizes | `level/special_loot/` | Crypt/Armory/Library/Treasury/Pool/Storage/Runestone/Lab/Statue + Sentry/Traps/MagicalFire/Sacrifice/ToxicGas + Pit/Garden/MagicWell + secrets (Honeypot/Maze/Summoning/ChestChasm/Garden/Well); room-shuffle + placeDoors RNG; may `findPrizeItem` from itemsToSpawn |
-| Remaining P1 room painters | `level/special_loot/geometry/` | Full SecretMaze `Maze.generate` + farthest chest, RotGarden retry/heart/lasher placement, WeakFloor paths/well, and mandatory Halls DemonSpawner terrain/masks/center RNG |
-| Shop stock | `level/shop.rs` | `ShopRoom.generateItems` (FOR_SALE); bag pick hero-less (scroll holder first); generated post-build (not mid-setSize) |
-| Ghost quest | `quests/ghost.rs` | `Ghost.Quest.spawn` on sewers: chance, placement (approx openSpace), weapon/armor rewards |
-| Wandmaker quest | `quests/wandmaker.rs` | `spawnRoom` on prison 7–9 (before shuffle); two +1 wands; MassGrave/Ritual/RotGarden side-effects (RotGarden terrain/heart/lasher placement now pinned) |
-| Blacksmith quest | `quests/blacksmith.rs` | `Blacksmith.Quest.spawn` on caves 12–14 (before shuffle); `generateRewards(true)` smith pool (2 weapons + missile + armor + optional enchant/glyph); room paint drops 2 equip |
-| Imp quest | `quests/imp.rs` | `Imp.Quest.spawn` on city 17–19 (before shuffle); cursed +2 ring reward generated at initRooms |
-| Crystal rooms | `level/special_loot/` (`crystal.rs`) | Vault (wand/ring/artifact crystal chests + mimic chance), Choice (pots/scrolls + chest), Path (3+3 consumables with dedup/sort) |
-| Main createItems | `level/create_items.rs` | nItems loop, heap types; drop cells use map origin |
-| Floor map export | `report.rs` `FloorMap` | Terrain tiles + pinned tile variance; exact known item/room-mob marker cells (ambient mobs remain unported) |
+### 1. `createMobs()` is completely unported — the root desync (Large)
+Java's per-floor order is `build() → createMobs() → createItems()`
+(`Level.java:313-314`). `RegularLevel.createMobs()`
+(`RegularLevel.java:219-306`) unconditionally burns RNG *before* `createItems`
+ever runs: `Random.shuffle(stdRooms)` weighted by `mobSpawnWeight()`, then per
+mob a `createMob()` (rotation + champion roll) and a retry loop (up to 30
+tries) gated by `ShadowCaster` entrance FOV, `PathFinder` distance map,
+`canPlaceCharacter`, traps/plants/open-space. Depth 1 always spawns exactly 8
+mobs. Rust's `level/mod.rs` jumps straight from special-room loot / quests to
+`create_items::create_items_main` (`level/mod.rs:350`) — so the very first
+RNG draw inside `createItems` (the `n_items` roll) is already reading from the
+wrong position. **Nothing downstream can match until this is ported**, even
+if it only needs to *burn* the correct RNG shape rather than render mobs.
 
-### Frontend
-| Area | Notes |
-|------|--------|
-| Layout | Sticky left **sidebar** (`AppSidebar`: title card, Analyze/Find-seeds mode tabs, seed form or finder blurb) + right **content** (`AnalyzerWorkspace` seed tabs, or `SeedFinder`); `AppFloatingAction` (Settings + theme toggle) floats top-right; `SiteFooter` below |
-| shadcn | Preset `buFzq0e` (radix-lyra / Oxanium / phosphor registry); tooltips for spoiler info |
-| State | **nanostores** + `@nanostores/persistent` / `@nanostores/react` — `stores/app.ts` re-exports focused modules (`sessions.ts`, `spoilers.ts`, `meta.ts`, `theme.ts`) plus the persisted `$mode` (`analyze`/`finder`) atom |
-| **Mode switch** | `AppSidebar` `TabsList` (Analyze / Find seeds) drives `$mode`; `App.tsx` renders `AnalyzerWorkspace` or `SeedFinder` accordingly |
-| **Theme** | Light/dark/system toggle (`ThemeToggle`) inside `AppFloatingAction`; persisted via `stores/theme.ts` |
-| Multi-seed tabs | Each analyzed seed is a closable tab; empty placeholder when none open; **max 10** open seeds (oldest dropped) |
-| Session restore | Open seed inputs persisted (`spd-analyzer-open-seeds` + active id); reports re-analyzed slowly on refresh (~350ms gap) |
-| Seed analyze UI | Section order: **Floors → Identities → Seed info**; honest **partial** status copy |
-| **Floors UI** | Region tabs only (level range hidden on small screens); all depths listed flat per region; region tabs sticky under seed tabs (`--seed-tabs-height`) |
-| **Quest cards** | Floor quests parsed into title / type / rewards cards (Ghost, Wandmaker, Blacksmith, Imp); Quest badge on floor header |
-| **Item sources** | `lib/labels.ts` maps room/heap/quest tags (`CrystalVaultRoom`, `chest:heap`, `Blacksmith.Quest`, …) to readable badges |
-| **Item icons** | `ItemIcon` + `lib/item-icons.ts` crops `/assets/sprites/items.png` (ItemSpriteSheet indices); potions/scrolls/rings use identity appearance; shop bags/darts/Ankh/Alchemize + crystal-artifact classes covered |
-| **Spoiler toggles** | Behind the Settings popover (`SettingsButton` + `SpoilerToggle`, reachable via `AppFloatingAction`); localStorage; identity table + map spoilers off by default; info-icon tooltips |
-| Map preview | Pinned terrain/water/chasm autotiling + raised wall layers; region water texture scrolls at 5 px/s in expanded view with reduced-motion cleanup; exact known item/mob markers are separately opt-in inside the spoiler-gated dialog |
-| Assets | Flattened to `web/public/assets/{environment,sprites,…}` (no nested `assets/assets`) |
-| App icon | `web/public/app_icon.jpg` |
-| **Seed finder** | Analyze / Find seeds modes; approachable grouped item selectors; bounded 1–250 candidate scans in five-seed chunks; ANY/ALL inclusive floor constraints; progress/cancel/error/empty states; ordered evidence cards open through the existing analyzer-session lifecycle |
+### 2. `random_drop_cell` shuffles the wrong-sized list (Medium)
+Java's `randomRoom(type)` (`RegularLevel.java:707-710`) shuffles the level's
+**entire** `rooms` list (every room: entrance, exit, standard, special,
+secret, shop, connectors) on *every call*, then linear-scans for the first
+room of the requested type (`randomDropCell`, `RegularLevel.java:736-766`).
+Fisher-Yates cost scales with total room count. Rust's `random_drop_cell`
+(`crates/spd-core/src/level/create_items.rs:198-258`) instead pre-filters to
+`RoomKind::Standard` rooms *before* shuffling, then reshuffles that smaller
+list on each of its 100 tries — a different RNG-call count on literally every
+invocation (main loop ×3-5, `itemsToSpawn` placement, trailing
+torch/rose/guide draws). Fix: shuffle the full per-floor room list (a
+precedent already exists in `special_loot::special_room_loot`, which shuffles
+a full index list the same way Java does), then take the first
+`RoomKind::Standard` match.
 
-### Bugs fixed recently
-- **WASM `"unreachable"` (depth 26):** UI always analyzes 26 floors. Depth 26 is SPD `LastLevel` (not RegularLevel); `secrets_for_floor` used `region = depth/5 == 5` into a 5-slot array → OOB panic → browser `"unreachable"`. Fixed by skipping non-regular depths (`regular_level()`: bosses 5/10/15/20/25 + last 26) and bounds-guarding `secrets_for_floor`.
-- **WASM `"unreachable"` (drop cells):** `create_items` used synthetic cell ids `x + y*1000` into `occupied[]` → OOB panic. Fixed via `TerrainMap::point_to_cell`.
-- Awkward `public/assets/assets/` nesting flattened.
+### 3. Eight special/secret rooms drop their trailing forced-item push (Small, precise)
+Java's `paint()` queues one more item via `level.addItemToSpawn(...)` at the
+very end of these rooms; the Rust port of the same function omits it, so
+`itemsToSpawn` is one entry short and every subsequent `randomDropCell` +
+per-drop `pushGenerator(Random.Long())` in the loop is shifted:
+
+| Room | Missing push | Rust location | Java location |
+|---|---|---|---|
+| RunestoneRoom | `IronKey` | `special_loot/special_rooms/consumable.rs:147` `runestone_prizes` | `RunestoneRoom.java:64` |
+| LibraryRoom | `IronKey` | `consumable.rs:12` `library_prizes` | `LibraryRoom.java:65` |
+| TreasuryRoom | `IronKey` | `consumable.rs:55` `treasury_prizes` | `TreasuryRoom.java:76` |
+| LaboratoryRoom | `IronKey` | `consumable.rs:175` `laboratory_prizes` (also inherited by `secret_rooms.rs:82` `secret_laboratory`) | `LaboratoryRoom.java:121` |
+| CryptRoom | `IronKey` | `special_rooms/equip.rs:13` `crypt_prize` (doesn't take `items_to_spawn` yet) | `CryptRoom.java:51` |
+| StatueRoom | `IronKey` | `equip.rs:130` `statue_weapon` (doesn't take `items_to_spawn` yet) | `StatueRoom.java:46` |
+| ArmoryRoom | `IronKey` | `equip.rs:33` `armory_prizes` | `ArmoryRoom.java:78` |
+| PoolRoom | `PotionOfInvisibility` | `equip.rs:89` `pool_prize` | `PoolRoom.java:91` |
+| SecretRunestoneRoom | `PotionOfLiquidFlame` | `secret_rooms.rs:39` `secret_runestone` | `SecretRunestoneRoom.java:64` |
+
+(`trap_rooms.rs`, `pit_secrets.rs`, `quest_rooms.rs`, `gardens.rs`,
+`crystal.rs` already push their forced items correctly — bug is isolated to
+the 9 sites above.) `crypt_prize` and `statue_weapon` need
+`items_to_spawn: &mut Vec<GeneratedItem>` threaded through from
+`special_loot/mod.rs` call sites first.
+
+The AAA-AAA-AAA fixture's expected `PotionOfInvisibility` (cell 454, `heap`)
+and `IronKey` (cell 941) directly confirm this floor has both a PoolRoom and
+a RunestoneRoom hitting this bug.
+
+### 4. `canPlaceItem` fidelity gaps (Medium)
+Only a generic `item_allowed` mask + trap-destroys-items filter +
+`AquariumRoom`'s water override are ported. Still missing room-specific
+exclusions: `PlantsRoom` (plant-occupied cells, `PlantsRoom.java:112-113`),
+`StandardBridgeRoom`/`CavesFissureRoom` (bridge/fissure exclusion rects),
+`RitualSiteRoom` (≥2 cells from candles), Vault-style rooms (center-only
+drop). The `Int(20)` heap-type roll / mimic-float / locked-chest-upgrade
+logic in the main loop was verified call-for-call correct against Java
+already — this gap is specifically the room-shape predicate.
+
+### Lower-leverage, already-known (from prior disclaimer, still open)
+- Full ambient `createMobs` also feeds map markers — only exact known cells
+  (room-painted heaps/mimics, RotGarden, DemonSpawner) are shown today.
+- Sewer room-count tables are reused for all regions.
+- Shop stock is generated post-build instead of mid-`setSize`; bag choice is
+  hero-less.
+- CrystalPath placement geometry is approximate (prize generation itself is
+  exact).
+- Structural-room paint/transition retry loops are capped at 10,000 attempts
+  for browser safety (valid layouts shouldn't hit this); `Maze.generate` kept
+  its real 2,500-failure limit.
+- The early Guidebook page uses an intentionally unseeded Java generator and
+  stays outside scope everywhere (oracle and Rust agree on omitting it).
 
 ---
 
-## Accuracy disclaimer
+## Suggested fix order
 
-Results are **partial**. Not game-parity yet because:
+These three bugs share one RNG stream, so verify each in isolation with a
+narrow unit test, but expect the `java_oracle_goldens/final_heaps.rs` mismatch
+test to stay red until **all three** land:
 
-1. Water/grass/trap painter + paintDoors merge/Graph and the current generic/region structural standard-room inventory are ported, but special/secret geometry can still desync merge success
-2. Special/secret room geometry still incomplete (drop cells / trap instances approximate); prize item RNG for main specials is largely ported  
-3. Shop stock timing is post-build (SPD generates during room `setSize`); bag choice is hero-less  
-4. Ghost quest rewards ported; placement uses minimal openSpace; full `createMobs` not ported (map markers include only exact cells known to room paint / `createItems`)
-5. Wandmaker + Blacksmith + Imp quests are ported; RotGarden heart/lasher paint, occupancy, and map markers are ported; CrystalPath/Choice placement geometry remains approximate
-6. `randomDropCell` is still simplified (standard rooms + passable + trap filter; room-painted heap/mob occupancy only, incomplete `canPlaceItem` fidelity)
-7. Sewer room-count tables used for all regions
-8. Structural-room paint/transition rejection loops (including SewerPipe, WaterBridge, RegionDecoBridge, CavesFissure, Pillars, ChasmBridge, CellBlock, LibraryHall, RotGarden, MazeConnection center retries, and malformed SecretMaze wall selection), builder branch selection/stitching, and regular-level inner/outer build retries are capped at 10,000 attempts for browser safety; valid layouts are not expected to reach the cap. `Maze.generate` retains its pinned 2,500 consecutive-failure limit. On the malformed disconnected-special path only, the Rust painter preflights failure before Java's `nTraps`/room-shuffle/partial-paint RNG burns; normal successful layouts are unaffected. Early guide pages use an isolated unseeded generator in SPD and remain omitted from reports.
-
-Status string: `"partial"`.
-
----
-
-## Not done / next phases
-
-### P1 — Special-room loot + quests (high value for seed-finder UX)
-- ~~Port `paint()` prize logic: Crypt, Armory, Library, Treasury, Statue, Pool, secrets~~ (partial; see `level/special_loot/`)  
-- ~~Shop (FOR_SALE) stock~~ (approx; see `level/shop.rs`)  
-- ~~Ghost.Quest rewards~~ (see `quests/ghost.rs`)  
-- ~~Wandmaker.Quest~~ (see `quests/wandmaker.rs`; MassGrave loot + ritual candles + full RotGarden terrain/heart/lasher placement RNG)
-- ~~Imp.Quest~~ (see `quests/imp.rs`; cursed +2 ring at initRooms; AmbitiousImpRoom paint is placement RNG only)  
-- ~~Crystal rooms~~ (Vault / Choice / Path prize gen in `special_loot/crystal.rs`; Path geometry not painted, placement RNG approximate)  
-- ~~Blacksmith.Quest~~ (see `quests/blacksmith.rs`; smithRewards at initRooms; room paint equip drops; mining branch not ported)  
-- ~~Sentry / Traps / MagicalFire / Sacrifice / ToxicGas / SecretHoneypot prize RNG~~ (approx layout; keys into itemsToSpawn; see `special_loot/hazards.rs`)  
-- ~~PitRoom / GardenRoom / MagicWellRoom / SecretWellRoom / SecretGardenRoom / SecretMazeRoom / SecretSummoningRoom / SecretChestChasmRoom~~ (see `special_loot/`; SecretMaze includes full pinned `Maze.generate` and farthest-cell selection; Patch.generate burned for secret garden)
-- ~~WeakFloorRoom / DemonSpawnerRoom / RotGardenRoom painter parity~~ (`special_loot/geometry/`; DemonSpawner is appended on Halls floors and refuses exit connections)
-- ~~Golden identity tests vs Java oracle for a handful of seeds~~ (`AAA-AAA-AAA`, `ABC-DEF-GHI`, `GFX-PZH-DCH`, `hello`)
-- ~~First single-floor Java item golden~~ (schema v2 `AAA-AAA-AAA` depth 1; exact pre-build forced queue only, not room loot/final heaps)
-
-### P2 — Painter parity
-- ~~Water/grass/trap placement RNG~~ (`level/patch.rs` + `level/painter/`; nTraps + sub-generator Long)  
-- ~~Region decorate (Sewer/Prison/City/Caves/Halls)~~ (partial overall; caves neighbour CHASM/REGION_DECO merges and connection-aware corner decoration are ported)
-- ~~paintDoors: mergeRooms + Graph hidden-door connectivity~~ (`level/painter/doors.rs`; door types from room paint table; merge depends on approximate interiors)  
-- ~~First standard PatchRoom geometry slice~~ (RegionDecoPatch / Cave / Ruins / Chasm / Burned, including matching entrance/exit variants; connected-patch path validation + Burned placement masks)
-- ~~Remaining generic standard-room geometry~~ (Plants / Aquarium / Platform / Fissure / Striped / Study / SuspiciousChest / Minefield; merge overrides, item masks, center loot, explosive traps, plant/fish/mimic RNG; aquarium mobs are not exported)
-- ~~Caves structural-room geometry~~ (RegionDecoBridge / CavesFissure / CirclePit / CircleWall plus entrance/exit variants; explicit-terrain neighbour merge hooks)
-- ~~Sewers structural-room geometry~~ (SewerPipe / Ring / WaterBridge / CircleBasin plus selected entrance/exit variants; WATER pipe doors, depth-aware bridge policy, placement masks, Ring center prize, odd basin resize)
-- ~~Prison structural-room geometry~~ (RegionDecoLine / Segmented / Pillars / ChasmBridge / CellBlock plus selected entrance/exit variants; recursive walls, bridge merge/masks, cell doors, and transition placement)
-- ~~City structural-room geometry~~ (Hallway / LibraryHall / LibraryRing / Statues / SegmentedLibrary plus selected entrance/exit variants; exact merge, resize, bookshelf/statue, RNG, and transition behavior)
-- ~~Chasm feeling padding + CHASM terrain from caves merge~~
-- ~~Halls structural rooms + generic GrassyGrave~~ (Skulls / Ritual plus Ritual entrance/exit; tomb loot and Plants/GrassyGrave merges)
-- ~~Connection corridor subclasses~~ (Tunnel/Bridge/Perimeter/Walkway/Ring/Maze geometry, doors, dimensions, and chasm merge overrides)
-- Improve remaining special room `paint()` geometry
-
-### P3 — Builder parity
-- ~~Full `FigureEightBuilder`~~ (two loops, persistent landmark, shared tunnel deck, opposite placement, centered branch angles)
-- ~~Connection room variants fidelity~~ (including region-weighted creation and MazeConnection max-connections/hidden-door behavior)
-- ~~Robust build retries~~ (inner builder-state reuse + outer initRooms/builder recreation; browser-safe cap and rare malformed-paint caveat documented above)
-
-### P4 — Map rendering polish
-- ~~Autotiling / raised walls~~ (pinned `DungeonTileSheet`, `DungeonTerrainTilemap`, `RaisedTerrainTilemap`, and `DungeonWallsTilemap` selection with `setupVariance`)
-- ~~Optional item/mob markers on canvas~~ (off by default; exact `randomDropCell`, known room heap, RotGarden, DemonSpawner, and mimic cells only; full ambient mob generation remains unported)
-- ~~Region water animation~~ (`water0..water4` selected by region and scrolled at pinned 5 px/s; expanded view only, RAF cleanup + `prefers-reduced-motion`)
-
-### P5 — Seed finder mode (post-v1)
-- ~~Constraint search over seeds (any/all items by floor)~~ (`spd-core::search_seeds` + thin WASM export + React finder; exact class constraints, inclusive floor windows, bounded/cancellable chunks, ascending evidence results; remains honestly `partial` because it searches the partial analyzer)
-
-### P6 — Correctness infrastructure
-- ~~`tools/java-oracle`: headless identity dump JSON from the exact pinned local SPD clone~~
-- ~~Golden identity fixtures in repo~~ (four seeds; ordered potion/scroll/ring item + appearance parity)
-- ~~Schema v2 depth-one forced-item export~~ (records `itemsToSpawn` at the pinned `Level.create` pre-`build()` boundary, then stops before builder/painter RNG)
-- ~~Single-floor Rust/Java golden slice~~ (`AAA-AAA-AAA`, depth 1; ordered forced class/cursed parity, unit quantity + level-zero scope)
-- ~~Separately scoped final placed-heap oracle contract~~ (schema v3 `AAA-AAA-AAA` depth 1; real pinned `Dungeon.newLevel()` through `Level.create()`, deterministic cell/type ordering, full Java heap/item facts; Rust consumer preserves the fixture and explicitly characterizes the current mismatch rather than claiming parity)
-
-Next correctness step: retain v3 facts in the Rust report and close the first
-depth-one deltas (exact Runestone and Pool room prize timing plus the remaining
-`randomDropCell`/main `createItems` call order) before converting the explicit
-mismatch test to exact heap/cell/type equality. The intentionally unseeded
-early Guidebook remains outside v3's seed-deterministic scope. **P5 seed finder
-is complete**; v3 is an infrastructure observation, not broad floor-loot
-parity. The analyzer and finder retain the current honest `partial` status.
+1. **Gap 3 first** (small, isolated, no plumbing changes beyond two function
+   signatures) — add the 9 missing pushes. Cheapest to verify: rerun
+   `cargo test -p spd-core` and diff the changed `itemsToSpawn` shape.
+2. **Gap 2** (`random_drop_cell` shuffle scope) — needs the full per-floor
+   room list passed in instead of a pre-filtered `Vec`; reuse the shuffle
+   pattern already in `special_loot::special_room_loot`.
+3. **Gap 1** (`createMobs`) — largest lift. Decide up front whether to fully
+   port `ShadowCaster`/`PathFinder`/mob placement (enables future mob map
+   markers) or build a reduced path that burns *identical* RNG shape without
+   real placement (faster to parity, defers mob rendering). Either way this
+   must consume the exact same `Random` calls Java does before `createItems`
+   begins.
+4. Once all three are in, flip
+   `depth_one_final_heaps_characterize_known_analyzer_mismatch` from
+   `assert_ne!` to exact fact equality (cell, heap type, quantity, level,
+   curse — the v3 fixture already carries all of it; the Rust report
+   currently only retains class+cursed, so the report/analyzer model likely
+   needs to start retaining cell/quantity/level/heap-type too).
+5. Extend schema-v3 fixtures to more seeds/depths once depth-one matches, to
+   catch anything depth-1-specific (e.g. the "8 mobs on depth 1" special
+   case) that wouldn't show up on other floors.
 
 ---
 
@@ -229,7 +216,7 @@ Random.pushGenerator(seed + 1)
 Random.resetGenerators
 ```
 
-### Per floor (`Level.create` subset we implement)
+### Per floor (`Level.create`)
 ```text
 Random.pushGenerator(seedForDepth(seed, depth, 0))
   forced drops (food, SoU, PoS, …) + feeling
@@ -237,6 +224,7 @@ Random.pushGenerator(seedForDepth(seed, depth, 0))
   initRooms() + shuffle
   retry builder.build until success
   paint_minimal → FloorMap
+  createMobs()      // <-- NOT YET PORTED (gap 1); Java runs this before createItems
   createItems main loop
 Random.popGenerator
 depth++
@@ -249,12 +237,12 @@ pushGenerator(seed); Long() × depth; result = Long(); pop
 
 ---
 
-## Frontend contracts
+## Frontend contracts (stable — reference only)
 
 ### WASM
 - `parse_seed(input) → SeedInfo`
 - `analyze_seed(input, floors) → SeedReport`
-- `search_seeds(request) → SeedSearchResult` (bounded to 250 candidates, 32 constraints, and 100 matches per call)
+- `search_seeds(request) → SeedSearchResult` (bounded to 250 candidates, 32 constraints, 100 matches/call)
 - `spd_version()` / `spd_commit()`
 
 ### `FloorMap` JSON
@@ -268,18 +256,14 @@ pushGenerator(seed); Long() × depth; result = Long(); pop
   "markers": [{ "cell": 318, "kind": "item", "label": "Potion of Healing" }]
 }
 ```
-Tiles are SPD `Terrain` values. `tile_variance` is the isolated pinned `DungeonTileSheet.setupVariance(seedCurDepth)` stream. Marker cells are row-major, bounds-checked, and limited to placements the partial engine actually knows. The client maps the terrain into the pinned lower/upper tilemap layers (`web/src/lib/dungeon-tile-visuals.ts`).
+Tiles are SPD `Terrain` values; `tile_variance` is the pinned
+`DungeonTileSheet.setupVariance(seedCurDepth)` stream. Marker cells are
+row-major, bounds-checked, limited to placements the partial engine actually
+knows.
 
-### Spoiler toggles (UI)
-- **Show identities (spoilers):** `localStorage["spd-analyzer-identity-spoilers"]` = `"1"` | `"0"` (default off). Hides the Identities card when off.
-- **Map spoilers:** `localStorage["spd-analyzer-map-spoilers"]` = `"1"` | `"0"` (default off). Maps only rendered when on (map data still returned from WASM).
-- Legacy: `spd-analyzer-advanced-mode` is still read as a fallback for map spoilers.
-
-### Open seed sessions (UI)
-- **Store:** `web/src/stores/sessions.ts` (`$savedSeedInputs`, `$activeSeedId`, `$sessions`, …), re-exported via `stores/app.ts`. Spoiler atoms live in `stores/spoilers.ts`.
-- **List:** `localStorage["spd-analyzer-open-seeds"]` = JSON string array of seed inputs (order = tab order), **max 10**.
-- **Active tab:** `localStorage["spd-analyzer-active-seed"]` = session id (normalized uppercase input).
-- Reports are **not** persisted (recomputed via WASM on load, sequentially with a short delay).
+If gap-1/2/3 fixes start retaining cell/quantity/level/heap-type on
+`SeedReport` items (needed for step 4 above), this contract will need a
+matching update — check `web/src/lib/` consumers before changing shape.
 
 ---
 
@@ -287,29 +271,35 @@ Tiles are SPD `Terrain` values. `tile_variance` is the isolated pinned `DungeonT
 
 ```bash
 cargo test -p spd-core
-# includes analyze_smoke coverage plus java_oracle_goldens identity/forced-item parity
 ```
 
-When adding features: prefer oracle comparisons for identity maps first, then
-tightly scoped single-floor facts. Schema v2 currently covers only the
-depth-one pre-build forced queue, not final heaps. Core tests also cover bounded
-search validation, ANY/ALL semantics, inclusive depth ranges, result limits,
-resume ordering, and non-wrapping exhaustion.
+`java_oracle_goldens.rs` (+ `java_oracle_goldens/final_heaps.rs`) is the
+parity harness: identity maps (schema v1), depth-one forced-item queue
+(schema v2), and the known final-heap mismatch (schema v3, see above). Add
+tightly-scoped oracle fixtures before writing new Rust behavior — regenerate
+via `tools/java-oracle/run` (see `tools/java-oracle/README.md`).
 
 ---
 
 ## License
 
-SPD is GPL-3.0. This project ports generation logic → treat as **GPL-3.0-or-later** when publishing. Assets are from SPD and under the same license constraints.
+SPD is GPL-3.0. This project ports generation logic → treat as
+**GPL-3.0-or-later** when publishing. Assets are from SPD and under the same
+license constraints.
 
 ---
 
 ## How to resume (clean context)
 
-1. Read this file + `README.md`  
-2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs` / `level/special_loot/` / `quests/{ghost,wandmaker,blacksmith,imp}.rs` / `level/shop.rs`  
-3. P5 seed finder is complete; next correctness slice: final placed-heap Java oracle facts; define a new product phase before expanding UX scope
-4. Icons: `web/src/lib/item-icons.ts` + `components/ItemIcon.tsx` (items.png sheet)  
-5. Do not re-copy full asset tree; use `web/public/assets/` as flattened SPD assets  
-6. After Rust changes: `bun run build:wasm` (or `bun run dev`)  
-7. Dev dump: `cargo run -p spd-core --example dump_seed -- SEED FLOORS`  
+1. Read this file, specifically **"What's lacking for exact parity"** above.
+2. Start with gap 3 (`level/special_loot/special_rooms/{consumable,equip}.rs`,
+   `level/special_loot/secret_rooms.rs`) — smallest, most isolated, most
+   verifiable.
+3. Then gap 2 (`level/create_items.rs:198-258`), then gap 1
+   (`level/mod.rs:350` + new `createMobs` port).
+4. Validate against `crates/spd-core/tests/java_oracle_goldens/final_heaps.rs`
+   and the `aaa-aaa-aaa-final-heaps-floor-1.json` fixture; regenerate/extend
+   fixtures via `tools/java-oracle/run` (set `SPD_SOURCE=/Users/toan/code/00-Evan/shattered-pixel-dungeon`).
+5. After Rust changes: `bun run build:wasm` (or `bun run dev`) before treating
+   the UI as verified.
+6. Dev dump: `cargo run -p spd-core --example dump_seed -- SEED FLOORS`
