@@ -18,6 +18,7 @@ Pinned game: SPD **v3.3.8** @ `7b8b845a7` — local clone often at `/Users/toan/
 ## Commands
 
 ```bash
+mise install         # once: rust (rustup-backed), bun, temurin-17, wasm-pack
 bun install
 bun run dev          # wasm-pack + Vite
 bun run build
@@ -32,7 +33,15 @@ bun run lint         # biome lint + cargo clippy -D warnings
 bun run check:all    # biome + rust fmt/clippy checks
 ```
 
-Use **rustup** cargo for wasm (`PATH` scripts prepend `$HOME/.cargo/bin`); mise/Homebrew `rustc` may lack the `wasm32-unknown-unknown` target.
+Local tooling is managed by **mise** (`mise.toml`: rust pinned, rustup-backed).
+Keep mise activated in your shell, or prefix commands with `mise exec --`.
+mise sets `RUSTUP_TOOLCHAIN`, and the rustup proxies in `~/.cargo/bin` honor
+it, so the `PATH` prepends in package.json scripts are no-ops locally (they
+exist for CI, which sets up its own toolchain). The
+`wasm32-unknown-unknown` target persists in the shared `~/.rustup` store
+(`rustup target add wasm32-unknown-unknown` once). Beware: running cargo
+outside mise uses the rustup *default* toolchain, which may differ from the
+pin (rustfmt output can drift between versions).
 
 ### CI parity (before done)
 
