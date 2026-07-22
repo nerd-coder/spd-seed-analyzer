@@ -1,6 +1,6 @@
 # SPD Seed Analyzer — Implementation Progress
 
-**Last updated:** 2026-07-22 (P5: bounded item-constraint seed finder)
+**Last updated:** 2026-07-22 (P6: final placed-heap oracle contract)
 
 **Branch:** `main`  
 **Pinned SPD:** v3.3.8 @ `7b8b845a7`  
@@ -84,8 +84,8 @@ bun run check:all    # biome + rust fmt/clippy
 | Potion/scroll/ring IDs | `items/identities.rs` | UI tables |
 | Generator decks/tiers | `generator/` | random weapons/armor/missiles/artifacts + item.random |
 | Depth seeds / limited drops | `dungeon/` | pos/sou/stylus/stones/cata/lab |
-| Java run oracle | `tools/java-oracle/` | Exact-pin, temporary headless SPD build; schema v1 identities + schema v2 depth-one pre-build forced-item queue without modifying the external clone |
-| Golden Java fixtures | `tools/java-oracle/fixtures/` + `crates/spd-core/tests/java_oracle_goldens.rs` | Four identity seeds plus one tightly scoped depth-one forced-item fixture; strict ordered identity and forced class/curse parity |
+| Java run oracle | `tools/java-oracle/` | Exact-pin, temporary headless SPD build; schema v1 identities + schema v2 depth-one pre-build forced-item queue + separately scoped schema v3 depth-one final heaps after real `Level.create()`, without modifying the external clone |
+| Golden Java fixtures | `tools/java-oracle/fixtures/` + `crates/spd-core/tests/java_oracle_goldens.rs` | Four identity seeds, one tightly scoped depth-one forced-item fixture, and one exact-pin final-heaps fixture; strict identity/forced parity plus explicit schema-v3 shape and known Rust mismatch characterization |
 | Seed constraint search | `search.rs` + `spd-wasm::search_seeds` | Bounded/resumable ascending numeric ranges; ANY/ALL exact item classes over inclusive floor windows; per-constraint evidence; explicit `partial` status; no wraparound |
 
 ### Levelgen (partial)
@@ -211,11 +211,15 @@ Status string: `"partial"`.
 - ~~Golden identity fixtures in repo~~ (four seeds; ordered potion/scroll/ring item + appearance parity)
 - ~~Schema v2 depth-one forced-item export~~ (records `itemsToSpawn` at the pinned `Level.create` pre-`build()` boundary, then stops before builder/painter RNG)
 - ~~Single-floor Rust/Java golden slice~~ (`AAA-AAA-AAA`, depth 1; ordered forced class/cursed parity, unit quantity + level-zero scope)
+- ~~Separately scoped final placed-heap oracle contract~~ (schema v3 `AAA-AAA-AAA` depth 1; real pinned `Dungeon.newLevel()` through `Level.create()`, deterministic cell/type ordering, full Java heap/item facts; Rust consumer preserves the fixture and explicitly characterizes the current mismatch rather than claiming parity)
 
-Next correctness step: add a separately scoped oracle contract for final placed
-heap items after real room generation before using Java fixtures to claim broad
-floor-loot parity. **P5 seed finder is complete**; no later product phase is yet
-defined. The analyzer and finder both retain the current honest `partial` status.
+Next correctness step: retain v3 facts in the Rust report and close the first
+depth-one deltas (exact Runestone and Pool room prize timing plus the remaining
+`randomDropCell`/main `createItems` call order) before converting the explicit
+mismatch test to exact heap/cell/type equality. The intentionally unseeded
+early Guidebook remains outside v3's seed-deterministic scope. **P5 seed finder
+is complete**; v3 is an infrastructure observation, not broad floor-loot
+parity. The analyzer and finder retain the current honest `partial` status.
 
 ---
 

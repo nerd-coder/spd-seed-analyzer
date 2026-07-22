@@ -9,13 +9,17 @@ tool_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source_dir="${SPD_SOURCE:-$DEFAULT_SOURCE}"
 output_path=""
 depth=""
+final_heaps_depth=""
 
 usage() {
 	cat >&2 <<'EOF'
-Usage: tools/java-oracle/run [--source PATH] [--output FILE] [--depth 1] SEED
+Usage: tools/java-oracle/run [--source PATH] [--output FILE]
+                             [--depth 1 | --final-heaps-depth 1] SEED
 
 Dumps SPD v3.3.8 run facts as stable JSON. With --depth 1, includes the pinned
-depth-one floor item slice. The source checkout must be pinned at 7b8b845a7.
+depth-one pre-build item slice. With --final-heaps-depth 1, records heaps after
+the real depth-one level generation completes. The source checkout must be
+pinned at 7b8b845a7.
 EOF
 }
 
@@ -34,6 +38,11 @@ while (($# > 0)); do
 		--depth)
 			[[ $# -ge 2 ]] || { usage; exit 2; }
 			depth="$2"
+			shift 2
+			;;
+		--final-heaps-depth)
+			[[ $# -ge 2 ]] || { usage; exit 2; }
+			final_heaps_depth="$2"
 			shift 2
 			;;
 		-h|--help)
@@ -55,6 +64,14 @@ done
 seed="$1"
 if [[ -n "$depth" && "$depth" != "1" ]]; then
 	echo "The floor oracle currently supports only --depth 1" >&2
+	exit 2
+fi
+if [[ -n "$final_heaps_depth" && "$final_heaps_depth" != "1" ]]; then
+	echo "The final-heaps oracle currently supports only --final-heaps-depth 1" >&2
+	exit 2
+fi
+if [[ -n "$depth" && -n "$final_heaps_depth" ]]; then
+	echo "--depth and --final-heaps-depth are separate contracts and cannot be combined" >&2
 	exit 2
 fi
 
@@ -100,6 +117,9 @@ gradle_args=(
 
 if [[ -n "$depth" ]]; then
 	gradle_args+=(-PoracleDepth="$depth")
+fi
+if [[ -n "$final_heaps_depth" ]]; then
+	gradle_args+=(-PoracleFinalHeapsDepth="$final_heaps_depth")
 fi
 gradle_args+=(:core:javaOracleDump)
 

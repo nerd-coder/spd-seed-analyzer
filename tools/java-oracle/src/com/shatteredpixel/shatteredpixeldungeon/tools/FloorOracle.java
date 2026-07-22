@@ -9,18 +9,23 @@ package com.shatteredpixel.shatteredpixeldungeon.tools;
 import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
+import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Blacksmith;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Ghost;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Imp;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Wandmaker;
 import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
+import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
 import com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretRoom;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.SpecialRoom;
@@ -31,8 +36,10 @@ import com.watabou.utils.Random;
 import com.watabou.utils.SparseArray;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 
 /** Runs the pinned depth-one SewerLevel and records stable item facts. */
 final class FloorOracle {
@@ -53,9 +60,38 @@ final class FloorOracle {
 		return new FloorFacts(1, level.forcedItems());
 	}
 
+	static FinalFloorFacts generateFinalHeaps(long seed) {
+		initializeFreshRun(seed);
+		Actor.clear();
+		// A committed seed fixture must not depend on the user's bones.dat. At
+		// this pin, Dungeon.daily is consulted during generation only by Bones.
+		Dungeon.daily = true;
+		SewerLevel level;
+		try {
+			level = (SewerLevel) Dungeon.newLevel();
+		} finally {
+			Dungeon.daily = false;
+		}
+		List<HeapFact> heaps = new ArrayList<>();
+		for (Heap heap : level.heaps.valueList()) {
+			List<ItemFact> items = new ArrayList<>();
+			for (Item item : heap.items) {
+				items.add(itemFact(item));
+			}
+			heaps.add(new HeapFact(
+					heap.pos, heap.type.name().toLowerCase(Locale.ROOT), items));
+		}
+		heaps.sort(Comparator.comparingInt(heap -> heap.cell));
+		return new FinalFloorFacts(1, heaps);
+	}
+
 	private static void initializeFreshRun(long seed) {
 		GameSettings.set(new MemoryPreferences());
 		Game.version = "3.3.8";
+		// Early guide placement intentionally uses an unseeded generator. Keep
+		// this seed contract independent of tutorial/meta progression.
+		SPDSettings.intro(false);
+		Document.ADVENTURERS_GUIDE.readPage(Document.GUIDE_INTRO);
 		GdxNativesLoader.load();
 		// ItemSpriteSheet.Icons only needs dimensions during generation. Seed a
 		// blank cache entry so its TextureFilm does not touch Gdx.files or GL.
@@ -89,6 +125,9 @@ final class FloorOracle {
 		Blacksmith.Quest.reset();
 		Imp.Quest.reset();
 		Dungeon.hero = new Hero();
+		Dungeon.hero.live();
+		GamesInProgress.selectedClass = HeroClass.WARRIOR;
+		GamesInProgress.selectedClass.initHero(Dungeon.hero);
 	}
 
 	private static ItemFact itemFact(Item item) {
@@ -117,6 +156,28 @@ final class FloorOracle {
 			this.quantity = quantity;
 			this.level = level;
 			this.cursed = cursed;
+		}
+	}
+
+	static final class FinalFloorFacts {
+		final int depth;
+		final List<HeapFact> heaps;
+
+		FinalFloorFacts(int depth, List<HeapFact> heaps) {
+			this.depth = depth;
+			this.heaps = heaps;
+		}
+	}
+
+	static final class HeapFact {
+		final int cell;
+		final String heapType;
+		final List<ItemFact> items;
+
+		HeapFact(int cell, String heapType, List<ItemFact> items) {
+			this.cell = cell;
+			this.heapType = heapType;
+			this.items = items;
 		}
 	}
 

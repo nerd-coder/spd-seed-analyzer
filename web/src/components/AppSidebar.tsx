@@ -66,7 +66,7 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
               className="absolute inset-0 h-full w-full object-contain"
               style={{ imageRendering: 'pixelated' }}
             />
-            <AppFloatingAction className='lg:hidden' />
+            <AppFloatingAction className="lg:hidden" />
           </div>
           <CardContent className="flex flex-col gap-1 pb-3">
             <p className="text-muted-foreground text-xs leading-relaxed">

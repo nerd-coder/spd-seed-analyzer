@@ -7,10 +7,16 @@ use spd_core::{analyze_seed, init_run, parse_seed, SPD_COMMIT, SPD_VERSION};
 
 const IDENTITY_SCHEMA_VERSION: u32 = 1;
 const FLOOR_SCHEMA_VERSION: u32 = 2;
+const FINAL_HEAPS_SCHEMA_VERSION: u32 = 3;
+
+#[path = "java_oracle_goldens/final_heaps.rs"]
+mod final_heaps;
 
 #[derive(Debug, Deserialize)]
 struct OracleFixture {
     schema_version: u32,
+    #[serde(default)]
+    contract: Option<String>,
     spd: SpdPin,
     input: OracleInput,
     identities: OracleIdentities,
@@ -48,10 +54,13 @@ struct OracleIdentity {
 #[derive(Debug, Deserialize)]
 struct OracleFloor {
     depth: u32,
+    #[serde(default)]
     forced_items: Vec<OracleItem>,
+    #[serde(default)]
+    final_heaps: Vec<OracleHeap>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, PartialEq, Eq)]
 struct OracleItem {
     #[serde(rename = "class")]
     class_name: String,
@@ -60,7 +69,14 @@ struct OracleItem {
     cursed: bool,
 }
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Deserialize)]
+struct OracleHeap {
+    cell: u32,
+    heap_type: String,
+    items: Vec<OracleItem>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 struct ComparableItem {
     class_name: String,
     cursed: bool,
@@ -117,7 +133,7 @@ fn run_identities_match_pinned_java_oracle() {
         assert!(
             matches!(
                 fixture.schema_version,
-                IDENTITY_SCHEMA_VERSION | FLOOR_SCHEMA_VERSION
+                IDENTITY_SCHEMA_VERSION | FLOOR_SCHEMA_VERSION | FINAL_HEAPS_SCHEMA_VERSION
             ),
             "supported schema version in {context}"
         );
@@ -125,7 +141,9 @@ fn run_identities_match_pinned_java_oracle() {
         assert_eq!(fixture.spd.commit, SPD_COMMIT, "SPD commit in {context}");
         if fixture.schema_version == IDENTITY_SCHEMA_VERSION {
             assert!(
-                fixture.input.depths.is_empty() && fixture.floors.is_empty(),
+                fixture.contract.is_none()
+                    && fixture.input.depths.is_empty()
+                    && fixture.floors.is_empty(),
                 "schema v1 identity fixture must not contain floors in {context}"
             );
         }

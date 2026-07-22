@@ -1,0 +1,176 @@
+{
+  "schema_version": 3,
+  "contract": "final_placed_heaps",
+  "spd": {
+    "version": "v3.3.8",
+    "commit": "7b8b845a7"
+  },
+  "input": {
+    "seed": "AAA-AAA-AAA",
+    "numeric": 0,
+    "depths": [1]
+  },
+  "identities": {
+    "potions": [
+      { "item": "PotionOfStrength", "appearance": "crimson" },
+      { "item": "PotionOfHealing", "appearance": "indigo" },
+      { "item": "PotionOfMindVision", "appearance": "turquoise" },
+      { "item": "PotionOfFrost", "appearance": "charcoal" },
+      { "item": "PotionOfLiquidFlame", "appearance": "magenta" },
+      { "item": "PotionOfToxicGas", "appearance": "amber" },
+      { "item": "PotionOfHaste", "appearance": "ivory" },
+      { "item": "PotionOfInvisibility", "appearance": "golden" },
+      { "item": "PotionOfLevitation", "appearance": "silver" },
+      { "item": "PotionOfParalyticGas", "appearance": "azure" },
+      { "item": "PotionOfPurity", "appearance": "jade" },
+      { "item": "PotionOfExperience", "appearance": "bistre" }
+    ],
+    "scrolls": [
+      { "item": "ScrollOfUpgrade", "appearance": "KAUNAN" },
+      { "item": "ScrollOfIdentify", "appearance": "LAGUZ" },
+      { "item": "ScrollOfRemoveCurse", "appearance": "ISAZ" },
+      { "item": "ScrollOfMirrorImage", "appearance": "MANNAZ" },
+      { "item": "ScrollOfRecharging", "appearance": "NAUDIZ" },
+      { "item": "ScrollOfTeleportation", "appearance": "TIWAZ" },
+      { "item": "ScrollOfLullaby", "appearance": "RAIDO" },
+      { "item": "ScrollOfMagicMapping", "appearance": "BERKANAN" },
+      { "item": "ScrollOfRage", "appearance": "YNGVI" },
+      { "item": "ScrollOfRetribution", "appearance": "SOWILO" },
+      { "item": "ScrollOfTerror", "appearance": "ODAL" },
+      { "item": "ScrollOfTransmutation", "appearance": "GYFU" }
+    ],
+    "rings": [
+      { "item": "RingOfAccuracy", "appearance": "ruby" },
+      { "item": "RingOfArcana", "appearance": "quartz" },
+      { "item": "RingOfElements", "appearance": "tourmaline" },
+      { "item": "RingOfEnergy", "appearance": "onyx" },
+      { "item": "RingOfEvasion", "appearance": "sapphire" },
+      { "item": "RingOfForce", "appearance": "garnet" },
+      { "item": "RingOfFuror", "appearance": "agate" },
+      { "item": "RingOfHaste", "appearance": "diamond" },
+      { "item": "RingOfMight", "appearance": "topaz" },
+      { "item": "RingOfSharpshooting", "appearance": "amethyst" },
+      { "item": "RingOfTenacity", "appearance": "opal" },
+      { "item": "RingOfWealth", "appearance": "emerald" }
+    ]
+  },
+  "floors": [
+    {
+      "depth": 1,
+      "final_heaps": [
+        {
+          "cell": 173,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "ScrollOfRecharging",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 293,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Food", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 315,
+          "heap_type": "chest",
+          "items": [
+            {
+              "class": "ScaleArmor",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 444,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "ScrollOfRage",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 454,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "PotionOfInvisibility",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 565,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "PotionOfHealing",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 807,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "StoneOfBlink",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 847,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "StoneOfAggression",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 903,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Gold", "quantity": 43, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 939,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Gold", "quantity": 57, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 941,
+          "heap_type": "heap",
+          "items": [
+            { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        }
+      ]
+    }
+  ]
+}

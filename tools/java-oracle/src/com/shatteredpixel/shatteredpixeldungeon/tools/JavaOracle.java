@@ -27,14 +27,21 @@ public final class JavaOracle {
 	}
 
 	public static void main(String[] args) {
-		if (args.length < 1 || args.length > 2) {
-			System.err.println("Usage: JavaOracle SEED [DEPTH]");
+		if (args.length < 1 || args.length > 3) {
+			System.err.println("Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH]");
 			System.exit(2);
 		}
 
 		String inputSeed = args[0];
 		long numericSeed = DungeonSeed.convertFromText(inputSeed);
-		Integer depth = args.length == 2 ? Integer.valueOf(args[1]) : null;
+		boolean finalHeaps = args.length == 3 && "final-heaps".equals(args[1]);
+		if (args.length == 3 && !finalHeaps) {
+			System.err.println("Unknown floor oracle contract: " + args[1]);
+			System.exit(2);
+		}
+		Integer depth = args.length == 1
+				? null
+				: Integer.valueOf(args[finalHeaps ? 2 : 1]);
 		if (depth != null && depth != 1) {
 			System.err.println("The floor oracle currently supports only depth 1");
 			System.exit(2);
@@ -42,12 +49,15 @@ public final class JavaOracle {
 
 		try {
 			FloorOracle.FloorFacts floor = null;
+			FloorOracle.FinalFloorFacts finalFloor = null;
 			if (depth == null) {
 				Random.pushGenerator(numericSeed + 1);
 				// Keep this in Dungeon.init() order at the pinned commit.
 				Scroll.initLabels();
 				Potion.initColors();
 				Ring.initGems();
+			} else if (finalHeaps) {
+				finalFloor = FloorOracle.generateFinalHeaps(numericSeed);
 			} else {
 				floor = FloorOracle.generate(numericSeed);
 			}
@@ -60,9 +70,15 @@ public final class JavaOracle {
 			List<Identity> potions = identities(Generator.Category.POTION, identities);
 			List<Identity> scrolls = identities(Generator.Category.SCROLL, identities);
 			List<Identity> rings = identities(Generator.Category.RING, identities);
-			System.out.print(floor == null
-					? toJson(inputSeed, numericSeed, potions, scrolls, rings)
-					: toFloorJson(inputSeed, numericSeed, potions, scrolls, rings, floor));
+			if (finalFloor != null) {
+				System.out.print(toFinalHeapsJson(
+						inputSeed, numericSeed, potions, scrolls, rings, finalFloor));
+			} else if (floor != null) {
+				System.out.print(toFloorJson(
+						inputSeed, numericSeed, potions, scrolls, rings, floor));
+			} else {
+				System.out.print(toJson(inputSeed, numericSeed, potions, scrolls, rings));
+			}
 		} finally {
 			Random.resetGenerators();
 			Scroll.clearLabels();
@@ -141,6 +157,85 @@ public final class JavaOracle {
 		json.append("  ]\n");
 		json.append("}\n");
 		return json.toString();
+	}
+
+	private static String toFinalHeapsJson(
+			String inputSeed,
+			long numericSeed,
+			List<Identity> potions,
+			List<Identity> scrolls,
+			List<Identity> rings,
+			FloorOracle.FinalFloorFacts floor) {
+		StringBuilder json = new StringBuilder();
+		json.append("{\n");
+		json.append("  \"schema_version\": 3,\n");
+		json.append("  \"contract\": \"final_placed_heaps\",\n");
+		json.append("  \"spd\": {\n");
+		json.append("    \"version\": \"").append(SPD_VERSION).append("\",\n");
+		json.append("    \"commit\": \"").append(SPD_COMMIT).append("\"\n");
+		json.append("  },\n");
+		json.append("  \"input\": {\n");
+		json.append("    \"seed\": \"").append(escape(inputSeed)).append("\",\n");
+		json.append("    \"numeric\": ").append(numericSeed).append(",\n");
+		json.append("    \"depths\": [").append(floor.depth).append("]\n");
+		json.append("  },\n");
+		json.append("  \"identities\": {\n");
+		appendIdentities(json, "potions", potions, true);
+		appendIdentities(json, "scrolls", scrolls, true);
+		appendIdentities(json, "rings", rings, false);
+		json.append("  },\n");
+		json.append("  \"floors\": [\n");
+		json.append("    {\n");
+		json.append("      \"depth\": ").append(floor.depth).append(",\n");
+		json.append("      \"final_heaps\": [\n");
+		appendHeaps(json, floor.heaps);
+		json.append("      ]\n");
+		json.append("    }\n");
+		json.append("  ]\n");
+		json.append("}\n");
+		return json.toString();
+	}
+
+	private static void appendHeaps(StringBuilder json, List<FloorOracle.HeapFact> heaps) {
+		for (int heapIndex = 0; heapIndex < heaps.size(); heapIndex++) {
+			FloorOracle.HeapFact heap = heaps.get(heapIndex);
+			json.append("        {\n");
+			json.append("          \"cell\": ").append(heap.cell).append(",\n");
+			json.append("          \"heap_type\": \"").append(escape(heap.heapType)).append("\",\n");
+			json.append("          \"items\": [\n");
+			appendBiomeItems(json, heap.items, "            ");
+			json.append("          ]\n");
+			json.append("        }");
+			if (heapIndex + 1 < heaps.size()) {
+				json.append(',');
+			}
+			json.append('\n');
+		}
+	}
+
+	private static void appendBiomeItems(
+			StringBuilder json, List<FloorOracle.ItemFact> items, String indent) {
+		for (int index = 0; index < items.size(); index++) {
+			FloorOracle.ItemFact item = items.get(index);
+			StringBuilder compact = new StringBuilder("{ ");
+			appendItemFields(compact, item);
+			compact.append(" }");
+			if (indent.length() + compact.length() <= 80) {
+				json.append(indent).append(compact);
+			} else {
+				json.append(indent).append("{\n");
+				json.append(indent).append("  \"class\": \"")
+						.append(escape(item.itemClass)).append("\",\n");
+				json.append(indent).append("  \"quantity\": ").append(item.quantity).append(",\n");
+				json.append(indent).append("  \"level\": ").append(item.level).append(",\n");
+				json.append(indent).append("  \"cursed\": ").append(item.cursed).append('\n');
+				json.append(indent).append('}');
+			}
+			if (index + 1 < items.size()) {
+				json.append(',');
+			}
+			json.append('\n');
+		}
 	}
 
 	private static void appendItems(

@@ -4,8 +4,9 @@ This tool produces deterministic JSON directly from the pinned Shattered Pixel
 Dungeon Java implementation. Schema v1 covers run-level potion, scroll, and
 ring identity mappings. Schema v2 adds an intentionally narrow floor contract:
 the ordered depth-one `itemsToSpawn` queue at the exact pre-`build()` boundary.
-It does **not** claim room generation, final heap contents, or full seed-finder
-parity.
+Schema v3 is a separately scoped depth-one contract that snapshots final heaps
+after the real `Level.create()` lifecycle completes. It does **not** claim
+full seed-finder parity.
 
 ## Requirements
 
@@ -26,6 +27,7 @@ From the analyzer repository root:
 ```bash
 ./tools/java-oracle/run AAA-AAA-AAA
 ./tools/java-oracle/run --depth 1 AAA-AAA-AAA
+./tools/java-oracle/run --final-heaps-depth 1 AAA-AAA-AAA
 ```
 
 If an older Java is the machine default, select a JDK 17 installation for the
@@ -53,9 +55,14 @@ the default when `--output` is omitted):
 ./tools/java-oracle/run --output tools/java-oracle/fixtures/hello.json hello
 ./tools/java-oracle/run --depth 1 \
   --output tools/java-oracle/fixtures/aaa-aaa-aaa-floor-1.json AAA-AAA-AAA
+./tools/java-oracle/run --final-heaps-depth 1 \
+  --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-1.json AAA-AAA-AAA
 ```
 
-The Rust golden consumer validates every `fixtures/*.json` file:
+The Rust golden consumer validates every `fixtures/*.json` file. The schema v3
+test intentionally reports the current analyzer mismatch as a passing,
+explicitly named regression until Rust can retain and match the placement
+facts:
 
 ```bash
 cargo test -p spd-core --test java_oracle_goldens
@@ -113,3 +120,42 @@ no asset files or graphics context are loaded.
 The Rust golden compares this fixture with the surviving `source="forced"`
 slice in `analyze_seed(..., 1)`. It deliberately does not compare every placed
 floor item.
+
+### Schema version 3: final placed heaps
+
+Passing `--final-heaps-depth 1` runs the exact pinned initialization followed
+by `Dungeon.newLevel()` for a depth-one `SewerLevel`, and snapshots
+`level.heaps` only after `Level.create()` returns (build, painter, mob pass,
+and `createItems` have all run). The oracle uses a fresh Warrior hero with no
+challenges and a fresh in-memory preference store. The intro page is marked
+read and the intro prompt disabled because SPD intentionally places its early
+Guidebook with an unseeded generator; that meta/tutorial heap is outside this
+seed-deterministic contract. The oracle also gates the pinned `Bones.get()`
+call as a daily run solely to prevent a machine's external `bones.dat` from
+entering a committed seed fixture; no other generation path consults that flag
+at this pin.
+
+The output has `schema_version: 3` and `contract: "final_placed_heaps"`:
+
+```json
+{
+  "floors": [{
+    "depth": 1,
+    "final_heaps": [{
+      "cell": 315,
+      "heap_type": "chest",
+      "items": [
+        { "class": "ScaleArmor", "quantity": 1, "level": 0, "cursed": false }
+      ]
+    }]
+  }]
+}
+```
+
+Heaps are ordered by ascending row-major `cell`; each `items` array keeps the
+Java `Heap.items` stack order. `heap_type` is the lower-case stable form of
+SPD's `Heap.Type`. Item class, quantity, true level, and curse state are kept
+without localization. Gold, keys, and every other heap item generated within
+the stated deterministic scope remain in this contract; nothing is filtered
+for UI convenience. This is an exact-pin observation contract, not evidence
+that the Rust analyzer currently matches room selection, placement, or loot.

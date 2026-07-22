@@ -11,6 +11,7 @@ gradle.beforeProject { project ->
         def sourceDir = gradle.startParameter.projectProperties['oracleSourceDir']
         def seed = gradle.startParameter.projectProperties['oracleSeed']
         def depth = gradle.startParameter.projectProperties['oracleDepth']
+        def finalHeapsDepth = gradle.startParameter.projectProperties['oracleFinalHeapsDepth']
         if (sourceDir == null || seed == null) {
             throw new GradleException('javaOracleDump requires oracleSourceDir and oracleSeed')
         }
@@ -40,6 +41,9 @@ gradle.beforeProject { project ->
             args(seed)
             if (depth != null) {
                 args(depth)
+            }
+            if (finalHeapsDepth != null) {
+                args('final-heaps', finalHeapsDepth)
             }
         }
     }
