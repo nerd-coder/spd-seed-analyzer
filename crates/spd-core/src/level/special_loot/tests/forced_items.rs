@@ -2,8 +2,8 @@
 
 use super::super::secret_rooms::{secret_laboratory, secret_runestone};
 use super::super::special_rooms::{
-    armory_prizes, crypt_prize, laboratory_prizes, library_prizes, pool_prize, runestone_prizes,
-    statue_weapon, treasury_prizes_on_map,
+    armory_prizes_on_map, crypt_prize, laboratory_prizes, library_prizes, pool_prize,
+    runestone_prizes, statue_weapon, treasury_prizes_on_map,
 };
 use super::test_room;
 use crate::items::model::ItemCategory;
@@ -149,8 +149,10 @@ fn armory_room_pushes_iron_key() {
     let mut d = dungeon_from_run(run);
     d.depth = 13;
     let room = test_room("ArmoryRoom", 8, 8);
+    let mut map = paint_minimal(std::slice::from_ref(&room)).expect("map");
+    let entrance = crate::geom::Point::new(room.left, room.top + 2);
     let mut spawn = Vec::new();
-    let loot = armory_prizes(&mut d, &room, &mut spawn);
+    let loot = armory_prizes_on_map(&mut d, &room, &mut map, entrance, &mut spawn);
     Random::pop_generator();
 
     assert!((2..=3).contains(&loot.len()));

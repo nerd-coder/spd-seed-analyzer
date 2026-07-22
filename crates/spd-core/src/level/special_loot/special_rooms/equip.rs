@@ -2,14 +2,15 @@
 
 #[cfg(test)]
 use super::super::placement::burn_terrain_pos;
-use super::super::placement::{burn_drop_pos, find_prize_item};
+use super::super::placement::find_prize_item;
 use super::{is_curse_enchant, is_good_glyph};
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
+use crate::geom::Point;
 use crate::items::enchants;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::level::create_items::PlacedLoot;
-use crate::level::terrain::{TerrainMap, WATER};
+use crate::level::terrain::{TerrainMap, EMPTY, STATUE, WALL, WATER};
 use crate::random::Random;
 use crate::rooms::room::Room;
 
@@ -38,20 +39,45 @@ pub fn crypt_prize(
         heap_type: "tomb",
     }
 }
-pub fn armory_prizes(
+pub fn armory_prizes_on_map(
     dungeon: &mut DungeonState,
     room: &Room,
+    map: &mut TerrainMap,
+    entrance: Point,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
     let mut out = Vec::new();
-    // statue position Random.Int(2)
-    let _ = Random::int_max(2);
+    fill_room(map, room, WALL);
+    fill_margin(map, room, 1, EMPTY);
+    let side = Random::int_max(2) == 0;
+    let statue = if entrance.x == room.left {
+        Point::new(
+            room.right - 1,
+            if side { room.top + 1 } else { room.bottom - 1 },
+        )
+    } else if entrance.x == room.right {
+        Point::new(
+            room.left + 1,
+            if side { room.top + 1 } else { room.bottom - 1 },
+        )
+    } else if entrance.y == room.top {
+        Point::new(
+            if side { room.left + 1 } else { room.right - 1 },
+            room.bottom - 1,
+        )
+    } else {
+        Point::new(
+            if side { room.left + 1 } else { room.right - 1 },
+            room.top + 1,
+        )
+    };
+    set_terrain(map, statue, STATUE);
 
     let n = Random::int_range_inclusive(2, 3);
     let mut prize_cats = [1.0f32, 1.0, 1.0, 1.0];
-    let mut occupied = Vec::new();
     for _ in 0..n {
-        burn_drop_pos(room, &mut occupied);
+        let cell = armory_drop_cell(room, map);
+        map.heap_occupied[cell] = true;
         let index = Random::chances(&prize_cats).max(0) as usize;
         prize_cats[index] = 0.0;
         let mut item = match index {
@@ -67,6 +93,7 @@ pub fn armory_prizes(
                 .random_missile(dungeon.depth / 5, false, dungeon.depth),
         };
         item.source = Some("ArmoryRoom".into());
+        map.record_heap(cell, "heap", item.clone());
         out.push(PlacedLoot {
             item,
             heap_type: "heap",
@@ -74,8 +101,9 @@ pub fn armory_prizes(
     }
 
     if let Some(mut cata) = find_prize_item(items_to_spawn, Some("TrinketCatalyst")) {
-        burn_drop_pos(room, &mut occupied);
+        let cell = armory_drop_cell(room, map);
         cata.source = Some("ArmoryRoom".into());
+        map.record_heap(cell, "heap", cata.clone());
         out.push(PlacedLoot {
             item: cata,
             heap_type: "heap",
@@ -84,6 +112,40 @@ pub fn armory_prizes(
     // ArmoryRoom.java:78 — IronKey is the last statement of paint()
     items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
     out
+}
+
+fn armory_drop_cell(room: &Room, map: &TerrainMap) -> usize {
+    loop {
+        let point = room.random();
+        let cell = map
+            .point_to_cell(point.x, point.y)
+            .expect("placed ArmoryRoom point is inside map");
+        if map.map[cell] == EMPTY && !map.heap_occupied[cell] {
+            return cell;
+        }
+    }
+}
+
+fn fill_room(map: &mut TerrainMap, room: &Room, terrain: i32) {
+    for y in room.top..=room.bottom {
+        for x in room.left..=room.right {
+            set_terrain(map, Point::new(x, y), terrain);
+        }
+    }
+}
+
+fn fill_margin(map: &mut TerrainMap, room: &Room, margin: i32, terrain: i32) {
+    for y in (room.top + margin)..=(room.bottom - margin) {
+        for x in (room.left + margin)..=(room.right - margin) {
+            set_terrain(map, Point::new(x, y), terrain);
+        }
+    }
+}
+
+fn set_terrain(map: &mut TerrainMap, point: Point, terrain: i32) {
+    if let Some(cell) = map.point_to_cell(point.x, point.y) {
+        map.map[cell] = terrain;
+    }
 }
 
 pub fn bomb_random() -> GeneratedItem {

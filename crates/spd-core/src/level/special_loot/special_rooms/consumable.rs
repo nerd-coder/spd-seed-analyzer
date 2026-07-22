@@ -85,22 +85,26 @@ pub fn treasury_prizes_on_map(
             "mimic"
         } else {
             item.source = Some("TreasuryRoom".into());
-            map.heap_occupied[cell] = true;
             if heap_chest {
                 "chest"
             } else {
                 "heap"
             }
         };
+        if !matches!(heap_type, "mimic" | "golden_mimic") {
+            map.record_heap(cell, heap_type, item.clone());
+        }
         out.push(PlacedLoot { item, heap_type });
     }
     if !heap_chest {
         for _ in 0..6 {
             let cell = treasury_drop_cell(room, map, false);
-            let _qty = Random::int_range_inclusive(5, 12);
+            let mut gold = GeneratedItem::new("Gold", ItemCategory::Gold);
+            gold.quantity = Random::int_range_inclusive(5, 12);
+            gold.source = Some("TreasuryRoom".into());
             // Small piles may merge with an existing heap, exactly like
             // Level.drop; they reject only non-EMPTY terrain.
-            map.heap_occupied[cell] = true;
+            map.record_heap(cell, "heap", gold);
         }
     }
     // TreasuryRoom.java:76 — IronKey pushed after the small gold piles

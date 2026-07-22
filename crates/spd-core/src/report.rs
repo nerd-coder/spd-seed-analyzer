@@ -25,9 +25,107 @@ pub struct FloorMap {
     pub tiles: Vec<u16>,
     /// SPD `DungeonTileSheet.setupVariance` values for deterministic tile alternates.
     pub tile_variance: Vec<u8>,
+    /// Pinned `Level.cleanWalls()` visibility mask, row-major and parallel to `tiles`.
+    #[serde(default)]
+    pub discoverable: Vec<bool>,
     /// Exact cells known to the partial generator, including depth-one ambient mobs.
     #[serde(default)]
     pub markers: Vec<MapMarker>,
+    /// Exact placed heap cells, types, and ordered item stacks.
+    #[serde(default)]
+    pub heaps: Vec<MapHeap>,
+    /// Exact placed mob cells and pinned Java class names.
+    #[serde(default)]
+    pub mobs: Vec<MapMob>,
+    /// Pinned Java `LevelTransition` facts, sorted by center cell then type.
+    #[serde(default)]
+    pub transitions: Vec<MapTransition>,
+    /// Pinned Java trap facts, sorted by cell.
+    #[serde(default)]
+    pub traps: Vec<MapTrap>,
+    /// Pinned Java plant facts, sorted by cell. Empty until a covered painter plants one.
+    #[serde(default)]
+    pub plants: Vec<MapPlant>,
+    /// Active pinned Java blob concentrations, sorted by class then cell.
+    #[serde(default)]
+    pub blobs: Vec<MapBlob>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct MapHeap {
+    pub cell: u32,
+    pub heap_type: String,
+    pub items: Vec<MapHeapItem>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct MapHeapItem {
+    #[serde(rename = "class")]
+    pub class_name: String,
+    pub quantity: i32,
+    pub level: i32,
+    pub cursed: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct MapMob {
+    pub cell: u32,
+    #[serde(rename = "class")]
+    pub class_name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct MapTransition {
+    pub cell: u32,
+    #[serde(rename = "type")]
+    pub transition_type: String,
+    pub left: u32,
+    pub top: u32,
+    pub right: u32,
+    pub bottom: u32,
+    pub dest_depth: i32,
+    pub dest_branch: i32,
+    pub dest_type: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct MapTrap {
+    pub cell: u32,
+    #[serde(rename = "class")]
+    pub class_name: String,
+    pub visible: bool,
+    pub active: bool,
+    /// Pinned `Trap` sprite color index.
+    #[serde(default)]
+    pub color: u8,
+    /// Pinned `Trap` sprite shape index.
+    #[serde(default)]
+    pub shape: u8,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct MapPlant {
+    pub cell: u32,
+    #[serde(rename = "class")]
+    pub class_name: String,
+    /// Pinned `Plant.image` sprite index.
+    #[serde(default)]
+    pub image: u8,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct MapBlob {
+    #[serde(rename = "class")]
+    pub class_name: String,
+    pub volume: u32,
+    pub always_visible: bool,
+    pub cells: Vec<MapBlobCell>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct MapBlobCell {
+    pub cell: u32,
+    pub value: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

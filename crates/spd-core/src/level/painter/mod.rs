@@ -19,6 +19,7 @@ use crate::rooms::room::Room;
 pub(crate) use connection_rooms::paint as paint_connection_room;
 pub use doors::{apply_room_door_types, door_spots, paint_doors, place_doors_for_room, DoorMap};
 pub use params::n_traps;
+pub(crate) use params::trap_metadata;
 pub(crate) use room_geometry::paint_standard_room;
 
 /// Water + grass + traps + region decorate under a separate generator
@@ -182,10 +183,16 @@ fn paint_traps(
             let Some(room) = rooms.get(room_index).filter(|r| !r.is_empty()) else {
                 continue;
             };
+            // Java asks each room for trapPlaceablePoints independently. A
+            // rejected point in an entrance room can still be contributed by
+            // an overlapping tunnel room, so this cannot use a global mask.
+            if depth == 1 && room.kind == crate::rooms::types::RoomKind::Entrance {
+                continue;
+            }
             for x in room.left..=room.right {
                 for y in room.top..=room.bottom {
                     if let Some(i) = map.point_to_cell(x, y) {
-                        if map.trap_allowed[i] && map.map[i] == EMPTY {
+                        if map.map[i] == EMPTY {
                             valid.push(i);
                         }
                     }
@@ -222,7 +229,6 @@ fn paint_traps(
             non_hall.push(i);
         }
     }
-
     n_traps = n_traps.min(valid.len() as i32 / 5);
 
     let (classes, chances) = params::trap_table(depth);
@@ -253,12 +259,16 @@ fn paint_traps(
             let idx = Random::int_max(valid.len() as i32) as usize;
             valid[idx]
         };
-        // remove Integer object (value), not index — Java ArrayList.remove(Object)
-        valid.retain(|&c| c != pos);
-        non_hall.retain(|&c| c != pos);
+        // Java `ArrayList.remove((Integer) pos)` removes only the first equal
+        // object. Overlapping rooms can contribute duplicate candidate cells.
+        remove_first(&mut valid, pos);
+        remove_first(&mut non_hall, pos);
 
         reveal_inc += revealed_chance;
-        let visible = i >= n_traps || reveal_inc >= 1.0;
+        let can_be_hidden = params::trap_metadata(trap.name)
+            .map(|metadata| metadata.can_be_hidden)
+            .unwrap_or(true);
+        let visible = !can_be_hidden || i >= n_traps || reveal_inc >= 1.0;
         if reveal_inc >= 1.0 {
             reveal_inc -= 1.0;
         }
@@ -270,6 +280,12 @@ fn paint_traps(
         if pos < map.trap_names.len() {
             map.trap_names[pos] = Some(trap.name);
         }
+    }
+}
+
+fn remove_first(cells: &mut Vec<usize>, target: usize) {
+    if let Some(index) = cells.iter().position(|&cell| cell == target) {
+        cells.remove(index);
     }
 }
 
@@ -302,6 +318,13 @@ mod tests {
         room.right = r;
         room.bottom = b;
         room
+    }
+
+    #[test]
+    fn trap_candidate_removal_preserves_overlapping_room_duplicates() {
+        let mut cells = vec![11, 22, 11, 33];
+        remove_first(&mut cells, 11);
+        assert_eq!(cells, [22, 11, 33]);
     }
 
     #[test]

@@ -73,6 +73,13 @@ struct OracleFloor {
     final_heaps: Vec<OracleHeap>,
     #[serde(default)]
     final_mobs: Vec<OracleMob>,
+    terrain: Option<Vec<u16>>,
+    discoverable: Option<Vec<bool>>,
+    tile_variance: Option<Vec<u8>>,
+    transitions: Option<Vec<OracleTransition>>,
+    traps: Option<Vec<OracleTrap>>,
+    plants: Option<Vec<OraclePlant>>,
+    blobs: Option<Vec<OracleBlob>>,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]
@@ -84,7 +91,7 @@ struct OracleItem {
     cursed: bool,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, PartialEq, Eq)]
 struct OracleHeap {
     cell: u32,
     heap_type: String,
@@ -96,6 +103,59 @@ struct OracleMob {
     cell: u32,
     #[serde(rename = "class")]
     class_name: String,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Eq)]
+struct OracleTransition {
+    cell: u32,
+    #[serde(rename = "type")]
+    transition_type: String,
+    left: u32,
+    top: u32,
+    right: u32,
+    bottom: u32,
+    dest_depth: i32,
+    dest_branch: i32,
+    dest_type: Option<String>,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Eq)]
+struct OracleTrap {
+    cell: u32,
+    #[serde(rename = "class")]
+    class_name: String,
+    visible: bool,
+    active: bool,
+    #[serde(default)]
+    color: u8,
+    #[serde(default)]
+    shape: u8,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Eq)]
+struct OraclePlant {
+    cell: u32,
+    #[serde(rename = "class")]
+    class_name: String,
+    #[serde(default)]
+    image: u8,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Eq)]
+struct OracleBlob {
+    #[serde(rename = "class")]
+    class_name: String,
+    #[serde(default)]
+    volume: u32,
+    #[serde(default)]
+    always_visible: bool,
+    cells: Vec<OracleBlobCell>,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Eq)]
+struct OracleBlobCell {
+    cell: u32,
+    value: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]

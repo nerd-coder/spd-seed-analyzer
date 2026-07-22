@@ -98,11 +98,21 @@ final class FloorOracle {
 		rooms.sort(String::compareTo);
 		int width = level.width();
 		int height = level.height();
+		FloorVisualFacts visualFacts = FloorVisualFacts.capture(level);
 		List<Integer> prePaintRng = generatePrePaintRng(seed);
 		List<Integer> preMobsRng = generatePreMobsRng(seed);
 		List<Integer> preItemsRng = generatePreItemsRng(seed);
 		return new FinalFloorFacts(
-				1, width, height, rooms, heaps, mobs, prePaintRng, preMobsRng, preItemsRng);
+				1,
+				width,
+				height,
+				rooms,
+				heaps,
+				mobs,
+				prePaintRng,
+				preMobsRng,
+				preItemsRng,
+				visualFacts);
 	}
 
 	private static List<Integer> generatePrePaintRng(long seed) {
@@ -228,6 +238,13 @@ final class FloorOracle {
 		final List<Integer> prePaintRng;
 		final List<Integer> preMobsRng;
 		final List<Integer> preItemsRng;
+		final List<Integer> terrain;
+		final List<Boolean> discoverable;
+		final List<Integer> tileVariance;
+		final List<FloorVisualFacts.TransitionFact> transitions;
+		final List<FloorVisualFacts.TrapFact> traps;
+		final List<FloorVisualFacts.PlantFact> plants;
+		final List<FloorVisualFacts.BlobFact> blobs;
 
 		FinalFloorFacts(
 				int depth,
@@ -238,7 +255,8 @@ final class FloorOracle {
 				List<MobFact> mobs,
 				List<Integer> prePaintRng,
 				List<Integer> preMobsRng,
-				List<Integer> preItemsRng) {
+				List<Integer> preItemsRng,
+				FloorVisualFacts visualFacts) {
 			this.depth = depth;
 			this.width = width;
 			this.height = height;
@@ -248,6 +266,13 @@ final class FloorOracle {
 			this.prePaintRng = prePaintRng;
 			this.preMobsRng = preMobsRng;
 			this.preItemsRng = preItemsRng;
+			this.terrain = visualFacts.terrain;
+			this.discoverable = visualFacts.discoverable;
+			this.tileVariance = visualFacts.tileVariance;
+			this.transitions = visualFacts.transitions;
+			this.traps = visualFacts.traps;
+			this.plants = visualFacts.plants;
+			this.blobs = visualFacts.blobs;
 		}
 	}
 

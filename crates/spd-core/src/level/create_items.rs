@@ -2,7 +2,7 @@
 
 use crate::dungeon::DungeonState;
 use crate::items::model::{GeneratedItem, ItemCategory};
-use crate::level::terrain::{TerrainMap, EXIT, WATER};
+use crate::level::terrain::{TerrainMap, EXIT, FURROWED_GRASS, GRASS, HIGH_GRASS, WATER};
 use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
@@ -27,7 +27,7 @@ pub struct CreatedLoot {
 pub fn create_items_main(
     dungeon: &mut DungeonState,
     rooms: &[Room],
-    map: &TerrainMap,
+    map: &mut TerrainMap,
     feeling_large: bool,
     items_to_spawn: Vec<GeneratedItem>,
 ) -> Vec<CreatedLoot> {
@@ -55,6 +55,7 @@ pub fn create_items_main(
         if cell < 0 {
             continue;
         }
+        flatten_grass(map, cell as usize);
 
         // Heap type
         let heap_type;
@@ -130,6 +131,9 @@ pub fn create_items_main(
         }
         let cell = random_drop_cell(rooms, &mut room_order, map, &mut occupied);
         let cell = (cell >= 0).then_some(cell as usize);
+        if let Some(cell) = cell {
+            flatten_grass(map, cell);
+        }
         if item.class_name == "TrinketCatalyst" {
             out.push(CreatedLoot {
                 loot: PlacedLoot {
@@ -140,6 +144,7 @@ pub fn create_items_main(
             });
             let key_cell = random_drop_cell(rooms, &mut room_order, map, &mut occupied);
             if key_cell >= 0 {
+                flatten_grass(map, key_cell as usize);
                 let mut key = GeneratedItem::new("GoldenKey", ItemCategory::Other);
                 key.source = Some("forced".into());
                 out.push(CreatedLoot {
@@ -204,6 +209,12 @@ pub fn create_items_main(
     Random::pop_generator();
 
     out
+}
+
+fn flatten_grass(map: &mut TerrainMap, cell: usize) {
+    if matches!(map.map[cell], HIGH_GRASS | FURROWED_GRASS) {
+        map.map[cell] = GRASS;
+    }
 }
 
 /// Returns index into `map.map` / `occupied`, or -1.

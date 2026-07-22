@@ -332,3 +332,18 @@ fn no_standard_instance_returns_minus_one_after_one_shuffle() {
     assert_eq!(oracle.tries[0].shuffle_draws, 3);
     assert_eq!(oracle.tries[0].picked, None);
 }
+
+#[test]
+fn late_drop_flattens_both_tall_grass_terrains() {
+    let room = room("EmptyRoom");
+    let mut map = terrain::paint_minimal(std::slice::from_ref(&room)).expect("map");
+    let cell = map
+        .point_to_cell(room.left + 1, room.top + 1)
+        .expect("interior cell");
+
+    for tile in [HIGH_GRASS, terrain::FURROWED_GRASS] {
+        map.map[cell] = tile;
+        flatten_grass(&mut map, cell);
+        assert_eq!(map.map[cell], terrain::GRASS);
+    }
+}

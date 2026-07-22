@@ -1,5 +1,6 @@
 //! Terrain map using SPD `Terrain` IDs for asset-aligned rendering.
 
+use crate::items::model::GeneratedItem;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
 
@@ -30,10 +31,17 @@ pub const STATUE: i32 = 25;
 pub const STATUE_SP: i32 = 26;
 pub const BOOKSHELF: i32 = 27;
 pub const WATER: i32 = 29;
+pub const FURROWED_GRASS: i32 = 30;
 pub const CRYSTAL_DOOR: i32 = 31;
 pub const REGION_DECO: i32 = 33;
 pub const REGION_DECO_ALT: i32 = 34;
 pub const ENTRANCE_SP: i32 = 37;
+
+#[derive(Debug, Clone)]
+pub(crate) struct KnownHeap {
+    pub heap_type: &'static str,
+    pub items: Vec<GeneratedItem>,
+}
 
 #[derive(Debug, Clone)]
 pub struct TerrainMap {
@@ -63,6 +71,8 @@ pub struct TerrainMap {
     pub known_mobs: Vec<Option<&'static str>>,
     /// Cells occupied by heaps placed during room paint.
     pub heap_occupied: Vec<bool>,
+    /// Exact room-painted heap facts retained for the structured map report.
+    pub(crate) known_heaps: Vec<Option<KnownHeap>>,
     /// Parallel to `map`: trap destroys dropped items (randomDropCell filter).
     pub trap_destroys_items: Vec<bool>,
     /// Optional trap class name for debugging / future UI.
@@ -76,6 +86,23 @@ impl TerrainMap {
 
     pub fn is_empty(&self) -> bool {
         self.map.is_empty()
+    }
+
+    pub(crate) fn record_heap(
+        &mut self,
+        cell: usize,
+        heap_type: &'static str,
+        item: GeneratedItem,
+    ) {
+        self.heap_occupied[cell] = true;
+        if let Some(heap) = &mut self.known_heaps[cell] {
+            heap.items.push(item);
+        } else {
+            self.known_heaps[cell] = Some(KnownHeap {
+                heap_type,
+                items: vec![item],
+            });
+        }
     }
 
     pub fn point_to_cell(&self, x: i32, y: i32) -> Option<usize> {
@@ -193,7 +220,26 @@ pub fn tileset_for_depth(depth: i32) -> &'static str {
     }
 }
 
-/// Paint rooms as walls with empty interiors and door tiles on connections.
+/// Pinned `RegularPainter.paint` bounds normalization. Java mutates every room
+/// into level-local coordinates before any room painter computes centers or
+/// random points; preserving that shift matters because integer division is
+/// not translation-invariant for negative odd coordinates.
+pub fn shift_rooms_for_painter(rooms: &mut [Room], chasm_feeling: bool) {
+    let Some(left_most) = rooms.iter().map(|room| room.left).min() else {
+        return;
+    };
+    let Some(top_most) = rooms.iter().map(|room| room.top).min() else {
+        return;
+    };
+    let padding = if chasm_feeling { 2 } else { 1 };
+    let dx = padding - left_most;
+    let dy = padding - top_most;
+    for room in rooms {
+        room.shift(dx, dy);
+    }
+}
+
+/// Paint the initial wall/interior terrain before room and connection painters.
 /// Uses SPD terrain IDs so the client can render with original tilesheets.
 pub fn paint_minimal(rooms: &[Room]) -> Option<TerrainMap> {
     paint_minimal_with_chasm(rooms, false)
@@ -227,37 +273,15 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
                 let border = x == r.left || x == r.right || y == r.top || y == r.bottom;
                 // Connection tunnels often paint as empty corridors; treat thin rooms as empty fill
                 let is_connection = r.kind == RoomKind::Connection;
-                map[idx(x, y)] = if border && !is_connection {
+                map[idx(x, y)] = if is_connection {
+                    // Java starts the whole level as wall; connection painters carve
+                    // only their tunnel path instead of receiving a pre-cleared room.
                     WALL
-                } else if border && is_connection {
-                    // keep wall shell for tunnels too
+                } else if border {
                     WALL
                 } else {
                     EMPTY
                 };
-            }
-        }
-
-        // doors along connections: midpoint of shared edge
-        for &oid in &r.connected {
-            let o = rooms.iter().find(|x| x.id == oid)?;
-            if o.is_empty() {
-                continue;
-            }
-            let il = r.left.max(o.left);
-            let ir = r.right.min(o.right);
-            let it = r.top.max(o.top);
-            let ib = r.bottom.min(o.bottom);
-            if il == ir {
-                let y = if ib - it >= 2 { (it + ib) / 2 } else { it };
-                if (r.left..=r.right).contains(&il) && (r.top..=r.bottom).contains(&y) {
-                    map[idx(il, y)] = DOOR;
-                }
-            } else if it == ib {
-                let x = if ir - il >= 2 { (il + ir) / 2 } else { il };
-                if (r.left..=r.right).contains(&x) && (r.top..=r.bottom).contains(&it) {
-                    map[idx(x, it)] = DOOR;
-                }
             }
         }
 
@@ -293,6 +317,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
     let plant_occupied = vec![false; len];
     let known_mobs = vec![None; len];
     let heap_occupied = vec![false; len];
+    let known_heaps = vec![None; len];
     let trap_destroys_items = vec![false; len];
     let trap_names = vec![None; len];
 
@@ -312,6 +337,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
         plant_occupied,
         known_mobs,
         heap_occupied,
+        known_heaps,
         trap_destroys_items,
         trap_names,
     })

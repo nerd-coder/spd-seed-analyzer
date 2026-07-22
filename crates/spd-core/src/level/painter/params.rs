@@ -10,6 +10,59 @@ pub struct TrapDef {
     pub destroys_items: bool,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TrapMetadata {
+    pub color: u8,
+    pub shape: u8,
+    pub can_be_hidden: bool,
+}
+
+/// Pinned `Trap` constructor fields used by terrain and feature rendering.
+pub fn trap_metadata(name: &str) -> Option<TrapMetadata> {
+    let (color, shape) = match name {
+        "AlarmTrap" => (0, 0),
+        "BlazingTrap" => (1, 3),
+        "BurningTrap" => (1, 0),
+        "ChillingTrap" => (6, 0),
+        "ConfusionTrap" => (4, 2),
+        "CorrosionTrap" => (7, 2),
+        "CursingTrap" => (5, 1),
+        "DisarmingTrap" => (0, 6),
+        "DisintegrationTrap" => (5, 5),
+        "DistortionTrap" => (4, 6),
+        "ExplosiveTrap" => (1, 4),
+        "FlashingTrap" => (7, 3),
+        "FlockTrap" => (6, 1),
+        "FrostTrap" => (6, 3),
+        "GatewayTrap" => (4, 5),
+        "GeyserTrap" => (4, 4),
+        "GrimTrap" => (7, 6),
+        "GrippingTrap" => (7, 0),
+        "GuardianTrap" => (0, 3),
+        "OozeTrap" => (3, 0),
+        "PitfallTrap" => (0, 4),
+        "PoisonDartTrap" => (3, 5),
+        "RockfallTrap" => (7, 4),
+        "ShockingTrap" => (2, 0),
+        "StormTrap" => (2, 3),
+        "SummoningTrap" => (4, 1),
+        "TeleportationTrap" => (4, 0),
+        "ToxicTrap" => (3, 2),
+        "WarpingTrap" => (4, 3),
+        "WeakeningTrap" => (3, 1),
+        "WornDartTrap" => (7, 5),
+        _ => return None,
+    };
+    Some(TrapMetadata {
+        color,
+        shape,
+        can_be_hidden: !matches!(
+            name,
+            "DisintegrationTrap" | "GrimTrap" | "PoisonDartTrap" | "RockfallTrap" | "WornDartTrap"
+        ),
+    })
+}
+
 /// `RegularLevel.nTraps()` — main-stream RNG (`NormalIntRange(2, 3 + depth/5)`).
 pub fn n_traps(depth: i32) -> i32 {
     crate::random::Random::normal_int_range(2, 3 + depth / 5)
@@ -160,3 +213,20 @@ const HALLS_TRAPS: &[TrapDef] = &[
     t("GatewayTrap", true, false),
     t("GeyserTrap", false, false),
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn worn_dart_visuals_and_visibility_match_pinned_trap_constructor() {
+        assert_eq!(
+            trap_metadata("WornDartTrap"),
+            Some(TrapMetadata {
+                color: 7,
+                shape: 5,
+                can_be_hidden: false,
+            })
+        );
+    }
+}

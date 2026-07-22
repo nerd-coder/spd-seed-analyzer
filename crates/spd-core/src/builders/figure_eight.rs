@@ -73,12 +73,78 @@ fn place_loop(
     None
 }
 
+/// Restores the insertion order of the room list returned by Java's builder.
+///
+/// Java creates the connection objects for both loops before placement, but it
+/// does not append them to the returned `rooms` list until each loop has been
+/// placed. Consequently, a closing stitch created while placing the first loop
+/// precedes every connection belonging to the second loop in the final list.
+fn restore_java_room_order(
+    rooms: &mut Vec<Room>,
+    base_len: usize,
+    first_loop: &[usize],
+    second_loop: &[usize],
+) {
+    let mut order = Vec::with_capacity(rooms.len());
+    let mut included = vec![false; rooms.len()];
+
+    let mut include = |old_id: usize| {
+        if !included[old_id] {
+            order.push(old_id);
+            included[old_id] = true;
+        }
+    };
+
+    for old_id in 0..base_len {
+        include(old_id);
+    }
+    for &old_id in first_loop {
+        if old_id >= base_len {
+            include(old_id);
+        }
+    }
+    for &old_id in second_loop {
+        if old_id >= base_len {
+            include(old_id);
+        }
+    }
+    for old_id in base_len..rooms.len() {
+        include(old_id);
+    }
+
+    let mut old_to_new = vec![0; rooms.len()];
+    for (new_id, &old_id) in order.iter().enumerate() {
+        old_to_new[old_id] = new_id;
+    }
+
+    let old_rooms = std::mem::take(rooms);
+    let mut old_rooms = old_rooms.into_iter().map(Some).collect::<Vec<_>>();
+    for (new_id, old_id) in order.into_iter().enumerate() {
+        let mut room = old_rooms[old_id]
+            .take()
+            .expect("room insertion order must contain each room once");
+        room.id = new_id;
+        room.connected = room
+            .connected
+            .into_iter()
+            .map(|old_id| old_to_new[old_id])
+            .collect();
+        room.neighbours = room
+            .neighbours
+            .into_iter()
+            .map(|old_id| old_to_new[old_id])
+            .collect();
+        rooms.push(room);
+    }
+}
+
 pub(super) fn build(
     rooms: &mut Vec<Room>,
     params: &BuilderParams,
     depth: i32,
     state: &mut FigureEightState,
 ) -> Option<()> {
+    let base_len = rooms.len();
     let mut setup = setup_rooms(rooms, params);
 
     if state.landmark.is_none() {
@@ -186,6 +252,7 @@ pub(super) fn build(
         return None;
     }
 
+    restore_java_room_order(rooms, base_len, &first_loop, &second_loop);
     find_neighbours(rooms);
     for room in 0..rooms.len() {
         let neighbours = rooms[room].neighbours.clone();
@@ -198,4 +265,79 @@ pub(super) fn build(
         }
     }
     Some(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::rooms::types::RoomKind;
+
+    fn room(id: usize, name: &str, kind: RoomKind) -> Room {
+        Room::new(id, name, kind, 1, 16, 3, 10, 3, 10)
+    }
+
+    #[test]
+    fn java_order_places_first_loop_stitch_before_second_loop_connections() {
+        let mut rooms = vec![
+            room(0, "BaseA", RoomKind::Standard),
+            room(1, "BaseB", RoomKind::Standard),
+            room(2, "BaseC", RoomKind::Standard),
+            room(3, "FirstPrecreated", RoomKind::Connection),
+            room(4, "SecondPrecreatedA", RoomKind::Connection),
+            room(5, "SecondPrecreatedB", RoomKind::Connection),
+            room(6, "FirstStitch", RoomKind::Connection),
+            room(7, "SecondStitch", RoomKind::Connection),
+            room(8, "Branch", RoomKind::Connection),
+        ];
+        rooms[0].connected = vec![3];
+        rooms[3].connected = vec![0, 6];
+        rooms[6].connected = vec![3, 1];
+        rooms[1].connected = vec![6];
+        rooms[0].neighbours = vec![4, 8];
+        rooms[4].neighbours = vec![0, 5];
+        rooms[5].neighbours = vec![4, 7];
+        rooms[7].neighbours = vec![5];
+        rooms[8].neighbours = vec![0];
+
+        restore_java_room_order(&mut rooms, 3, &[0, 3, 1, 6], &[0, 4, 2, 5, 7]);
+
+        assert_eq!(
+            rooms
+                .iter()
+                .map(|room| room.name.as_str())
+                .collect::<Vec<_>>(),
+            [
+                "BaseA",
+                "BaseB",
+                "BaseC",
+                "FirstPrecreated",
+                "FirstStitch",
+                "SecondPrecreatedA",
+                "SecondPrecreatedB",
+                "SecondStitch",
+                "Branch",
+            ]
+        );
+        assert!(rooms.iter().enumerate().all(|(id, room)| room.id == id));
+        assert!(rooms.iter().all(|room| room
+            .connected
+            .iter()
+            .chain(&room.neighbours)
+            .all(|&other| other < rooms.len())));
+        for room in &rooms {
+            assert!(room
+                .connected
+                .iter()
+                .all(|&other| rooms[other].connected.contains(&room.id)));
+            assert!(room
+                .neighbours
+                .iter()
+                .all(|&other| rooms[other].neighbours.contains(&room.id)));
+        }
+        assert_eq!(rooms[0].connected, [3]);
+        assert_eq!(rooms[3].connected, [0, 4]);
+        assert_eq!(rooms[4].connected, [3, 1]);
+        assert_eq!(rooms[0].neighbours, [5, 8]);
+        assert_eq!(rooms[5].neighbours, [0, 6]);
+    }
 }

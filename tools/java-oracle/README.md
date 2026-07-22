@@ -5,8 +5,9 @@ Dungeon Java implementation. Schema v1 covers run-level potion, scroll, and
 ring identity mappings. Schema v2 adds an intentionally narrow floor contract:
 the ordered depth-one `itemsToSpawn` queue at the exact pre-`build()` boundary.
 Schema v3 is a separately scoped depth-one contract that snapshots final heaps
-and mobs after the real `Level.create()` lifecycle completes. It does **not**
-claim full seed-finder parity.
+and mobs after the real `Level.create()` lifecycle completes. Additive visual
+fields capture final terrain, discoverability, tile variance, transitions,
+traps, plants, and active blobs. It does **not** claim full seed-finder parity.
 
 ## Requirements
 
@@ -63,11 +64,15 @@ the default when `--output` is omitted):
   --output tools/java-oracle/fixtures/gfx-pzh-dch-final-heaps-floor-1.json GFX-PZH-DCH
 ./tools/java-oracle/run --final-heaps-depth 1 \
   --output tools/java-oracle/fixtures/hello-final-heaps-floor-1.json hello
+./tools/java-oracle/run --final-heaps-depth 1 \
+  --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-1.json HKT-JZN-XQQ
 ```
 
 The Rust golden consumer validates every `fixtures/*.json` file. The schema-v3
-test requires all four committed depth-one fixtures to match lifecycle probes,
-map bounds, heap cells, mob facts, and the report-visible item projection:
+test requires all five committed depth-one fixtures to match lifecycle probes,
+map bounds, heap cells, mob facts, and the report-visible item projection. The
+HKT fixture also requires exact terrain, discoverability, tile variance,
+transitions, traps, structured heaps/mobs, plants, and active blobs:
 
 ```bash
 cargo test -p spd-core --test java_oracle_goldens
@@ -152,6 +157,13 @@ The output has `schema_version: 3` and `contract: "final_placed_heaps"`:
     "pre_paint_rng": [1993374861, -149591753],
     "pre_mobs_rng": [1726373121, -188171336],
     "pre_items_rng": [-339886649, -1704611306],
+    "terrain": [4, 4, 1],
+    "discoverable": [false, true, true],
+    "tile_variance": [12, 68, 97],
+    "transitions": [],
+    "traps": [],
+    "plants": [],
+    "blobs": [],
     "final_heaps": [{
       "cell": 315,
       "heap_type": "chest",
@@ -168,10 +180,14 @@ The output has `schema_version: 3` and `contract: "final_placed_heaps"`:
 
 `rooms` is the sorted list of Java room simple-class names retained by the
 builder, including connection rooms, and records the room-family coverage of
-each fixture. Heaps are ordered by ascending row-major `cell`; each `items` array keeps the
-Java `Heap.items` stack order. `heap_type` is the lower-case stable form of
-SPD's `Heap.Type`. Item class, quantity, true level, and curse state are kept
-without localization. Gold, keys, and every other heap item generated within
+each fixture. `terrain`, `discoverable`, and `tile_variance` are row-major
+arrays parallel to the floor bounds. Transitions, traps, plants, and non-empty
+blob concentrations retain stable render-facing Java facts and are sorted for
+deterministic comparison. Heaps are ordered by ascending row-major `cell`;
+each `items` array keeps the Java `Heap.items` stack order. `heap_type` is the
+lower-case stable form of SPD's `Heap.Type`. Item class, quantity, true level,
+and curse state are kept without localization. Gold, keys, and every other
+heap item generated within
 the stated deterministic scope remain in this contract; nothing is filtered
 for UI convenience. `final_mobs` is likewise cell-sorted and uses Java simple
 class names, covering both room-painted mobs and the ambient `createMobs`
@@ -180,7 +196,7 @@ pass. The three eight-value RNG probes snapshot consecutive full-range
 and at the `createMobs` and `createItems` entry boundaries; recording stops at
 each boundary, so the probes do not perturb the final heap/mob run. They make
 raw LCG draw-count comparison possible even while an earlier phase is
-desynchronized. This is an exact-pin observation contract. The four committed
-depth-one fixtures currently match their strongest honest Rust projection,
-but they are not evidence that every room set, deeper floor, or full heap fact
-matches.
+desynchronized. This is an exact-pin observation contract. The five committed
+depth-one fixtures currently match their strongest honest Rust projection;
+only HKT opts into the additive render-fact assertions. They are not evidence
+that every room set, deeper floor, or full heap fact matches.

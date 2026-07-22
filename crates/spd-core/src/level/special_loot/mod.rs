@@ -135,7 +135,15 @@ fn paint_special(
     let name = room.name.as_str();
     match name {
         "CryptRoom" => vec![special_rooms::crypt_prize(dungeon, items_to_spawn)],
-        "ArmoryRoom" => special_rooms::armory_prizes(dungeon, room, items_to_spawn),
+        "ArmoryRoom" => {
+            let entrance = room
+                .connected
+                .iter()
+                .find_map(|&other| doors.get(ri, other))
+                .map(|door| crate::geom::Point::new(door.x, door.y))
+                .expect("placed ArmoryRoom has an entrance");
+            special_rooms::armory_prizes_on_map(dungeon, room, map, entrance, items_to_spawn)
+        }
         "LibraryRoom" => special_rooms::library_prizes(dungeon, room, items_to_spawn),
         "TreasuryRoom" => special_rooms::treasury_prizes_on_map(dungeon, room, map, items_to_spawn),
         "PoolRoom" => vec![special_rooms::pool_prize_on_map(

@@ -222,6 +222,12 @@ fn depth_one_final_heaps_match_report_projection() {
         let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
         dungeon.depth = 1;
         let level = create_level_partial(&mut dungeon);
+        let map = report.floors[0].map.as_ref().expect("depth-one map");
+        assert_eq!(
+            (map.width, map.height),
+            (expected_floor.width, expected_floor.height),
+            "Rust map bounds in {context}"
+        );
         assert_eq!(
             level.pre_paint_rng_probe, expected_floor.pre_paint_rng,
             "pre-painter RNG boundary in {context}"
@@ -234,12 +240,134 @@ fn depth_one_final_heaps_match_report_projection() {
             level.pre_items_rng_probe, expected_floor.pre_items_rng,
             "pre-createItems RNG boundary in {context}"
         );
-        let map = report.floors[0].map.as_ref().expect("depth-one map");
-        assert_eq!(
-            (map.width, map.height),
-            (expected_floor.width, expected_floor.height),
-            "Rust map bounds in {context}"
-        );
+        if let Some(terrain) = &expected_floor.terrain {
+            let mismatches: Vec<_> = map
+                .tiles
+                .iter()
+                .zip(terrain)
+                .enumerate()
+                .filter_map(|(cell, (&actual, &expected))| {
+                    (actual != expected).then_some((cell, actual, expected))
+                })
+                .collect();
+            assert!(
+                mismatches.is_empty(),
+                "depth-one final terrain mismatches (cell, actual, expected) in {context}: {mismatches:?}"
+            );
+        }
+        if let Some(discoverable) = &expected_floor.discoverable {
+            assert_eq!(
+                map.discoverable, *discoverable,
+                "depth-one discoverable mask cell-for-cell in {context}"
+            );
+        }
+        if let Some(tile_variance) = &expected_floor.tile_variance {
+            assert_eq!(
+                map.tile_variance, *tile_variance,
+                "depth-one tile variance cell-for-cell in {context}"
+            );
+        }
+        if expected_floor.terrain.is_some() {
+            let actual_heaps: Vec<_> = map
+                .heaps
+                .iter()
+                .map(|heap| OracleHeap {
+                    cell: heap.cell,
+                    heap_type: heap.heap_type.clone(),
+                    items: heap
+                        .items
+                        .iter()
+                        .map(|item| OracleItem {
+                            class_name: item.class_name.clone(),
+                            quantity: item.quantity,
+                            level: item.level,
+                            cursed: item.cursed,
+                        })
+                        .collect(),
+                })
+                .collect();
+            assert_eq!(
+                actual_heaps, expected_floor.final_heaps,
+                "depth-one structured heaps in {context}"
+            );
+            let actual_mobs: Vec<_> = map
+                .mobs
+                .iter()
+                .map(|mob| OracleMob {
+                    cell: mob.cell,
+                    class_name: mob.class_name.clone(),
+                })
+                .collect();
+            assert_eq!(
+                actual_mobs, expected_floor.final_mobs,
+                "depth-one structured mobs in {context}"
+            );
+        }
+        if let Some(transitions) = &expected_floor.transitions {
+            let actual: Vec<_> = map
+                .transitions
+                .iter()
+                .map(|transition| OracleTransition {
+                    cell: transition.cell,
+                    transition_type: transition.transition_type.clone(),
+                    left: transition.left,
+                    top: transition.top,
+                    right: transition.right,
+                    bottom: transition.bottom,
+                    dest_depth: transition.dest_depth,
+                    dest_branch: transition.dest_branch,
+                    dest_type: transition.dest_type.clone(),
+                })
+                .collect();
+            assert_eq!(actual, *transitions, "depth-one transitions in {context}");
+        }
+        if let Some(traps) = &expected_floor.traps {
+            let actual: Vec<_> = map
+                .traps
+                .iter()
+                .map(|trap| OracleTrap {
+                    cell: trap.cell,
+                    class_name: trap.class_name.clone(),
+                    visible: trap.visible,
+                    active: trap.active,
+                    color: trap.color,
+                    shape: trap.shape,
+                })
+                .collect();
+            assert_eq!(actual, *traps, "depth-one traps in {context}");
+        }
+        if let Some(plants) = &expected_floor.plants {
+            let actual: Vec<_> = map
+                .plants
+                .iter()
+                .map(|plant| OraclePlant {
+                    cell: plant.cell,
+                    class_name: plant.class_name.clone(),
+                    image: plant.image,
+                })
+                .collect();
+            assert_eq!(actual, *plants, "depth-one plants in {context}");
+        }
+        if let Some(blobs) = &expected_floor.blobs {
+            let actual: Vec<_> = map
+                .blobs
+                .iter()
+                .map(|blob| OracleBlob {
+                    class_name: blob.class_name.clone(),
+                    volume: blob.volume,
+                    always_visible: blob.always_visible,
+                    cells: blob
+                        .cells
+                        .iter()
+                        .map(|cell| OracleBlobCell {
+                            cell: cell.cell,
+                            value: cell.value,
+                        })
+                        .collect(),
+                })
+                .collect();
+            assert_eq!(actual, *blobs, "depth-one active blobs in {context}");
+        }
         let actual_item_cells: Vec<_> = map
             .markers
             .iter()

@@ -213,6 +213,36 @@ public final class JavaOracle {
 			json.append(floor.preItemsRng.get(index));
 		}
 		json.append("],\n");
+		json.append("      \"terrain\": [");
+		for (int index = 0; index < floor.terrain.size(); index++) {
+			if (index > 0) json.append(", ");
+			json.append(floor.terrain.get(index));
+		}
+		json.append("],\n");
+		json.append("      \"discoverable\": [");
+		for (int index = 0; index < floor.discoverable.size(); index++) {
+			if (index > 0) json.append(", ");
+			json.append(floor.discoverable.get(index));
+		}
+		json.append("],\n");
+		json.append("      \"tile_variance\": [");
+		for (int index = 0; index < floor.tileVariance.size(); index++) {
+			if (index > 0) json.append(", ");
+			json.append(floor.tileVariance.get(index));
+		}
+		json.append("],\n");
+		json.append("      \"transitions\": [\n");
+		appendTransitions(json, floor.transitions);
+		json.append("      ],\n");
+		json.append("      \"traps\": [\n");
+		appendTraps(json, floor.traps);
+		json.append("      ],\n");
+		json.append("      \"plants\": [\n");
+		appendPlants(json, floor.plants);
+		json.append("      ],\n");
+		json.append("      \"blobs\": [\n");
+		appendBlobs(json, floor.blobs);
+		json.append("      ],\n");
 		json.append("      \"final_heaps\": [\n");
 		appendHeaps(json, floor.heaps);
 		json.append("      ],\n");
@@ -223,6 +253,76 @@ public final class JavaOracle {
 		json.append("  ]\n");
 		json.append("}\n");
 		return json.toString();
+	}
+
+	private static void appendTransitions(
+			StringBuilder json, List<FloorVisualFacts.TransitionFact> transitions) {
+		for (int index = 0; index < transitions.size(); index++) {
+			FloorVisualFacts.TransitionFact transition = transitions.get(index);
+			json.append("        { \"cell\": ").append(transition.cell)
+					.append(", \"type\": \"").append(escape(transition.transitionType))
+					.append("\", \"left\": ").append(transition.left)
+					.append(", \"top\": ").append(transition.top)
+					.append(", \"right\": ").append(transition.right)
+					.append(", \"bottom\": ").append(transition.bottom)
+					.append(", \"dest_depth\": ").append(transition.destDepth)
+					.append(", \"dest_branch\": ").append(transition.destBranch)
+					.append(", \"dest_type\": ");
+			if (transition.destType == null) {
+				json.append("null");
+			} else {
+				json.append('"').append(escape(transition.destType)).append('"');
+			}
+			json.append(" }");
+			if (index + 1 < transitions.size()) json.append(',');
+			json.append('\n');
+		}
+	}
+
+	private static void appendTraps(StringBuilder json, List<FloorVisualFacts.TrapFact> traps) {
+		for (int index = 0; index < traps.size(); index++) {
+			FloorVisualFacts.TrapFact trap = traps.get(index);
+			json.append("        { \"cell\": ").append(trap.cell)
+					.append(", \"class\": \"").append(escape(trap.trapClass))
+					.append("\", \"visible\": ").append(trap.visible)
+					.append(", \"active\": ").append(trap.active)
+					.append(", \"color\": ").append(trap.color)
+					.append(", \"shape\": ").append(trap.shape).append(" }");
+			if (index + 1 < traps.size()) json.append(',');
+			json.append('\n');
+		}
+	}
+
+	private static void appendPlants(StringBuilder json, List<FloorVisualFacts.PlantFact> plants) {
+		for (int index = 0; index < plants.size(); index++) {
+			FloorVisualFacts.PlantFact plant = plants.get(index);
+			json.append("        { \"cell\": ").append(plant.cell)
+					.append(", \"class\": \"").append(escape(plant.plantClass))
+					.append("\", \"image\": ").append(plant.image).append(" }");
+			if (index + 1 < plants.size()) json.append(',');
+			json.append('\n');
+		}
+	}
+
+	private static void appendBlobs(StringBuilder json, List<FloorVisualFacts.BlobFact> blobs) {
+		for (int blobIndex = 0; blobIndex < blobs.size(); blobIndex++) {
+			FloorVisualFacts.BlobFact blob = blobs.get(blobIndex);
+			json.append("        {\n");
+			json.append("          \"class\": \"").append(escape(blob.blobClass)).append("\",\n");
+			json.append("          \"volume\": ").append(blob.volume).append(",\n");
+			json.append("          \"always_visible\": ").append(blob.alwaysVisible).append(",\n");
+			json.append("          \"cells\": [");
+			for (int cellIndex = 0; cellIndex < blob.cells.size(); cellIndex++) {
+				FloorVisualFacts.BlobCellFact cell = blob.cells.get(cellIndex);
+				if (cellIndex > 0) json.append(", ");
+				json.append("{ \"cell\": ").append(cell.cell)
+						.append(", \"value\": ").append(cell.value).append(" }");
+			}
+			json.append("]\n");
+			json.append("        }");
+			if (blobIndex + 1 < blobs.size()) json.append(',');
+			json.append('\n');
+		}
 	}
 
 	private static void appendMobs(StringBuilder json, List<FloorOracle.MobFact> mobs) {
