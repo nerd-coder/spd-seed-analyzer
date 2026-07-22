@@ -106,20 +106,51 @@ RNG draw inside `createItems` (the `n_items` roll) is already reading from the
 wrong position. **Nothing downstream can match until this is ported**, even
 if it only needs to *burn* the correct RNG shape rather than render mobs.
 
-### 2. `random_drop_cell` shuffles the wrong-sized list (Medium)
+### 2. ~~`random_drop_cell` shuffles the wrong-sized list (Medium)~~ — FIXED
 Java's `randomRoom(type)` (`RegularLevel.java:707-710`) shuffles the level's
 **entire** `rooms` list (every room: entrance, exit, standard, special,
-secret, shop, connectors) on *every call*, then linear-scans for the first
-room of the requested type (`randomDropCell`, `RegularLevel.java:736-766`).
-Fisher-Yates cost scales with total room count. Rust's `random_drop_cell`
-(`crates/spd-core/src/level/create_items.rs:198-258`) instead pre-filters to
-`RoomKind::Standard` rooms *before* shuffling, then reshuffles that smaller
-list on each of its 100 tries — a different RNG-call count on literally every
-invocation (main loop ×3-5, `itemsToSpawn` placement, trailing
-torch/rose/guide draws). Fix: shuffle the full per-floor room list (a
-precedent already exists in `special_loot::special_room_loot`, which shuffles
-a full index list the same way Java does), then take the first
-`RoomKind::Standard` match.
+secret, shop, connectors, **and set-empty rooms**) on *every call*, then
+linear-scans for the first room of the requested type (`randomDropCell`,
+`RegularLevel.java:736-766`). Fisher-Yates cost scales with total room count.
+Rust's `random_drop_cell` now does exactly that: full index-list
+`Random::shuffle_list` per try (the `special_loot::special_room_loot`
+pattern), first `StandardRoom`-instance match in shuffled order.
+
+Verified-against-source details now ported:
+
+- **Instanceof set**: `EntranceRoom`/`ExitRoom` extend `StandardRoom`
+  (v3.3.8), so Rust kinds `Entrance`, `Exit`, AND `Standard` all match the
+  scan. Entrance picked → try wasted (`room != roomEntrance`), zero further
+  draws. Exit room CAN host drops — only the exact exit cell is excluded.
+- **Exit cell**: Java `exit()` is the `REGULAR_EXIT` transition cell = the
+  single cell painted `Terrain.EXIT` by the exit room. Rust resolves it as
+  `map.map.iter().position(|&t| t == EXIT)` once per call (no `TerrainMap`
+  field needed; the whole exit room is NOT excluded).
+- **Degenerate IntRange correction**: watabou `Int(max)` returns 0 with **no
+  RNG draw** when `max <= 0` (`Random.java:120-124`), so a set-empty room's
+  `IntRange(left+1, right-1)` = `IntRange(1, -1)` burns **zero** draws (not
+  one per coordinate) and yields point (1, 1), which then fails
+  passable/solid (wall padding in practice). Rust `Random::int_max` already
+  mirrored this; the old `width() <= 2` pre-skip (which burned nothing and
+  never drew) is gone — Java always evaluates `Room.random()` for
+  non-entrance matches.
+- **No fallback**: scan finds no `StandardRoom` instance → return -1 on the
+  FIRST try after exactly one full-list shuffle. The old non-Java
+  "non-entrance rooms" fallback is dropped.
+- Kept as-is: `occupied` mask as the `heaps.get(pos) == null` analog,
+  `item_allowed` mask + `AquariumRoom` water override (gap 4),
+  `trap_destroys_items`, passable/solid, 100-try cap. `findMob(pos) == null`
+  marked with `// TODO(gap 1):` at its exact conjunct position.
+
+Tests moved to `level/create_items/tests.rs` (SMALL-FILES split; same module
+path). New coverage drives a parallel `JavaRandom` twin oracle that
+transcribes the Java method (JDK `Collections.shuffle` loop + watabou
+`IntRange` semantics) and asserts both the selected cell AND the total draw
+count (post-call `next_int` sync): full-list reshuffle per try, exit-room
+hosting minus the exit cell, entrance-wastes-try, degenerate zero-draw pick,
+and no-match→-1-after-one-shuffle. The AAA-AAA-AAA final-heaps projection
+was re-characterized (now shares 6 of 8 Java items; still `assert_ne` —
+gap 1 `createMobs` RNG shape remains).
 
 ### 3. ~~Eight special/secret rooms drop their trailing forced-item push~~ — FIXED
 All 9 missing `addItemToSpawn` pushes are now ported. Push positions were
@@ -194,9 +225,9 @@ a narrow unit test, but expect the `java_oracle_goldens/final_heaps.rs`
 mismatch test to stay red until **both** land:
 
 1. ~~Gap 3~~ — **done** (9 forced-item pushes + per-room push ordering).
-2. **Gap 2** (`random_drop_cell` shuffle scope) — needs the full per-floor
-   room list passed in instead of a pre-filtered `Vec`; reuse the shuffle
-   pattern already in `special_loot::special_room_loot`.
+2. ~~Gap 2~~ — **done** (`random_drop_cell` full-list reshuffle per try,
+   Java instanceof semantics for Entrance/Exit/Standard, exact exit-cell
+   exclusion, zero-draw degenerate IntRange, no fallback).
 3. **Gap 1** (`createMobs`) — largest lift. Decide up front whether to fully
    port `ShadowCaster`/`PathFinder`/mob placement (enables future mob map
    markers) or build a reduced path that burns *identical* RNG shape without
@@ -302,10 +333,12 @@ license constraints.
 ## How to resume (clean context)
 
 1. Read this file, specifically **"What's lacking for exact parity"** above.
-2. ~~Gap 3~~ — done. Start with gap 2
-   (`level/create_items.rs` `random_drop_cell` — shuffle the full per-floor
-   room list, don't pre-filter to Standard).
-3. Then gap 1 (`level/mod.rs` + new `createMobs` port).
+2. ~~Gap 3~~ — done. ~~Gap 2~~ — done
+   (`level/create_items.rs` `random_drop_cell` now shuffles the full per-floor
+   room list per try with Java `StandardRoom` instanceof semantics).
+3. Then gap 1 (`level/mod.rs` + new `createMobs` port) — the only remaining
+   RNG-stream gap before `createItems`; `random_drop_cell` already carries a
+   `// TODO(gap 1):` marker where the `findMob(pos) == null` conjunct lands.
 4. Validate against `crates/spd-core/tests/java_oracle_goldens/final_heaps.rs`
    and the `aaa-aaa-aaa-final-heaps-floor-1.json` fixture; regenerate/extend
    fixtures via `tools/java-oracle/run` (set `SPD_SOURCE=/Users/toan/code/00-Evan/shattered-pixel-dungeon`).

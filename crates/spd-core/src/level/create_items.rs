@@ -1,8 +1,8 @@
-//! Port of `RegularLevel.createItems` main random drop loop (simplified placement).
+//! Port of `RegularLevel.createItems` main random drop loop.
 
 use crate::dungeon::DungeonState;
 use crate::items::model::{GeneratedItem, ItemCategory};
-use crate::level::terrain::TerrainMap;
+use crate::level::terrain::{TerrainMap, EXIT, WATER};
 use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
@@ -21,7 +21,8 @@ pub struct CreatedLoot {
 }
 
 /// Main createItems random drops + forced itemsToSpawn placement.
-/// Uses simplified randomDropCell (standard rooms only, passable empty).
+/// `randomDropCell` matches Java: full-list reshuffle per try, StandardRoom
+/// instanceof scan (Entrance/Exit/Standard kinds), exact exit-cell exclusion.
 pub fn create_items_main(
     dungeon: &mut DungeonState,
     rooms: &[Room],
@@ -200,45 +201,63 @@ pub fn create_items_main(
 }
 
 /// Returns index into `map.map` / `occupied`, or -1.
+///
+/// Port of `RegularLevel.randomDropCell(StandardRoom.class)`:
+/// - Every try calls `randomRoom`, i.e. `Random.shuffle(rooms)` on the ENTIRE
+///   room list (entrance, exit, standard, special, secret, connection, shop,
+///   AND set-empty rooms), then linear-scans the shuffled order for the first
+///   `StandardRoom` instance. In Java `EntranceRoom`/`ExitRoom` extend
+///   `StandardRoom`, so Rust kinds Entrance/Exit/Standard all match.
+/// - If the scan finds no match, Java returns -1 on the FIRST try (exactly one
+///   full-list shuffle burned). There is no fallback room set.
+/// - The entrance room never hosts a drop (`room != roomEntrance`): picking it
+///   wastes the try with no `Room.random()` draws.
+/// - The exit room CAN host a drop, just never on the exit cell itself.
+/// - Set-empty rooms stay in the list; if picked, watabou `Int(max <= 0)`
+///   returns 0 WITHOUT consuming a draw, so the degenerate
+///   `IntRange(left+1, right-1)` pair on a zeroed rect burns zero draws and
+///   yields (1, 1), which then fails the terrain checks below.
 fn random_drop_cell(rooms: &[Room], map: &TerrainMap, occupied: &mut [bool]) -> i32 {
-    let mut candidates: Vec<usize> = rooms
-        .iter()
-        .enumerate()
-        .filter(|(_, r)| !r.is_empty() && r.kind == RoomKind::Standard)
-        .map(|(i, _)| i)
-        .collect();
-    if candidates.is_empty() {
-        candidates = rooms
-            .iter()
-            .enumerate()
-            .filter(|(_, r)| !r.is_empty() && !r.is_entrance())
-            .map(|(i, _)| i)
-            .collect();
-    }
-    if candidates.is_empty() {
-        return -1;
-    }
+    // Java `exit()` is the REGULAR_EXIT transition cell — the single cell the
+    // exit room painter set to Terrain.EXIT. Invariant during this loop.
+    let exit_cell = map.map.iter().position(|&t| t == EXIT);
 
+    let mut order: Vec<usize> = (0..rooms.len()).collect();
     let mut tries = 100;
     while tries > 0 {
         tries -= 1;
-        Random::shuffle_list(&mut candidates);
-        let room = &rooms[candidates[0]];
+        // `randomRoom`: Collections.shuffle on the full list, every try.
+        Random::shuffle_list(&mut order);
+        // `room(type)`: first instanceof-StandardRoom in shuffled order.
+        let room = order.iter().map(|&ri| &rooms[ri]).find(|r| {
+            matches!(
+                r.kind,
+                RoomKind::Entrance | RoomKind::Exit | RoomKind::Standard
+            )
+        });
+        let Some(room) = room else {
+            return -1;
+        };
         if room.is_entrance() {
+            // `room != roomEntrance` — try wasted, no point draws.
             continue;
         }
-        if room.width() <= 2 || room.height() <= 2 {
-            continue;
-        }
+        // `Room.random()` = IntRange(left+1, right-1), IntRange(top+1, bottom-1).
         let x = Random::int_range_inclusive(room.left + 1, room.right - 1);
         let y = Random::int_range_inclusive(room.top + 1, room.bottom - 1);
         let Some(idx) = map.point_to_cell(x, y) else {
             continue;
         };
-        if idx >= occupied.len() || occupied[idx] {
+        if idx >= map.passable.len() || !map.passable[idx] {
             continue;
         }
-        if idx >= map.passable.len() || !map.passable[idx] {
+        if map.is_solid(idx) {
+            continue;
+        }
+        if Some(idx) == exit_cell {
+            continue;
+        }
+        if idx >= occupied.len() || occupied[idx] {
             continue;
         }
         if !map.item_allowed.get(idx).copied().unwrap_or(false) {
@@ -246,12 +265,12 @@ fn random_drop_cell(rooms: &[Room], map: &TerrainMap, occupied: &mut [bool]) -> 
         }
         // AquariumRoom checks the final terrain dynamically, including water
         // added by RegularPainter after the room's own pool was painted.
-        if room.name == "AquariumRoom" && map.map[idx] == crate::level::terrain::WATER {
+        if room.name == "AquariumRoom" && map.map[idx] == WATER {
             continue;
         }
-        if map.is_solid(idx) {
-            continue;
-        }
+        // TODO(gap 1): add the `findMob(pos) == null` conjunct here once
+        // createMobs lands (room-painted mobs are already folded into
+        // `occupied` by the caller).
         // Items cannot spawn on traps that destroy items (Burning/Frost/…/Pitfall).
         if map.trap_destroys_items.get(idx).copied().unwrap_or(false) {
             continue;
@@ -263,51 +282,4 @@ fn random_drop_cell(rooms: &[Room], map: &TerrainMap, occupied: &mut [bool]) -> 
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::level::terrain::{self, EMPTY, WATER};
-
-    fn room(name: &str) -> Room {
-        let mut room = Room::new(0, name, RoomKind::Standard, 1, 16, 5, 5, 5, 5);
-        room.left = 1;
-        room.top = 1;
-        room.right = 5;
-        room.bottom = 5;
-        room
-    }
-
-    #[test]
-    fn random_drop_cell_enforces_room_item_mask() {
-        Random::reset_generators();
-        let room = room("PlantsRoom");
-        let mut map = terrain::paint_minimal(std::slice::from_ref(&room)).expect("map");
-        map.item_allowed.fill(false);
-        let only = map.point_to_cell(3, 3).expect("center");
-        map.item_allowed[only] = true;
-        let mut occupied = vec![false; map.len()];
-        Random::push_generator_seeded(3);
-        let selected = random_drop_cell(&[room], &map, &mut occupied);
-        Random::pop_generator();
-        assert_eq!(selected, only as i32);
-    }
-
-    #[test]
-    fn aquarium_rejects_water_from_later_painter_passes() {
-        Random::reset_generators();
-        let room = room("AquariumRoom");
-        let mut map = terrain::paint_minimal(std::slice::from_ref(&room)).expect("map");
-        for y in 2..=4 {
-            for x in 2..=4 {
-                let cell = map.point_to_cell(x, y).expect("interior");
-                map.map[cell] = WATER;
-            }
-        }
-        let only = map.point_to_cell(3, 3).expect("center");
-        map.map[only] = EMPTY;
-        let mut occupied = vec![false; map.len()];
-        Random::push_generator_seeded(7);
-        let selected = random_drop_cell(&[room], &map, &mut occupied);
-        Random::pop_generator();
-        assert_eq!(selected, only as i32);
-    }
-}
+mod tests;
