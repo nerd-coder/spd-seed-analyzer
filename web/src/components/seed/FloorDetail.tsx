@@ -137,7 +137,11 @@ export function FloorDetail({
       <div className="flex items-start gap-3">
         {details}
         {showMap && floor.map && (
-          <FloorMapPreview map={floor.map} depth={floor.depth} />
+          <FloorMapPreview
+            map={floor.map}
+            identities={identities}
+            depth={floor.depth}
+          />
         )}
       </div>
     </section>

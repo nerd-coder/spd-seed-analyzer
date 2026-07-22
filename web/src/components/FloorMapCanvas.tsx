@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Terrain } from '@/lib/dungeon-tile-visuals'
-import type { FloorMap } from '@/lib/spd-wasm'
+import type { FloorMap, IdentityMaps } from '@/lib/spd-wasm'
 import {
   drawFloorMap,
   loadMapAssets,
+  mapViewport,
   renderStaticMap,
   TILE_PX,
 } from '@/lib/tiles'
@@ -11,6 +12,7 @@ import { cn } from '@/lib/utils'
 
 type Props = {
   map: FloorMap
+  identities: IdentityMaps
   /** Pixel scale per game tile for canvas backing store (1 = 16px, 2 = 32px, …). */
   scale?: number
   /**
@@ -28,6 +30,7 @@ type Props = {
 
 export function FloorMapCanvas({
   map,
+  identities,
   scale = 2,
   maxDisplay,
   className,
@@ -39,9 +42,10 @@ export function FloorMapCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [error, setError] = useState<string | null>(null)
   const [reducedMotion, setReducedMotion] = useState(false)
+  const viewport = useMemo(() => mapViewport(map), [map])
 
-  const naturalW = map.width * TILE_PX * scale
-  const naturalH = map.height * TILE_PX * scale
+  const naturalW = viewport.width * TILE_PX * scale
+  const naturalH = viewport.height * TILE_PX * scale
   let displayW = naturalW
   let displayH = naturalH
   if (maxDisplay != null && maxDisplay > 0) {
@@ -85,14 +89,21 @@ export function FloorMapCanvas({
         if (cancelled) return
         const ctx = canvas.getContext('2d')
         if (!ctx) return
-        const staticMap = renderStaticMap(assets, map, scale, {
+        const staticMap = renderStaticMap(assets, map, identities, scale, {
           item: showItems,
           mob: showMobs,
         })
         const started = performance.now()
         const frame = (now: number) => {
           if (cancelled) return
-          drawFloorMap(ctx, assets, staticMap, scale, (now - started) / 1000)
+          drawFloorMap(
+            ctx,
+            assets,
+            staticMap,
+            scale,
+            (now - started) / 1000,
+            viewport
+          )
           if (hasWater && !reducedMotion) {
             requestId = requestAnimationFrame(frame)
           }
@@ -111,6 +122,7 @@ export function FloorMapCanvas({
     }
   }, [
     map,
+    identities,
     scale,
     naturalW,
     naturalH,
@@ -118,6 +130,7 @@ export function FloorMapCanvas({
     reducedMotion,
     showItems,
     showMobs,
+    viewport,
   ])
 
   return (
@@ -132,7 +145,7 @@ export function FloorMapCanvas({
           ref={canvasRef}
           className={cn('rounded-none border bg-black/80', canvasClassName)}
           role="img"
-          aria-label={`Shattered Pixel Dungeon floor map.${markerDescription}`}
+          aria-label={`Shattered Pixel Dungeon floor map. ${map.heaps.length} exact heaps, ${map.mobs.length} exact mobs, ${map.traps.length} traps, and ${map.transitions.length} transitions.${markerDescription}`}
           title={markerDescription.trim() || undefined}
           style={{
             width: displayW,

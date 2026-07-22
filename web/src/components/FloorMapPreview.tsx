@@ -12,14 +12,15 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-import type { FloorMap } from '@/lib/spd-wasm'
-import { TILE_PX } from '@/lib/tiles'
+import type { FloorMap, IdentityMaps } from '@/lib/spd-wasm'
+import { mapViewport, TILE_PX } from '@/lib/tiles'
 import { cn } from '@/lib/utils'
 
 const PREVIEW_BOX = 128
 
 type Props = {
   map: FloorMap
+  identities: IdentityMaps
   depth: number
   className?: string
 }
@@ -28,15 +29,20 @@ type Props = {
 function fullscreenScale(map: FloorMap): number {
   if (typeof window === 'undefined') return 2
   const budget = Math.min(window.innerWidth - 48, window.innerHeight - 140)
-  const tileEdge = Math.max(map.width, map.height) * TILE_PX
-  return Math.max(1, Math.min(4, Math.floor(budget / tileEdge) || 1))
+  const viewport = mapViewport(map)
+  const tileEdge = Math.max(viewport.width, viewport.height) * TILE_PX
+  // The dialog scrolls; allow one 2× tile of overflow so HKT keeps the pinned
+  // 2× composition after retaining its raised-overhang row.
+  const fit = Math.floor((budget + 2 * TILE_PX) / tileEdge)
+  return Math.max(1, Math.min(4, fit || 1))
 }
 
 /**
  * Fixed 128×128 clickable map thumbnail; opens a dialog for a larger view.
  */
-export function FloorMapPreview({ map, depth, className }: Props) {
+export function FloorMapPreview({ map, identities, depth, className }: Props) {
   const expandScale = useMemo(() => fullscreenScale(map), [map])
+  const viewport = useMemo(() => mapViewport(map), [map])
   const [showItems, setShowItems] = useState(false)
   const [showMobs, setShowMobs] = useState(false)
   const itemMarkers = map.markers.filter(
@@ -62,6 +68,7 @@ export function FloorMapPreview({ map, depth, className }: Props) {
           <span className="absolute inset-0 flex items-center justify-center">
             <FloorMapCanvas
               map={map}
+              identities={identities}
               scale={1}
               maxDisplay={PREVIEW_BOX}
               canvasClassName="border-0"
@@ -82,7 +89,8 @@ export function FloorMapPreview({ map, depth, className }: Props) {
         <DialogHeader>
           <DialogTitle className="font-mono">Floor {depth}</DialogTitle>
           <DialogDescription>
-            {map.width}×{map.height} · {map.tileset}
+            {map.width}×{map.height} · {map.tileset} · discoverable crop{' '}
+            {viewport.width}×{viewport.height}
           </DialogDescription>
         </DialogHeader>
         {map.markers.length > 0 && (
@@ -115,18 +123,15 @@ export function FloorMapPreview({ map, depth, className }: Props) {
             </p>
           </div>
         )}
-        <div className="flex min-h-0 flex-1 items-center justify-center overflow-auto bg-black/80 p-2">
+        <div className="flex min-h-0 flex-1 items-start justify-start overflow-auto bg-black/80 p-2">
           <FloorMapCanvas
             map={map}
+            identities={identities}
+            className="m-auto"
             scale={expandScale}
             animateWater
             showItems={showItems}
             showMobs={showMobs}
-            maxDisplay={
-              typeof window !== 'undefined'
-                ? Math.min(window.innerWidth - 64, window.innerHeight - 160)
-                : 640
-            }
           />
         </div>
       </DialogContent>

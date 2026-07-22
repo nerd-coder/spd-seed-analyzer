@@ -35,7 +35,14 @@ export type FloorMap = {
   tileset: string
   tiles: number[]
   tile_variance: number[]
+  discoverable: boolean[]
   markers: MapMarker[]
+  heaps: MapHeap[]
+  mobs: MapMob[]
+  transitions: MapTransition[]
+  traps: MapTrap[]
+  plants: MapPlant[]
+  blobs: MapBlob[]
 }
 
 export type MapMarkerKind = 'item' | 'mob'
@@ -44,6 +51,63 @@ export type MapMarker = {
   cell: number
   kind: MapMarkerKind
   label: string
+}
+
+export type MapHeap = {
+  cell: number
+  heap_type: string
+  items: MapHeapItem[]
+}
+
+export type MapHeapItem = {
+  class: string
+  quantity: number
+  level: number
+  cursed: boolean
+}
+
+export type MapMob = {
+  cell: number
+  class: string
+}
+
+export type MapTransition = {
+  cell: number
+  type: string
+  left: number
+  top: number
+  right: number
+  bottom: number
+  dest_depth: number
+  dest_branch: number
+  dest_type: string | null
+}
+
+export type MapTrap = {
+  cell: number
+  class: string
+  visible: boolean
+  active: boolean
+  color: number
+  shape: number
+}
+
+export type MapPlant = {
+  cell: number
+  class: string
+  image: number
+}
+
+export type MapBlobCell = {
+  cell: number
+  value: number
+}
+
+export type MapBlob = {
+  class: string
+  volume: number
+  always_visible: boolean
+  cells: MapBlobCell[]
 }
 
 export type FloorReport = {

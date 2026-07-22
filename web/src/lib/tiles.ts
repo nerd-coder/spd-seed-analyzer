@@ -6,14 +6,26 @@ import {
   TILE_PX,
   wallVisual,
 } from '@/lib/dungeon-tile-visuals'
-import type { FloorMap, MapMarkerKind } from '@/lib/spd-wasm'
+import {
+  drawKnownEntities,
+  drawVisibleTraps,
+  exactEntityCells,
+  type MapEntityAssets,
+} from '@/lib/map-entities'
+import type { FloorMap, IdentityMaps, MapMarkerKind } from '@/lib/spd-wasm'
 
 export { TILE_PX } from '@/lib/dungeon-tile-visuals'
 
-export type MapAssets = {
+export type MapAssets = MapEntityAssets & {
   tiles: HTMLImageElement
-  terrainFeatures: HTMLImageElement
   water: HTMLImageElement
+}
+
+export type MapViewport = {
+  x: number
+  y: number
+  width: number
+  height: number
 }
 
 type MarkerVisibility = Record<MapMarkerKind, boolean>
@@ -47,11 +59,50 @@ export function loadMapAssets(tileset: string): Promise<MapAssets> {
     loadImage(`/assets/environment/tiles_${key}.png`),
     loadImage('/assets/environment/terrain_features.png'),
     loadImage(`/assets/environment/water${region}.png`),
-  ]).then(([tiles, terrainFeatures, water]) => ({
+    loadImage('/assets/sprites/items.png'),
+    loadImage('/assets/sprites/rat.png'),
+    loadImage('/assets/sprites/snake.png'),
+  ]).then(([tiles, terrainFeatures, water, items, rat, snake]) => ({
     tiles,
     terrainFeatures,
     water,
+    items,
+    rat,
+    snake,
   }))
+}
+
+/** Tight deterministic viewport around cells retained by pinned `cleanWalls()`. */
+export function mapViewport(map: FloorMap): MapViewport {
+  if (map.discoverable.length !== map.tiles.length) {
+    return { x: 0, y: 0, width: map.width, height: map.height }
+  }
+  let left = map.width
+  let top = map.height
+  let right = -1
+  let bottom = -1
+  for (let cell = 0; cell < map.discoverable.length; cell++) {
+    if (!map.discoverable[cell]) continue
+    const x = cell % map.width
+    const y = Math.floor(cell / map.width)
+    left = Math.min(left, x)
+    top = Math.min(top, y)
+    right = Math.max(right, x)
+    bottom = Math.max(bottom, y)
+  }
+  if (right >= left) {
+    // Raised sprites/walls occupy pixels above their owning cell. Preserve one
+    // row of vertical overhang, matching GameScene's camera composition.
+    top = Math.max(0, top - 1)
+  }
+  return right < left
+    ? { x: 0, y: 0, width: map.width, height: map.height }
+    : {
+        x: left,
+        y: top,
+        width: right - left + 1,
+        height: bottom - top + 1,
+      }
 }
 
 function drawSheetTile(
@@ -85,6 +136,7 @@ function drawMarkers(
   const size = TILE_PX * scale
   const radius = Math.max(2, 3 * scale)
   ctx.lineWidth = Math.max(1, scale)
+  const exactCells = exactEntityCells(map)
   for (const marker of map.markers) {
     if (
       !visibility[marker.kind] ||
@@ -92,6 +144,7 @@ function drawMarkers(
       marker.cell >= map.tiles.length
     )
       continue
+    if (exactCells[marker.kind].has(marker.cell)) continue
     const x = (marker.cell % map.width) * size + size / 2
     const y = Math.floor(marker.cell / map.width) * size + size / 2
     ctx.beginPath()
@@ -116,6 +169,7 @@ function drawMarkers(
 export function renderStaticMap(
   assets: MapAssets,
   map: FloorMap,
+  identities: IdentityMaps,
   scale: number,
   visibility: MarkerVisibility
 ): HTMLCanvasElement {
@@ -127,7 +181,19 @@ export function renderStaticMap(
   ctx.imageSmoothingEnabled = false
 
   const variance = map.tile_variance ?? []
+  const hasDiscoverability = map.discoverable.length === map.tiles.length
   for (let cell = 0; cell < map.tiles.length; cell++) {
+    if (hasDiscoverability && !map.discoverable[cell]) {
+      const size = TILE_PX * scale
+      ctx.fillStyle = '#000'
+      ctx.fillRect(
+        (cell % map.width) * size,
+        Math.floor(cell / map.width) * size,
+        size,
+        size
+      )
+      continue
+    }
     const visual = lowerVisual(
       map.tiles,
       variance,
@@ -139,6 +205,7 @@ export function renderStaticMap(
       drawSheetTile(ctx, assets.tiles, visual, cell, map.width, scale)
   }
   for (let cell = 0; cell < map.tiles.length; cell++) {
+    if (hasDiscoverability && !map.discoverable[cell]) continue
     const visual = featureVisual(
       map.tiles[cell],
       map.tileset,
@@ -148,7 +215,10 @@ export function renderStaticMap(
       drawSheetTile(ctx, assets.terrainFeatures, visual, cell, map.width, scale)
     }
   }
+  drawVisibleTraps(ctx, assets, map, scale)
+  drawKnownEntities(ctx, assets, map, identities, scale, visibility)
   for (let cell = 0; cell < map.tiles.length; cell++) {
+    if (hasDiscoverability && !map.discoverable[cell]) continue
     const raised = raisedTerrainVisual(map.tiles[cell], variance, cell)
     if (raised != null)
       drawSheetTile(ctx, assets.tiles, raised, cell, map.width, scale)
@@ -166,13 +236,17 @@ function drawWater(
   width: number,
   height: number,
   scale: number,
-  offset: number
+  offset: number,
+  originX: number,
+  originY: number
 ) {
   const tileWidth = water.naturalWidth * scale
   const tileHeight = water.naturalHeight * scale
-  const yOffset = (((offset * scale) % tileHeight) + tileHeight) % tileHeight
+  const xOffset = -(((originX * scale) % tileWidth) + tileWidth) % tileWidth
+  const yOffset =
+    ((((offset - originY) * scale) % tileHeight) + tileHeight) % tileHeight
   for (let y = yOffset - tileHeight; y < height; y += tileHeight) {
-    for (let x = 0; x < width; x += tileWidth) {
+    for (let x = xOffset; x < width; x += tileWidth) {
       ctx.drawImage(water, x, y, tileWidth, tileHeight)
     }
   }
@@ -184,7 +258,8 @@ export function drawFloorMap(
   assets: MapAssets,
   staticMap: HTMLCanvasElement,
   scale: number,
-  elapsedSeconds: number
+  elapsedSeconds: number,
+  viewport: MapViewport
 ) {
   ctx.imageSmoothingEnabled = false
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
@@ -194,7 +269,19 @@ export function drawFloorMap(
     ctx.canvas.width,
     ctx.canvas.height,
     scale,
-    -5 * elapsedSeconds
+    -5 * elapsedSeconds,
+    viewport.x * TILE_PX,
+    viewport.y * TILE_PX
   )
-  ctx.drawImage(staticMap, 0, 0)
+  ctx.drawImage(
+    staticMap,
+    viewport.x * TILE_PX * scale,
+    viewport.y * TILE_PX * scale,
+    viewport.width * TILE_PX * scale,
+    viewport.height * TILE_PX * scale,
+    0,
+    0,
+    ctx.canvas.width,
+    ctx.canvas.height
+  )
 }

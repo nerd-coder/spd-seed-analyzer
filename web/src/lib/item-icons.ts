@@ -125,6 +125,7 @@ export const CLASS_ICON: Record<string, number> = {
   Food: 437,
   Gold: 18,
   Honeypot: 53,
+  IronKey: 55,
   MagicalHolster: 485,
   MysteryMeat: 432,
   Pasty: 438,

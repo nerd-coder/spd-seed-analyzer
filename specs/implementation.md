@@ -1,6 +1,6 @@
 # SPD Seed Analyzer — Implementation Plan
 
-**Last updated:** 2026-07-22
+**Last updated:** 2026-07-23
 **Branch:** `main`
 **Pinned SPD:** v3.3.8 @ `7b8b845a7`
 **Local game source:** `/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`
@@ -68,11 +68,14 @@ Structured heap facts
 are exact only for the covered room families whose paint-time cell association
 has been ported; uncovered families retain the legacy `Room loot` marker.
 
-**Frontend — functionally complete for a `partial` engine, not the current
-focus.** Analyze + Find-seeds modes, multi-seed session tabs, spoiler
-toggles, map rendering with autotiling, bounded seed-constraint search. See
-git history / `AGENTS.md` for UI details; no open frontend work is blocking
-parity.
+**Frontend — HKT floor-one deterministic render composition is matched.**
+Analyze + Find-seeds modes, multi-seed session tabs, spoiler toggles, bounded
+seed-constraint search, and map rendering with pinned autotiling are present.
+The browser now consumes the core's structured discoverability, transition,
+trap, heap, and mob facts; HKT floor 1 renders exact trap and entity sprites in
+pinned GameScene layer order inside an integer-scaled, discoverability-bounded
+viewport. The engine and UI still report `partial`; this browser slice does not
+promote uncovered room families or deeper floors.
 
 **Correctness infra — the tool that will prove parity.**
 `tools/java-oracle/` runs the *actual pinned Java source* headlessly and
@@ -118,8 +121,32 @@ Committed screenshots in `specs/fixtures/visual/`, named
 Their hero positions are post-generation gameplay state, not seed-derived
 `Level.create()` output; frontend comparisons must treat the hero as a fixed
 reference overlay or exclude it from the deterministic contract. Floor-1
-browser composition is the next phase, followed by floor-6 core/render parity;
-core parity does not by itself prove pixel-level frontend parity.
+deterministic browser composition is now matched; floor-6 core/render parity is
+next. Core parity does not by itself prove gameplay-state pixel parity.
+
+### 0b. ~~HKT floor-one browser-render parity~~ — DETERMINISTIC LAYERS MATCHED
+For `HKT-JZN-XQQ` floor 1, the browser now consumes every existing structured
+render fact instead of reducing heaps and mobs to dots. Visible traps use the
+pinned terrain-feature atlas indices (`color + shape*16`); heap containers and
+top items use their pinned item frames and seed identity appearances; the eight
+Rat/Snake facts use their pinned idle frames. Rendering follows GameScene's
+relevant order: lower terrain, terrain features/traps, heaps, mobs, raised
+terrain, and walls. Entrance/exit transitions remain terrain-atlas visuals at
+their exact structured cells (260 and 804).
+
+The expanded canvas uses a 2× integer backing scale and the deterministic
+`cleanWalls()` bounds, retaining one row above for raised overhangs. HKT's
+result is 992×1088 rather than the former fractional 981×1040 stretch; its
+terrain geometry and asset selection align with the 988×1083 pinned gameplay
+capture. Overflow starts at the map's top-left and scrolls instead of centering
+oversized content behind the dialog header.
+
+The committed reference still contains fixture-only gameplay state: a hero and
+current/post-exploration FOV shading. Those are intentionally excluded because
+they are not outputs of `Level.create()`; animated water phase is also not a
+fixed pixel contract. Exact heaps/mobs remain opt-in spoiler layers. This closes
+only the HKT floor-one browser slice and does not change the engine's `partial`
+status. Floor-6 core/render parity is next.
 
 ### 0. ~~Broaden depth-one schema-v3 room coverage~~ — FIXED FOR FOUR FIXTURES
 Three representative fixtures were added beside the original AAA regression:
@@ -309,13 +336,14 @@ already — this gap is specifically the room-shape predicate.
 
 ## Suggested fix order
 
-1. **Next phase — HKT browser-render parity.** Rebuild WASM, render
-   `HKT-JZN-XQQ` floor 1 in the browser, and compare the frontend's asset
-   composition against the corresponding committed visual fixture.
-   Correct tile selection/layering, transitions, traps, mobs, heaps, and
-   viewport composition without reimplementing RNG in the UI.
-2. Add pinned core facts for `HKT-JZN-XQQ` floor 6 and compare its browser
-   rendering against the corresponding committed visual fixture.
+1. ~~**HKT browser-render parity.**~~ Rebuilt WASM, rendered
+   `HKT-JZN-XQQ` floor 1 in the browser, and compared the frontend's asset
+   composition against the corresponding committed visual fixture. Structured
+   transitions/traps/heaps/mobs and the cropped integer viewport now compose
+   without reimplementing RNG in the UI.
+2. **Next phase — add pinned core facts for `HKT-JZN-XQQ` floor 6** and
+   compare its browser rendering against the corresponding committed visual
+   fixture.
 3. Extend schema-v3 coverage to still more depth-one room sets. Five exact
    lifecycles are strong regression fixtures, not evidence that every
    depth-one combination is exact.
@@ -431,8 +459,8 @@ license constraints.
    lifecycles are exact at the pre-painter, pre-mobs, and pre-items boundaries
    and for final map bounds, heap cells, mob facts, and report-visible items.
    Keep all five fixtures green.
-3. Continue with the `HKT-JZN-XQQ` browser-render comparison in suggested fix
-   order item 1. Preserve `partial` status while broader depth-one and
+3. Continue with `HKT-JZN-XQQ` floor-6 core/render parity in suggested fix
+   order item 2. Preserve `partial` status while broader depth-one and
    deeper-floor parity remain incomplete.
 4. Validate against `crates/spd-core/tests/java_oracle_goldens/final_heaps.rs`
    and all `*-final-heaps-floor-1.json` fixtures; regenerate/extend fixtures
