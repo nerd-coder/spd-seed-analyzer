@@ -34,7 +34,7 @@ gradle.beforeProject { project ->
         }
         project.tasks.register('javaOracleDump', JavaExec) {
             group = 'verification'
-            description = 'Dumps pinned SPD identity mappings as stable JSON.'
+            description = 'Dumps pinned SPD identity and level-generation facts as stable JSON.'
             dependsOn(project.tasks.named(oracle.classesTaskName))
             classpath = oracle.runtimeClasspath
             mainClass = 'com.shatteredpixel.shatteredpixeldungeon.tools.JavaOracle'

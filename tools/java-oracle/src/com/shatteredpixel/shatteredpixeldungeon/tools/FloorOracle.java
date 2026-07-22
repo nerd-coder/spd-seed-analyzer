@@ -28,8 +28,8 @@ import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel;
-import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretRoom;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.SpecialRoom;
@@ -64,15 +64,15 @@ final class FloorOracle {
 		return new FloorFacts(1, level.forcedItems());
 	}
 
-	static FinalFloorFacts generateFinalHeaps(long seed) {
+	static FinalFloorFacts generateFinalHeaps(long seed, int depth) {
 		initializeFreshRun(seed);
-		Actor.clear();
+		generatePriorFloors(depth);
 		// A committed seed fixture must not depend on the user's bones.dat. At
 		// this pin, Dungeon.daily is consulted during generation only by Bones.
 		Dungeon.daily = true;
-		SewerLevel level;
+		RegularLevel level;
 		try {
-			level = (SewerLevel) Dungeon.newLevel();
+			level = (RegularLevel) Dungeon.newLevel();
 		} finally {
 			Dungeon.daily = false;
 		}
@@ -99,11 +99,11 @@ final class FloorOracle {
 		int width = level.width();
 		int height = level.height();
 		FloorVisualFacts visualFacts = FloorVisualFacts.capture(level);
-		List<Integer> prePaintRng = generatePrePaintRng(seed);
-		List<Integer> preMobsRng = generatePreMobsRng(seed);
-		List<Integer> preItemsRng = generatePreItemsRng(seed);
+		List<Integer> prePaintRng = generatePrePaintRng(seed, depth);
+		List<Integer> preMobsRng = generatePreMobsRng(seed, depth);
+		List<Integer> preItemsRng = generatePreItemsRng(seed, depth);
 		return new FinalFloorFacts(
-				1,
+				depth,
 				width,
 				height,
 				rooms,
@@ -115,43 +115,64 @@ final class FloorOracle {
 				visualFacts);
 	}
 
-	private static List<Integer> generatePrePaintRng(long seed) {
+	private static List<Integer> generatePrePaintRng(long seed, int depth) {
 		initializeFreshRun(seed);
-		Actor.clear();
-		Dungeon.generatedLevels.add(1);
-		RecordingPrePaintSewerLevel level = new RecordingPrePaintSewerLevel();
+		generatePriorFloors(depth);
+		markTargetFloorGenerated(depth);
+		FloorProbeLevels.Probe level = FloorProbeLevels.prePaint(depth);
 		try {
-			level.create();
+			level.level().create();
 		} catch (SnapshotComplete expected) {
 			// The recording painter stops before RegularPainter.paint.
 		}
-		return level.rngProbe;
+		return level.rngProbe();
 	}
 
-	private static List<Integer> generatePreMobsRng(long seed) {
+	private static List<Integer> generatePreMobsRng(long seed, int depth) {
 		initializeFreshRun(seed);
-		Actor.clear();
-		Dungeon.generatedLevels.add(1);
-		RecordingPreMobsSewerLevel level = new RecordingPreMobsSewerLevel();
+		generatePriorFloors(depth);
+		markTargetFloorGenerated(depth);
+		FloorProbeLevels.Probe level = FloorProbeLevels.preMobs(depth);
 		try {
-			level.create();
+			level.level().create();
 		} catch (SnapshotComplete expected) {
 			// The override stops at the createMobs entry boundary.
 		}
-		return level.rngProbe;
+		return level.rngProbe();
 	}
 
-	private static List<Integer> generatePreItemsRng(long seed) {
+	private static List<Integer> generatePreItemsRng(long seed, int depth) {
 		initializeFreshRun(seed);
-		Actor.clear();
-		Dungeon.generatedLevels.add(1);
-		RecordingPreItemsSewerLevel level = new RecordingPreItemsSewerLevel();
+		generatePriorFloors(depth);
+		markTargetFloorGenerated(depth);
+		FloorProbeLevels.Probe level = FloorProbeLevels.preItems(depth);
 		try {
-			level.create();
+			level.level().create();
 		} catch (SnapshotComplete expected) {
 			// The override stops at the createItems entry boundary.
 		}
-		return level.rngProbe;
+		return level.rngProbe();
+	}
+
+	private static void generatePriorFloors(int targetDepth) {
+		Dungeon.daily = true;
+		try {
+			for (int depth = 1; depth < targetDepth; depth++) {
+				Dungeon.depth = depth;
+				Dungeon.level = Dungeon.newLevel();
+			}
+		} finally {
+			Dungeon.daily = false;
+		}
+		Dungeon.depth = targetDepth;
+		// Dungeon.newLevel clears the previous floor before target creation. Probe
+		// subclasses call Level.create directly, so mirror that boundary here.
+		Dungeon.level = null;
+		Actor.clear();
+	}
+
+	private static void markTargetFloorGenerated(int depth) {
+		Dungeon.generatedLevels.add(depth);
 	}
 
 	private static void initializeFreshRun(long seed) {
@@ -317,53 +338,7 @@ final class FloorOracle {
 		}
 	}
 
-	private static final class RecordingPreItemsSewerLevel extends SewerLevel {
-		private List<Integer> rngProbe;
-
-		@Override
-		protected void createItems() {
-			rngProbe = new ArrayList<>();
-			for (int index = 0; index < 8; index++) {
-				rngProbe.add(Random.Int());
-			}
-			throw new SnapshotComplete();
-		}
-	}
-
-	private static final class RecordingPreMobsSewerLevel extends SewerLevel {
-		private List<Integer> rngProbe;
-
-		@Override
-		protected void createMobs() {
-			rngProbe = new ArrayList<>();
-			for (int index = 0; index < 8; index++) {
-				rngProbe.add(Random.Int());
-			}
-			throw new SnapshotComplete();
-		}
-	}
-
-	private static final class RecordingPrePaintSewerLevel extends SewerLevel {
-		private List<Integer> rngProbe;
-
-		@Override
-		protected Painter painter() {
-			// Preserve SewerLevel.painter construction, including nTraps RNG.
-			super.painter();
-			return new Painter() {
-				@Override
-				public boolean paint(Level level, ArrayList<Room> rooms) {
-					rngProbe = new ArrayList<>();
-					for (int index = 0; index < 8; index++) {
-						rngProbe.add(Random.Int());
-					}
-					throw new SnapshotComplete();
-				}
-			};
-		}
-	}
-
-	private static final class SnapshotComplete extends RuntimeException {
+	static final class SnapshotComplete extends RuntimeException {
 		private static final long serialVersionUID = 1L;
 	}
 }

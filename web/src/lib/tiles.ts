@@ -62,14 +62,35 @@ export function loadMapAssets(tileset: string): Promise<MapAssets> {
     loadImage('/assets/sprites/items.png'),
     loadImage('/assets/sprites/rat.png'),
     loadImage('/assets/sprites/snake.png'),
-  ]).then(([tiles, terrainFeatures, water, items, rat, snake]) => ({
-    tiles,
-    terrainFeatures,
-    water,
-    items,
-    rat,
-    snake,
-  }))
+    loadImage('/assets/sprites/skeleton.png'),
+    loadImage('/assets/sprites/swarm.png'),
+    loadImage('/assets/sprites/thief.png'),
+    loadImage('/assets/sprites/shopkeeper.png'),
+  ]).then(
+    ([
+      tiles,
+      terrainFeatures,
+      water,
+      items,
+      rat,
+      snake,
+      skeleton,
+      swarm,
+      thief,
+      shopkeeper,
+    ]) => ({
+      tiles,
+      terrainFeatures,
+      water,
+      items,
+      rat,
+      snake,
+      skeleton,
+      swarm,
+      thief,
+      shopkeeper,
+    })
+  )
 }
 
 /** Tight deterministic viewport around cells retained by pinned `cleanWalls()`. */

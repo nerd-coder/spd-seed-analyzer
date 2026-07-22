@@ -7,6 +7,10 @@ export type MapEntityAssets = {
   items: HTMLImageElement
   rat: HTMLImageElement
   snake: HTMLImageElement
+  skeleton: HTMLImageElement
+  swarm: HTMLImageElement
+  thief: HTMLImageElement
+  shopkeeper: HTMLImageElement
 }
 
 type Visibility = { item: boolean; mob: boolean }
@@ -21,12 +25,53 @@ const CONTAINER_FRAMES: Record<string, [number, number, number]> = {
 }
 
 const ITEM_FRAME_SIZES: Record<string, [number, number]> = {
+  Alchemize: [10, 15],
+  Ankh: [10, 16],
   Bomb: [10, 13],
+  CrystalKey: [8, 14],
+  Dirk: [13, 14],
+  Food: [16, 12],
+  Gold: [15, 13],
+  GuidePage: [10, 11],
+  HandAxe: [12, 14],
+  HealingDart: [15, 15],
   IronKey: [8, 14],
   LeatherArmor: [14, 13],
+  MagicalHolster: [15, 16],
+  MailArmor: [14, 12],
   Pasty: [16, 11],
   Scimitar: [13, 16],
+  Shuriken: [12, 12],
+  SmallRation: [14, 11],
   StoneOfIntuition: [14, 12],
+}
+
+type MobAsset = keyof Pick<
+  MapEntityAssets,
+  'rat' | 'snake' | 'skeleton' | 'swarm' | 'thief' | 'shopkeeper'
+>
+
+type MobFrame = {
+  asset: MobAsset
+  width: number
+  height: number
+  sourceX?: number
+}
+
+/** Pinned v3.3.8 idle frames from the matching Sprite classes. */
+const MOB_FRAMES: Record<string, MobFrame> = {
+  Rat: { asset: 'rat', width: 16, height: 15 },
+  Snake: { asset: 'snake', width: 12, height: 11 },
+  Skeleton: { asset: 'skeleton', width: 12, height: 15 },
+  Swarm: { asset: 'swarm', width: 16, height: 16 },
+  Thief: { asset: 'thief', width: 12, height: 13 },
+  // ShopkeeperSprite's idle animation starts on frame 1, then blinks to 0.
+  Shopkeeper: {
+    asset: 'shopkeeper',
+    width: 14,
+    height: 14,
+    sourceX: 14,
+  },
 }
 
 function validCell(map: FloorMap, cell: number) {
@@ -108,7 +153,13 @@ function itemFrame(heap: MapHeap, identities: IdentityMaps) {
     ? [12, 14]
     : item.class.startsWith('ScrollOf')
       ? [15, 14]
-      : (ITEM_FRAME_SIZES[item.class] ?? [16, 16])
+      : item.class.startsWith('RingOf')
+        ? [8, 10]
+        : item.class.startsWith('WandOf')
+          ? [14, 14]
+          : item.class.startsWith('StoneOf')
+            ? [14, 12]
+            : (ITEM_FRAME_SIZES[item.class] ?? [16, 16])
   return [index, width, height] as const
 }
 
@@ -146,27 +197,23 @@ function drawMob(
   mob: MapMob,
   scale: number
 ) {
-  const sprite =
-    mob.class === 'Rat'
-      ? { image: assets.rat, width: 16, height: 15 }
-      : mob.class === 'Snake'
-        ? { image: assets.snake, width: 12, height: 11 }
-        : null
-  if (!sprite) return false
+  const frame = MOB_FRAMES[mob.class]
+  if (!frame) return false
+  const image = assets[frame.asset]
   const cellX = mob.cell % map.width
   const cellY = Math.floor(mob.cell / map.width)
-  const x = cellX * TILE_PX + (TILE_PX - sprite.width) / 2
-  const y = (cellY + 1) * TILE_PX - sprite.height - 6
+  const x = cellX * TILE_PX + (TILE_PX - frame.width) / 2
+  const y = (cellY + 1) * TILE_PX - frame.height - 6
   ctx.drawImage(
-    sprite.image,
+    image,
+    frame.sourceX ?? 0,
     0,
-    0,
-    sprite.width,
-    sprite.height,
+    frame.width,
+    frame.height,
     x * scale,
     y * scale,
-    sprite.width * scale,
-    sprite.height * scale
+    frame.width * scale,
+    frame.height * scale
   )
   return true
 }
@@ -199,7 +246,7 @@ export function exactEntityCells(map: FloorMap) {
     item: new Set(map.heaps.map((heap) => heap.cell)),
     mob: new Set(
       map.mobs
-        .filter((mob) => mob.class === 'Rat' || mob.class === 'Snake')
+        .filter((mob) => MOB_FRAMES[mob.class] != null)
         .map((mob) => mob.cell)
     ),
   }

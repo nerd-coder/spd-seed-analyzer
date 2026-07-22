@@ -21,6 +21,7 @@ pub fn build_rooms(
     offset: f32,
     depth: i32,
     max_tries: u32,
+    prepare_shop: &mut impl FnMut(&mut Room),
 ) -> bool {
     let params = BuilderParams {
         curve_exponent: 2,
@@ -42,9 +43,10 @@ pub fn build_rooms(
         }
 
         let ok = match kind {
-            BuilderKind::Loop => loop_builder::build(rooms, &params, depth).is_some(),
+            BuilderKind::Loop => loop_builder::build(rooms, &params, depth, prepare_shop).is_some(),
             BuilderKind::FigureEight => {
-                figure_eight::build(rooms, &params, depth, &mut figure_state).is_some()
+                figure_eight::build(rooms, &params, depth, &mut figure_state, prepare_shop)
+                    .is_some()
             }
         };
         if ok {
@@ -91,7 +93,15 @@ mod tests {
         ];
         Random::reset_generators();
         Random::push_generator_seeded(0xF168_0008);
-        let built = build_rooms(&mut rooms, BuilderKind::FigureEight, 0.55, 0.0, 12, 1_000);
+        let built = build_rooms(
+            &mut rooms,
+            BuilderKind::FigureEight,
+            0.55,
+            0.0,
+            12,
+            1_000,
+            &mut |_| {},
+        );
         let rng_tail = Random::int();
         Random::pop_generator();
 

@@ -18,7 +18,6 @@ use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::quests;
 use crate::random::Random;
 use crate::report::FloorReport;
-use crate::rooms::types::RoomKind;
 
 pub use create_items::PlacedLoot;
 pub use state::LevelState;
@@ -152,9 +151,8 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
 
     // RegularLevel only — bosses + depth 26 LastLevel use dedicated layouts in SPD.
     if dungeon.regular_level() {
-        let lab_needed = dungeon.lab_room_needed();
         let shop = dungeon.shop_on_level();
-        let Some(mut floor) = build::regular_rooms(dungeon, feeling, shop, lab_needed) else {
+        let Some(mut floor) = build::regular_rooms(dungeon, feeling, shop) else {
             Random::pop_generator();
             return LevelState {
                 depth: dungeon.depth,
@@ -204,7 +202,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         // before room shuffle / placeDoors / special paint.
         terrain::shift_rooms_for_painter(&mut floor.rooms, feeling == Feeling::Chasm);
         let n_traps = painter::n_traps(dungeon.depth);
-        if dungeon.depth == 1 {
+        if matches!(dungeon.depth, 1..=4 | 6) {
             pre_paint_rng_probe = Random::peek_ints(8);
         }
 
@@ -214,18 +212,9 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             terrain::paint_minimal(&floor.rooms)
         };
         if let Some(mut map) = painted_map {
-            // Shop stock: in SPD generated during setSize (mid-build). We run
-            // after build / before other special paint so Generator still
-            // advances before createItems (timing approximate).
-            if floor
-                .rooms
-                .iter()
-                .any(|r| r.kind == RoomKind::Shop && !r.is_empty())
-            {
-                for item in shop::generate_items(dungeon) {
-                    placed_items.push(item);
-                }
-            }
+            // ShopRoom lazily generates stock when the builder first asks for
+            // its minimum size; `regular_rooms` retains that exact inventory.
+            placed_items.extend(floor.shop_items.clone());
 
             // Special/secret room paint loot (before createItems; may consume itemsToSpawn).
             // Includes RegularPainter shuffle + placeDoors + door-type upgrades.
@@ -234,6 +223,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 &floor.rooms,
                 &mut map,
                 &mut items_to_spawn,
+                &floor.shop_items,
                 feeling,
             );
             let special_loot::SpecialPaintResult {
@@ -327,16 +317,21 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 }
             }
 
-            if dungeon.depth == 1 {
+            if matches!(dungeon.depth, 1..=4 | 6) {
                 pre_mobs_rng_probe = Random::peek_ints(8);
             }
-            let _ambient_mobs_consumed = if dungeon.depth == 1 {
-                create_mobs::create_depth_one(&population_rooms, &mut map)
+            let _ambient_mobs_consumed = if matches!(dungeon.depth, 1..=4 | 6) {
+                create_mobs::create_regular(
+                    dungeon.depth,
+                    feeling == Feeling::Large,
+                    &population_rooms,
+                    &mut map,
+                )
             } else {
                 false
             };
 
-            if dungeon.depth == 1 {
+            if matches!(dungeon.depth, 1..=4 | 6) {
                 pre_items_rng_probe = Random::peek_ints(8);
             }
             let loot = create_items::create_items_main(

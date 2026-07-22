@@ -14,12 +14,13 @@ final_heaps_depth=""
 usage() {
 	cat >&2 <<'EOF'
 Usage: tools/java-oracle/run [--source PATH] [--output FILE]
-                             [--depth 1 | --final-heaps-depth 1] SEED
+                             [--depth 1 | --final-heaps-depth 1|6] SEED
 
 Dumps SPD v3.3.8 run facts as stable JSON. With --depth 1, includes the pinned
-depth-one pre-build item slice. With --final-heaps-depth 1, records heaps after
-the real depth-one level generation completes. The source checkout must be
-pinned at 7b8b845a7.
+depth-one pre-build item slice. With --final-heaps-depth 1 or 6, records heaps
+after the real level generation lifecycle completes. Floor 6 is generated
+after all prior floors to retain run-persistent state. The source checkout
+must be pinned at 7b8b845a7.
 EOF
 }
 
@@ -66,8 +67,8 @@ if [[ -n "$depth" && "$depth" != "1" ]]; then
 	echo "The floor oracle currently supports only --depth 1" >&2
 	exit 2
 fi
-if [[ -n "$final_heaps_depth" && "$final_heaps_depth" != "1" ]]; then
-	echo "The final-heaps oracle currently supports only --final-heaps-depth 1" >&2
+if [[ -n "$final_heaps_depth" && "$final_heaps_depth" != "1" && "$final_heaps_depth" != "6" ]]; then
+	echo "The final-heaps oracle currently supports only --final-heaps-depth 1 or 6" >&2
 	exit 2
 fi
 if [[ -n "$depth" && -n "$final_heaps_depth" ]]; then

@@ -42,8 +42,9 @@ public final class JavaOracle {
 		Integer depth = args.length == 1
 				? null
 				: Integer.valueOf(args[finalHeaps ? 2 : 1]);
-		if (depth != null && depth != 1) {
-			System.err.println("The floor oracle currently supports only depth 1");
+		if (depth != null && (depth != 1 && (!finalHeaps || depth != 6))) {
+			System.err.println(
+					"The floor oracle supports depth 1, plus depth 6 for final-heaps");
 			System.exit(2);
 		}
 
@@ -57,7 +58,7 @@ public final class JavaOracle {
 				Potion.initColors();
 				Ring.initGems();
 			} else if (finalHeaps) {
-				finalFloor = FloorOracle.generateFinalHeaps(numericSeed);
+				finalFloor = FloorOracle.generateFinalHeaps(numericSeed, depth);
 			} else {
 				floor = FloorOracle.generate(numericSeed);
 			}

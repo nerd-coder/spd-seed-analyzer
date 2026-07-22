@@ -143,6 +143,7 @@ pub(super) fn build(
     params: &BuilderParams,
     depth: i32,
     state: &mut FigureEightState,
+    prepare_shop: &mut impl FnMut(&mut Room),
 ) -> Option<()> {
     let base_len = rooms.len();
     let mut setup = setup_rooms(rooms, params);
@@ -215,6 +216,7 @@ pub(super) fn build(
     )?;
 
     if let Some(shop) = setup.shop {
+        prepare_shop(&mut rooms[shop]);
         let mut placed = false;
         for _ in 0..11 {
             if place_room(rooms, entrance, shop, Random::float_max(360.0)) != -1.0 {

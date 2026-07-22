@@ -118,6 +118,9 @@ fn depth_one_final_heaps_match_report_projection() {
         if fixture.schema_version != FINAL_HEAPS_SCHEMA_VERSION {
             continue;
         }
+        if fixture.input.depths != [1] {
+            continue;
+        }
         let context = path.display();
         assert_eq!(
             fixture.contract.as_deref(),
@@ -424,5 +427,77 @@ fn depth_one_final_heaps_match_report_projection() {
     assert!(
         compared >= 4,
         "expected at least four schema v3 final-heap fixtures, compared {compared}"
+    );
+}
+
+#[test]
+fn hkt_floor_six_fixture_and_partial_structure_are_pinned() {
+    let path = fixture_paths()
+        .into_iter()
+        .find(|path| {
+            path.file_name()
+                .is_some_and(|name| name == "hkt-jzn-xqq-final-heaps-floor-6.json")
+        })
+        .expect("HKT floor-6 schema-v3 fixture");
+    let fixture = read_fixture(&path);
+    let expected = fixture.floors.first().expect("floor-6 oracle facts");
+    assert_eq!(fixture.schema_version, FINAL_HEAPS_SCHEMA_VERSION);
+    assert_eq!(fixture.contract.as_deref(), Some("final_placed_heaps"));
+    assert_eq!(fixture.input.depths, [6]);
+    assert_eq!(expected.depth, 6);
+    assert_eq!((expected.width, expected.height), (48, 48));
+    assert_eq!(expected.pre_paint_rng.len(), 8);
+    assert_eq!(expected.pre_mobs_rng.len(), 8);
+    assert_eq!(expected.pre_items_rng.len(), 8);
+    assert_eq!(expected.terrain.as_ref().map(Vec::len), Some(48 * 48));
+    assert_eq!(expected.discoverable.as_ref().map(Vec::len), Some(48 * 48));
+    assert_eq!(expected.tile_variance.as_ref().map(Vec::len), Some(48 * 48));
+    assert_eq!(expected.final_heaps.len(), 36);
+    assert_eq!(
+        expected
+            .final_heaps
+            .iter()
+            .filter(|heap| heap.heap_type == "for_sale")
+            .count(),
+        20
+    );
+    assert_eq!(expected.final_mobs.len(), 7);
+    assert_eq!(expected.transitions.as_ref().map(Vec::len), Some(2));
+    assert_eq!(expected.traps.as_ref().map(Vec::len), Some(3));
+
+    let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
+    let mut actual = None;
+    for depth in 1..=6 {
+        dungeon.depth = depth;
+        actual = Some(create_level_partial(&mut dungeon));
+    }
+    let actual = actual.expect("floor-6 Rust facts");
+    let map = actual.map.as_ref().expect("floor-6 regular map");
+    let mut actual_rooms = actual.rooms.clone();
+    actual_rooms.sort();
+
+    assert_eq!(actual.feeling.as_str(), "water", "HKT floor-6 feeling");
+    assert_eq!(actual_rooms, expected.rooms, "HKT floor-6 room classes");
+    assert_eq!(
+        map.heaps
+            .iter()
+            .filter(|heap| heap.heap_type == "for_sale")
+            .count(),
+        20,
+        "partial core retains every shop placement"
+    );
+    assert_eq!(
+        map.mobs
+            .iter()
+            .filter(|mob| mob.class_name == "Shopkeeper")
+            .count(),
+        1,
+        "partial core retains the shopkeeper"
+    );
+    assert!(
+        actual.placed_items.iter().any(|item| {
+            item.source.as_deref() == Some("ShopRoom") && item.class_name == "MagicalHolster"
+        }),
+        "fresh Warrior's ThrowingStone selects MagicalHolster"
     );
 }

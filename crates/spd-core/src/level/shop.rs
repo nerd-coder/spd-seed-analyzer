@@ -1,10 +1,9 @@
 //! Port of `ShopRoom.generateItems` (shop stock for analysis reports).
 //!
-//! In SPD, stock is generated during room `setSize` (builder). We generate
-//! after layout build and before other special-room paint so Generator decks
-//! still advance before `createItems`. Timing is approximate vs mid-build
-//! `setSize`. Bag choice assumes no hero inventory (velvet pouch already
-//! dropped for all classes).
+//! Stock is generated lazily when builder placement first asks for the room's
+//! minimum size, matching pinned `ShopRoom.spacesNeeded`. The committed
+//! fresh-Warrior oracle carries its starting ThrowingStone, so MagicalHolster
+//! wins the bag content score.
 
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
@@ -166,9 +165,14 @@ fn with_shop_source(mut item: GeneratedItem) -> GeneratedItem {
     item
 }
 
-/// Hero-less bag pick: velvet already dropped; prefer scroll holder → bandolier → holster.
+/// Fresh-Warrior bag pick from `ShopRoom.chooseBag`.
 fn choose_bag(dungeon: &mut DungeonState) -> Option<GeneratedItem> {
-    // Without backpack contents all remaining bags score 0; pick a stable order.
+    // HeroClass.WARRIOR starts with a ThrowingStone. Of the eligible bags, the
+    // MagicalHolster is the only bag with a positive content score.
+    if !dungeon.limited.magical_holster {
+        dungeon.limited.magical_holster = true;
+        return Some(GeneratedItem::new("MagicalHolster", ItemCategory::Other));
+    }
     if !dungeon.limited.scroll_holder {
         dungeon.limited.scroll_holder = true;
         return Some(GeneratedItem::new("ScrollHolder", ItemCategory::Other));
@@ -176,10 +180,6 @@ fn choose_bag(dungeon: &mut DungeonState) -> Option<GeneratedItem> {
     if !dungeon.limited.potion_bandolier {
         dungeon.limited.potion_bandolier = true;
         return Some(GeneratedItem::new("PotionBandolier", ItemCategory::Other));
-    }
-    if !dungeon.limited.magical_holster {
-        dungeon.limited.magical_holster = true;
-        return Some(GeneratedItem::new("MagicalHolster", ItemCategory::Other));
     }
     if !dungeon.limited.velvet_pouch {
         dungeon.limited.velvet_pouch = true;

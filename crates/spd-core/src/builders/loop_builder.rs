@@ -9,7 +9,12 @@ use crate::builders::regular::{
 use crate::random::Random;
 use crate::rooms::room::{connect, Room};
 
-pub(super) fn build(rooms: &mut Vec<Room>, params: &BuilderParams, depth: i32) -> Option<()> {
+pub(super) fn build(
+    rooms: &mut Vec<Room>,
+    params: &BuilderParams,
+    depth: i32,
+    prepare_shop: &mut impl FnMut(&mut Room),
+) -> Option<()> {
     let setup = setup_rooms(rooms, params);
     let entrance = setup.entrance?;
     let mut main_path = setup.main_path;
@@ -70,6 +75,7 @@ pub(super) fn build(rooms: &mut Vec<Room>, params: &BuilderParams, depth: i32) -
     }
 
     if let Some(shop) = setup.shop {
+        prepare_shop(&mut rooms[shop]);
         let mut placed = false;
         // Java's do/while with `tries >= 0` makes eleven attempts.
         for _ in 0..11 {

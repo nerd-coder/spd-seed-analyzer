@@ -4,10 +4,13 @@ This tool produces deterministic JSON directly from the pinned Shattered Pixel
 Dungeon Java implementation. Schema v1 covers run-level potion, scroll, and
 ring identity mappings. Schema v2 adds an intentionally narrow floor contract:
 the ordered depth-one `itemsToSpawn` queue at the exact pre-`build()` boundary.
-Schema v3 is a separately scoped depth-one contract that snapshots final heaps
-and mobs after the real `Level.create()` lifecycle completes. Additive visual
-fields capture final terrain, discoverability, tile variance, transitions,
-traps, plants, and active blobs. It does **not** claim full seed-finder parity.
+Schema v3 is a separately scoped level contract that snapshots final heaps and
+mobs after the real `Level.create()` lifecycle completes. Sewer depth 1 and
+Prison depth 6 are supported. Depth 1 is generated directly; depth 6 is
+generated after completing every prior floor so run-persistent state is
+preserved. Additive visual fields capture final terrain, discoverability, tile
+variance, transitions, traps, plants, and active blobs. It does **not** claim
+full seed-finder parity.
 
 ## Requirements
 
@@ -29,6 +32,7 @@ From the analyzer repository root:
 ./tools/java-oracle/run AAA-AAA-AAA
 ./tools/java-oracle/run --depth 1 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 1 AAA-AAA-AAA
+./tools/java-oracle/run --final-heaps-depth 6 HKT-JZN-XQQ
 ```
 
 If an older Java is the machine default, select a JDK 17 installation for the
@@ -66,13 +70,17 @@ the default when `--output` is omitted):
   --output tools/java-oracle/fixtures/hello-final-heaps-floor-1.json hello
 ./tools/java-oracle/run --final-heaps-depth 1 \
   --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-1.json HKT-JZN-XQQ
+./tools/java-oracle/run --final-heaps-depth 6 \
+  --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-6.json HKT-JZN-XQQ
 ```
 
 The Rust golden consumer validates every `fixtures/*.json` file. The schema-v3
 test requires all five committed depth-one fixtures to match lifecycle probes,
 map bounds, heap cells, mob facts, and the report-visible item projection. The
-HKT fixture also requires exact terrain, discoverability, tile variance,
-transitions, traps, structured heaps/mobs, plants, and active blobs:
+HKT floor-one fixture also requires exact terrain, discoverability, tile
+variance, transitions, traps, structured heaps/mobs, plants, and active blobs.
+The floor-six fixture pins the full Java observation while Rust currently
+asserts only its exact room set and implemented shop structure:
 
 ```bash
 cargo test -p spd-core --test java_oracle_goldens
@@ -134,7 +142,9 @@ floor item.
 ### Schema version 3: final placed heaps
 
 Passing `--final-heaps-depth 1` runs the exact pinned initialization followed
-by `Dungeon.newLevel()` for a depth-one `SewerLevel`, and snapshots
+by `Dungeon.newLevel()` for a depth-one `SewerLevel`. Passing depth 6 first
+runs `Dungeon.newLevel()` for floors 1 through 5, then creates the target
+`PrisonLevel`. The oracle snapshots
 `level.heaps` and `level.mobs` only after `Level.create()` returns (build,
 painter, mob pass, and `createItems` have all run). The oracle uses a fresh
 Warrior hero with no challenges and a fresh in-memory preference store. The
@@ -198,5 +208,7 @@ each boundary, so the probes do not perturb the final heap/mob run. They make
 raw LCG draw-count comparison possible even while an earlier phase is
 desynchronized. This is an exact-pin observation contract. The five committed
 depth-one fixtures currently match their strongest honest Rust projection;
-only HKT opts into the additive render-fact assertions. They are not evidence
-that every room set, deeper floor, or full heap fact matches.
+only HKT floor 1 opts into the additive render-fact assertions. HKT floor 6 is
+an exact Java observation but not yet a full Rust lifecycle match. These
+fixtures are not evidence that every room set, deeper floor, or full heap fact
+matches.

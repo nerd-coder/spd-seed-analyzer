@@ -1,6 +1,7 @@
 //! `RegularLevel.initRooms` + builder selection.
 
 use crate::generator::GeneratorState;
+use crate::items::model::GeneratedItem;
 use crate::level::Feeling;
 use crate::quests::{self, BlacksmithQuestState, ImpQuestState, WandmakerQuestState};
 use crate::random::Random;
@@ -13,6 +14,7 @@ use crate::rooms::types::RoomSpec;
 #[derive(Debug, Clone)]
 pub struct FloorRooms {
     pub rooms: Vec<Room>,
+    pub shop_items: Vec<GeneratedItem>,
     pub builder_kind: BuilderKind,
     pub curve_intensity: f32,
     pub curve_offset: f32,
@@ -24,18 +26,84 @@ pub enum BuilderKind {
     FigureEight,
 }
 
-fn sewer_standard_rooms(force_max: bool) -> i32 {
-    if force_max {
-        return 6;
+fn standard_rooms(depth: i32, force_max: bool) -> i32 {
+    match depth / 5 {
+        0 => {
+            if force_max {
+                6
+            } else {
+                4 + Random::chances(&[1., 3., 1.])
+            }
+        }
+        1 => {
+            if force_max {
+                6
+            } else {
+                5 + Random::chances(&[1., 1.])
+            }
+        }
+        2 => {
+            if force_max {
+                7
+            } else {
+                6 + Random::chances(&[2., 1.])
+            }
+        }
+        3 => {
+            if force_max {
+                8
+            } else {
+                6 + Random::chances(&[1., 3., 1.])
+            }
+        }
+        _ => {
+            if force_max {
+                9
+            } else {
+                8 + Random::chances(&[2., 1.])
+            }
+        }
     }
-    4 + Random::chances(&[1., 3., 1.])
 }
 
-fn sewer_special_rooms(force_max: bool) -> i32 {
-    if force_max {
-        return 2;
+fn special_rooms(depth: i32, force_max: bool) -> i32 {
+    match depth / 5 {
+        0 => {
+            if force_max {
+                2
+            } else {
+                1 + Random::chances(&[1., 4.])
+            }
+        }
+        1 => {
+            if force_max {
+                3
+            } else {
+                1 + Random::chances(&[1., 3., 1.])
+            }
+        }
+        2 => {
+            if force_max {
+                3
+            } else {
+                2 + Random::chances(&[4., 1.])
+            }
+        }
+        3 => {
+            if force_max {
+                3
+            } else {
+                2 + Random::chances(&[2., 1.])
+            }
+        }
+        _ => {
+            if force_max {
+                3
+            } else {
+                2 + Random::chances(&[1., 1.])
+            }
+        }
     }
-    1 + Random::chances(&[1., 4.])
 }
 
 /// `RegularLevel.builder()` — returns kind + loop shape params.
@@ -76,7 +144,6 @@ pub fn init_rooms_regular(
     depth: i32,
     feeling: Feeling,
     shop_on_level: bool,
-    lab_needed: bool,
     lab_room_count: &mut i32,
     run_specials: &mut Vec<&'static str>,
     run_secrets: &mut Vec<&'static str>,
@@ -94,7 +161,7 @@ pub fn init_rooms_regular(
     specs.push(standard::create_exit(depth));
 
     let force_max = feeling == Feeling::Large;
-    let mut standards = sewer_standard_rooms(force_max);
+    let mut standards = standard_rooms(depth, force_max);
     if feeling == Feeling::Large {
         standards = (standards as f32 * 1.5).ceil() as i32;
     }
@@ -115,10 +182,18 @@ pub fn init_rooms_regular(
         specs.push(RoomSpec::shop());
     }
 
-    let mut specials = sewer_special_rooms(force_max);
+    let mut specials = special_rooms(depth, force_max);
     if feeling == Feeling::Large {
         specials += 1;
     }
+
+    // `SpecialRoom.initForFloor` checks the laboratory quota here: after
+    // builder selection, standard-room construction, and the special-room
+    // count roll. Moving this check earlier shifts every subsequent room draw.
+    let region = 1 + depth / 5;
+    let floor_this_region = depth % 5;
+    let lab_needed = region > *lab_room_count
+        && (floor_this_region >= 4 || (floor_this_region == 3 && Random::int_max(2) == 0));
 
     let mut special_floor =
         SpecialFloorState::init_for_floor(run_specials, lab_needed, lab_room_count);
@@ -167,6 +242,7 @@ pub fn init_rooms_regular(
 
     FloorRooms {
         rooms,
+        shop_items: Vec::new(),
         builder_kind,
         curve_intensity,
         curve_offset,
@@ -194,7 +270,6 @@ mod tests {
             2,
             Feeling::None,
             false,
-            false,
             &mut lab,
             &mut run_sp,
             &mut run_sec,
@@ -220,7 +295,6 @@ mod tests {
         let b = init_rooms_regular(
             2,
             Feeling::None,
-            false,
             false,
             &mut lab,
             &mut run_sp,
@@ -267,7 +341,6 @@ mod tests {
         let floor = init_rooms_regular(
             23,
             Feeling::None,
-            false,
             false,
             &mut lab,
             &mut run_sp,

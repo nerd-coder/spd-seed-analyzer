@@ -12,6 +12,7 @@ mod pit_secrets;
 mod placement;
 mod quest_rooms;
 mod secret_rooms;
+mod shop_room;
 mod special_rooms;
 mod standard_rooms;
 mod trap_rooms;
@@ -50,6 +51,7 @@ pub fn special_room_loot(
     rooms: &[Room],
     map: &mut TerrainMap,
     items_to_spawn: &mut Vec<GeneratedItem>,
+    shop_items: &[GeneratedItem],
     feeling: Feeling,
 ) -> SpecialPaintResult {
     let mut out = Vec::new();
@@ -110,7 +112,7 @@ pub fn special_room_loot(
                 out.append(&mut loot);
             }
             RoomKind::Shop => {
-                // Shop contents deferred (FOR_SALE filter); still burn no RNG here.
+                shop_room::paint(map, room, ri, &doors, shop_items);
             }
             _ => {}
         }

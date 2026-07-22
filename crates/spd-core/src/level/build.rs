@@ -5,7 +5,7 @@ use crate::dungeon::DungeonState;
 use crate::rooms::init_rooms::{self, FloorRooms};
 use crate::rooms::types::RoomKind;
 
-use super::Feeling;
+use super::{shop, Feeling};
 
 const BUILD_RETRY_LIMIT: u32 = 10_000;
 
@@ -15,14 +15,12 @@ pub(super) fn regular_rooms(
     dungeon: &mut DungeonState,
     feeling: Feeling,
     shop: bool,
-    lab_needed: bool,
 ) -> Option<FloorRooms> {
     for _ in 0..BUILD_RETRY_LIMIT {
         let mut floor = init_rooms::init_rooms_regular(
             dungeon.depth,
             feeling,
             shop,
-            lab_needed,
             &mut dungeon.limited.lab_room,
             &mut dungeon.rooms.specials,
             &mut dungeon.rooms.secrets,
@@ -33,6 +31,7 @@ pub(super) fn regular_rooms(
             &mut dungeon.imp,
             &mut dungeon.generator,
         );
+        let mut shop_items = None;
         if !builders::build_rooms(
             &mut floor.rooms,
             floor.builder_kind,
@@ -40,9 +39,22 @@ pub(super) fn regular_rooms(
             floor.curve_offset,
             dungeon.depth,
             BUILD_RETRY_LIMIT,
+            &mut |shop_room| {
+                if shop_items.is_none() {
+                    let items = shop::generate_items(dungeon);
+                    // ShopRoom.spacesNeeded ignores sandbags, adds four stable
+                    // sandbag slots, then one shopkeeper slot.
+                    let spaces_needed = items.len() + 5;
+                    let min_size = ((spaces_needed as f64).sqrt() as i32 + 3).max(7);
+                    shop_room.min_w = min_size;
+                    shop_room.min_h = min_size;
+                    shop_items = Some(items);
+                }
+            },
         ) {
             continue;
         }
+        floor.shop_items = shop_items.unwrap_or_default();
 
         // RegularPainter returns false only for a disconnected SpecialRoom.
         // Preflight it so the whole build can be retried. A malformed failed
