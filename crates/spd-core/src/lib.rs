@@ -74,7 +74,7 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
         floors: floor_reports,
         status: "partial".to_string(),
         message: Some(
-            "Partial analysis: pinned loop/figure-eight builders + connection-room geometry + special/secret-room prizes (including full SecretMaze layout, RotGarden, WeakFloor, and DemonSpawner paint) + shop/crystal loot (approx.) + Ghost/Wandmaker/Blacksmith/Imp quest rewards + water/grass/trap painter + paintDoors merge/Graph + generic/region standard-room geometry + region-specific standard/special room-count tables + exact depth-one createMobs RNG/placement + source-ported partial createMobs for floors 2–4 and 6 + main createItems drops. Ambient createMobs for floors 7–24, remaining special-room geometry, and deeper-floor lifecycle parity are still incomplete — results may not match the game yet."
+            "Partial analysis: pinned loop/figure-eight builders + connection-room geometry + special/secret-room prizes (including full SecretMaze layout, RotGarden, WeakFloor, and DemonSpawner paint) + shop/crystal loot (approx.) + Ghost/Wandmaker/Blacksmith/Imp quest rewards + water/grass/trap painter + paintDoors merge/Graph + generic/region standard-room geometry + region-specific standard/special room-count tables + exact depth-one createMobs RNG/placement + source-ported partial createMobs for floors 2–4 and 6–8 + main createItems drops. Ambient createMobs for floors 9–24, remaining special-room geometry, and deeper-floor lifecycle parity are still incomplete — results may not match the game yet."
                 .to_string(),
         ),
     })

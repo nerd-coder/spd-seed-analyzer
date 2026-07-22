@@ -1,6 +1,8 @@
 use crate::level::create_level_partial;
 use crate::run::{dungeon_from_run, init_run};
 
+use super::{next_mob, Random};
+
 const LCG_MULTIPLIER: u64 = 0x5DEECE66D;
 const LCG_ADDEND: u64 = 0xB;
 const LCG_MASK: u64 = (1 << 48) - 1;
@@ -79,4 +81,37 @@ fn depth_one_builder_painter_and_mob_boundaries_match_java() {
     assert_eq!(raw_lcg_steps(rust_pre, rust_post, 512), Some(116));
     assert_eq!(raw_lcg_steps(java_pre, java_post, 512), Some(116));
     assert_eq!(rust_post, java_post);
+}
+
+fn rotation_labels(depth: i32, len: usize) -> Vec<&'static str> {
+    Random::reset_generators();
+    Random::push_generator_seeded(1);
+    let mut rotation = Vec::new();
+    let mut labels: Vec<_> = (0..len)
+        .map(|_| next_mob(depth, &mut rotation).label())
+        .collect();
+    labels.sort_unstable();
+    Random::reset_generators();
+    labels
+}
+
+#[test]
+fn prison_floor_seven_and_eight_rotations_match_the_pin() {
+    assert_eq!(
+        rotation_labels(7, 6),
+        ["DM100", "Guard", "Skeleton", "Skeleton", "Skeleton", "Thief"]
+    );
+    assert_eq!(
+        rotation_labels(8, 8),
+        [
+            "DM100",
+            "DM100",
+            "Guard",
+            "Guard",
+            "Necromancer",
+            "Skeleton",
+            "Skeleton",
+            "Thief",
+        ]
+    );
 }

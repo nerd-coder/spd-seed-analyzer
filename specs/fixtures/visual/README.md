@@ -9,5 +9,6 @@ post-generation gameplay state and are not deterministic outputs of
 `Level.create()`; visual tests must either use a fixed hero overlay or exclude
 the hero from the deterministic comparison.
 
-Current `HKT-JZN-XQQ` references cover floors 1, 6, and 8. Floor 8 is queued
-after the still-open floor-6 lifecycle parity phase.
+Current `HKT-JZN-XQQ` references cover floors 1, 6, and 8. Floors 6 and 8 have
+pinned Java observations and partial browser comparisons; their lifecycle and
+entity-cell parity remains open.

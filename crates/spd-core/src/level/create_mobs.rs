@@ -1,5 +1,5 @@
 //! `RegularLevel.createMobs`: oracle-exact at depth 1 and a source-aligned
-//! partial port for Sewer floors 2–4 and Prison floor 6.
+//! partial port for Sewer floors 2–4 and Prison floors 6–8.
 
 mod navigation;
 
@@ -28,6 +28,10 @@ enum MobKind {
     Skeleton,
     Thief,
     Bandit,
+    Dm100,
+    Guard,
+    Necromancer,
+    SpectralNecromancer,
 }
 
 impl MobKind {
@@ -46,6 +50,10 @@ impl MobKind {
             Self::Skeleton => "Skeleton",
             Self::Thief => "Thief",
             Self::Bandit => "Bandit",
+            Self::Dm100 => "DM100",
+            Self::Guard => "Guard",
+            Self::Necromancer => "Necromancer",
+            Self::SpectralNecromancer => "SpectralNecromancer",
         }
     }
 
@@ -55,7 +63,7 @@ impl MobKind {
 }
 
 /// Runs the exact depth-one path and the partial deeper-floor path for depths
-/// 2–4 and 6. The latter retains pinned rotations and placement semantics but
+/// 2–4 and 6–8. The latter retains pinned rotations and placement semantics but
 /// is not yet a lifecycle or cell-for-cell parity claim.
 pub(crate) fn create_regular(
     depth: i32,
@@ -242,6 +250,24 @@ fn next_mob(depth: i32, rotation: &mut Vec<MobKind>) -> MobKind {
                 MobKind::Thief,
                 MobKind::Swarm,
             ],
+            7 => vec![
+                MobKind::Skeleton,
+                MobKind::Skeleton,
+                MobKind::Skeleton,
+                MobKind::Thief,
+                MobKind::Dm100,
+                MobKind::Guard,
+            ],
+            8 => vec![
+                MobKind::Skeleton,
+                MobKind::Skeleton,
+                MobKind::Thief,
+                MobKind::Dm100,
+                MobKind::Dm100,
+                MobKind::Guard,
+                MobKind::Guard,
+                MobKind::Necromancer,
+            ],
             _ => vec![MobKind::Rat, MobKind::Rat, MobKind::Rat, MobKind::Snake],
         });
         if depth == 4 && Random::float() < 0.025 {
@@ -258,6 +284,7 @@ fn next_mob(depth: i32, rotation: &mut Vec<MobKind>) -> MobKind {
                     MobKind::Crab => MobKind::HermitCrab,
                     MobKind::Slime => MobKind::CausticSlime,
                     MobKind::Thief => MobKind::Bandit,
+                    MobKind::Necromancer => MobKind::SpectralNecromancer,
                     other => other,
                 };
             }

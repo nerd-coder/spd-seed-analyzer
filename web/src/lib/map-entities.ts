@@ -1,17 +1,7 @@
 import { SHEET_COLS, TILE_PX } from '@/lib/dungeon-tile-visuals'
 import { ITEM_SHEET, resolveItemIconIndex } from '@/lib/item-icons'
+import type { MapEntityAssets, MobAssetKey } from '@/lib/map-assets'
 import type { FloorMap, IdentityMaps, MapHeap, MapMob } from '@/lib/spd-wasm'
-
-export type MapEntityAssets = {
-  terrainFeatures: HTMLImageElement
-  items: HTMLImageElement
-  rat: HTMLImageElement
-  snake: HTMLImageElement
-  skeleton: HTMLImageElement
-  swarm: HTMLImageElement
-  thief: HTMLImageElement
-  shopkeeper: HTMLImageElement
-}
 
 type Visibility = { item: boolean; mob: boolean }
 
@@ -26,10 +16,13 @@ const CONTAINER_FRAMES: Record<string, [number, number, number]> = {
 
 const ITEM_FRAME_SIZES: Record<string, [number, number]> = {
   Alchemize: [10, 15],
+  AlchemyPage: [10, 11],
   Ankh: [10, 16],
   Bomb: [10, 13],
+  Crossbow: [15, 15],
   CrystalKey: [8, 14],
   Dirk: [13, 14],
+  EnergyCrystal: [16, 16],
   Food: [16, 12],
   Gold: [15, 13],
   GuidePage: [10, 11],
@@ -46,16 +39,12 @@ const ITEM_FRAME_SIZES: Record<string, [number, number]> = {
   StoneOfIntuition: [14, 12],
 }
 
-type MobAsset = keyof Pick<
-  MapEntityAssets,
-  'rat' | 'snake' | 'skeleton' | 'swarm' | 'thief' | 'shopkeeper'
->
-
 type MobFrame = {
-  asset: MobAsset
+  asset: MobAssetKey
   width: number
   height: number
   sourceX?: number
+  sourceY?: number
 }
 
 /** Pinned v3.3.8 idle frames from the matching Sprite classes. */
@@ -71,6 +60,15 @@ const MOB_FRAMES: Record<string, MobFrame> = {
     width: 14,
     height: 14,
     sourceX: 14,
+  },
+  DM100: { asset: 'dm100', width: 16, height: 14 },
+  Guard: { asset: 'guard', width: 12, height: 16 },
+  // SpectralNecromancerSprite starts at frame 16, the second atlas row.
+  SpectralNecromancer: {
+    asset: 'necromancer',
+    width: 16,
+    height: 16,
+    sourceY: 16,
   },
 }
 
@@ -207,7 +205,7 @@ function drawMob(
   ctx.drawImage(
     image,
     frame.sourceX ?? 0,
-    0,
+    frame.sourceY ?? 0,
     frame.width,
     frame.height,
     x * scale,

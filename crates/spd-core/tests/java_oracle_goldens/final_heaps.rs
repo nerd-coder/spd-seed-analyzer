@@ -501,3 +501,6 @@ fn hkt_floor_six_fixture_and_partial_structure_are_pinned() {
         "fresh Warrior's ThrowingStone selects MagicalHolster"
     );
 }
+
+#[path = "final_heaps/floor_eight.rs"]
+mod floor_eight;

@@ -202,7 +202,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         // before room shuffle / placeDoors / special paint.
         terrain::shift_rooms_for_painter(&mut floor.rooms, feeling == Feeling::Chasm);
         let n_traps = painter::n_traps(dungeon.depth);
-        if matches!(dungeon.depth, 1..=4 | 6) {
+        if matches!(dungeon.depth, 1..=4 | 6..=8) {
             pre_paint_rng_probe = Random::peek_ints(8);
         }
 
@@ -297,7 +297,8 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
 
             // createMobs quest hooks run before the regular population, matching
             // SewerLevel/PrisonLevel overrides. Depth-one ambient placement is
-            // now call-for-call ported; later region rotations remain pending.
+            // now call-for-call ported; supported deeper rotations remain a
+            // partial port until their preceding lifecycle is exact.
             if let Some(exit) = floor.rooms.iter().find(|r| r.is_exit() && !r.is_empty()) {
                 if let Some(ghost) = quests::try_spawn_ghost(dungeon, exit, &map) {
                     quests.push(ghost.summary.clone());
@@ -317,10 +318,10 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 }
             }
 
-            if matches!(dungeon.depth, 1..=4 | 6) {
+            if matches!(dungeon.depth, 1..=4 | 6..=8) {
                 pre_mobs_rng_probe = Random::peek_ints(8);
             }
-            let _ambient_mobs_consumed = if matches!(dungeon.depth, 1..=4 | 6) {
+            let _ambient_mobs_consumed = if matches!(dungeon.depth, 1..=4 | 6..=8) {
                 create_mobs::create_regular(
                     dungeon.depth,
                     feeling == Feeling::Large,
@@ -331,7 +332,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 false
             };
 
-            if matches!(dungeon.depth, 1..=4 | 6) {
+            if matches!(dungeon.depth, 1..=4 | 6..=8) {
                 pre_items_rng_probe = Random::peek_ints(8);
             }
             let loot = create_items::create_items_main(

@@ -6,20 +6,17 @@ import {
   TILE_PX,
   wallVisual,
 } from '@/lib/dungeon-tile-visuals'
+import type { MapAssets } from '@/lib/map-assets'
 import {
   drawKnownEntities,
   drawVisibleTraps,
   exactEntityCells,
-  type MapEntityAssets,
 } from '@/lib/map-entities'
 import type { FloorMap, IdentityMaps, MapMarkerKind } from '@/lib/spd-wasm'
 
 export { TILE_PX } from '@/lib/dungeon-tile-visuals'
-
-export type MapAssets = MapEntityAssets & {
-  tiles: HTMLImageElement
-  water: HTMLImageElement
-}
+export type { MapAssets } from '@/lib/map-assets'
+export { loadMapAssets } from '@/lib/map-assets'
 
 export type MapViewport = {
   x: number
@@ -29,69 +26,6 @@ export type MapViewport = {
 }
 
 type MarkerVisibility = Record<MapMarkerKind, boolean>
-
-const imageCache = new Map<string, Promise<HTMLImageElement>>()
-
-function loadImage(url: string): Promise<HTMLImageElement> {
-  let promise = imageCache.get(url)
-  if (!promise) {
-    promise = new Promise((resolve, reject) => {
-      const image = new Image()
-      image.onload = () => resolve(image)
-      image.onerror = () =>
-        reject(new Error(`Failed to load map asset: ${url}`))
-      image.src = url
-    })
-    imageCache.set(url, promise)
-  }
-  return promise
-}
-
-function regionIndex(tileset: string): number {
-  const index = ['sewers', 'prison', 'caves', 'city', 'halls'].indexOf(tileset)
-  return index < 0 ? 0 : index
-}
-
-export function loadMapAssets(tileset: string): Promise<MapAssets> {
-  const region = regionIndex(tileset)
-  const key = ['sewers', 'prison', 'caves', 'city', 'halls'][region]
-  return Promise.all([
-    loadImage(`/assets/environment/tiles_${key}.png`),
-    loadImage('/assets/environment/terrain_features.png'),
-    loadImage(`/assets/environment/water${region}.png`),
-    loadImage('/assets/sprites/items.png'),
-    loadImage('/assets/sprites/rat.png'),
-    loadImage('/assets/sprites/snake.png'),
-    loadImage('/assets/sprites/skeleton.png'),
-    loadImage('/assets/sprites/swarm.png'),
-    loadImage('/assets/sprites/thief.png'),
-    loadImage('/assets/sprites/shopkeeper.png'),
-  ]).then(
-    ([
-      tiles,
-      terrainFeatures,
-      water,
-      items,
-      rat,
-      snake,
-      skeleton,
-      swarm,
-      thief,
-      shopkeeper,
-    ]) => ({
-      tiles,
-      terrainFeatures,
-      water,
-      items,
-      rat,
-      snake,
-      skeleton,
-      swarm,
-      thief,
-      shopkeeper,
-    })
-  )
-}
 
 /** Tight deterministic viewport around cells retained by pinned `cleanWalls()`. */
 export function mapViewport(map: FloorMap): MapViewport {

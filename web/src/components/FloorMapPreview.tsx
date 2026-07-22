@@ -119,8 +119,8 @@ export function FloorMapPreview({ map, identities, depth, className }: Props) {
             )}
             <p className="w-full text-muted-foreground text-xs">
               Markers cover engine-confirmed cells only. Mob generation is exact
-              on depth 1, partial and source-aligned on depths 2–4 and 6, and
-              not yet ported on depths 7–24.
+              on depth 1, partial and source-aligned on depths 2–4 and 6–8, and
+              not yet ported on depths 9–24.
             </p>
           </div>
         )}

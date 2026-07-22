@@ -30,19 +30,19 @@ final class FloorProbeLevels {
 
 	static Probe prePaint(int depth) {
 		if (depth == 1) return new PrePaintSewerLevel();
-		if (depth == 6) return new PrePaintPrisonLevel();
+		if (depth == 6 || depth == 8) return new PrePaintPrisonLevel();
 		throw unsupported(depth);
 	}
 
 	static Probe preMobs(int depth) {
 		if (depth == 1) return new PreMobsSewerLevel();
-		if (depth == 6) return new PreMobsPrisonLevel();
+		if (depth == 6 || depth == 8) return new PreMobsPrisonLevel();
 		throw unsupported(depth);
 	}
 
 	static Probe preItems(int depth) {
 		if (depth == 1) return new PreItemsSewerLevel();
-		if (depth == 6) return new PreItemsPrisonLevel();
+		if (depth == 6 || depth == 8) return new PreItemsPrisonLevel();
 		throw unsupported(depth);
 	}
 
