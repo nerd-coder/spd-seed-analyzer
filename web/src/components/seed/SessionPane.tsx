@@ -1,5 +1,4 @@
 import { Loader2 } from 'lucide-react'
-
 import { SeedReportView } from '@/components/seed/SeedReportView'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import type { SeedSession } from '@/stores/app'
@@ -38,11 +37,13 @@ export function SessionPane({
 
   if (session.report) {
     return (
-      <SeedReportView
-        report={session.report}
-        identitySpoilers={identitySpoilers}
-        mapSpoilers={mapSpoilers}
-      />
+      <div className="relative">
+        <SeedReportView
+          report={session.report}
+          identitySpoilers={identitySpoilers}
+          mapSpoilers={mapSpoilers}
+        />
+      </div>
     )
   }
 

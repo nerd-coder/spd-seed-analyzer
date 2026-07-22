@@ -6,9 +6,12 @@
  * - `spoilers` — map / identity spoiler flags
  * - `meta` — SPD version/commit from wasm
  * - `theme` — light / dark / system preference
+ * - `mode` — current mode (analyze / finder), persisted
  *
  * Consumers should keep importing from `@/stores/app`.
  */
+
+import { persistentAtom } from '@nanostores/persistent'
 
 export { $meta, loadSpdMeta, type SpdMeta } from './meta'
 export {
@@ -48,3 +51,21 @@ export {
   setTheme,
   type Theme,
 } from './theme'
+
+/**
+ * Mode: analyze or find-seed. Persisted to localStorage via nanostores/persistent.
+ */
+export type AppMode = 'analyze' | 'finder'
+
+const MODE_KEY = 'spd-analyzer-mode'
+const modeCodec = {
+  encode: (v: AppMode) => v,
+  decode: (v: string): AppMode =>
+    v === 'analyze' || v === 'finder' ? v : 'analyze',
+}
+
+export const $mode = persistentAtom<AppMode>(MODE_KEY, 'analyze', modeCodec)
+
+export function setMode(value: AppMode) {
+  $mode.set(value)
+}

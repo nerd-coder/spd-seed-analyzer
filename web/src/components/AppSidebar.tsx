@@ -6,8 +6,7 @@ import {
   SpinnerGapIcon,
 } from '@phosphor-icons/react'
 import type { FormEvent } from 'react'
-import { SettingsButton } from '@/components/SettingsButton'
-import { ThemeToggle } from '@/components/ThemeToggle'
+import { AppFloatingAction } from '@/components/AppFloatingAction'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -29,13 +28,12 @@ import {
   $formError,
   $meta,
   $seedInput,
+  type AppMode,
   analyzeDraftSeed,
   MAX_SAVED_SEEDS,
   normalizeSeedInput,
   setSeedInput,
 } from '@/stores/app'
-
-export type AppMode = 'analyze' | 'finder'
 
 export function AppSidebar({ mode }: { mode: AppMode }) {
   const seedInput = useStore($seedInput)
@@ -49,8 +47,8 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
   }
 
   return (
-    <aside className="border-border bg-sidebar text-sidebar-foreground lg:sticky lg:top-0 lg:max-h-svh lg:w-80 lg:shrink-0 lg:self-start lg:overflow-y-auto lg:border-r">
-      <div className="flex flex-col gap-4 p-4">
+    <aside className="border-border text-sidebar-foreground lg:sticky lg:top-0 lg:max-h-svh lg:h-full lg:w-80 lg:shrink-0 lg:self-start lg:overflow-y-auto lg:border-r">
+      <div className="flex flex-col gap-4 p-4 lg:h-full">
         <Card size="sm" className="relative overflow-hidden py-0">
           <div
             className="relative w-full bg-black"
@@ -68,10 +66,7 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
               className="absolute inset-0 h-full w-full object-contain"
               style={{ imageRendering: 'pixelated' }}
             />
-            <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 lg:hidden">
-              <SettingsButton className="border-white/20 bg-black/55 text-white hover:bg-black/70 hover:text-white" />
-              <ThemeToggle className="border-white/20 bg-black/55 text-white hover:bg-black/70 hover:text-white" />
-            </div>
+            <AppFloatingAction />
           </div>
           <CardContent className="flex flex-col gap-1 pb-3">
             <p className="text-muted-foreground text-xs leading-relaxed">

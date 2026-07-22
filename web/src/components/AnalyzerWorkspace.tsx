@@ -1,10 +1,7 @@
 import { useStore } from '@nanostores/react'
 import { SpinnerGapIcon, XIcon } from '@phosphor-icons/react'
 import { useRef } from 'react'
-import { SettingsButton } from '@/components/SettingsButton'
-import { EmptyAnalysisPlaceholder } from '@/components/seed/EmptyAnalysisPlaceholder'
 import { SessionPane } from '@/components/seed/SessionPane'
-import { ThemeToggle } from '@/components/ThemeToggle'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSeedTabsHeight } from '@/hooks/useSeedTabsHeight'
 import {
@@ -16,6 +13,7 @@ import {
   setActiveSeed,
   tabLabel,
 } from '@/stores/app'
+import { EmptyAnalysisPlaceholder } from './seed/EmptyAnalysisPlaceholder'
 
 export function AnalyzerWorkspace() {
   const sessions = useStore($sessions)
@@ -25,17 +23,7 @@ export function AnalyzerWorkspace() {
   const seedTabsRef = useRef<HTMLDivElement>(null)
   useSeedTabsHeight(seedTabsRef, sessions.length > 0)
 
-  if (sessions.length === 0) {
-    return (
-      <>
-        <div className="absolute top-3 right-3 z-30 hidden items-center gap-1.5 lg:flex">
-          <SettingsButton />
-          <ThemeToggle />
-        </div>
-        <EmptyAnalysisPlaceholder />
-      </>
-    )
-  }
+  if (sessions.length === 0) return <EmptyAnalysisPlaceholder />
 
   return (
     <Tabs
@@ -79,10 +67,6 @@ export function AnalyzerWorkspace() {
             </div>
           ))}
         </TabsList>
-        <div className="mt-0.5 mb-1.5 hidden shrink-0 items-center gap-1.5 lg:flex">
-          <SettingsButton />
-          <ThemeToggle />
-        </div>
       </div>
 
       <div className="flex flex-col gap-4 p-4 md:p-6">

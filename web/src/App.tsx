@@ -1,14 +1,21 @@
-import { useEffect, useState } from 'react'
+import { useStore } from '@nanostores/react'
+import { useEffect } from 'react'
 import { AnalyzerWorkspace } from '@/components/AnalyzerWorkspace'
-import { type AppMode, AppSidebar } from '@/components/AppSidebar'
+import { AppSidebar } from '@/components/AppSidebar'
 import { SeedFinder } from '@/components/finder/SeedFinder'
 import { SiteFooter } from '@/components/SiteFooter'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { loadSpdMeta, startSessionRehydrate } from '@/stores/app'
+import {
+  $mode,
+  loadSpdMeta,
+  setMode,
+  startSessionRehydrate,
+} from '@/stores/app'
+import { AppFloatingAction } from './components/AppFloatingAction'
 
 export default function App() {
-  const [mode, setMode] = useState<AppMode>('analyze')
+  const mode = useStore($mode)
 
   useEffect(() => {
     loadSpdMeta()
@@ -25,10 +32,11 @@ export default function App() {
         }}
         className="bg-muted/40 flex min-h-svh w-full justify-center gap-0"
       >
-        <div className="bg-background border-border flex min-h-svh w-full max-w-6xl flex-col lg:border-x">
-          <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        <div className="bg-background border-border min-h-svh w-full max-w-6xl mx-auto grid grid-cols-1 grid-rows-[1fr_max-content] lg:border-x">
+          <div className="grid grid-cols-1 lg:grid-cols-[max-content_1fr]">
             <AppSidebar mode={mode} />
             <main className="relative min-w-0 flex-1">
+              <AppFloatingAction />
               <TabsContent value="analyze" className="mt-0">
                 <AnalyzerWorkspace />
               </TabsContent>

@@ -1,6 +1,4 @@
 import { WarningIcon } from '@phosphor-icons/react'
-import { SettingsButton } from '@/components/SettingsButton'
-import { ThemeToggle } from '@/components/ThemeToggle'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import type { SeedSearchMatch } from '@/lib/spd-wasm'
 import { analyzeSeedInput } from '@/stores/app'
@@ -29,10 +27,6 @@ export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
             Search a deliberate numeric range for exact generated items, then
             open promising seeds in the analyzer.
           </p>
-        </div>
-        <div className="hidden shrink-0 items-center gap-1.5 lg:flex">
-          <SettingsButton />
-          <ThemeToggle />
         </div>
       </div>
 
