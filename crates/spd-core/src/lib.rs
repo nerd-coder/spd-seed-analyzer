@@ -15,6 +15,7 @@ pub mod random;
 pub mod report;
 pub mod rooms;
 pub mod run;
+pub mod search;
 
 pub use dungeon_seed::{DungeonSeed, SeedError, TOTAL_SEEDS};
 pub use items::IdentityMaps;
@@ -22,6 +23,11 @@ pub use java_random::JavaRandom;
 pub use random::Random;
 pub use report::{AnalyzeError, FloorReport, SeedInfo, SeedReport};
 pub use run::{dungeon_from_run, init_run, RunState};
+pub use search::{
+    search_seeds, ItemConstraint, ItemMatchEvidence, MatchMode, SearchError, SeedMatch,
+    SeedSearchRequest, SeedSearchResult, MAX_SEARCH_CANDIDATES, MAX_SEARCH_CONSTRAINTS,
+    MAX_SEARCH_MATCHES,
+};
 
 /// Pinned SPD version this port targets (from local clone at scaffold time).
 pub const SPD_VERSION: &str = "v3.3.8";

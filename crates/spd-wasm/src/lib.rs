@@ -1,6 +1,9 @@
 //! WASM bindings for `spd-core`.
 
-use spd_core::{analyze_seed as core_analyze, parse_seed as core_parse, AnalyzeError, SeedError};
+use spd_core::{
+    analyze_seed as core_analyze, parse_seed as core_parse, search_seeds as core_search,
+    AnalyzeError, SearchError, SeedError, SeedSearchRequest,
+};
 use wasm_bindgen::prelude::*;
 
 fn seed_err(e: SeedError) -> JsValue {
@@ -8,6 +11,10 @@ fn seed_err(e: SeedError) -> JsValue {
 }
 
 fn analyze_err(e: AnalyzeError) -> JsValue {
+    JsValue::from_str(&e.to_string())
+}
+
+fn search_err(e: SearchError) -> JsValue {
     JsValue::from_str(&e.to_string())
 }
 
@@ -29,6 +36,15 @@ pub fn parse_seed(input: &str) -> Result<JsValue, JsValue> {
 pub fn analyze_seed(input: &str, floors: u32) -> Result<JsValue, JsValue> {
     let report = core_analyze(input, floors).map_err(analyze_err)?;
     serde_wasm_bindgen::to_value(&report).map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+/// Search a bounded, resumable chunk of numeric seeds using item constraints.
+#[wasm_bindgen]
+pub fn search_seeds(request: JsValue) -> Result<JsValue, JsValue> {
+    let request: SeedSearchRequest = serde_wasm_bindgen::from_value(request)
+        .map_err(|e| JsValue::from_str(&format!("invalid search request: {e}")))?;
+    let result = core_search(&request).map_err(search_err)?;
+    serde_wasm_bindgen::to_value(&result).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
 /// Pinned SPD version string.

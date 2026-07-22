@@ -1,0 +1,169 @@
+import { useStore } from '@nanostores/react'
+import {
+  BinocularsIcon,
+  MagnifyingGlassIcon,
+  PlantIcon,
+  SpinnerGapIcon,
+} from '@phosphor-icons/react'
+import type { FormEvent } from 'react'
+import { SettingsButton } from '@/components/SettingsButton'
+import { ThemeToggle } from '@/components/ThemeToggle'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from '@/components/ui/field'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group'
+import { TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  $analyzing,
+  $formError,
+  $meta,
+  $seedInput,
+  analyzeDraftSeed,
+  MAX_SAVED_SEEDS,
+  normalizeSeedInput,
+  setSeedInput,
+} from '@/stores/app'
+
+export type AppMode = 'analyze' | 'finder'
+
+export function AppSidebar({ mode }: { mode: AppMode }) {
+  const seedInput = useStore($seedInput)
+  const analyzing = useStore($analyzing)
+  const formError = useStore($formError)
+  const meta = useStore($meta)
+
+  async function onAnalyze(event: FormEvent) {
+    event.preventDefault()
+    await analyzeDraftSeed()
+  }
+
+  return (
+    <aside className="border-border bg-sidebar text-sidebar-foreground lg:sticky lg:top-0 lg:max-h-svh lg:w-80 lg:shrink-0 lg:self-start lg:overflow-y-auto lg:border-r">
+      <div className="flex flex-col gap-4 p-4">
+        <Card size="sm" className="relative overflow-hidden py-0">
+          <div
+            className="relative w-full bg-black"
+            style={{ aspectRatio: '616/200' }}
+          >
+            <img
+              src="/assets/title.gif"
+              alt="Shattered Pixel Dungeon"
+              className="absolute inset-0 h-full w-full object-contain"
+              style={{ imageRendering: 'pixelated' }}
+            />
+            <img
+              src="/assets/title_overlay.png"
+              alt="SEED Analyzer"
+              className="absolute inset-0 h-full w-full object-contain"
+              style={{ imageRendering: 'pixelated' }}
+            />
+            <div className="absolute top-2 right-2 z-10 flex items-center gap-1.5 lg:hidden">
+              <SettingsButton className="border-white/20 bg-black/55 text-white hover:bg-black/70 hover:text-white" />
+              <ThemeToggle className="border-white/20 bg-black/55 text-white hover:bg-black/70 hover:text-white" />
+            </div>
+          </div>
+          <CardContent className="flex flex-col gap-1 pb-3">
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              Partial seed analysis — layout, loot, and quest rewards (not full
+              game parity).
+            </p>
+            {meta ? (
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                Tested on{' '}
+                <span className="font-bold">Shattered Pixel Dungeon</span>{' '}
+                <Badge variant="secondary" className="font-mono text-[10px]">
+                  {meta.version}
+                </Badge>
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        <TabsList
+          className="grid w-full grid-cols-2"
+          aria-label="Analyzer mode"
+        >
+          <TabsTrigger value="analyze">
+            <MagnifyingGlassIcon data-icon="inline-start" />
+            Analyze
+          </TabsTrigger>
+          <TabsTrigger value="finder">
+            <BinocularsIcon data-icon="inline-start" />
+            Find seeds
+          </TabsTrigger>
+        </TabsList>
+
+        {mode === 'analyze' ? (
+          <form onSubmit={onAnalyze}>
+            <FieldGroup className="gap-2">
+              <Field>
+                <FieldLabel htmlFor="seed">Enter your seed</FieldLabel>
+                <div className="flex w-full items-stretch">
+                  <InputGroup className="min-w-0 flex-1 border-r-0">
+                    <InputGroupAddon align="inline-start" aria-hidden>
+                      <PlantIcon />
+                    </InputGroupAddon>
+                    <InputGroupInput
+                      id="seed"
+                      value={seedInput}
+                      onChange={(event) => setSeedInput(event.target.value)}
+                      placeholder="XXX-XXX-XXX"
+                      autoComplete="off"
+                      spellCheck={false}
+                      className="font-mono uppercase"
+                    />
+                  </InputGroup>
+                  <Button
+                    type="submit"
+                    size="default"
+                    disabled={analyzing || !normalizeSeedInput(seedInput)}
+                  >
+                    {analyzing ? (
+                      <SpinnerGapIcon
+                        data-icon="inline-start"
+                        className="animate-spin"
+                      />
+                    ) : (
+                      <MagnifyingGlassIcon data-icon="inline-start" />
+                    )}
+                    Analyze
+                  </Button>
+                </div>
+                <FieldDescription>
+                  Codes, numeric seeds, or free-text fun seeds. Up to{' '}
+                  {MAX_SAVED_SEEDS} open seeds are kept (oldest dropped).
+                </FieldDescription>
+              </Field>
+            </FieldGroup>
+          </form>
+        ) : (
+          <div className="flex flex-col gap-1">
+            <p className="text-xs font-medium">Bounded item search</p>
+            <p className="text-muted-foreground text-xs/relaxed">
+              Scan up to 250 numeric candidates at a time. Search settings and
+              results are cleared when this page reloads.
+            </p>
+          </div>
+        )}
+
+        {mode === 'analyze' && formError ? (
+          <Alert variant="destructive">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{formError}</AlertDescription>
+          </Alert>
+        ) : null}
+      </div>
+    </aside>
+  )
+}

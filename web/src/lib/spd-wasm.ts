@@ -1,9 +1,4 @@
-import init, {
-  analyze_seed,
-  parse_seed,
-  spd_commit,
-  spd_version,
-} from '@/wasm/spd_wasm'
+import init, * as wasmBindings from '@/wasm/spd_wasm'
 
 export type SeedInfo = {
   input: string
@@ -72,6 +67,51 @@ export type SeedReport = {
   message?: string | null
 }
 
+export type SeedSearchMatchMode = 'any' | 'all'
+
+export type SeedSearchConstraint = {
+  className: string
+  minDepth: number
+  maxDepth: number
+}
+
+export type SeedSearchRequest = {
+  startSeed: number
+  candidateCount: number
+  floors: number
+  constraints: SeedSearchConstraint[]
+  matchMode: SeedSearchMatchMode
+  maxMatches: number
+}
+
+export type SeedSearchEvidence = {
+  constraintIndex: number
+  className: string
+  depth: number
+  name: string
+  source?: string | null
+}
+
+export type SeedSearchMatch = {
+  seed: SeedInfo
+  evidence: SeedSearchEvidence[]
+}
+
+export type SeedSearchResult = {
+  startSeed: number
+  requestedCandidates: number
+  candidatesScanned: number
+  nextSeed: number | null
+  exhausted: boolean
+  matchLimitReached: boolean
+  matchMode: SeedSearchMatchMode
+  matches: SeedSearchMatch[]
+  status: string
+  message: string
+}
+
+type SearchBinding = (request: SeedSearchRequest) => SeedSearchResult
+
 let ready: Promise<void> | null = null
 
 export function ensureWasm(): Promise<void> {
@@ -83,7 +123,7 @@ export function ensureWasm(): Promise<void> {
 
 export async function parseSeed(input: string): Promise<SeedInfo> {
   await ensureWasm()
-  return parse_seed(input) as SeedInfo
+  return wasmBindings.parse_seed(input) as SeedInfo
 }
 
 export async function analyzeSeed(
@@ -91,7 +131,19 @@ export async function analyzeSeed(
   floors: number
 ): Promise<SeedReport> {
   await ensureWasm()
-  return analyze_seed(input, floors) as SeedReport
+  return wasmBindings.analyze_seed(input, floors) as SeedReport
+}
+
+export async function searchSeeds(
+  request: SeedSearchRequest
+): Promise<SeedSearchResult> {
+  await ensureWasm()
+  const search = (wasmBindings as unknown as { search_seeds?: SearchBinding })
+    .search_seeds
+  if (!search) {
+    throw new Error('Seed search is unavailable. Rebuild the WASM package.')
+  }
+  return search(request)
 }
 
 export async function getSpdMeta(): Promise<{
@@ -99,5 +151,8 @@ export async function getSpdMeta(): Promise<{
   commit: string
 }> {
   await ensureWasm()
-  return { version: spd_version(), commit: spd_commit() }
+  return {
+    version: wasmBindings.spd_version(),
+    commit: wasmBindings.spd_commit(),
+  }
 }

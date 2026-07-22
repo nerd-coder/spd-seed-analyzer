@@ -21,6 +21,7 @@ export {
   $sessions,
   ANALYZE_FLOORS,
   analyzeDraftSeed,
+  analyzeSeedInput,
   closeSeedSession,
   MAX_SAVED_SEEDS,
   normalizeSeedInput,

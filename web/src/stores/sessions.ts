@@ -188,12 +188,11 @@ export function closeSeedSession(id: string) {
   }
 }
 
-/**
- * Analyze the draft seed input (or re-focus existing tab).
- * Enforces {@link MAX_SAVED_SEEDS} by dropping oldest sessions.
- */
-export async function analyzeDraftSeed(): Promise<void> {
-  const input = normalizeSeedInput($seedInput.get())
+async function analyzeSeedInputInternal(
+  rawInput: string,
+  clearDraftOnCreate: boolean
+): Promise<void> {
+  const input = normalizeSeedInput(rawInput)
   if (!input) return
 
   $formError.set(null)
@@ -234,13 +233,31 @@ export async function analyzeDraftSeed(): Promise<void> {
   $sessions.set(nextSessions)
   setSavedInputs(nextSessions.map((s) => s.input))
   $activeSeedId.set(id)
-  $seedInput.set('')
+  if (clearDraftOnCreate) {
+    $seedInput.set('')
+  }
   $analyzing.set(true)
   try {
     await runAnalyze(id, input)
   } finally {
     $analyzing.set(false)
   }
+}
+
+/**
+ * Open and analyze any seed input through the normal persisted session lifecycle.
+ * Used by entry points such as seed-finder results that do not own the draft field.
+ */
+export async function analyzeSeedInput(input: string): Promise<void> {
+  await analyzeSeedInputInternal(input, false)
+}
+
+/**
+ * Analyze the draft seed input (or re-focus existing tab).
+ * Enforces {@link MAX_SAVED_SEEDS} by dropping oldest sessions.
+ */
+export async function analyzeDraftSeed(): Promise<void> {
+  await analyzeSeedInputInternal($seedInput.get(), true)
 }
 
 /**

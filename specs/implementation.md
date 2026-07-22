@@ -1,6 +1,6 @@
 # SPD Seed Analyzer — Implementation Progress
 
-**Last updated:** 2026-07-22 (P6: depth-one forced-item Java oracle)
+**Last updated:** 2026-07-22 (P5: bounded item-constraint seed finder)
 
 **Branch:** `main`  
 **Pinned SPD:** v3.3.8 @ `7b8b845a7`  
@@ -86,6 +86,7 @@ bun run check:all    # biome + rust fmt/clippy
 | Depth seeds / limited drops | `dungeon/` | pos/sou/stylus/stones/cata/lab |
 | Java run oracle | `tools/java-oracle/` | Exact-pin, temporary headless SPD build; schema v1 identities + schema v2 depth-one pre-build forced-item queue without modifying the external clone |
 | Golden Java fixtures | `tools/java-oracle/fixtures/` + `crates/spd-core/tests/java_oracle_goldens.rs` | Four identity seeds plus one tightly scoped depth-one forced-item fixture; strict ordered identity and forced class/curse parity |
+| Seed constraint search | `search.rs` + `spd-wasm::search_seeds` | Bounded/resumable ascending numeric ranges; ANY/ALL exact item classes over inclusive floor windows; per-constraint evidence; explicit `partial` status; no wraparound |
 
 ### Levelgen (partial)
 | Area | Location | Notes |
@@ -135,6 +136,7 @@ bun run check:all    # biome + rust fmt/clippy
 | Map preview | Pinned terrain/water/chasm autotiling + raised wall layers; region water texture scrolls at 5 px/s in expanded view with reduced-motion cleanup; exact known item/mob markers are separately opt-in inside the spoiler-gated dialog |
 | Assets | Flattened to `web/public/assets/{environment,sprites,…}` (no nested `assets/assets`) |
 | App icon | `web/public/app_icon.jpg` |
+| **Seed finder** | Analyze / Find seeds modes; approachable grouped item selectors; bounded 1–250 candidate scans in five-seed chunks; ANY/ALL inclusive floor constraints; progress/cancel/error/empty states; ordered evidence cards open through the existing analyzer-session lifecycle |
 
 ### Bugs fixed recently
 - **WASM `"unreachable"` (depth 26):** UI always analyzes 26 floors. Depth 26 is SPD `LastLevel` (not RegularLevel); `secrets_for_floor` used `region = depth/5 == 5` into a 5-slot array → OOB panic → browser `"unreachable"`. Fixed by skipping non-regular depths (`regular_level()`: bosses 5/10/15/20/25 + last 26) and bounds-guarding `secrets_for_floor`.
@@ -202,7 +204,7 @@ Status string: `"partial"`.
 - ~~Region water animation~~ (`water0..water4` selected by region and scrolled at pinned 5 px/s; expanded view only, RAF cleanup + `prefers-reduced-motion`)
 
 ### P5 — Seed finder mode (post-v1)
-- Constraint search over seeds (any/all items by floor)  
+- ~~Constraint search over seeds (any/all items by floor)~~ (`spd-core::search_seeds` + thin WASM export + React finder; exact class constraints, inclusive floor windows, bounded/cancellable chunks, ascending evidence results; remains honestly `partial` because it searches the partial analyzer)
 
 ### P6 — Correctness infrastructure
 - ~~`tools/java-oracle`: headless identity dump JSON from the exact pinned local SPD clone~~
@@ -212,8 +214,8 @@ Status string: `"partial"`.
 
 Next correctness step: add a separately scoped oracle contract for final placed
 heap items after real room generation before using Java fixtures to claim broad
-floor-loot parity. The product-plan next phase remains **P5 seed finder** with
-the current honest `partial` status.
+floor-loot parity. **P5 seed finder is complete**; no later product phase is yet
+defined. The analyzer and finder both retain the current honest `partial` status.
 
 ---
 
@@ -253,6 +255,7 @@ pushGenerator(seed); Long() × depth; result = Long(); pop
 ### WASM
 - `parse_seed(input) → SeedInfo`
 - `analyze_seed(input, floors) → SeedReport`
+- `search_seeds(request) → SeedSearchResult` (bounded to 250 candidates, 32 constraints, and 100 matches per call)
 - `spd_version()` / `spd_commit()`
 
 ### `FloorMap` JSON
@@ -290,7 +293,9 @@ cargo test -p spd-core
 
 When adding features: prefer oracle comparisons for identity maps first, then
 tightly scoped single-floor facts. Schema v2 currently covers only the
-depth-one pre-build forced queue, not final heaps.
+depth-one pre-build forced queue, not final heaps. Core tests also cover bounded
+search validation, ANY/ALL semantics, inclusive depth ranges, result limits,
+resume ordering, and non-wrapping exhaustion.
 
 ---
 
@@ -304,7 +309,7 @@ SPD is GPL-3.0. This project ports generation logic → treat as **GPL-3.0-or-la
 
 1. Read this file + `README.md`  
 2. Open `crates/spd-core/src/lib.rs` → `analyze_seed` / `level/mod.rs` / `level/special_loot/` / `quests/{ghost,wandmaker,blacksmith,imp}.rs` / `level/shop.rs`  
-3. Next product phase: implement **P5 seed finder** constraints; next correctness slice: final placed-heap Java oracle facts
+3. P5 seed finder is complete; next correctness slice: final placed-heap Java oracle facts; define a new product phase before expanding UX scope
 4. Icons: `web/src/lib/item-icons.ts` + `components/ItemIcon.tsx` (items.png sheet)  
 5. Do not re-copy full asset tree; use `web/public/assets/` as flattened SPD assets  
 6. After Rust changes: `bun run build:wasm` (or `bun run dev`)  
