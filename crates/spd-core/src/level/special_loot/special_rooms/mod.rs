@@ -4,8 +4,8 @@ mod consumable;
 mod equip;
 
 pub(super) use consumable::{
-    laboratory_prizes, library_prizes, runestone_prizes, storage_prize, storage_prizes,
-    treasury_prizes,
+    laboratory_prizes, laboratory_prizes_shared, library_prizes, runestone_prizes, storage_prize,
+    storage_prizes, treasury_prizes,
 };
 pub(super) use equip::{armory_prizes, bomb_random, crypt_prize, pool_prize, statue_weapon};
 

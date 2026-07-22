@@ -402,7 +402,10 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                         label,
                     });
                 }
-                if p.item.source.as_deref() == Some("forced") {
+                if matches!(
+                    p.item.source.as_deref(),
+                    Some("forced") | Some("items_to_spawn")
+                ) {
                     // Room paint may add to itemsToSpawn (e.g. Storage → PotionOfLiquidFlame).
                     // Keep those in the report if not already listed under forced.
                     if !forced.iter().any(|f| f.class_name == p.item.class_name) {

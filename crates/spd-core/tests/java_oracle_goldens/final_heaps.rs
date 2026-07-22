@@ -136,6 +136,7 @@ fn depth_one_final_heaps_characterize_known_analyzer_mismatch() {
             signatures(&actual_projection),
             [
                 "Food",
+                "PotionOfInvisibility",
                 "StoneOfAggression",
                 "StoneOfBlink",
                 "StoneOfDeepSleep",

@@ -1,7 +1,7 @@
 //! Secret room prize painters.
 
 use super::placement::{burn_drop_pos, find_prize_item};
-use super::special_rooms::laboratory_prizes;
+use super::special_rooms::laboratory_prizes_shared;
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
@@ -41,6 +41,11 @@ pub(super) fn secret_runestone(
     room: &Room,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
+    // SecretRunestoneRoom.java:64 — pushed before the stone drops (zero-RNG append)
+    items_to_spawn.push(GeneratedItem::new(
+        "PotionOfLiquidFlame",
+        ItemCategory::Potion,
+    ));
     let n = Random::int_range_inclusive(2, 3);
     let mut out = Vec::new();
     let mut occupied = Vec::new();
@@ -84,7 +89,9 @@ pub(super) fn secret_laboratory(
     room: &Room,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
-    laboratory_prizes(dungeon, room, items_to_spawn)
+    // Java SecretLaboratoryRoom extends SecretRoom with its own paint() that
+    // never calls addItemToSpawn — shared lab body without the IronKey push.
+    laboratory_prizes_shared(dungeon, room, items_to_spawn)
         .into_iter()
         .map(|mut p| {
             p.item.source = Some("SecretLaboratoryRoom".into());

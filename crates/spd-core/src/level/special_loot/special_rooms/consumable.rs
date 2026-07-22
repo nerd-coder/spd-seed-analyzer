@@ -34,6 +34,8 @@ pub fn library_prizes(
             heap_type: "heap",
         });
     }
+    // LibraryRoom.java:65 — IronKey is the last statement of paint()
+    items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
     out
 }
 
@@ -92,6 +94,8 @@ pub fn treasury_prizes(
             let _qty = Random::int_range_inclusive(5, 12);
         }
     }
+    // TreasuryRoom.java:76 — IronKey pushed after the small gold piles
+    items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
     out
 }
 pub fn storage_prizes(
@@ -169,10 +173,26 @@ pub fn runestone_prizes(
             heap_type: "heap",
         });
     }
+    // RunestoneRoom.java:64 — IronKey is the last statement of paint()
+    items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
     out
 }
 
 pub fn laboratory_prizes(
+    dungeon: &mut DungeonState,
+    room: &Room,
+    items_to_spawn: &mut Vec<GeneratedItem>,
+) -> Vec<PlacedLoot> {
+    let out = laboratory_prizes_shared(dungeon, room, items_to_spawn);
+    // LaboratoryRoom.java:121 — IronKey is the last statement of paint()
+    items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
+    out
+}
+
+/// LaboratoryRoom prize body without the trailing IronKey push.
+/// `SecretLaboratoryRoom` reuses this: in Java it extends `SecretRoom` with its
+/// own `paint()` that never calls `addItemToSpawn`.
+pub fn laboratory_prizes_shared(
     dungeon: &mut DungeonState,
     room: &Room,
     items_to_spawn: &mut Vec<GeneratedItem>,

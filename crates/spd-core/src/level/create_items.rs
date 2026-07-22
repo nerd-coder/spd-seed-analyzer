@@ -115,7 +115,12 @@ pub fn create_items_main(
 
     // place itemsToSpawn as heaps
     for mut item in items_to_spawn {
-        item.source = Some("forced".into());
+        // Pre-build forced drops arrive already tagged "forced"; room-paint
+        // additions (IronKey, PoolRoom potion, …) are tagged separately so the
+        // schema-v2 pre-build forced-queue oracle can tell the two apart.
+        if item.source.is_none() {
+            item.source = Some("items_to_spawn".into());
+        }
         let cell = random_drop_cell(rooms, map, &mut occupied);
         let cell = (cell >= 0).then_some(cell as usize);
         if item.class_name == "TrinketCatalyst" {

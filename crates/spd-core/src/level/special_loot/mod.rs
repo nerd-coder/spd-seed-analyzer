@@ -131,7 +131,7 @@ fn paint_special(
     let room = &rooms[ri];
     let name = room.name.as_str();
     match name {
-        "CryptRoom" => vec![special_rooms::crypt_prize(dungeon)],
+        "CryptRoom" => vec![special_rooms::crypt_prize(dungeon, items_to_spawn)],
         "ArmoryRoom" => special_rooms::armory_prizes(dungeon, room, items_to_spawn),
         "LibraryRoom" => special_rooms::library_prizes(dungeon, room, items_to_spawn),
         "TreasuryRoom" => special_rooms::treasury_prizes(dungeon, room, items_to_spawn),
@@ -139,7 +139,7 @@ fn paint_special(
         "StorageRoom" => special_rooms::storage_prizes(dungeon, room, items_to_spawn),
         "RunestoneRoom" => special_rooms::runestone_prizes(dungeon, room, items_to_spawn),
         "LaboratoryRoom" => special_rooms::laboratory_prizes(dungeon, room, items_to_spawn),
-        "StatueRoom" => vec![special_rooms::statue_weapon(dungeon, room)],
+        "StatueRoom" => vec![special_rooms::statue_weapon(dungeon, room, items_to_spawn)],
         "SecretLibraryRoom" => secret_rooms::secret_library(dungeon, room, items_to_spawn),
         "SecretRunestoneRoom" => secret_rooms::secret_runestone(dungeon, room, items_to_spawn),
         "SecretArtilleryRoom" => secret_rooms::secret_artillery(dungeon, room),

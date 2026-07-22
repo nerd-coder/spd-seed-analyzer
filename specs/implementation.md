@@ -87,10 +87,10 @@ schema-v3 fixture (`aaa-aaa-aaa-final-heaps-floor-1.json`, seed
 `AAA-AAA-AAA` depth 1), whose Java-visible projection
 `[Food, PotionOfHealing, PotionOfInvisibility, ScaleArmor, ScrollOfRage,
 ScrollOfRecharging, StoneOfAggression, StoneOfBlink]` currently comes out of
-Rust as `[Food, StoneOfAggression, StoneOfBlink, StoneOfDeepSleep,
-ThrowingHammer]`. These three bugs compound on the same RNG stream — fixing
-one alone will not flip that test green, but each is independently correct
-and unit-testable.
+Rust as `[Food, PotionOfInvisibility, StoneOfAggression, StoneOfBlink,
+StoneOfDeepSleep, ThrowingHammer]` (post-gap-3). These bugs compound on the
+same RNG stream — fixing one alone will not flip that test green, but each is
+independently correct and unit-testable.
 
 ### 1. `createMobs()` is completely unported — the root desync (Large)
 Java's per-floor order is `build() → createMobs() → createItems()`
@@ -121,33 +121,41 @@ precedent already exists in `special_loot::special_room_loot`, which shuffles
 a full index list the same way Java does), then take the first
 `RoomKind::Standard` match.
 
-### 3. Eight special/secret rooms drop their trailing forced-item push (Small, precise)
-Java's `paint()` queues one more item via `level.addItemToSpawn(...)` at the
-very end of these rooms; the Rust port of the same function omits it, so
-`itemsToSpawn` is one entry short and every subsequent `randomDropCell` +
-per-drop `pushGenerator(Random.Long())` in the loop is shifted:
+### 3. ~~Eight special/secret rooms drop their trailing forced-item push~~ — FIXED
+All 9 missing `addItemToSpawn` pushes are now ported. Push positions were
+verified per-room against Java (they are **not** all at the end of `paint()`):
+Crypt/Statue push right after `entrance.set(LOCKED)` (before prize RNG),
+PoolRoom pushes after the pedestal prize but before piranha placement,
+SecretRunestone pushes before its stone drops, the rest (Runestone, Library,
+Treasury, Laboratory, Armory) push last. Constructors consume zero RNG; the
+pushes only reorder `items_to_spawn` contents.
 
-| Room | Missing push | Rust location | Java location |
-|---|---|---|---|
-| RunestoneRoom | `IronKey` | `special_loot/special_rooms/consumable.rs:147` `runestone_prizes` | `RunestoneRoom.java:64` |
-| LibraryRoom | `IronKey` | `consumable.rs:12` `library_prizes` | `LibraryRoom.java:65` |
-| TreasuryRoom | `IronKey` | `consumable.rs:55` `treasury_prizes` | `TreasuryRoom.java:76` |
-| LaboratoryRoom | `IronKey` | `consumable.rs:175` `laboratory_prizes` (also inherited by `secret_rooms.rs:82` `secret_laboratory`) | `LaboratoryRoom.java:121` |
-| CryptRoom | `IronKey` | `special_rooms/equip.rs:13` `crypt_prize` (doesn't take `items_to_spawn` yet) | `CryptRoom.java:51` |
-| StatueRoom | `IronKey` | `equip.rs:130` `statue_weapon` (doesn't take `items_to_spawn` yet) | `StatueRoom.java:46` |
-| ArmoryRoom | `IronKey` | `equip.rs:33` `armory_prizes` | `ArmoryRoom.java:78` |
-| PoolRoom | `PotionOfInvisibility` | `equip.rs:89` `pool_prize` | `PoolRoom.java:91` |
-| SecretRunestoneRoom | `PotionOfLiquidFlame` | `secret_rooms.rs:39` `secret_runestone` | `SecretRunestoneRoom.java:64` |
+Two Java-source corrections to what this section previously claimed:
 
-(`trap_rooms.rs`, `pit_secrets.rs`, `quest_rooms.rs`, `gardens.rs`,
-`crystal.rs` already push their forced items correctly — bug is isolated to
-the 9 sites above.) `crypt_prize` and `statue_weapon` need
-`items_to_spawn: &mut Vec<GeneratedItem>` threaded through from
-`special_loot/mod.rs` call sites first.
+- `SecretLaboratoryRoom` does **not** inherit `LaboratoryRoom.paint` — it
+  extends `SecretRoom` with its own `paint()` (weighted `potionChances`
+  table) and never pushes an `IronKey`. Rust now splits
+  `laboratory_prizes` (push) from `laboratory_prizes_shared` (no push, used
+  by `secret_laboratory`). **Still open:** the shared body itself is
+  LaboratoryRoom's prize logic, not SecretLaboratoryRoom's own paint —
+  listed under lower-leverage gaps.
+- Push-order fidelity matters beyond count: `PoolRoom`'s unfiltered
+  `findPrizeItem` would consume its own `PotionOfInvisibility` if the push
+  landed before prize selection.
 
-The AAA-AAA-AAA fixture's expected `PotionOfInvisibility` (cell 454, `heap`)
-and `IronKey` (cell 941) directly confirm this floor has both a PoolRoom and
-a RunestoneRoom hitting this bug.
+Report-model note: `create_items` no longer blanket-tags every
+`itemsToSpawn` placement `source = "forced"`. Pre-build forced drops keep
+`"forced"`; room-paint additions are tagged `"items_to_spawn"` (both still
+merge into the report's forced list). This keeps the schema-v2 oracle —
+which snapshots Java's queue at the **pre-build** boundary
+(`FloorOracle.RecordingSewerLevel.build()`) — comparable after room pushes
+started surviving into `createItems`.
+
+Unit coverage: 10 tests in `special_loot/tests.rs` (`*_pushes_iron_key`,
+`pool_room_pushes_invisibility`, `secret_runestone_pushes_liquid_flame`,
+`secret_laboratory_no_iron_key`). The AAA-AAA-AAA final-heaps projection
+gained `PotionOfInvisibility` (PoolRoom push now lands; `IronKey` stays
+report-blacklisted).
 
 ### 4. `canPlaceItem` fidelity gaps (Medium)
 Only a generic `item_allowed` mask + trap-destroys-items filter +
@@ -162,6 +170,10 @@ already — this gap is specifically the room-shape predicate.
 ### Lower-leverage, already-known (from prior disclaimer, still open)
 - Full ambient `createMobs` also feeds map markers — only exact known cells
   (room-painted heaps/mimics, RotGarden, DemonSpawner) are shown today.
+- `SecretLaboratoryRoom` reuses `LaboratoryRoom`'s prize body
+  (`laboratory_prizes_shared`); Java gives it its own `paint()` with a
+  weighted `potionChances` table (2 potions) — different RNG shape whenever
+  the room appears (found while fixing gap 3; no fixture covers it yet).
 - Sewer room-count tables are reused for all regions.
 - Shop stock is generated post-build instead of mid-`setSize`; bag choice is
   hero-less.
@@ -177,13 +189,11 @@ already — this gap is specifically the room-shape predicate.
 
 ## Suggested fix order
 
-These three bugs share one RNG stream, so verify each in isolation with a
-narrow unit test, but expect the `java_oracle_goldens/final_heaps.rs` mismatch
-test to stay red until **all three** land:
+The remaining two bugs share one RNG stream, so verify each in isolation with
+a narrow unit test, but expect the `java_oracle_goldens/final_heaps.rs`
+mismatch test to stay red until **both** land:
 
-1. **Gap 3 first** (small, isolated, no plumbing changes beyond two function
-   signatures) — add the 9 missing pushes. Cheapest to verify: rerun
-   `cargo test -p spd-core` and diff the changed `itemsToSpawn` shape.
+1. ~~Gap 3~~ — **done** (9 forced-item pushes + per-room push ordering).
 2. **Gap 2** (`random_drop_cell` shuffle scope) — needs the full per-floor
    room list passed in instead of a pre-filtered `Vec`; reuse the shuffle
    pattern already in `special_loot::special_room_loot`.
@@ -193,7 +203,7 @@ test to stay red until **all three** land:
    real placement (faster to parity, defers mob rendering). Either way this
    must consume the exact same `Random` calls Java does before `createItems`
    begins.
-4. Once all three are in, flip
+4. Once both are in, flip
    `depth_one_final_heaps_characterize_known_analyzer_mismatch` from
    `assert_ne!` to exact fact equality (cell, heap type, quantity, level,
    curse — the v3 fixture already carries all of it; the Rust report
@@ -292,11 +302,10 @@ license constraints.
 ## How to resume (clean context)
 
 1. Read this file, specifically **"What's lacking for exact parity"** above.
-2. Start with gap 3 (`level/special_loot/special_rooms/{consumable,equip}.rs`,
-   `level/special_loot/secret_rooms.rs`) — smallest, most isolated, most
-   verifiable.
-3. Then gap 2 (`level/create_items.rs:198-258`), then gap 1
-   (`level/mod.rs:350` + new `createMobs` port).
+2. ~~Gap 3~~ — done. Start with gap 2
+   (`level/create_items.rs` `random_drop_cell` — shuffle the full per-floor
+   room list, don't pre-filter to Standard).
+3. Then gap 1 (`level/mod.rs` + new `createMobs` port).
 4. Validate against `crates/spd-core/tests/java_oracle_goldens/final_heaps.rs`
    and the `aaa-aaa-aaa-final-heaps-floor-1.json` fixture; regenerate/extend
    fixtures via `tools/java-oracle/run` (set `SPD_SOURCE=/Users/toan/code/00-Evan/shattered-pixel-dungeon`).

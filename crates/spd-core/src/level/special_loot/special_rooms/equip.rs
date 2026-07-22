@@ -10,7 +10,12 @@ use crate::level::create_items::PlacedLoot;
 use crate::random::Random;
 use crate::rooms::room::Room;
 
-pub fn crypt_prize(dungeon: &mut DungeonState) -> PlacedLoot {
+pub fn crypt_prize(
+    dungeon: &mut DungeonState,
+    items_to_spawn: &mut Vec<GeneratedItem>,
+) -> PlacedLoot {
+    // CryptRoom.java:51 — IronKey pushed before prize generation (zero-RNG append)
+    items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
     // Generator.randomArmor((depth/5)+1)
     let mut prize = dungeon
         .generator
@@ -73,6 +78,8 @@ pub fn armory_prizes(
             heap_type: "heap",
         });
     }
+    // ArmoryRoom.java:78 — IronKey is the last statement of paint()
+    items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
     out
 }
 
@@ -106,6 +113,14 @@ pub fn pool_prize(
     }
     prize.source = Some("PoolRoom".into());
 
+    // PoolRoom.java:91 — pushed after prize generation, before piranha placement.
+    // Must stay after the findPrizeItem call above: an unfiltered find could
+    // otherwise consume this potion as the pedestal prize.
+    items_to_spawn.push(GeneratedItem::new(
+        "PotionOfInvisibility",
+        ItemCategory::Potion,
+    ));
+
     // piranha placement burns RNG (3 piranhas)
     for _ in 0..3 {
         burn_terrain_pos(room, /*water-like*/ true);
@@ -127,7 +142,13 @@ fn pool_equip(dungeon: &mut DungeonState) -> GeneratedItem {
         _ => dungeon.generator.random_armor(floor, dungeon.depth),
     }
 }
-pub fn statue_weapon(dungeon: &mut DungeonState, _room: &Room) -> PlacedLoot {
+pub fn statue_weapon(
+    dungeon: &mut DungeonState,
+    _room: &Room,
+    items_to_spawn: &mut Vec<GeneratedItem>,
+) -> PlacedLoot {
+    // StatueRoom.java:46 — IronKey pushed before Statue.random() (zero-RNG append)
+    items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
     // Statue.random: 10% armored (rat skull default)
     let _armored = Random::float() < 0.1;
     let mut weapon = dungeon
