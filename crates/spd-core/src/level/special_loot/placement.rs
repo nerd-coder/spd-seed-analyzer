@@ -24,6 +24,7 @@ pub(super) fn burn_drop_pos_margin(room: &Room, m: i32, occupied: &mut Vec<(i32,
     }
 }
 
+#[cfg(test)]
 pub(super) fn burn_terrain_pos(room: &Room, _water: bool) {
     // simplified: consume the same RNG shape as a single accepted roll
     // (full map terrain not painted yet)

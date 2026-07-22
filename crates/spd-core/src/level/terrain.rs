@@ -55,7 +55,9 @@ pub struct TerrainMap {
     pub character_allowed: Vec<bool>,
     /// Cells occupied by mobs placed during room paint.
     pub mob_occupied: Vec<bool>,
-    /// Exact known mob identity for room-painted cells. Full createMobs is not ported.
+    /// Cells occupied by plants; Java rejects these separately during mob placement.
+    pub plant_occupied: Vec<bool>,
+    /// Exact known mob identity for room-painted and ambient cells.
     pub known_mobs: Vec<Option<&'static str>>,
     /// Cells occupied by heaps placed during room paint.
     pub heap_occupied: Vec<bool>,
@@ -96,6 +98,13 @@ impl TerrainMap {
                 | SECRET_DOOR
                 | REGION_DECO
                 | REGION_DECO_ALT
+        )
+    }
+
+    pub fn is_los_blocking(&self, cell: usize) -> bool {
+        matches!(
+            self.map[cell],
+            WALL | DOOR | LOCKED_DOOR | SECRET_DOOR | WALL_DECO | HIGH_GRASS | BOOKSHELF
         )
     }
 
@@ -278,6 +287,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
     let item_allowed = vec![true; len];
     let character_allowed = vec![true; len];
     let mob_occupied = vec![false; len];
+    let plant_occupied = vec![false; len];
     let known_mobs = vec![None; len];
     let heap_occupied = vec![false; len];
     let trap_destroys_items = vec![false; len];
@@ -296,6 +306,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
         item_allowed,
         character_allowed,
         mob_occupied,
+        plant_occupied,
         known_mobs,
         heap_occupied,
         trap_destroys_items,

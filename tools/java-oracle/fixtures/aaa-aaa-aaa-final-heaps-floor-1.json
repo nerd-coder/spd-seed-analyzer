@@ -57,6 +57,20 @@
   "floors": [
     {
       "depth": 1,
+      "width": 40,
+      "height": 30,
+      "pre_paint_rng": [
+        1993374861, -149591753, -1380055091, 368556635, 1163123780, 1118396506,
+        798076888, -791762655
+      ],
+      "pre_mobs_rng": [
+        1726373121, -188171336, 1867201434, -2048184778, 717498613, -493803451,
+        -1465937696, 689471909
+      ],
+      "pre_items_rng": [
+        -339886649, -1704611306, -1853649770, -1054644975, 1614102425,
+        -1139121137, -821014263, -184470637
+      ],
       "final_heaps": [
         {
           "cell": 173,
@@ -170,6 +184,19 @@
             { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
           ]
         }
+      ],
+      "final_mobs": [
+        { "cell": 175, "class": "Rat" },
+        { "cell": 314, "class": "Piranha" },
+        { "cell": 404, "class": "Snake" },
+        { "cell": 432, "class": "Piranha" },
+        { "cell": 436, "class": "Piranha" },
+        { "cell": 497, "class": "Rat" },
+        { "cell": 524, "class": "Rat" },
+        { "cell": 738, "class": "Rat" },
+        { "cell": 752, "class": "Rat" },
+        { "cell": 778, "class": "Snake" },
+        { "cell": 902, "class": "Rat" }
       ]
     }
   ]

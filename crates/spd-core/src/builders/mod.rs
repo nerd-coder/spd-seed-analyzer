@@ -100,7 +100,7 @@ mod tests {
         let vertices = rooms.iter().filter(|room| !room.is_empty()).count();
         let edges = rooms.iter().map(|room| room.connected.len()).sum::<usize>() / 2;
         assert!(edges + 1 >= vertices + 2, "expected two independent loops");
-        assert_eq!(rng_tail, 1_744_841_133);
+        assert_eq!(rng_tail, 1_953_852_014);
     }
 
     #[test]

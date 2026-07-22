@@ -185,7 +185,7 @@ impl GeneratorState {
                     assert!(i >= 0, "defaultProbs chances empty");
                     rt.def.classes[i as usize]
                 };
-                // exotic chance is 0 without trinket
+                consume_exotic_conversion_roll(cat);
                 let mut item = GeneratedItem::new(class_name, rt.def.item_category);
                 randomize_item(&mut item, depth);
                 item
@@ -244,7 +244,7 @@ impl GeneratorState {
             self.cats[idx].dropped += 1;
         }
 
-        // Exotic potion/scroll chance is 0 without ExoticCrystals trinket
+        consume_exotic_conversion_roll(cat);
         let mut item = if cat == Category::Gold {
             GeneratedItem::new("Gold", ItemCategory::Gold)
         } else {
@@ -365,6 +365,16 @@ impl GeneratorState {
             return p.get(i).copied().unwrap_or(0.0);
         }
         0.0
+    }
+}
+
+/// Java checks every regular potion and scroll against its exotic counterpart
+/// after leaving the category's seeded deck. The current engine models no
+/// ExoticCrystals trinket, so conversion is impossible, but `Random.Float()`
+/// is still evaluated and must advance the active level-generation stream.
+fn consume_exotic_conversion_roll(cat: Category) {
+    if matches!(cat, Category::Potion | Category::Scroll) {
+        let _ = Random::float();
     }
 }
 

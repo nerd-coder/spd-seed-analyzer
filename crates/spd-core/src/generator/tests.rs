@@ -30,3 +30,42 @@ fn potion_deck_never_strength_from_random() {
     }
     Random::pop_generator();
 }
+
+#[test]
+fn consumable_decks_advance_level_stream_for_exotic_conversion_check() {
+    Random::reset_generators();
+    Random::push_generator_seeded(314_159);
+    let mut generator = GeneratorState::full_reset_ordered();
+
+    // The class draw uses the scroll category's private seeded generator.
+    // Java then evaluates ExoticScroll.regToExo's Float check on the restored
+    // level stream, even when ExoticCrystals makes conversion impossible.
+    let before_scroll = Random::peek_ints(2);
+    let scroll = generator.random_category(Category::Scroll, 1);
+    assert_eq!(scroll.category, crate::items::model::ItemCategory::Scroll);
+    assert_eq!(Random::int(), before_scroll[1]);
+
+    // Non-convertible categories do not perform that extra base-stream draw.
+    let before_stone = Random::peek_ints(1);
+    let stone = generator.random_category(Category::Stone, 1);
+    assert_eq!(stone.category, crate::items::model::ItemCategory::Stone);
+    assert_eq!(Random::int(), before_stone[0]);
+
+    Random::pop_generator();
+}
+
+#[test]
+fn default_consumable_selection_keeps_exotic_conversion_draw() {
+    Random::reset_generators();
+    Random::push_generator_seeded(271_828);
+    let mut generator = GeneratorState::full_reset_ordered();
+
+    // One Float selects the default potion class and a second checks for its
+    // exotic counterpart, so the following Int matches the third probe Int.
+    let before = Random::peek_ints(3);
+    let potion = generator.random_using_defaults(Category::Potion, 1);
+    assert_eq!(potion.category, crate::items::model::ItemCategory::Potion);
+    assert_eq!(Random::int(), before[2]);
+
+    Random::pop_generator();
+}

@@ -176,6 +176,6 @@ mod tests {
             map.item_allowed.iter().filter(|&&allowed| !allowed).count(),
             4
         );
-        assert_eq!(next, -7_692_918_352_596_686_609);
+        assert_eq!(next, 7_161_894_312_517_791_962);
     }
 }

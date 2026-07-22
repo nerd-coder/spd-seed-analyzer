@@ -25,7 +25,7 @@ pub struct FloorMap {
     pub tiles: Vec<u16>,
     /// SPD `DungeonTileSheet.setupVariance` values for deterministic tile alternates.
     pub tile_variance: Vec<u8>,
-    /// Exact cells known to the partial generator; ambient mobs are not included.
+    /// Exact cells known to the partial generator, including depth-one ambient mobs.
     #[serde(default)]
     pub markers: Vec<MapMarker>,
 }

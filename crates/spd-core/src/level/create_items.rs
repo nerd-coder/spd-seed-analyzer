@@ -22,7 +22,8 @@ pub struct CreatedLoot {
 
 /// Main createItems random drops + forced itemsToSpawn placement.
 /// `randomDropCell` matches Java: full-list reshuffle per try, StandardRoom
-/// instanceof scan (Entrance/Exit/Standard kinds), exact exit-cell exclusion.
+/// instanceof scan (Entrance/Exit/Standard kinds), one persistent in-place
+/// room permutation across all drops, and exact exit-cell exclusion.
 pub fn create_items_main(
     dungeon: &mut DungeonState,
     rooms: &[Room],
@@ -35,6 +36,9 @@ pub fn create_items_main(
     for (occupied, &mob) in occupied.iter_mut().zip(&map.mob_occupied) {
         *occupied |= mob;
     }
+    // Java shuffles the level's `rooms` ArrayList itself. Preserve that
+    // permutation across every random and forced drop on this floor.
+    let mut room_order: Vec<usize> = (0..rooms.len()).collect();
 
     // nItems = 3 + chances{6,3,1}; +2 if LARGE
     let mut n_items = 3 + Random::chances(&[6., 3., 1.]);
@@ -46,7 +50,7 @@ pub fn create_items_main(
         let mut to_drop = dungeon.generator.random(dungeon.depth);
         to_drop.source = Some("heap".into());
 
-        let cell = random_drop_cell(rooms, map, &mut occupied);
+        let cell = random_drop_cell(rooms, &mut room_order, map, &mut occupied);
         if cell < 0 {
             continue;
         }
@@ -80,7 +84,6 @@ pub fn create_items_main(
                 heap_type = "heap";
             }
         }
-
         // locked chest upgrade path
         let upgradable = matches!(
             to_drop.category,
@@ -104,7 +107,6 @@ pub fn create_items_main(
                 heap_type = "locked_chest";
             }
         }
-
         out.push(CreatedLoot {
             loot: PlacedLoot {
                 item: to_drop,
@@ -122,7 +124,7 @@ pub fn create_items_main(
         if item.source.is_none() {
             item.source = Some("items_to_spawn".into());
         }
-        let cell = random_drop_cell(rooms, map, &mut occupied);
+        let cell = random_drop_cell(rooms, &mut room_order, map, &mut occupied);
         let cell = (cell >= 0).then_some(cell as usize);
         if item.class_name == "TrinketCatalyst" {
             out.push(CreatedLoot {
@@ -132,7 +134,7 @@ pub fn create_items_main(
                 },
                 cell,
             });
-            let key_cell = random_drop_cell(rooms, map, &mut occupied);
+            let key_cell = random_drop_cell(rooms, &mut room_order, map, &mut occupied);
             if key_cell >= 0 {
                 let mut key = GeneratedItem::new("GoldenKey", ItemCategory::Other);
                 key.source = Some("forced".into());
@@ -217,17 +219,21 @@ pub fn create_items_main(
 ///   returns 0 WITHOUT consuming a draw, so the degenerate
 ///   `IntRange(left+1, right-1)` pair on a zeroed rect burns zero draws and
 ///   yields (1, 1), which then fails the terrain checks below.
-fn random_drop_cell(rooms: &[Room], map: &TerrainMap, occupied: &mut [bool]) -> i32 {
+fn random_drop_cell(
+    rooms: &[Room],
+    order: &mut [usize],
+    map: &TerrainMap,
+    occupied: &mut [bool],
+) -> i32 {
     // Java `exit()` is the REGULAR_EXIT transition cell — the single cell the
     // exit room painter set to Terrain.EXIT. Invariant during this loop.
     let exit_cell = map.map.iter().position(|&t| t == EXIT);
 
-    let mut order: Vec<usize> = (0..rooms.len()).collect();
     let mut tries = 100;
     while tries > 0 {
         tries -= 1;
         // `randomRoom`: Collections.shuffle on the full list, every try.
-        Random::shuffle_list(&mut order);
+        Random::shuffle_list(order);
         // `room(type)`: first instanceof-StandardRoom in shuffled order.
         let room = order.iter().map(|&ri| &rooms[ri]).find(|r| {
             matches!(
@@ -268,9 +274,8 @@ fn random_drop_cell(rooms: &[Room], map: &TerrainMap, occupied: &mut [bool]) -> 
         if room.name == "AquariumRoom" && map.map[idx] == WATER {
             continue;
         }
-        // TODO(gap 1): add the `findMob(pos) == null` conjunct here once
-        // createMobs lands (room-painted mobs are already folded into
-        // `occupied` by the caller).
+        // `findMob(pos) == null`: room-painted and depth-one ambient mobs are
+        // folded into `occupied` by the caller.
         // Items cannot spawn on traps that destroy items (Burning/Frost/…/Pitfall).
         if map.trap_destroys_items.get(idx).copied().unwrap_or(false) {
             continue;

@@ -149,7 +149,8 @@ fn assert_java_semantics(rooms: &[Room], map: &TerrainMap, seed: i64) -> OracleO
     Random::reset_generators();
     Random::push_generator_seeded(seed);
     let mut occupied = vec![false; map.len()];
-    let actual_cell = random_drop_cell(rooms, map, &mut occupied);
+    let mut order: Vec<usize> = (0..rooms.len()).collect();
+    let actual_cell = random_drop_cell(rooms, &mut order, map, &mut occupied);
     let actual_next = Random::int();
     Random::pop_generator();
 
@@ -174,8 +175,9 @@ fn random_drop_cell_enforces_room_item_mask() {
     let only = map.point_to_cell(3, 3).expect("center");
     map.item_allowed[only] = true;
     let mut occupied = vec![false; map.len()];
+    let mut order = vec![0];
     Random::push_generator_seeded(3);
-    let selected = random_drop_cell(&[room], &map, &mut occupied);
+    let selected = random_drop_cell(&[room], &mut order, &map, &mut occupied);
     Random::pop_generator();
     assert_eq!(selected, only as i32);
 }
@@ -194,8 +196,9 @@ fn aquarium_rejects_water_from_later_painter_passes() {
     let only = map.point_to_cell(3, 3).expect("center");
     map.map[only] = EMPTY;
     let mut occupied = vec![false; map.len()];
+    let mut order = vec![0];
     Random::push_generator_seeded(7);
-    let selected = random_drop_cell(&[room], &map, &mut occupied);
+    let selected = random_drop_cell(&[room], &mut order, &map, &mut occupied);
     Random::pop_generator();
     assert_eq!(selected, only as i32);
 }

@@ -15,6 +15,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Statistics;
 import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Blacksmith;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Ghost;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Imp;
@@ -26,7 +27,10 @@ import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
+import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretRoom;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.SpecialRoom;
 import com.watabou.gltextures.TextureCache;
@@ -82,7 +86,57 @@ final class FloorOracle {
 					heap.pos, heap.type.name().toLowerCase(Locale.ROOT), items));
 		}
 		heaps.sort(Comparator.comparingInt(heap -> heap.cell));
-		return new FinalFloorFacts(1, heaps);
+		List<MobFact> mobs = new ArrayList<>();
+		for (Mob mob : level.mobs) {
+			mobs.add(new MobFact(mob.pos, mob.getClass().getSimpleName()));
+		}
+		mobs.sort(Comparator.comparingInt(mob -> mob.cell));
+		int width = level.width();
+		int height = level.height();
+		List<Integer> prePaintRng = generatePrePaintRng(seed);
+		List<Integer> preMobsRng = generatePreMobsRng(seed);
+		List<Integer> preItemsRng = generatePreItemsRng(seed);
+		return new FinalFloorFacts(
+				1, width, height, heaps, mobs, prePaintRng, preMobsRng, preItemsRng);
+	}
+
+	private static List<Integer> generatePrePaintRng(long seed) {
+		initializeFreshRun(seed);
+		Actor.clear();
+		Dungeon.generatedLevels.add(1);
+		RecordingPrePaintSewerLevel level = new RecordingPrePaintSewerLevel();
+		try {
+			level.create();
+		} catch (SnapshotComplete expected) {
+			// The recording painter stops before RegularPainter.paint.
+		}
+		return level.rngProbe;
+	}
+
+	private static List<Integer> generatePreMobsRng(long seed) {
+		initializeFreshRun(seed);
+		Actor.clear();
+		Dungeon.generatedLevels.add(1);
+		RecordingPreMobsSewerLevel level = new RecordingPreMobsSewerLevel();
+		try {
+			level.create();
+		} catch (SnapshotComplete expected) {
+			// The override stops at the createMobs entry boundary.
+		}
+		return level.rngProbe;
+	}
+
+	private static List<Integer> generatePreItemsRng(long seed) {
+		initializeFreshRun(seed);
+		Actor.clear();
+		Dungeon.generatedLevels.add(1);
+		RecordingPreItemsSewerLevel level = new RecordingPreItemsSewerLevel();
+		try {
+			level.create();
+		} catch (SnapshotComplete expected) {
+			// The override stops at the createItems entry boundary.
+		}
+		return level.rngProbe;
 	}
 
 	private static void initializeFreshRun(long seed) {
@@ -161,11 +215,41 @@ final class FloorOracle {
 
 	static final class FinalFloorFacts {
 		final int depth;
+		final int width;
+		final int height;
 		final List<HeapFact> heaps;
+		final List<MobFact> mobs;
+		final List<Integer> prePaintRng;
+		final List<Integer> preMobsRng;
+		final List<Integer> preItemsRng;
 
-		FinalFloorFacts(int depth, List<HeapFact> heaps) {
+		FinalFloorFacts(
+				int depth,
+				int width,
+				int height,
+				List<HeapFact> heaps,
+				List<MobFact> mobs,
+				List<Integer> prePaintRng,
+				List<Integer> preMobsRng,
+				List<Integer> preItemsRng) {
 			this.depth = depth;
+			this.width = width;
+			this.height = height;
 			this.heaps = heaps;
+			this.mobs = mobs;
+			this.prePaintRng = prePaintRng;
+			this.preMobsRng = preMobsRng;
+			this.preItemsRng = preItemsRng;
+		}
+	}
+
+	static final class MobFact {
+		final int cell;
+		final String mobClass;
+
+		MobFact(int cell, String mobClass) {
+			this.cell = cell;
+			this.mobClass = mobClass;
 		}
 	}
 
@@ -197,6 +281,52 @@ final class FloorOracle {
 
 		List<ItemFact> forcedItems() {
 			return forcedItems;
+		}
+	}
+
+	private static final class RecordingPreItemsSewerLevel extends SewerLevel {
+		private List<Integer> rngProbe;
+
+		@Override
+		protected void createItems() {
+			rngProbe = new ArrayList<>();
+			for (int index = 0; index < 8; index++) {
+				rngProbe.add(Random.Int());
+			}
+			throw new SnapshotComplete();
+		}
+	}
+
+	private static final class RecordingPreMobsSewerLevel extends SewerLevel {
+		private List<Integer> rngProbe;
+
+		@Override
+		protected void createMobs() {
+			rngProbe = new ArrayList<>();
+			for (int index = 0; index < 8; index++) {
+				rngProbe.add(Random.Int());
+			}
+			throw new SnapshotComplete();
+		}
+	}
+
+	private static final class RecordingPrePaintSewerLevel extends SewerLevel {
+		private List<Integer> rngProbe;
+
+		@Override
+		protected Painter painter() {
+			// Preserve SewerLevel.painter construction, including nTraps RNG.
+			super.painter();
+			return new Painter() {
+				@Override
+				public boolean paint(Level level, ArrayList<Room> rooms) {
+					rngProbe = new ArrayList<>();
+					for (int index = 0; index < 8; index++) {
+						rngProbe.add(Random.Int());
+					}
+					throw new SnapshotComplete();
+				}
+			};
 		}
 	}
 

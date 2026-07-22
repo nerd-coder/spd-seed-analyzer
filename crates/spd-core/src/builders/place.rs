@@ -67,10 +67,13 @@ pub fn find_free_space(start: Point, collision: &[Room], max_size: i32) -> Rect 
         let mut closest_room: Option<usize> = None;
         let mut closest_diff = i32::MAX;
 
+        // Pinned Builder.findFreeSpace declares these outside the room loop.
+        // `inside` therefore stays false after the first room that does not
+        // contain the start point, and `curDiff` accumulates across rooms.
+        let mut inside = true;
+        let mut cur_diff = 0;
         for &idx in &colliding {
             let cur = &collision[idx];
-            let mut inside = true;
-            let mut cur_diff = 0;
             if start.x <= cur.left {
                 inside = false;
                 cur_diff += cur.left - start.x;

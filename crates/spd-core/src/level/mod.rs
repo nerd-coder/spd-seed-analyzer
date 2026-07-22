@@ -2,11 +2,13 @@
 
 mod build;
 mod create_items;
+mod create_mobs;
 mod maze;
 mod painter;
 pub mod patch;
 mod shop;
 mod special_loot;
+mod state;
 mod terrain;
 
 use crate::dungeon::DungeonState;
@@ -14,11 +16,11 @@ use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::quests;
 use crate::random::Random;
-use crate::report::{FloorReport, ItemEntry, MapMarker, MapMarkerKind};
-use crate::rooms::init_rooms::BuilderKind;
+use crate::report::{FloorReport, MapMarker, MapMarkerKind};
 use crate::rooms::types::RoomKind;
 
 pub use create_items::PlacedLoot;
+pub use state::LevelState;
 pub use terrain::TerrainMap;
 pub(crate) use terrain::{ENTRANCE, ENTRANCE_SP, EXIT};
 
@@ -47,77 +49,6 @@ impl Feeling {
             Feeling::Secrets => "secrets",
         }
     }
-}
-
-#[derive(Debug, Clone)]
-pub struct LevelState {
-    pub depth: i32,
-    pub feeling: Feeling,
-    pub builder: Option<BuilderKind>,
-    pub rooms: Vec<String>,
-    pub build_ok: bool,
-    pub forced_items: Vec<GeneratedItem>,
-    pub placed_items: Vec<GeneratedItem>,
-    pub quests: Vec<String>,
-    pub complete: bool,
-    pub map: Option<crate::report::FloorMap>,
-}
-
-impl LevelState {
-    pub fn to_floor_report(&self) -> FloorReport {
-        let mut items: Vec<ItemEntry> = Vec::new();
-        for it in self.forced_items.iter().chain(self.placed_items.iter()) {
-            if is_blacklisted(it) {
-                continue;
-            }
-            // Title includes a "cursed " prefix; report that as a structured flag
-            // and keep `name` free of it for chip-based UI.
-            let full_title = it.title();
-            let name = if it.cursed {
-                full_title
-                    .strip_prefix("cursed ")
-                    .unwrap_or(&full_title)
-                    .to_string()
-            } else {
-                full_title
-            };
-            items.push(ItemEntry {
-                name,
-                class_name: Some(it.class_name.clone()),
-                category: format!("{:?}", it.category).to_ascii_lowercase(),
-                cursed: it.cursed,
-                source: it.source.clone(),
-            });
-        }
-        FloorReport {
-            depth: self.depth as u32,
-            feeling: Some(self.feeling.as_str().to_string()),
-            builder: self.builder.map(|b| match b {
-                BuilderKind::Loop => "loop".to_string(),
-                BuilderKind::FigureEight => "figure_eight".to_string(),
-            }),
-            rooms: self.rooms.clone(),
-            items,
-            quests: self.quests.clone(),
-            map: self.map.clone(),
-        }
-    }
-}
-
-fn is_blacklisted(it: &GeneratedItem) -> bool {
-    matches!(
-        it.class_name.as_str(),
-        "Gold"
-            | "Dewdrop"
-            | "IronKey"
-            | "GoldenKey"
-            | "CrystalKey"
-            | "EnergyCrystal"
-            | "CorpseDust"
-            | "Embers"
-            | "CeremonialCandle"
-            | "Pickaxe"
-    )
 }
 
 /// Level.create partial: forced drops → initRooms → build → minimal paint → createItems.
@@ -214,6 +145,9 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
     let mut placed_items = Vec::new();
     let mut floor_map = None;
     let mut quests = Vec::new();
+    let mut pre_items_rng_probe = Vec::new();
+    let mut pre_mobs_rng_probe = Vec::new();
+    let mut pre_paint_rng_probe = Vec::new();
 
     // RegularLevel only — bosses + depth 26 LastLevel use dedicated layouts in SPD.
     if dungeon.regular_level() {
@@ -232,6 +166,9 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 quests,
                 complete: false,
                 map: floor_map,
+                pre_items_rng_probe: Vec::new(),
+                pre_mobs_rng_probe: Vec::new(),
+                pre_paint_rng_probe: Vec::new(),
             };
         };
         builder = Some(floor.builder_kind);
@@ -265,6 +202,9 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         // RegularPainter: nTraps() is rolled when constructing the painter,
         // before room shuffle / placeDoors / special paint.
         let n_traps = painter::n_traps(dungeon.depth);
+        if dungeon.depth == 1 {
+            pre_paint_rng_probe = Random::peek_ints(8);
+        }
 
         let painted_map = if feeling == Feeling::Chasm {
             terrain::paint_minimal_with_chasm(&floor.rooms, true)
@@ -347,8 +287,17 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 n_traps,
             );
 
-            // createMobs subset: Ghost (sewers) / Wandmaker (prison) before createItems.
-            // Full mob placement still not ported — createItems RNG remains approximate.
+            // RegularPainter shuffles the actual Java `rooms` ArrayList in
+            // place. Later createMobs/createItems therefore observe painter
+            // order, not the builder's original room order.
+            let population_rooms: Vec<_> = paint_order
+                .iter()
+                .filter_map(|&index| floor.rooms.get(index).cloned())
+                .collect();
+
+            // createMobs quest hooks run before the regular population, matching
+            // SewerLevel/PrisonLevel overrides. Depth-one ambient placement is
+            // now call-for-call ported; later region rotations remain pending.
             if let Some(exit) = floor.rooms.iter().find(|r| r.is_exit() && !r.is_empty()) {
                 if let Some(ghost) = quests::try_spawn_ghost(dungeon, exit, &map) {
                     quests.push(ghost.summary.clone());
@@ -368,9 +317,21 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 }
             }
 
+            if dungeon.depth == 1 {
+                pre_mobs_rng_probe = Random::peek_ints(8);
+            }
+            let _ambient_mobs_consumed = if dungeon.depth == 1 {
+                create_mobs::create_depth_one(&population_rooms, &mut map)
+            } else {
+                false
+            };
+
+            if dungeon.depth == 1 {
+                pre_items_rng_probe = Random::peek_ints(8);
+            }
             let loot = create_items::create_items_main(
                 dungeon,
-                &floor.rooms,
+                &population_rooms,
                 &map,
                 feeling == Feeling::Large,
                 items_to_spawn,
@@ -473,6 +434,9 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         quests,
         complete: build_ok,
         map: floor_map,
+        pre_items_rng_probe,
+        pre_mobs_rng_probe,
+        pre_paint_rng_probe,
     }
 }
 

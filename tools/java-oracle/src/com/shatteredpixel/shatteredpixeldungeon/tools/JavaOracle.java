@@ -187,13 +187,48 @@ public final class JavaOracle {
 		json.append("  \"floors\": [\n");
 		json.append("    {\n");
 		json.append("      \"depth\": ").append(floor.depth).append(",\n");
+		json.append("      \"width\": ").append(floor.width).append(",\n");
+		json.append("      \"height\": ").append(floor.height).append(",\n");
+		json.append("      \"pre_paint_rng\": [");
+		for (int index = 0; index < floor.prePaintRng.size(); index++) {
+			if (index > 0) json.append(", ");
+			json.append(floor.prePaintRng.get(index));
+		}
+		json.append("],\n");
+		json.append("      \"pre_mobs_rng\": [");
+		for (int index = 0; index < floor.preMobsRng.size(); index++) {
+			if (index > 0) json.append(", ");
+			json.append(floor.preMobsRng.get(index));
+		}
+		json.append("],\n");
+		json.append("      \"pre_items_rng\": [");
+		for (int index = 0; index < floor.preItemsRng.size(); index++) {
+			if (index > 0) json.append(", ");
+			json.append(floor.preItemsRng.get(index));
+		}
+		json.append("],\n");
 		json.append("      \"final_heaps\": [\n");
 		appendHeaps(json, floor.heaps);
+		json.append("      ],\n");
+		json.append("      \"final_mobs\": [\n");
+		appendMobs(json, floor.mobs);
 		json.append("      ]\n");
 		json.append("    }\n");
 		json.append("  ]\n");
 		json.append("}\n");
 		return json.toString();
+	}
+
+	private static void appendMobs(StringBuilder json, List<FloorOracle.MobFact> mobs) {
+		for (int index = 0; index < mobs.size(); index++) {
+			FloorOracle.MobFact mob = mobs.get(index);
+			json.append("        { \"cell\": ").append(mob.cell)
+					.append(", \"class\": \"").append(escape(mob.mobClass)).append("\" }");
+			if (index + 1 < mobs.size()) {
+				json.append(',');
+			}
+			json.append('\n');
+		}
 	}
 
 	private static void appendHeaps(StringBuilder json, List<FloorOracle.HeapFact> heaps) {

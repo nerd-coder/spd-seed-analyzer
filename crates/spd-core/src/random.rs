@@ -109,6 +109,16 @@ impl Random {
         Self::with_top(use_generator_stack, |r| r.next_int())
     }
 
+    /// Clone the active generator and inspect upcoming full-range ints without
+    /// advancing the real stream. Used by the Java parity harness at lifecycle
+    /// boundaries where comparing outputs alone would hide the first desync.
+    pub(crate) fn peek_ints(count: usize) -> Vec<i32> {
+        Self::with_top(true, |generator| {
+            let mut snapshot = generator.clone();
+            (0..count).map(|_| snapshot.next_int()).collect()
+        })
+    }
+
     /// Uniform int in `[0, max)`. Returns 0 if `max <= 0` (watabou behavior).
     pub fn int_max(max: i32) -> i32 {
         Self::int_max_stack(max, true)

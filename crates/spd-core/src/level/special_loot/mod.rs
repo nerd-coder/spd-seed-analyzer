@@ -98,14 +98,14 @@ pub fn special_room_loot(
         match room.kind {
             RoomKind::Special | RoomKind::Secret => {
                 geometry::paint(map, room, ri, &doors);
-                let mut loot = paint_special(dungeon, rooms, ri, items_to_spawn);
+                let mut loot = paint_special(dungeon, rooms, ri, map, items_to_spawn);
                 out.append(&mut loot);
             }
             RoomKind::Standard
                 if room.name == "RitualSiteRoom" || room.name == "BlacksmithRoom" =>
             {
                 geometry::paint(map, room, ri, &doors);
-                let mut loot = paint_special(dungeon, rooms, ri, items_to_spawn);
+                let mut loot = paint_special(dungeon, rooms, ri, map, items_to_spawn);
                 out.append(&mut loot);
             }
             RoomKind::Shop => {
@@ -126,6 +126,7 @@ fn paint_special(
     dungeon: &mut DungeonState,
     rooms: &[Room],
     ri: usize,
+    map: &mut TerrainMap,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
     let room = &rooms[ri];
@@ -135,9 +136,16 @@ fn paint_special(
         "ArmoryRoom" => special_rooms::armory_prizes(dungeon, room, items_to_spawn),
         "LibraryRoom" => special_rooms::library_prizes(dungeon, room, items_to_spawn),
         "TreasuryRoom" => special_rooms::treasury_prizes(dungeon, room, items_to_spawn),
-        "PoolRoom" => vec![special_rooms::pool_prize(dungeon, room, items_to_spawn)],
+        "PoolRoom" => vec![special_rooms::pool_prize_on_map(
+            dungeon,
+            room,
+            map,
+            items_to_spawn,
+        )],
         "StorageRoom" => special_rooms::storage_prizes(dungeon, room, items_to_spawn),
-        "RunestoneRoom" => special_rooms::runestone_prizes(dungeon, room, items_to_spawn),
+        "RunestoneRoom" => {
+            special_rooms::runestone_prizes_on_map(dungeon, room, map, items_to_spawn)
+        }
         "LaboratoryRoom" => special_rooms::laboratory_prizes(dungeon, room, items_to_spawn),
         "StatueRoom" => vec![special_rooms::statue_weapon(dungeon, room, items_to_spawn)],
         "SecretLibraryRoom" => secret_rooms::secret_library(dungeon, room, items_to_spawn),

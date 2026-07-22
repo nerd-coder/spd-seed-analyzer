@@ -1,12 +1,15 @@
 //! Equip-focused special rooms: Crypt, Armory, Pool, Statue.
 
-use super::super::placement::{burn_drop_pos, burn_terrain_pos, find_prize_item};
+#[cfg(test)]
+use super::super::placement::burn_terrain_pos;
+use super::super::placement::{burn_drop_pos, find_prize_item};
 use super::{is_curse_enchant, is_good_glyph};
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::items::enchants;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::level::create_items::PlacedLoot;
+use crate::level::terrain::{TerrainMap, WATER};
 use crate::random::Random;
 use crate::rooms::room::Room;
 
@@ -93,12 +96,49 @@ pub fn bomb_random() -> GeneratedItem {
         GeneratedItem::new("Bomb", ItemCategory::Other)
     }
 }
+#[cfg(test)]
 pub fn pool_prize(
     dungeon: &mut DungeonState,
     room: &Room,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> PlacedLoot {
-    // pedestal position is geometric; prize first
+    let prize = pool_prize_without_piranhas(dungeon, items_to_spawn);
+    for _ in 0..3 {
+        let _ = Random::float();
+        burn_terrain_pos(room, /*water-like*/ true);
+    }
+    prize
+}
+
+pub fn pool_prize_on_map(
+    dungeon: &mut DungeonState,
+    room: &Room,
+    map: &mut TerrainMap,
+    items_to_spawn: &mut Vec<GeneratedItem>,
+) -> PlacedLoot {
+    let prize = pool_prize_without_piranhas(dungeon, items_to_spawn);
+    for _ in 0..3 {
+        // Piranha.random always rolls the rare PhantomPiranha replacement.
+        let phantom = Random::float() < 1.0 / 50.0;
+        loop {
+            let point = room.random();
+            let Some(cell) = map.point_to_cell(point.x, point.y) else {
+                continue;
+            };
+            if map.map[cell] == WATER && !map.mob_occupied[cell] {
+                map.mob_occupied[cell] = true;
+                map.known_mobs[cell] = Some(if phantom { "PhantomPiranha" } else { "Piranha" });
+                break;
+            }
+        }
+    }
+    prize
+}
+
+fn pool_prize_without_piranhas(
+    dungeon: &mut DungeonState,
+    items_to_spawn: &mut Vec<GeneratedItem>,
+) -> PlacedLoot {
     let mut prize = if Random::int_max(3) == 0 {
         find_prize_item(items_to_spawn, None).unwrap_or_else(|| pool_equip(dungeon))
     } else {
@@ -112,20 +152,10 @@ pub fn pool_prize(
         prize.level += 1;
     }
     prize.source = Some("PoolRoom".into());
-
-    // PoolRoom.java:91 — pushed after prize generation, before piranha placement.
-    // Must stay after the findPrizeItem call above: an unfiltered find could
-    // otherwise consume this potion as the pedestal prize.
     items_to_spawn.push(GeneratedItem::new(
         "PotionOfInvisibility",
         ItemCategory::Potion,
     ));
-
-    // piranha placement burns RNG (3 piranhas)
-    for _ in 0..3 {
-        burn_terrain_pos(room, /*water-like*/ true);
-    }
-
     PlacedLoot {
         item: prize,
         heap_type: "chest",

@@ -57,6 +57,7 @@ pub(super) fn paint_plants(
             // Level.plant converts HIGH_GRASS/EMPTY/EMBERS to GRASS.
             map.map[cell] = GRASS;
             map.item_allowed[cell] = false;
+            map.plant_occupied[cell] = true;
         }
     }
 }
@@ -99,6 +100,8 @@ pub(super) fn paint_aquarium(map: &mut TerrainMap, room: &Room) {
             };
             if map.map[cell] == WATER && !fish_cells.contains(&cell) {
                 fish_cells.push(cell);
+                map.mob_occupied[cell] = true;
+                map.known_mobs[cell] = Some("Piranha");
                 break;
             }
         }

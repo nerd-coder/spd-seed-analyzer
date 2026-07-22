@@ -55,9 +55,21 @@ struct OracleIdentity {
 struct OracleFloor {
     depth: u32,
     #[serde(default)]
+    width: u32,
+    #[serde(default)]
+    height: u32,
+    #[serde(default)]
+    pre_paint_rng: Vec<i32>,
+    #[serde(default)]
+    pre_mobs_rng: Vec<i32>,
+    #[serde(default)]
+    pre_items_rng: Vec<i32>,
+    #[serde(default)]
     forced_items: Vec<OracleItem>,
     #[serde(default)]
     final_heaps: Vec<OracleHeap>,
+    #[serde(default)]
+    final_mobs: Vec<OracleMob>,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]
@@ -74,6 +86,13 @@ struct OracleHeap {
     cell: u32,
     heap_type: String,
     items: Vec<OracleItem>,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+struct OracleMob {
+    cell: u32,
+    #[serde(rename = "class")]
+    class_name: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]

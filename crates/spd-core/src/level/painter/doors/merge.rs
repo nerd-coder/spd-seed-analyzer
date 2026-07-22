@@ -39,6 +39,11 @@ fn can_merge_at(
     merge_terrain: i32,
     depth: i32,
 ) -> bool {
+    // RegionDecoPatchEntranceRoom refuses all merges on depths 1–2 in the
+    // pinned SPD source, even though its base class is a StandardRoom.
+    if room.name == "RegionDecoPatchEntranceRoom" && depth <= 2 {
+        return false;
+    }
     if room.kind == RoomKind::Connection
         && matches!(
             room.name.as_str(),

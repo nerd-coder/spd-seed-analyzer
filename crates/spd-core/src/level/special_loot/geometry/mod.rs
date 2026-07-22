@@ -16,6 +16,8 @@ pub(super) fn paint(map: &mut TerrainMap, room: &Room, room_index: usize, doors:
     match room.name.as_str() {
         "SecretMazeRoom" => maze::paint(map, room, room_index, doors),
         "RotGardenRoom" => rot_garden::paint(map, room, room_index, doors),
+        "PoolRoom" => basic::paint_pool(map, room, room_index, doors),
+        "RunestoneRoom" => basic::paint_runestone(map, room, room_index, doors),
         "WeakFloorRoom" => basic::paint_weak_floor(map, room, room_index, doors),
         "DemonSpawnerRoom" => basic::paint_demon_spawner(map, room),
         _ => {}

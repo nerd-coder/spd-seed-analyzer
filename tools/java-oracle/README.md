@@ -5,8 +5,8 @@ Dungeon Java implementation. Schema v1 covers run-level potion, scroll, and
 ring identity mappings. Schema v2 adds an intentionally narrow floor contract:
 the ordered depth-one `itemsToSpawn` queue at the exact pre-`build()` boundary.
 Schema v3 is a separately scoped depth-one contract that snapshots final heaps
-after the real `Level.create()` lifecycle completes. It does **not** claim
-full seed-finder parity.
+and mobs after the real `Level.create()` lifecycle completes. It does **not**
+claim full seed-finder parity.
 
 ## Requirements
 
@@ -125,15 +125,15 @@ floor item.
 
 Passing `--final-heaps-depth 1` runs the exact pinned initialization followed
 by `Dungeon.newLevel()` for a depth-one `SewerLevel`, and snapshots
-`level.heaps` only after `Level.create()` returns (build, painter, mob pass,
-and `createItems` have all run). The oracle uses a fresh Warrior hero with no
-challenges and a fresh in-memory preference store. The intro page is marked
-read and the intro prompt disabled because SPD intentionally places its early
-Guidebook with an unseeded generator; that meta/tutorial heap is outside this
-seed-deterministic contract. The oracle also gates the pinned `Bones.get()`
-call as a daily run solely to prevent a machine's external `bones.dat` from
-entering a committed seed fixture; no other generation path consults that flag
-at this pin.
+`level.heaps` and `level.mobs` only after `Level.create()` returns (build,
+painter, mob pass, and `createItems` have all run). The oracle uses a fresh
+Warrior hero with no challenges and a fresh in-memory preference store. The
+intro page is marked read and the intro prompt disabled because SPD
+intentionally places its early Guidebook with an unseeded generator; that
+meta/tutorial heap is outside this seed-deterministic contract. The oracle also
+gates the pinned `Bones.get()` call as a daily run solely to prevent a machine's
+external `bones.dat` from entering a committed seed fixture; no other generation
+path consults that flag at this pin.
 
 The output has `schema_version: 3` and `contract: "final_placed_heaps"`:
 
@@ -141,13 +141,21 @@ The output has `schema_version: 3` and `contract: "final_placed_heaps"`:
 {
   "floors": [{
     "depth": 1,
+    "width": 40,
+    "height": 30,
+    "pre_paint_rng": [1993374861, -149591753],
+    "pre_mobs_rng": [1726373121, -188171336],
+    "pre_items_rng": [-339886649, -1704611306],
     "final_heaps": [{
       "cell": 315,
       "heap_type": "chest",
       "items": [
         { "class": "ScaleArmor", "quantity": 1, "level": 0, "cursed": false }
       ]
-    }]
+    }],
+    "final_mobs": [
+      { "cell": 234, "class": "Rat" }
+    ]
   }]
 }
 ```
@@ -157,5 +165,12 @@ Java `Heap.items` stack order. `heap_type` is the lower-case stable form of
 SPD's `Heap.Type`. Item class, quantity, true level, and curse state are kept
 without localization. Gold, keys, and every other heap item generated within
 the stated deterministic scope remain in this contract; nothing is filtered
-for UI convenience. This is an exact-pin observation contract, not evidence
-that the Rust analyzer currently matches room selection, placement, or loot.
+for UI convenience. `final_mobs` is likewise cell-sorted and uses Java simple
+class names, covering both room-painted mobs and the ambient `createMobs`
+pass. The three eight-value RNG probes snapshot consecutive full-range
+`Random.Int()` results from separate fresh runs before `RegularPainter.paint`
+and at the `createMobs` and `createItems` entry boundaries; recording stops at
+each boundary, so the probes do not perturb the final heap/mob run. They make
+raw LCG draw-count comparison possible even while an earlier phase is
+desynchronized. This is an exact-pin observation contract, not evidence that
+the Rust analyzer currently matches room selection, placement, or loot.

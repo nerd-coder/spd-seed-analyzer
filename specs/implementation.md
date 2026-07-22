@@ -3,10 +3,7 @@
 **Last updated:** 2026-07-22
 **Branch:** `main`
 **Pinned SPD:** v3.3.8 @ `7b8b845a7`
-**Local game source:** `/Users/toan/code/00-Evan/shattered-pixel-dungeon`
-  (⚠ `tools/java-oracle/run`'s `DEFAULT_SOURCE` still points at the stale
-  `/Users/toan/code/repos/00-Evan/...` path — pass `SPD_SOURCE=...` or fix the
-  default before relying on it)
+**Local game source:** `/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`
 
 ## Goal
 
@@ -30,7 +27,7 @@ implementation state + the parity punch list, not a command reference.
 spd-seed-analyzer/
 ├── crates/
 │   ├── spd-core/              # pure Rust generation logic (this is the focus)
-│   │   ├── src/level/          # per-floor build/paint/createItems/createMobs(missing)
+│   │   ├── src/level/          # per-floor build/paint/createItems/createMobs
 │   │   ├── src/level/special_loot/  # special/secret room prize RNG
 │   │   ├── src/quests/         # Ghost/Wandmaker/Blacksmith/Imp
 │   │   └── tests/java_oracle_goldens.rs + fixtures/  # Java-vs-Rust parity tests
@@ -52,15 +49,18 @@ decks/tiers, depth seeds / limited drops. Golden fixtures in
 `tools/java-oracle/fixtures/` + `crates/spd-core/tests/java_oracle_goldens.rs`
 confirm exact identity parity across four seeds.
 
-**Levelgen — ported broadly, diverges in RNG-stream order.** Room init,
-geometry, both builders (Loop/FigureEight), all connection-room subclasses,
-water/grass/trap painter, `paintDoors` merge/Graph, every region's
+**Levelgen — broad partial port; one depth-one lifecycle fixture is exact.**
+Room init, geometry, both builders (Loop/FigureEight), all connection-room
+subclasses, water/grass/trap painter, `paintDoors` merge/Graph, every region's
 structural + standard room geometry, special/secret room prize logic, shop
 stock, all four quests, crystal rooms, the main `createItems` drop loop, and
-floor-map export are all implemented. The known problem is **RNG call order
-during and after `createItems`** — see gaps below. This is why the schema-v3
-final-heaps oracle test (`java_oracle_goldens/final_heaps.rs`) explicitly
-documents a mismatch instead of asserting equality.
+floor-map export are implemented. For `AAA-AAA-AAA` depth 1, Rust now reaches
+the exact Java RNG states before painter, `createMobs`, and `createItems`;
+matches the 40×30 map; matches all 11 final mob cells/types; and matches all
+final heap cells plus the report-visible item projection. This is deliberately
+still `partial`: deeper-floor mob generation and several room-specific
+predicates/paint paths remain incomplete, and the public report does not yet
+retain enough facts for full schema-v3 heap identity/type/quantity equality.
 
 **Frontend — functionally complete for a `partial` engine, not the current
 focus.** Analyze + Find-seeds modes, multi-seed session tabs, spoiler
@@ -72,7 +72,8 @@ parity.
 `tools/java-oracle/` runs the *actual pinned Java source* headlessly and
 dumps JSON: schema v1 (run identities), v2 (depth-one pre-build forced-item
 queue), v3 (final placed heaps after real `Level.create()`, ordered by cell,
-full item/heap facts, no report-shaped filtering). Regenerate fixtures with
+full item/heap facts plus final mob cells/types and lifecycle RNG probes, no
+report-shaped filtering). Regenerate fixtures with
 the exact commands in `tools/java-oracle/README.md`. This is the intended
 mechanism for closing every gap below — add or extend a fixture, then make
 the Rust side match it exactly.
@@ -82,29 +83,46 @@ the Rust side match it exactly.
 ## What's lacking for exact parity
 
 Verified against the pinned Java source
-(`/Users/toan/code/00-Evan/shattered-pixel-dungeon`) and against the existing
-schema-v3 fixture (`aaa-aaa-aaa-final-heaps-floor-1.json`, seed
-`AAA-AAA-AAA` depth 1), whose Java-visible projection
+(`/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`) and schema-v3
+fixture `aaa-aaa-aaa-final-heaps-floor-1.json`. Its report-visible projection
 `[Food, PotionOfHealing, PotionOfInvisibility, ScaleArmor, ScrollOfRage,
-ScrollOfRecharging, StoneOfAggression, StoneOfBlink]` currently comes out of
-Rust as `[Food, PotionOfInvisibility, StoneOfAggression, StoneOfBlink,
-StoneOfDeepSleep, ThrowingHammer]` (post-gap-3). These bugs compound on the
-same RNG stream — fixing one alone will not flip that test green, but each is
-independently correct and unit-testable.
+ScrollOfRecharging, StoneOfAggression, StoneOfBlink]` now matches Rust exactly.
+The fixture also asserts exact 40×30 bounds, final heap cells, and final mob
+cells/types. Remaining gaps below are outside that single covered lifecycle or
+require richer report facts.
 
-### 1. `createMobs()` is completely unported — the root desync (Large)
-Java's per-floor order is `build() → createMobs() → createItems()`
-(`Level.java:313-314`). `RegularLevel.createMobs()`
-(`RegularLevel.java:219-306`) unconditionally burns RNG *before* `createItems`
-ever runs: `Random.shuffle(stdRooms)` weighted by `mobSpawnWeight()`, then per
-mob a `createMob()` (rotation + champion roll) and a retry loop (up to 30
-tries) gated by `ShadowCaster` entrance FOV, `PathFinder` distance map,
-`canPlaceCharacter`, traps/plants/open-space. Depth 1 always spawns exactly 8
-mobs. Rust's `level/mod.rs` jumps straight from special-room loot / quests to
-`create_items::create_items_main` (`level/mod.rs:350`) — so the very first
-RNG draw inside `createItems` (the `n_items` roll) is already reading from the
-wrong position. **Nothing downstream can match until this is ported**, even
-if it only needs to *burn* the correct RNG shape rather than render mobs.
+### 1. ~~Depth-one builder/painter boundary was 66 LCG steps behind~~ — FIXED
+The schema-v3 lifecycle probes recover the exact 48-bit Java LCG state before
+`RegularPainter.paint`, `createMobs`, and `createItems`. The fixture now proves:
+
+- builder placement arrives at the exact pre-painter Java state and produces
+  the exact 40×30 bounds;
+- painter consumes exactly 190 raw LCG advances, matching Java;
+- depth-one `createMobs` consumes exactly 116 raw advances and ends at the
+  exact pre-`createItems` state.
+
+The root builder bug was `findFreeSpace`: Java keeps `inside` and `curDiff`
+across the collision-room loop, while Rust reset them per room. PoolRoom and
+RunestoneRoom also require 6×6 minimum dimensions rather than the generic
+5×5 special-room minimum.
+
+The painter gap closed by porting RunestoneRoom's wall/chasm/interior geometry
+and EMPTY/no-existing-heap retry predicate, and by preventing
+`RegionDecoPatchEntranceRoom` merges through depth 2. Java also shuffles its
+actual `rooms` list during painting; Rust now passes that paint order into both
+population phases instead of returning to builder order.
+
+### 1a. Depth-one `createMobs` is exact for the fixture; deeper floors remain (Large)
+`level/create_mobs.rs` now ports the fixed eight-mob depth-one pass: weighted
+and shuffled `StandardRoom` instances, rat/snake rotations and rare-alt rolls,
+the unconditional champion roll, exact 30-retry semantics, recursive
+`ShadowCaster`, bounded eight-neighbour entrance distance, room character
+masks, traps/plants, existing mob occupancy, exits, and high-grass cleanup.
+Pool/Aquarium piranhas are retained as real occupied cells and map markers.
+The boundary and schema-v3 tests now assert exact draw shape and all 11 final
+mob cells/types. Floors 2–24 still need `mobLimit`, region rotations (including
+Shaman/Elemental subtype rolls and rare alts), large-mob properties, second
+mob room rolls, quest/NPC occupancy, and exact markers.
 
 ### 2. ~~`random_drop_cell` shuffles the wrong-sized list (Medium)~~ — FIXED
 Java's `randomRoom(type)` (`RegularLevel.java:707-710`) shuffles the level's
@@ -118,6 +136,10 @@ pattern), first `StandardRoom`-instance match in shuffled order.
 
 Verified-against-source details now ported:
 
+- **Persistent list order**: Java shuffles the actual `rooms` ArrayList, so
+  the permutation left by one drop is the starting order for the next. Rust
+  carries one mutable index permutation through all generated drops and the
+  entire `itemsToSpawn` queue instead of rebuilding identity order per item.
 - **Instanceof set**: `EntranceRoom`/`ExitRoom` extend `StandardRoom`
   (v3.3.8), so Rust kinds `Entrance`, `Exit`, AND `Standard` all match the
   scan. Entrance picked → try wasted (`room != roomEntrance`), zero further
@@ -140,7 +162,8 @@ Verified-against-source details now ported:
 - Kept as-is: `occupied` mask as the `heaps.get(pos) == null` analog,
   `item_allowed` mask + `AquariumRoom` water override (gap 4),
   `trap_destroys_items`, passable/solid, 100-try cap. `findMob(pos) == null`
-  marked with `// TODO(gap 1):` at its exact conjunct position.
+  is now covered by folding room-painted and depth-one ambient mob occupancy
+  into the same mask before item placement.
 
 Tests moved to `level/create_items/tests.rs` (SMALL-FILES split; same module
 path). New coverage drives a parallel `JavaRandom` twin oracle that
@@ -148,9 +171,22 @@ transcribes the Java method (JDK `Collections.shuffle` loop + watabou
 `IntRange` semantics) and asserts both the selected cell AND the total draw
 count (post-call `next_int` sync): full-list reshuffle per try, exit-room
 hosting minus the exit cell, entrance-wastes-try, degenerate zero-draw pick,
-and no-match→-1-after-one-shuffle. The AAA-AAA-AAA final-heaps projection
-was re-characterized (now shares 6 of 8 Java items; still `assert_ne` —
-gap 1 `createMobs` RNG shape remains).
+and no-match→-1-after-one-shuffle. The schema-v3 golden additionally pins the
+cross-item permutation behavior through exact final heap-cell equality.
+
+### 2a. ~~Consumable generation skipped the exotic-conversion draw~~ — FIXED
+After selecting a regular potion or scroll, Java checks its regular→exotic
+map and always evaluates `Random.Float() < consumableExoticChance()`. With no
+ExoticCrystals trinket the chance is zero, but the Float still advances the
+restored level-generation stream after the private category deck is popped.
+Rust now preserves this draw in both category-deck and default-selection
+paths. Focused generator tests pin the extra level-stream advance.
+
+Combined with persistent room order, `AAA-AAA-AAA` depth 1 now generates and
+places the exact five main drops (`ScrollOfRage`, `ScrollOfRecharging`,
+`PotionOfHealing`, `Gold`, `Gold`) at cells 444, 173, 565, 939, and 903 with
+matching heap types. The subsequent `itemsToSpawn` retry stream and final heap
+cells also match.
 
 ### 3. ~~Eight special/secret rooms drop their trailing forced-item push~~ — FIXED
 All 9 missing `addItemToSpawn` pushes are now ported. Push positions were
@@ -199,8 +235,9 @@ logic in the main loop was verified call-for-call correct against Java
 already — this gap is specifically the room-shape predicate.
 
 ### Lower-leverage, already-known (from prior disclaimer, still open)
-- Full ambient `createMobs` also feeds map markers — only exact known cells
-  (room-painted heaps/mimics, RotGarden, DemonSpawner) are shown today.
+- Full ambient `createMobs` also feeds map markers — depth-one ambient mobs
+  and represented room-painted mobs are shown, but deeper-floor ambient mobs
+  are still absent.
 - `SecretLaboratoryRoom` reuses `LaboratoryRoom`'s prize body
   (`laboratory_prizes_shared`); Java gives it its own `paint()` with a
   weighted `potionChances` table (2 potions) — different RNG shape whenever
@@ -220,29 +257,20 @@ already — this gap is specifically the room-shape predicate.
 
 ## Suggested fix order
 
-The remaining two bugs share one RNG stream, so verify each in isolation with
-a narrow unit test, but expect the `java_oracle_goldens/final_heaps.rs`
-mismatch test to stay red until **both** land:
-
-1. ~~Gap 3~~ — **done** (9 forced-item pushes + per-room push ordering).
-2. ~~Gap 2~~ — **done** (`random_drop_cell` full-list reshuffle per try,
-   Java instanceof semantics for Entrance/Exit/Standard, exact exit-cell
-   exclusion, zero-draw degenerate IntRange, no fallback).
-3. **Gap 1** (`createMobs`) — largest lift. Decide up front whether to fully
-   port `ShadowCaster`/`PathFinder`/mob placement (enables future mob map
-   markers) or build a reduced path that burns *identical* RNG shape without
-   real placement (faster to parity, defers mob rendering). Either way this
-   must consume the exact same `Random` calls Java does before `createItems`
-   begins.
-4. Once both are in, flip
-   `depth_one_final_heaps_characterize_known_analyzer_mismatch` from
-   `assert_ne!` to exact fact equality (cell, heap type, quantity, level,
-   curse — the v3 fixture already carries all of it; the Rust report
-   currently only retains class+cursed, so the report/analyzer model likely
-   needs to start retaining cell/quantity/level/heap-type too).
-5. Extend schema-v3 fixtures to more seeds/depths once depth-one matches, to
-   catch anything depth-1-specific (e.g. the "8 mobs on depth 1" special
-   case) that wouldn't show up on other floors.
+1. Extend schema-v3 coverage to several more depth-one seeds/room sets. The
+   single exact AAA lifecycle is a strong regression fixture, not evidence
+   that every depth-one room combination is exact.
+2. Port deeper-floor `createMobs`: mob limits/rotations, second-room spawns,
+   large-mob open-space checks, and quest/NPC occupancy.
+3. Close the remaining room-specific `canPlaceItem` predicates and known
+   special-room paint gaps.
+4. Correct the remaining timing/geometry approximations (SecretLaboratory,
+   region room counts, shop `setSize`, CrystalPath) as new fixtures cover them.
+5. Extend the analyzer/report model with item-to-cell, quantity, level, and
+   heap type so schema-v3 can assert full heap facts rather than the currently
+   exact cell set plus report-visible item projection.
+6. Add multi-depth schema-v3 fixtures and promote each newly covered region
+   only after its lifecycle boundary probes and final facts match.
 
 ---
 
@@ -264,8 +292,8 @@ Random.pushGenerator(seedForDepth(seed, depth, 0))
   builder()  // loop vs figure-eight + curve params
   initRooms() + shuffle
   retry builder.build until success
-  paint_minimal → FloorMap
-  createMobs()      // <-- NOT YET PORTED (gap 1); Java runs this before createItems
+  RegularPainter.paint()  // shuffles the actual rooms list in place
+  createMobs()      // depth-one fixture exact; floors 2–24 pending
   createItems main loop
 Random.popGenerator
 depth++
@@ -289,8 +317,8 @@ pushGenerator(seed); Long() × depth; result = Long(); pop
 ### `FloorMap` JSON
 ```json
 {
-  "width": 41,
-  "height": 43,
+  "width": 40,
+  "height": 30,
   "tileset": "sewers",
   "tiles": [4, 4, 1, 5, 7, 8, ...],
   "tile_variance": [12, 68, 97, 3, ...],
@@ -302,8 +330,8 @@ Tiles are SPD `Terrain` values; `tile_variance` is the pinned
 row-major, bounds-checked, limited to placements the partial engine actually
 knows.
 
-If gap-1/2/3 fixes start retaining cell/quantity/level/heap-type on
-`SeedReport` items (needed for step 4 above), this contract will need a
+If parity fixes start retaining item-to-cell/quantity/level/heap-type on
+`SeedReport` items (needed for step 5 above), this contract will need a
 matching update — check `web/src/lib/` consumers before changing shape.
 
 ---
@@ -316,7 +344,8 @@ cargo test -p spd-core
 
 `java_oracle_goldens.rs` (+ `java_oracle_goldens/final_heaps.rs`) is the
 parity harness: identity maps (schema v1), depth-one forced-item queue
-(schema v2), and the known final-heap mismatch (schema v3, see above). Add
+(schema v2), and exact AAA depth-one map bounds, heap cells, mob facts, and
+report-visible item projection (schema v3, see above). Add
 tightly-scoped oracle fixtures before writing new Rust behavior — regenerate
 via `tools/java-oracle/run` (see `tools/java-oracle/README.md`).
 
@@ -333,15 +362,15 @@ license constraints.
 ## How to resume (clean context)
 
 1. Read this file, specifically **"What's lacking for exact parity"** above.
-2. ~~Gap 3~~ — done. ~~Gap 2~~ — done
-   (`level/create_items.rs` `random_drop_cell` now shuffles the full per-floor
-   room list per try with Java `StandardRoom` instanceof semantics).
-3. Then gap 1 (`level/mod.rs` + new `createMobs` port) — the only remaining
-   RNG-stream gap before `createItems`; `random_drop_cell` already carries a
-   `// TODO(gap 1):` marker where the `findMob(pos) == null` conjunct lands.
+2. The `AAA-AAA-AAA` depth-one lifecycle is exact at the pre-painter,
+   pre-mobs, and pre-items boundaries and for final map bounds, heap cells,
+   mob facts, and report-visible items. Keep that fixture green.
+3. Continue with broader depth-one schema-v3 coverage or the deeper-floor
+   `createMobs` port; do not claim full parity while either remains partial.
 4. Validate against `crates/spd-core/tests/java_oracle_goldens/final_heaps.rs`
    and the `aaa-aaa-aaa-final-heaps-floor-1.json` fixture; regenerate/extend
-   fixtures via `tools/java-oracle/run` (set `SPD_SOURCE=/Users/toan/code/00-Evan/shattered-pixel-dungeon`).
+   fixtures via `tools/java-oracle/run` (default source is the pinned clone at
+   `/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`).
 5. After Rust changes: `bun run build:wasm` (or `bun run dev`) before treating
    the UI as verified.
 6. Dev dump: `cargo run -p spd-core --example dump_seed -- SEED FLOORS`

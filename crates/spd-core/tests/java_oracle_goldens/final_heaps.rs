@@ -30,7 +30,7 @@ fn signatures(items: &[ComparableItem]) -> Vec<String> {
 }
 
 #[test]
-fn depth_one_final_heaps_characterize_known_analyzer_mismatch() {
+fn depth_one_final_heaps_match_report_projection() {
     let mut compared = 0;
     for path in fixture_paths() {
         let fixture = read_fixture(&path);
@@ -47,6 +47,29 @@ fn depth_one_final_heaps_characterize_known_analyzer_mismatch() {
         assert_eq!(fixture.floors.len(), 1, "floor count in {context}");
         let expected_floor = &fixture.floors[0];
         assert_eq!(expected_floor.depth, 1, "floor depth in {context}");
+        assert_eq!(
+            expected_floor.width, 40,
+            "pinned Java map width in {context}"
+        );
+        assert_eq!(
+            expected_floor.height, 30,
+            "pinned Java map height in {context}"
+        );
+        assert_eq!(
+            expected_floor.pre_paint_rng.len(),
+            8,
+            "pre-paint RNG probe length in {context}"
+        );
+        assert_eq!(
+            expected_floor.pre_mobs_rng.len(),
+            8,
+            "pre-mobs RNG probe length in {context}"
+        );
+        assert_eq!(
+            expected_floor.pre_items_rng.len(),
+            8,
+            "RNG probe length in {context}"
+        );
         assert!(
             expected_floor.forced_items.is_empty(),
             "schema v3 does not reuse the schema v2 forced_items field in {context}"
@@ -54,6 +77,56 @@ fn depth_one_final_heaps_characterize_known_analyzer_mismatch() {
         assert!(
             !expected_floor.final_heaps.is_empty(),
             "final heap snapshot must not be empty in {context}"
+        );
+        assert_eq!(
+            expected_floor.final_mobs,
+            [
+                OracleMob {
+                    cell: 175,
+                    class_name: "Rat".into()
+                },
+                OracleMob {
+                    cell: 314,
+                    class_name: "Piranha".into()
+                },
+                OracleMob {
+                    cell: 404,
+                    class_name: "Snake".into()
+                },
+                OracleMob {
+                    cell: 432,
+                    class_name: "Piranha".into()
+                },
+                OracleMob {
+                    cell: 436,
+                    class_name: "Piranha".into()
+                },
+                OracleMob {
+                    cell: 497,
+                    class_name: "Rat".into()
+                },
+                OracleMob {
+                    cell: 524,
+                    class_name: "Rat".into()
+                },
+                OracleMob {
+                    cell: 738,
+                    class_name: "Rat".into()
+                },
+                OracleMob {
+                    cell: 752,
+                    class_name: "Rat".into()
+                },
+                OracleMob {
+                    cell: 778,
+                    class_name: "Snake".into()
+                },
+                OracleMob {
+                    cell: 902,
+                    class_name: "Rat".into()
+                },
+            ],
+            "pinned Java final mobs in {context}"
         );
         assert!(
             expected_floor
@@ -105,6 +178,44 @@ fn depth_one_final_heaps_characterize_known_analyzer_mismatch() {
 
         let report = analyze_seed(&fixture.input.seed, 1)
             .unwrap_or_else(|error| panic!("failed to analyze seed in {context}: {error}"));
+        let map = report.floors[0].map.as_ref().expect("depth-one map");
+        assert_eq!(
+            (map.width, map.height),
+            (expected_floor.width, expected_floor.height),
+            "Rust map bounds in {context}"
+        );
+        let actual_item_cells: Vec<_> = map
+            .markers
+            .iter()
+            .filter(|marker| marker.kind == spd_core::report::MapMarkerKind::Item)
+            .map(|marker| marker.cell)
+            .collect();
+        let expected_item_cells: Vec<_> = expected_floor
+            .final_heaps
+            .iter()
+            .map(|heap| heap.cell)
+            .collect();
+        assert_eq!(
+            actual_item_cells, expected_item_cells,
+            "depth-one final heap cells in {context}"
+        );
+        let mut actual_mobs: Vec<_> = report.floors[0]
+            .map
+            .as_ref()
+            .expect("depth-one regular floor has a map")
+            .markers
+            .iter()
+            .filter(|marker| marker.kind == spd_core::report::MapMarkerKind::Mob)
+            .map(|marker| OracleMob {
+                cell: marker.cell,
+                class_name: marker.label.clone(),
+            })
+            .collect();
+        actual_mobs.sort();
+        assert_eq!(
+            actual_mobs, expected_floor.final_mobs,
+            "depth-one final mobs in {context}"
+        );
         let mut actual_projection: Vec<_> = report.floors[0]
             .items
             .iter()
@@ -133,23 +244,8 @@ fn depth_one_final_heaps_characterize_known_analyzer_mismatch() {
             "pinned Java report-visible projection in {context}"
         );
         assert_eq!(
-            signatures(&actual_projection),
-            [
-                "Food",
-                "LeatherArmor",
-                "PotionOfInvisibility",
-                "ScrollOfRage",
-                "ScrollOfRecharging",
-                "StoneOfAggression",
-                "StoneOfBlink",
-                "StoneOfDeepSleep",
-                "ThrowingHammer",
-            ],
-            "documented current Rust projection in {context}"
-        );
-        assert_ne!(
             actual_projection, expected_projection,
-            "convert this known-mismatch contract to an exact full-fact equality test only after the analyzer retains and matches v3 heap facts in {context}"
+            "report-visible item projection in {context}"
         );
         assert_eq!(report.status, "partial", "accuracy status in {context}");
         compared += 1;

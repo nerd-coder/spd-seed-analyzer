@@ -6,6 +6,7 @@ use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::items::randomize::randomize_item;
 use crate::level::create_items::PlacedLoot;
+use crate::level::terrain::{TerrainMap, EMPTY};
 use crate::random::Random;
 use crate::rooms::room::Room;
 
@@ -148,16 +149,48 @@ pub fn storage_prize(
     dungeon.generator.random_category(cat, dungeon.depth)
 }
 
+#[cfg(test)]
 pub fn runestone_prizes(
     dungeon: &mut DungeonState,
     room: &Room,
+    items_to_spawn: &mut Vec<GeneratedItem>,
+) -> Vec<PlacedLoot> {
+    runestone_prizes_shared(dungeon, room, None, items_to_spawn)
+}
+
+pub fn runestone_prizes_on_map(
+    dungeon: &mut DungeonState,
+    room: &Room,
+    map: &mut TerrainMap,
+    items_to_spawn: &mut Vec<GeneratedItem>,
+) -> Vec<PlacedLoot> {
+    runestone_prizes_shared(dungeon, room, Some(map), items_to_spawn)
+}
+
+fn runestone_prizes_shared(
+    dungeon: &mut DungeonState,
+    room: &Room,
+    mut map: Option<&mut TerrainMap>,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
     let mut out = Vec::new();
     let n = Random::normal_int_range(2, 3);
     let mut occupied = Vec::new();
     for _ in 0..n {
-        burn_drop_pos(room, &mut occupied);
+        if let Some(map) = map.as_deref_mut() {
+            loop {
+                let point = room.random();
+                let Some(cell) = map.point_to_cell(point.x, point.y) else {
+                    continue;
+                };
+                if map.map[cell] == EMPTY && !map.heap_occupied[cell] {
+                    map.heap_occupied[cell] = true;
+                    break;
+                }
+            }
+        } else {
+            burn_drop_pos(room, &mut occupied);
+        }
         let mut item = if let Some(c) = find_prize_item(items_to_spawn, Some("TrinketCatalyst")) {
             c
         } else if let Some(s) = find_prize_item_category(items_to_spawn, ItemCategory::Stone) {

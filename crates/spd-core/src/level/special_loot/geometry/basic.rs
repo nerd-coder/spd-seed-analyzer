@@ -2,9 +2,59 @@
 
 use crate::geom::Point;
 use crate::level::painter::DoorMap;
-use crate::level::terrain::{TerrainMap, CHASM, EMPTY, EMPTY_SP, WALL};
+use crate::level::terrain::{TerrainMap, CHASM, EMPTY, EMPTY_SP, PEDESTAL, WALL, WATER};
 use crate::random::Random;
 use crate::rooms::room::Room;
+
+pub(super) fn paint_pool(map: &mut TerrainMap, room: &Room, room_index: usize, doors: &DoorMap) {
+    fill_room(map, room, WALL);
+    fill_margin(map, room, 1, WATER);
+
+    let Some(door) = entrance(room, room_index, doors) else {
+        return;
+    };
+    let pedestal = if door.x == room.left {
+        for y in (room.top + 1)..room.bottom {
+            set(map, Point::new(room.left + 1, y), EMPTY_SP);
+        }
+        Point::new(room.right - 1, room.top + room.height() / 2)
+    } else if door.x == room.right {
+        for y in (room.top + 1)..room.bottom {
+            set(map, Point::new(room.right - 1, y), EMPTY_SP);
+        }
+        Point::new(room.left + 1, room.top + room.height() / 2)
+    } else if door.y == room.top {
+        for x in (room.left + 1)..room.right {
+            set(map, Point::new(x, room.top + 1), EMPTY_SP);
+        }
+        Point::new(room.left + room.width() / 2, room.bottom - 1)
+    } else {
+        for x in (room.left + 1)..room.right {
+            set(map, Point::new(x, room.bottom - 1), EMPTY_SP);
+        }
+        Point::new(room.left + room.width() / 2, room.top + 1)
+    };
+    set(map, pedestal, PEDESTAL);
+    if let Some(cell) = map.point_to_cell(pedestal.x, pedestal.y) {
+        map.heap_occupied[cell] = true;
+        map.item_allowed[cell] = false;
+    }
+}
+
+pub(super) fn paint_runestone(
+    map: &mut TerrainMap,
+    room: &Room,
+    room_index: usize,
+    doors: &DoorMap,
+) {
+    fill_room(map, room, WALL);
+    fill_margin(map, room, 1, CHASM);
+    let Some(door) = entrance(room, room_index, doors) else {
+        return;
+    };
+    draw_inside(map, room, door, 2, EMPTY_SP);
+    fill_margin(map, room, 2, EMPTY);
+}
 
 pub(super) fn paint_weak_floor(
     map: &mut TerrainMap,
