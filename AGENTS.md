@@ -32,7 +32,7 @@ bun run lint         # biome lint + cargo clippy -D warnings
 bun run check:all    # biome + rust fmt/clippy checks
 ```
 
-Use **rustup** cargo for wasm (`PATH` scripts prepend `$HOME/.cargo/bin`).
+Use **rustup** cargo for wasm (`PATH` scripts prepend `$HOME/.cargo/bin`); mise/Homebrew `rustc` may lack the `wasm32-unknown-unknown` target.
 
 ### CI parity (before done)
 
@@ -55,4 +55,4 @@ GitHub Actions `check` job (`.github/workflows/ci.yaml`) runs, in order:
 - **ASSETS-FLAT** — Assets live at `web/public/assets/{environment,sprites,…}`. No nested `assets/assets/`.
 - **PIN-SPD** — Target the pinned SPD version/commit; note version impact when porting from a newer tree.
 - **HAND-OFF** — After multi-step work, update `specs/implementation.md` when behavior or next steps change.
-- **SMALL-FILES** — Keep source files focused and reviewable. Soft target **≤ ~300 lines**; treat **~500 lines** as a hard ceiling for *new* growth (not an excuse to bloate existing files further). When a change would push a file past ~500, **extract a module first** (same package/`mod`, sibling component, or `lib/` helper) rather than appending. Split by **cohesive responsibility** (room family, UI panel, prize helpers), not arbitrary line cuts. Prefer many small modules + a thin orchestrator over god-files. Does **not** apply to generated output (`web/src/wasm/`), vendored assets, lockfiles, or third-party UI primitives under `web/src/components/ui/` unless we own substantial custom logic there. When expanding an already-oversized file (see known offenders below), budget extraction into the same task when practical.
+- **SMALL-FILES** — Keep source files focused and reviewable. Soft target **≤ ~300 lines**; treat **~500 lines** as a hard ceiling for *new* growth (not an excuse to bloate existing files further). When a change would push a file past ~500, **extract a module first** (same package/`mod`, sibling component, or `lib/` helper) rather than appending. Split by **cohesive responsibility** (room family, UI panel, prize helpers), not arbitrary line cuts. Prefer many small modules + a thin orchestrator over god-files. Does **not** apply to generated output (`web/src/wasm/`), vendored assets, lockfiles, or third-party UI primitives under `web/src/components/ui/` unless we own substantial custom logic there. When expanding an already-oversized file, budget extraction into the same task when practical.

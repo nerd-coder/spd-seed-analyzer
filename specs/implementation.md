@@ -1,6 +1,6 @@
 # SPD Seed Analyzer — Implementation Progress
 
-**Last updated:** 2026-07-22 (P6: final placed-heap oracle contract)
+**Last updated:** 2026-07-22 (P6: final placed-heap oracle contract; docs synced to mode/sidebar UI + commands dedup)
 
 **Branch:** `main`  
 **Pinned SPD:** v3.3.8 @ `7b8b845a7`  
@@ -36,30 +36,23 @@ spd-seed-analyzer/
 │   │   └── assets/            # SPD asset tree (flattened)
 │   │       └── environment/tiles_*.png
 │   └── src/
-│       ├── App.tsx            # thin shell: form, spoilers, session tabs
-│       ├── components/seed/   # Identities, Floors, SessionPane, …
-│       ├── components/FloorMapCanvas.tsx
+│       ├── App.tsx                    # thin shell: mode tabs + sidebar + workspace
+│       ├── components/
+│       │   ├── AppSidebar.tsx         # title card, mode tabs, seed form / finder blurb
+│       │   ├── AnalyzerWorkspace.tsx  # seed tabs + SessionPane host
+│       │   ├── AppFloatingAction.tsx  # SettingsButton (spoilers) + ThemeToggle
+│       │   ├── SiteFooter.tsx
+│       │   ├── seed/                  # Identities, Floors, SessionPane, …
+│       │   └── finder/                # Seed-finder mode: form, constraints, results
+│       ├── stores/                    # app.ts re-exports sessions/spoilers/meta/theme + $mode
 │       ├── hooks/useSeedTabsHeight.ts
-│       └── lib/{spd-wasm.ts,tiles.ts,regions.ts,identity.ts}
+│       └── lib/{spd-wasm.ts,tiles.ts,regions.ts,identity.ts,labels.ts,item-icons.ts,…}
 └── specs/implementation.md    # this file
 ```
 
 ### Commands
 
-```bash
-bun install
-bun run dev          # wasm-pack + Vite (prefers $HOME/.cargo/bin for rustup)
-bun run build
-bun run deploy       # build + wrangler deploy (Cloudflare Worker SPA)
-bun run test:rust    # cargo test -p spd-core
-bun run build:wasm
-bun run check        # biome (TS/JS/CSS/JSON)
-bun run format       # biome format + cargo fmt
-bun run lint         # biome lint + cargo clippy -D warnings
-bun run check:all    # biome + rust fmt/clippy
-```
-
-**Note:** mise/Homebrew `rustc` may lack `wasm32-unknown-unknown`; scripts prepend rustup’s cargo.
+See `AGENTS.md` for the full command list and CI parity steps.
 
 ### Deploy (Cloudflare Worker SPA)
 
@@ -122,9 +115,11 @@ bun run check:all    # biome + rust fmt/clippy
 ### Frontend
 | Area | Notes |
 |------|--------|
-| Layout | Two columns: sticky left **menu** (title card, seed form, Spoilers) + right **content** (seed tabs) |
+| Layout | Sticky left **sidebar** (`AppSidebar`: title card, Analyze/Find-seeds mode tabs, seed form or finder blurb) + right **content** (`AnalyzerWorkspace` seed tabs, or `SeedFinder`); `AppFloatingAction` (Settings + theme toggle) floats top-right; `SiteFooter` below |
 | shadcn | Preset `buFzq0e` (radix-lyra / Oxanium / phosphor registry); tooltips for spoiler info |
-| State | **nanostores** + `@nanostores/persistent` / `@nanostores/react` — all UI state in `web/src/stores/app.ts` |
+| State | **nanostores** + `@nanostores/persistent` / `@nanostores/react` — `stores/app.ts` re-exports focused modules (`sessions.ts`, `spoilers.ts`, `meta.ts`, `theme.ts`) plus the persisted `$mode` (`analyze`/`finder`) atom |
+| **Mode switch** | `AppSidebar` `TabsList` (Analyze / Find seeds) drives `$mode`; `App.tsx` renders `AnalyzerWorkspace` or `SeedFinder` accordingly |
+| **Theme** | Light/dark/system toggle (`ThemeToggle`) inside `AppFloatingAction`; persisted via `stores/theme.ts` |
 | Multi-seed tabs | Each analyzed seed is a closable tab; empty placeholder when none open; **max 10** open seeds (oldest dropped) |
 | Session restore | Open seed inputs persisted (`spd-analyzer-open-seeds` + active id); reports re-analyzed slowly on refresh (~350ms gap) |
 | Seed analyze UI | Section order: **Floors → Identities → Seed info**; honest **partial** status copy |
@@ -132,7 +127,7 @@ bun run check:all    # biome + rust fmt/clippy
 | **Quest cards** | Floor quests parsed into title / type / rewards cards (Ghost, Wandmaker, Blacksmith, Imp); Quest badge on floor header |
 | **Item sources** | `lib/labels.ts` maps room/heap/quest tags (`CrystalVaultRoom`, `chest:heap`, `Blacksmith.Quest`, …) to readable badges |
 | **Item icons** | `ItemIcon` + `lib/item-icons.ts` crops `/assets/sprites/items.png` (ItemSpriteSheet indices); potions/scrolls/rings use identity appearance; shop bags/darts/Ankh/Alchemize + crystal-artifact classes covered |
-| **Spoiler toggles** | localStorage; identity table + map spoilers off by default; info-icon tooltips |
+| **Spoiler toggles** | Behind the Settings popover (`SettingsButton` + `SpoilerToggle`, reachable via `AppFloatingAction`); localStorage; identity table + map spoilers off by default; info-icon tooltips |
 | Map preview | Pinned terrain/water/chasm autotiling + raised wall layers; region water texture scrolls at 5 px/s in expanded view with reduced-motion cleanup; exact known item/mob markers are separately opt-in inside the spoiler-gated dialog |
 | Assets | Flattened to `web/public/assets/{environment,sprites,…}` (no nested `assets/assets`) |
 | App icon | `web/public/app_icon.jpg` |
@@ -281,7 +276,7 @@ Tiles are SPD `Terrain` values. `tile_variance` is the isolated pinned `DungeonT
 - Legacy: `spd-analyzer-advanced-mode` is still read as a fallback for map spoilers.
 
 ### Open seed sessions (UI)
-- **Store:** `web/src/stores/app.ts` (`$savedSeedInputs`, `$activeSeedId`, `$sessions`, spoiler atoms, …).
+- **Store:** `web/src/stores/sessions.ts` (`$savedSeedInputs`, `$activeSeedId`, `$sessions`, …), re-exported via `stores/app.ts`. Spoiler atoms live in `stores/spoilers.ts`.
 - **List:** `localStorage["spd-analyzer-open-seeds"]` = JSON string array of seed inputs (order = tab order), **max 10**.
 - **Active tab:** `localStorage["spd-analyzer-active-seed"]` = session id (normalized uppercase input).
 - Reports are **not** persisted (recomputed via WASM on load, sequentially with a short delay).
