@@ -182,7 +182,21 @@ pub fn create_items_main(
     Random::push_generator_seeded(Random::long());
     let drop_chance = 0.25f32 * (dungeon.depth - 1) as f32;
     if Random::float() < drop_chance {
-        // guide page — skip listing
+        // Fresh-run analysis starts with the guide pages missing (apart from
+        // GUIDE_SEARCHING, which Java removes from the random pool). Creating
+        // and selecting the first missing page consumes no RNG; placement does
+        // mutate the level's persistent room order using this nested generator.
+        let cell = random_drop_cell(rooms, &mut room_order, map, &mut occupied);
+        if cell >= 0 {
+            flatten_grass(map, cell as usize);
+            out.push(CreatedLoot {
+                loot: PlacedLoot {
+                    item: GeneratedItem::new("GuidePage", ItemCategory::Other),
+                    heap_type: "heap",
+                },
+                cell: Some(cell as usize),
+            });
+        }
     }
     Random::pop_generator();
 

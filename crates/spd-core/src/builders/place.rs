@@ -19,7 +19,9 @@ pub fn gate(min: f32, value: f32, max: f32) -> f32 {
 }
 
 pub fn angle_between_points(from: (f32, f32), to: (f32, f32)) -> f32 {
-    let m = (to.1 - from.1) as f64 / (to.0 - from.0) as f64;
+    // Java evaluates the PointF division as `float` before widening the
+    // result to the local `double` slope.
+    let m = ((to.1 - from.1) / (to.0 - from.0)) as f64;
     let mut angle = (A * (m.atan() + std::f64::consts::PI / 2.0)) as f32;
     if from.0 > to.0 {
         angle -= 180.0;
@@ -142,7 +144,20 @@ pub fn find_free_space(start: Point, collision: &[Room], max_size: i32) -> Rect 
 
 /// Place `next` next to `prev` at approximately `angle` degrees. Returns angle or -1.
 /// `next` is identified by index into `rooms` which must include all collision rooms + next.
-pub fn place_room(rooms: &mut [Room], prev: usize, next: usize, mut angle: f32) -> f32 {
+pub fn place_room(rooms: &mut [Room], prev: usize, next: usize, angle: f32) -> f32 {
+    place_room_with_prepare(rooms, prev, next, angle, &mut |_| {})
+}
+
+/// ShopRoom computes its minimum dimensions lazily from generated stock.
+/// Java reaches that hook inside `setSizeWithLimit`, after the angle draw and
+/// `findFreeSpace`, but before the room-size draws.
+pub(super) fn place_room_with_prepare(
+    rooms: &mut [Room],
+    prev: usize,
+    next: usize,
+    mut angle: f32,
+    prepare: &mut impl FnMut(&mut Room),
+) -> f32 {
     angle %= 360.0;
     if angle < 0.0 {
         angle += 360.0;
@@ -189,6 +204,7 @@ pub fn place_room(rooms: &mut [Room], prev: usize, next: usize, mut angle: f32) 
     let max_dim = rooms[next].max_width().max(rooms[next].max_height());
     // collision list: all rooms except empty next? Java uses full list including unplaced empties
     let space = find_free_space(start, rooms, max_dim);
+    prepare(&mut rooms[next]);
     if !rooms[next].set_size_with_limit(space.raw_width() + 1, space.raw_height() + 1) {
         return -1.0;
     }

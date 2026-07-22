@@ -1,6 +1,6 @@
 //! Focused coverage for room-paint additions to `itemsToSpawn`.
 
-use super::super::secret_rooms::{secret_laboratory, secret_runestone};
+use super::super::secret_rooms::{secret_laboratory, secret_larder, secret_runestone};
 use super::super::special_rooms::{
     armory_prizes_on_map, crypt_prize, laboratory_prizes, library_prizes, pool_prize,
     runestone_prizes, statue_weapon, treasury_prizes_on_map,
@@ -211,18 +211,56 @@ fn secret_laboratory_no_iron_key() {
     // never calls addItemToSpawn — reusing the lab prize body must not append
     // the LaboratoryRoom IronKey here.
     Random::reset_generators();
-    let run = init_run(40);
+    let _run = init_run(40);
     Random::push_generator_seeded(110);
-    let mut d = dungeon_from_run(run);
-    d.depth = 11;
     let room = test_room("SecretLaboratoryRoom", 8, 8);
-    let mut spawn = Vec::new();
-    let loot = secret_laboratory(&mut d, &room, &mut spawn);
+    let mut map = paint_minimal(std::slice::from_ref(&room)).expect("secret lab map");
+    let loot = secret_laboratory(&room, &mut map);
     Random::pop_generator();
 
-    assert!(!loot.is_empty());
+    assert!((2..=3).contains(&loot.len()));
     assert!(loot
         .iter()
         .all(|p| p.item.source.as_deref() == Some("SecretLaboratoryRoom")));
-    assert!(spawn.is_empty());
+    assert_eq!(
+        map.known_heaps
+            .iter()
+            .flatten()
+            .flat_map(|heap| &heap.items)
+            .filter(|item| item.class_name == "EnergyCrystal")
+            .count(),
+        2
+    );
+}
+
+#[test]
+fn secret_larder_uses_pinned_food_energy_units() {
+    let cases = [
+        (4, vec!["ChargrilledMeat"]),
+        (6, vec!["ChargrilledMeat", "ChargrilledMeat"]),
+        (10, vec!["Pasty"]),
+    ];
+
+    for (depth, expected) in cases {
+        Random::reset_generators();
+        Random::push_generator_seeded(200 + i64::from(depth));
+        let room = test_room("SecretLarderRoom", 8, 8);
+        let mut map = paint_minimal(std::slice::from_ref(&room)).expect("secret larder map");
+
+        let loot = secret_larder(depth, &room, &mut map);
+
+        Random::pop_generator();
+        assert_eq!(
+            loot.iter()
+                .map(|drop| drop.item.class_name.as_str())
+                .collect::<Vec<_>>(),
+            expected,
+            "depth {depth} food composition"
+        );
+        assert_eq!(
+            map.known_heaps.iter().flatten().count(),
+            loot.len(),
+            "depth {depth} heap count"
+        );
+    }
 }

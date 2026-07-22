@@ -176,16 +176,22 @@ impl GeneratorState {
                 if rt.def.default_probs.is_none() || cat == Category::Artifact {
                     return self.random_category(cat, depth);
                 }
-                let class_name = if let Some(ref total) = rt.default_probs_total {
-                    let i = Random::chances(total);
-                    assert!(i >= 0, "defaultProbsTotal chances empty");
-                    rt.def.classes[i as usize]
-                } else {
-                    let i = Random::chances(rt.def.default_probs.unwrap());
-                    assert!(i >= 0, "defaultProbs chances empty");
-                    rt.def.classes[i as usize]
-                };
-                consume_exotic_conversion_roll(cat);
+                let (class_name, consume_exotic_roll) =
+                    if let Some(ref total) = rt.default_probs_total {
+                        let i = Random::chances(total);
+                        assert!(i >= 0, "defaultProbsTotal chances empty");
+                        (rt.def.classes[i as usize], false)
+                    } else {
+                        let i = Random::chances(rt.def.default_probs.unwrap());
+                        assert!(i >= 0, "defaultProbs chances empty");
+                        (rt.def.classes[i as usize], true)
+                    };
+                // Java returns directly from the cumulative
+                // `defaultProbsTotal` branch. Only the plain default-probability
+                // path reaches the exotic consumable conversion roll.
+                if consume_exotic_roll {
+                    consume_exotic_conversion_roll(cat);
+                }
                 let mut item = GeneratedItem::new(class_name, rt.def.item_category);
                 randomize_item(&mut item, depth);
                 item

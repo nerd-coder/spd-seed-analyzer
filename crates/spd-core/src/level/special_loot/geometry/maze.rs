@@ -6,7 +6,12 @@ use crate::level::painter::DoorMap;
 use crate::level::terrain::TerrainMap;
 use crate::rooms::room::Room;
 
-pub(super) fn paint(map: &mut TerrainMap, room: &Room, room_index: usize, doors: &DoorMap) {
+pub(super) fn paint(
+    map: &mut TerrainMap,
+    room: &Room,
+    room_index: usize,
+    doors: &DoorMap,
+) -> Option<usize> {
     let door_points: Vec<Point> = room
         .connected
         .iter()
@@ -42,7 +47,9 @@ pub(super) fn paint(map: &mut TerrainMap, room: &Room, room_index: usize, doors:
                 room.top + best_cell as i32 / width,
             ) {
                 map.heap_occupied[prize_cell] = true;
+                return Some(prize_cell);
             }
         }
     }
+    None
 }

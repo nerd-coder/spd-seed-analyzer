@@ -1,7 +1,9 @@
 //! Pinned SPD v3.3.8 `FigureEightBuilder`.
 
 use crate::builders::connection;
-use crate::builders::place::{angle_between_rooms, find_neighbours, place_room};
+use crate::builders::place::{
+    angle_between_rooms, find_neighbours, place_room, place_room_with_prepare,
+};
 use crate::builders::regular::{
     create_branches, loop_center, setup_rooms, target_angle, weight_rooms, BranchAngles,
     BuilderParams,
@@ -73,18 +75,19 @@ fn place_loop(
     None
 }
 
-/// Restores the insertion order of the room list returned by Java's builder.
+/// Restores the insertion order of Java's room list before branch placement.
 ///
 /// Java creates the connection objects for both loops before placement, but it
 /// does not append them to the returned `rooms` list until each loop has been
 /// placed. Consequently, a closing stitch created while placing the first loop
-/// precedes every connection belonging to the second loop in the final list.
+/// precedes every connection belonging to the second loop. This must happen
+/// before `createBranches`: pinned `findFreeSpace` is collision-order-sensitive.
 fn restore_java_room_order(
     rooms: &mut Vec<Room>,
     base_len: usize,
     first_loop: &[usize],
     second_loop: &[usize],
-) {
+) -> Vec<usize> {
     let mut order = Vec::with_capacity(rooms.len());
     let mut included = vec![false; rooms.len()];
 
@@ -136,6 +139,7 @@ fn restore_java_room_order(
             .collect();
         rooms.push(room);
     }
+    old_to_new
 }
 
 pub(super) fn build(
@@ -216,10 +220,10 @@ pub(super) fn build(
     )?;
 
     if let Some(shop) = setup.shop {
-        prepare_shop(&mut rooms[shop]);
         let mut placed = false;
         for _ in 0..11 {
-            if place_room(rooms, entrance, shop, Random::float_max(360.0)) != -1.0 {
+            let angle = Random::float_max(360.0);
+            if place_room_with_prepare(rooms, entrance, shop, angle, prepare_shop) != -1.0 {
                 placed = true;
                 break;
             }
@@ -227,6 +231,14 @@ pub(super) fn build(
         if !placed {
             return None;
         }
+    }
+
+    let old_to_new = restore_java_room_order(rooms, base_len, &first_loop, &second_loop);
+    for room in &mut first_loop {
+        *room = old_to_new[*room];
+    }
+    for room in &mut second_loop {
+        *room = old_to_new[*room];
     }
 
     let first_center = loop_center(rooms, &first_loop);
@@ -254,7 +266,6 @@ pub(super) fn build(
         return None;
     }
 
-    restore_java_room_order(rooms, base_len, &first_loop, &second_loop);
     find_neighbours(rooms);
     for room in 0..rooms.len() {
         let neighbours = rooms[room].neighbours.clone();

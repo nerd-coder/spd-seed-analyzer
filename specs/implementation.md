@@ -49,7 +49,7 @@ decks/tiers, depth seeds / limited drops. Golden fixtures in
 `tools/java-oracle/fixtures/` + `crates/spd-core/tests/java_oracle_goldens.rs`
 confirm exact identity parity across four seeds.
 
-**Levelgen — broad partial port; five depth-one lifecycle fixtures are exact.**
+**Levelgen — broad partial port; five depth-one fixtures plus HKT floor 6 are exact.**
 Room init, geometry, both builders (Loop/FigureEight), all connection-room
 subclasses, water/grass/trap painter, `paintDoors` merge/Graph, every region's
 structural + standard room geometry, special/secret room prize logic, shop
@@ -68,13 +68,12 @@ Structured heap facts
 are exact only for the covered room families whose paint-time cell association
 has been ported; uncovered families retain the legacy `Room loot` marker.
 
-Floor 6 now has a full pinned Java observation after replaying floors 1–5:
-48×48 terrain/render arrays, lifecycle probes, 36 heaps, 7 mobs, 2
-transitions, and 3 traps. Rust matches the water feeling, exact 12-room class
-set, 20 structured shop heaps, Shopkeeper, and fresh-Warrior MagicalHolster
-choice. It does **not** yet match the floor lifecycle: Rust is 49×48, has one
-fewer ambient mob, and diverges at every recorded RNG boundary and in final
-terrain/entity cells.
+Floor 6 now has an exact pinned lifecycle after replaying floors 1–5. For
+`HKT-JZN-XQQ`, Rust matches Java's water feeling, 12-room class set, 48×48
+bounds, all three RNG probes, terrain/discoverability/tile variance, 36 heaps
+(including 20 shop heaps), 7 mobs, 2 transitions, and 3 traps. This is exact
+for the committed fresh-run fixture only; the engine remains `partial` because
+other deeper-floor histories and room combinations are not yet covered.
 
 Floor 8 now has the same full Java observation after replaying floors 1–7:
 30×42 render arrays, all three lifecycle probes, 11 heaps, 7 mobs, 2
@@ -93,10 +92,11 @@ viewport. The engine and UI still report `partial`; this browser slice does not
 promote uncovered room families or deeper floors.
 
 The renderer can now compose the exact item crops and static idle sprites used
-by the floor-6 and floor-8 oracles. Floor 8 adds DM100, Guard, and
+by the floor-6 and floor-8 oracles. Floor 6 uses exact core cells for the
+committed HKT replay. Floor 8 adds DM100, Guard, and
 SpectralNecromancer alongside its exact AlchemyPage, Crossbow, and
-EnergyCrystal crops. This is asset-layer support, not deeper-floor visual
-parity: current Rust geometry and entity cells still differ from Java.
+EnergyCrystal crops, but its current Rust geometry and entity cells still
+differ from Java.
 
 **Correctness infra — the tool that will prove parity.**
 `tools/java-oracle/` runs the *actual pinned Java source* headlessly and
@@ -122,12 +122,12 @@ CrystalPath/MagicWell, Traps/Treasury, SewerPipe, RegionDecoPatch,
 Bridge/Ring/CircleBasin, tunnel, WaterBridge, and HKT's Armory/FigureEight
 variants. Every depth-one fixture asserts exact lifecycle RNG probes, map
 bounds, final heap cells, final mob cells/types, and report-visible item
-projection. The HKT floor-one fixture also asserts every
-additive render fact listed above. The floor-six and floor-eight fixtures retain
-the same full Java observation, but Rust asserts only each currently exact
-subset.
+projection. The HKT floor-one fixture also asserts every additive render fact
+listed above. The floor-six fixture now asserts its complete Java observation;
+floor eight retains the same full observation but asserts only its currently
+exact Rust subset.
 
-### 0c. ~~Pin HKT floor-six core/render facts~~ — ORACLE EXACT, RUST PARTIAL
+### 0c. ~~HKT floor-six lifecycle parity~~ — FIXTURE EXACT
 For `HKT-JZN-XQQ` floor 6, schema v3 now replays every prior Java floor before
 creating the target `PrisonLevel`. The committed oracle records the exact
 48×48 map, lifecycle RNG probes, terrain, discoverability, tile variance,
@@ -135,23 +135,22 @@ transitions, traps, 36 heaps (20 `for_sale`), and 7 mobs. Regeneration from the
 pinned checkout is deterministic; the committed JSON is Biome-formatted after
 generation.
 
-The strongest honest Rust projection now matches the water feeling and sorted
-room classes: CrystalChoice, four Perimeter rooms, Pillars entrance/standard,
-RegionDecoLine exit, SecretMaze, two Segmented rooms, and Shop. Region-specific
-room counts and the laboratory-quota draw now occur at their pinned positions.
-Shop stock is generated lazily during builder sizing; the room paints 20
-clockwise structured sale heaps plus Shopkeeper, and fresh-Warrior inventory
-selects MagicalHolster. Floors 2–4 and 6–8 have source-aligned partial
-ambient-mob rotations/placement, while only depth 1 remains lifecycle-exact.
+Rust now matches that complete observation: water feeling; sorted room classes
+(CrystalChoice, four Perimeter rooms, Pillars entrance/standard,
+RegionDecoLine exit, SecretMaze, two Segmented rooms, and Shop); 48×48 bounds;
+all lifecycle RNG probes; every render array; and all heap, mob, transition,
+trap, plant, and blob facts. Shop stock remains lazily generated at Java's
+builder-sizing boundary and selects the fresh-Warrior MagicalHolster.
 
-This phase intentionally stops at comparison, not parity. Rust currently
-builds 49×48, produces five ambient mobs plus Shopkeeper rather than Java's six
-plus Shopkeeper, and misses every floor-six lifecycle probe. Terrain,
-transitions, traps, heap contents/cells, and mob cells therefore remain open.
-The browser can render the oracle's floor-six item/mob sprite families, but its
-current composition reflects those partial Rust facts. The reference hero,
-post-exploration FOV, and animated-water phase remain outside deterministic
-`Level.create()` comparison.
+Closing the lifecycle required Java-float builder angles, Java room-list order
+before FigureEight branches, `EntranceRoom`/`ExitRoom` connection weighting,
+`mobLimit()` draw timing, exact SecretLaboratory/SecretLarder and laboratory
+guide-page draw shapes on prior floors, exact CrystalChoice geometry and heap
+cells, SecretMaze's prize-to-chest association, cumulative-default generator
+semantics, and regular GuidePage nested-generator placement. The reference
+hero, post-exploration FOV, and animated-water phase remain outside
+deterministic `Level.create()` comparison. Global status stays `partial`; this
+result proves only the committed HKT fresh-run floor-6 history.
 
 ### 0d. ~~Pin HKT floor-eight core/render facts~~ — ORACLE EXACT, RUST PARTIAL
 For `HKT-JZN-XQQ` floor 8, schema v3 replays Java floors 1–7 before creating
@@ -166,8 +165,10 @@ sorted room set, and every pre-paint RNG value. Divergence begins during
 painting: Rust has 6 heaps rather than 11, 8 mobs rather than 7, 2 traps rather
 than 14, different transition cells, and different pre-mobs/pre-items probes,
 terrain, and entity cells. Floor 7 already differs in room structure and
-Wandmaker reward state, so this phase intentionally pins and compares floor 8
-without claiming downstream parity.
+Wandmaker reward state. After the floor-6 cross-floor fixes, the analyzer now
+reports `WandOfPrismaticLight +1` and `WandOfCorrosion +2`; the user-observed
+pinned result is `WandOfCorrosion +1`. Resolve that replay divergence before
+using floor 8 as the next parity target.
 
 The browser now has exact static crops for every floor-8 heap and mob family,
 including DM100, Guard, SpectralNecromancer, AlchemyPage, Crossbow, and
@@ -194,9 +195,9 @@ Committed screenshots in `specs/fixtures/visual/`, named
 Their hero positions are post-generation gameplay state, not seed-derived
 `Level.create()` output; frontend comparisons must treat the hero as a fixed
 reference overlay or exclude it from the deterministic contract. Floor-1
-deterministic browser composition is now matched; floor-6 and floor-8 lifecycle
-parity remain open against the pinned oracles above. Core parity does not by
-itself prove gameplay-state pixel parity.
+deterministic browser composition is matched and floor-6 core lifecycle parity
+is exact for HKT; floor-8 lifecycle parity remains open. Core parity does not
+by itself prove gameplay-state pixel parity.
 
 ### 0b. ~~HKT floor-one browser-render parity~~ — DETERMINISTIC LAYERS MATCHED
 For `HKT-JZN-XQQ` floor 1, the browser now consumes every existing structured
@@ -220,8 +221,9 @@ current/post-exploration FOV shading. Those are intentionally excluded because
 they are not outputs of `Level.create()`; animated water phase is also not a
 fixed pixel contract. Exact heaps/mobs remain opt-in spoiler layers. This closes
 only the HKT floor-one browser slice and does not change the engine's `partial`
-status. Floor-6 and floor-8 asset coverage is present, but lifecycle/render
-parity is open.
+status. Floor-6 and floor-8 asset coverage is present; floor 6 now has exact
+HKT core facts, while its browser comparison and floor-8 lifecycle/render
+parity remain open.
 
 ### 0. ~~Broaden depth-one schema-v3 room coverage~~ — FIXED FOR FOUR FIXTURES
 Three representative fixtures were added beside the original AAA regression:
@@ -327,12 +329,13 @@ and no-match→-1-after-one-shuffle. The schema-v3 golden additionally pins the
 cross-item permutation behavior through exact final heap-cell equality.
 
 ### 2a. ~~Consumable generation skipped the exotic-conversion draw~~ — FIXED
-After selecting a regular potion or scroll, Java checks its regular→exotic
-map and always evaluates `Random.Float() < consumableExoticChance()`. With no
-ExoticCrystals trinket the chance is zero, but the Float still advances the
-restored level-generation stream after the private category deck is popped.
-Rust now preserves this draw in both category-deck and default-selection
-paths. Focused generator tests pin the extra level-stream advance.
+After selecting a regular potion or scroll from a category deck, Java checks
+its regular→exotic map and evaluates
+`Random.Float() < consumableExoticChance()`. With no ExoticCrystals trinket
+the chance is zero, but that Float still advances the restored level stream.
+Java's cumulative `defaultProbsTotal` branch is different: it returns directly
+after class selection and skips the exotic roll. Rust now preserves both draw
+shapes, and focused generator tests pin their distinct RNG tails.
 
 Combined with persistent room order, `AAA-AAA-AAA` depth 1 now generates and
 places the exact five main drops (`ScrollOfRage`, `ScrollOfRecharging`,
@@ -352,12 +355,11 @@ pushes only reorder `items_to_spawn` contents.
 Two Java-source corrections to what this section previously claimed:
 
 - `SecretLaboratoryRoom` does **not** inherit `LaboratoryRoom.paint` — it
-  extends `SecretRoom` with its own `paint()` (weighted `potionChances`
-  table) and never pushes an `IronKey`. Rust now splits
-  `laboratory_prizes` (push) from `laboratory_prizes_shared` (no push, used
-  by `secret_laboratory`). **Still open:** the shared body itself is
-  LaboratoryRoom's prize logic, not SecretLaboratoryRoom's own paint —
-  listed under lower-leverage gaps.
+  extends `SecretRoom` with its own `paint()` and never pushes an `IronKey`.
+  Its EMPTY_SP geometry, alchemy cell, EnergyCrystal stacks, pinned JVM
+  HashMap chance order, potion draws, and heap cells are now ported directly.
+  Regular `LaboratoryRoom` retains its own prize body, IronKey push, and first
+  alchemy-guide placement draw.
 - Push-order fidelity matters beyond count: `PoolRoom`'s unfiltered
   `findPrizeItem` would consume its own `PotionOfInvisibility` if the push
   landed before prize selection.
@@ -370,11 +372,11 @@ which snapshots Java's queue at the **pre-build** boundary
 (`FloorOracle.RecordingSewerLevel.build()`) — comparable after room pushes
 started surviving into `createItems`.
 
-Unit coverage: 10 tests in `special_loot/tests.rs` (`*_pushes_iron_key`,
+Focused coverage in `special_loot/tests.rs` includes `*_pushes_iron_key`,
 `pool_room_pushes_invisibility`, `secret_runestone_pushes_liquid_flame`,
-`secret_laboratory_no_iron_key`). The AAA-AAA-AAA final-heaps projection
-gained `PotionOfInvisibility` (PoolRoom push now lands; `IronKey` stays
-report-blacklisted).
+`secret_laboratory_no_iron_key`, and SecretLarder's exact Pasty/ChargrilledMeat
+energy units. The AAA-AAA-AAA final-heaps projection gained
+`PotionOfInvisibility` (PoolRoom push now lands; `IronKey` stays report-blacklisted).
 
 ### 4. `canPlaceItem` fidelity gaps (Medium)
 Only a generic `item_allowed` mask + trap-destroys-items filter +
@@ -387,14 +389,10 @@ logic in the main loop was verified call-for-call correct against Java
 already — this gap is specifically the room-shape predicate.
 
 ### Lower-leverage, already-known (from prior disclaimer, still open)
-- Full ambient `createMobs` also feeds map markers — depth one is exact and
-  floors 2–4/6–8 have partial source-aligned rotations/placement. Floor 6 is
-  still one ambient mob short; floor 8 has 8 mobs versus Java's 7; floors
-  9–24 remain absent.
-- `SecretLaboratoryRoom` reuses `LaboratoryRoom`'s prize body
-  (`laboratory_prizes_shared`); Java gives it its own `paint()` with a
-  weighted `potionChances` table (2 potions) — different RNG shape whenever
-  the room appears (found while fixing gap 3; no fixture covers it yet).
+- Full ambient `createMobs` also feeds map markers — depth one and the HKT
+  floor-6 replay are exact, while other floors 2–4/7–8 retain partial
+  source-aligned rotations/placement. Floor 8 has 8 mobs versus Java's 7;
+  floors 9–24 remain absent.
 - Shop stock is builder-timed and fresh-Warrior bag scoring is exact for floor
   6. Later shops still need inventory-sensitive bag modeling.
 - `random_deck_item` still has a known exhausted-probability private-generator
@@ -417,31 +415,34 @@ already — this gap is specifically the room-shape predicate.
    transitions/traps/heaps/mobs and the cropped integer viewport now compose
    without reimplementing RNG in the UI.
 2. ~~**Pin and compare `HKT-JZN-XQQ` floor 6.**~~ Added the sequential Java
-   oracle, exact render facts, strongest honest Rust room/shop assertions, and
-   floor-6 sprite/icon coverage. The comparison proves lifecycle/render parity
-   is still open.
-3. **Close HKT floor-6 lifecycle parity.** Match the 48×48 builder boundary,
-   painter/terrain facts, sixth ambient mob, final heap/entity cells, and all
-   three RNG probes before promoting browser parity.
+   oracle, exact render facts, Rust room/shop assertions, and floor-6
+   sprite/icon coverage.
+3. ~~**Close HKT floor-6 lifecycle parity.**~~ Rust now matches the 48×48
+   builder boundary, all painter/render facts, all three RNG probes, the sixth
+   ambient mob, and every final entity cell in the committed fixture.
 4. ~~**Pin and compare `HKT-JZN-XQQ` floor 8.**~~ Added the sequential Java
    oracle, exact render facts, strongest honest Rust pre-paint assertions,
    source-aligned floor-7/8 mob rotations, and floor-8 sprite/icon coverage.
    The comparison proves painter/downstream parity is still open.
-5. **Close HKT floor-8 painter/lifecycle parity after floor 6.** Match terrain,
+5. **Fix the HKT floor-7 Wandmaker replay before floor 8.** Match the
+   user-observed `WandOfCorrosion +1` instead of the current analyzer pair,
+   `WandOfPrismaticLight +1` / `WandOfCorrosion +2`, then recheck the floor-8
+   entry boundary after correcting the prior-floor history.
+6. **Close HKT floor-8 painter/lifecycle parity after floor 7.** Match terrain,
    pre-mobs/pre-items probes, 11 heap cells, 7 mob cells, 14 traps, transition
    cells, and the Alchemy blob before promoting browser parity.
-6. Extend schema-v3 coverage to still more depth-one room sets. Five exact
+7. Extend schema-v3 coverage to still more depth-one room sets. Five exact
    lifecycles are strong regression fixtures, not evidence that every
    depth-one combination is exact.
-7. Port deeper-floor `createMobs`: mob limits/rotations, second-room spawns,
+8. Port deeper-floor `createMobs`: mob limits/rotations, second-room spawns,
    large-mob open-space checks, and quest/NPC occupancy.
-8. Close the remaining room-specific `canPlaceItem` predicates and known
+9. Close the remaining room-specific `canPlaceItem` predicates and known
    special-room paint gaps.
-9. Correct the remaining timing/geometry approximations (SecretLaboratory and
-   inventory-sensitive later shops) as new fixtures cover them.
-10. Extend exact paint-time heap capture to the remaining room families; keep
+10. Correct remaining timing/geometry approximations such as
+    inventory-sensitive later shops as new fixtures cover them.
+11. Extend exact paint-time heap capture to the remaining room families; keep
    the legacy marker fallback until each family has a pinned cell association.
-11. Add multi-depth schema-v3 fixtures and promote each newly covered region
+12. Add multi-depth schema-v3 fixtures and promote each newly covered region
    only after its lifecycle boundary probes and final facts match.
 
 ---
@@ -465,7 +466,7 @@ Random.pushGenerator(seedForDepth(seed, depth, 0))
   initRooms() + shuffle
   retry builder.build until success
   RegularPainter.paint()  // shuffles the actual rooms list in place
-  createMobs()      // depth 1 exact; floors 2–4/6–8 partial; 9–24 pending
+  createMobs()      // depth 1 + HKT floor 6 exact; other deeper floors partial
   createItems main loop
 Random.popGenerator
 depth++
@@ -523,9 +524,9 @@ cargo test -p spd-core
 parity harness: identity maps (schema v1), depth-one forced-item queue
 (schema v2), five exact depth-one lifecycle fixtures covering map bounds,
 heap cells, mob facts, and report-visible item projection, plus full Java
-floor-six and floor-eight observations (schema v3, see above). HKT floor 1
-additionally proves the full render-fact projection; floors 6 and 8 currently
-assert only their exact Rust subsets. Add
+floor-six and floor-eight observations (schema v3, see above). HKT floors 1
+and 6 prove their complete render-fact projections; floor 8 currently asserts
+only its exact Rust subset. Add
 tightly-scoped oracle fixtures before writing new Rust behavior — regenerate
 via `tools/java-oracle/run` (see `tools/java-oracle/README.md`).
 
@@ -547,17 +548,21 @@ license constraints.
    lifecycles are exact at the pre-painter, pre-mobs, and pre-items boundaries
    and for final map bounds, heap cells, mob facts, and report-visible items.
    Keep all five fixtures green.
-3. Continue closing `HKT-JZN-XQQ` floor-6 lifecycle parity in suggested fix
-   order item 3. Its Java facts are fully pinned, but Rust still differs in
-   bounds, all RNG probes, terrain, heaps, and mob cells. Preserve `partial`.
+3. Keep the exact `HKT-JZN-XQQ` floor-6 lifecycle golden green. It matches
+   bounds, all RNG probes, terrain/render masks, heaps, mobs, transitions, and
+   traps, but this single replay does not change global `partial` status.
 4. Validate against `crates/spd-core/tests/java_oracle_goldens/final_heaps.rs`,
    its focused child modules, and all committed schema-v3 fixtures;
    regenerate/extend fixtures via
    `tools/java-oracle/run` (default source is the pinned clone at
    `/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`).
-5. After floor 6 closes, continue floor-8 parity from its exact pre-paint
-   boundary using the committed sequential oracle and
+5. Resolve the floor-7 Wandmaker mismatch first: the user-observed pinned game
+   result is `WandOfCorrosion +1`; the analyzer currently reports
+   `WandOfPrismaticLight +1` and `WandOfCorrosion +2`. Do not proceed to
+   floor-8 parity until that prior history is exact.
+6. Then continue floor-8 parity from its recorded pre-paint boundary using the
+   committed sequential oracle and
    `specs/fixtures/visual/HKT-JZN-XQQ_F8.png`.
-6. After Rust changes: `bun run build:wasm` (or `bun run dev`) before treating
+7. After Rust changes: `bun run build:wasm` (or `bun run dev`) before treating
    the UI as verified.
-7. Dev dump: `cargo run -p spd-core --example dump_seed -- SEED FLOORS`
+8. Dev dump: `cargo run -p spd-core --example dump_seed -- SEED FLOORS`

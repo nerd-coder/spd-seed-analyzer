@@ -55,17 +55,18 @@ fn consumable_decks_advance_level_stream_for_exotic_conversion_check() {
 }
 
 #[test]
-fn default_consumable_selection_keeps_exotic_conversion_draw() {
+fn cumulative_default_consumable_selection_skips_exotic_conversion_draw() {
     Random::reset_generators();
     Random::push_generator_seeded(271_828);
     let mut generator = GeneratorState::full_reset_ordered();
 
-    // One Float selects the default potion class and a second checks for its
-    // exotic counterpart, so the following Int matches the third probe Int.
-    let before = Random::peek_ints(3);
+    // Potion/Scroll use Java's cumulative `defaultProbsTotal` table. That
+    // branch returns immediately after the class draw, before the regular
+    // default path's exotic-conversion check.
+    let before = Random::peek_ints(2);
     let potion = generator.random_using_defaults(Category::Potion, 1);
     assert_eq!(potion.category, crate::items::model::ItemCategory::Potion);
-    assert_eq!(Random::int(), before[2]);
+    assert_eq!(Random::int(), before[1]);
 
     Random::pop_generator();
 }

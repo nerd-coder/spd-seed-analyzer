@@ -30,6 +30,7 @@ pub const WELL: i32 = 24;
 pub const STATUE: i32 = 25;
 pub const STATUE_SP: i32 = 26;
 pub const BOOKSHELF: i32 = 27;
+pub const ALCHEMY: i32 = 28;
 pub const WATER: i32 = 29;
 pub const FURROWED_GRASS: i32 = 30;
 pub const CRYSTAL_DOOR: i32 = 31;

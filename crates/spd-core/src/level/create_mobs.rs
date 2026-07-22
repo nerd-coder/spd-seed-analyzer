@@ -85,6 +85,19 @@ pub(crate) fn create_regular(
         return false;
     };
 
+    // RegularLevel.createMobs calls mobLimit before collecting and shuffling
+    // the weighted StandardRoom list.
+    let mut remaining = if depth == 1 {
+        8
+    } else {
+        let base = 3 + depth % 5 + Random::int_max(3);
+        if large_feeling {
+            (base as f32 * 1.33).ceil() as i32
+        } else {
+            base
+        }
+    };
+
     let mut spawn_rooms = Vec::new();
     for (index, room) in rooms.iter().enumerate() {
         if matches!(
@@ -122,16 +135,6 @@ pub(crate) fn create_regular(
     let mut rotation = Vec::new();
     let mut room_cursor = 0usize;
     let mut current_mob = None;
-    let mut remaining = if depth == 1 {
-        8
-    } else {
-        let base = 3 + depth % 5 + Random::int_max(3);
-        if large_feeling {
-            (base as f32 * 1.33).ceil() as i32
-        } else {
-            base
-        }
-    };
     while remaining > 0 {
         if current_mob.is_none() {
             current_mob = Some(next_mob(depth, &mut rotation));

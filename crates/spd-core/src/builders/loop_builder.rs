@@ -1,7 +1,9 @@
 //! Pinned SPD v3.3.8 `LoopBuilder`.
 
 use crate::builders::connection;
-use crate::builders::place::{angle_between_rooms, find_neighbours, place_room};
+use crate::builders::place::{
+    angle_between_rooms, find_neighbours, place_room, place_room_with_prepare,
+};
 use crate::builders::regular::{
     create_branches, loop_center, setup_rooms, target_angle, weight_rooms, BranchAngles,
     BuilderParams,
@@ -75,11 +77,11 @@ pub(super) fn build(
     }
 
     if let Some(shop) = setup.shop {
-        prepare_shop(&mut rooms[shop]);
         let mut placed = false;
         // Java's do/while with `tries >= 0` makes eleven attempts.
         for _ in 0..11 {
-            if place_room(rooms, entrance, shop, Random::float_max(360.0)) != -1.0 {
+            let angle = Random::float_max(360.0);
+            if place_room_with_prepare(rooms, entrance, shop, angle, prepare_shop) != -1.0 {
                 placed = true;
                 break;
             }

@@ -54,7 +54,7 @@ fn secret_maze_paints_full_maze_and_marks_farthest_chest() {
     let mut map = terrain::paint_minimal(&rooms).expect("map");
     Random::reset_generators();
     Random::push_generator_seeded(0x5EED);
-    paint(&mut map, &rooms[0], 0, &doors);
+    let prize_cell = paint(&mut map, &rooms[0], 0, &doors).expect("maze prize cell");
     let tail = Random::int();
     Random::pop_generator();
 
@@ -64,6 +64,7 @@ fn secret_maze_paints_full_maze_and_marks_farthest_chest() {
         .count();
     assert!(room_wall_count > (rooms[0].width() * 2) as usize);
     assert_eq!(map.heap_occupied.iter().filter(|&&v| v).count(), 1);
+    assert!(map.heap_occupied[prize_cell]);
     assert_eq!(tail, 295_367_267);
 }
 
@@ -73,7 +74,7 @@ fn weak_floor_burns_each_row_roll_and_keeps_hidden_well_chasm() {
     let mut map = terrain::paint_minimal(&rooms).expect("map");
     Random::reset_generators();
     Random::push_generator_seeded(0xA11CE);
-    paint(&mut map, &rooms[0], 0, &doors);
+    let _ = paint(&mut map, &rooms[0], 0, &doors);
     let tail = Random::int();
     Random::pop_generator();
 
@@ -88,7 +89,7 @@ fn rot_garden_places_heart_and_lashers_without_duplicate_key_rng() {
     let mut map = terrain::paint_minimal(&rooms).expect("map");
     Random::reset_generators();
     Random::push_generator_seeded(0xB07);
-    paint(&mut map, &rooms[0], 0, &doors);
+    let _ = paint(&mut map, &rooms[0], 0, &doors);
     let tail = Random::int();
     Random::pop_generator();
 
@@ -136,7 +137,7 @@ fn demon_spawner_burns_center_jitter_and_blocks_ambient_paint() {
     let mut map = terrain::paint_minimal(std::slice::from_ref(&room)).expect("map");
     Random::reset_generators();
     Random::push_generator_seeded(0xD3E0);
-    paint(&mut map, &room, 0, &DoorMap::new());
+    let _ = paint(&mut map, &room, 0, &DoorMap::new());
     let tail = Random::int();
     Random::pop_generator();
 

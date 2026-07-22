@@ -114,7 +114,12 @@ pub(super) fn setup_rooms(rooms: &mut [Room], params: &BuilderParams) -> Setup {
 pub(super) fn weight_rooms(rooms: &[Room], list: &mut Vec<usize>) {
     let original = list.clone();
     for id in original {
-        if rooms[id].kind == RoomKind::Standard {
+        // Java's entrance/exit room families also extend StandardRoom and
+        // therefore receive the same size-based connection weighting.
+        if matches!(
+            rooms[id].kind,
+            RoomKind::Standard | RoomKind::Entrance | RoomKind::Exit
+        ) {
             for _ in 1..rooms[id].connection_weight() {
                 list.push(id);
             }
@@ -275,7 +280,10 @@ pub(super) fn create_branches(
             }
         }
         if rooms[room].max_connections(DIR_ALL) > 1 && Random::int_max(3) == 0 {
-            let copies = if rooms[room].kind == RoomKind::Standard {
+            let copies = if matches!(
+                rooms[room].kind,
+                RoomKind::Standard | RoomKind::Entrance | RoomKind::Exit
+            ) {
                 rooms[room].connection_weight()
             } else {
                 1
@@ -298,4 +306,28 @@ pub(super) fn loop_center(rooms: &[Room], ids: &[usize]) -> (f32, f32) {
     center.0 /= ids.len() as f32;
     center.1 /= ids.len() as f32;
     center
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn room(id: usize, kind: RoomKind, size_factor: i32) -> Room {
+        Room::new(id, "WeightedRoom", kind, size_factor, 16, 3, 10, 3, 10)
+    }
+
+    #[test]
+    fn standard_entrance_and_exit_subclasses_receive_connection_weight() {
+        let rooms = vec![
+            room(0, RoomKind::Standard, 2),
+            room(1, RoomKind::Entrance, 2),
+            room(2, RoomKind::Exit, 2),
+            room(3, RoomKind::Special, 2),
+        ];
+        let mut ids = vec![0, 1, 2, 3];
+
+        weight_rooms(&rooms, &mut ids);
+
+        assert_eq!(ids, [0, 1, 2, 3, 0, 0, 0, 1, 1, 1, 2, 2, 2]);
+    }
 }

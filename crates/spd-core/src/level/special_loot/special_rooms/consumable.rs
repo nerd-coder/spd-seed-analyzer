@@ -309,6 +309,9 @@ pub fn laboratory_prizes_shared(
             heap_type: "heap",
         });
     }
-    // alchemy guide pages — skip (document state not tracked)
+    // A fresh run is missing the first alchemy guide page. In chapter one the
+    // regular LaboratoryRoom drops exactly one page after its prizes; the
+    // page identity is unseeded, but its room-position retry uses level RNG.
+    burn_drop_pos(room, &mut occupied);
     out
 }

@@ -1,7 +1,8 @@
-//! Crystal vault / choice / path special rooms.
+//! Crystal vault special-room prizes and shared entrance geometry.
+
+mod choice;
 
 use super::door_spots;
-use super::placement::burn_drop_pos_margin;
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::geom::Point;
@@ -119,36 +120,11 @@ fn adjacent_4(a: Point, b: Point) -> bool {
 /// `CrystalChoiceRoom.paint` — 3–4 potion/scroll piles + one chest (wand/ring/artifact).
 pub(super) fn crystal_choice(
     dungeon: &mut DungeonState,
-    room: &Room,
+    rooms: &[Room],
+    room_index: usize,
+    map: &mut crate::level::terrain::TerrainMap,
+    doors: &crate::level::painter::DoorMap,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
-    // room1/room2 may swap
-    let _ = Random::int_max(2);
-
-    let n = Random::normal_int_range(3, 4);
-    let mut out = Vec::new();
-    let mut occupied = Vec::new();
-    for _ in 0..n {
-        // room.random(1) or random(0) depending on square — burn margin-0 style
-        burn_drop_pos_margin(room, 0, &mut occupied);
-        let cat = *Random::one_of(&[Category::Potion, Category::Scroll]);
-        let mut item = dungeon.generator.random_category(cat, dungeon.depth);
-        item.source = Some("CrystalChoiceRoom".into());
-        out.push(PlacedLoot {
-            item,
-            heap_type: "heap",
-        });
-    }
-
-    let hidden_cat = *Random::one_of(&[Category::Wand, Category::Ring, Category::Artifact]);
-    let mut hidden = dungeon.generator.random_category(hidden_cat, dungeon.depth);
-    hidden.source = Some("CrystalChoiceRoom".into());
-    out.push(PlacedLoot {
-        item: hidden,
-        heap_type: "chest",
-    });
-
-    items_to_spawn.push(GeneratedItem::new("CrystalKey", ItemCategory::Other));
-    items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
-    out
+    choice::paint(dungeon, rooms, room_index, map, doors, items_to_spawn)
 }

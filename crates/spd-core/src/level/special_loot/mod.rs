@@ -100,15 +100,31 @@ pub fn special_room_loot(
 
         match room.kind {
             RoomKind::Special | RoomKind::Secret => {
-                geometry::paint(map, room, ri, &doors);
-                let mut loot = paint_special(dungeon, rooms, ri, map, &doors, items_to_spawn);
+                let geometry_prize_cell = geometry::paint(map, room, ri, &doors);
+                let mut loot = paint_special(
+                    dungeon,
+                    rooms,
+                    ri,
+                    map,
+                    &doors,
+                    geometry_prize_cell,
+                    items_to_spawn,
+                );
                 out.append(&mut loot);
             }
             RoomKind::Standard
                 if room.name == "RitualSiteRoom" || room.name == "BlacksmithRoom" =>
             {
-                geometry::paint(map, room, ri, &doors);
-                let mut loot = paint_special(dungeon, rooms, ri, map, &doors, items_to_spawn);
+                let geometry_prize_cell = geometry::paint(map, room, ri, &doors);
+                let mut loot = paint_special(
+                    dungeon,
+                    rooms,
+                    ri,
+                    map,
+                    &doors,
+                    geometry_prize_cell,
+                    items_to_spawn,
+                );
                 out.append(&mut loot);
             }
             RoomKind::Shop => {
@@ -131,6 +147,7 @@ fn paint_special(
     ri: usize,
     map: &mut TerrainMap,
     doors: &DoorMap,
+    geometry_prize_cell: Option<usize>,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
     let room = &rooms[ri];
@@ -163,8 +180,8 @@ fn paint_special(
         "SecretLibraryRoom" => secret_rooms::secret_library(dungeon, room, items_to_spawn),
         "SecretRunestoneRoom" => secret_rooms::secret_runestone(dungeon, room, items_to_spawn),
         "SecretArtilleryRoom" => secret_rooms::secret_artillery(dungeon, room),
-        "SecretLaboratoryRoom" => secret_rooms::secret_laboratory(dungeon, room, items_to_spawn),
-        "SecretLarderRoom" => secret_rooms::secret_larder(dungeon, room),
+        "SecretLaboratoryRoom" => secret_rooms::secret_laboratory(room, map),
+        "SecretLarderRoom" => secret_rooms::secret_larder(dungeon.depth, room, map),
         "SecretHoardRoom" => secret_rooms::secret_hoard(dungeon, room),
         // Garden / well / pit / remaining secrets with portable prizes
         "GardenRoom" => gardens::garden_prizes(room, items_to_spawn),
@@ -172,7 +189,12 @@ fn paint_special(
         "MagicWellRoom" => gardens::magic_well(room, map, items_to_spawn),
         "SecretWellRoom" => gardens::secret_well(),
         "PitRoom" => pit_secrets::pit_prizes(dungeon, items_to_spawn),
-        "SecretMazeRoom" => vec![pit_secrets::secret_maze_prize(dungeon)],
+        "SecretMazeRoom" => {
+            let prize = pit_secrets::secret_maze_prize(dungeon);
+            let cell = geometry_prize_cell.expect("SecretMazeRoom geometry returns a prize cell");
+            map.record_heap(cell, "chest", prize.item.clone());
+            vec![prize]
+        }
         "SecretSummoningRoom" => vec![pit_secrets::secret_summoning_prize(dungeon)],
         "SecretChestChasmRoom" => pit_secrets::secret_chest_chasm(dungeon, items_to_spawn),
         // Layout-only (no portable prize items)
@@ -193,7 +215,9 @@ fn paint_special(
         "ToxicGasRoom" => trap_rooms::toxic_gas_prizes(dungeon, room, items_to_spawn),
         "SecretHoneypotRoom" => trap_rooms::secret_honeypot(room),
         "CrystalVaultRoom" => crystal::crystal_vault(dungeon, rooms, ri, items_to_spawn),
-        "CrystalChoiceRoom" => crystal::crystal_choice(dungeon, room, items_to_spawn),
+        "CrystalChoiceRoom" => {
+            crystal::crystal_choice(dungeon, rooms, ri, map, doors, items_to_spawn)
+        }
         "CrystalPathRoom" => crystal_path::paint(dungeon, rooms, ri, map, doors, items_to_spawn),
         // Wandmaker quest rooms
         "MassGraveRoom" => quest_rooms::mass_grave_prizes(dungeon, room, items_to_spawn),

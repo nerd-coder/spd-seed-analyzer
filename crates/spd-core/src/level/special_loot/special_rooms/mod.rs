@@ -6,8 +6,8 @@ mod equip;
 #[cfg(test)]
 pub(super) use consumable::runestone_prizes;
 pub(super) use consumable::{
-    laboratory_prizes, laboratory_prizes_shared, library_prizes, runestone_prizes_on_map,
-    storage_prize, storage_prizes, treasury_prizes_on_map,
+    laboratory_prizes, library_prizes, runestone_prizes_on_map, storage_prize, storage_prizes,
+    treasury_prizes_on_map,
 };
 #[cfg(test)]
 pub(super) use equip::pool_prize;
