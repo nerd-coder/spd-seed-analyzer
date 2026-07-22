@@ -25,10 +25,12 @@ pub const SECRET_TRAP: i32 = 17;
 pub const TRAP: i32 = 18;
 pub const INACTIVE_TRAP: i32 = 19;
 pub const EMPTY_DECO: i32 = 20;
+pub const WELL: i32 = 24;
 pub const STATUE: i32 = 25;
 pub const STATUE_SP: i32 = 26;
 pub const BOOKSHELF: i32 = 27;
 pub const WATER: i32 = 29;
+pub const CRYSTAL_DOOR: i32 = 31;
 pub const REGION_DECO: i32 = 33;
 pub const REGION_DECO_ALT: i32 = 34;
 pub const ENTRANCE_SP: i32 = 37;
@@ -90,6 +92,7 @@ impl TerrainMap {
         matches!(
             self.map[cell],
             WALL | WALL_DECO
+                | CRYSTAL_DOOR
                 | STATUE
                 | STATUE_SP
                 | BOOKSHELF

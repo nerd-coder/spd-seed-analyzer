@@ -189,6 +189,12 @@ public final class JavaOracle {
 		json.append("      \"depth\": ").append(floor.depth).append(",\n");
 		json.append("      \"width\": ").append(floor.width).append(",\n");
 		json.append("      \"height\": ").append(floor.height).append(",\n");
+		json.append("      \"rooms\": [");
+		for (int index = 0; index < floor.rooms.size(); index++) {
+			if (index > 0) json.append(", ");
+			json.append('"').append(escape(floor.rooms.get(index))).append('"');
+		}
+		json.append("],\n");
 		json.append("      \"pre_paint_rng\": [");
 		for (int index = 0; index < floor.prePaintRng.size(); index++) {
 			if (index > 0) json.append(", ");

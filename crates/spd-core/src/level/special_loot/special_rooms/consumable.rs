@@ -6,7 +6,7 @@ use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::items::randomize::randomize_item;
 use crate::level::create_items::PlacedLoot;
-use crate::level::terrain::{TerrainMap, EMPTY};
+use crate::level::terrain::{TerrainMap, EMPTY, STATUE, WALL};
 use crate::random::Random;
 use crate::rooms::room::Room;
 
@@ -55,30 +55,37 @@ fn library_prize(
         .random_category(Category::Scroll, dungeon.depth)
 }
 
-pub fn treasury_prizes(
+pub fn treasury_prizes_on_map(
     dungeon: &mut DungeonState,
     room: &Room,
+    map: &mut TerrainMap,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
     let mut out = Vec::new();
-    // center statue — no RNG
+    fill_room(map, room, WALL);
+    fill_margin(map, room, 1, EMPTY);
+    let statue = room.as_rect().center_room();
+    set_terrain(map, statue.x, statue.y, STATUE);
+
     let heap_chest = Random::int_max(2) == 0;
     let n = Random::int_range_inclusive(2, 3);
     let mimic_chance = 0.2f32; // 1/5 without MimicTooth
-    let mut occupied = Vec::new();
     for _ in 0..n {
-        burn_drop_pos(room, &mut occupied);
         let mut item =
             find_prize_item(items_to_spawn, Some("TrinketCatalyst")).unwrap_or_else(|| {
                 let mut g = GeneratedItem::new("Gold", ItemCategory::Gold);
                 randomize_item(&mut g, dungeon.depth);
                 g
             });
+        let cell = treasury_drop_cell(room, map, true);
         let heap_type = if heap_chest && dungeon.depth > 1 && Random::float() < mimic_chance {
             item.source = Some("TreasuryRoom:mimic".into());
+            map.mob_occupied[cell] = true;
+            map.known_mobs[cell] = Some("Mimic");
             "mimic"
         } else {
             item.source = Some("TreasuryRoom".into());
+            map.heap_occupied[cell] = true;
             if heap_chest {
                 "chest"
             } else {
@@ -89,15 +96,53 @@ pub fn treasury_prizes(
     }
     if !heap_chest {
         for _ in 0..6 {
-            let _ = Random::int_range_inclusive(room.left + 1, room.right - 1);
-            let _ = Random::int_range_inclusive(room.top + 1, room.bottom - 1);
-            // small gold piles blacklisted from report — still burn quantity RNG
+            let cell = treasury_drop_cell(room, map, false);
             let _qty = Random::int_range_inclusive(5, 12);
+            // Small piles may merge with an existing heap, exactly like
+            // Level.drop; they reject only non-EMPTY terrain.
+            map.heap_occupied[cell] = true;
         }
     }
     // TreasuryRoom.java:76 — IronKey pushed after the small gold piles
     items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
     out
+}
+
+fn treasury_drop_cell(room: &Room, map: &TerrainMap, reject_occupied: bool) -> usize {
+    for _ in 0..10_000 {
+        let point = room.random();
+        let Some(cell) = map.point_to_cell(point.x, point.y) else {
+            continue;
+        };
+        if map.map[cell] == EMPTY
+            && (!reject_occupied || (!map.heap_occupied[cell] && !map.mob_occupied[cell]))
+        {
+            return cell;
+        }
+    }
+    panic!("placed TreasuryRoom must have a valid drop cell");
+}
+
+fn fill_room(map: &mut TerrainMap, room: &Room, terrain: i32) {
+    for y in room.top..=room.bottom {
+        for x in room.left..=room.right {
+            set_terrain(map, x, y, terrain);
+        }
+    }
+}
+
+fn fill_margin(map: &mut TerrainMap, room: &Room, margin: i32, terrain: i32) {
+    for y in (room.top + margin)..=(room.bottom - margin) {
+        for x in (room.left + margin)..=(room.right - margin) {
+            set_terrain(map, x, y, terrain);
+        }
+    }
+}
+
+fn set_terrain(map: &mut TerrainMap, x: i32, y: i32, terrain: i32) {
+    if let Some(cell) = map.point_to_cell(x, y) {
+        map.map[cell] = terrain;
+    }
 }
 pub fn storage_prizes(
     dungeon: &mut DungeonState,

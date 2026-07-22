@@ -57,12 +57,17 @@ the default when `--output` is omitted):
   --output tools/java-oracle/fixtures/aaa-aaa-aaa-floor-1.json AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 1 \
   --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-1.json AAA-AAA-AAA
+./tools/java-oracle/run --final-heaps-depth 1 \
+  --output tools/java-oracle/fixtures/abc-def-ghi-final-heaps-floor-1.json ABC-DEF-GHI
+./tools/java-oracle/run --final-heaps-depth 1 \
+  --output tools/java-oracle/fixtures/gfx-pzh-dch-final-heaps-floor-1.json GFX-PZH-DCH
+./tools/java-oracle/run --final-heaps-depth 1 \
+  --output tools/java-oracle/fixtures/hello-final-heaps-floor-1.json hello
 ```
 
-The Rust golden consumer validates every `fixtures/*.json` file. The schema v3
-test intentionally reports the current analyzer mismatch as a passing,
-explicitly named regression until Rust can retain and match the placement
-facts:
+The Rust golden consumer validates every `fixtures/*.json` file. The schema-v3
+test requires all four committed depth-one fixtures to match lifecycle probes,
+map bounds, heap cells, mob facts, and the report-visible item projection:
 
 ```bash
 cargo test -p spd-core --test java_oracle_goldens
@@ -143,6 +148,7 @@ The output has `schema_version: 3` and `contract: "final_placed_heaps"`:
     "depth": 1,
     "width": 40,
     "height": 30,
+    "rooms": ["EntranceRoom", "ExitRoom", "PoolRoom"],
     "pre_paint_rng": [1993374861, -149591753],
     "pre_mobs_rng": [1726373121, -188171336],
     "pre_items_rng": [-339886649, -1704611306],
@@ -160,7 +166,9 @@ The output has `schema_version: 3` and `contract: "final_placed_heaps"`:
 }
 ```
 
-Heaps are ordered by ascending row-major `cell`; each `items` array keeps the
+`rooms` is the sorted list of Java room simple-class names retained by the
+builder, including connection rooms, and records the room-family coverage of
+each fixture. Heaps are ordered by ascending row-major `cell`; each `items` array keeps the
 Java `Heap.items` stack order. `heap_type` is the lower-case stable form of
 SPD's `Heap.Type`. Item class, quantity, true level, and curse state are kept
 without localization. Gold, keys, and every other heap item generated within
@@ -172,5 +180,7 @@ pass. The three eight-value RNG probes snapshot consecutive full-range
 and at the `createMobs` and `createItems` entry boundaries; recording stops at
 each boundary, so the probes do not perturb the final heap/mob run. They make
 raw LCG draw-count comparison possible even while an earlier phase is
-desynchronized. This is an exact-pin observation contract, not evidence that
-the Rust analyzer currently matches room selection, placement, or loot.
+desynchronized. This is an exact-pin observation contract. The four committed
+depth-one fixtures currently match their strongest honest Rust projection,
+but they are not evidence that every room set, deeper floor, or full heap fact
+matches.

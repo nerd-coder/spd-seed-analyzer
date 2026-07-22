@@ -29,6 +29,87 @@ fn signatures(items: &[ComparableItem]) -> Vec<String> {
         .collect()
 }
 
+fn assert_aaa_regression_facts(
+    fixture: &OracleFixture,
+    floor: &OracleFloor,
+    projection: &[ComparableItem],
+    context: &impl std::fmt::Display,
+) {
+    if fixture.input.seed != "AAA-AAA-AAA" {
+        return;
+    }
+
+    assert_eq!(
+        (floor.width, floor.height),
+        (40, 30),
+        "pinned AAA Java map bounds in {context}"
+    );
+    assert_eq!(
+        floor.final_mobs,
+        [
+            OracleMob {
+                cell: 175,
+                class_name: "Rat".into()
+            },
+            OracleMob {
+                cell: 314,
+                class_name: "Piranha".into()
+            },
+            OracleMob {
+                cell: 404,
+                class_name: "Snake".into()
+            },
+            OracleMob {
+                cell: 432,
+                class_name: "Piranha".into()
+            },
+            OracleMob {
+                cell: 436,
+                class_name: "Piranha".into()
+            },
+            OracleMob {
+                cell: 497,
+                class_name: "Rat".into()
+            },
+            OracleMob {
+                cell: 524,
+                class_name: "Rat".into()
+            },
+            OracleMob {
+                cell: 738,
+                class_name: "Rat".into()
+            },
+            OracleMob {
+                cell: 752,
+                class_name: "Rat".into()
+            },
+            OracleMob {
+                cell: 778,
+                class_name: "Snake".into()
+            },
+            OracleMob {
+                cell: 902,
+                class_name: "Rat".into()
+            },
+        ],
+        "pinned AAA Java final mobs in {context}"
+    );
+    assert_eq!(
+        signatures(projection),
+        [
+            "Food",
+            "PotionOfHealing",
+            "PotionOfInvisibility",
+            "ScaleArmor",
+            "ScrollOfRage",
+            "ScrollOfRecharging",
+            "StoneOfAggression",
+            "StoneOfBlink",
+        ],
+        "pinned AAA Java report-visible projection in {context}"
+    );
+}
+
 #[test]
 fn depth_one_final_heaps_match_report_projection() {
     let mut compared = 0;
@@ -47,13 +128,17 @@ fn depth_one_final_heaps_match_report_projection() {
         assert_eq!(fixture.floors.len(), 1, "floor count in {context}");
         let expected_floor = &fixture.floors[0];
         assert_eq!(expected_floor.depth, 1, "floor depth in {context}");
-        assert_eq!(
-            expected_floor.width, 40,
-            "pinned Java map width in {context}"
+        assert!(
+            expected_floor.width > 0 && expected_floor.height > 0,
+            "pinned Java map has positive bounds in {context}"
         );
-        assert_eq!(
-            expected_floor.height, 30,
-            "pinned Java map height in {context}"
+        assert!(
+            !expected_floor.rooms.is_empty()
+                && expected_floor
+                    .rooms
+                    .windows(2)
+                    .all(|pair| pair[0] <= pair[1]),
+            "pinned Java rooms are non-empty and sorted in {context}"
         );
         assert_eq!(
             expected_floor.pre_paint_rng.len(),
@@ -77,56 +162,6 @@ fn depth_one_final_heaps_match_report_projection() {
         assert!(
             !expected_floor.final_heaps.is_empty(),
             "final heap snapshot must not be empty in {context}"
-        );
-        assert_eq!(
-            expected_floor.final_mobs,
-            [
-                OracleMob {
-                    cell: 175,
-                    class_name: "Rat".into()
-                },
-                OracleMob {
-                    cell: 314,
-                    class_name: "Piranha".into()
-                },
-                OracleMob {
-                    cell: 404,
-                    class_name: "Snake".into()
-                },
-                OracleMob {
-                    cell: 432,
-                    class_name: "Piranha".into()
-                },
-                OracleMob {
-                    cell: 436,
-                    class_name: "Piranha".into()
-                },
-                OracleMob {
-                    cell: 497,
-                    class_name: "Rat".into()
-                },
-                OracleMob {
-                    cell: 524,
-                    class_name: "Rat".into()
-                },
-                OracleMob {
-                    cell: 738,
-                    class_name: "Rat".into()
-                },
-                OracleMob {
-                    cell: 752,
-                    class_name: "Rat".into()
-                },
-                OracleMob {
-                    cell: 778,
-                    class_name: "Snake".into()
-                },
-                OracleMob {
-                    cell: 902,
-                    class_name: "Rat".into()
-                },
-            ],
-            "pinned Java final mobs in {context}"
         );
         assert!(
             expected_floor
@@ -178,6 +213,27 @@ fn depth_one_final_heaps_match_report_projection() {
 
         let report = analyze_seed(&fixture.input.seed, 1)
             .unwrap_or_else(|error| panic!("failed to analyze seed in {context}: {error}"));
+        let mut actual_rooms = report.floors[0].rooms.clone();
+        actual_rooms.sort();
+        assert_eq!(
+            actual_rooms, expected_floor.rooms,
+            "depth-one room classes in {context}"
+        );
+        let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
+        dungeon.depth = 1;
+        let level = create_level_partial(&mut dungeon);
+        assert_eq!(
+            level.pre_paint_rng_probe, expected_floor.pre_paint_rng,
+            "pre-painter RNG boundary in {context}"
+        );
+        assert_eq!(
+            level.pre_mobs_rng_probe, expected_floor.pre_mobs_rng,
+            "pre-createMobs RNG boundary in {context}"
+        );
+        assert_eq!(
+            level.pre_items_rng_probe, expected_floor.pre_items_rng,
+            "pre-createItems RNG boundary in {context}"
+        );
         let map = report.floors[0].map.as_ref().expect("depth-one map");
         assert_eq!(
             (map.width, map.height),
@@ -229,20 +285,7 @@ fn depth_one_final_heaps_match_report_projection() {
             .collect();
         actual_projection.sort();
 
-        assert_eq!(
-            signatures(&expected_projection),
-            [
-                "Food",
-                "PotionOfHealing",
-                "PotionOfInvisibility",
-                "ScaleArmor",
-                "ScrollOfRage",
-                "ScrollOfRecharging",
-                "StoneOfAggression",
-                "StoneOfBlink",
-            ],
-            "pinned Java report-visible projection in {context}"
-        );
+        assert_aaa_regression_facts(&fixture, expected_floor, &expected_projection, &context);
         assert_eq!(
             actual_projection, expected_projection,
             "report-visible item projection in {context}"
@@ -251,7 +294,7 @@ fn depth_one_final_heaps_match_report_projection() {
         compared += 1;
     }
     assert!(
-        compared > 0,
-        "no schema v3 final-heap fixtures were compared"
+        compared >= 4,
+        "expected at least four schema v3 final-heap fixtures, compared {compared}"
     );
 }

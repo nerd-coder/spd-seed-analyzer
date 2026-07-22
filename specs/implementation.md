@@ -49,18 +49,20 @@ decks/tiers, depth seeds / limited drops. Golden fixtures in
 `tools/java-oracle/fixtures/` + `crates/spd-core/tests/java_oracle_goldens.rs`
 confirm exact identity parity across four seeds.
 
-**Levelgen — broad partial port; one depth-one lifecycle fixture is exact.**
+**Levelgen — broad partial port; four depth-one lifecycle fixtures are exact.**
 Room init, geometry, both builders (Loop/FigureEight), all connection-room
 subclasses, water/grass/trap painter, `paintDoors` merge/Graph, every region's
 structural + standard room geometry, special/secret room prize logic, shop
 stock, all four quests, crystal rooms, the main `createItems` drop loop, and
-floor-map export are implemented. For `AAA-AAA-AAA` depth 1, Rust now reaches
-the exact Java RNG states before painter, `createMobs`, and `createItems`;
-matches the 40×30 map; matches all 11 final mob cells/types; and matches all
-final heap cells plus the report-visible item projection. This is deliberately
-still `partial`: deeper-floor mob generation and several room-specific
-predicates/paint paths remain incomplete, and the public report does not yet
-retain enough facts for full schema-v3 heap identity/type/quantity equality.
+floor-map export are implemented. For `AAA-AAA-AAA`, `ABC-DEF-GHI`,
+`GFX-PZH-DCH`, and `hello` at depth 1, Rust now reaches the exact Java RNG
+states before painter, `createMobs`, and `createItems`; matches map bounds,
+all final mob cells/types, all final heap cells, and the report-visible item
+projection. This is deliberately still `partial`: four room sets do not cover
+all depth-one combinations, deeper-floor mob generation and several
+room-specific predicates/paint paths remain incomplete, and the public report
+does not yet retain enough facts for full schema-v3 heap
+identity/type/quantity equality.
 
 **Frontend — functionally complete for a `partial` engine, not the current
 focus.** Analyze + Find-seeds modes, multi-seed session tabs, spoiler
@@ -83,13 +85,33 @@ the Rust side match it exactly.
 ## What's lacking for exact parity
 
 Verified against the pinned Java source
-(`/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`) and schema-v3
-fixture `aaa-aaa-aaa-final-heaps-floor-1.json`. Its report-visible projection
-`[Food, PotionOfHealing, PotionOfInvisibility, ScaleArmor, ScrollOfRage,
-ScrollOfRecharging, StoneOfAggression, StoneOfBlink]` now matches Rust exactly.
-The fixture also asserts exact 40×30 bounds, final heap cells, and final mob
-cells/types. Remaining gaps below are outside that single covered lifecycle or
-require richer report facts.
+(`/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`) and four schema-v3
+fixtures. The suite covers Pool/Runestone, MagicalFire, CrystalPath/MagicWell,
+Traps/Treasury, SewerPipe, RegionDecoPatch, Bridge/Ring/CircleBasin, tunnel,
+and WaterBridge variants. Every fixture asserts exact lifecycle RNG probes,
+map bounds, final heap cells, final mob cells/types, and report-visible item
+projection. Remaining gaps are outside these covered lifecycles or require
+richer report facts.
+
+### 0. ~~Broaden depth-one schema-v3 room coverage~~ — FIXED FOR FOUR FIXTURES
+Three representative fixtures were added beside the original AAA regression:
+`ABC-DEF-GHI`, `GFX-PZH-DCH`, and `hello`. Closing them required exact ports of
+the following pinned behavior:
+
+- MagicalFire's 7×7 minimum, temporary `EmptyRoom` constructor draw, fire and
+  behind-fire geometry, heap retries/cells, and forced-prize queue removal;
+- CrystalPath's six temporary-room constructor draws, zero-chance exotic draw,
+  center jitter, center-only connection policy, six-room layout, crystal
+  doors, paint masks, and exact heap cells; MagicWell's center/water draws and
+  non-heap well-water blob;
+- TrapsRoom's 6…8 dimensions, trap/chasm paint, opposite safe row, chest cell,
+  and immediate return when `findPrizeItem` succeeds;
+- Treasury's center jitter, item-before-position order, EMPTY/heap/mob retry
+  predicates, and six small-gold placements that may merge; plus the main
+  `createItems` locked-chest GoldenKey enqueue.
+
+Focused tests pin the affected RNG tails and on-map facts. This closes the
+current four-fixture slice only; it is not a full depth-one accuracy claim.
 
 ### 1. ~~Depth-one builder/painter boundary was 66 LCG steps behind~~ — FIXED
 The schema-v3 lifecycle probes recover the exact 48-bit Java LCG state before
@@ -245,8 +267,10 @@ already — this gap is specifically the room-shape predicate.
 - Sewer room-count tables are reused for all regions.
 - Shop stock is generated post-build instead of mid-`setSize`; bag choice is
   hero-less.
-- CrystalPath placement geometry is approximate (prize generation itself is
-  exact).
+- `random_deck_item` still has a known exhausted-probability private-generator
+  state/push-pop mismatch. None of the four fixtures exercises that rollover;
+  fix it with a dedicated Java draw-shape fixture rather than folding it into
+  an unrelated room patch.
 - Structural-room paint/transition retry loops are capped at 10,000 attempts
   for browser safety (valid layouts shouldn't hit this); `Maze.generate` kept
   its real 2,500-failure limit.
@@ -257,19 +281,25 @@ already — this gap is specifically the room-shape predicate.
 
 ## Suggested fix order
 
-1. Extend schema-v3 coverage to several more depth-one seeds/room sets. The
-   single exact AAA lifecycle is a strong regression fixture, not evidence
-   that every depth-one room combination is exact.
-2. Port deeper-floor `createMobs`: mob limits/rotations, second-room spawns,
+1. **Next phase — HKT visual-oracle parity.** Add a depth-one schema-v3 fixture
+   for `HKT-JZN-XQQ`, extend the oracle additively with full terrain/transition
+   facts needed for exact comparison, and make Rust layout, tiles, doors,
+   transitions, heaps, mobs, and other objects match. Only after the core map
+   is exact, compare the frontend's asset composition against
+   `specs/HKT-JZN-XQQ_F1.png` (user-owned reference; do not modify or commit it).
+2. Extend schema-v3 coverage to still more depth-one room sets. Four exact
+   lifecycles are strong regression fixtures, not evidence that every
+   depth-one combination is exact.
+3. Port deeper-floor `createMobs`: mob limits/rotations, second-room spawns,
    large-mob open-space checks, and quest/NPC occupancy.
-3. Close the remaining room-specific `canPlaceItem` predicates and known
+4. Close the remaining room-specific `canPlaceItem` predicates and known
    special-room paint gaps.
-4. Correct the remaining timing/geometry approximations (SecretLaboratory,
-   region room counts, shop `setSize`, CrystalPath) as new fixtures cover them.
-5. Extend the analyzer/report model with item-to-cell, quantity, level, and
+5. Correct the remaining timing/geometry approximations (SecretLaboratory,
+   region room counts, shop `setSize`) as new fixtures cover them.
+6. Extend the analyzer/report model with item-to-cell, quantity, level, and
    heap type so schema-v3 can assert full heap facts rather than the currently
    exact cell set plus report-visible item projection.
-6. Add multi-depth schema-v3 fixtures and promote each newly covered region
+7. Add multi-depth schema-v3 fixtures and promote each newly covered region
    only after its lifecycle boundary probes and final facts match.
 
 ---
@@ -344,8 +374,9 @@ cargo test -p spd-core
 
 `java_oracle_goldens.rs` (+ `java_oracle_goldens/final_heaps.rs`) is the
 parity harness: identity maps (schema v1), depth-one forced-item queue
-(schema v2), and exact AAA depth-one map bounds, heap cells, mob facts, and
-report-visible item projection (schema v3, see above). Add
+(schema v2), and four exact depth-one lifecycle fixtures covering map bounds,
+heap cells, mob facts, and report-visible item projection (schema v3, see
+above). Add
 tightly-scoped oracle fixtures before writing new Rust behavior — regenerate
 via `tools/java-oracle/run` (see `tools/java-oracle/README.md`).
 
@@ -362,14 +393,16 @@ license constraints.
 ## How to resume (clean context)
 
 1. Read this file, specifically **"What's lacking for exact parity"** above.
-2. The `AAA-AAA-AAA` depth-one lifecycle is exact at the pre-painter,
-   pre-mobs, and pre-items boundaries and for final map bounds, heap cells,
-   mob facts, and report-visible items. Keep that fixture green.
-3. Continue with broader depth-one schema-v3 coverage or the deeper-floor
-   `createMobs` port; do not claim full parity while either remains partial.
+2. The `AAA-AAA-AAA`, `ABC-DEF-GHI`, `GFX-PZH-DCH`, and `hello` depth-one
+   lifecycles are exact at the pre-painter, pre-mobs, and pre-items boundaries
+   and for final map bounds, heap cells, mob facts, and report-visible items.
+   Keep all four fixtures green.
+3. Continue with the `HKT-JZN-XQQ` visual-oracle phase in suggested fix order
+   item 1. Preserve `partial` status while broader depth-one and deeper-floor
+   parity remain incomplete.
 4. Validate against `crates/spd-core/tests/java_oracle_goldens/final_heaps.rs`
-   and the `aaa-aaa-aaa-final-heaps-floor-1.json` fixture; regenerate/extend
-   fixtures via `tools/java-oracle/run` (default source is the pinned clone at
+   and all `*-final-heaps-floor-1.json` fixtures; regenerate/extend fixtures
+   via `tools/java-oracle/run` (default source is the pinned clone at
    `/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`).
 5. After Rust changes: `bun run build:wasm` (or `bun run dev`) before treating
    the UI as verified.

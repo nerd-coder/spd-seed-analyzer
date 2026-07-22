@@ -249,16 +249,24 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                     if let Some(pos) = forced.iter().position(|f| {
                         f.class_name == p.item.class_name && f.source.as_deref() == Some("forced")
                     }) {
-                        // Only remove once per prize consumption of unique forced types.
-                        if matches!(
-                            p.item.class_name.as_str(),
-                            "TrinketCatalyst"
-                                | "PotionOfStrength"
-                                | "ScrollOfUpgrade"
-                                | "Stylus"
-                                | "StoneOfEnchantment"
-                                | "StoneOfIntuition"
-                        ) {
+                        // Room painters retain `:forced` when an arbitrary
+                        // findPrizeItem pull consumes a pre-build queue item.
+                        let consumed_forced = p
+                            .item
+                            .source
+                            .as_deref()
+                            .is_some_and(|source| source.ends_with(":forced"));
+                        if consumed_forced
+                            || matches!(
+                                p.item.class_name.as_str(),
+                                "TrinketCatalyst"
+                                    | "PotionOfStrength"
+                                    | "ScrollOfUpgrade"
+                                    | "Stylus"
+                                    | "StoneOfEnchantment"
+                                    | "StoneOfIntuition"
+                            )
+                        {
                             forced.remove(pos);
                         }
                     }

@@ -91,13 +91,18 @@ final class FloorOracle {
 			mobs.add(new MobFact(mob.pos, mob.getClass().getSimpleName()));
 		}
 		mobs.sort(Comparator.comparingInt(mob -> mob.cell));
+		List<String> rooms = new ArrayList<>();
+		for (Room room : level.rooms()) {
+			rooms.add(room.getClass().getSimpleName());
+		}
+		rooms.sort(String::compareTo);
 		int width = level.width();
 		int height = level.height();
 		List<Integer> prePaintRng = generatePrePaintRng(seed);
 		List<Integer> preMobsRng = generatePreMobsRng(seed);
 		List<Integer> preItemsRng = generatePreItemsRng(seed);
 		return new FinalFloorFacts(
-				1, width, height, heaps, mobs, prePaintRng, preMobsRng, preItemsRng);
+				1, width, height, rooms, heaps, mobs, prePaintRng, preMobsRng, preItemsRng);
 	}
 
 	private static List<Integer> generatePrePaintRng(long seed) {
@@ -217,6 +222,7 @@ final class FloorOracle {
 		final int depth;
 		final int width;
 		final int height;
+		final List<String> rooms;
 		final List<HeapFact> heaps;
 		final List<MobFact> mobs;
 		final List<Integer> prePaintRng;
@@ -227,6 +233,7 @@ final class FloorOracle {
 				int depth,
 				int width,
 				int height,
+				List<String> rooms,
 				List<HeapFact> heaps,
 				List<MobFact> mobs,
 				List<Integer> prePaintRng,
@@ -235,6 +242,7 @@ final class FloorOracle {
 			this.depth = depth;
 			this.width = width;
 			this.height = height;
+			this.rooms = rooms;
 			this.heaps = heaps;
 			this.mobs = mobs;
 			this.prePaintRng = prePaintRng;

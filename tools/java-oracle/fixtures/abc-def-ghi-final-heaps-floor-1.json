@@ -1,0 +1,195 @@
+{
+  "schema_version": 3,
+  "contract": "final_placed_heaps",
+  "spd": {
+    "version": "v3.3.8",
+    "commit": "7b8b845a7"
+  },
+  "input": {
+    "seed": "ABC-DEF-GHI",
+    "numeric": 8687205886,
+    "depths": [1]
+  },
+  "identities": {
+    "potions": [
+      { "item": "PotionOfStrength", "appearance": "silver" },
+      { "item": "PotionOfHealing", "appearance": "charcoal" },
+      { "item": "PotionOfMindVision", "appearance": "azure" },
+      { "item": "PotionOfFrost", "appearance": "crimson" },
+      { "item": "PotionOfLiquidFlame", "appearance": "turquoise" },
+      { "item": "PotionOfToxicGas", "appearance": "ivory" },
+      { "item": "PotionOfHaste", "appearance": "magenta" },
+      { "item": "PotionOfInvisibility", "appearance": "golden" },
+      { "item": "PotionOfLevitation", "appearance": "bistre" },
+      { "item": "PotionOfParalyticGas", "appearance": "jade" },
+      { "item": "PotionOfPurity", "appearance": "indigo" },
+      { "item": "PotionOfExperience", "appearance": "amber" }
+    ],
+    "scrolls": [
+      { "item": "ScrollOfUpgrade", "appearance": "TIWAZ" },
+      { "item": "ScrollOfIdentify", "appearance": "YNGVI" },
+      { "item": "ScrollOfRemoveCurse", "appearance": "MANNAZ" },
+      { "item": "ScrollOfMirrorImage", "appearance": "ODAL" },
+      { "item": "ScrollOfRecharging", "appearance": "BERKANAN" },
+      { "item": "ScrollOfTeleportation", "appearance": "ISAZ" },
+      { "item": "ScrollOfLullaby", "appearance": "RAIDO" },
+      { "item": "ScrollOfMagicMapping", "appearance": "KAUNAN" },
+      { "item": "ScrollOfRage", "appearance": "SOWILO" },
+      { "item": "ScrollOfRetribution", "appearance": "NAUDIZ" },
+      { "item": "ScrollOfTerror", "appearance": "LAGUZ" },
+      { "item": "ScrollOfTransmutation", "appearance": "GYFU" }
+    ],
+    "rings": [
+      { "item": "RingOfAccuracy", "appearance": "sapphire" },
+      { "item": "RingOfArcana", "appearance": "emerald" },
+      { "item": "RingOfElements", "appearance": "quartz" },
+      { "item": "RingOfEnergy", "appearance": "garnet" },
+      { "item": "RingOfEvasion", "appearance": "topaz" },
+      { "item": "RingOfForce", "appearance": "ruby" },
+      { "item": "RingOfFuror", "appearance": "opal" },
+      { "item": "RingOfHaste", "appearance": "onyx" },
+      { "item": "RingOfMight", "appearance": "amethyst" },
+      { "item": "RingOfSharpshooting", "appearance": "diamond" },
+      { "item": "RingOfTenacity", "appearance": "tourmaline" },
+      { "item": "RingOfWealth", "appearance": "agate" }
+    ]
+  },
+  "floors": [
+    {
+      "depth": 1,
+      "width": 38,
+      "height": 28,
+      "rooms": [
+        "MagicalFireRoom",
+        "RegionDecoPatchExitRoom",
+        "RegionDecoPatchRoom",
+        "RingTunnelRoom",
+        "SewerPipeRoom",
+        "SewerPipeRoom",
+        "TunnelRoom",
+        "TunnelRoom",
+        "TunnelRoom",
+        "TunnelRoom",
+        "WaterBridgeEntranceRoom",
+        "WaterBridgeRoom"
+      ],
+      "pre_paint_rng": [
+        1618059791, -1407909353, -1865147292, 2004368532, -1149186140,
+        -1564313682, 91185358, -108674707
+      ],
+      "pre_mobs_rng": [
+        759540966, 435848405, -69457815, 1433314258, -1203112538, 1395411519,
+        997814325, -1795002811
+      ],
+      "pre_items_rng": [
+        1866869856, -380919186, -2063934846, -1414948008, -656529311, 131914006,
+        1058259013, 143486769
+      ],
+      "final_heaps": [
+        {
+          "cell": 441,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "StoneOfIntuition",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 574,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "ScrollOfTerror",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 666,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "PotionOfPurity",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 794,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Gold", "quantity": 58, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 822,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "PotionOfFrost",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 887,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "PotionOfToxicGas",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 889,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Pasty", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 929,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "PotionOfInvisibility",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 964,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Honeypot", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        }
+      ],
+      "final_mobs": [
+        { "cell": 132, "class": "Rat" },
+        { "cell": 473, "class": "Snake" },
+        { "cell": 538, "class": "Rat" },
+        { "cell": 585, "class": "Rat" },
+        { "cell": 589, "class": "Rat" },
+        { "cell": 665, "class": "Rat" },
+        { "cell": 717, "class": "Snake" },
+        { "cell": 857, "class": "Rat" }
+      ]
+    }
+  ]
+}

@@ -32,6 +32,7 @@ pub fn create_items_main(
     items_to_spawn: Vec<GeneratedItem>,
 ) -> Vec<CreatedLoot> {
     let mut out = Vec::new();
+    let mut items_to_spawn = items_to_spawn;
     let mut occupied = map.heap_occupied.clone();
     for (occupied, &mob) in occupied.iter_mut().zip(&map.mob_occupied) {
         *occupied |= mob;
@@ -105,6 +106,9 @@ pub fn create_items_main(
                 heap_type = "golden_mimic";
             } else {
                 heap_type = "locked_chest";
+                // Java appends the matching key to itemsToSpawn immediately;
+                // it is placed after the remaining main-loop drops.
+                items_to_spawn.push(GeneratedItem::new("GoldenKey", ItemCategory::Other));
             }
         }
         out.push(CreatedLoot {

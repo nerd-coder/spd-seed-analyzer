@@ -27,6 +27,8 @@ pub fn dims_for_kind(kind: RoomKind, size_factor: i32, name: &str) -> (i32, i32,
         "SecretSummoningRoom" => return (5, 8, 5, 8),
         "PitRoom" => return (6, 9, 6, 9),
         "PoolRoom" | "RunestoneRoom" => return (6, 10, 6, 10),
+        "MagicalFireRoom" => return (7, 10, 7, 10),
+        "TrapsRoom" => return (6, 8, 6, 8),
         "RitualSiteRoom" => {
             let (mw, xw, mh, xh) = dims_for_size_factor(size_factor);
             return (mw.max(9), xw, mh.max(9), xh);
@@ -174,6 +176,8 @@ mod tests {
             (RoomKind::Standard, 1, "RitualRoom", (9, 10, 9, 10)),
             (RoomKind::Special, 1, "PoolRoom", (6, 10, 6, 10)),
             (RoomKind::Special, 1, "RunestoneRoom", (6, 10, 6, 10)),
+            (RoomKind::Special, 1, "MagicalFireRoom", (7, 10, 7, 10)),
+            (RoomKind::Special, 1, "TrapsRoom", (6, 8, 6, 8)),
             (
                 RoomKind::Entrance,
                 2,

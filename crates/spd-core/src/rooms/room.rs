@@ -259,7 +259,11 @@ impl Room {
     pub fn can_connect_point(&self, p: Point) -> bool {
         let on_one_edge =
             (p.x == self.left || p.x == self.right) != (p.y == self.top || p.y == self.bottom);
-        if self.name == "SewerPipeRoom" {
+        if self.name == "CrystalPathRoom" {
+            let mid_x = (self.left + self.right) as f32 / 2.0;
+            let mid_y = (self.top + self.bottom) as f32 / 2.0;
+            on_one_edge && ((p.x as f32 - mid_x).abs() < 1.0 || (p.y as f32 - mid_y).abs() < 1.0)
+        } else if self.name == "SewerPipeRoom" {
             on_one_edge
                 && ((p.x > self.left + 1 && p.x < self.right - 1)
                     || (p.y > self.top + 1 && p.y < self.bottom - 1))
@@ -413,6 +417,21 @@ mod tests {
         large.size_factor = 2;
         large.resize(16, 14);
         assert_eq!((large.width(), large.height()), (17, 15));
+    }
+
+    #[test]
+    fn crystal_path_accepts_only_centered_door_points() {
+        let mut room = Room::new(0, "CrystalPathRoom", RoomKind::Special, 1, 1, 7, 10, 7, 10);
+        room.left = 10;
+        room.top = 20;
+        room.right = 18;
+        room.bottom = 27;
+
+        assert!(room.can_connect_point(Point::new(10, 23)));
+        assert!(room.can_connect_point(Point::new(10, 24)));
+        assert!(!room.can_connect_point(Point::new(10, 22)));
+        assert!(room.can_connect_point(Point::new(14, 20)));
+        assert!(!room.can_connect_point(Point::new(13, 20)));
     }
 
     #[test]

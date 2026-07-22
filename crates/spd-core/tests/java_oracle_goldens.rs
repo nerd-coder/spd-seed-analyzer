@@ -3,7 +3,8 @@ use std::path::{Path, PathBuf};
 
 use serde::Deserialize;
 use spd_core::items::identities::IdentityEntry;
-use spd_core::{analyze_seed, init_run, parse_seed, SPD_COMMIT, SPD_VERSION};
+use spd_core::level::create_level_partial;
+use spd_core::{analyze_seed, dungeon_from_run, init_run, parse_seed, SPD_COMMIT, SPD_VERSION};
 
 const IDENTITY_SCHEMA_VERSION: u32 = 1;
 const FLOOR_SCHEMA_VERSION: u32 = 2;
@@ -64,6 +65,8 @@ struct OracleFloor {
     pre_mobs_rng: Vec<i32>,
     #[serde(default)]
     pre_items_rng: Vec<i32>,
+    #[serde(default)]
+    rooms: Vec<String>,
     #[serde(default)]
     forced_items: Vec<OracleItem>,
     #[serde(default)]

@@ -5,6 +5,7 @@
 //! Returns door map + paint order for subsequent `paintDoors`.
 
 mod crystal;
+mod crystal_path;
 mod gardens;
 mod geometry;
 mod pit_secrets;
@@ -98,14 +99,14 @@ pub fn special_room_loot(
         match room.kind {
             RoomKind::Special | RoomKind::Secret => {
                 geometry::paint(map, room, ri, &doors);
-                let mut loot = paint_special(dungeon, rooms, ri, map, items_to_spawn);
+                let mut loot = paint_special(dungeon, rooms, ri, map, &doors, items_to_spawn);
                 out.append(&mut loot);
             }
             RoomKind::Standard
                 if room.name == "RitualSiteRoom" || room.name == "BlacksmithRoom" =>
             {
                 geometry::paint(map, room, ri, &doors);
-                let mut loot = paint_special(dungeon, rooms, ri, map, items_to_spawn);
+                let mut loot = paint_special(dungeon, rooms, ri, map, &doors, items_to_spawn);
                 out.append(&mut loot);
             }
             RoomKind::Shop => {
@@ -127,6 +128,7 @@ fn paint_special(
     rooms: &[Room],
     ri: usize,
     map: &mut TerrainMap,
+    doors: &DoorMap,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
     let room = &rooms[ri];
@@ -135,7 +137,7 @@ fn paint_special(
         "CryptRoom" => vec![special_rooms::crypt_prize(dungeon, items_to_spawn)],
         "ArmoryRoom" => special_rooms::armory_prizes(dungeon, room, items_to_spawn),
         "LibraryRoom" => special_rooms::library_prizes(dungeon, room, items_to_spawn),
-        "TreasuryRoom" => special_rooms::treasury_prizes(dungeon, room, items_to_spawn),
+        "TreasuryRoom" => special_rooms::treasury_prizes_on_map(dungeon, room, map, items_to_spawn),
         "PoolRoom" => vec![special_rooms::pool_prize_on_map(
             dungeon,
             room,
@@ -157,7 +159,7 @@ fn paint_special(
         // Garden / well / pit / remaining secrets with portable prizes
         "GardenRoom" => gardens::garden_prizes(room, items_to_spawn),
         "SecretGardenRoom" => gardens::secret_garden_prizes(room),
-        "MagicWellRoom" => gardens::magic_well(items_to_spawn),
+        "MagicWellRoom" => gardens::magic_well(room, map, items_to_spawn),
         "SecretWellRoom" => gardens::secret_well(),
         "PitRoom" => pit_secrets::pit_prizes(dungeon, items_to_spawn),
         "SecretMazeRoom" => vec![pit_secrets::secret_maze_prize(dungeon)],
@@ -166,14 +168,23 @@ fn paint_special(
         // Layout-only (no portable prize items)
         "WeakFloorRoom" | "DemonSpawnerRoom" => Vec::new(),
         "SentryRoom" => vec![trap_rooms::sentry_prize(dungeon, items_to_spawn)],
-        "TrapsRoom" => vec![trap_rooms::traps_prize(dungeon, items_to_spawn)],
-        "MagicalFireRoom" => trap_rooms::magical_fire_prizes(dungeon, room, items_to_spawn),
+        "TrapsRoom" => vec![trap_rooms::traps_prize(
+            dungeon,
+            rooms,
+            ri,
+            map,
+            doors,
+            items_to_spawn,
+        )],
+        "MagicalFireRoom" => {
+            trap_rooms::magical_fire_prizes(dungeon, rooms, ri, map, doors, items_to_spawn)
+        }
         "SacrificeRoom" => vec![trap_rooms::sacrifice_prize(dungeon, rooms, ri)],
         "ToxicGasRoom" => trap_rooms::toxic_gas_prizes(dungeon, room, items_to_spawn),
         "SecretHoneypotRoom" => trap_rooms::secret_honeypot(room),
         "CrystalVaultRoom" => crystal::crystal_vault(dungeon, rooms, ri, items_to_spawn),
         "CrystalChoiceRoom" => crystal::crystal_choice(dungeon, room, items_to_spawn),
-        "CrystalPathRoom" => crystal::crystal_path(dungeon, items_to_spawn),
+        "CrystalPathRoom" => crystal_path::paint(dungeon, rooms, ri, map, doors, items_to_spawn),
         // Wandmaker quest rooms
         "MassGraveRoom" => quest_rooms::mass_grave_prizes(dungeon, room, items_to_spawn),
         "RitualSiteRoom" => quest_rooms::ritual_site_setup(items_to_spawn),

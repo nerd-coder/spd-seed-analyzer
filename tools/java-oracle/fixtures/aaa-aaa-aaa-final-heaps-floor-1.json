@@ -59,6 +59,20 @@
       "depth": 1,
       "width": 40,
       "height": 30,
+      "rooms": [
+        "PoolRoom",
+        "RegionDecoPatchEntranceRoom",
+        "RegionDecoPatchRoom",
+        "RunestoneRoom",
+        "SewerPipeRoom",
+        "SewerPipeRoom",
+        "SewerPipeRoom",
+        "TunnelRoom",
+        "TunnelRoom",
+        "TunnelRoom",
+        "TunnelRoom",
+        "WaterBridgeExitRoom"
+      ],
       "pre_paint_rng": [
         1993374861, -149591753, -1380055091, 368556635, 1163123780, 1118396506,
         798076888, -791762655

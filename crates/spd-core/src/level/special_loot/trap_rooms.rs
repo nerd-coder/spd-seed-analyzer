@@ -1,14 +1,20 @@
 //! Sentry, traps, fire, sacrifice, toxic gas, and honeypot room prizes.
 
+mod traps;
+
+pub(super) use traps::paint as traps_prize;
+
 use super::crystal::vault_entrance_cell;
 use super::placement::{burn_drop_pos, burn_drop_pos_margin, find_prize_item};
 use super::special_rooms::{bomb_random, is_curse_enchant, storage_prize};
 use crate::dungeon::DungeonState;
-use crate::geom::Point;
+use crate::geom::{Point, Rect};
 use crate::items::enchants;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::items::randomize::randomize_item;
 use crate::level::create_items::PlacedLoot;
+use crate::level::painter::DoorMap;
+use crate::level::terrain::{TerrainMap, EMPTY, EMPTY_SP, WALL};
 use crate::random::Random;
 use crate::rooms::room::Room;
 
@@ -50,70 +56,51 @@ fn sentry_equip(dungeon: &mut DungeonState) -> GeneratedItem {
     }
 }
 
-/// `TrapsRoom.paint` — trap class RNG then chest prize + PotionOfLevitation.
-pub(super) fn traps_prize(
-    dungeon: &mut DungeonState,
-    items_to_spawn: &mut Vec<GeneratedItem>,
-) -> PlacedLoot {
-    // Trap class selection (layout only; no trap instances in report).
-    // Int(4)==0 → chasm (null traps); else oneOf(levelTraps[depth/5]).
-    if Random::int_max(4) != 0 {
-        let region = (dungeon.depth / 5).clamp(0, 4) as usize;
-        let n = TRAPS_ROOM_TRAP_COUNTS[region];
-        let _ = Random::int_max(n);
-    }
-
-    // Pedestal vs free chest: Random.Int(3) == 0 skips pedestal (geometry only).
-    let _ = Random::int_max(3);
-
-    let mut prize = if Random::int_max(3) != 0 {
-        find_prize_item(items_to_spawn, None).unwrap_or_else(|| traps_equip(dungeon))
-    } else {
-        traps_equip(dungeon)
-    };
-    prize.cursed = false;
-    if is_curse_enchant(&prize) {
-        prize.enchantment = None;
-    }
-    if Random::int_max(3) == 0 {
-        prize.level += 1;
-    }
-    prize.source = Some("TrapsRoom".into());
-    items_to_spawn.push(GeneratedItem::new(
-        "PotionOfLevitation",
-        ItemCategory::Potion,
-    ));
-    PlacedLoot {
-        item: prize,
-        heap_type: "chest",
-    }
-}
-
-/// Counts for `TrapsRoom.levelTraps` oneOf per region (sewers…halls).
-const TRAPS_ROOM_TRAP_COUNTS: [i32; 5] = [3, 3, 3, 3, 1];
-
-fn traps_equip(dungeon: &mut DungeonState) -> GeneratedItem {
-    let floor = (dungeon.depth / 5) + 1;
-    if Random::int_max(2) == 0 {
-        dungeon.generator.random_weapon(floor, false, dungeon.depth)
-    } else {
-        dungeon.generator.random_armor(floor, dungeon.depth)
-    }
-}
-
 /// `MagicalFireRoom.paint` — 3–4 honeypot/consumable drops + PotionOfFrost.
 pub(super) fn magical_fire_prizes(
     dungeon: &mut DungeonState,
-    room: &Room,
+    rooms: &[Room],
+    ri: usize,
+    map: &mut TerrainMap,
+    doors: &DoorMap,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
-    // Fire wall geometry from entrance — no RNG. behindFire drops use random(0).
+    let room = &rooms[ri];
+    let center = room.as_rect().center_room();
+    let door = room
+        .connected
+        .first()
+        .and_then(|&other| doors.get(ri, other))
+        .map(|door| Point::new(door.x, door.y))
+        .expect("placed MagicalFireRoom has an entrance door");
+    let behind_fire = magical_fire_geometry(map, room, center, door);
+
+    // `new EmptyRoom()` constructs a StandardRoom solely to hold behindFire.
+    // Its instance initializer calls setSizeCat() and consumes this chance roll.
+    let _ = Random::chances(&[1.0, 0.0, 0.0]);
+
     let mut honey = Random::int_max(2) == 0;
     let n = Random::int_range_inclusive(3, 4);
     let mut out = Vec::new();
-    let mut occupied = Vec::new();
     for _ in 0..n {
-        burn_drop_pos_margin(room, 0, &mut occupied);
+        let mut placed = false;
+        for _ in 0..10_000 {
+            let point = Point::new(
+                Random::int_range_inclusive(behind_fire.left, behind_fire.right),
+                Random::int_range_inclusive(behind_fire.top, behind_fire.bottom),
+            );
+            let Some(cell) = map.point_to_cell(point.x, point.y) else {
+                continue;
+            };
+            if map.map[cell] == EMPTY_SP && !map.heap_occupied[cell] {
+                map.heap_occupied[cell] = true;
+                placed = true;
+                break;
+            }
+        }
+        if !placed {
+            continue;
+        }
         let mut item = if honey {
             honey = false;
             GeneratedItem::new("Honeypot", ItemCategory::Other)
@@ -121,7 +108,12 @@ pub(super) fn magical_fire_prizes(
             // Same prize table as StorageRoom / MagicalFireRoom.prize
             storage_prize(dungeon, items_to_spawn)
         };
-        item.source = Some("MagicalFireRoom".into());
+        let consumed_forced = item.source.as_deref() == Some("forced");
+        item.source = Some(if consumed_forced {
+            "MagicalFireRoom:forced".into()
+        } else {
+            "MagicalFireRoom".into()
+        });
         out.push(PlacedLoot {
             item,
             heap_type: "heap",
@@ -129,6 +121,89 @@ pub(super) fn magical_fire_prizes(
     }
     items_to_spawn.push(GeneratedItem::new("PotionOfFrost", ItemCategory::Potion));
     out
+}
+
+fn magical_fire_geometry(map: &mut TerrainMap, room: &Room, fire_pos: Point, door: Point) -> Rect {
+    let mut fire_cells = Vec::new();
+    for y in room.top..=room.bottom {
+        for x in room.left..=room.right {
+            if let Some(cell) = map.point_to_cell(x, y) {
+                let inside = x > room.left && x < room.right && y > room.top && y < room.bottom;
+                map.map[cell] = if inside { EMPTY } else { WALL };
+                map.grass_allowed[cell] = false;
+            }
+        }
+    }
+
+    let behind = if door.x == room.left || door.x == room.right {
+        for y in (room.top + 1)..room.bottom {
+            set_magical_tile(map, fire_pos.x, y, EMPTY_SP);
+            fire_cells.push(Point::new(fire_pos.x, y));
+        }
+        if door.x == room.left {
+            Rect {
+                left: fire_pos.x + 1,
+                top: room.top + 1,
+                right: room.right - 1,
+                bottom: room.bottom - 1,
+            }
+        } else {
+            Rect {
+                left: room.left + 1,
+                top: room.top + 1,
+                right: fire_pos.x - 1,
+                bottom: room.bottom - 1,
+            }
+        }
+    } else {
+        for x in (room.left + 1)..room.right {
+            set_magical_tile(map, x, fire_pos.y, EMPTY_SP);
+            fire_cells.push(Point::new(x, fire_pos.y));
+        }
+        if door.y == room.top {
+            Rect {
+                left: room.left + 1,
+                top: fire_pos.y + 1,
+                right: room.right - 1,
+                bottom: room.bottom - 1,
+            }
+        } else {
+            Rect {
+                left: room.left + 1,
+                top: room.top + 1,
+                right: room.right - 1,
+                bottom: fire_pos.y - 1,
+            }
+        }
+    };
+
+    for y in behind.top..=behind.bottom {
+        for x in behind.left..=behind.right {
+            set_magical_tile(map, x, y, EMPTY_SP);
+        }
+    }
+    for y in room.top..=room.bottom {
+        for x in room.left..=room.right {
+            let special = map
+                .point_to_cell(x, y)
+                .is_some_and(|cell| map.map[cell] == EMPTY_SP);
+            let next_to_fire = fire_cells
+                .iter()
+                .any(|fire| (fire.x - x).abs() + (fire.y - y).abs() == 1);
+            if special || next_to_fire {
+                if let Some(cell) = map.point_to_cell(x, y) {
+                    map.character_allowed[cell] = false;
+                }
+            }
+        }
+    }
+    behind
+}
+
+fn set_magical_tile(map: &mut TerrainMap, x: i32, y: i32, terrain: i32) {
+    if let Some(cell) = map.point_to_cell(x, y) {
+        map.map[cell] = terrain;
+    }
 }
 
 /// `SacrificeRoom.paint` — cursed upgraded weapon on sacrificial fire.

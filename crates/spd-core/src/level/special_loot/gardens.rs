@@ -3,6 +3,7 @@
 use super::placement::burn_drop_pos;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::level::create_items::PlacedLoot;
+use crate::level::terrain::{TerrainMap, EMPTY, WALL, WELL};
 use crate::random::Random;
 use crate::rooms::room::Room;
 
@@ -72,9 +73,28 @@ fn plant_loot(class_name: &str, source: &str) -> PlacedLoot {
 }
 
 /// `MagicWellRoom.paint` — locked IronKey + Awareness/Health well type.
-pub(super) fn magic_well(items_to_spawn: &mut Vec<GeneratedItem>) -> Vec<PlacedLoot> {
+pub(super) fn magic_well(
+    room: &Room,
+    map: &mut TerrainMap,
+    items_to_spawn: &mut Vec<GeneratedItem>,
+) -> Vec<PlacedLoot> {
+    for y in room.top..=room.bottom {
+        for x in room.left..=room.right {
+            if let Some(cell) = map.point_to_cell(x, y) {
+                let inside = x > room.left && x < room.right && y > room.top && y < room.bottom;
+                map.map[cell] = if inside { EMPTY } else { WALL };
+            }
+        }
+    }
+    let center = room.as_rect().center_room();
+    if let Some(cell) = map.point_to_cell(center.x, center.y) {
+        map.map[cell] = WELL;
+        map.character_allowed[cell] = false;
+    }
+    // Well water is a blob, not a heap item, but its class selection is seeded.
+    let _water = Random::one_of(&["WaterOfAwareness", "WaterOfHealth"]);
     items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
-    secret_well_type("MagicWellRoom")
+    Vec::new()
 }
 
 /// `SecretWellRoom.paint` — Awareness/Health well (no key).
