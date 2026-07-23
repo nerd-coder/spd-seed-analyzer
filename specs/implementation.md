@@ -440,6 +440,25 @@ places the exact five main drops (`ScrollOfRage`, `ScrollOfRecharging`,
 matching heap types. The subsequent `itemsToSpawn` retry stream and final heap
 cells also match.
 
+### 2b. ~~Category deck rollover private-generator shape~~ — ORACLE EXACT
+Pinned `Generator.random(Category)` pushes the category's private generator
+once, replays one `Random.Long()` per prior drop, and keeps that same frame
+pushed when exhausted probabilities trigger `reset(cat)` and a second
+`Random.chances`. Rust now follows that exact one-push/one-pop control flow.
+
+A dedicated pinned-Java `generator_deck_rollover` fixture exhausts the
+five-card Food deck on draw five and records draws six through eight after the
+reset. The focused Rust test matches every Java item class, dropped count,
+remaining deck weight, two reconstructed private-stream integers, and two
+active base-stream integers after every draw. It also asserts exactly one
+private-frame push/pop per category draw, including the rollover.
+
+This closes a source-shape discrepancy, not a demonstrated historical output
+divergence: an exhausted `Random.chances` and `Generator.reset` consume no RNG,
+so the removed pop/re-push happened to reconstruct the same observable state
+at this pin. Global status remains `partial`; the fixture proves this category
+rollover boundary only.
+
 ### 3. ~~Eight special/secret rooms drop their trailing forced-item push~~ — FIXED
 All 9 missing `addItemToSpawn` pushes are now ported. Push positions were
 verified per-room against Java (they are **not** all at the end of `paint()`):
@@ -508,11 +527,6 @@ the global `partial` status or close remaining special-room paint gaps.
   matching oracle: depth 1 and the HKT floor-6/floor-7/floor-8 replays.
 - Shop stock is builder-timed and fresh-Warrior bag scoring is exact for floor
   6. Later shops still need inventory-sensitive bag modeling.
-- `random_deck_item` still has a known exhausted-probability private-generator
-  state/push-pop mismatch. None of the ten schema-v3 fixtures exercises that
-  rollover;
-  fix it with a dedicated Java draw-shape fixture rather than folding it into
-  an unrelated room patch.
 - Structural-room paint/transition retry loops are capped at 10,000 attempts
   for browser safety (valid layouts shouldn't hit this); `Maze.generate` kept
   its real 2,500-failure limit.
@@ -566,11 +580,15 @@ the global `partial` status or close remaining special-room paint gaps.
     fixture.**~~ Added the full-additive `AAA-AAA-AFO` oracle and matched
     CryptRoom geometry, center-jitter timing, all directional statue/tomb
     layouts, exact tomb cell/item facts, and the complete downstream lifecycle.
-12. Correct remaining timing/geometry approximations such as
+12. ~~**Close category-deck rollover generator shape.**~~ Added a dedicated
+    pinned-Java Food-deck fixture spanning exhaustion and reset, matched exact
+    item/private/base RNG observations, and retained one pushed category frame
+    across both `Random.chances` calls.
+13. Correct remaining timing/geometry approximations such as
     inventory-sensitive later shops as new fixtures cover them.
-13. Extend exact paint-time heap capture to the remaining room families; keep
+14. Extend exact paint-time heap capture to the remaining room families; keep
     the legacy marker fallback until each family has a pinned cell association.
-14. Add multi-depth schema-v3 fixtures and promote each newly covered region
+15. Add multi-depth schema-v3 fixtures and promote each newly covered region
     only after its lifecycle boundary probes and final facts match.
 
 ---
@@ -660,6 +678,11 @@ projections. Add tightly-scoped oracle fixtures before writing new Rust
 behavior — regenerate via `tools/java-oracle/run` (see
 `tools/java-oracle/README.md`).
 
+The separate Food deck-rollover fixture under
+`tools/java-oracle/fixtures/generator/` pins item sequence and private/base RNG
+state across its first reset; its consumer is the focused `spd-core` unit test,
+not the floor-schema integration harness.
+
 The map-render registry test keeps the source gameplay PNGs and typed cases in
 lockstep. The Playwright suite builds the app and checks the deterministic
 browser canvases; use `bun run install:visual-browser` once locally and
@@ -700,11 +723,12 @@ license constraints.
    its focused child modules, and all committed schema-v3 fixtures;
    regenerate/extend fixtures via `tools/java-oracle/run --source
    /Users/toan/code/00-Evan/shattered-pixel-dungeon ...`.
-7. Keep the source-exact regular-floor item/character placement predicates and
-   CryptRoom paint green. Next, correct known timing/geometry approximations
-   with pinned lifecycle or draw-shape fixtures; source-ported deeper mob
-   populations are not a substitute for goldens. VaultLevel-only predicates
-   remain part of a future branch port.
+7. Keep the source-exact regular-floor item/character placement predicates,
+   CryptRoom paint, and Food deck-rollover oracle green. Next, correct known
+   timing/geometry approximations, beginning with inventory-sensitive later
+   shops as a fixture exposes them; source-ported deeper mob populations are
+   not a substitute for goldens. VaultLevel-only predicates remain part of a
+   future branch port.
 8. After Rust changes: `bun run build:wasm` (or `bun run dev`) before treating
    the UI as verified.
 9. Dev dump: `cargo run -p spd-core --example dump_seed -- SEED FLOORS`

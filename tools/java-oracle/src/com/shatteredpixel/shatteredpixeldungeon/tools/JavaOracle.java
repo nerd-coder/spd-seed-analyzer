@@ -28,18 +28,25 @@ public final class JavaOracle {
 
 	public static void main(String[] args) {
 		if (args.length < 1 || args.length > 3) {
-			System.err.println("Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH]");
+			System.err.println(
+					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH | generator-deck-rollover]");
 			System.exit(2);
 		}
 
 		String inputSeed = args[0];
 		long numericSeed = DungeonSeed.convertFromText(inputSeed);
 		boolean finalHeaps = args.length == 3 && "final-heaps".equals(args[1]);
+		boolean generatorDeckRollover =
+				args.length == 2 && "generator-deck-rollover".equals(args[1]);
 		if (args.length == 3 && !finalHeaps) {
 			System.err.println("Unknown floor oracle contract: " + args[1]);
 			System.exit(2);
 		}
-		Integer depth = args.length == 1
+		if (args.length == 2 && !generatorDeckRollover && !args[1].matches("\\d+")) {
+			System.err.println("Unknown oracle contract: " + args[1]);
+			System.exit(2);
+		}
+		Integer depth = args.length == 1 || generatorDeckRollover
 				? null
 				: Integer.valueOf(args[finalHeaps ? 2 : 1]);
 		if (depth != null
@@ -50,6 +57,10 @@ public final class JavaOracle {
 		}
 
 		try {
+			if (generatorDeckRollover) {
+				System.out.print(GeneratorDeckOracle.generateJson(inputSeed, numericSeed));
+				return;
+			}
 			FloorOracle.FloorFacts floor = null;
 			FloorOracle.FinalFloorFacts finalFloor = null;
 			if (depth == null) {
@@ -423,7 +434,7 @@ public final class JavaOracle {
 		json.append(trailingComma ? ",\n" : "\n");
 	}
 
-	private static String escape(String value) {
+	static String escape(String value) {
 		StringBuilder escaped = new StringBuilder();
 		for (int index = 0; index < value.length(); index++) {
 			char character = value.charAt(index);

@@ -10,17 +10,20 @@ source_dir="${SPD_SOURCE:-$DEFAULT_SOURCE}"
 output_path=""
 depth=""
 final_heaps_depth=""
+generator_deck_rollover=""
 
 usage() {
 	cat >&2 <<'EOF'
 Usage: tools/java-oracle/run [--source PATH] [--output FILE]
-                             [--depth 1 | --final-heaps-depth 1|6|7|8] SEED
+                             [--depth 1 | --final-heaps-depth 1|6|7|8 |
+                              --generator-deck-rollover] SEED
 
 Dumps SPD v3.3.8 run facts as stable JSON. With --depth 1, includes the pinned
 depth-one pre-build item slice. With --final-heaps-depth 1, 6, 7, or 8, records
 heaps after the real level generation lifecycle completes. Floors 6-8 are
 generated after all prior floors to retain run-persistent state. The source checkout
-must be pinned at 7b8b845a7.
+must be pinned at 7b8b845a7. With --generator-deck-rollover, records the exact
+Food deck draw sequence and private/base RNG probes through its first reset.
 EOF
 }
 
@@ -45,6 +48,10 @@ while (($# > 0)); do
 			[[ $# -ge 2 ]] || { usage; exit 2; }
 			final_heaps_depth="$2"
 			shift 2
+			;;
+		--generator-deck-rollover)
+			generator_deck_rollover="1"
+			shift
 			;;
 		-h|--help)
 			usage
@@ -73,6 +80,14 @@ if [[ -n "$final_heaps_depth" && "$final_heaps_depth" != "1" && "$final_heaps_de
 fi
 if [[ -n "$depth" && -n "$final_heaps_depth" ]]; then
 	echo "--depth and --final-heaps-depth are separate contracts and cannot be combined" >&2
+	exit 2
+fi
+selected_contracts=0
+[[ -n "$depth" ]] && ((selected_contracts += 1))
+[[ -n "$final_heaps_depth" ]] && ((selected_contracts += 1))
+[[ -n "$generator_deck_rollover" ]] && ((selected_contracts += 1))
+if ((selected_contracts > 1)); then
+	echo "Choose only one oracle contract" >&2
 	exit 2
 fi
 
@@ -121,6 +136,9 @@ if [[ -n "$depth" ]]; then
 fi
 if [[ -n "$final_heaps_depth" ]]; then
 	gradle_args+=(-PoracleFinalHeapsDepth="$final_heaps_depth")
+fi
+if [[ -n "$generator_deck_rollover" ]]; then
+	gradle_args+=(-PoracleGeneratorDeckRollover=true)
 fi
 gradle_args+=(:core:javaOracleDump)
 

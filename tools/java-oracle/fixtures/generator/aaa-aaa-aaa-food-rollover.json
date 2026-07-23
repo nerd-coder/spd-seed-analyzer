@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "contract": "generator_deck_rollover",
+  "spd": { "version": "v3.3.8", "commit": "7b8b845a7" },
+  "input": {
+    "seed": "AAA-AAA-AAA",
+    "numeric": 0,
+    "base_stream_seed": 24301
+  },
+  "category": "FOOD",
+  "initial_weight": 5,
+  "draws": [
+    {
+      "draw": 1,
+      "class": "Food",
+      "dropped": 1,
+      "remaining_weight": 4,
+      "private_rng": [-225816998, -1444170957],
+      "base_rng": [-1423682303, 1372989720]
+    },
+    {
+      "draw": 2,
+      "class": "Pasty",
+      "dropped": 2,
+      "remaining_weight": 3,
+      "private_rng": [-1460871083, 1544111644],
+      "base_rng": [1862995375, 1285629005]
+    },
+    {
+      "draw": 3,
+      "class": "Food",
+      "dropped": 3,
+      "remaining_weight": 2,
+      "private_rng": [-1074940323, -470872751],
+      "base_rng": [-1825887873, -185948464]
+    },
+    {
+      "draw": 4,
+      "class": "Food",
+      "dropped": 4,
+      "remaining_weight": 1,
+      "private_rng": [-251690688, 1913446537],
+      "base_rng": [-1785867875, 308594116]
+    },
+    {
+      "draw": 5,
+      "class": "Food",
+      "dropped": 5,
+      "remaining_weight": 0,
+      "private_rng": [996404981, 763809896],
+      "base_rng": [-617939668, -816892379]
+    },
+    {
+      "draw": 6,
+      "class": "Food",
+      "dropped": 6,
+      "remaining_weight": 4,
+      "private_rng": [-1372472316, 1233853562],
+      "base_rng": [1947624529, -1966196134]
+    },
+    {
+      "draw": 7,
+      "class": "Food",
+      "dropped": 7,
+      "remaining_weight": 3,
+      "private_rng": [-1188318100, 1567335105],
+      "base_rng": [510226473, 1495648358]
+    },
+    {
+      "draw": 8,
+      "class": "Pasty",
+      "dropped": 8,
+      "remaining_weight": 2,
+      "private_rng": [1216685078, -1845199786],
+      "base_rng": [-1259187300, 1604717176]
+    }
+  ]
+}

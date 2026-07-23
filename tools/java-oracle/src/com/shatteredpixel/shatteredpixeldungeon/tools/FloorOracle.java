@@ -183,7 +183,7 @@ final class FloorOracle {
 		Dungeon.generatedLevels.add(depth);
 	}
 
-	private static void initializeFreshRun(long seed) {
+	static void initializeFreshRun(long seed) {
 		GameSettings.set(new MemoryPreferences());
 		Game.version = "3.3.8";
 		// Early guide placement intentionally uses an unseeded generator. Keep

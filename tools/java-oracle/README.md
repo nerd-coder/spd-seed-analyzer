@@ -8,9 +8,10 @@ Schema v3 is a separately scoped level contract that snapshots final heaps and
 mobs after the real `Level.create()` lifecycle completes. Sewer depth 1 and
 Prison depths 6, 7, and 8 are supported. Depth 1 is generated directly; deeper
 targets are generated after completing every prior floor so run-persistent state is
-preserved. Additive visual fields capture final terrain, discoverability, tile
-variance, transitions, traps, plants, and active blobs. It does **not** claim
-full seed-finder parity.
+preserved. A separate generator-deck contract records exact category draws and
+RNG probes across a deck reset without running a floor. Additive visual fields
+capture final terrain, discoverability, tile variance, transitions, traps,
+plants, and active blobs. It does **not** claim full seed-finder parity.
 
 ## Requirements
 
@@ -35,6 +36,7 @@ From the analyzer repository root:
 ./tools/java-oracle/run --final-heaps-depth 6 HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 7 HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 8 HKT-JZN-XQQ
+./tools/java-oracle/run --generator-deck-rollover AAA-AAA-AAA
 ```
 
 If an older Java is the machine default, select a JDK 17 installation for the
@@ -82,6 +84,9 @@ these commands (stdout is the default when `--output` is omitted):
   --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-7.json HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 8 \
   --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-8.json HKT-JZN-XQQ
+./tools/java-oracle/run --generator-deck-rollover \
+  --output tools/java-oracle/fixtures/generator/aaa-aaa-aaa-food-rollover.json \
+  AAA-AAA-AAA
 ```
 
 `--final-heaps-depth` always emits the additive render fields. The AAA-AAA-AAA,
@@ -107,7 +112,23 @@ fresh-run replays:
 cargo test -p spd-core --test java_oracle_goldens
 ```
 
+The generator rollover fixture is intentionally stored in its own fixture
+subdirectory because it is not a floor schema. Its focused Rust unit test runs
+with the core library tests.
+
 ## JSON contracts
+
+### Generator deck rollover
+
+`--generator-deck-rollover` initializes the actual pinned run state, then draws
+eight items from `Generator.Category.FOOD`. That five-card deck is exhausted on
+draw five and reset for draw six. Every draw records the selected Java class,
+`Category.dropped`, remaining weight, two integers from the next reconstructed
+private category state, and two consumed integers from the restored active
+base stream. The paired Rust test therefore pins both the item sequence and RNG
+state on both sides of the reset. The private probe follows SPD's own deck
+replay rule: push `Category.seed`, consume `Random.Long()` once per prior drop,
+then read the probe.
 
 ### Schema version 1: identities
 

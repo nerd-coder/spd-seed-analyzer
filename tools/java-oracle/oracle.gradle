@@ -12,6 +12,8 @@ gradle.beforeProject { project ->
         def seed = gradle.startParameter.projectProperties['oracleSeed']
         def depth = gradle.startParameter.projectProperties['oracleDepth']
         def finalHeapsDepth = gradle.startParameter.projectProperties['oracleFinalHeapsDepth']
+        def generatorDeckRollover =
+                gradle.startParameter.projectProperties['oracleGeneratorDeckRollover']
         if (sourceDir == null || seed == null) {
             throw new GradleException('javaOracleDump requires oracleSourceDir and oracleSeed')
         }
@@ -44,6 +46,9 @@ gradle.beforeProject { project ->
             }
             if (finalHeapsDepth != null) {
                 args('final-heaps', finalHeapsDepth)
+            }
+            if (generatorDeckRollover != null) {
+                args('generator-deck-rollover')
             }
         }
     }

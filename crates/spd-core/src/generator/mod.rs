@@ -6,6 +6,10 @@ mod state;
 #[cfg(test)]
 mod tests;
 
+#[cfg(test)]
+#[path = "tests/rollover.rs"]
+mod rollover_tests;
+
 pub use categories::{FLOOR_SET_TIER_PROBS, MIS_TIERS, WEP_TIERS};
 pub use state::{full_reset, GeneratorState};
 

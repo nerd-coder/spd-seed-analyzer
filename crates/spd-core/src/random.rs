@@ -11,6 +11,9 @@ thread_local! {
         d.push_back(JavaRandom::new_unseeded());
         d
     });
+
+    #[cfg(test)]
+    static STACK_MUTATIONS: RefCell<(usize, usize)> = const { RefCell::new((0, 0)) };
 }
 
 /// Static RNG façade matching watabou `Random`.
@@ -31,6 +34,8 @@ impl Random {
         GENERATORS.with(|g| {
             g.borrow_mut().push_front(JavaRandom::new_unseeded());
         });
+        #[cfg(test)]
+        STACK_MUTATIONS.with(|mutations| mutations.borrow_mut().0 += 1);
     }
 
     /// Push a generator seeded with `scramble_seed(seed)`.
@@ -39,6 +44,8 @@ impl Random {
         GENERATORS.with(|g| {
             g.borrow_mut().push_front(JavaRandom::new(scrambled));
         });
+        #[cfg(test)]
+        STACK_MUTATIONS.with(|mutations| mutations.borrow_mut().0 += 1);
     }
 
     /// MX3 scramble (Jon Maiga), matching SPD `Random.scrambleSeed`.
@@ -63,6 +70,8 @@ impl Random {
                 return;
             }
             g.pop_front();
+            #[cfg(test)]
+            STACK_MUTATIONS.with(|mutations| mutations.borrow_mut().1 += 1);
         });
     }
 
@@ -234,6 +243,12 @@ impl Random {
     #[cfg(test)]
     pub fn stack_len() -> usize {
         GENERATORS.with(|g| g.borrow().len())
+    }
+
+    /// Total successful pushes and pops on this thread (for draw-shape tests).
+    #[cfg(test)]
+    pub fn stack_mutations() -> (usize, usize) {
+        STACK_MUTATIONS.with(|mutations| *mutations.borrow())
     }
 }
 

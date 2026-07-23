@@ -215,16 +215,9 @@ impl GeneratorState {
 
         let mut i = Random::chances(&self.cats[idx].probs);
         if i < 0 {
-            if seed.is_some() {
-                Random::pop_generator();
-            }
+            // Java keeps this category generator pushed while it resets the
+            // exhausted probabilities and makes the second selection.
             self.reset_cat(cat);
-            if let Some(s) = seed {
-                Random::push_generator_seeded(s);
-                for _ in 0..self.cats[idx].dropped {
-                    Random::long();
-                }
-            }
             i = Random::chances(&self.cats[idx].probs);
         }
 
@@ -335,6 +328,16 @@ impl GeneratorState {
 
     pub fn using_first_deck(&self) -> bool {
         self.using_first_deck
+    }
+
+    #[cfg(test)]
+    pub(super) fn deck_state(&self, cat: Category) -> (i64, i32, f32) {
+        let runtime = &self.cats[cat.index()];
+        (
+            runtime.seed.expect("deck category seed"),
+            runtime.dropped,
+            runtime.probs.iter().map(|prob| prob.max(0.0)).sum(),
+        )
     }
 
     /// `Generator.undoDrop(Class)` — put a drawn class back into its category deck.
