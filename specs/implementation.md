@@ -199,6 +199,9 @@ RegionDecoLine exit, SecretMaze, two Segmented rooms, and Shop); 48×48 bounds;
 all lifecycle RNG probes; every render array; and all heap, mob, transition,
 trap, plant, and blob facts. Shop stock remains lazily generated at Java's
 builder-sizing boundary and selects the fresh-Warrior MagicalHolster.
+Later-shop bag selection now scores the direct main backpack like Java: with
+generated heaps left uncollected, the same fresh inventory uniquely selects
+PotionBandolier at floor 11 and leaves ScrollHolder for floor 16.
 
 Closing the lifecycle required Java-float builder angles, Java room-list order
 before FigureEight branches, `EntranceRoom`/`ExitRoom` connection weighting,
@@ -521,12 +524,38 @@ room overrides belong to the separate `VaultLevel` branch, not
 guessed into regular-floor generation. This phase therefore does not promote
 the global `partial` status or close remaining special-room paint gaps.
 
+### 4a. ~~Inventory-sensitive later-shop bag selection~~ — UNIQUE WINNERS EXACT
+Pinned `ShopRoom.ChooseBag` scores every still-available bag from the items in
+`Dungeon.hero.belongings.backpack.items`, adds VelvetPouch's built-in score of
+one, and replaces its current choice only for a strictly greater score. Rust
+now carries the fresh Warrior's direct main-backpack affinities and uses that
+same scoring path instead of a fixed limited-drop order.
+
+The existing floor-6 HKT lifecycle continues to pin MagicalHolster as Java's
+observed winner of the fresh Warrior's ThrowingStone/Waterskin tie. After that
+limited drop is consumed, Waterskin makes PotionBandolier the unique floor-11
+winner; after both bags are consumed, ScrollHolder is the remaining floor-16
+choice. A standalone pinned-Java fixture calls the real protected
+`ShopRoom.ChooseBag` for the untouched later-shop backpack and a synthetic
+scroll-heavy backpack, proving PotionBandolier and ScrollHolder as their
+respective unique winners.
+
+This does not claim full floor-11 lifecycle parity. The sequential oracle does
+not auto-collect generated heaps, arbitrary gameplay inventory is not an input
+to the analyzer, and identified TimekeepersHourglass sandbags remain outside
+this phase. Equal-score choices also stay explicitly non-portable because the
+pinned Java method iterates identity-hashed `HashMap` keys; Rust retains the
+already-oracled floor-6 MagicalHolster result as its stable tie fallback.
+Global status therefore remains `partial`.
+
 ### Lower-leverage, already-known (from prior disclaimer, still open)
 - Full ambient `createMobs` now feeds map markers on every regular floor, but
   exact final cells are only promoted where the preceding lifecycle has a
   matching oracle: depth 1 and the HKT floor-6/floor-7/floor-8 replays.
-- Shop stock is builder-timed and fresh-Warrior bag scoring is exact for floor
-  6. Later shops still need inventory-sensitive bag modeling.
+- Shop stock is builder-timed, and bag scoring is exact for the committed
+  floor-6 winner plus the unique-score floor-11/floor-16 fresh-inventory
+  progression. Player-collected inventory and TimekeepersHourglass sandbags
+  still require an explicit analysis input before they can be exact.
 - Structural-room paint/transition retry loops are capped at 10,000 attempts
   for browser safety (valid layouts shouldn't hit this); `Maze.generate` kept
   its real 2,500-failure limit.
@@ -584,8 +613,12 @@ the global `partial` status or close remaining special-room paint gaps.
     pinned-Java Food-deck fixture spanning exhaustion and reset, matched exact
     item/private/base RNG observations, and retained one pushed category frame
     across both `Random.chances` calls.
-13. Correct remaining timing/geometry approximations such as
-    inventory-sensitive later shops as new fixtures cover them.
+13. ~~**Correct inventory-sensitive later-shop bag selection.**~~ Added a
+    standalone pinned-Java `ChooseBag` fixture with unique-score fresh and
+    scroll-heavy floor-11 profiles, ported direct-backpack scoring, and fixed
+    the uncollected fresh-run progression to MagicalHolster, PotionBandolier,
+    then ScrollHolder. Equal-score player inventories and hourglass sandbags
+    remain outside this phase.
 14. Extend exact paint-time heap capture to the remaining room families; keep
     the legacy marker fallback until each family has a pinned cell association.
 15. Add multi-depth schema-v3 fixtures and promote each newly covered region
@@ -724,11 +757,11 @@ license constraints.
    regenerate/extend fixtures via `tools/java-oracle/run --source
    /Users/toan/code/00-Evan/shattered-pixel-dungeon ...`.
 7. Keep the source-exact regular-floor item/character placement predicates,
-   CryptRoom paint, and Food deck-rollover oracle green. Next, correct known
-   timing/geometry approximations, beginning with inventory-sensitive later
-   shops as a fixture exposes them; source-ported deeper mob populations are
-   not a substitute for goldens. VaultLevel-only predicates remain part of a
-   future branch port.
+   CryptRoom paint, Food deck-rollover oracle, and unique-winner shop-bag
+   oracle green. Next, extend exact paint-time heap capture to another room
+   family with a pinned lifecycle fixture; source-ported deeper mob
+   populations are not a substitute for goldens. VaultLevel-only predicates
+   remain part of a future branch port.
 8. After Rust changes: `bun run build:wasm` (or `bun run dev`) before treating
    the UI as verified.
 9. Dev dump: `cargo run -p spd-core --example dump_seed -- SEED FLOORS`

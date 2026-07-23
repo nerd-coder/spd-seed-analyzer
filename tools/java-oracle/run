@@ -11,12 +11,13 @@ output_path=""
 depth=""
 final_heaps_depth=""
 generator_deck_rollover=""
+shop_bag_selection=""
 
 usage() {
 	cat >&2 <<'EOF'
 Usage: tools/java-oracle/run [--source PATH] [--output FILE]
                              [--depth 1 | --final-heaps-depth 1|6|7|8 |
-                              --generator-deck-rollover] SEED
+                             --generator-deck-rollover | --shop-bag-selection] SEED
 
 Dumps SPD v3.3.8 run facts as stable JSON. With --depth 1, includes the pinned
 depth-one pre-build item slice. With --final-heaps-depth 1, 6, 7, or 8, records
@@ -24,6 +25,8 @@ heaps after the real level generation lifecycle completes. Floors 6-8 are
 generated after all prior floors to retain run-persistent state. The source checkout
 must be pinned at 7b8b845a7. With --generator-deck-rollover, records the exact
 Food deck draw sequence and private/base RNG probes through its first reset.
+With --shop-bag-selection, calls the pinned ShopRoom.ChooseBag against two
+unique-winner floor-11 backpack profiles without generating a floor.
 EOF
 }
 
@@ -51,6 +54,10 @@ while (($# > 0)); do
 			;;
 		--generator-deck-rollover)
 			generator_deck_rollover="1"
+			shift
+			;;
+		--shop-bag-selection)
+			shop_bag_selection="1"
 			shift
 			;;
 		-h|--help)
@@ -86,6 +93,7 @@ selected_contracts=0
 [[ -n "$depth" ]] && ((selected_contracts += 1))
 [[ -n "$final_heaps_depth" ]] && ((selected_contracts += 1))
 [[ -n "$generator_deck_rollover" ]] && ((selected_contracts += 1))
+[[ -n "$shop_bag_selection" ]] && ((selected_contracts += 1))
 if ((selected_contracts > 1)); then
 	echo "Choose only one oracle contract" >&2
 	exit 2
@@ -139,6 +147,9 @@ if [[ -n "$final_heaps_depth" ]]; then
 fi
 if [[ -n "$generator_deck_rollover" ]]; then
 	gradle_args+=(-PoracleGeneratorDeckRollover=true)
+fi
+if [[ -n "$shop_bag_selection" ]]; then
+	gradle_args+=(-PoracleShopBagSelection=true)
 fi
 gradle_args+=(:core:javaOracleDump)
 

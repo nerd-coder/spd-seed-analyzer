@@ -2,10 +2,10 @@
 //!
 //! Stock is generated lazily when builder placement first asks for the room's
 //! minimum size, matching pinned `ShopRoom.spacesNeeded`. The committed
-//! fresh-Warrior oracle carries its starting ThrowingStone, so MagicalHolster
-//! wins the bag content score.
+//! fresh-Warrior floor-6 oracle carries both ThrowingStone and Waterskin; its
+//! observed equal-score HashMap winner is MagicalHolster.
 
-use crate::dungeon::DungeonState;
+use crate::dungeon::{BagAffinity, DungeonState, HeroInventory, LimitedDrops};
 use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::random::Random;
@@ -165,27 +165,89 @@ fn with_shop_source(mut item: GeneratedItem) -> GeneratedItem {
     item
 }
 
-/// Fresh-Warrior bag pick from `ShopRoom.chooseBag`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum BagKind {
+    VelvetPouch,
+    ScrollHolder,
+    PotionBandolier,
+    MagicalHolster,
+}
+
+impl BagKind {
+    fn class_name(self) -> &'static str {
+        match self {
+            Self::VelvetPouch => "VelvetPouch",
+            Self::ScrollHolder => "ScrollHolder",
+            Self::PotionBandolier => "PotionBandolier",
+            Self::MagicalHolster => "MagicalHolster",
+        }
+    }
+
+    fn affinity(self) -> BagAffinity {
+        match self {
+            Self::VelvetPouch => BagAffinity::VelvetPouch,
+            Self::ScrollHolder => BagAffinity::ScrollHolder,
+            Self::PotionBandolier => BagAffinity::PotionBandolier,
+            Self::MagicalHolster => BagAffinity::MagicalHolster,
+        }
+    }
+}
+
+/// Pinned `ShopRoom.ChooseBag` scoring over direct backpack items.
 fn choose_bag(dungeon: &mut DungeonState) -> Option<GeneratedItem> {
-    // HeroClass.WARRIOR starts with a ThrowingStone. Of the eligible bags, the
-    // MagicalHolster is the only bag with a positive content score.
-    if !dungeon.limited.magical_holster {
-        dungeon.limited.magical_holster = true;
-        return Some(GeneratedItem::new("MagicalHolster", ItemCategory::Other));
+    let bag = choose_bag_kind(&mut dungeon.limited, &dungeon.hero_inventory)?;
+    Some(GeneratedItem::new(bag.class_name(), ItemCategory::Other))
+}
+
+fn choose_bag_kind(limited: &mut LimitedDrops, inventory: &HeroInventory) -> Option<BagKind> {
+    // Java stores candidates in a HashMap and only replaces the best bag on a
+    // strictly greater score. Identity-hash iteration makes equal-score ties
+    // non-portable, so keep the observed fresh-Warrior floor-6 winner as the
+    // stable fallback. Unique winners still match source exactly.
+    let candidates = [
+        BagKind::MagicalHolster,
+        BagKind::ScrollHolder,
+        BagKind::PotionBandolier,
+        BagKind::VelvetPouch,
+    ];
+    let mut best: Option<(BagKind, usize)> = None;
+    for bag in candidates {
+        if bag_was_dropped(limited, bag) {
+            continue;
+        }
+        let base_score = usize::from(bag == BagKind::VelvetPouch);
+        let score = base_score
+            + inventory
+                .main_backpack
+                .iter()
+                .filter(|affinity| **affinity == bag.affinity())
+                .count();
+        if best.is_none_or(|(_, best_score)| score > best_score) {
+            best = Some((bag, score));
+        }
     }
-    if !dungeon.limited.scroll_holder {
-        dungeon.limited.scroll_holder = true;
-        return Some(GeneratedItem::new("ScrollHolder", ItemCategory::Other));
+
+    let (bag, _) = best?;
+    mark_bag_dropped(limited, bag);
+    Some(bag)
+}
+
+fn bag_was_dropped(limited: &LimitedDrops, bag: BagKind) -> bool {
+    match bag {
+        BagKind::VelvetPouch => limited.velvet_pouch,
+        BagKind::ScrollHolder => limited.scroll_holder,
+        BagKind::PotionBandolier => limited.potion_bandolier,
+        BagKind::MagicalHolster => limited.magical_holster,
     }
-    if !dungeon.limited.potion_bandolier {
-        dungeon.limited.potion_bandolier = true;
-        return Some(GeneratedItem::new("PotionBandolier", ItemCategory::Other));
+}
+
+fn mark_bag_dropped(limited: &mut LimitedDrops, bag: BagKind) {
+    match bag {
+        BagKind::VelvetPouch => limited.velvet_pouch = true,
+        BagKind::ScrollHolder => limited.scroll_holder = true,
+        BagKind::PotionBandolier => limited.potion_bandolier = true,
+        BagKind::MagicalHolster => limited.magical_holster = true,
     }
-    if !dungeon.limited.velvet_pouch {
-        dungeon.limited.velvet_pouch = true;
-        return Some(GeneratedItem::new("VelvetPouch", ItemCategory::Other));
-    }
-    None
 }
 
 fn random_tipped_dart(dungeon: &mut DungeonState, quantity: i32) -> GeneratedItem {
@@ -227,3 +289,7 @@ fn tipped_dart_for_seed(seed: &str) -> &'static str {
         _ => "HealingDart",
     }
 }
+
+#[cfg(test)]
+#[path = "shop/tests.rs"]
+mod tests;

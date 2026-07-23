@@ -9,7 +9,9 @@ mobs after the real `Level.create()` lifecycle completes. Sewer depth 1 and
 Prison depths 6, 7, and 8 are supported. Depth 1 is generated directly; deeper
 targets are generated after completing every prior floor so run-persistent state is
 preserved. A separate generator-deck contract records exact category draws and
-RNG probes across a deck reset without running a floor. Additive visual fields
+RNG probes across a deck reset without running a floor. A separate shop-bag
+contract calls the real `ShopRoom.ChooseBag` with portable, unique-winner
+floor-11 inventory profiles. Additive visual fields
 capture final terrain, discoverability, tile variance, transitions, traps,
 plants, and active blobs. It does **not** claim full seed-finder parity.
 
@@ -37,6 +39,7 @@ From the analyzer repository root:
 ./tools/java-oracle/run --final-heaps-depth 7 HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 8 HKT-JZN-XQQ
 ./tools/java-oracle/run --generator-deck-rollover AAA-AAA-AAA
+./tools/java-oracle/run --shop-bag-selection AAA-AAA-AAA
 ```
 
 If an older Java is the machine default, select a JDK 17 installation for the
@@ -87,6 +90,9 @@ these commands (stdout is the default when `--output` is omitted):
 ./tools/java-oracle/run --generator-deck-rollover \
   --output tools/java-oracle/fixtures/generator/aaa-aaa-aaa-food-rollover.json \
   AAA-AAA-AAA
+./tools/java-oracle/run --shop-bag-selection \
+  --output tools/java-oracle/fixtures/shop/aaa-aaa-aaa-shop-bags.json \
+  AAA-AAA-AAA
 ```
 
 `--final-heaps-depth` always emits the additive render fields. The AAA-AAA-AAA,
@@ -116,6 +122,16 @@ The generator rollover fixture is intentionally stored in its own fixture
 subdirectory because it is not a floor schema. Its focused Rust unit test runs
 with the core library tests.
 
+The shop-bag fixture is likewise standalone. It does not generate or claim
+parity for a depth-11 level. The normal fresh-hero replay creates prior floors
+but never auto-collects their heaps into the hero's backpack, so its direct
+backpack still contains Food, VelvetPouch, Waterskin, and ThrowingStone. The
+fixture marks the floor-6 MagicalHolster as dropped, then records the pinned
+choice for that state and for a synthetic scroll-heavy state. Both profiles
+have a unique maximum bag score. Equal scores are deliberately excluded:
+Java's `HashMap<Bag, Integer>` iterates identity-hashed bag instances, making
+its tie choice unsuitable as a portable deterministic oracle contract.
+
 ## JSON contracts
 
 ### Generator deck rollover
@@ -129,6 +145,18 @@ base stream. The paired Rust test therefore pins both the item sequence and RNG
 state on both sides of the reset. The private probe follows SPD's own deck
 replay rule: push `Category.seed`, consume `Random.Long()` once per prior drop,
 then read the probe.
+
+### Shop bag selection
+
+`--shop-bag-selection` initializes the actual pinned Warrior inventory, marks
+the first shop's MagicalHolster limited drop as consumed, and invokes the real
+protected `ShopRoom.ChooseBag` through a test subclass. It records the direct
+main-backpack classes, `Bag.canHold` scores, and selected class for two
+unique-winner floor-11 profiles. The fresh profile proves that Waterskin makes
+PotionBandolier the later-shop winner; the scroll-heavy profile proves that
+content scoring can instead select ScrollHolder. Generated floor items are not
+collected, and TimekeepersHourglass sandbag state remains outside this narrow
+contract.
 
 ### Schema version 1: identities
 

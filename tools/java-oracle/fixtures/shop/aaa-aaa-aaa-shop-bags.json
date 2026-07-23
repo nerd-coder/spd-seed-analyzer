@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "contract": "shop_bag_selection",
+  "spd": { "version": "v3.3.8", "commit": "7b8b845a7" },
+  "input": { "seed": "AAA-AAA-AAA", "numeric": 0 },
+  "scenarios": [
+    {
+      "name": "fresh_backpack_after_holster",
+      "depth": 11,
+      "main_backpack": ["Food", "ThrowingStone", "VelvetPouch", "Waterskin"],
+      "scores": [
+        { "bag": "PotionBandolier", "score": 1 },
+        { "bag": "ScrollHolder", "score": 0 }
+      ],
+      "selected": "PotionBandolier"
+    },
+    {
+      "name": "scroll_heavy_after_holster",
+      "depth": 11,
+      "main_backpack": [
+        "Food",
+        "ScrollOfMagicMapping",
+        "ScrollOfRemoveCurse",
+        "ThrowingStone",
+        "VelvetPouch",
+        "Waterskin"
+      ],
+      "scores": [
+        { "bag": "PotionBandolier", "score": 1 },
+        { "bag": "ScrollHolder", "score": 2 }
+      ],
+      "selected": "ScrollHolder"
+    }
+  ]
+}

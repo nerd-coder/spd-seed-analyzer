@@ -29,7 +29,7 @@ public final class JavaOracle {
 	public static void main(String[] args) {
 		if (args.length < 1 || args.length > 3) {
 			System.err.println(
-					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH | generator-deck-rollover]");
+					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH | generator-deck-rollover | shop-bag-selection]");
 			System.exit(2);
 		}
 
@@ -38,15 +38,20 @@ public final class JavaOracle {
 		boolean finalHeaps = args.length == 3 && "final-heaps".equals(args[1]);
 		boolean generatorDeckRollover =
 				args.length == 2 && "generator-deck-rollover".equals(args[1]);
+		boolean shopBagSelection =
+				args.length == 2 && "shop-bag-selection".equals(args[1]);
 		if (args.length == 3 && !finalHeaps) {
 			System.err.println("Unknown floor oracle contract: " + args[1]);
 			System.exit(2);
 		}
-		if (args.length == 2 && !generatorDeckRollover && !args[1].matches("\\d+")) {
+		if (args.length == 2
+				&& !generatorDeckRollover
+				&& !shopBagSelection
+				&& !args[1].matches("\\d+")) {
 			System.err.println("Unknown oracle contract: " + args[1]);
 			System.exit(2);
 		}
-		Integer depth = args.length == 1 || generatorDeckRollover
+		Integer depth = args.length == 1 || generatorDeckRollover || shopBagSelection
 				? null
 				: Integer.valueOf(args[finalHeaps ? 2 : 1]);
 		if (depth != null
@@ -59,6 +64,10 @@ public final class JavaOracle {
 		try {
 			if (generatorDeckRollover) {
 				System.out.print(GeneratorDeckOracle.generateJson(inputSeed, numericSeed));
+				return;
+			}
+			if (shopBagSelection) {
+				System.out.print(ShopBagOracle.generateJson(inputSeed, numericSeed));
 				return;
 			}
 			FloorOracle.FloorFacts floor = null;

@@ -14,6 +14,8 @@ gradle.beforeProject { project ->
         def finalHeapsDepth = gradle.startParameter.projectProperties['oracleFinalHeapsDepth']
         def generatorDeckRollover =
                 gradle.startParameter.projectProperties['oracleGeneratorDeckRollover']
+        def shopBagSelection =
+                gradle.startParameter.projectProperties['oracleShopBagSelection']
         if (sourceDir == null || seed == null) {
             throw new GradleException('javaOracleDump requires oracleSourceDir and oracleSeed')
         }
@@ -49,6 +51,9 @@ gradle.beforeProject { project ->
             }
             if (generatorDeckRollover != null) {
                 args('generator-deck-rollover')
+            }
+            if (shopBagSelection != null) {
+                args('shop-bag-selection')
             }
         }
     }

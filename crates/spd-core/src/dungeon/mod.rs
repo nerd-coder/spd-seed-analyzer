@@ -1,7 +1,9 @@
 //! Dungeon run context (depth, seed, limited drops).
 
+mod hero_inventory;
 mod limited_drops;
 
+pub use hero_inventory::{BagAffinity, HeroInventory};
 pub use limited_drops::LimitedDrops;
 
 use crate::generator::GeneratorState;
@@ -21,6 +23,8 @@ pub struct DungeonState {
     pub rooms: RoomRunState,
     pub generator: GeneratorState,
     pub limited: LimitedDrops,
+    /// Direct main-backpack contents used by `ShopRoom.ChooseBag`.
+    pub hero_inventory: HeroInventory,
     /// Items forced onto the next level (`Level.itemsToSpawn`).
     pub items_to_spawn: Vec<GeneratedItem>,
     pub ghost: GhostQuestState,

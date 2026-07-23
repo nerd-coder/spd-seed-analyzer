@@ -1,6 +1,6 @@
 //! Run initialization sequence from `Dungeon.init()`.
 
-use crate::dungeon::{DungeonState, LimitedDrops};
+use crate::dungeon::{DungeonState, HeroInventory, LimitedDrops};
 use crate::generator::{self, GeneratorState};
 use crate::items::{init_identities, IdentityMaps};
 use crate::random::Random;
@@ -52,6 +52,7 @@ pub fn dungeon_from_run(run: RunState) -> DungeonState {
         rooms: run.rooms,
         generator: run.generator,
         limited: LimitedDrops::reset(),
+        hero_inventory: HeroInventory::fresh_warrior(),
         items_to_spawn: Vec::new(),
         ghost: crate::quests::GhostQuestState::default(),
         wandmaker: crate::quests::WandmakerQuestState::default(),
