@@ -53,6 +53,8 @@ pub struct GhostSpawnResult {
     pub weapon: GeneratedItem,
     pub armor: GeneratedItem,
     pub summary: String,
+    /// Cell occupied before `RegularLevel.createMobs` places ambient enemies.
+    pub cell: usize,
 }
 
 /// `Ghost.Quest.spawn(level, roomExit)` — sewer depths only (1–4).
@@ -81,7 +83,7 @@ pub fn try_spawn_ghost(
 
     // Placement loop (consumes RNG; openSpace is approximate).
     let exit_cell = exit_center_cell(exit_room, map);
-    let mut placed = false;
+    let mut placed_cell = None;
     for _ in 0..2000 {
         let p = exit_room.random();
         let Some(cell) = map.point_to_cell(p.x, p.y) else {
@@ -93,20 +95,16 @@ pub fn try_spawn_ghost(
         if map.is_solid(cell) {
             continue;
         }
-        if !map.character_allowed.get(cell).copied().unwrap_or(false) {
-            continue;
-        }
         if !map.is_open_space(cell) {
             continue;
         }
-        placed = true;
+        placed_cell = Some(cell);
         break;
     }
-    if !placed {
-        // Extremely rare with valid exit rooms; still spawn rewards so analysis
-        // reports the quest (placement desync already possible from painter).
-        let _ = exit_room.random();
-    }
+    // Java retries without a cap. Valid exit rooms always have a candidate;
+    // returning no quest is safer than inventing an unoccupied NPC if a
+    // malformed partial map exhausts this browser-safety limit.
+    let cell = placed_cell?;
 
     dungeon.ghost.spawned = true;
     let quest_type = GhostType::from_depth(dungeon.depth);
@@ -127,6 +125,7 @@ pub fn try_spawn_ghost(
         weapon,
         armor,
         summary,
+        cell,
     })
 }
 

@@ -303,14 +303,15 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
 
             // The probe records the createMobs entry boundary. Quest hooks then
             // run before the regular population, matching SewerLevel/PrisonLevel
-            // overrides. Depth-one ambient placement is now call-for-call ported;
-            // supported deeper rotations remain a partial port until their
-            // preceding lifecycle is exact.
+            // overrides. The population pass is source-ported for every regular
+            // depth, though final parity still depends on the preceding lifecycle.
             if matches!(dungeon.depth, 1..=4 | 6..=8) {
                 pre_mobs_rng_probe = Random::peek_ints(8);
             }
             if let Some(exit) = floor.rooms.iter().find(|r| r.is_exit() && !r.is_empty()) {
                 if let Some(ghost) = quests::try_spawn_ghost(dungeon, exit, &map) {
+                    map.mob_occupied[ghost.cell] = true;
+                    map.known_mobs[ghost.cell] = Some("Ghost");
                     quests.push(ghost.summary.clone());
                     placed_items.push(ghost.weapon);
                     placed_items.push(ghost.armor);
@@ -322,13 +323,15 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 .find(|r| r.is_entrance() && !r.is_empty())
             {
                 if let Some(wm) = quests::try_spawn_wandmaker(dungeon, entrance, &map) {
+                    map.mob_occupied[wm.cell] = true;
+                    map.known_mobs[wm.cell] = Some("Wandmaker");
                     quests.push(wm.summary.clone());
                     placed_items.push(wm.wand1);
                     placed_items.push(wm.wand2);
                 }
             }
 
-            let _ambient_mobs_consumed = if matches!(dungeon.depth, 1..=4 | 6..=8) {
+            let _ambient_mobs_consumed = if dungeon.regular_level() {
                 create_mobs::create_regular(
                     dungeon.depth,
                     feeling == Feeling::Large,

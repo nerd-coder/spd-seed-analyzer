@@ -64,8 +64,9 @@ forced-queue consumption. The HKT visual fixture additionally proves exact
 final terrain,
 discoverability, tile variance, transitions, traps (including sprite metadata),
 structured heaps, and structured mobs. This is deliberately still `partial`:
-six room sets do not cover all depth-one combinations, deeper-floor mob
-generation and several room-specific predicates/paint paths remain incomplete.
+six room sets do not cover all depth-one combinations, and deeper-floor
+lifecycle coverage plus several room-specific predicates/paint paths remain
+incomplete.
 Structured heap facts
 are exact only for the covered room families whose paint-time cell association
 has been ported; uncovered families retain the legacy `Room loot` marker.
@@ -79,10 +80,11 @@ other deeper-floor histories and room combinations are not yet covered.
 
 Floor 7 now has a full pinned Java observation after replaying floors 1–6.
 For `HKT-JZN-XQQ`, Rust matches the exact 16-room class set, the complete
-pre-paint and `createMobs`-entry RNG probes, and the persistent Wandmaker
-rewards: `WandOfPrismaticLight +1` and `WandOfCorrosion +1`. Its remaining
-painter, heap, mob, and `createItems` facts are not yet asserted as exact, so
-this is a deliberately narrow replay slice and global status stays `partial`.
+pre-paint, `createMobs`-entry, and pre-`createItems` RNG probes; all eight final
+mob cells/classes including the Wandmaker; and the persistent rewards
+`WandOfPrismaticLight +1` and `WandOfCorrosion +1`. Its remaining painter,
+heap, and `createItems` facts are not yet asserted as exact, so this is still a
+deliberately narrow replay slice and global status stays `partial`.
 
 Floor 8 now has an exact pinned lifecycle after replaying floors 1–7. For
 `HKT-JZN-XQQ`, Rust matches the `none` feeling, exact 15-room class set, 30×42
@@ -188,20 +190,21 @@ hero, post-exploration FOV, and animated-water phase remain outside
 deterministic `Level.create()` comparison. Global status stays `partial`; this
 result proves only the committed HKT fresh-run floor-6 history.
 
-### 0d. ~~Fix HKT floor-seven Wandmaker replay~~ — TARGET SLICE EXACT
+### 0d. ~~Fix HKT floor-seven Wandmaker replay~~ — CREATE-MOBS SLICE EXACT
 For `HKT-JZN-XQQ` floor 7, schema v3 replays Java floors 1–6 before creating
 the target `PrisonLevel`. The committed oracle records the full 41×35 Java
 observation: 16 room classes, all lifecycle probes and render arrays, 15
 heaps, 8 mobs, and persistent Wandmaker reward state.
 
-Rust now matches the sorted room classes, complete pre-paint probe, complete
-`createMobs`-entry probe, and both rewards exactly:
+Rust now matches the sorted room classes, complete pre-paint and
+`createMobs`-entry probes, complete pre-`createItems` probe, all eight final mob
+cells/classes including the Wandmaker, and both rewards exactly:
 `WandOfPrismaticLight +1` and `WandOfCorrosion +1`. Closing this slice required
 the inherited `StandardRoom.setSizeCat()` draws for `RitualSiteRoom` and the
 temporary `EmptyRoom` in `CellBlockRoom`, RitualSite's jittered center and 3×3
 `CUSTOM_DECO_EMPTY` area, the pinned Wandmaker placement predicates, and
 recording the pre-mobs probe before quest hooks. Remaining floor-7 painter,
-heap, mob, and pre-items parity is not claimed; global status stays `partial`.
+heap, and `createItems` parity is not claimed; global status stays `partial`.
 
 ### 0e. ~~Close HKT floor-eight lifecycle parity~~ — FIXTURE EXACT
 For `HKT-JZN-XQQ` floor 8, schema v3 replays Java floors 1–7 before creating
@@ -325,17 +328,26 @@ and EMPTY/no-existing-heap retry predicate, and by preventing
 actual `rooms` list during painting; Rust now passes that paint order into both
 population phases instead of returning to builder order.
 
-### 1a. Depth-one `createMobs` is exact for the fixture; deeper floors remain (Large)
-`level/create_mobs.rs` now ports the fixed eight-mob depth-one pass: weighted
-and shuffled `StandardRoom` instances, rat/snake rotations and rare-alt rolls,
-the unconditional champion roll, exact 30-retry semantics, recursive
-`ShadowCaster`, bounded eight-neighbour entrance distance, room character
-masks, traps/plants, existing mob occupancy, exits, and high-grass cleanup.
-Pool/Aquarium piranhas are retained as real occupied cells and map markers.
-The boundary and schema-v3 tests now assert exact draw shape and all 11 final
-mob cells/types. Floors 2–24 still need `mobLimit`, region rotations (including
-Shaman/Elemental subtype rolls and rare alts), large-mob properties, second
-mob room rolls, quest/NPC occupancy, and exact markers.
+### 1a. ~~Port deeper-floor `createMobs`~~ — SOURCE-PORTED THROUGH FLOOR 24
+`level/create_mobs.rs` now follows the pinned `RegularLevel.createMobs` pass on
+every regular floor through depth 24: exact `mobLimit` and LARGE-feeling
+rounding, weighted and shuffled `StandardRoom` instances, 30-retry placement,
+failed-mob retention, the same-room second-spawn roll, recursive
+`ShadowCaster`, bounded entrance distance, room character masks,
+traps/plants/exits, large-mob `openSpace`, and high/furrowed-grass cleanup.
+
+`level/create_mobs/rotation.rs` ports every regional `MobSpawner` table,
+Shaman and Elemental subtype draws, rare additions and alternatives, list
+shuffle order, constructor-side draws, and the unconditional champion roll.
+Painter-created actors and quest NPCs now occupy their source-derived cells
+before the ambient pass: Aquarium piranhas, shopkeepers, MassGrave skeletons,
+RotGarden lashers, demon spawners, Ghost, Wandmaker, Blacksmith, and Imp.
+Focused tests pin the regional tables, LARGE classes, `openSpace` corner
+order, mob-limit rounding, and Blacksmith corridor/NPC behavior. The existing
+oracles prove the complete pass for depth 1 and HKT floors 6, 7, and 8. Floors
+without lifecycle goldens remain only source-ported because upstream
+builder/painter state can still diverge. Global status therefore remains
+`partial`.
 
 ### 2. ~~`random_drop_cell` shuffles the wrong-sized list (Medium)~~ — FIXED
 Java's `randomRoom(type)` (`RegularLevel.java:707-710`) shuffles the level's
@@ -448,9 +460,9 @@ logic in the main loop was verified call-for-call correct against Java
 already — this gap is specifically the room-shape predicate.
 
 ### Lower-leverage, already-known (from prior disclaimer, still open)
-- Full ambient `createMobs` also feeds map markers — depth one and the HKT
-  floor-6/floor-8 replays are exact, while floors 2–4 and floor 7 retain
-  partial source-aligned rotations/placement. Floors 9–24 remain absent.
+- Full ambient `createMobs` now feeds map markers on every regular floor, but
+  exact final cells are only promoted where the preceding lifecycle has a
+  matching oracle: depth 1 and the HKT floor-6/floor-7/floor-8 replays.
 - Shop stock is builder-timed and fresh-Warrior bag scoring is exact for floor
   6. Later shops still need inventory-sensitive bag modeling.
 - `random_deck_item` still has a known exhausted-probability private-generator
@@ -494,8 +506,10 @@ already — this gap is specifically the room-shape predicate.
    exact `AAA-AAA-AAD` lifecycle for Garden, Sacrifice, Striped, and RingRoom
    center-loot behavior. Six exact lifecycles are strong regression fixtures,
    not evidence that every depth-one combination is exact.
-8. Port deeper-floor `createMobs`: mob limits/rotations, second-room spawns,
-   large-mob open-space checks, and quest/NPC occupancy.
+8. ~~**Port deeper-floor `createMobs`.**~~ Added pinned mob limits and regional
+   rotations through floor 24, second-room spawns, constructor/subtype/rare-alt
+   draw order, LARGE open-space checks, and painter/quest NPC occupancy. HKT
+   floor 7 now also matches its pre-items probe and all eight final mobs.
 9. Close the remaining room-specific `canPlaceItem` predicates and known
    special-room paint gaps.
 10. Correct remaining timing/geometry approximations such as
@@ -526,7 +540,7 @@ Random.pushGenerator(seedForDepth(seed, depth, 0))
   initRooms() + shuffle
   retry builder.build until success
   RegularPainter.paint()  // shuffles the actual rooms list in place
-  createMobs()      // depth 1 + HKT floors 6/8 exact; other deeper floors partial
+  createMobs()      // source-ported through 24; fixtures exact at 1 and HKT 6/7/8
   createItems main loop
 Random.popGenerator
 depth++
@@ -588,7 +602,7 @@ parity harness: identity maps (schema v1), depth-one forced-item queue
 heap cells, mob facts, and report-visible item projection, plus full Java
 floor-six, floor-seven, and floor-eight observations (schema v3, see above).
 HKT floors 1, 6, and 8 prove their complete render-fact projections; floor 7
-asserts its exact room/pre-paint/pre-mobs/Wandmaker slice. Add
+asserts its exact room/pre-paint/pre-mobs/pre-items/final-mobs/Wandmaker slice. Add
 tightly-scoped oracle fixtures before writing new Rust behavior — regenerate
 via `tools/java-oracle/run` (see `tools/java-oracle/README.md`).
 
@@ -627,11 +641,13 @@ license constraints.
    its focused child modules, and all committed schema-v3 fixtures;
    regenerate/extend fixtures via `tools/java-oracle/run --source
    /Users/toan/code/00-Evan/shattered-pixel-dungeon ...`.
-6. Keep the exact floor-7 room/pre-paint/pre-mobs/Wandmaker replay slice green:
-   `WandOfPrismaticLight +1` and `WandOfCorrosion +1`. Its full painter and
-   final-fact lifecycle remains partial.
-7. Port deeper-floor `createMobs`; the six exact depth-one lifecycles are
-   regression fixtures, not a full depth-one accuracy claim.
+6. Keep the exact floor-7 room/pre-paint/pre-mobs/pre-items/final-mobs/Wandmaker
+   replay slice green: `WandOfPrismaticLight +1` and
+   `WandOfCorrosion +1`. Its full painter and final-fact lifecycle remains
+   partial.
+7. Close the remaining room-specific `canPlaceItem` predicates and known
+   special-room paint gaps; source-ported deeper mob populations are not a
+   substitute for lifecycle goldens.
 8. After Rust changes: `bun run build:wasm` (or `bun run dev`) before treating
    the UI as verified.
 9. Dev dump: `cargo run -p spd-core --example dump_seed -- SEED FLOORS`

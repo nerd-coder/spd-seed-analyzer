@@ -64,6 +64,8 @@ pub struct WandmakerSpawnResult {
     pub wand1: GeneratedItem,
     pub wand2: GeneratedItem,
     pub summary: String,
+    /// Cell occupied before `RegularLevel.createMobs` places ambient enemies.
+    pub cell: usize,
 }
 
 /// `Wandmaker.Quest.spawnRoom(rooms)` — prison only; call before room shuffle.
@@ -136,7 +138,7 @@ pub fn try_spawn_wandmaker(
     dungeon.wandmaker.quest_room_spawned = false;
 
     // Placement loop on entrance (consumes RNG; terrain flags approximate).
-    place_wandmaker(entrance, map);
+    let cell = place_wandmaker(entrance, map)?;
 
     dungeon.wandmaker.spawned = true;
     dungeon.wandmaker.depth = dungeon.depth;
@@ -156,10 +158,11 @@ pub fn try_spawn_wandmaker(
         wand1,
         wand2,
         summary,
+        cell,
     })
 }
 
-fn place_wandmaker(room: &Room, map: &TerrainMap) {
+fn place_wandmaker(room: &Room, map: &TerrainMap) -> Option<usize> {
     let entrance_cell = entrance_center_cell(room, map);
     let mut tries = 0;
     let mut dist = 2;
@@ -196,8 +199,9 @@ fn place_wandmaker(room: &Room, map: &TerrainMap) {
             continue;
         }
         // Valid placement
-        return;
+        return Some(cell);
     }
+    None
 }
 
 fn has_adjacent_door(map: &TerrainMap, cell: usize) -> bool {

@@ -1,7 +1,8 @@
 use crate::level::create_level_partial;
 use crate::run::{dungeon_from_run, init_run};
 
-use super::{next_mob, Random};
+use super::rotation::{standard_rotation, MobKind};
+use super::{mob_limit, next_mob, Random};
 
 const LCG_MULTIPLIER: u64 = 0x5DEECE66D;
 const LCG_ADDEND: u64 = 0xB;
@@ -114,4 +115,86 @@ fn prison_floor_seven_and_eight_rotations_match_the_pin() {
             "Thief",
         ]
     );
+}
+
+fn rotation_families(depth: i32) -> Vec<&'static str> {
+    Random::reset_generators();
+    Random::push_generator_seeded(1);
+    let mut labels: Vec<_> = standard_rotation(depth)
+        .into_iter()
+        .map(|mob| match mob {
+            MobKind::RedShaman | MobKind::BlueShaman | MobKind::PurpleShaman => "Shaman",
+            MobKind::FireElemental
+            | MobKind::FrostElemental
+            | MobKind::ShockElemental
+            | MobKind::ChaosElemental => "Elemental",
+            other => other.label(),
+        })
+        .collect();
+    labels.sort_unstable();
+    Random::reset_generators();
+    labels
+}
+
+#[test]
+fn region_rotation_tables_match_mob_spawner_through_floor_twenty_four() {
+    assert_eq!(
+        rotation_families(11),
+        ["Bat", "Bat", "Bat", "Brute", "Shaman"]
+    );
+    assert_eq!(
+        rotation_families(14),
+        ["Bat", "Brute", "DM200", "DM200", "Shaman", "Shaman", "Spinner", "Spinner"]
+    );
+    assert_eq!(
+        rotation_families(16),
+        ["Elemental", "Ghoul", "Ghoul", "Ghoul", "Warlock"]
+    );
+    assert_eq!(
+        rotation_families(19),
+        [
+            "Elemental",
+            "Golem",
+            "Golem",
+            "Golem",
+            "Monk",
+            "Monk",
+            "Warlock",
+            "Warlock",
+        ]
+    );
+    assert_eq!(rotation_families(21), ["Eye", "Succubus", "Succubus"]);
+    assert_eq!(
+        rotation_families(24),
+        ["Eye", "Eye", "Scorpio", "Scorpio", "Scorpio", "Succubus"]
+    );
+}
+
+#[test]
+fn only_pinned_large_ambient_classes_require_open_space() {
+    assert!(MobKind::Dm200.is_large());
+    assert!(MobKind::Dm201.is_large());
+    assert!(MobKind::Golem.is_large());
+    for mob in [
+        MobKind::Brute,
+        MobKind::ArmoredBrute,
+        MobKind::Eye,
+        MobKind::Scorpio,
+        MobKind::Acidic,
+    ] {
+        assert!(!mob.is_large(), "{} is not LARGE in the pin", mob.label());
+    }
+}
+
+#[test]
+fn regular_mob_limit_uses_pinned_large_feeling_rounding() {
+    Random::reset_generators();
+    Random::push_generator_seeded(7);
+    let normal = mob_limit(14, false);
+    Random::reset_generators();
+    Random::push_generator_seeded(7);
+    let large = mob_limit(14, true);
+    assert_eq!(large, (normal as f32 * 1.33).ceil() as i32);
+    assert_eq!(mob_limit(1, true), 8);
+    Random::reset_generators();
 }

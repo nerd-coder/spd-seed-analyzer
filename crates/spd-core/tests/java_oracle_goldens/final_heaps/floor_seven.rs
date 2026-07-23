@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn hkt_floor_seven_wandmaker_rewards_match_oracle() {
+fn hkt_floor_seven_create_mobs_and_wandmaker_match_oracle() {
     let path = fixture_paths()
         .into_iter()
         .find(|path| {
@@ -54,6 +54,22 @@ fn hkt_floor_seven_wandmaker_rewards_match_oracle() {
         actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
         "HKT floor-7 pre-mobs RNG boundary"
     );
+    assert_eq!(
+        actual.pre_items_rng_probe, expected.pre_items_rng,
+        "HKT floor-7 pre-items RNG boundary"
+    );
+    let actual_mobs: Vec<_> = actual
+        .map
+        .as_ref()
+        .expect("HKT floor-7 map")
+        .mobs
+        .iter()
+        .map(|mob| OracleMob {
+            cell: mob.cell,
+            class_name: mob.class_name.clone(),
+        })
+        .collect();
+    assert_eq!(actual_mobs, expected.final_mobs, "HKT floor-7 mobs");
     let actual_rewards: Vec<_> = actual
         .placed_items
         .iter()

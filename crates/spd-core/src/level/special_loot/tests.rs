@@ -17,6 +17,7 @@ use crate::run::{dungeon_from_run, init_run};
 
 mod depth_one_parity;
 mod forced_items;
+mod quest_npcs;
 
 fn test_room(name: &str, w: i32, h: i32) -> Room {
     let mut r = Room::new(0, name, RoomKind::Special, 1, 3, w, w + 2, h, h + 2);

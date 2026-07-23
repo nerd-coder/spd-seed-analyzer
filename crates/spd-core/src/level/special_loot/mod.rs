@@ -228,14 +228,14 @@ fn paint_special(
         }
         "CrystalPathRoom" => crystal_path::paint(dungeon, rooms, ri, map, doors, items_to_spawn),
         // Wandmaker quest rooms
-        "MassGraveRoom" => quest_rooms::mass_grave_prizes(dungeon, room, items_to_spawn),
+        "MassGraveRoom" => quest_rooms::mass_grave_prizes(dungeon, room, map, items_to_spawn),
         "RitualSiteRoom" => quest_rooms::ritual_site_setup(room, map, items_to_spawn),
         "RotGardenRoom" => quest_rooms::rot_garden_setup(room, items_to_spawn),
         // Blacksmith quest room — two random equip drops + NPC / exit placement RNG
-        "BlacksmithRoom" => quest_rooms::blacksmith_room_prizes(dungeon, room),
+        "BlacksmithRoom" => quest_rooms::blacksmith_room_prizes(dungeon, rooms, ri, map, doors),
         // Imp quest room — NPC offset burns IntRange(-1,1); no prize items
         "AmbitiousImpRoom" => {
-            let _ = Random::int_range_inclusive(-1, 1);
+            quest_rooms::ambitious_imp_room_npc(rooms, ri, map, doors);
             Vec::new()
         }
         _ => Vec::new(),

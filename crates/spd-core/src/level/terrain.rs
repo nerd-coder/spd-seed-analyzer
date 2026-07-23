@@ -187,7 +187,7 @@ impl TerrainMap {
         self.passable = self.map.iter().copied().map(is_passable_tile).collect();
     }
 
-    /// Approximate SPD `openSpace`: not solid, and some diagonal corner pair is open.
+    /// SPD `openSpace`: not solid, with one open cardinal/diagonal/cardinal corner.
     pub fn is_open_space(&self, cell: usize) -> bool {
         if self.is_solid(cell) {
             return false;
@@ -195,8 +195,10 @@ impl TerrainMap {
         let w = self.width as usize;
         let x = cell % w;
         let y = cell / w;
-        // CIRCLE8: N, NE, E, SE, S, SW, W, NW — diagonals at odd indices
+        // PathFinder.CIRCLE8 is NW,N,NE,E,SE,S,SW,W. Java starts at the
+        // cardinal indices and checks the following diagonal + cardinal pair.
         let deltas: [(i32, i32); 8] = [
+            (-1, -1),
             (0, -1),
             (1, -1),
             (1, 0),
@@ -204,7 +206,6 @@ impl TerrainMap {
             (0, 1),
             (-1, 1),
             (-1, 0),
-            (-1, -1),
         ];
         for j in (1..8).step_by(2) {
             let (dx, dy) = deltas[j];
@@ -410,5 +411,38 @@ mod tests {
         assert_eq!(chasm.origin_x, normal.origin_x - 1);
         assert_eq!(chasm.origin_y, normal.origin_y - 1);
         assert_eq!(chasm.map[0], CHASM);
+    }
+
+    #[test]
+    fn open_space_uses_cardinal_diagonal_cardinal_corner_order() {
+        let mut room = Room::new(0, "EmptyRoom", RoomKind::Standard, 1, 4, 4, 10, 4, 10);
+        room.left = 0;
+        room.top = 0;
+        room.right = 6;
+        room.bottom = 6;
+        let mut map = paint_minimal(&[room]).expect("map");
+        let center = map.point_to_cell(3, 3).expect("center");
+        let w = map.width as usize;
+
+        for offset in [
+            -(w as isize) - 1,
+            -(w as isize),
+            -(w as isize) + 1,
+            1,
+            w as isize + 1,
+            w as isize,
+            w as isize - 1,
+            -1,
+        ] {
+            map.map[(center as isize + offset) as usize] = WALL;
+        }
+        // The pinned CIRCLE8 scan recognizes the N/NE/E corner.
+        map.map[center - w] = EMPTY;
+        map.map[center - w + 1] = EMPTY;
+        map.map[center + 1] = EMPTY;
+        assert!(map.is_open_space(center));
+
+        map.map[center - w + 1] = WALL;
+        assert!(!map.is_open_space(center));
     }
 }

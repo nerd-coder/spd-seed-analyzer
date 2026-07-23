@@ -1,7 +1,7 @@
-//! `RegularLevel.createMobs`: oracle-exact at depth 1 and a source-aligned
-//! partial port for Sewer floors 2–4 and Prison floors 6–8.
+//! Pinned `RegularLevel.createMobs` for supported non-boss floors.
 
 mod navigation;
+mod rotation;
 
 #[cfg(test)]
 mod tests;
@@ -12,59 +12,10 @@ use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
 
 use navigation::{distance_limited, shadow_cast};
+use rotation::{next_mob, MobKind};
 
-#[derive(Clone, Copy)]
-enum MobKind {
-    Rat,
-    Albino,
-    Snake,
-    Gnoll,
-    GnollExile,
-    Swarm,
-    Crab,
-    HermitCrab,
-    Slime,
-    CausticSlime,
-    Skeleton,
-    Thief,
-    Bandit,
-    Dm100,
-    Guard,
-    Necromancer,
-    SpectralNecromancer,
-}
-
-impl MobKind {
-    fn label(self) -> &'static str {
-        match self {
-            Self::Rat => "Rat",
-            Self::Albino => "Albino",
-            Self::Snake => "Snake",
-            Self::Gnoll => "Gnoll",
-            Self::GnollExile => "GnollExile",
-            Self::Swarm => "Swarm",
-            Self::Crab => "Crab",
-            Self::HermitCrab => "HermitCrab",
-            Self::Slime => "Slime",
-            Self::CausticSlime => "CausticSlime",
-            Self::Skeleton => "Skeleton",
-            Self::Thief => "Thief",
-            Self::Bandit => "Bandit",
-            Self::Dm100 => "DM100",
-            Self::Guard => "Guard",
-            Self::Necromancer => "Necromancer",
-            Self::SpectralNecromancer => "SpectralNecromancer",
-        }
-    }
-
-    fn is_large(self) -> bool {
-        false
-    }
-}
-
-/// Runs the exact depth-one path and the partial deeper-floor path for depths
-/// 2–4 and 6–8. The latter retains pinned rotations and placement semantics but
-/// is not yet a lifecycle or cell-for-cell parity claim.
+/// Runs the pinned population path. Exact final parity still depends on every
+/// preceding builder, painter, and quest hook reaching the same state.
 pub(crate) fn create_regular(
     depth: i32,
     large_feeling: bool,
@@ -87,16 +38,7 @@ pub(crate) fn create_regular(
 
     // RegularLevel.createMobs calls mobLimit before collecting and shuffling
     // the weighted StandardRoom list.
-    let mut remaining = if depth == 1 {
-        8
-    } else {
-        let base = 3 + depth % 5 + Random::int_max(3);
-        if large_feeling {
-            (base as f32 * 1.33).ceil() as i32
-        } else {
-            base
-        }
-    };
+    let mut remaining = mob_limit(depth, large_feeling);
 
     let mut spawn_rooms = Vec::new();
     for (index, room) in rooms.iter().enumerate() {
@@ -180,6 +122,18 @@ pub(crate) fn create_regular(
     true
 }
 
+fn mob_limit(depth: i32, large_feeling: bool) -> i32 {
+    if depth == 1 {
+        return 8;
+    }
+    let base = 3 + depth % 5 + Random::int_max(3);
+    if large_feeling {
+        (base as f32 * 1.33).ceil() as i32
+    } else {
+        base
+    }
+}
+
 fn find_position(
     room: &Room,
     mob: MobKind,
@@ -217,90 +171,4 @@ fn find_position(
 fn place_mob(map: &mut TerrainMap, cell: usize, mob: MobKind) {
     map.mob_occupied[cell] = true;
     map.known_mobs[cell] = Some(mob.label());
-}
-
-fn next_mob(depth: i32, rotation: &mut Vec<MobKind>) -> MobKind {
-    if rotation.is_empty() {
-        rotation.extend(match depth {
-            2 => vec![
-                MobKind::Rat,
-                MobKind::Rat,
-                MobKind::Snake,
-                MobKind::Gnoll,
-                MobKind::Gnoll,
-            ],
-            3 => vec![
-                MobKind::Rat,
-                MobKind::Snake,
-                MobKind::Gnoll,
-                MobKind::Gnoll,
-                MobKind::Gnoll,
-                MobKind::Swarm,
-                MobKind::Crab,
-            ],
-            4 => vec![
-                MobKind::Gnoll,
-                MobKind::Swarm,
-                MobKind::Crab,
-                MobKind::Crab,
-                MobKind::Slime,
-                MobKind::Slime,
-            ],
-            6 => vec![
-                MobKind::Skeleton,
-                MobKind::Skeleton,
-                MobKind::Skeleton,
-                MobKind::Thief,
-                MobKind::Swarm,
-            ],
-            7 => vec![
-                MobKind::Skeleton,
-                MobKind::Skeleton,
-                MobKind::Skeleton,
-                MobKind::Thief,
-                MobKind::Dm100,
-                MobKind::Guard,
-            ],
-            8 => vec![
-                MobKind::Skeleton,
-                MobKind::Skeleton,
-                MobKind::Thief,
-                MobKind::Dm100,
-                MobKind::Dm100,
-                MobKind::Guard,
-                MobKind::Guard,
-                MobKind::Necromancer,
-            ],
-            _ => vec![MobKind::Rat, MobKind::Rat, MobKind::Rat, MobKind::Snake],
-        });
-        if depth == 4 && Random::float() < 0.025 {
-            rotation.push(MobKind::Thief);
-        }
-        for mob in &mut *rotation {
-            // MobSpawner swaps alternatives before its list shuffle, and the
-            // roll is made for every entry even when no alternative exists.
-            let alt = Random::float() < 1.0 / 50.0;
-            if alt {
-                *mob = match *mob {
-                    MobKind::Rat => MobKind::Albino,
-                    MobKind::Gnoll => MobKind::GnollExile,
-                    MobKind::Crab => MobKind::HermitCrab,
-                    MobKind::Slime => MobKind::CausticSlime,
-                    MobKind::Thief => MobKind::Bandit,
-                    MobKind::Necromancer => MobKind::SpectralNecromancer,
-                    other => other,
-                };
-            }
-        }
-        Random::shuffle_list(rotation);
-    }
-    let mob = rotation.remove(0);
-    if matches!(mob, MobKind::Thief | MobKind::Bandit) {
-        // Thief's instance initializer chooses Ring versus Artifact loot.
-        let _ = Random::int_max(2);
-    }
-    // ChampionEnemy.rollForChampion always burns Random.Int(6), even with
-    // challenges disabled. This is the stream edge that matters.
-    let _ = Random::int_max(6);
-    mob
 }
