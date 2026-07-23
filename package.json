@@ -13,6 +13,7 @@
     "build": "bun run build:wasm && bun run --filter spd-seed-analyzer-web build",
     "deploy": "bun run build && bun run --filter spd-seed-analyzer-web deploy",
     "preview": "bun run --filter spd-seed-analyzer-web preview",
+    "test:map-render": "bun test web/test/map-render",
     "test:rust": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo test -p spd-core",
     "check": "biome check",
     "check:fix": "biome check --fix",

@@ -263,7 +263,13 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                         }
                     }
                 }
-                placed_items.push(p.item);
+                // Garden plant entries are synthetic painter facts rather than
+                // portable rewards. Blob-held well and SacrificeRoom facts
+                // remain useful public analyzer results even though
+                // Level.heaps does not contain them.
+                if p.heap_type != "plant" {
+                    placed_items.push(p.item);
+                }
             }
 
             // paintDoors: mergeRooms + hidden-door Float/Graph + terrain.

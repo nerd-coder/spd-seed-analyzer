@@ -110,6 +110,34 @@ fn assert_aaa_regression_facts(
     );
 }
 
+fn assert_aaa_aad_public_report_facts(
+    fixture: &OracleFixture,
+    floor: &spd_core::FloorReport,
+    context: &impl std::fmt::Display,
+) {
+    if fixture.input.seed != "AAA-AAA-AAD" {
+        return;
+    }
+
+    assert!(
+        floor
+            .items
+            .iter()
+            .any(|item| item.source.as_deref() == Some("SacrificeRoom")),
+        "public report retains the blob-held SacrificeRoom reward in {context}"
+    );
+    let seed = floor
+        .items
+        .iter()
+        .find(|item| item.category == "seed")
+        .expect("AAA-AAD report contains its random seed heap");
+    assert_eq!(
+        seed.class_name.as_deref(),
+        Some("EarthrootSeed"),
+        "public report retains the precise seed class for icons/search in {context}"
+    );
+}
+
 #[test]
 fn depth_one_final_heaps_match_report_projection() {
     let mut compared = 0;
@@ -403,14 +431,26 @@ fn depth_one_final_heaps_match_report_projection() {
             actual_mobs, expected_floor.final_mobs,
             "depth-one final mobs in {context}"
         );
+        assert_aaa_aad_public_report_facts(&fixture, &report.floors[0], &context);
+
+        // FloorOracle's final-heaps contract cannot see the prize held by the
+        // SacrificialFire blob. Exclude that reward only at this heap-only
+        // comparison boundary; the public report assertion above keeps it.
+        // Java seed implementations are nested `*.Seed` classes, so its
+        // `getSimpleName()` observation is canonicalized here without
+        // flattening the analyzer's precise item class names.
         let mut actual_projection: Vec<_> = report.floors[0]
             .items
             .iter()
+            .filter(|item| item.source.as_deref() != Some("SacrificeRoom"))
             .map(|item| ComparableItem {
-                class_name: item
-                    .class_name
-                    .clone()
-                    .expect("all analyzed items have a Java class name"),
+                class_name: if item.category == "seed" {
+                    "Seed".to_string()
+                } else {
+                    item.class_name
+                        .clone()
+                        .expect("all analyzed items have a Java class name")
+                },
                 cursed: item.cursed,
             })
             .collect();
@@ -425,8 +465,8 @@ fn depth_one_final_heaps_match_report_projection() {
         compared += 1;
     }
     assert!(
-        compared >= 4,
-        "expected at least four schema v3 final-heap fixtures, compared {compared}"
+        compared >= 6,
+        "expected at least six schema v3 depth-one fixtures, compared {compared}"
     );
 }
 

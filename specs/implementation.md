@@ -49,20 +49,22 @@ decks/tiers, depth seeds / limited drops. Golden fixtures in
 `tools/java-oracle/fixtures/` + `crates/spd-core/tests/java_oracle_goldens.rs`
 confirm exact identity parity across four seeds.
 
-**Levelgen — broad partial port; five depth-one fixtures plus HKT floors 6 and 8 are exact.**
+**Levelgen — broad partial port; six depth-one fixtures plus HKT floors 6 and 8 are exact.**
 Room init, geometry, both builders (Loop/FigureEight), all connection-room
 subclasses, water/grass/trap painter, `paintDoors` merge/Graph, every region's
 structural + standard room geometry, special/secret room prize logic, shop
 stock, all four quests, crystal rooms, the main `createItems` drop loop, and
-floor-map export are implemented. For `AAA-AAA-AAA`, `ABC-DEF-GHI`,
-`GFX-PZH-DCH`, `hello`, and `HKT-JZN-XQQ` at depth 1, Rust now reaches the
-exact Java RNG states before painter, `createMobs`, and `createItems`; matches
-map bounds,
-all final mob cells/types, all final heap cells, and the report-visible item
-projection. The HKT visual fixture additionally proves exact final terrain,
+floor-map export are implemented. For `AAA-AAA-AAA`, `AAA-AAA-AAD`,
+`ABC-DEF-GHI`, `GFX-PZH-DCH`, `hello`, and `HKT-JZN-XQQ` at depth 1, Rust now
+reaches the exact Java RNG states before painter, `createMobs`, and
+`createItems`; matches map bounds, all final mob cells/types, all final heap
+cells, and the report-visible item projection. The AAA-AAD fixture adds Garden,
+Sacrifice, and Striped room coverage and pins RingRoom's center heap and
+forced-queue consumption. The HKT visual fixture additionally proves exact
+final terrain,
 discoverability, tile variance, transitions, traps (including sprite metadata),
 structured heaps, and structured mobs. This is deliberately still `partial`:
-five room sets do not cover all depth-one combinations, deeper-floor mob
+six room sets do not cover all depth-one combinations, deeper-floor mob
 generation and several room-specific predicates/paint paths remain incomplete.
 Structured heap facts
 are exact only for the covered room families whose paint-time cell association
@@ -105,15 +107,21 @@ alongside its exact AlchemyPage, Crossbow, and EnergyCrystal crops. A dedicated
 floor-8 browser comparison has not yet promoted that asset coverage to a
 pixel-parity claim.
 
+`CXG-FJT-BFQ` floor 1 is registered alongside the three HKT screenshots in the
+typed map-render QA fixture list. The registry test guarantees one-to-one
+metadata/file coverage, but the repository still has no automated browser
+screenshot comparator; registering CXG is not a pixel-parity claim.
+
 **Correctness infra — the tool that will prove parity.**
 `tools/java-oracle/` runs the *actual pinned Java source* headlessly and
 dumps JSON: schema v1 (run identities), v2 (depth-one pre-build forced-item
 queue), v3 (final placed heaps after real `Level.create()`, ordered by cell,
 full item/heap facts plus final mob cells/types and lifecycle RNG probes, no
 report-shaped filtering). Schema v3 supports direct depth 1 plus sequentially
-replayed depths 6, 7, and 8. It can also include additive render facts:
+replayed depths 6, 7, and 8. It also emits additive render facts:
 terrain, discoverability, tile variance, transitions, traps, plants, and active
-blobs. Regenerate fixtures with
+blobs; lifecycle-only fixtures may intentionally normalize those fields to
+`null`. Regenerate fixtures with
 the exact commands in `tools/java-oracle/README.md`. This is the intended
 mechanism for closing every gap below — add or extend a fixture, then make
 the Rust side match it exactly.
@@ -123,17 +131,34 @@ the Rust side match it exactly.
 ## What's lacking for exact parity
 
 Verified against the pinned Java source
-(`/Users/toan/code/00-Evan/shattered-pixel-dungeon`) and eight schema-v3
+(`/Users/toan/code/00-Evan/shattered-pixel-dungeon`) and nine schema-v3
 fixtures. The depth-one suite covers Pool/Runestone, MagicalFire,
 CrystalPath/MagicWell, Traps/Treasury, SewerPipe, RegionDecoPatch,
-Bridge/Ring/CircleBasin, tunnel, WaterBridge, and HKT's Armory/FigureEight
-variants. Every depth-one fixture asserts exact lifecycle RNG probes, map
-bounds, final heap cells, final mob cells/types, and report-visible item
-projection. The HKT floor-one fixture also asserts every additive render fact
-listed above. The floor-six fixture now asserts its complete Java observation.
+Bridge/Ring/CircleBasin, Garden/Sacrifice/Striped, tunnel, WaterBridge, and
+HKT's Armory/FigureEight variants. Every depth-one fixture asserts exact
+lifecycle RNG probes, map bounds, final heap cells, final mob cells/types, and
+report-visible item projection. The HKT floor-one fixture also asserts every
+additive render fact listed above. The floor-six fixture now asserts its
+complete Java observation.
 Floor seven asserts its exact room/pre-paint/pre-mobs/Wandmaker slice, while
 floor eight asserts its complete lifecycle and final render/entity facts for
 the committed replay.
+
+### 0f. ~~Extend depth-one lifecycle coverage with AAA-AAD~~ — FIXTURE EXACT
+For `AAA-AAA-AAD` at depth 1, Rust now matches Java's Garden, Sacrifice,
+Striped, two Ring, SewerPipe, RegionDecoPatch entrance, WaterBridge exit, and
+six Tunnel rooms; 31×44 bounds; all three lifecycle RNG probes; seven final
+heap cells; eight final mob cells/types; and report-visible heap projection.
+
+Closing this fixture required `SacrificeRoom`'s 7×7 minimum, exact capture of
+`RingRoom`'s center heap, and preserving the `:forced` provenance when its
+`findPrizeItem()` consumes the pre-build Food. Java reports nested plant seed
+classes as the ambiguous simple name `Seed`; the golden normalizes that only at
+the oracle boundary, while the public analyzer retains `EarthrootSeed` for
+icons and finder constraints. Garden plants remain painter facts rather than
+portable items, while blob-held Sacrifice and well rewards stay visible in the
+public report. Additive render arrays remain deliberately unasserted for this
+lifecycle-only fixture, and global status stays `partial`.
 
 ### 0c. ~~HKT floor-six lifecycle parity~~ — FIXTURE EXACT
 For `HKT-JZN-XQQ` floor 6, schema v3 now replays every prior Java floor before
@@ -214,7 +239,7 @@ grass under late item drops. Armory and Treasury painters now retain exact heap
 cells and ordered item stacks for the structured report.
 
 Committed screenshots in `specs/fixtures/visual/`, named
-`<seed>_<floor>.png`, are visual-regression references.
+`<seed>_F<floor>.png`, are visual-regression references.
 Their hero positions are post-generation gameplay state, not seed-derived
 `Level.create()` output; frontend comparisons must treat the hero as a fixed
 reference overlay or exclude it from the deterministic contract. Floor-1
@@ -418,7 +443,7 @@ already — this gap is specifically the room-shape predicate.
 - Shop stock is builder-timed and fresh-Warrior bag scoring is exact for floor
   6. Later shops still need inventory-sensitive bag modeling.
 - `random_deck_item` still has a known exhausted-probability private-generator
-  state/push-pop mismatch. None of the eight schema-v3 fixtures exercises that
+  state/push-pop mismatch. None of the nine schema-v3 fixtures exercises that
   rollover;
   fix it with a dedicated Java draw-shape fixture rather than folding it into
   an unrelated room patch.
@@ -454,9 +479,10 @@ already — this gap is specifically the room-shape predicate.
    terrain and render masks, pre-mobs/pre-items probes, 11 heap cells, 7 mob
    cells, 14 traps, transition cells, and the Alchemy blob. Dedicated browser
    comparison remains a separate follow-up.
-7. Extend schema-v3 coverage to still more depth-one room sets. Five exact
-   lifecycles are strong regression fixtures, not evidence that every
-   depth-one combination is exact.
+7. ~~**Extend schema-v3 coverage to another depth-one room set.**~~ Added the
+   exact `AAA-AAA-AAD` lifecycle for Garden, Sacrifice, Striped, and RingRoom
+   center-loot behavior. Six exact lifecycles are strong regression fixtures,
+   not evidence that every depth-one combination is exact.
 8. Port deeper-floor `createMobs`: mob limits/rotations, second-room spawns,
    large-mob open-space checks, and quest/NPC occupancy.
 9. Close the remaining room-specific `canPlaceItem` predicates and known
@@ -545,7 +571,7 @@ cargo test -p spd-core
 
 `java_oracle_goldens.rs` (+ `java_oracle_goldens/final_heaps.rs`) is the
 parity harness: identity maps (schema v1), depth-one forced-item queue
-(schema v2), five exact depth-one lifecycle fixtures covering map bounds,
+(schema v2), six exact depth-one lifecycle fixtures covering map bounds,
 heap cells, mob facts, and report-visible item projection, plus full Java
 floor-six, floor-seven, and floor-eight observations (schema v3, see above).
 HKT floors 1, 6, and 8 prove their complete render-fact projections; floor 7
@@ -566,11 +592,11 @@ license constraints.
 ## How to resume (clean context)
 
 1. Read this file, specifically **"What's lacking for exact parity"** above.
-2. The `AAA-AAA-AAA`, `ABC-DEF-GHI`, `GFX-PZH-DCH`, `hello`, and
-   `HKT-JZN-XQQ` depth-one
+2. The `AAA-AAA-AAA`, `AAA-AAA-AAD`, `ABC-DEF-GHI`, `GFX-PZH-DCH`, `hello`,
+   and `HKT-JZN-XQQ` depth-one
    lifecycles are exact at the pre-painter, pre-mobs, and pre-items boundaries
    and for final map bounds, heap cells, mob facts, and report-visible items.
-   Keep all five fixtures green.
+   Keep all six fixtures green.
 3. Keep the exact `HKT-JZN-XQQ` floor-6 lifecycle golden green. It matches
    bounds, all RNG probes, terrain/render masks, heaps, mobs, transitions, and
    traps, but this single replay does not change global `partial` status.
@@ -584,8 +610,8 @@ license constraints.
 6. Keep the exact floor-7 room/pre-paint/pre-mobs/Wandmaker replay slice green:
    `WandOfPrismaticLight +1` and `WandOfCorrosion +1`. Its full painter and
    final-fact lifecycle remains partial.
-7. Extend schema-v3 coverage to more depth-one room sets; the five exact
-   lifecycles are regression fixtures, not a full depth-one accuracy claim.
+7. Port deeper-floor `createMobs`; the six exact depth-one lifecycles are
+   regression fixtures, not a full depth-one accuracy claim.
 8. After Rust changes: `bun run build:wasm` (or `bun run dev`) before treating
    the UI as verified.
 9. Dev dump: `cargo run -p spd-core --example dump_seed -- SEED FLOORS`

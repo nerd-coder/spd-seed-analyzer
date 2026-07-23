@@ -41,10 +41,16 @@ fn ring_prize(
     let Some(mut prize) = find_prize_item(items_to_spawn, None) else {
         return Vec::new();
     };
-    prize.source = Some("RingRoom".into());
+    let consumed_forced = prize.source.as_deref() == Some("forced");
+    prize.source = Some(if consumed_forced {
+        "RingRoom:forced".into()
+    } else {
+        "RingRoom".into()
+    });
     if let Some(cell) = map.point_to_cell(center.x, center.y) {
         // Java's heap occupies the center only when `findPrizeItem` succeeded.
         map.item_allowed[cell] = false;
+        map.record_heap(cell, "heap", prize.clone());
     }
     vec![PlacedLoot {
         item: prize,
@@ -227,11 +233,18 @@ mod tests {
         dungeon.depth = 3;
         let mut ring_map = map(&room);
         let cell = ring_map.point_to_cell(center.x, center.y).expect("center");
-        let mut items = vec![GeneratedItem::new("Food", ItemCategory::Food)];
+        let mut food = GeneratedItem::new("Food", ItemCategory::Food);
+        food.source = Some("forced".into());
+        let mut items = vec![food];
         let loot = paint_center_loot(&mut dungeon, &room, &mut ring_map, Some(center), &mut items);
         assert_eq!(loot.len(), 1);
-        assert_eq!(loot[0].item.source.as_deref(), Some("RingRoom"));
+        assert_eq!(loot[0].item.source.as_deref(), Some("RingRoom:forced"));
         assert!(!ring_map.item_allowed[cell]);
+        let heap = ring_map.known_heaps[cell]
+            .as_ref()
+            .expect("RingRoom center heap");
+        assert_eq!(heap.heap_type, "heap");
+        assert_eq!(heap.items, [loot[0].item.clone()]);
 
         let mut dungeon = dungeon_from_run(run);
         dungeon.depth = 3;
