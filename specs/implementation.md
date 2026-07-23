@@ -49,22 +49,24 @@ decks/tiers, depth seeds / limited drops. Golden fixtures in
 `tools/java-oracle/fixtures/` + `crates/spd-core/tests/java_oracle_goldens.rs`
 confirm exact identity parity across four seeds.
 
-**Levelgen — broad partial port; seven depth-one fixtures plus HKT replay
+**Levelgen — broad partial port; eight depth-one fixtures plus HKT replay
 floors 6–8 are exact.**
 Room init, geometry, both builders (Loop/FigureEight), all connection-room
 subclasses, water/grass/trap painter, `paintDoors` merge/Graph, every region's
 structural + standard room geometry, special/secret room prize logic, shop
 stock, all four quests, crystal rooms, the main `createItems` drop loop, and
 floor-map export are implemented. For `AAA-AAA-AAA`, `AAA-AAA-AAD`,
-`AAA-AAA-AFO`, `ABC-DEF-GHI`, `GFX-PZH-DCH`, `hello`, and `HKT-JZN-XQQ` at
-depth 1, Rust now reaches the exact Java RNG states before painter,
-`createMobs`, and `createItems`; matches map bounds, all final mob cells/types,
-all final heap cells, and the report-visible item projection. The AAA-AAD fixture adds Garden,
+`AAA-AAA-AFO`, `AAA-AAA-AFU`, `ABC-DEF-GHI`, `GFX-PZH-DCH`, `hello`, and
+`HKT-JZN-XQQ` at depth 1, Rust now reaches the exact Java RNG states before
+painter, `createMobs`, and `createItems`; matches map bounds, all final mob
+cells/types, all final heap cells, and the report-visible item projection. The
+AAA-AAD fixture adds Garden,
 Sacrifice, and Striped room coverage and pins RingRoom's center heap and
-forced-queue consumption. The AFO and HKT full-additive fixtures additionally
-prove exact final terrain, discoverability, tile variance, transitions, traps,
-structured heaps, and structured mobs; HKT also pins trap sprite metadata.
-This is deliberately still `partial`: seven room sets do not cover all
+forced-queue consumption. The AFO, AFU, and HKT full-additive fixtures
+additionally prove exact final terrain, discoverability, tile variance,
+transitions, traps, structured heaps, and structured mobs; HKT also pins trap
+sprite metadata.
+This is deliberately still `partial`: eight room sets do not cover all
 depth-one combinations, and deeper-floor lifecycle coverage plus several
 room-specific predicates/paint paths remain incomplete. Structured heap facts
 are exact only for the covered room families whose paint-time cell association
@@ -135,14 +137,14 @@ the Rust side match it exactly.
 ## What's lacking for exact parity
 
 Verified against the pinned Java source
-(`/Users/toan/code/00-Evan/shattered-pixel-dungeon`) and ten schema-v3
+(`/Users/toan/code/00-Evan/shattered-pixel-dungeon`) and eleven schema-v3
 fixtures. The depth-one suite covers Pool/Runestone, MagicalFire,
 CrystalPath/MagicWell, Traps/Treasury, SewerPipe, RegionDecoPatch,
 Bridge/Ring/CircleBasin, Garden/Sacrifice/Striped, tunnel, WaterBridge, Crypt,
 and HKT's Armory/FigureEight variants. Every depth-one fixture asserts exact
 lifecycle RNG probes, map bounds, final heap cells, final mob cells/types, and
-report-visible item projection. The AFO and HKT floor-one fixtures also assert
-every additive render fact listed above. The floor-six, floor-seven, and
+report-visible item projection. The AFO, AFU, and HKT floor-one fixtures also
+assert every additive render fact listed above. The floor-six, floor-seven, and
 floor-eight fixtures now assert their complete Java observations and final
 render/entity facts for the committed replays.
 
@@ -152,6 +154,21 @@ entrance/exit subclasses), and RitualSite apply their pinned `canPlaceItem`
 and paired `canPlaceCharacter` exclusions without extra predicate RNG beyond
 the already-pinned painter setup. VaultLevel branch rooms remain outside the
 regular-floor analyzer and are not implied by this coverage.
+
+### 0h. ~~Close RunestoneRoom structured heap capture with AAA-AFU~~ — FIXTURE EXACT
+For `AAA-AAA-AFU` at depth 1, Rust now matches Java's Runestone, CircleBasin,
+SewerPipe, Walkway, WaterBridge entrance/exit, and Tunnel rooms; 39×29 bounds;
+all three lifecycle RNG probes; every additive render fact; 8 heaps; 8 mobs;
+2 transitions; and 2 traps.
+
+The Runestone painter now retains Java's exact item-to-cell association: it
+selects and validates an `EMPTY` cell before generating each prize, records the
+result only after prize generation as `Level.drop()` does, and makes that heap
+visible to the next retry loop. The fixture pins `StoneOfBlast` at cell 542 and
+`StoneOfDeepSleep` at cell 579, both as ordinary heaps, with no legacy
+`Room loot` fallback. Independent regeneration from the pinned checkout
+produced identical canonical JSON. Global status stays `partial`; other room
+families still need the same cell-association treatment.
 
 ### 0g. ~~Close CryptRoom paint parity with AAA-AFO~~ — FIXTURE EXACT
 For `AAA-AAA-AFO` at depth 1, Rust now matches Java's Crypt, Ring,
@@ -619,9 +636,13 @@ Global status therefore remains `partial`.
     the uncollected fresh-run progression to MagicalHolster, PotionBandolier,
     then ScrollHolder. Equal-score player inventories and hourglass sandbags
     remain outside this phase.
-14. Extend exact paint-time heap capture to the remaining room families; keep
-    the legacy marker fallback until each family has a pinned cell association.
-15. Add multi-depth schema-v3 fixtures and promote each newly covered region
+14. ~~**Close RunestoneRoom paint-time heap capture.**~~ Added the full-additive
+    `AAA-AAA-AFU` fixture, retained the exact cell-before-prize call order, and
+    matched both structured stone heaps without a legacy marker.
+15. Continue exact paint-time heap capture across the remaining room families;
+    keep the legacy marker fallback until each family has a pinned cell
+    association.
+16. Add multi-depth schema-v3 fixtures and promote each newly covered region
     only after its lifecycle boundary probes and final facts match.
 
 ---
@@ -703,12 +724,12 @@ bun run test:visual
 
 `java_oracle_goldens.rs` (+ `java_oracle_goldens/final_heaps.rs`) is the
 parity harness: identity maps (schema v1), depth-one forced-item queue
-(schema v2), seven exact depth-one lifecycle fixtures covering map bounds,
+(schema v2), eight exact depth-one lifecycle fixtures covering map bounds,
 heap cells, mob facts, and report-visible item projection, plus full Java
 floor-six, floor-seven, and floor-eight observations (schema v3, see above).
-AFO floor 1 and HKT floors 1, 6, 7, and 8 prove their complete render-fact
-projections. Add tightly-scoped oracle fixtures before writing new Rust
-behavior — regenerate via `tools/java-oracle/run` (see
+AFO and AFU floor 1 plus HKT floors 1, 6, 7, and 8 prove their complete
+render-fact projections. Add tightly-scoped oracle fixtures before writing new
+Rust behavior — regenerate via `tools/java-oracle/run` (see
 `tools/java-oracle/README.md`).
 
 The separate Food deck-rollover fixture under
@@ -736,12 +757,12 @@ license constraints.
 ## How to resume (clean context)
 
 1. Read this file, specifically **"What's lacking for exact parity"** above.
-2. The `AAA-AAA-AAA`, `AAA-AAA-AAD`, `AAA-AAA-AFO`, `ABC-DEF-GHI`,
-   `GFX-PZH-DCH`, `hello`, and `HKT-JZN-XQQ` depth-one
+2. The `AAA-AAA-AAA`, `AAA-AAA-AAD`, `AAA-AAA-AFO`, `AAA-AAA-AFU`,
+   `ABC-DEF-GHI`, `GFX-PZH-DCH`, `hello`, and `HKT-JZN-XQQ` depth-one
    lifecycles are exact at the pre-painter, pre-mobs, and pre-items boundaries
    and for final map bounds, heap cells, mob facts, and report-visible items.
-   Keep all seven fixtures green. AFO and HKT additionally pin every additive
-   render fact.
+   Keep all eight fixtures green. AFO, AFU, and HKT additionally pin every
+   additive render fact.
 3. Keep the exact `HKT-JZN-XQQ` floor-6 lifecycle golden green. It matches
    bounds, all RNG probes, terrain/render masks, heaps, mobs, transitions, and
    traps, but this single replay does not change global `partial` status.
@@ -757,11 +778,11 @@ license constraints.
    regenerate/extend fixtures via `tools/java-oracle/run --source
    /Users/toan/code/00-Evan/shattered-pixel-dungeon ...`.
 7. Keep the source-exact regular-floor item/character placement predicates,
-   CryptRoom paint, Food deck-rollover oracle, and unique-winner shop-bag
-   oracle green. Next, extend exact paint-time heap capture to another room
-   family with a pinned lifecycle fixture; source-ported deeper mob
-   populations are not a substitute for goldens. VaultLevel-only predicates
-   remain part of a future branch port.
+   CryptRoom paint, RunestoneRoom heap capture, Food deck-rollover oracle, and
+   unique-winner shop-bag oracle green. Next, extend exact paint-time heap
+   capture to another room family with a pinned lifecycle fixture;
+   source-ported deeper mob populations are not a substitute for goldens.
+   VaultLevel-only predicates remain part of a future branch port.
 8. After Rust changes: `bun run build:wasm` (or `bun run dev`) before treating
    the UI as verified.
 9. Dev dump: `cargo run -p spd-core --example dump_seed -- SEED FLOORS`

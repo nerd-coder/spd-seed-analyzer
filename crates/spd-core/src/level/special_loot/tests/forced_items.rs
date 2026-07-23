@@ -3,7 +3,7 @@
 use super::super::secret_rooms::{secret_laboratory, secret_larder, secret_runestone};
 use super::super::special_rooms::{
     armory_prizes_on_map, crypt_prize, library_prizes, paint_laboratory, pool_prize,
-    runestone_prizes, statue_weapon, treasury_prizes_on_map,
+    runestone_prizes, runestone_prizes_on_map, statue_weapon, treasury_prizes_on_map,
 };
 use super::test_room;
 use crate::geom::Point;
@@ -34,6 +34,56 @@ fn runestone_room_pushes_iron_key() {
     assert_eq!(spawn.len(), 1);
     assert_eq!(spawn[0].class_name, "IronKey");
     assert_eq!(spawn[0].category, ItemCategory::Other);
+}
+
+#[test]
+fn runestone_room_retains_exact_stone_cells_and_rng_tail() {
+    Random::reset_generators();
+    let run = init_run(31);
+    Random::push_generator_seeded(101);
+    let mut dungeon = dungeon_from_run(run);
+    dungeon.depth = 7;
+    let mut room = test_room("RunestoneRoom", 8, 8);
+    room.connected.push(1);
+    let mut neighbour = Room::new(1, "TunnelRoom", RoomKind::Connection, 1, 16, 3, 10, 3, 10);
+    neighbour.left = 8;
+    neighbour.top = 2;
+    neighbour.right = 12;
+    neighbour.bottom = 6;
+    neighbour.connected.push(0);
+    let rooms = vec![room, neighbour];
+    let mut map = paint_minimal(&rooms).expect("test map");
+    let mut doors = DoorMap::new();
+    doors.insert_test_point(0, 1, Point::new(8, 4));
+    super::super::geometry::paint(&mut map, &rooms[0], 0, &doors);
+    let mut spawn = Vec::new();
+
+    let loot = runestone_prizes_on_map(&mut dungeon, &rooms[0], &mut map, &mut spawn);
+    let tail = Random::peek_ints(4);
+    Random::pop_generator();
+
+    let heaps: Vec<_> = map
+        .known_heaps
+        .iter()
+        .enumerate()
+        .filter_map(|(cell, heap)| {
+            heap.as_ref()
+                .map(|heap| (cell, heap.heap_type, heap.items[0].class_name.as_str()))
+        })
+        .collect();
+    assert_eq!(loot.len(), heaps.len());
+    assert_eq!(
+        heaps,
+        [
+            (51, "heap", "StoneOfClairvoyance"),
+            (63, "heap", "StoneOfAggression"),
+            (108, "heap", "StoneOfAggression"),
+        ]
+    );
+    assert_eq!(
+        tail,
+        [1_187_957_485, 1_420_579_380, 346_128_254, -1_944_953_493]
+    );
 }
 
 #[test]

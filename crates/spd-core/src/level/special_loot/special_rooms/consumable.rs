@@ -243,20 +243,23 @@ fn runestone_prizes_shared(
     let n = Random::normal_int_range(2, 3);
     let mut occupied = Vec::new();
     for _ in 0..n {
-        if let Some(map) = map.as_deref_mut() {
+        // RunestoneRoom.java chooses and validates the position before it
+        // selects the stone. Retain that cell across item generation so the
+        // final Level.drop association is available to the structured map.
+        let selected_cell = if let Some(map) = map.as_deref() {
             loop {
                 let point = room.random();
                 let Some(cell) = map.point_to_cell(point.x, point.y) else {
                     continue;
                 };
                 if map.map[cell] == EMPTY && !map.heap_occupied[cell] {
-                    map.heap_occupied[cell] = true;
-                    break;
+                    break Some(cell);
                 }
             }
         } else {
             burn_drop_pos(room, &mut occupied);
-        }
+            None
+        };
         let mut item = if let Some(c) = find_prize_item(items_to_spawn, Some("TrinketCatalyst")) {
             c
         } else if let Some(s) = find_prize_item_category(items_to_spawn, ItemCategory::Stone) {
@@ -267,6 +270,9 @@ fn runestone_prizes_shared(
                 .random_category(Category::Stone, dungeon.depth)
         };
         item.source = Some("RunestoneRoom".into());
+        if let (Some(map), Some(cell)) = (map.as_deref_mut(), selected_cell) {
+            map.record_heap(cell, "heap", item.clone());
+        }
         out.push(PlacedLoot {
             item,
             heap_type: "heap",

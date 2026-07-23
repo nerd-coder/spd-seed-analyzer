@@ -254,6 +254,7 @@ fn depth_one_final_heaps_match_report_projection() {
         dungeon.depth = 1;
         let level = create_level_partial(&mut dungeon);
         let map = report.floors[0].map.as_ref().expect("depth-one map");
+        runestone::assert_aaa_afu_facts(&fixture, map, &context);
         assert_eq!(
             (map.width, map.height),
             (expected_floor.width, expected_floor.height),
@@ -465,10 +466,13 @@ fn depth_one_final_heaps_match_report_projection() {
         compared += 1;
     }
     assert!(
-        compared >= 7,
-        "expected at least seven schema v3 depth-one fixtures, compared {compared}"
+        compared >= 8,
+        "expected at least eight schema v3 depth-one fixtures, compared {compared}"
     );
 }
+
+#[path = "final_heaps/runestone.rs"]
+mod runestone;
 
 #[path = "final_heaps/floor_six.rs"]
 mod floor_six;
