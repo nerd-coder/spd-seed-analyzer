@@ -106,6 +106,14 @@ fn traps_prize_adds_levitation() {
     assert_eq!(loot.item.class_name, "Pasty");
     assert_eq!(loot.heap_type, "chest");
     assert_eq!(map.heap_occupied.iter().filter(|&&cell| cell).count(), 1);
+    let heap = map
+        .known_heaps
+        .iter()
+        .flatten()
+        .next()
+        .expect("TrapsRoom chest is retained");
+    assert_eq!(heap.heap_type, "chest");
+    assert_eq!(heap.items.as_slice(), std::slice::from_ref(&loot.item));
     assert_eq!(tail, [375063918, -1577561530, 1030305667, 2049706016]);
     assert_eq!(spawn.len(), 1, "queued Pasty was consumed by the room");
     assert_eq!(spawn[0].class_name, "PotionOfLevitation");

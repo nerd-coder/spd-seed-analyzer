@@ -82,9 +82,10 @@ pub(crate) fn paint(
     } else {
         set(map, prize_pos.x, prize_pos.y, PEDESTAL);
     }
-    if let Some(cell) = map.point_to_cell(prize_pos.x, prize_pos.y) {
-        map.heap_occupied[cell] = true;
-    }
+    let prize_cell = map
+        .point_to_cell(prize_pos.x, prize_pos.y)
+        .expect("TrapsRoom prize cell is on map");
+    map.heap_occupied[prize_cell] = true;
 
     let mut prize = generate_prize(dungeon, items_to_spawn);
     let consumed_forced = prize.source.as_deref() == Some("forced");
@@ -93,6 +94,9 @@ pub(crate) fn paint(
     } else {
         "TrapsRoom".into()
     });
+    // Java chooses the far-row cell before generating the prize, then drops
+    // the generated item into a chest at that exact cell.
+    map.record_heap(prize_cell, "chest", prize.clone());
     items_to_spawn.push(GeneratedItem::new(
         "PotionOfLevitation",
         ItemCategory::Potion,

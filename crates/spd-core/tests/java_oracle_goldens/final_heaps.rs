@@ -256,6 +256,7 @@ fn depth_one_final_heaps_match_report_projection() {
         let map = report.floors[0].map.as_ref().expect("depth-one map");
         magical_fire::assert_abc_magical_fire_facts(&fixture, map, &context);
         runestone::assert_aaa_afu_facts(&fixture, map, &context);
+        traps::assert_hello_traps_facts(&fixture, map, &context);
         assert_eq!(
             (map.width, map.height),
             (expected_floor.width, expected_floor.height),
@@ -477,6 +478,9 @@ mod runestone;
 
 #[path = "final_heaps/magical_fire.rs"]
 mod magical_fire;
+
+#[path = "final_heaps/traps.rs"]
+mod traps;
 
 #[path = "final_heaps/floor_six.rs"]
 mod floor_six;

@@ -169,8 +169,22 @@ was independently regenerated from SPD v3.3.8 at `7b8b845a7`; after the
 documented lifecycle-only render-field normalization, its canonical lifecycle
 facts match (the regenerated oracle additively emits an empty `quest_rewards`
 array that the older fixture legitimately omits). Global status stays
-`partial`; the next item-15 phase should pin one additional legacy family,
-preferably `TrapsRoom` or `SentryRoom`, and preserve its exact heap cell.
+`partial`; the next item-15 phase was the `TrapsRoom` capture documented below.
+
+### 0j. ~~Close TrapsRoom structured heap capture with hello~~ — FIXTURE EXACT
+For `hello` at depth 1, Rust now retains the paint-time `TrapsRoom` chest at
+cell 928 with its exact `PlateArmor +1`, quantity one and uncursed, and emits
+no legacy `Room loot` fallback. The existing schema-v3 fixture continues to
+pin the complete downstream lifecycle: 46×30 bounds, all three RNG probes,
+19 final heaps, and the final mob facts.
+
+The painter preserves pinned `TrapsRoom.paint()` order: it chooses the
+trap/chasm field and opposite safe row, fixes the far-row prize cell and chest
+terrain, generates the prize, then records the same item at the previously
+chosen cell as `Level.drop()` does. Focused coverage also proves a forced
+prize is retained in the same structured chest without changing the RNG tail.
+Global status stays `partial`; item 15 should next close `SentryRoom` or
+another remaining legacy family with an oracle-pinned cell association.
 
 ### 0h. ~~Close RunestoneRoom structured heap capture with AAA-AFU~~ — FIXTURE EXACT
 For `AAA-AAA-AFU` at depth 1, Rust now matches Java's Runestone, CircleBasin,
@@ -657,9 +671,9 @@ Global status therefore remains `partial`.
     `AAA-AAA-AFU` fixture, retained the exact cell-before-prize call order, and
     matched both structured stone heaps without a legacy marker.
 15. **Continue exact paint-time heap capture across the remaining room
-    families.** MagicalFireRoom is now exact for `ABC-DEF-GHI`; next pin
-    `TrapsRoom` or `SentryRoom`. Keep the legacy marker fallback until each
-    family has a pinned cell association.
+    families.** MagicalFireRoom and TrapsRoom are exact for `ABC-DEF-GHI` and
+    `hello`; next pin `SentryRoom` or another legacy family. Keep the legacy
+    marker fallback until each family has a pinned cell association.
 16. Add multi-depth schema-v3 fixtures and promote each newly covered region
     only after its lifecycle boundary probes and final facts match.
 
