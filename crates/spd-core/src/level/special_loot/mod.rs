@@ -212,7 +212,14 @@ fn paint_special(
         "SecretChestChasmRoom" => pit_secrets::secret_chest_chasm(dungeon, items_to_spawn),
         // Layout-only (no portable prize items)
         "WeakFloorRoom" | "DemonSpawnerRoom" => Vec::new(),
-        "SentryRoom" => vec![trap_rooms::sentry_prize(dungeon, items_to_spawn)],
+        "SentryRoom" => vec![trap_rooms::sentry_prize(
+            dungeon,
+            rooms,
+            ri,
+            map,
+            doors,
+            items_to_spawn,
+        )],
         "TrapsRoom" => vec![trap_rooms::traps_prize(
             dungeon,
             rooms,

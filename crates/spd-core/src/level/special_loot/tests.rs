@@ -54,26 +54,44 @@ fn sentry_prize_deterministic() {
     Random::reset_generators();
     let run = init_run(7);
     Random::push_generator_seeded(777);
-    let mut d = dungeon_from_run(run.clone());
+    let mut d = dungeon_from_run(run);
     d.depth = 8;
-    let mut spawn = Vec::new();
-    let a = sentry_prize(&mut d, &mut spawn);
+    let mut room = test_room("SentryRoom", 7, 7);
+    room.connected.push(1);
+    let mut neighbour = Room::new(1, "TunnelRoom", RoomKind::Connection, 1, 16, 3, 10, 3, 10);
+    neighbour.left = -4;
+    neighbour.top = 2;
+    neighbour.right = 0;
+    neighbour.bottom = 6;
+    neighbour.connected.push(0);
+    let rooms = vec![room, neighbour];
+    let mut map = paint_minimal(&rooms).expect("test map");
+    let mut doors = DoorMap::new();
+    doors.insert_test_point(0, 1, Point::new(0, 3));
+    let mut forced = crate::items::model::GeneratedItem::new("Pasty", ItemCategory::Food);
+    forced.source = Some("forced".into());
+    let mut spawn = vec![forced];
+    let loot = sentry_prize(&mut d, &rooms, 0, &mut map, &doors, &mut spawn);
+    let tail = Random::peek_ints(4);
     Random::pop_generator();
 
-    Random::reset_generators();
-    Random::push_generator_seeded(777);
-    let mut d2 = dungeon_from_run(run);
-    d2.depth = 8;
-    let mut spawn2 = Vec::new();
-    let b = sentry_prize(&mut d2, &mut spawn2);
-    Random::pop_generator();
-
-    assert_eq!(a.item.class_name, b.item.class_name);
-    assert_eq!(a.item.level, b.item.level);
-    assert!(!a.item.cursed);
-    assert_eq!(a.item.source.as_deref(), Some("SentryRoom"));
+    assert_eq!(loot.item.class_name, "Pasty");
+    assert_eq!(loot.item.source.as_deref(), Some("SentryRoom:forced"));
+    assert_eq!(loot.heap_type, "chest");
+    let heap_cell = map
+        .known_heaps
+        .iter()
+        .position(Option::is_some)
+        .expect("SentryRoom chest");
+    let mob_cell = map
+        .known_mobs
+        .iter()
+        .position(|mob| *mob == Some("Sentry"))
+        .expect("room-painted Sentry");
+    assert_eq!((heap_cell, mob_cell), (90, 81));
     assert_eq!(spawn.len(), 1);
     assert_eq!(spawn[0].class_name, "PotionOfHaste");
+    assert_eq!(tail, [-834025322, 1806119153, 699286909, 886657781]);
 }
 
 #[test]

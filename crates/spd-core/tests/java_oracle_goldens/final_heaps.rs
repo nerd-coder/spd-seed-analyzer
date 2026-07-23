@@ -257,6 +257,7 @@ fn depth_one_final_heaps_match_report_projection() {
         magical_fire::assert_abc_magical_fire_facts(&fixture, map, &context);
         runestone::assert_aaa_afu_facts(&fixture, map, &context);
         traps::assert_hello_traps_facts(&fixture, map, &context);
+        sentry::assert_aaz_sentry_facts(&fixture, map, &context);
         assert_eq!(
             (map.width, map.height),
             (expected_floor.width, expected_floor.height),
@@ -312,7 +313,15 @@ fn depth_one_final_heaps_match_report_projection() {
                         .items
                         .iter()
                         .map(|item| OracleItem {
-                            class_name: item.class_name.clone(),
+                            // Java reports nested plant seed classes by their
+                            // ambiguous simple name; preserve exact item
+                            // identity in the analyzer and normalize only at
+                            // this oracle boundary.
+                            class_name: if item.class_name.ends_with("Seed") {
+                                "Seed".into()
+                            } else {
+                                item.class_name.clone()
+                            },
                             quantity: item.quantity,
                             level: item.level,
                             cursed: item.cursed,
@@ -479,6 +488,8 @@ mod runestone;
 #[path = "final_heaps/magical_fire.rs"]
 mod magical_fire;
 
+#[path = "final_heaps/sentry.rs"]
+mod sentry;
 #[path = "final_heaps/traps.rs"]
 mod traps;
 

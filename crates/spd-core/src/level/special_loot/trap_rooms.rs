@@ -1,7 +1,9 @@
 //! Sentry, traps, fire, sacrifice, toxic gas, and honeypot room prizes.
 
+mod sentry;
 mod traps;
 
+pub(super) use sentry::paint as sentry_prize;
 pub(super) use traps::paint as traps_prize;
 
 use super::crystal::vault_entrance_cell;
@@ -19,31 +21,6 @@ use crate::random::Random;
 use crate::rooms::room::Room;
 
 /// `SentryRoom.paint` prize — chest equip or findPrizeItem + PotionOfHaste.
-pub(super) fn sentry_prize(
-    dungeon: &mut DungeonState,
-    items_to_spawn: &mut Vec<GeneratedItem>,
-) -> PlacedLoot {
-    // Layout (center/sentry/treasure) is geometric from entrance — no RNG before prize.
-    let mut prize = if Random::int_max(2) == 0 {
-        find_prize_item(items_to_spawn, None).unwrap_or_else(|| sentry_equip(dungeon))
-    } else {
-        sentry_equip(dungeon)
-    };
-    prize.cursed = false;
-    if is_curse_enchant(&prize) {
-        prize.enchantment = None;
-    }
-    if Random::int_max(3) == 0 {
-        prize.level += 1;
-    }
-    prize.source = Some("SentryRoom".into());
-    items_to_spawn.push(GeneratedItem::new("PotionOfHaste", ItemCategory::Potion));
-    PlacedLoot {
-        item: prize,
-        heap_type: "chest",
-    }
-}
-
 fn sentry_equip(dungeon: &mut DungeonState) -> GeneratedItem {
     let floor = (dungeon.depth / 5) + 1;
     // Random.Int(5): 0,1 weapon; 2 missile; 3,4 armor

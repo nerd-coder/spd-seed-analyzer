@@ -87,12 +87,16 @@ pub(super) fn magic_well(
         }
     }
     let center = room.as_rect().center_room();
-    if let Some(cell) = map.point_to_cell(center.x, center.y) {
+    let well_cell = map.point_to_cell(center.x, center.y);
+    if let Some(cell) = well_cell {
         map.map[cell] = WELL;
         map.character_allowed[cell] = false;
     }
     // Well water is a blob, not a heap item, but its class selection is seeded.
-    let _water = Random::one_of(&["WaterOfAwareness", "WaterOfHealth"]);
+    let water = *Random::one_of(&["WaterOfAwareness", "WaterOfHealth"]);
+    if let Some(cell) = well_cell {
+        map.record_blob_cell(water, false, cell, 1);
+    }
     items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
     Vec::new()
 }
