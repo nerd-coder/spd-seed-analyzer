@@ -46,6 +46,13 @@ pub(crate) struct KnownHeap {
 }
 
 #[derive(Debug, Clone)]
+pub(crate) struct KnownBlob {
+    pub class_name: &'static str,
+    pub always_visible: bool,
+    pub cells: Vec<(usize, u32)>,
+}
+
+#[derive(Debug, Clone)]
 pub struct TerrainMap {
     pub width: i32,
     pub height: i32,
@@ -75,6 +82,8 @@ pub struct TerrainMap {
     pub heap_occupied: Vec<bool>,
     /// Exact room-painted heap facts retained for the structured map report.
     pub(crate) known_heaps: Vec<Option<KnownHeap>>,
+    /// Active room-painted blobs retained for the structured map report.
+    pub(crate) known_blobs: Vec<KnownBlob>,
     /// Parallel to `map`: trap destroys dropped items (randomDropCell filter).
     pub trap_destroys_items: Vec<bool>,
     /// Optional trap class name for debugging / future UI.
@@ -103,6 +112,40 @@ impl TerrainMap {
             self.known_heaps[cell] = Some(KnownHeap {
                 heap_type,
                 items: vec![item],
+            });
+        }
+    }
+
+    pub(crate) fn record_blob_cell(
+        &mut self,
+        class_name: &'static str,
+        always_visible: bool,
+        cell: usize,
+        value: u32,
+    ) {
+        assert!(cell < self.len(), "blob cell must be inside the map");
+        if let Some(blob) = self
+            .known_blobs
+            .iter_mut()
+            .find(|blob| blob.class_name == class_name)
+        {
+            debug_assert_eq!(blob.always_visible, always_visible);
+            if let Some((_, concentration)) = blob
+                .cells
+                .iter_mut()
+                .find(|(known_cell, _)| *known_cell == cell)
+            {
+                // `Blob.seed` adds to the cell's current concentration and
+                // volume when a class is seeded into the same cell again.
+                *concentration += value;
+            } else {
+                blob.cells.push((cell, value));
+            }
+        } else {
+            self.known_blobs.push(KnownBlob {
+                class_name,
+                always_visible,
+                cells: vec![(cell, value)],
             });
         }
     }
@@ -321,6 +364,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
     let known_mobs = vec![None; len];
     let heap_occupied = vec![false; len];
     let known_heaps = vec![None; len];
+    let known_blobs = Vec::new();
     let trap_destroys_items = vec![false; len];
     let trap_names = vec![None; len];
 
@@ -341,6 +385,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
         known_mobs,
         heap_occupied,
         known_heaps,
+        known_blobs,
         trap_destroys_items,
         trap_names,
     })

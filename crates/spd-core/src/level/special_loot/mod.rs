@@ -175,7 +175,9 @@ fn paint_special(
         "RunestoneRoom" => {
             special_rooms::runestone_prizes_on_map(dungeon, room, map, items_to_spawn)
         }
-        "LaboratoryRoom" => special_rooms::laboratory_prizes(dungeon, room, items_to_spawn),
+        "LaboratoryRoom" => {
+            special_rooms::paint_laboratory(dungeon, room, ri, map, doors, items_to_spawn)
+        }
         "StatueRoom" => vec![special_rooms::statue_weapon(dungeon, room, items_to_spawn)],
         "SecretLibraryRoom" => secret_rooms::secret_library(dungeon, room, items_to_spawn),
         "SecretRunestoneRoom" => secret_rooms::secret_runestone(dungeon, room, items_to_spawn),
@@ -195,7 +197,13 @@ fn paint_special(
             map.record_heap(cell, "chest", prize.item.clone());
             vec![prize]
         }
-        "SecretSummoningRoom" => vec![pit_secrets::secret_summoning_prize(dungeon)],
+        "SecretSummoningRoom" => {
+            let prize = pit_secrets::secret_summoning_prize(dungeon);
+            let cell =
+                geometry_prize_cell.expect("SecretSummoningRoom geometry returns its center cell");
+            map.record_heap(cell, "skeleton", prize.item.clone());
+            vec![prize]
+        }
         "SecretChestChasmRoom" => pit_secrets::secret_chest_chasm(dungeon, items_to_spawn),
         // Layout-only (no portable prize items)
         "WeakFloorRoom" | "DemonSpawnerRoom" => Vec::new(),

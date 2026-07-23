@@ -1,7 +1,10 @@
 use super::*;
 
+#[path = "floor_eight/parity.rs"]
+mod parity;
+
 #[test]
-fn hkt_floor_eight_fixture_and_partial_structure_are_pinned() {
+fn hkt_floor_eight_lifecycle_matches_oracle() {
     let path = fixture_paths()
         .into_iter()
         .find(|path| {
@@ -181,15 +184,19 @@ fn hkt_floor_eight_fixture_and_partial_structure_are_pinned() {
         actual.pre_paint_rng_probe, expected.pre_paint_rng,
         "HKT floor-8 pre-paint RNG boundary"
     );
-    assert_eq!(actual.pre_mobs_rng_probe.len(), 8);
-    assert_eq!(actual.pre_items_rng_probe.len(), 8);
-    // Bounds also remain exact, but RNG divergence begins during painting and
-    // is visible at the pre-mobs boundary. Do not treat these narrow matches
-    // as terrain, entity-cell, or downstream lifecycle parity.
+    assert_eq!(
+        actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
+        "HKT floor-8 pre-mobs RNG boundary"
+    );
+    assert_eq!(
+        actual.pre_items_rng_probe, expected.pre_items_rng,
+        "HKT floor-8 pre-items RNG boundary"
+    );
     assert_eq!(
         (map.width, map.height),
         (expected.width, expected.height),
         "HKT floor-8 map bounds"
     );
     assert_eq!(actual_rooms, expected.rooms, "HKT floor-8 room classes");
+    parity::assert_map(map, expected);
 }

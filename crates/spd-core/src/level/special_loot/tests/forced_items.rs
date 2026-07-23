@@ -2,13 +2,17 @@
 
 use super::super::secret_rooms::{secret_laboratory, secret_larder, secret_runestone};
 use super::super::special_rooms::{
-    armory_prizes_on_map, crypt_prize, laboratory_prizes, library_prizes, pool_prize,
+    armory_prizes_on_map, crypt_prize, library_prizes, paint_laboratory, pool_prize,
     runestone_prizes, statue_weapon, treasury_prizes_on_map,
 };
 use super::test_room;
+use crate::geom::Point;
 use crate::items::model::ItemCategory;
+use crate::level::painter::DoorMap;
 use crate::level::terrain::paint_minimal;
 use crate::random::Random;
+use crate::rooms::room::Room;
+use crate::rooms::types::RoomKind;
 use crate::run::{dungeon_from_run, init_run};
 
 #[test]
@@ -79,21 +83,50 @@ fn treasury_room_pushes_iron_key() {
 }
 
 #[test]
-fn laboratory_room_pushes_iron_key() {
+fn laboratory_room_records_fresh_prison_chapter_loot_blob_and_key() {
     Random::reset_generators();
     let run = init_run(34);
     Random::push_generator_seeded(104);
     let mut d = dungeon_from_run(run);
-    d.depth = 12;
-    let room = test_room("LaboratoryRoom", 8, 8);
+    d.depth = 8;
+    let mut room = test_room("LaboratoryRoom", 8, 8);
+    room.connected.push(1);
+    let mut neighbour = Room::new(1, "TunnelRoom", RoomKind::Connection, 1, 16, 3, 10, 3, 10);
+    neighbour.left = 8;
+    neighbour.top = 2;
+    neighbour.right = 12;
+    neighbour.bottom = 6;
+    neighbour.connected.push(0);
+    let mut map = paint_minimal(&[room.clone(), neighbour]).expect("test map");
+    let mut doors = DoorMap::new();
+    doors.insert_test_point(0, 1, Point::new(8, 4));
     let mut spawn = Vec::new();
-    let loot = laboratory_prizes(&mut d, &room, &mut spawn);
+    let loot = paint_laboratory(&mut d, &room, 0, &mut map, &doors, &mut spawn);
     Random::pop_generator();
 
-    assert!((1..=2).contains(&loot.len()));
+    assert!((4..=5).contains(&loot.len()));
     assert!(loot
         .iter()
         .all(|p| p.item.source.as_deref() == Some("LaboratoryRoom")));
+    assert_eq!(
+        loot.iter()
+            .filter(|drop| drop.item.class_name == "AlchemyPage")
+            .count(),
+        2
+    );
+    assert_eq!(
+        loot.iter()
+            .filter(|drop| drop.item.class_name == "EnergyCrystal")
+            .count(),
+        1
+    );
+    assert_eq!(map.known_blobs.len(), 1);
+    assert_eq!(map.known_blobs[0].class_name, "Alchemy");
+    assert_eq!(map.known_blobs[0].cells.len(), 1);
+    assert_eq!(
+        map.known_heaps.iter().filter(|heap| heap.is_some()).count(),
+        loot.len()
+    );
     assert_eq!(spawn.len(), 1);
     assert_eq!(spawn[0].class_name, "IronKey");
     assert_eq!(spawn[0].category, ItemCategory::Other);

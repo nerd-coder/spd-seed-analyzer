@@ -6,8 +6,12 @@ use crate::level::painter;
 use crate::level::terrain::{self, TerrainMap};
 use crate::random::Random;
 use crate::report::{
-    FloorMap, MapHeap, MapHeapItem, MapMarker, MapMarkerKind, MapMob, MapTransition, MapTrap,
+    FloorMap, MapBlob, MapBlobCell, MapHeap, MapHeapItem, MapMarker, MapMarkerKind, MapMob,
+    MapTransition, MapTrap,
 };
+
+#[cfg(test)]
+mod tests;
 
 pub(super) struct MapFacts {
     pub heaps: Vec<MapHeap>,
@@ -140,9 +144,35 @@ impl MapFacts {
             transitions: transitions(map, depth, branch),
             traps: traps(map),
             plants: Vec::new(),
-            blobs: Vec::new(),
+            blobs: blobs(map),
         }
     }
+}
+
+fn blobs(map: &TerrainMap) -> Vec<MapBlob> {
+    let mut blobs: Vec<_> = map
+        .known_blobs
+        .iter()
+        .map(|blob| {
+            let mut cells: Vec<_> = blob
+                .cells
+                .iter()
+                .map(|&(cell, value)| MapBlobCell {
+                    cell: cell as u32,
+                    value,
+                })
+                .collect();
+            cells.sort_by_key(|cell| cell.cell);
+            MapBlob {
+                class_name: blob.class_name.to_string(),
+                volume: cells.iter().map(|cell| cell.value).sum(),
+                always_visible: blob.always_visible,
+                cells,
+            }
+        })
+        .collect();
+    blobs.sort_by(|left, right| left.class_name.cmp(&right.class_name));
+    blobs
 }
 
 fn heap_item(item: &GeneratedItem) -> MapHeapItem {

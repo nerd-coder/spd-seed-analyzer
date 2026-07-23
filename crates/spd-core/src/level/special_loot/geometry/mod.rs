@@ -3,6 +3,7 @@
 mod basic;
 mod maze;
 mod rot_garden;
+mod summoning;
 
 #[cfg(test)]
 mod tests;
@@ -21,6 +22,7 @@ pub(super) fn paint(
 ) -> Option<usize> {
     match room.name.as_str() {
         "SecretMazeRoom" => maze::paint(map, room, room_index, doors),
+        "SecretSummoningRoom" => Some(summoning::paint(map, room)),
         "RotGardenRoom" => {
             rot_garden::paint(map, room, room_index, doors);
             None

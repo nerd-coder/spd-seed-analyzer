@@ -2,9 +2,12 @@
 
 mod caves;
 
-use crate::level::terrain::{TerrainMap, EMPTY, EMPTY_DECO, EMPTY_SP, WALL, WALL_DECO, WATER};
+use crate::level::terrain::{
+    TerrainMap, CHASM, EMPTY, EMPTY_DECO, EMPTY_SP, REGION_DECO_ALT, WALL, WALL_DECO, WATER,
+};
 use crate::random::Random;
 use crate::rooms::room::Room;
+use crate::rooms::types::RoomKind;
 
 use super::DoorMap;
 
@@ -17,7 +20,7 @@ pub fn decorate(
 ) {
     match depth {
         1..=5 => decorate_sewers(map),
-        6..=10 => decorate_prison(map, rooms),
+        6..=10 => decorate_prison(map, rooms, paint_order),
         11..=15 => caves::decorate(map, rooms, paint_order, doors),
         16..=20 => decorate_city(map, depth),
         _ => decorate_halls(map),
@@ -67,8 +70,8 @@ fn decorate_sewers(map: &mut TerrainMap) {
     }
 }
 
-/// `PrisonPainter.decorate` (chasm/region-deco room loops simplified — no CHASM rooms yet).
-fn decorate_prison(map: &mut TerrainMap, _rooms: &[Room]) {
+/// `PrisonPainter.decorate`, including its room-ordered chasm ornament pass.
+fn decorate_prison(map: &mut TerrainMap, rooms: &[Room], paint_order: &[usize]) {
     let w = map.width;
     let l = map.map.len() as i32;
     for i in (w + 1)..(l - w - 1) {
@@ -93,7 +96,39 @@ fn decorate_prison(map: &mut TerrainMap, _rooms: &[Room]) {
             map.map[i] = EMPTY_DECO;
         }
     }
-    // Fissure/Chasm region deco skipped (no CHASM terrain from our painter yet).
+    for &room_index in paint_order {
+        let Some(room) = rooms.get(room_index) else {
+            continue;
+        };
+        if matches!(
+            room.kind,
+            RoomKind::Special | RoomKind::Secret | RoomKind::Shop
+        ) {
+            continue;
+        }
+        let chance = if room.name.contains("FissureRoom") {
+            3
+        } else if room.name.contains("ChasmBridgeRoom") {
+            5
+        } else {
+            15
+        };
+        for y in ((room.top + 1)..room.bottom).rev() {
+            for x in (room.left + 1)..room.right {
+                let Some(cell) = map.point_to_cell(x, y) else {
+                    continue;
+                };
+                let Some(above) = map.point_to_cell(x, y - 1) else {
+                    continue;
+                };
+                if map.map[cell] == CHASM && map.map[above] == CHASM && Random::int_max(chance) == 0
+                {
+                    map.map[cell] = REGION_DECO_ALT;
+                }
+            }
+        }
+    }
+
     for i in 0..w {
         let i = i as usize;
         let below = i + w as usize;
