@@ -150,6 +150,19 @@ fn magical_fire_drops_and_frost() {
             .count(),
         loot.len()
     );
+    let known_heaps: Vec<_> = map
+        .known_heaps
+        .iter()
+        .enumerate()
+        .filter_map(|(cell, heap)| {
+            heap.as_ref()
+                .map(|heap| (cell, heap.heap_type, heap.items[0].class_name.as_str()))
+        })
+        .collect();
+    assert_eq!(known_heaps.len(), loot.len());
+    assert!(known_heaps
+        .iter()
+        .all(|(_, heap_type, _)| *heap_type == "heap"));
     assert!(map.grass_allowed.iter().any(|&allowed| !allowed));
     assert!(map.character_allowed.iter().any(|&allowed| !allowed));
     assert_eq!(tail, [-1240710046, 1594262110, -1344810206, 1548219350]);

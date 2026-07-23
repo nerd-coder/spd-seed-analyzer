@@ -83,7 +83,7 @@ pub(super) fn magical_fire_prizes(
     let n = Random::int_range_inclusive(3, 4);
     let mut out = Vec::new();
     for _ in 0..n {
-        let mut placed = false;
+        let mut prize_cell = None;
         for _ in 0..10_000 {
             let point = Point::new(
                 Random::int_range_inclusive(behind_fire.left, behind_fire.right),
@@ -94,13 +94,13 @@ pub(super) fn magical_fire_prizes(
             };
             if map.map[cell] == EMPTY_SP && !map.heap_occupied[cell] {
                 map.heap_occupied[cell] = true;
-                placed = true;
+                prize_cell = Some(cell);
                 break;
             }
         }
-        if !placed {
+        let Some(prize_cell) = prize_cell else {
             continue;
-        }
+        };
         let mut item = if honey {
             honey = false;
             GeneratedItem::new("Honeypot", ItemCategory::Other)
@@ -114,6 +114,9 @@ pub(super) fn magical_fire_prizes(
         } else {
             "MagicalFireRoom".into()
         });
+        // Java chooses the cell before `prize(level)`, then `Level.drop`
+        // records the generated item at that exact cell.
+        map.record_heap(prize_cell, "heap", item.clone());
         out.push(PlacedLoot {
             item,
             heap_type: "heap",

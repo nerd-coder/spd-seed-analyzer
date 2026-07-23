@@ -1,9 +1,9 @@
 # SPD Seed Analyzer — Implementation Plan
 
-**Last updated:** 2026-07-23
+**Last updated:** 2026-07-24
 **Branch:** `main`
 **Pinned SPD:** v3.3.8 @ `7b8b845a7`
-**Local game source:** `/Users/toan/code/00-Evan/shattered-pixel-dungeon`
+**Local game source:** `/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`
 
 ## Goal
 
@@ -137,7 +137,7 @@ the Rust side match it exactly.
 ## What's lacking for exact parity
 
 Verified against the pinned Java source
-(`/Users/toan/code/00-Evan/shattered-pixel-dungeon`) and eleven schema-v3
+(`/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`) and eleven schema-v3
 fixtures. The depth-one suite covers Pool/Runestone, MagicalFire,
 CrystalPath/MagicWell, Traps/Treasury, SewerPipe, RegionDecoPatch,
 Bridge/Ring/CircleBasin, Garden/Sacrifice/Striped, tunnel, WaterBridge, Crypt,
@@ -154,6 +154,23 @@ entrance/exit subclasses), and RitualSite apply their pinned `canPlaceItem`
 and paired `canPlaceCharacter` exclusions without extra predicate RNG beyond
 the already-pinned painter setup. VaultLevel branch rooms remain outside the
 regular-floor analyzer and are not implied by this coverage.
+
+### 0i. ~~Close MagicalFireRoom structured heap capture with ABC-DEF-GHI~~ — FIXTURE EXACT
+For `ABC-DEF-GHI` at depth 1, the schema-v3 lifecycle pins
+`MagicalFireRoom` and its exact downstream boundary probes. Rust now retains
+the three paint-time heap associations: `PotionOfToxicGas` at cell 887,
+`Pasty` at cell 889, and `Honeypot` at cell 964, all as ordinary heaps, with
+no legacy `Room loot` fallback.
+
+The painter follows pinned `MagicalFireRoom.paint()` call order: choose and
+reserve an unoccupied `behindFire.random(0)` cell first, generate the prize
+second, and only then record it as `Level.drop()` does. The committed fixture
+was independently regenerated from SPD v3.3.8 at `7b8b845a7`; after the
+documented lifecycle-only render-field normalization, its canonical lifecycle
+facts match (the regenerated oracle additively emits an empty `quest_rewards`
+array that the older fixture legitimately omits). Global status stays
+`partial`; the next item-15 phase should pin one additional legacy family,
+preferably `TrapsRoom` or `SentryRoom`, and preserve its exact heap cell.
 
 ### 0h. ~~Close RunestoneRoom structured heap capture with AAA-AFU~~ — FIXTURE EXACT
 For `AAA-AAA-AFU` at depth 1, Rust now matches Java's Runestone, CircleBasin,
@@ -639,9 +656,10 @@ Global status therefore remains `partial`.
 14. ~~**Close RunestoneRoom paint-time heap capture.**~~ Added the full-additive
     `AAA-AAA-AFU` fixture, retained the exact cell-before-prize call order, and
     matched both structured stone heaps without a legacy marker.
-15. Continue exact paint-time heap capture across the remaining room families;
-    keep the legacy marker fallback until each family has a pinned cell
-    association.
+15. **Continue exact paint-time heap capture across the remaining room
+    families.** MagicalFireRoom is now exact for `ABC-DEF-GHI`; next pin
+    `TrapsRoom` or `SentryRoom`. Keep the legacy marker fallback until each
+    family has a pinned cell association.
 16. Add multi-depth schema-v3 fixtures and promote each newly covered region
     only after its lifecycle boundary probes and final facts match.
 
@@ -776,7 +794,7 @@ license constraints.
 6. Validate against `crates/spd-core/tests/java_oracle_goldens/final_heaps.rs`,
    its focused child modules, and all committed schema-v3 fixtures;
    regenerate/extend fixtures via `tools/java-oracle/run --source
-   /Users/toan/code/00-Evan/shattered-pixel-dungeon ...`.
+   /Users/toan/code/repos/00-Evan/shattered-pixel-dungeon ...`.
 7. Keep the source-exact regular-floor item/character placement predicates,
    CryptRoom paint, RunestoneRoom heap capture, Food deck-rollover oracle, and
    unique-winner shop-bag oracle green. Next, extend exact paint-time heap
