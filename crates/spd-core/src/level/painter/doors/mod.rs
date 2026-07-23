@@ -10,7 +10,9 @@ mod model;
 use std::collections::{HashMap, VecDeque};
 
 use crate::geom::Point;
-use crate::level::terrain::{TerrainMap, DOOR, EMPTY, LOCKED_DOOR, SECRET_DOOR, WALL, WATER};
+use crate::level::terrain::{
+    TerrainMap, BARRICADE, DOOR, EMPTY, LOCKED_DOOR, SECRET_DOOR, WALL, WATER,
+};
 use crate::level::Feeling;
 use crate::random::Random;
 use crate::rooms::room::Room;
@@ -170,7 +172,7 @@ pub fn paint_doors(
                 DoorType::Water => WATER,
                 DoorType::Unlocked | DoorType::Regular => DOOR,
                 DoorType::Hidden => SECRET_DOOR,
-                DoorType::Barricade => WALL,
+                DoorType::Barricade => BARRICADE,
                 DoorType::Locked => LOCKED_DOOR,
                 DoorType::Crystal => LOCKED_DOOR,
                 DoorType::Wall => WALL,

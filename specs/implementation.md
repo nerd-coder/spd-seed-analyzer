@@ -49,7 +49,7 @@ decks/tiers, depth seeds / limited drops. Golden fixtures in
 `tools/java-oracle/fixtures/` + `crates/spd-core/tests/java_oracle_goldens.rs`
 confirm exact identity parity across four seeds.
 
-**Levelgen — broad partial port; six depth-one fixtures plus HKT floors 6 and 8 are exact.**
+**Levelgen — broad partial port; six depth-one fixtures plus HKT replay floors 6–8 are exact.**
 Room init, geometry, both builders (Loop/FigureEight), all connection-room
 subclasses, water/grass/trap painter, `paintDoors` merge/Graph, every region's
 structural + standard room geometry, special/secret room prize logic, shop
@@ -79,12 +79,12 @@ for the committed fresh-run fixture only; the engine remains `partial` because
 other deeper-floor histories and room combinations are not yet covered.
 
 Floor 7 now has a full pinned Java observation after replaying floors 1–6.
-For `HKT-JZN-XQQ`, Rust matches the exact 16-room class set, the complete
-pre-paint, `createMobs`-entry, and pre-`createItems` RNG probes; all eight final
-mob cells/classes including the Wandmaker; and the persistent rewards
-`WandOfPrismaticLight +1` and `WandOfCorrosion +1`. Its remaining painter,
-heap, and `createItems` facts are not yet asserted as exact, so this is still a
-deliberately narrow replay slice and global status stays `partial`.
+For `HKT-JZN-XQQ`, Rust matches the `none` feeling, exact 16-room class set,
+41×35 bounds, all three lifecycle probes, terrain/discoverability/tile
+variance, 15 heaps, 8 mobs, 2 transitions, 2 traps, empty plant/blob sets, and
+the persistent rewards `WandOfPrismaticLight +1` and `WandOfCorrosion +1`.
+This is exact for the committed fresh-run fixture only; global status stays
+`partial` for other histories and uncovered room combinations.
 
 Floor 8 now has an exact pinned lifecycle after replaying floors 1–7. For
 `HKT-JZN-XQQ`, Rust matches the `none` feeling, exact 15-room class set, 30×42
@@ -143,11 +143,9 @@ Bridge/Ring/CircleBasin, Garden/Sacrifice/Striped, tunnel, WaterBridge, and
 HKT's Armory/FigureEight variants. Every depth-one fixture asserts exact
 lifecycle RNG probes, map bounds, final heap cells, final mob cells/types, and
 report-visible item projection. The HKT floor-one fixture also asserts every
-additive render fact listed above. The floor-six fixture now asserts its
-complete Java observation.
-Floor seven asserts its exact room/pre-paint/pre-mobs/Wandmaker slice, while
-floor eight asserts its complete lifecycle and final render/entity facts for
-the committed replay.
+additive render fact listed above. The floor-six, floor-seven, and floor-eight
+fixtures now assert their complete Java observations and final render/entity
+facts for the committed replays.
 
 The supported regular-floor room-placement predicates are now source-exact.
 Plants, Aquarium, every StandardBridge family, CavesFissure (including its
@@ -197,21 +195,27 @@ hero, post-exploration FOV, and animated-water phase remain outside
 deterministic `Level.create()` comparison. Global status stays `partial`; this
 result proves only the committed HKT fresh-run floor-6 history.
 
-### 0d. ~~Fix HKT floor-seven Wandmaker replay~~ — CREATE-MOBS SLICE EXACT
+### 0d. ~~Close HKT floor-seven lifecycle parity~~ — FIXTURE EXACT
 For `HKT-JZN-XQQ` floor 7, schema v3 replays Java floors 1–6 before creating
 the target `PrisonLevel`. The committed oracle records the full 41×35 Java
 observation: 16 room classes, all lifecycle probes and render arrays, 15
 heaps, 8 mobs, and persistent Wandmaker reward state.
 
-Rust now matches the sorted room classes, complete pre-paint and
-`createMobs`-entry probes, complete pre-`createItems` probe, all eight final mob
-cells/classes including the Wandmaker, and both rewards exactly:
-`WandOfPrismaticLight +1` and `WandOfCorrosion +1`. Closing this slice required
-the inherited `StandardRoom.setSizeCat()` draws for `RitualSiteRoom` and the
-temporary `EmptyRoom` in `CellBlockRoom`, RitualSite's jittered center and 3×3
-`CUSTOM_DECO_EMPTY` area, the pinned Wandmaker placement predicates, and
-recording the pre-mobs probe before quest hooks. Remaining floor-7 painter,
-heap, and `createItems` parity is not claimed; global status stays `partial`.
+Rust now matches that complete observation: `none` feeling, sorted room set,
+41×35 bounds, every lifecycle probe and render array, all 15 heap cells/stacks,
+all 8 mob cells/classes including the Wandmaker, both transitions, both traps,
+empty plant/blob sets, and the exact `WandOfPrismaticLight +1` and
+`WandOfCorrosion +1` rewards.
+
+The earlier boundary work covered the inherited `StandardRoom.setSizeCat()`
+draws for `RitualSiteRoom`, CellBlock's temporary `EmptyRoom`, RitualSite's
+jittered center, and Wandmaker placement. Closing the final facts required
+source-exact StorageRoom wall/`EMPTY_SP` paint and heap-cell retention, its
+`BARRICADE` entrance terrain/flags, and PrisonPainter's Java
+`instanceof ChasmBridgeRoom` behavior for entrance/exit subclasses. The
+committed fixture was independently regenerated from the pinned checkout with
+identical canonical JSON. Global status stays `partial`; this proves only the
+committed HKT fresh-run floor-7 history.
 
 ### 0e. ~~Close HKT floor-eight lifecycle parity~~ — FIXTURE EXACT
 For `HKT-JZN-XQQ` floor 8, schema v3 replays Java floors 1–7 before creating
@@ -539,13 +543,17 @@ the global `partial` status or close remaining special-room paint gaps.
    centralized StandardBridge's half-open `spaceRect`, and matched the paired
    Plants/Aquarium/CavesFissure/RitualSite character exclusions. Vault-only
    predicates remain scoped to a future VaultLevel port.
-10. Close known special-room paint gaps with a pinned fixture before promoting
-    each room family.
-11. Correct remaining timing/geometry approximations such as
+10. ~~**Close HKT floor-7 lifecycle and StorageRoom paint parity.**~~ Matched
+    all render/entity facts, retained Storage's four exact heap cells, painted
+    its barricade terrain, and fixed PrisonPainter's ChasmBridge subclass
+    ornament predicate.
+11. Close the next known special-room paint gap with a pinned lifecycle fixture
+    before promoting that room family.
+12. Correct remaining timing/geometry approximations such as
     inventory-sensitive later shops as new fixtures cover them.
-12. Extend exact paint-time heap capture to the remaining room families; keep
+13. Extend exact paint-time heap capture to the remaining room families; keep
     the legacy marker fallback until each family has a pinned cell association.
-13. Add multi-depth schema-v3 fixtures and promote each newly covered region
+14. Add multi-depth schema-v3 fixtures and promote each newly covered region
     only after its lifecycle boundary probes and final facts match.
 
 ---
@@ -630,8 +638,7 @@ parity harness: identity maps (schema v1), depth-one forced-item queue
 (schema v2), six exact depth-one lifecycle fixtures covering map bounds,
 heap cells, mob facts, and report-visible item projection, plus full Java
 floor-six, floor-seven, and floor-eight observations (schema v3, see above).
-HKT floors 1, 6, and 8 prove their complete render-fact projections; floor 7
-asserts its exact room/pre-paint/pre-mobs/pre-items/final-mobs/Wandmaker slice. Add
+HKT floors 1, 6, 7, and 8 prove their complete render-fact projections. Add
 tightly-scoped oracle fixtures before writing new Rust behavior — regenerate
 via `tools/java-oracle/run` (see `tools/java-oracle/README.md`).
 
@@ -663,17 +670,17 @@ license constraints.
 3. Keep the exact `HKT-JZN-XQQ` floor-6 lifecycle golden green. It matches
    bounds, all RNG probes, terrain/render masks, heaps, mobs, transitions, and
    traps, but this single replay does not change global `partial` status.
-4. Keep the exact `HKT-JZN-XQQ` floor-8 lifecycle golden green. It matches all
+4. Keep the exact `HKT-JZN-XQQ` floor-7 lifecycle golden green. It matches
+   bounds, all RNG probes and render masks, 15 heaps, 8 mobs, 2 transitions,
+   2 traps, and both Wandmaker rewards. This replay still leaves global status
+   `partial`.
+5. Keep the exact `HKT-JZN-XQQ` floor-8 lifecycle golden green. It matches all
    three RNG probes, terrain/render masks, heaps, mobs, transitions, traps, and
    the Alchemy blob; this replay also leaves global status `partial`.
-5. Validate against `crates/spd-core/tests/java_oracle_goldens/final_heaps.rs`,
+6. Validate against `crates/spd-core/tests/java_oracle_goldens/final_heaps.rs`,
    its focused child modules, and all committed schema-v3 fixtures;
    regenerate/extend fixtures via `tools/java-oracle/run --source
    /Users/toan/code/00-Evan/shattered-pixel-dungeon ...`.
-6. Keep the exact floor-7 room/pre-paint/pre-mobs/pre-items/final-mobs/Wandmaker
-   replay slice green: `WandOfPrismaticLight +1` and
-   `WandOfCorrosion +1`. Its full painter and final-fact lifecycle remains
-   partial.
 7. Keep the source-exact regular-floor item/character placement predicates
    green. Next, close known special-room paint gaps with pinned lifecycle
    fixtures; source-ported deeper mob populations are not a substitute for

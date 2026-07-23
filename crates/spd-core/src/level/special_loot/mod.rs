@@ -171,7 +171,7 @@ fn paint_special(
             map,
             items_to_spawn,
         )],
-        "StorageRoom" => special_rooms::storage_prizes(dungeon, room, items_to_spawn),
+        "StorageRoom" => special_rooms::storage_prizes(dungeon, room, map, items_to_spawn),
         "RunestoneRoom" => {
             special_rooms::runestone_prizes_on_map(dungeon, room, map, items_to_spawn)
         }

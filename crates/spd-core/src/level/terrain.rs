@@ -20,6 +20,7 @@ pub const PEDESTAL: i32 = 11;
 /// SPD `Terrain.SECRET_DOOR` — hidden wall door.
 pub const SECRET_DOOR: i32 = 16;
 pub const WALL_DECO: i32 = 12;
+pub const BARRICADE: i32 = 13;
 pub const EMPTY_SP: i32 = 14;
 pub const HIGH_GRASS: i32 = 15;
 pub const SECRET_TRAP: i32 = 17;
@@ -169,6 +170,7 @@ impl TerrainMap {
                 | STATUE_SP
                 | BOOKSHELF
                 | DOOR
+                | BARRICADE
                 | LOCKED_DOOR
                 | SECRET_DOOR
                 | REGION_DECO
@@ -179,7 +181,13 @@ impl TerrainMap {
     pub fn is_los_blocking(&self, cell: usize) -> bool {
         matches!(
             self.map[cell],
-            WALL | DOOR | LOCKED_DOOR | SECRET_DOOR | WALL_DECO | HIGH_GRASS | BOOKSHELF
+            WALL | DOOR
+                | BARRICADE
+                | LOCKED_DOOR
+                | SECRET_DOOR
+                | WALL_DECO
+                | HIGH_GRASS
+                | BOOKSHELF
         )
     }
 

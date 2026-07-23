@@ -19,6 +19,7 @@ mod depth_one_parity;
 mod forced_items;
 mod placement_masks;
 mod quest_npcs;
+mod storage;
 
 fn test_room(name: &str, w: i32, h: i32) -> Room {
     let mut r = Room::new(0, name, RoomKind::Special, 1, 3, w, w + 2, h, h + 2);

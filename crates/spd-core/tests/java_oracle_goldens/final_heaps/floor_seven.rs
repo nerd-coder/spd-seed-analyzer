@@ -1,7 +1,10 @@
 use super::*;
 
+#[path = "floor_seven/parity.rs"]
+mod parity;
+
 #[test]
-fn hkt_floor_seven_create_mobs_and_wandmaker_match_oracle() {
+fn hkt_floor_seven_lifecycle_matches_oracle() {
     let path = fixture_paths()
         .into_iter()
         .find(|path| {
@@ -17,6 +20,20 @@ fn hkt_floor_seven_create_mobs_and_wandmaker_match_oracle() {
     assert_eq!(fixture.contract.as_deref(), Some("final_placed_heaps"));
     assert_eq!(fixture.input.depths, [7]);
     assert_eq!(expected.depth, 7);
+    assert_eq!((expected.width, expected.height), (41, 35));
+    assert_eq!(expected.pre_paint_rng.len(), 8);
+    assert_eq!(expected.pre_mobs_rng.len(), 8);
+    assert_eq!(expected.pre_items_rng.len(), 8);
+    assert_eq!(expected.terrain.as_ref().map(Vec::len), Some(41 * 35));
+    assert_eq!(expected.discoverable.as_ref().map(Vec::len), Some(41 * 35));
+    assert_eq!(expected.tile_variance.as_ref().map(Vec::len), Some(41 * 35));
+    assert!(expected.forced_items.is_empty());
+    assert_eq!(expected.final_heaps.len(), 15);
+    assert_eq!(expected.final_mobs.len(), 8);
+    assert_eq!(expected.transitions.as_ref().map(Vec::len), Some(2));
+    assert_eq!(expected.traps.as_ref().map(Vec::len), Some(2));
+    assert_eq!(expected.plants.as_ref().map(Vec::len), Some(0));
+    assert_eq!(expected.blobs.as_ref().map(Vec::len), Some(0));
     assert_eq!(
         expected.quest_rewards,
         [
@@ -43,9 +60,16 @@ fn hkt_floor_seven_create_mobs_and_wandmaker_match_oracle() {
         actual = Some(create_level_partial(&mut dungeon));
     }
     let actual = actual.expect("floor-7 Rust facts");
+    let map = actual.map.as_ref().expect("floor-7 regular map");
     let mut actual_rooms = actual.rooms.clone();
     actual_rooms.sort();
+    assert_eq!(actual.feeling.as_str(), "none", "HKT floor-7 feeling");
     assert_eq!(actual_rooms, expected.rooms, "HKT floor-7 room classes");
+    assert_eq!(
+        (map.width, map.height),
+        (expected.width, expected.height),
+        "HKT floor-7 map bounds"
+    );
     assert_eq!(
         actual.pre_paint_rng_probe, expected.pre_paint_rng,
         "HKT floor-7 pre-paint RNG boundary"
@@ -58,18 +82,7 @@ fn hkt_floor_seven_create_mobs_and_wandmaker_match_oracle() {
         actual.pre_items_rng_probe, expected.pre_items_rng,
         "HKT floor-7 pre-items RNG boundary"
     );
-    let actual_mobs: Vec<_> = actual
-        .map
-        .as_ref()
-        .expect("HKT floor-7 map")
-        .mobs
-        .iter()
-        .map(|mob| OracleMob {
-            cell: mob.cell,
-            class_name: mob.class_name.clone(),
-        })
-        .collect();
-    assert_eq!(actual_mobs, expected.final_mobs, "HKT floor-7 mobs");
+    parity::assert_map(map, expected);
     let actual_rewards: Vec<_> = actual
         .placed_items
         .iter()

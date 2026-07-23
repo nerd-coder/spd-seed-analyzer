@@ -6,7 +6,7 @@ use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::items::randomize::randomize_item;
 use crate::level::create_items::PlacedLoot;
-use crate::level::terrain::{TerrainMap, EMPTY, STATUE, WALL};
+use crate::level::terrain::{TerrainMap, EMPTY, EMPTY_SP, STATUE, WALL};
 use crate::random::Random;
 use crate::rooms::room::Room;
 
@@ -151,14 +151,30 @@ fn set_terrain(map: &mut TerrainMap, x: i32, y: i32, terrain: i32) {
 pub fn storage_prizes(
     dungeon: &mut DungeonState,
     room: &Room,
+    map: &mut TerrainMap,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
+    // StorageRoom.paint establishes its own terrain before selecting drops.
+    // This must not depend on the generic special-room canvas, especially when
+    // a chasm-feeling level was initialized with CHASM outside room painters.
+    fill_room(map, room, WALL);
+    fill_margin(map, room, 1, EMPTY_SP);
+
     let mut out = Vec::new();
     let mut honey = Random::int_max(2) == 0;
     let n = Random::int_range_inclusive(3, 4);
-    let mut occupied = Vec::new();
     for _ in 0..n {
-        burn_drop_pos(room, &mut occupied);
+        // StorageRoom chooses and reserves the drop cell before generating its
+        // prize, rejecting non-EMPTY_SP terrain and existing heaps.
+        let cell = loop {
+            let point = room.random();
+            let cell = map
+                .point_to_cell(point.x, point.y)
+                .expect("StorageRoom point is on map");
+            if map.map[cell] == EMPTY_SP && !map.heap_occupied[cell] {
+                break cell;
+            }
+        };
         let mut item = if honey {
             honey = false;
             GeneratedItem::new("Honeypot", ItemCategory::Other)
@@ -166,6 +182,7 @@ pub fn storage_prizes(
             storage_prize(dungeon, items_to_spawn)
         };
         item.source = Some("StorageRoom".into());
+        map.record_heap(cell, "heap", item.clone());
         out.push(PlacedLoot {
             item,
             heap_type: "heap",

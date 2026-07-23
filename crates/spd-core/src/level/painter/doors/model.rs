@@ -162,11 +162,23 @@ fn special_door_type(name: &str) -> DoorType {
     match name {
         "DemonSpawnerRoom" => DoorType::Unlocked,
         "SacrificeRoom" => DoorType::Empty,
-        "CryptRoom" | "ArmoryRoom" | "LibraryRoom" | "TreasuryRoom" | "StorageRoom"
-        | "RunestoneRoom" | "LaboratoryRoom" | "StatueRoom" | "GardenRoom" | "MagicWellRoom"
-        | "CrystalVaultRoom" | "CrystalChoiceRoom" | "RotGardenRoom" => DoorType::Locked,
+        "StorageRoom" => DoorType::Barricade,
+        "CryptRoom" | "ArmoryRoom" | "LibraryRoom" | "TreasuryRoom" | "RunestoneRoom"
+        | "LaboratoryRoom" | "StatueRoom" | "GardenRoom" | "MagicWellRoom" | "CrystalVaultRoom"
+        | "CrystalChoiceRoom" | "RotGardenRoom" => DoorType::Locked,
         "PoolRoom" | "TrapsRoom" | "SentryRoom" | "ToxicGasRoom" | "MagicalFireRoom"
         | "WeakFloorRoom" | "CrystalPathRoom" | "PitRoom" => DoorType::Regular,
         _ => DoorType::Regular,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn storage_is_the_barricaded_special_room() {
+        assert_eq!(special_door_type("StorageRoom"), DoorType::Barricade);
+        assert_eq!(special_door_type("MagicalFireRoom"), DoorType::Regular);
     }
 }

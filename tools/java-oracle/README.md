@@ -96,8 +96,8 @@ map bounds, heap cells, mob facts, and the report-visible item projection. The
 HKT floor-one fixture also requires exact terrain, discoverability, tile
 variance, transitions, traps, structured heaps/mobs, plants, and active blobs.
 The floor-six, floor-seven, and floor-eight fixtures pin full Java
-observations. Rust matches the full floor-six lifecycle and asserts the
-strongest exact subset implemented for floors 7 and 8:
+observations, and Rust matches all three complete lifecycles for the committed
+fresh-run replays:
 
 ```bash
 cargo test -p spd-core --test java_oracle_goldens
@@ -231,9 +231,7 @@ each boundary, so the probes do not perturb the final heap/mob run. They make
 raw LCG draw-count comparison possible even while an earlier phase is
 desynchronized. This is an exact-pin observation contract. The six committed
 depth-one fixtures currently match their strongest honest Rust projection;
-only HKT floor 1 opts into the additive render-fact assertions. HKT floor 6 is
-a full Rust lifecycle match. HKT floor 7 matches its room classes, pre-paint
-and pre-mobs boundaries, and Wandmaker rewards, while the rest of its lifecycle
-remains partial; HKT floor 8 is likewise not yet a full Rust lifecycle match.
-These fixtures are not evidence that every room set, deeper floor, or full
-heap fact matches.
+only HKT floor 1 opts into the additive render-fact assertions. HKT floors 6,
+7, and 8 are full Rust lifecycle matches for their committed sequential
+fresh-run replays. These fixtures are not evidence that every room set, deeper
+floor, or full heap fact matches.

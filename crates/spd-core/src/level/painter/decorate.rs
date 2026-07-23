@@ -106,9 +106,12 @@ fn decorate_prison(map: &mut TerrainMap, rooms: &[Room], paint_order: &[usize]) 
         ) {
             continue;
         }
-        let chance = if room.name.contains("FissureRoom") {
+        let chance = if room.name == "FissureRoom" {
             3
-        } else if room.name.contains("ChasmBridgeRoom") {
+        } else if matches!(
+            room.name.as_str(),
+            "ChasmBridgeRoom" | "ChasmBridgeEntranceRoom" | "ChasmBridgeExitRoom"
+        ) {
             5
         } else {
             15
