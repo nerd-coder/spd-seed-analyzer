@@ -73,6 +73,8 @@ struct OracleFloor {
     final_heaps: Vec<OracleHeap>,
     #[serde(default)]
     final_mobs: Vec<OracleMob>,
+    #[serde(default)]
+    quest_rewards: Vec<OracleItem>,
     terrain: Option<Vec<u16>>,
     discoverable: Option<Vec<bool>>,
     tile_variance: Option<Vec<u8>>,

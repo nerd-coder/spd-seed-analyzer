@@ -22,7 +22,7 @@ use crate::report::FloorReport;
 pub use create_items::PlacedLoot;
 pub use state::LevelState;
 pub use terrain::TerrainMap;
-pub(crate) use terrain::{ENTRANCE, ENTRANCE_SP, EXIT};
+pub(crate) use terrain::{CUSTOM_DECO_EMPTY, DOOR, EMPTY_SP, ENTRANCE, ENTRANCE_SP, EXIT};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Feeling {
@@ -295,10 +295,14 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 .filter_map(|&index| floor.rooms.get(index).cloned())
                 .collect();
 
-            // createMobs quest hooks run before the regular population, matching
-            // SewerLevel/PrisonLevel overrides. Depth-one ambient placement is
-            // now call-for-call ported; supported deeper rotations remain a
-            // partial port until their preceding lifecycle is exact.
+            // The probe records the createMobs entry boundary. Quest hooks then
+            // run before the regular population, matching SewerLevel/PrisonLevel
+            // overrides. Depth-one ambient placement is now call-for-call ported;
+            // supported deeper rotations remain a partial port until their
+            // preceding lifecycle is exact.
+            if matches!(dungeon.depth, 1..=4 | 6..=8) {
+                pre_mobs_rng_probe = Random::peek_ints(8);
+            }
             if let Some(exit) = floor.rooms.iter().find(|r| r.is_exit() && !r.is_empty()) {
                 if let Some(ghost) = quests::try_spawn_ghost(dungeon, exit, &map) {
                     quests.push(ghost.summary.clone());
@@ -318,9 +322,6 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 }
             }
 
-            if matches!(dungeon.depth, 1..=4 | 6..=8) {
-                pre_mobs_rng_probe = Random::peek_ints(8);
-            }
             let _ambient_mobs_consumed = if matches!(dungeon.depth, 1..=4 | 6..=8) {
                 create_mobs::create_regular(
                     dungeon.depth,

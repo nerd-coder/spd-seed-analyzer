@@ -34,6 +34,7 @@ pub const ALCHEMY: i32 = 28;
 pub const WATER: i32 = 29;
 pub const FURROWED_GRASS: i32 = 30;
 pub const CRYSTAL_DOOR: i32 = 31;
+pub const CUSTOM_DECO_EMPTY: i32 = 32;
 pub const REGION_DECO: i32 = 33;
 pub const REGION_DECO_ALT: i32 = 34;
 pub const ENTRANCE_SP: i32 = 37;
@@ -206,6 +207,7 @@ pub fn is_passable_tile(t: i32) -> bool {
             | INACTIVE_TRAP
             | WATER
             | SECRET_TRAP // SECRET_TRAP = EMPTY | SECRET
+            | CUSTOM_DECO_EMPTY
     )
     // TRAP is AVOID (not passable)
 }

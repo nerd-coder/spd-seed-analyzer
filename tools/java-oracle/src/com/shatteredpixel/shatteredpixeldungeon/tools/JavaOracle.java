@@ -43,9 +43,9 @@ public final class JavaOracle {
 				? null
 				: Integer.valueOf(args[finalHeaps ? 2 : 1]);
 		if (depth != null
-				&& (depth != 1 && (!finalHeaps || (depth != 6 && depth != 8)))) {
+				&& (depth != 1 && (!finalHeaps || (depth != 6 && depth != 7 && depth != 8)))) {
 			System.err.println(
-					"The floor oracle supports depth 1, plus depths 6 and 8 for final-heaps");
+					"The floor oracle supports depth 1, plus depths 6-8 for final-heaps");
 			System.exit(2);
 		}
 
@@ -250,6 +250,9 @@ public final class JavaOracle {
 		json.append("      ],\n");
 		json.append("      \"final_mobs\": [\n");
 		appendMobs(json, floor.mobs);
+		json.append("      ],\n");
+		json.append("      \"quest_rewards\": [\n");
+		appendItems(json, floor.questRewards, "        ");
 		json.append("      ]\n");
 		json.append("    }\n");
 		json.append("  ]\n");

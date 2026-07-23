@@ -12,6 +12,11 @@ pub(super) fn paint(map: &mut TerrainMap, room: &Room) {
     fill_margin(map, room, 1, EMPTY);
     fill_margin(map, room, 3, WALL);
 
+    // Java creates `new EmptyRoom()` for this helper rectangle. EmptyRoom
+    // inherits StandardRoom, so its instance initializer rolls the inherited
+    // `[1, 0, 0]` size category even though the rectangle is immediately reset.
+    let _ = Random::chances(&[1.0, 0.0, 0.0]);
+
     // `internal` is an EmptyRoom in SPD, so width/height are inclusive
     // (Room.width()/height()), unlike a bare watabou Rect.
     let internal = RoomRect {

@@ -6,6 +6,7 @@ use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::items::randomize::randomize_item;
 use crate::level::create_items::PlacedLoot;
+use crate::level::TerrainMap;
 use crate::random::Random;
 use crate::rooms::room::Room;
 
@@ -75,8 +76,22 @@ pub(super) fn mass_grave_prizes(
     out
 }
 
-/// `RitualSiteRoom.paint` — four ceremonial candles into itemsToSpawn.
-pub(super) fn ritual_site_setup(items_to_spawn: &mut Vec<GeneratedItem>) -> Vec<PlacedLoot> {
+/// `RitualSiteRoom.paint` — select its jittered ritual center and enqueue four candles.
+pub(super) fn ritual_site_setup(
+    room: &Room,
+    map: &mut TerrainMap,
+    items_to_spawn: &mut Vec<GeneratedItem>,
+) -> Vec<PlacedLoot> {
+    let center = room.as_rect().center_room();
+    for y in (center.y - 1)..=(center.y + 1) {
+        for x in (center.x - 1)..=(center.x + 1) {
+            if let Some(cell) = map.point_to_cell(x, y) {
+                map.map[cell] = crate::level::CUSTOM_DECO_EMPTY;
+                map.item_allowed[cell] = false;
+                map.character_allowed[cell] = false;
+            }
+        }
+    }
     for _ in 0..4 {
         items_to_spawn.push(GeneratedItem::new("CeremonialCandle", ItemCategory::Other));
     }

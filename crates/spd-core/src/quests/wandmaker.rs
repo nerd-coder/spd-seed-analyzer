@@ -110,12 +110,17 @@ fn quest_room_spec(qtype: WandmakerQuestType) -> RoomSpec {
             max_connections: 1,
         },
         // RitualSiteRoom extends StandardRoom
-        WandmakerQuestType::ElementalEmbers => RoomSpec {
-            name: qtype.room_name().into(),
-            kind: RoomKind::Standard,
-            size_factor: 1,
-            max_connections: 16,
-        },
+        WandmakerQuestType::ElementalEmbers => {
+            // RitualSiteRoom extends StandardRoom, whose instance initializer
+            // calls setSizeCat() even though its default weights force NORMAL.
+            let size_factor = crate::rooms::standard::set_size_cat_default(qtype.room_name());
+            RoomSpec {
+                name: qtype.room_name().into(),
+                kind: RoomKind::Standard,
+                size_factor,
+                max_connections: 16,
+            }
+        }
     }
 }
 
@@ -174,14 +179,19 @@ fn place_wandmaker(room: &Room, map: &TerrainMap) {
         if map.is_solid(cell) {
             continue;
         }
-        if !map.character_allowed.get(cell).copied().unwrap_or(false) {
+        // Pinned `spawnWandmaker` checks the level trap registry directly and
+        // does not consult the broader room `canPlaceCharacter` predicate.
+        if map.trap_names.get(cell).is_some_and(Option::is_some) {
             continue;
         }
-        // Reject EMPTY_SP and non-passable (approx passable = !solid for painted tiles)
         if !map.passable.get(cell).copied().unwrap_or(false) {
             continue;
         }
-        // Door-neighbour check: burn NEIGHBOURS4 style — if any door adjacent, reject
+        if map.map.get(cell).copied() == Some(crate::level::EMPTY_SP) {
+            continue;
+        }
+        // Only Terrain.DOOR is rejected here. OPEN_DOOR and LOCKED_DOOR are
+        // distinct terrain values in the pinned source.
         if has_adjacent_door(map, cell) {
             continue;
         }
@@ -201,8 +211,7 @@ fn has_adjacent_door(map: &TerrainMap, cell: usize) -> bool {
             continue;
         }
         let ncell = (nx + ny * map.width) as usize;
-        // Terrain.DOOR / OPEN_DOOR / LOCKED_DOOR
-        if matches!(map.map.get(ncell).copied().unwrap_or(0), 5 | 6 | 10) {
+        if map.map.get(ncell).copied() == Some(crate::level::DOOR) {
             return true;
         }
     }

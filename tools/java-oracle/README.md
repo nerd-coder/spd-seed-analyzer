@@ -6,7 +6,7 @@ ring identity mappings. Schema v2 adds an intentionally narrow floor contract:
 the ordered depth-one `itemsToSpawn` queue at the exact pre-`build()` boundary.
 Schema v3 is a separately scoped level contract that snapshots final heaps and
 mobs after the real `Level.create()` lifecycle completes. Sewer depth 1 and
-Prison depths 6 and 8 are supported. Depth 1 is generated directly; deeper
+Prison depths 6, 7, and 8 are supported. Depth 1 is generated directly; deeper
 targets are generated after completing every prior floor so run-persistent state is
 preserved. Additive visual fields capture final terrain, discoverability, tile
 variance, transitions, traps, plants, and active blobs. It does **not** claim
@@ -33,6 +33,7 @@ From the analyzer repository root:
 ./tools/java-oracle/run --depth 1 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 1 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 6 HKT-JZN-XQQ
+./tools/java-oracle/run --final-heaps-depth 7 HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 8 HKT-JZN-XQQ
 ```
 
@@ -73,6 +74,8 @@ the default when `--output` is omitted):
   --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-1.json HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 6 \
   --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-6.json HKT-JZN-XQQ
+./tools/java-oracle/run --final-heaps-depth 7 \
+  --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-7.json HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 8 \
   --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-8.json HKT-JZN-XQQ
 ```
@@ -82,8 +85,9 @@ test requires all five committed depth-one fixtures to match lifecycle probes,
 map bounds, heap cells, mob facts, and the report-visible item projection. The
 HKT floor-one fixture also requires exact terrain, discoverability, tile
 variance, transitions, traps, structured heaps/mobs, plants, and active blobs.
-The floor-six and floor-eight fixtures pin full Java observations while Rust
-asserts only the strongest exact subset implemented for each floor:
+The floor-six, floor-seven, and floor-eight fixtures pin full Java
+observations. Rust matches the full floor-six lifecycle and asserts the
+strongest exact subset implemented for floors 7 and 8:
 
 ```bash
 cargo test -p spd-core --test java_oracle_goldens
@@ -145,7 +149,7 @@ floor item.
 ### Schema version 3: final placed heaps
 
 Passing `--final-heaps-depth 1` runs the exact pinned initialization followed
-by `Dungeon.newLevel()` for a depth-one `SewerLevel`. Passing depth 6 or 8
+by `Dungeon.newLevel()` for a depth-one `SewerLevel`. Passing depth 6, 7, or 8
 first runs `Dungeon.newLevel()` for every preceding floor, then creates the
 target `PrisonLevel`. The oracle snapshots
 `level.heaps` and `level.mobs` only after `Level.create()` returns (build,
@@ -186,6 +190,9 @@ The output has `schema_version: 3` and `contract: "final_placed_heaps"`:
     }],
     "final_mobs": [
       { "cell": 234, "class": "Rat" }
+    ],
+    "quest_rewards": [
+      { "class": "WandOfCorrosion", "quantity": 1, "level": 1, "cursed": false }
     ]
   }]
 }
@@ -204,14 +211,19 @@ heap item generated within
 the stated deterministic scope remain in this contract; nothing is filtered
 for UI convenience. `final_mobs` is likewise cell-sorted and uses Java simple
 class names, covering both room-painted mobs and the ambient `createMobs`
-pass. The three eight-value RNG probes snapshot consecutive full-range
+pass. `quest_rewards` records non-null persistent Wandmaker reward state after
+the target lifecycle. On sequential deeper targets, those rewards may have
+been generated on an earlier floor; the array is empty until the quest creates
+them. The three eight-value RNG probes snapshot consecutive full-range
 `Random.Int()` results from separate fresh runs before `RegularPainter.paint`
 and at the `createMobs` and `createItems` entry boundaries; recording stops at
 each boundary, so the probes do not perturb the final heap/mob run. They make
 raw LCG draw-count comparison possible even while an earlier phase is
 desynchronized. This is an exact-pin observation contract. The five committed
 depth-one fixtures currently match their strongest honest Rust projection;
-only HKT floor 1 opts into the additive render-fact assertions. HKT floors 6
-and 8 are exact Java observations but not yet full Rust lifecycle matches.
+only HKT floor 1 opts into the additive render-fact assertions. HKT floor 6 is
+a full Rust lifecycle match. HKT floor 7 matches its room classes, pre-paint
+and pre-mobs boundaries, and Wandmaker rewards, while the rest of its lifecycle
+remains partial; HKT floor 8 is likewise not yet a full Rust lifecycle match.
 These fixtures are not evidence that every room set, deeper floor, or full
 heap fact matches.

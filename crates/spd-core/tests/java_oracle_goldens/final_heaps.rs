@@ -433,5 +433,8 @@ fn depth_one_final_heaps_match_report_projection() {
 #[path = "final_heaps/floor_six.rs"]
 mod floor_six;
 
+#[path = "final_heaps/floor_seven.rs"]
+mod floor_seven;
+
 #[path = "final_heaps/floor_eight.rs"]
 mod floor_eight;

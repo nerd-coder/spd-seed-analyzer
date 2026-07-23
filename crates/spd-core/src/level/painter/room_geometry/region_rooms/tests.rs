@@ -327,7 +327,7 @@ fn prison_cell_block_entrance_preserves_empty_sp_transition() {
     let (rooms, doors) = with_east_connection(entrance);
     let mut map = terrain::paint_minimal(&rooms).expect("map");
     assert!(paint(&mut map, &rooms, &rooms[0], 0, &doors, 8).is_some());
-    assert_eq!(Random::int(), 1_328_498_476);
+    assert_eq!(Random::int(), 1_641_140_543);
     Random::pop_generator();
 
     assert!(map.map.contains(&REGION_DECO));

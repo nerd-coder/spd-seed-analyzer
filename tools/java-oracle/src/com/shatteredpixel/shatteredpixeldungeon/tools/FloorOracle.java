@@ -91,6 +91,13 @@ final class FloorOracle {
 			mobs.add(new MobFact(mob.pos, mob.getClass().getSimpleName()));
 		}
 		mobs.sort(Comparator.comparingInt(mob -> mob.cell));
+		List<ItemFact> questRewards = new ArrayList<>();
+		if (Wandmaker.Quest.wand1 != null) {
+			questRewards.add(itemFact(Wandmaker.Quest.wand1));
+		}
+		if (Wandmaker.Quest.wand2 != null) {
+			questRewards.add(itemFact(Wandmaker.Quest.wand2));
+		}
 		List<String> rooms = new ArrayList<>();
 		for (Room room : level.rooms()) {
 			rooms.add(room.getClass().getSimpleName());
@@ -109,6 +116,7 @@ final class FloorOracle {
 				rooms,
 				heaps,
 				mobs,
+				questRewards,
 				prePaintRng,
 				preMobsRng,
 				preItemsRng,
@@ -256,6 +264,7 @@ final class FloorOracle {
 		final List<String> rooms;
 		final List<HeapFact> heaps;
 		final List<MobFact> mobs;
+		final List<ItemFact> questRewards;
 		final List<Integer> prePaintRng;
 		final List<Integer> preMobsRng;
 		final List<Integer> preItemsRng;
@@ -274,6 +283,7 @@ final class FloorOracle {
 				List<String> rooms,
 				List<HeapFact> heaps,
 				List<MobFact> mobs,
+				List<ItemFact> questRewards,
 				List<Integer> prePaintRng,
 				List<Integer> preMobsRng,
 				List<Integer> preItemsRng,
@@ -284,6 +294,7 @@ final class FloorOracle {
 			this.rooms = rooms;
 			this.heaps = heaps;
 			this.mobs = mobs;
+			this.questRewards = questRewards;
 			this.prePaintRng = prePaintRng;
 			this.preMobsRng = preMobsRng;
 			this.preItemsRng = preItemsRng;
