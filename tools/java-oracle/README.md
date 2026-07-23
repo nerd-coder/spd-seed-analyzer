@@ -74,6 +74,8 @@ these commands (stdout is the default when `--output` is omitted):
   --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-1.json HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 1 \
   --output tools/java-oracle/fixtures/aaa-aaa-aad-final-heaps-floor-1.json AAA-AAA-AAD
+./tools/java-oracle/run --final-heaps-depth 1 \
+  --output tools/java-oracle/fixtures/aaa-aaa-afo-final-heaps-floor-1.json AAA-AAA-AFO
 ./tools/java-oracle/run --final-heaps-depth 6 \
   --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-6.json HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 7 \
@@ -82,19 +84,21 @@ these commands (stdout is the default when `--output` is omitted):
   --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-8.json HKT-JZN-XQQ
 ```
 
-`--final-heaps-depth` always emits the additive render fields. The non-HKT
-depth-one fixtures intentionally scope their assertions to lifecycle facts, so
-their `terrain`, `discoverable`, `tile_variance`, `transitions`, `traps`,
-`plants`, and `blobs` fields are normalized to JSON `null` after generation and
-then Biome-formatted. The commands above reproduce the underlying Java
-observation; byte-for-byte regeneration of those lifecycle-only fixtures also
-requires that normalization. HKT fixtures retain the emitted render facts.
+`--final-heaps-depth` always emits the additive render fields. The AAA-AAA-AAA,
+AAA-AAA-AAD, ABC-DEF-GHI, GFX-PZH-DCH, and `hello` depth-one fixtures
+intentionally scope their assertions to lifecycle facts, so their `terrain`,
+`discoverable`, `tile_variance`, `transitions`, `traps`, `plants`, and `blobs`
+fields are normalized to JSON `null` after generation and then Biome-formatted.
+The commands above reproduce the underlying Java observation; byte-for-byte
+regeneration of those lifecycle-only fixtures also requires that normalization.
+AAA-AAA-AFO and the HKT fixtures retain the emitted render facts.
 
 The Rust golden consumer validates every `fixtures/*.json` file. The schema-v3
-test requires all six committed depth-one fixtures to match lifecycle probes,
+test requires all seven committed depth-one fixtures to match lifecycle probes,
 map bounds, heap cells, mob facts, and the report-visible item projection. The
-HKT floor-one fixture also requires exact terrain, discoverability, tile
-variance, transitions, traps, structured heaps/mobs, plants, and active blobs.
+AAA-AAA-AFO and HKT floor-one fixtures also require exact terrain,
+discoverability, tile variance, transitions, traps, structured heaps/mobs,
+plants, and active blobs.
 The floor-six, floor-seven, and floor-eight fixtures pin full Java
 observations, and Rust matches all three complete lifecycles for the committed
 fresh-run replays:
@@ -229,9 +233,9 @@ them. The three eight-value RNG probes snapshot consecutive full-range
 and at the `createMobs` and `createItems` entry boundaries; recording stops at
 each boundary, so the probes do not perturb the final heap/mob run. They make
 raw LCG draw-count comparison possible even while an earlier phase is
-desynchronized. This is an exact-pin observation contract. The six committed
+desynchronized. This is an exact-pin observation contract. The seven committed
 depth-one fixtures currently match their strongest honest Rust projection;
-only HKT floor 1 opts into the additive render-fact assertions. HKT floors 6,
-7, and 8 are full Rust lifecycle matches for their committed sequential
-fresh-run replays. These fixtures are not evidence that every room set, deeper
-floor, or full heap fact matches.
+AAA-AAA-AFO and HKT floor 1 opt into the additive render-fact assertions. HKT
+floors 6, 7, and 8 are full Rust lifecycle matches for their committed
+sequential fresh-run replays. These fixtures are not evidence that every room
+set, deeper floor, or full heap fact matches.

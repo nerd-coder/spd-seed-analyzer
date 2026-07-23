@@ -465,8 +465,8 @@ fn depth_one_final_heaps_match_report_projection() {
         compared += 1;
     }
     assert!(
-        compared >= 6,
-        "expected at least six schema v3 depth-one fixtures, compared {compared}"
+        compared >= 7,
+        "expected at least seven schema v3 depth-one fixtures, compared {compared}"
     );
 }
 

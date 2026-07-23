@@ -84,6 +84,85 @@ fn weak_floor_burns_each_row_roll_and_keeps_hidden_well_chasm() {
 }
 
 #[test]
+fn crypt_paints_each_orientation_after_resolving_both_center_coordinates() {
+    let cases = [
+        (
+            Point::new(1, 5),
+            [Point::new(7, 2), Point::new(7, 7)],
+            Some(6),
+            None,
+        ),
+        (
+            Point::new(8, 5),
+            [Point::new(2, 2), Point::new(2, 7)],
+            Some(3),
+            None,
+        ),
+        (
+            Point::new(5, 1),
+            [Point::new(2, 7), Point::new(7, 7)],
+            None,
+            Some(6),
+        ),
+        (
+            Point::new(5, 8),
+            [Point::new(2, 2), Point::new(7, 2)],
+            None,
+            Some(3),
+        ),
+    ];
+
+    for (entrance, statues, overridden_x, overridden_y) in cases {
+        let (rooms, mut doors) = connected_room("CryptRoom", 8, 8);
+        doors.insert_test_point(0, 1, entrance);
+
+        Random::reset_generators();
+        Random::push_generator_seeded(0xC7A7);
+        let mut expected_tomb = rooms[0].as_rect().center_room();
+        let expected_tail = Random::int();
+        Random::pop_generator();
+        if let Some(x) = overridden_x {
+            expected_tomb.x = x;
+        }
+        if let Some(y) = overridden_y {
+            expected_tomb.y = y;
+        }
+
+        let mut map = terrain::paint_minimal(&rooms).expect("map");
+        Random::reset_generators();
+        Random::push_generator_seeded(0xC7A7);
+        let tomb_cell = paint(&mut map, &rooms[0], 0, &doors).expect("crypt tomb cell");
+        let tail = Random::int();
+        Random::pop_generator();
+
+        assert_eq!(
+            tomb_cell,
+            map.point_to_cell(expected_tomb.x, expected_tomb.y)
+                .expect("expected tomb cell")
+        );
+        assert_eq!(tail, expected_tail);
+        for y in rooms[0].top..=rooms[0].bottom {
+            for x in rooms[0].left..=rooms[0].right {
+                let point = Point::new(x, y);
+                let cell = map.point_to_cell(x, y).expect("crypt cell");
+                let expected = if x == rooms[0].left
+                    || x == rooms[0].right
+                    || y == rooms[0].top
+                    || y == rooms[0].bottom
+                {
+                    WALL
+                } else if statues.contains(&point) {
+                    terrain::STATUE
+                } else {
+                    EMPTY
+                };
+                assert_eq!(map.map[cell], expected, "terrain at ({x}, {y})");
+            }
+        }
+    }
+}
+
+#[test]
 fn rot_garden_places_heart_and_lashers_without_duplicate_key_rng() {
     let (rooms, doors) = connected_room("RotGardenRoom", 10, 10);
     let mut map = terrain::paint_minimal(&rooms).expect("map");

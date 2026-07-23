@@ -153,7 +153,12 @@ fn paint_special(
     let room = &rooms[ri];
     let name = room.name.as_str();
     match name {
-        "CryptRoom" => vec![special_rooms::crypt_prize(dungeon, items_to_spawn)],
+        "CryptRoom" => {
+            let prize = special_rooms::crypt_prize(dungeon, items_to_spawn);
+            let cell = geometry_prize_cell.expect("CryptRoom geometry returns its tomb cell");
+            map.record_heap(cell, "tomb", prize.item.clone());
+            vec![prize]
+        }
         "ArmoryRoom" => {
             let entrance = room
                 .connected

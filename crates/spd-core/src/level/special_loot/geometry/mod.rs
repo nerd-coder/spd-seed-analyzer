@@ -1,6 +1,7 @@
 //! RNG-visible geometry for special and secret rooms.
 
 mod basic;
+mod crypt;
 mod maze;
 mod rot_garden;
 mod summoning;
@@ -21,6 +22,7 @@ pub(super) fn paint(
     doors: &DoorMap,
 ) -> Option<usize> {
     match room.name.as_str() {
+        "CryptRoom" => Some(crypt::paint(map, room, room_index, doors)),
         "SecretMazeRoom" => maze::paint(map, room, room_index, doors),
         "SecretSummoningRoom" => Some(summoning::paint(map, room)),
         "RotGardenRoom" => {
