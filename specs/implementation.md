@@ -108,9 +108,12 @@ floor-8 browser comparison has not yet promoted that asset coverage to a
 pixel-parity claim.
 
 `CXG-FJT-BFQ` floor 1 is registered alongside the three HKT screenshots in the
-typed map-render QA fixture list. The registry test guarantees one-to-one
-metadata/file coverage, but the repository still has no automated browser
-screenshot comparator; registering CXG is not a pixel-parity claim.
+typed map-render QA fixture list. A Playwright harness under `tools/visual/`
+drives the real analyzer UI and performs strict zero-difference comparisons of
+the deterministic map canvas for all four cases. Its browser baselines are
+separate from the gameplay captures because hero, explored-FOV, and animation
+state remain outside the deterministic contract; passing the harness is not a
+full gameplay pixel-parity claim.
 
 **Correctness infra — the tool that will prove parity.**
 `tools/java-oracle/` runs the *actual pinned Java source* headlessly and
@@ -238,7 +241,7 @@ depth-one entrance room from trap placement, and flattening tall or furrowed
 grass under late item drops. Armory and Treasury painters now retain exact heap
 cells and ordered item stacks for the structured report.
 
-Committed screenshots in `specs/fixtures/visual/`, named
+Committed screenshots in `tools/visual/fixtures/`, named
 `<seed>_F<floor>.png`, are visual-regression references.
 Their hero positions are post-generation gameplay state, not seed-derived
 `Level.create()` output; frontend comparisons must treat the hero as a fixed
@@ -246,6 +249,14 @@ reference overlay or exclude it from the deterministic contract. Floor-1
 deterministic browser composition is matched and floor-6 core lifecycle parity
 is exact for HKT; floor-8 core lifecycle parity is also exact for its committed
 replay. Core parity does not by itself prove gameplay-state pixel parity.
+
+`tools/visual/` automates the deterministic side of that comparison with
+Playwright Chromium. It enters each registered seed through the public UI,
+selects the correct region/floor, enables exact heap and mob layers, captures
+the raw canvas backing bitmap with reduced motion, and compares it at zero
+pixel tolerance against `tools/visual/snapshots/`. CI runs the suite after the
+production WASM/Vite build. Browser baselines intentionally do not replace the
+pinned gameplay references above.
 
 ### 0b. ~~HKT floor-one browser-render parity~~ — DETERMINISTIC LAYERS MATCHED
 For `HKT-JZN-XQQ` floor 1, the browser now consumes every existing structured
@@ -567,6 +578,8 @@ core; all fields are additive and default empty for older serialized data.
 
 ```bash
 cargo test -p spd-core
+bun run test:map-render
+bun run test:visual
 ```
 
 `java_oracle_goldens.rs` (+ `java_oracle_goldens/final_heaps.rs`) is the
@@ -578,6 +591,13 @@ HKT floors 1, 6, and 8 prove their complete render-fact projections; floor 7
 asserts its exact room/pre-paint/pre-mobs/Wandmaker slice. Add
 tightly-scoped oracle fixtures before writing new Rust behavior — regenerate
 via `tools/java-oracle/run` (see `tools/java-oracle/README.md`).
+
+The map-render registry test keeps the source gameplay PNGs and typed cases in
+lockstep. The Playwright suite builds the app and checks the deterministic
+browser canvases; use `bun run install:visual-browser` once locally and
+`bun run test:visual:update` only after reviewing an intentional renderer
+change. Failures retain actual, expected, diff, and trace artifacts under the
+gitignored `tools/visual/test-results/` directory.
 
 ---
 

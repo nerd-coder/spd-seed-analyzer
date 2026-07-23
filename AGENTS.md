@@ -24,6 +24,9 @@ bun run dev          # wasm-pack + Vite
 bun run build
 bun run deploy       # build + Cloudflare Worker SPA (wrangler)
 bun run test:rust    # cargo test -p spd-core
+bun run test:map-render # map-render fixture registry
+bun run test:visual  # build + Playwright Chromium pixel comparison
+bun run install:visual-browser # once: install Playwright Chromium
 bun run build:wasm
 bun run check        # biome check (TS/JS/CSS/JSON)
 bun run check:fix    # biome check --fix
@@ -51,6 +54,7 @@ GitHub Actions `check` job (`.github/workflows/ci.yaml`) runs, in order:
 2. `bun run check:rust` — `cargo fmt --all -- --check` + `cargo clippy --workspace --all-targets -- -D warnings`  
 3. `bun run test:rust` — `cargo test -p spd-core`  
 4. `bun run build` — wasm-pack + Vite production build  
+5. `bun run test:visual:only` — Playwright deterministic map comparison
 
 ## Rules
 
@@ -60,7 +64,7 @@ GitHub Actions `check` job (`.github/workflows/ci.yaml`) runs, in order:
 - **BUN-WEB** — Package manager is Bun. UI: Vite + React + shadcn. Do not introduce npm/yarn as primary.
 - **WASM-REBUILD** — After Rust changes, rebuild wasm (`bun run build:wasm` / `dev`) before treating UI as verified.
 - **TEST-RUST** — Add/extend `spd-core` tests for RNG and analyze paths; keep smoke coverage on `analyze_seed`.
-- **CI-BEFORE-DONE** — Before marking a task complete, committing work as finished, or claiming “done”, run the same checks as CI’s `check` job (see **CI parity** above). Minimum for any Rust-touching change: `bun run check:rust` and `bun run test:rust`. If TS/web or wasm exports changed, also `bun run check` and `bun run build`. Fix fmt/clippy/test/build failures before hand-off; do not skip with “clippy later”.
+- **CI-BEFORE-DONE** — Before marking a task complete, committing work as finished, or claiming “done”, run the same checks as CI’s `check` job (see **CI parity** above). Minimum for any Rust-touching change: `bun run check:rust` and `bun run test:rust`. If TS/web or wasm exports changed, also `bun run check` and `bun run build`. If browser rendering or the visual harness changed, also run `bun run test:visual:only` after the build. Fix fmt/clippy/test/build/visual failures before hand-off; do not skip with “clippy later”.
 - **ASSETS-FLAT** — Assets live at `web/public/assets/{environment,sprites,…}`. No nested `assets/assets/`.
 - **PIN-SPD** — Target the pinned SPD version/commit; note version impact when porting from a newer tree.
 - **HAND-OFF** — After multi-step work, update `specs/implementation.md` when behavior or next steps change.

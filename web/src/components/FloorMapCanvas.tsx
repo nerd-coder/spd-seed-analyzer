@@ -10,6 +10,15 @@ import {
 } from '@/lib/tiles'
 import { cn } from '@/lib/utils'
 
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
+
+function prefersReducedMotion() {
+  return (
+    typeof window !== 'undefined' &&
+    window.matchMedia(REDUCED_MOTION_QUERY).matches
+  )
+}
+
 type Props = {
   map: FloorMap
   identities: IdentityMaps
@@ -41,7 +50,7 @@ export function FloorMapCanvas({
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [error, setError] = useState<string | null>(null)
-  const [reducedMotion, setReducedMotion] = useState(false)
+  const [reducedMotion, setReducedMotion] = useState(prefersReducedMotion)
   const viewport = useMemo(() => mapViewport(map), [map])
 
   const naturalW = viewport.width * TILE_PX * scale
@@ -67,7 +76,7 @@ export function FloorMapCanvas({
 
   useEffect(() => {
     if (!animateWater) return
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const media = window.matchMedia(REDUCED_MOTION_QUERY)
     const update = () => setReducedMotion(media.matches)
     update()
     media.addEventListener?.('change', update)
@@ -144,6 +153,9 @@ export function FloorMapCanvas({
         <canvas
           ref={canvasRef}
           className={cn('rounded-none border bg-black/80', canvasClassName)}
+          data-water-animation={
+            hasWater && !reducedMotion ? 'running' : 'paused'
+          }
           role="img"
           aria-label={`Shattered Pixel Dungeon floor map. ${map.heaps.length} exact heaps, ${map.mobs.length} exact mobs, ${map.traps.length} traps, and ${map.transitions.length} transitions.${markerDescription}`}
           title={markerDescription.trim() || undefined}

@@ -1,21 +1,18 @@
 import { describe, expect, test } from 'bun:test'
 import { readdir } from 'node:fs/promises'
 
-import { MAP_RENDER_FIXTURES } from './fixtures'
+import { MAP_RENDER_FIXTURES } from './map-render-fixtures'
 
-const VISUAL_FIXTURE_DIRECTORY = new URL(
-  '../../../specs/fixtures/visual/',
-  import.meta.url
-)
+const VISUAL_FIXTURE_DIRECTORY = new URL('../fixtures/', import.meta.url)
 
 describe('map-render visual fixtures', () => {
   test('registers every on-disk PNG with matching seed and floor metadata', async () => {
-    const registeredFiles = MAP_RENDER_FIXTURES.map(
+    const registeredFiles: string[] = MAP_RENDER_FIXTURES.map(
       ({ seed, floor, referenceFile }) => {
         expect(seed).toMatch(/^[A-Z]{3}(?:-[A-Z]{3}){2}$/)
         expect(floor).toBeGreaterThan(0)
-        expect(referenceFile).toBe(`${seed}_F${floor}.png`)
-        return referenceFile
+        expect(String(referenceFile)).toBe(`${seed}_F${floor}.png`)
+        return String(referenceFile)
       }
     )
 

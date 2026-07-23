@@ -7,7 +7,7 @@ export type MapRenderFixture = {
 /**
  * Canonical input list for manual and automated map-render QA.
  *
- * Keep this registry in lockstep with specs/fixtures/visual/*.png. A fixture
+ * Keep this registry in lockstep with tools/visual/fixtures/*.png. A fixture
  * only identifies a seed/floor reference; it does not claim pixel parity.
  */
 export const MAP_RENDER_FIXTURES = [

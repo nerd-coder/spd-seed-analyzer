@@ -1,0 +1,16 @@
+{
+  "name": "@spd-seed-analyzer/visual-tests",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "test": "bun run test:registry && playwright test",
+    "test:registry": "bun test tests/map-render-fixtures.test.ts",
+    "test:update": "bun run test:registry && playwright test --update-snapshots",
+    "install:browser": "playwright install chromium",
+    "install:browser:ci": "playwright install --with-deps chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1"
+  }
+}

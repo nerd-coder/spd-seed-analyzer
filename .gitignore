@@ -10,6 +10,7 @@ pkg/
 node_modules/
 web/node_modules/
 web/dist/
+tools/visual/test-results/
 *.local
 
 # OS / IDE
