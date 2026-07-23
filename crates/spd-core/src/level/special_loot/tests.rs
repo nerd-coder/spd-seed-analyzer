@@ -17,6 +17,7 @@ use crate::run::{dungeon_from_run, init_run};
 
 mod depth_one_parity;
 mod forced_items;
+mod placement_masks;
 mod quest_npcs;
 
 fn test_room(name: &str, w: i32, h: i32) -> Room {

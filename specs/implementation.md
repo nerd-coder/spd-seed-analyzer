@@ -149,6 +149,13 @@ Floor seven asserts its exact room/pre-paint/pre-mobs/Wandmaker slice, while
 floor eight asserts its complete lifecycle and final render/entity facts for
 the committed replay.
 
+The supported regular-floor room-placement predicates are now source-exact.
+Plants, Aquarium, every StandardBridge family, CavesFissure (including its
+entrance/exit subclasses), and RitualSite apply their pinned `canPlaceItem`
+and paired `canPlaceCharacter` exclusions without extra predicate RNG beyond
+the already-pinned painter setup. VaultLevel branch rooms remain outside the
+regular-floor analyzer and are not implied by this coverage.
+
 ### 0f. ~~Extend depth-one lifecycle coverage with AAA-AAD~~ — FIXTURE EXACT
 For `AAA-AAA-AAD` at depth 1, Rust now matches Java's Garden, Sacrifice,
 Striped, two Ring, SewerPipe, RegionDecoPatch entrance, WaterBridge exit, and
@@ -449,15 +456,32 @@ Focused coverage in `special_loot/tests.rs` includes `*_pushes_iron_key`,
 energy units. The AAA-AAA-AAA final-heaps projection gained
 `PotionOfInvisibility` (PoolRoom push now lands; `IronKey` stays report-blacklisted).
 
-### 4. `canPlaceItem` fidelity gaps (Medium)
-Only a generic `item_allowed` mask + trap-destroys-items filter +
-`AquariumRoom`'s water override are ported. Still missing room-specific
-exclusions: `PlantsRoom` (plant-occupied cells, `PlantsRoom.java:112-113`),
-`StandardBridgeRoom`/`CavesFissureRoom` (bridge/fissure exclusion rects),
-`RitualSiteRoom` (≥2 cells from candles), Vault-style rooms (center-only
-drop). The `Int(20)` heap-type roll / mimic-float / locked-chest-upgrade
-logic in the main loop was verified call-for-call correct against Java
-already — this gap is specifically the room-shape predicate.
+### 4. ~~Regular-floor room-placement predicate fidelity~~ — SOURCE-EXACT
+The pinned source's supported `RegularLevel` overrides are all represented:
+
+- `PlantsRoom` rejects its planted cells for both items and characters;
+  `plant_occupied` also preserves that predicate dynamically for ambient mobs.
+- `AquariumRoom` rejects water for both placements, including water introduced
+  by the later painter pass through the existing dynamic mob/drop checks.
+- `StandardBridgeRoom` uses one shared watabou `Rect.inside` implementation
+  (left/top inclusive, right/bottom exclusive) for WaterBridge, ChasmBridge,
+  and RegionDecoBridge standard/entrance/exit families. The entire logical
+  `spaceRect` stays excluded even where a walkable bridge is painted over it.
+- `CavesFissureRoom` and its entrance/exit subclasses reject final
+  `EMPTY_SP` cells for items and characters after transition painting.
+- `RitualSiteRoom` rejects the exact Chebyshev-radius `< 2` area around its
+  jittered ritual center for both placement types.
+
+Focused tests pin the masks, half-open edges, and the absence of predicate RNG
+draws. The main-loop `Int(20)` heap roll, mimic float, locked-chest upgrade,
+trap destruction, mob/heap occupancy, and exit-cell exclusions remain covered
+by the existing Java-transcribed tests and schema-v3 goldens.
+
+`AlternatingTrapsRoom`'s center-only rule and the false-return treasure/final
+room overrides belong to the separate `VaultLevel` branch, not
+`RegularLevel.randomDropCell`; they must be ported with that branch rather than
+guessed into regular-floor generation. This phase therefore does not promote
+the global `partial` status or close remaining special-room paint gaps.
 
 ### Lower-leverage, already-known (from prior disclaimer, still open)
 - Full ambient `createMobs` now feeds map markers on every regular floor, but
@@ -510,14 +534,19 @@ already — this gap is specifically the room-shape predicate.
    rotations through floor 24, second-room spawns, constructor/subtype/rare-alt
    draw order, LARGE open-space checks, and painter/quest NPC occupancy. HKT
    floor 7 now also matches its pre-items probe and all eight final mobs.
-9. Close the remaining room-specific `canPlaceItem` predicates and known
-   special-room paint gaps.
-10. Correct remaining timing/geometry approximations such as
+9. ~~**Close supported regular-floor room-placement predicates.**~~ Audited
+   every pinned `canPlaceItem` override reachable from `RegularLevel`,
+   centralized StandardBridge's half-open `spaceRect`, and matched the paired
+   Plants/Aquarium/CavesFissure/RitualSite character exclusions. Vault-only
+   predicates remain scoped to a future VaultLevel port.
+10. Close known special-room paint gaps with a pinned fixture before promoting
+    each room family.
+11. Correct remaining timing/geometry approximations such as
     inventory-sensitive later shops as new fixtures cover them.
-11. Extend exact paint-time heap capture to the remaining room families; keep
-   the legacy marker fallback until each family has a pinned cell association.
-12. Add multi-depth schema-v3 fixtures and promote each newly covered region
-   only after its lifecycle boundary probes and final facts match.
+12. Extend exact paint-time heap capture to the remaining room families; keep
+    the legacy marker fallback until each family has a pinned cell association.
+13. Add multi-depth schema-v3 fixtures and promote each newly covered region
+    only after its lifecycle boundary probes and final facts match.
 
 ---
 
@@ -645,9 +674,10 @@ license constraints.
    replay slice green: `WandOfPrismaticLight +1` and
    `WandOfCorrosion +1`. Its full painter and final-fact lifecycle remains
    partial.
-7. Close the remaining room-specific `canPlaceItem` predicates and known
-   special-room paint gaps; source-ported deeper mob populations are not a
-   substitute for lifecycle goldens.
+7. Keep the source-exact regular-floor item/character placement predicates
+   green. Next, close known special-room paint gaps with pinned lifecycle
+   fixtures; source-ported deeper mob populations are not a substitute for
+   goldens. VaultLevel-only predicates remain part of a future branch port.
 8. After Rust changes: `bun run build:wasm` (or `bun run dev`) before treating
    the UI as verified.
 9. Dev dump: `cargo run -p spd-core --example dump_seed -- SEED FLOORS`

@@ -65,6 +65,11 @@ fn caves_fissure_paints_bridged_chasms_and_safe_entrance() {
 
     assert!(map.map.contains(&CHASM));
     assert!(map.map.contains(&EMPTY_SP));
+    for cell in 0..map.len() {
+        let expected = map.map[cell] != EMPTY_SP;
+        assert_eq!(map.item_allowed[cell], expected);
+        assert_eq!(map.character_allowed[cell], expected);
+    }
     let entrance = map
         .map
         .iter()

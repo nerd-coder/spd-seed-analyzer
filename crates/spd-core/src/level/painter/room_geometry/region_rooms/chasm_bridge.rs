@@ -35,7 +35,7 @@ pub(super) fn paint(map: &mut TerrainMap, room: &Room, room_index: usize, doors:
         layout.bridge.bottom,
         EMPTY_SP,
     );
-    apply_place_masks(map, room, layout.logical_space);
+    standard_bridge::apply_place_masks(map, layout.logical_space);
     paint_transition(map, room, layout.logical_space);
 }
 
@@ -47,20 +47,6 @@ fn max_bridge_width(room_dimension: i32) -> i32 {
     }
 }
 
-fn apply_place_masks(map: &mut TerrainMap, room: &Room, space: Rect) {
-    for y in room.top..=room.bottom {
-        for x in room.left..=room.right {
-            if !inside(space, x, y) {
-                continue;
-            }
-            if let Some(cell) = map.point_to_cell(x, y) {
-                map.item_allowed[cell] = false;
-                map.character_allowed[cell] = false;
-            }
-        }
-    }
-}
-
 fn paint_transition(map: &mut TerrainMap, room: &Room, space: Rect) {
     let terrain = match room.kind {
         RoomKind::Entrance => ENTRANCE,
@@ -69,7 +55,7 @@ fn paint_transition(map: &mut TerrainMap, room: &Room, space: Rect) {
     };
     for _ in 0..10_000 {
         let point = room.random_margin(2);
-        if inside(space, point.x, point.y) {
+        if standard_bridge::inside(space, point.x, point.y) {
             continue;
         }
         for dy in -1..=1 {
@@ -87,9 +73,4 @@ fn paint_transition(map: &mut TerrainMap, room: &Room, space: Rect) {
         }
         return;
     }
-}
-
-/// watabou `Rect.inside`: left/top inclusive, right/bottom exclusive.
-fn inside(rect: Rect, x: i32, y: i32) -> bool {
-    x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom
 }

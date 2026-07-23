@@ -42,23 +42,20 @@ pub(super) fn paint(
         EMPTY_SP,
     );
 
-    apply_place_masks(map, room, layout.logical_space, depth);
+    standard_bridge::apply_place_masks(map, layout.logical_space);
+    apply_room_masks(map, room, depth);
     if matches!(room.kind, RoomKind::Entrance | RoomKind::Exit) {
         paint_transition(map, room, layout.logical_space);
     }
 }
 
-fn apply_place_masks(map: &mut TerrainMap, room: &Room, space: Rect, depth: i32) {
+fn apply_room_masks(map: &mut TerrainMap, room: &Room, depth: i32) {
     for y in room.top..=room.bottom {
         for x in room.left..=room.right {
             let Some(cell) = map.point_to_cell(x, y) else {
                 continue;
             };
             map.water_allowed[cell] = false;
-            if inside(space, x, y) {
-                map.item_allowed[cell] = false;
-                map.character_allowed[cell] = false;
-            }
             if room.kind == RoomKind::Entrance && depth == 1 {
                 map.trap_allowed[cell] = false;
             }
@@ -70,7 +67,7 @@ fn paint_transition(map: &mut TerrainMap, room: &Room, space: Rect) {
     let mut selected = None;
     for _ in 0..10_000 {
         let point = room.random_margin(2);
-        if !inside(space, point.x, point.y) {
+        if !standard_bridge::inside(space, point.x, point.y) {
             selected = Some(point);
             break;
         }
@@ -96,29 +93,5 @@ fn paint_transition(map: &mut TerrainMap, room: &Room, space: Rect) {
         if let Some(cell) = map.point_to_cell(point.x, point.y) {
             map.character_allowed[cell] = false;
         }
-    }
-}
-
-/// watabou `Rect.inside`: left/top inclusive, right/bottom exclusive.
-fn inside(rect: Rect, x: i32, y: i32) -> bool {
-    x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn space_rect_inside_includes_left_and_top_edges() {
-        let rect = Rect {
-            left: 2,
-            top: 3,
-            right: 6,
-            bottom: 8,
-        };
-        assert!(inside(rect, 2, 3));
-        assert!(inside(rect, 5, 7));
-        assert!(!inside(rect, 6, 3));
-        assert!(!inside(rect, 2, 8));
     }
 }

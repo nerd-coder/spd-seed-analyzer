@@ -60,6 +60,10 @@ fn plants_paints_grass_and_blocks_plant_cells_from_item_drops() {
         map.item_allowed.iter().filter(|&&allowed| !allowed).count(),
         2
     );
+    for cell in 0..map.len() {
+        assert_eq!(map.item_allowed[cell], !map.plant_occupied[cell]);
+        assert_eq!(map.character_allowed[cell], !map.plant_occupied[cell]);
+    }
 }
 
 #[test]
@@ -74,6 +78,11 @@ fn aquarium_paints_water_and_blocks_it_from_item_drops() {
         .count();
     assert_eq!(water, 16);
     assert_eq!(blocked_water, water);
+    for cell in 0..map.len() {
+        let expected = map.map[cell] != WATER;
+        assert_eq!(map.item_allowed[cell], expected);
+        assert_eq!(map.character_allowed[cell], expected);
+    }
 }
 
 #[test]

@@ -34,17 +34,10 @@ pub(super) fn paint(map: &mut TerrainMap, room: &Room, room_index: usize, doors:
         bridge.bottom,
         EMPTY_SP,
     );
-    for y in space.top..=space.bottom {
-        for x in space.left..=space.right {
-            if let Some(cell) = map.point_to_cell(x, y) {
-                map.item_allowed[cell] = false;
-                map.character_allowed[cell] = false;
-            }
-        }
-    }
+    standard_bridge::apply_place_masks(map, layout.logical_space);
 
     if matches!(room.kind, RoomKind::Entrance | RoomKind::Exit) {
-        paint_transition(map, room, space);
+        paint_transition(map, room, layout.logical_space);
     }
 }
 
@@ -56,7 +49,7 @@ fn paint_transition(map: &mut TerrainMap, room: &Room, space: Rect) {
     };
     for _ in 0..10_000 {
         let p = room.random_margin(2);
-        if p.x >= space.left && p.x <= space.right && p.y >= space.top && p.y <= space.bottom {
+        if standard_bridge::inside(space, p.x, p.y) {
             continue;
         }
         let touches_deco = (-1..=1).any(|dy| {

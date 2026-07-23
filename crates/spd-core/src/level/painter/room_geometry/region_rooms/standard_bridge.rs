@@ -1,6 +1,7 @@
 //! Shared `StandardBridgeRoom.paint` layout.
 
 use crate::geom::{Point, Rect};
+use crate::level::terrain::TerrainMap;
 use crate::random::Random;
 use crate::rooms::room::Room;
 
@@ -36,6 +37,24 @@ pub(super) fn layout(
     } else {
         vertical(room, doors, vertical_max_bridge_width)
     }
+}
+
+/// `StandardBridgeRoom.canPlaceItem` / `canPlaceCharacter` reject every point
+/// inside Java's half-open `spaceRect`, including the bridge painted over it.
+pub(super) fn apply_place_masks(map: &mut TerrainMap, space: Rect) {
+    for y in space.top..space.bottom {
+        for x in space.left..space.right {
+            if let Some(cell) = map.point_to_cell(x, y) {
+                map.item_allowed[cell] = false;
+                map.character_allowed[cell] = false;
+            }
+        }
+    }
+}
+
+/// watabou `Rect.inside`: left/top inclusive, right/bottom exclusive.
+pub(super) fn inside(rect: Rect, x: i32, y: i32) -> bool {
+    x >= rect.left && x < rect.right && y >= rect.top && y < rect.bottom
 }
 
 fn horizontal(room: &Room, doors: &[Point], max_bridge_width: i32) -> BridgeLayout {
@@ -133,6 +152,7 @@ fn exclusive_rect(rect: Rect) -> Rect {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::level::terrain;
     use crate::rooms::types::RoomKind;
 
     fn room(width: i32, height: i32) -> Room {
@@ -183,5 +203,40 @@ mod tests {
         Random::pop_generator();
         assert!(layout.space.raw_height() < 2);
         assert_eq!(layout.space.raw_width() + 1, room.width() - 2);
+    }
+
+    #[test]
+    fn placement_mask_uses_java_half_open_space_rect_without_rng() {
+        let room = room(9, 9);
+        let mut map = terrain::paint_minimal(std::slice::from_ref(&room)).expect("map");
+        let space = Rect {
+            left: 2,
+            top: 3,
+            right: 6,
+            bottom: 8,
+        };
+
+        Random::push_generator_seeded(0xB10C);
+        apply_place_masks(&mut map, space);
+        let actual_next = Random::int();
+        Random::pop_generator();
+        Random::push_generator_seeded(0xB10C);
+        let expected_next = Random::int();
+        Random::pop_generator();
+
+        assert_eq!(
+            actual_next, expected_next,
+            "predicate mask must not use RNG"
+        );
+        for y in room.top..=room.bottom {
+            for x in room.left..=room.right {
+                let cell = map.point_to_cell(x, y).expect("room cell");
+                assert_eq!(map.item_allowed[cell], !inside(space, x, y));
+                assert_eq!(map.character_allowed[cell], !inside(space, x, y));
+            }
+        }
+        assert!(inside(space, space.left, space.top));
+        assert!(!inside(space, space.right, space.top));
+        assert!(!inside(space, space.left, space.bottom));
     }
 }

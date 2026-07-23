@@ -59,17 +59,22 @@ pub(super) fn paint(map: &mut TerrainMap, room: &Room, room_index: usize, doors:
             door_point = room_cell_from_door(room, door);
         }
         if all_floor_reachable(map, room, door_point) {
-            for y in (room.top + 1)..room.bottom {
-                for x in (room.left + 1)..room.right {
-                    if terrain_at(map, x, y) == Some(EMPTY_SP) {
-                        if let Some(cell) = map.point_to_cell(x, y) {
-                            map.item_allowed[cell] = false;
-                        }
-                    }
+            paint_transition(map, room);
+            apply_place_masks(map, room);
+            return;
+        }
+    }
+}
+
+fn apply_place_masks(map: &mut TerrainMap, room: &Room) {
+    for y in (room.top + 1)..room.bottom {
+        for x in (room.left + 1)..room.right {
+            if terrain_at(map, x, y) == Some(EMPTY_SP) {
+                if let Some(cell) = map.point_to_cell(x, y) {
+                    map.item_allowed[cell] = false;
+                    map.character_allowed[cell] = false;
                 }
             }
-            paint_transition(map, room);
-            return;
         }
     }
 }

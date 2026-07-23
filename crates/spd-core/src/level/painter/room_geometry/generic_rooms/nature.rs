@@ -57,6 +57,7 @@ pub(super) fn paint_plants(
             // Level.plant converts HIGH_GRASS/EMPTY/EMBERS to GRASS.
             map.map[cell] = GRASS;
             map.item_allowed[cell] = false;
+            map.character_allowed[cell] = false;
             map.plant_occupied[cell] = true;
         }
     }
@@ -82,6 +83,7 @@ pub(super) fn paint_aquarium(map: &mut TerrainMap, room: &Room) {
             if let Some(cell) = map.point_to_cell(x, y) {
                 if map.map[cell] == WATER {
                     map.item_allowed[cell] = false;
+                    map.character_allowed[cell] = false;
                 }
             }
         }
