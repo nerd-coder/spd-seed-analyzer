@@ -70,7 +70,8 @@
       "remaining": [
         "Loot tied to uncovered room paint or lifecycle paths can be incomplete or misplaced",
         "Shop and crystal-room loot outside verified flows should be treated as approximate",
-        "Later-shop bag selection cannot be exact without player inventory and Hourglass sandbag input"
+        "Later-shop bags require player inventory, and equal-score ChooseBag ties follow non-seeded JVM identity-hash HashMap iteration; HKT and AAA oracle processes choose different bags for equivalent fresh inventories",
+        "Hourglass sandbag input is unavailable"
       ],
       "impact": "An item can be missing, different, or placed on a different cell even when earlier seed facts match.",
       "evidence": [

@@ -1,4 +1,4 @@
-# SPD Seed Analyzer — Accuracy Handoff
+# SPD Seed Analyzer — Handoff
 
 **Updated:** 2026-07-25
 
@@ -6,31 +6,32 @@
 
 **Status:** `partial` — do not claim full seed-finder accuracy
 
-`specs/accuracy.json` is the coverage source of truth. Port only from the
-pinned checkout, normally at
+`specs/accuracy.json` is the coverage source of truth. Port generation only
+from the pinned checkout at
 `/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`.
-
-## Checkpoint
-
-- Preserved `AAA-AAA-AAA` replay now crosses floor 10 and matches floor 11 at
-  pre-paint, pre-mobs, and pre-items RNG boundaries.
-- Floor 11 matches exact mobs and SecretHoardRoom heaps after replacing its
-  approximate painter with the pinned gold/trap lifecycle.
-- Other floor-11 heaps are not exact: later-shop bag state and additive
-  GuidePage/key/drop placement still differ.
 
 ## Next phase
 
-Resolve the earliest floor-11 heap divergence without disturbing the exact RNG
-boundaries. Start with the later-shop bag choice (`MagicalHolster` in Java vs
-`PotionBandolier` in Rust), then compare GuidePage/key/main-drop placement.
+Replace the oversized web Accuracy popover with a dedicated modal. Preserve
+all manifest-rendered content, accessibility, responsive behavior, and the
+existing compact trigger/status summary. Run the web checks, production build,
+and visual suite before committing, then stop.
 
-## Known limits
+## Accuracy phase after that
 
-- Fixture-specific room painters and Generator histories may still diverge.
-- ToxicGas vents/gas blobs are not exact exported additive facts.
-- VaultLevel branches and general player-dependent later-shop bags are out of
-  scope; only pinned deterministic inventory profiles can be verified.
-- The unseeded early Guidebook page is intentionally out of scope.
+Resolve floor-11 GuidePage, CrystalKey, and main/forced-drop placement while
+preserving the exact pre-paint, pre-mobs, and pre-items RNG boundaries. Current
+example: Rust GuidePage cell 1687 vs Java cell 870.
+
+## Constraints discovered
+
+- Do not globally reorder equal-score shop bags. Pinned `ChooseBag` uses
+  identity-hash `HashMap` iteration: equivalent fresh inventories choose
+  `MagicalHolster` in the HKT oracle and `PotionBandolier` in the AAA oracle.
+  This is non-seeded JVM behavior, not a source-faithful accuracy fix.
+- Floor 11 currently has exact mobs and SecretHoardRoom heaps, but not all
+  additive heaps.
+- Player inventory, Hourglass sandbags, VaultLevel branches, and the unseeded
+  early Guidebook page remain outside general exact prediction.
 
 Before committing, run the complete CI `check` sequence from `AGENTS.md`.
