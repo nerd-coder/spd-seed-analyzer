@@ -81,6 +81,34 @@ fn aaa_replay_pins_floor_two_and_floor_three_painter_boundary() {
             );
         } else if depth == 3 {
             assert_eq!(
+                expected.pre_doors_rng,
+                [
+                    -1107632305,
+                    1945287652,
+                    -1328999995,
+                    -1387751388,
+                    -1694303545,
+                    -1627736540,
+                    2119338483,
+                    1053549476
+                ],
+                "{context} pinned post-room-paint boundary"
+            );
+            assert_eq!(
+                expected.post_doors_rng,
+                [
+                    -700035324,
+                    -240926920,
+                    -1024974318,
+                    -2119231834,
+                    1908727426,
+                    344618962,
+                    -1144966623,
+                    1333384002
+                ],
+                "{context} pinned post-paintDoors boundary"
+            );
+            assert_eq!(
                 actual.pre_mobs_rng_probe[..4],
                 expected.pre_mobs_rng[4..],
                 "{context} Rust remains exactly four base draws ahead"

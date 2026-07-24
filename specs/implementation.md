@@ -15,19 +15,19 @@ pinned checkout, normally at
 - `AAA-AAA-AAA` floors 1–2 match through pre-items RNG; floor 2 also matches
   exact seeded heaps after porting GrassyGrave tombs and SecretChestChasm
   chests, keys, and terrain.
-- Floor 3 matches room classes, bounds, and pre-paint RNG. At pre-mobs, Rust is
-  exactly four base-stream draws ahead of Java.
+- Floor 3 matches room classes, bounds, and pre-paint RNG. Durable pre/post-door
+  probes show Rust consumes four extra base-stream draws during room painting;
+  door painting preserves the offset and the isolated painter tail is exact.
 - Floor 7 still has exact local paint/mob boundaries, but its five main drops
   diverge because the earlier overall Generator category history differs.
 
 ## Next phase
 
-Trace the four missing floor-3 paint-stage base RNG draws. Compare the pinned
-SewerLevel painter lifecycle from the exact pre-paint boundary through
-`paintDoors`, room paint, and the isolated water/grass/traps/decorate tail.
-Add the narrowest intermediate oracle probe that identifies the call site,
-then port the general behavior and advance the floor-3 boundary toward
-pre-items.
+Trace the four extra floor-3 room-paint draws room by room. Start with the final
+two `TunnelRoom` painters, which consume two draws each in Rust, and compare
+their `getDoorCenter` call lifecycle and connection iteration against pinned
+Java. Identify the exact source-backed mismatch, remove it generally, then
+advance floor 3 from exact pre-paint parity through pre-mobs and pre-items.
 
 After floor 3 is exact, continue floor 4 and replay through floor 7. The target
 floor-7 main drops remain:

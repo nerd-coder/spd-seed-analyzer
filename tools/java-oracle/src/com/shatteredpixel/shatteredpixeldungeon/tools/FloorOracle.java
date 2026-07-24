@@ -111,6 +111,8 @@ final class FloorOracle {
 		int height = level.height();
 		FloorVisualFacts visualFacts = FloorVisualFacts.capture(level);
 		List<Integer> prePaintRng = generatePrePaintRng(seed, depth);
+		List<Integer> preDoorsRng = depth <= 4 ? generateDoorRng(seed, depth, false) : new ArrayList<>();
+		List<Integer> postDoorsRng = depth <= 4 ? generateDoorRng(seed, depth, true) : new ArrayList<>();
 		List<Integer> preMobsRng = generatePreMobsRng(seed, depth);
 		List<Integer> preItemsRng = generatePreItemsRng(seed, depth);
 		return new FinalFloorFacts(
@@ -123,9 +125,25 @@ final class FloorOracle {
 				mobs,
 				questRewards,
 				prePaintRng,
+				preDoorsRng,
+				postDoorsRng,
 				preMobsRng,
 				preItemsRng,
 				visualFacts);
+	}
+
+	private static List<Integer> generateDoorRng(long seed, int depth, boolean after) {
+		initializeFreshRun(seed);
+		generatePriorFloors(depth);
+		markTargetFloorGenerated(depth);
+		FloorProbeLevels.Probe level = after
+				? FloorProbeLevels.postDoors(depth) : FloorProbeLevels.preDoors(depth);
+		try {
+			level.level().create();
+		} catch (SnapshotComplete expected) {
+			// Stops immediately before or after RegularPainter.paintDoors.
+		}
+		return level.rngProbe();
 	}
 
 	private static List<Integer> generatePrePaintRng(long seed, int depth) {
@@ -272,6 +290,8 @@ final class FloorOracle {
 		final List<MobFact> mobs;
 		final List<ItemFact> questRewards;
 		final List<Integer> prePaintRng;
+		final List<Integer> preDoorsRng;
+		final List<Integer> postDoorsRng;
 		final List<Integer> preMobsRng;
 		final List<Integer> preItemsRng;
 		final List<Integer> terrain;
@@ -292,6 +312,8 @@ final class FloorOracle {
 				List<MobFact> mobs,
 				List<ItemFact> questRewards,
 				List<Integer> prePaintRng,
+				List<Integer> preDoorsRng,
+				List<Integer> postDoorsRng,
 				List<Integer> preMobsRng,
 				List<Integer> preItemsRng,
 				FloorVisualFacts visualFacts) {
@@ -304,6 +326,8 @@ final class FloorOracle {
 			this.mobs = mobs;
 			this.questRewards = questRewards;
 			this.prePaintRng = prePaintRng;
+			this.preDoorsRng = preDoorsRng;
+			this.postDoorsRng = postDoorsRng;
 			this.preMobsRng = preMobsRng;
 			this.preItemsRng = preItemsRng;
 			this.terrain = visualFacts.terrain;

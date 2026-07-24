@@ -10,6 +10,7 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.PrisonLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
+import com.shatteredpixel.shatteredpixeldungeon.levels.painters.SewerPainter;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
 import com.watabou.utils.Random;
 
@@ -37,6 +38,16 @@ final class FloorProbeLevels {
 	static Probe preMobs(int depth) {
 		if (depth >= 1 && depth <= 4) return new PreMobsSewerLevel();
 		if (depth >= 6 && depth <= 9) return new PreMobsPrisonLevel();
+		throw unsupported(depth);
+	}
+
+	static Probe preDoors(int depth) {
+		if (depth >= 1 && depth <= 4) return new DoorBoundarySewerLevel(false);
+		throw unsupported(depth);
+	}
+
+	static Probe postDoors(int depth) {
+		if (depth >= 1 && depth <= 4) return new DoorBoundarySewerLevel(true);
 		throw unsupported(depth);
 	}
 
@@ -122,6 +133,32 @@ final class FloorProbeLevels {
 		public void setRngProbe(List<Integer> probe) {
 			rngProbe = probe;
 		}
+	}
+
+	private static final class DoorBoundarySewerLevel extends SewerLevel implements Probe {
+		private final boolean after;
+		private List<Integer> rngProbe;
+
+		private DoorBoundarySewerLevel(boolean after) {
+			this.after = after;
+		}
+
+		@Override
+		protected Painter painter() {
+			return new SewerPainter() {
+				@Override
+				protected void paintDoors(Level level, ArrayList<Room> rooms) {
+					if (after) super.paintDoors(level, rooms);
+					rngProbe = captureRng();
+					throw new FloorOracle.SnapshotComplete();
+				}
+			}.setWater(feeling == Feeling.WATER ? 0.85f : 0.30f, 5)
+					.setGrass(feeling == Feeling.GRASS ? 0.80f : 0.20f, 4)
+					.setTraps(nTraps(), trapClasses(), trapChances());
+		}
+
+		@Override public Level level() { return this; }
+		@Override public List<Integer> rngProbe() { return rngProbe; }
 	}
 
 	private static final class PreMobsSewerLevel extends SewerLevel implements Probe {

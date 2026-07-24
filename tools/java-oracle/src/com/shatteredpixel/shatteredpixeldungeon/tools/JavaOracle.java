@@ -232,6 +232,18 @@ public final class JavaOracle {
 			json.append(floor.prePaintRng.get(index));
 		}
 		json.append("],\n");
+		json.append("      \"pre_doors_rng\": [");
+		for (int index = 0; index < floor.preDoorsRng.size(); index++) {
+			if (index > 0) json.append(", ");
+			json.append(floor.preDoorsRng.get(index));
+		}
+		json.append("],\n");
+		json.append("      \"post_doors_rng\": [");
+		for (int index = 0; index < floor.postDoorsRng.size(); index++) {
+			if (index > 0) json.append(", ");
+			json.append(floor.postDoorsRng.get(index));
+		}
+		json.append("],\n");
 		json.append("      \"pre_mobs_rng\": [");
 		for (int index = 0; index < floor.preMobsRng.size(); index++) {
 			if (index > 0) json.append(", ");

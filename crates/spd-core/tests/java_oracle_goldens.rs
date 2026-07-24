@@ -68,6 +68,10 @@ struct OracleFloor {
     #[serde(default)]
     pre_paint_rng: Vec<i32>,
     #[serde(default)]
+    pre_doors_rng: Vec<i32>,
+    #[serde(default)]
+    post_doors_rng: Vec<i32>,
+    #[serde(default)]
     pre_mobs_rng: Vec<i32>,
     #[serde(default)]
     pre_items_rng: Vec<i32>,
