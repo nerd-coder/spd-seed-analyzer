@@ -12,16 +12,18 @@ from the pinned checkout at
 
 ## Next phase
 
-Replace the oversized web Accuracy popover with a dedicated modal. Preserve
-all manifest-rendered content, accessibility, responsive behavior, and the
-existing compact trigger/status summary. Run the web checks, production build,
-and visual suite before committing, then stop.
-
-## Accuracy phase after that
-
 Resolve floor-11 GuidePage, CrystalKey, and main/forced-drop placement while
 preserving the exact pre-paint, pre-mobs, and pre-items RNG boundaries. Current
-example: Rust GuidePage cell 1687 vs Java cell 870.
+example: Rust GuidePage cell 1687 vs Java cell 870. Compare the nested
+`randomDropCell` room-order mutation and occupied-cell state first.
+
+## Checkpoint
+
+- Accuracy details now use a responsive, accessible modal with a bounded
+  two-axis table scroller; mobile overflow, Escape close, and focus return are
+  covered by Playwright.
+- Floor 11 has exact RNG boundaries, mobs, and SecretHoardRoom heaps, but not
+  all additive heaps.
 
 ## Constraints discovered
 
@@ -29,8 +31,6 @@ example: Rust GuidePage cell 1687 vs Java cell 870.
   identity-hash `HashMap` iteration: equivalent fresh inventories choose
   `MagicalHolster` in the HKT oracle and `PotionBandolier` in the AAA oracle.
   This is non-seeded JVM behavior, not a source-faithful accuracy fix.
-- Floor 11 currently has exact mobs and SecretHoardRoom heaps, but not all
-  additive heaps.
 - Player inventory, Hourglass sandbags, VaultLevel branches, and the unseeded
   early Guidebook page remain outside general exact prediction.
 

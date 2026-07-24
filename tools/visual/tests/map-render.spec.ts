@@ -260,6 +260,46 @@ test('map dialog initially focuses its container instead of a control', async ({
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
+test('accuracy details use a responsive modal and restore trigger focus', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 600 })
+  const browserErrors = await openAnalyzer(page, 'CXG-FJT-BFQ')
+  const trigger = page.getByRole('button', { name: 'View accuracy details' })
+  await trigger.click()
+
+  const dialog = page.getByRole('dialog', { name: 'Accuracy details' })
+  await expect(dialog).toBeVisible()
+  await expect(
+    dialog.getByText(/Last reviewed .+ for v?3\.3\.8\./)
+  ).toBeVisible()
+
+  const bounds = await dialog.boundingBox()
+  expect(bounds).not.toBeNull()
+  expect(bounds?.x).toBeGreaterThanOrEqual(16)
+  expect(bounds?.y).toBeGreaterThanOrEqual(16)
+  expect(bounds?.width).toBeLessThanOrEqual(358)
+  expect(bounds?.height).toBeLessThanOrEqual(568)
+
+  const scrollArea = dialog.getByTestId('accuracy-details-scroll')
+  await expect
+    .poll(() =>
+      scrollArea.evaluate(
+        (node) =>
+          node.scrollHeight > node.clientHeight &&
+          node.scrollWidth > node.clientWidth
+      )
+    )
+    .toBe(true)
+
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeHidden()
+  await expect(trigger).toBeFocused()
+
+  expect(browserErrors.console, 'browser console errors').toEqual([])
+  expect(browserErrors.page, 'uncaught page errors').toEqual([])
+})
+
 test('animated liquid advances on the pixel-aligned canvas path', async ({
   page,
 }) => {

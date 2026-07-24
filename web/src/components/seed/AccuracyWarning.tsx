@@ -3,13 +3,13 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
-  Popover,
-  PopoverContent,
-  PopoverDescription,
-  PopoverHeader,
-  PopoverTitle,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
 import accuracy from '../../../../specs/accuracy.json'
 
 export function AccuracyWarning() {
@@ -23,8 +23,8 @@ export function AccuracyWarning() {
           {accuracy.target.version}
         </Badge>
       </AlertDescription>
-      <Popover>
-        <PopoverTrigger asChild>
+      <Dialog>
+        <DialogTrigger asChild>
           <Button
             type="button"
             variant="ghost"
@@ -34,19 +34,19 @@ export function AccuracyWarning() {
           >
             <InfoIcon />
           </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          align="end"
-          className="max-h-[min(36rem,calc(100vh-2rem))] w-160 max-w-[calc(100vw-2rem)] overflow-auto"
-        >
-          <PopoverHeader>
-            <PopoverTitle>Accuracy details</PopoverTitle>
-            <PopoverDescription>
+        </DialogTrigger>
+        <DialogContent className="flex max-h-[calc(100svh-2rem)] flex-col sm:max-w-4xl lg:max-w-5xl">
+          <DialogHeader className="shrink-0 pr-8">
+            <DialogTitle>Accuracy details</DialogTitle>
+            <DialogDescription>
               {accuracy.summary} Last reviewed {accuracy.lastReviewed} for{' '}
               {accuracy.target.version}.
-            </PopoverDescription>
-          </PopoverHeader>
-          <div className="overflow-x-auto ring-1 ring-foreground/10">
+            </DialogDescription>
+          </DialogHeader>
+          <div
+            className="min-h-0 overflow-auto ring-1 ring-foreground/10"
+            data-testid="accuracy-details-scroll"
+          >
             <table className="w-full min-w-xl border-collapse text-left text-xs/relaxed">
               <thead className="bg-muted text-foreground">
                 <tr>
@@ -88,8 +88,8 @@ export function AccuracyWarning() {
               </tbody>
             </table>
           </div>
-        </PopoverContent>
-      </Popover>
+        </DialogContent>
+      </Dialog>
     </Alert>
   )
 }
