@@ -42,7 +42,7 @@ export function SettingsButton({ className }: SettingsButtonProps) {
           <Settings />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-64">
+      <PopoverContent align="start" className="w-sm max-w-svw">
         <PopoverHeader>
           <PopoverTitle>Settings</PopoverTitle>
           <PopoverDescription>

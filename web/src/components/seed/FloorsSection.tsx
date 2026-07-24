@@ -51,12 +51,7 @@ export function FloorsSection({
       <div className="space-y-1 px-4 pt-4">
         <h2 className="font-heading text-sm font-medium">Floors</h2>
         <p className="text-muted-foreground text-xs leading-relaxed">
-          Partial levelgen: layout, special/secret rooms, shops, crystal rooms,
-          and quest rewards when reported. Boss floors (5 / 10 / 15 / 20 / 25)
-          and Last Level (26) are hidden.
-          {mapSpoilers
-            ? ' Map thumbnails are 128×128 — click to expand.'
-            : ' Enable Floor maps to view layout thumbnails.'}
+          Items you may find on each floor.
         </p>
       </div>
 

@@ -41,6 +41,10 @@ thin consumers.
   All/Any match switch sits left of the Find seeds action. The engine accepts
   bounded chunks up to 10,000 candidates.
 
+- Floor titles expose generated room classes from a count chip and popover.
+  Expanded maps fill the mobile viewport, use a larger bounded desktop dialog,
+  and pin dark, icon-only zoom and marker controls to the map container.
+
 - Java `Random`, watabou generator stacks, seed codes, run identities,
   generator decks, depth seeds, forced drops, and supported shop/quest flows
   have focused coverage.

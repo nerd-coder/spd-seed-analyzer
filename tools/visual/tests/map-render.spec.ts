@@ -78,10 +78,10 @@ async function waitForCanvasPaint(canvas: Locator) {
 }
 
 async function enableMarkerLayer(dialog: Locator, name: RegExp) {
-  const toggle = dialog.getByRole('switch', { name })
+  const toggle = dialog.getByRole('button', { name })
   if ((await toggle.count()) === 0) return false
   await toggle.click()
-  await expect(toggle).toHaveAttribute('aria-checked', 'true')
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true')
   return true
 }
 
@@ -128,8 +128,8 @@ async function captureFloor(page: Page, floor: number, snapshot: string) {
   })
   await expect(canvas).toHaveAttribute('data-water-animation', 'paused')
   await waitForCanvasPaint(canvas)
-  const itemsEnabled = await enableMarkerLayer(dialog, /^Items/)
-  const mobsEnabled = await enableMarkerLayer(dialog, /^Known mobs/)
+  const itemsEnabled = await enableMarkerLayer(dialog, /^Show items/)
+  const mobsEnabled = await enableMarkerLayer(dialog, /^Show known mobs/)
 
   await snapshotCanvas(canvas, snapshot, itemsEnabled || mobsEnabled)
 }
@@ -149,3 +149,75 @@ for (const fixture of MAP_RENDER_FIXTURES) {
     expect(browserErrors.page, 'uncaught page errors').toEqual([])
   })
 }
+
+test('mobile map dialog fills the viewport and supports 1x and 2x zoom', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  const browserErrors = await openAnalyzer(page, 'CXG-FJT-BFQ')
+  await page.getByRole('button', { name: 'Expand floor 1 map' }).click()
+
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await expect
+    .poll(() => dialog.boundingBox())
+    .toEqual({ x: 0, y: 0, width: 390, height: 844 })
+
+  const canvas = dialog.getByRole('img', {
+    name: /Shattered Pixel Dungeon floor map/,
+  })
+  await waitForCanvasPaint(canvas)
+  await dialog.getByRole('radio', { name: 'Zoom map to 1x' }).click()
+  const oneXWidth = await canvas.evaluate(
+    (node) => (node as HTMLCanvasElement).width
+  )
+  await dialog.getByRole('radio', { name: 'Zoom map to 2x' }).click()
+  await expect
+    .poll(() => canvas.evaluate((node) => (node as HTMLCanvasElement).width))
+    .toBe(oneXWidth * 2)
+
+  const settingsPanel = dialog.getByTestId('map-settings-panel')
+  const scrollContainer = dialog.getByTestId('map-scroll-container')
+  await expect(settingsPanel).toHaveClass(/\bdark\b/)
+  const panelBounds = await settingsPanel.boundingBox()
+  await scrollContainer.evaluate((node) => {
+    node.scrollTo({ left: node.scrollWidth, top: node.scrollHeight })
+  })
+  await expect
+    .poll(() => scrollContainer.evaluate((node) => node.scrollLeft))
+    .toBeGreaterThan(0)
+  await expect
+    .poll(() => scrollContainer.evaluate((node) => node.scrollTop))
+    .toBeGreaterThan(0)
+  expect(await settingsPanel.boundingBox()).toEqual(panelBounds)
+
+  expect(browserErrors.console, 'browser console errors').toEqual([])
+  expect(browserErrors.page, 'uncaught page errors').toEqual([])
+})
+
+test('floor rooms open from a title chip and desktop maps use a large dialog', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 1200 })
+  const browserErrors = await openAnalyzer(page, 'CXG-FJT-BFQ')
+
+  const rooms = page.getByRole('button', { name: /^Rooms \(\d+\)$/ }).first()
+  await rooms.click()
+  await expect(page.getByText(/^Rooms on floor 1$/)).toBeVisible()
+
+  await page.getByRole('button', { name: 'Expand floor 1 map' }).click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await expect
+    .poll(async () => (await dialog.boundingBox())?.width)
+    .toBeGreaterThan(1200)
+  await expect
+    .poll(async () => (await dialog.boundingBox())?.height)
+    .toBeGreaterThan(1100)
+  await expect(
+    dialog.getByRole('radio', { name: 'Zoom map to 1x' })
+  ).toBeVisible()
+
+  expect(browserErrors.console, 'browser console errors').toEqual([])
+  expect(browserErrors.page, 'uncaught page errors').toEqual([])
+})

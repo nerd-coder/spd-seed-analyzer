@@ -8,7 +8,7 @@ type AppFloatingActionProps = {
 
 export function AppFloatingAction({ className }: AppFloatingActionProps) {
   const buttonClasses =
-    'border-white/20 bg-black/55 text-white hover:bg-black/70 hover:text-white'
+    'dark border-white/20 bg-black/55 text-white hover:bg-black/70 hover:text-white'
 
   return (
     <div

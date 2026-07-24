@@ -2,6 +2,7 @@ import { ArrowsOut } from '@phosphor-icons/react'
 import { useMemo, useState } from 'react'
 
 import { FloorMapCanvas } from '@/components/FloorMapCanvas'
+import { MapSettingsPanel } from '@/components/MapSettingsPanel'
 import {
   Dialog,
   DialogContent,
@@ -10,8 +11,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 import type { FloorMap, IdentityMaps } from '@/lib/spd-wasm'
 import { mapViewport, TILE_PX } from '@/lib/tiles'
 import { cn } from '@/lib/utils'
@@ -25,24 +24,22 @@ type Props = {
   className?: string
 }
 
-/** Pick a render scale so the expanded map fills most of the viewport. */
-function fullscreenScale(map: FloorMap): number {
-  if (typeof window === 'undefined') return 2
+/** Preserve the previous fitted scale, now bounded to the available choices. */
+function initialZoom(map: FloorMap): string {
+  if (typeof window === 'undefined') return '1'
   const budget = Math.min(window.innerWidth - 48, window.innerHeight - 140)
   const viewport = mapViewport(map)
   const tileEdge = Math.max(viewport.width, viewport.height) * TILE_PX
-  // The dialog scrolls; allow one 2× tile of overflow so HKT keeps the pinned
-  // 2× composition after retaining its raised-overhang row.
   const fit = Math.floor((budget + 2 * TILE_PX) / tileEdge)
-  return Math.max(1, Math.min(4, fit || 1))
+  return String(Math.max(1, Math.min(2, fit || 1)))
 }
 
 /**
  * Fixed 128×128 clickable map thumbnail; opens a dialog for a larger view.
  */
 export function FloorMapPreview({ map, identities, depth, className }: Props) {
-  const expandScale = useMemo(() => fullscreenScale(map), [map])
   const viewport = useMemo(() => mapViewport(map), [map])
+  const [zoom, setZoom] = useState(() => initialZoom(map))
   const [showItems, setShowItems] = useState(false)
   const [showMobs, setShowMobs] = useState(false)
   const itemMarkers = map.markers.filter(
@@ -83,7 +80,7 @@ export function FloorMapPreview({ map, identities, depth, className }: Props) {
         </button>
       </DialogTrigger>
       <DialogContent
-        className="flex max-h-[min(92vh,56rem)] w-auto max-w-[min(96vw,56rem)] flex-col gap-3 sm:max-w-[min(96vw,56rem)]"
+        className="inset-0 flex h-dvh max-h-none w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-3 sm:top-1/2 sm:left-1/2 sm:h-[min(94vh,72rem)] sm:w-[min(96vw,80rem)] sm:max-w-[min(96vw,80rem)] sm:-translate-x-1/2 sm:-translate-y-1/2"
         showCloseButton
       >
         <DialogHeader>
@@ -93,47 +90,31 @@ export function FloorMapPreview({ map, identities, depth, className }: Props) {
             {viewport.width}×{viewport.height}
           </DialogDescription>
         </DialogHeader>
-        {map.markers.length > 0 && (
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            {itemMarkers > 0 && (
-              <Label htmlFor={`floor-${depth}-item-markers`}>
-                <Switch
-                  id={`floor-${depth}-item-markers`}
-                  size="sm"
-                  checked={showItems}
-                  onCheckedChange={setShowItems}
-                />
-                Items ({itemMarkers})
-              </Label>
-            )}
-            {mobMarkers > 0 && (
-              <Label htmlFor={`floor-${depth}-mob-markers`}>
-                <Switch
-                  id={`floor-${depth}-mob-markers`}
-                  size="sm"
-                  checked={showMobs}
-                  onCheckedChange={setShowMobs}
-                />
-                Known mobs ({mobMarkers})
-              </Label>
-            )}
-            <p className="w-full text-muted-foreground text-xs">
-              Markers cover engine-confirmed cells only. Mob generation is exact
-              on depth 1, partial and source-aligned on depths 2–4 and 6–8, and
-              not yet ported on depths 9–24.
-            </p>
-          </div>
-        )}
-        <div className="flex min-h-0 flex-1 items-start justify-start overflow-auto bg-black/80 p-2">
-          <FloorMapCanvas
-            map={map}
-            identities={identities}
-            className="m-auto"
-            scale={expandScale}
-            animateWater
+        <div className="relative min-h-0 flex-1 overflow-hidden bg-black/80">
+          <MapSettingsPanel
+            zoom={zoom}
+            onZoomChange={setZoom}
+            itemMarkers={itemMarkers}
             showItems={showItems}
+            onShowItemsChange={setShowItems}
+            mobMarkers={mobMarkers}
             showMobs={showMobs}
+            onShowMobsChange={setShowMobs}
           />
+          <div
+            className="flex size-full items-start justify-start overflow-auto p-2"
+            data-testid="map-scroll-container"
+          >
+            <FloorMapCanvas
+              map={map}
+              identities={identities}
+              className="m-auto"
+              scale={Number(zoom)}
+              animateWater
+              showItems={showItems}
+              showMobs={showMobs}
+            />
+          </div>
         </div>
       </DialogContent>
     </Dialog>

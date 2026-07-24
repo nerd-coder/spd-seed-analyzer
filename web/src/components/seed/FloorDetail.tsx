@@ -4,6 +4,14 @@ import { ItemIcon } from '@/components/ItemIcon'
 import { ItemName } from '@/components/ItemName'
 import { QuestCard } from '@/components/seed/QuestCard'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Popover,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { itemAppearance } from '@/lib/identity'
 import { formatItemSource, isHighlightSource } from '@/lib/labels'
 import type { FloorReport, IdentityMaps } from '@/lib/spd-wasm'
@@ -32,20 +40,6 @@ export function FloorDetail({
               <QuestCard key={`${floor.depth}-quest-${i}`} quest={q} />
             ))}
           </div>
-        </div>
-      )}
-
-      {floor.rooms && floor.rooms.length > 0 && (
-        <div className="space-y-1">
-          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            Rooms
-            <span className="ml-1.5 font-mono font-normal tabular-nums normal-case">
-              ({floor.rooms.length})
-            </span>
-          </p>
-          <p className="text-sm leading-relaxed">
-            {floor.rooms.map((r) => r.replace(/Room$/, '')).join(' · ')}
-          </p>
         </div>
       )}
 
@@ -112,6 +106,25 @@ export function FloorDetail({
         <span className="font-mono text-sm font-medium tabular-nums">
           Floor {floor.depth}
         </span>
+        {floor.rooms && floor.rooms.length > 0 && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="xs">
+                Rooms ({floor.rooms.length})
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-72">
+              <PopoverHeader>
+                <PopoverTitle>Rooms on floor {floor.depth}</PopoverTitle>
+              </PopoverHeader>
+              <p className="text-sm leading-relaxed">
+                {floor.rooms
+                  .map((room) => room.replace(/Room$/, ''))
+                  .join(' · ')}
+              </p>
+            </PopoverContent>
+          </Popover>
+        )}
         {floor.feeling && floor.feeling !== 'none' && (
           <Badge variant="secondary" className="capitalize">
             {floor.feeling}
