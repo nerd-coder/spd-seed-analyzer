@@ -13,7 +13,8 @@ export function AppFloatingAction({ className }: AppFloatingActionProps) {
   return (
     <div
       className={cn(
-        'absolute items-center gap-1.5 shrink-0 top-2 left-2 z-30',
+        'absolute top-2 left-2 right-2 z-30',
+        'flex items-center justify-between',
         className
       )}
     >
