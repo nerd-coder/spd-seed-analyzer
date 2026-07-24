@@ -565,7 +565,7 @@ fn aaa_floor_thirteen_matches_the_pinned_final_facts() {
 }
 
 #[test]
-fn aaa_floor_fourteen_matches_the_pinned_layout_rng_and_mobs() {
+fn aaa_floor_fourteen_matches_the_pinned_final_facts() {
     let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-14.json");
     let path = fixture_paths()
         .into_iter()
@@ -621,6 +621,29 @@ fn aaa_floor_fourteen_matches_the_pinned_layout_rng_and_mobs() {
         })
         .collect();
     assert_eq!(actual_mobs, expected.final_mobs, "floor-14 final mobs");
+
+    let actual_heaps: Vec<_> = actual
+        .map
+        .as_ref()
+        .expect("floor-14 map")
+        .heaps
+        .iter()
+        .map(|heap| OracleHeap {
+            cell: heap.cell,
+            heap_type: heap.heap_type.clone(),
+            items: heap
+                .items
+                .iter()
+                .map(|item| OracleItem {
+                    class_name: oracle_item_class(&item.class_name).into(),
+                    quantity: item.quantity,
+                    level: item.level,
+                    cursed: item.cursed,
+                })
+                .collect(),
+        })
+        .collect();
+    assert_eq!(actual_heaps, expected.final_heaps, "floor-14 final heaps");
 }
 
 fn oracle_item_class(class_name: &str) -> &str {

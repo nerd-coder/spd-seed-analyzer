@@ -6,12 +6,12 @@
 
 ## Next phase
 
-Compare AAA-AAA-AAA floor 14 normalized final heaps with the pinned Java
-fixture. Fix only the first semantic difference, then stop.
+Extend the pinned Java final-heaps oracle through floor 16, preserving the
+floor-15 boss lifecycle. Compare AAA-AAA-AAA floor 16 room classes and
+normalized bounds first; fix only the first semantic difference, then stop.
 
 ## Current checkpoint
 
-- Floor 14 matches Java's room classes, normalized bounds, RNG boundaries, and
-  final mobs. `SuspiciousChestRoom` now projects its Mimic at the exact cell.
+- AAA-AAA-AAA floor 14 matches Java through normalized final heaps.
 
 Run the complete CI `check` sequence from `AGENTS.md` before committing.
