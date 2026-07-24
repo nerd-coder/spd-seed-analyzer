@@ -15,23 +15,18 @@ pinned checkout, normally at
 - `AAA-AAA-AAA` floors 1–2 match through pre-items RNG; floor 2 also matches
   exact seeded heaps after porting GrassyGrave tombs and SecretChestChasm
   chests, keys, and terrain.
-- Floor 3 matches room classes, bounds, and pre-paint RNG. Durable pre/post-door
-  probes isolate a four-draw room-paint offset. The first durable fact mismatch
-  is `WaterBridgeExitRoom`: Rust exit cell 308 versus pinned Java cell 237.
+- Floor 3 matches through exact pre-mobs/pre-items RNG, including its regular
+  exit at cell 237. `SacrificeRoom` now preserves `Room.center()` odd-span
+  burns before its entrance-alignment nudge.
 - Floor 7 still has exact local paint/mob boundaries, but its five main drops
   diverge because the earlier overall Generator category history differs.
 
 ## Next phase
 
-Trace floor-3 `WaterBridgeExitRoom` from its `StandardBridgeRoom` orientation,
-widest-gap selection, and `spaceRect` through rejected `random(2)` transition
-candidates. Explain why Java accepts cell 237 while Rust accepts 308, then make
-the general source-backed fix and advance parity through pre-mobs/pre-items.
-
-Do not remove `TunnelRoom.getDoorCenter` burns: pinned Java unconditionally
-evaluates both `Random.Float()` calls, and RingTunnel caches its second lookup.
-
-After floor 3 is exact, continue floor 4 and replay through floor 7. The target
+Continue exact floor 4 and replay through floor 7. Compare durable boundaries
+first, then port the earliest pinned source lifecycle mismatch. Do not remove
+`TunnelRoom.getDoorCenter` burns: pinned Java unconditionally evaluates both
+`Random.Float()` calls, and RingTunnel caches its second lookup. The target
 floor-7 main drops remain:
 
 - `ThrowingSpear(3)` at 281, heap

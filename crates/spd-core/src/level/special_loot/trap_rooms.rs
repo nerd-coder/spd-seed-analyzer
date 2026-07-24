@@ -231,12 +231,27 @@ fn is_good_weapon_enchant(item: &GeneratedItem) -> bool {
 }
 
 /// Burn `Random.Int(2)` center nudge when entrance is mid-edge (SacrificeRoom).
-fn burn_sacrifice_center_offset(rooms: &[Room], ri: usize) {
+pub(super) fn burn_sacrifice_center_offset(rooms: &[Room], ri: usize) {
     let room = &rooms[ri];
     if room.is_empty() {
         return;
     }
-    let c = Point::new((room.left + room.right) / 2, (room.top + room.bottom) / 2);
+    // Room.center() evaluates its independent odd-span nudges before the
+    // entrance-alignment nudge in SacrificeRoom.paint.
+    let c = Point::new(
+        (room.left + room.right) / 2
+            + if (room.right - room.left) % 2 == 1 {
+                Random::int_max(2)
+            } else {
+                0
+            },
+        (room.top + room.bottom) / 2
+            + if (room.bottom - room.top) % 2 == 1 {
+                Random::int_max(2)
+            } else {
+                0
+            },
+    );
     let Some(door) = vault_entrance_cell(rooms, ri) else {
         return;
     };

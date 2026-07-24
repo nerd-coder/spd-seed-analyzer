@@ -94,9 +94,8 @@ fn aaa_replay_pins_floor_two_and_floor_three_painter_boundary() {
                 .find(|transition| transition.transition_type == "REGULAR_EXIT")
                 .expect("AAA floor-3 Java regular exit");
             assert_eq!(
-                (actual_exit.cell, java_exit.cell),
-                (308, 237),
-                "{context} first durable room-paint fact localizes the divergence to WaterBridgeExitRoom"
+                actual_exit.cell, java_exit.cell,
+                "{context} exact regular exit"
             );
             assert_eq!(
                 expected.pre_doors_rng,
@@ -127,15 +126,13 @@ fn aaa_replay_pins_floor_two_and_floor_three_painter_boundary() {
                 "{context} pinned post-paintDoors boundary"
             );
             assert_eq!(
-                actual.pre_mobs_rng_probe[..4],
-                expected.pre_mobs_rng[4..],
-                "{context} Rust remains exactly four base draws ahead"
-            );
-            assert_ne!(
                 actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
-                "{context} records the next known painter boundary"
+                "{context} pre-mobs RNG"
             );
-            break;
+            assert_eq!(
+                actual.pre_items_rng_probe, expected.pre_items_rng,
+                "{context} pre-items RNG"
+            );
         }
     }
 }

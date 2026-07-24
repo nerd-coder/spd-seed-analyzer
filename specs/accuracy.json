@@ -19,12 +19,13 @@
         "Pinned standard, special, and secret room-count tables",
         "Pinned SecretLarderRoom minimum dimensions and food-placement viability",
         "Depth-one lifecycle fixtures across ten seeds, full HKT-JZN-XQQ floor 6–8 parity, and preserved-state AAA-AAA-AAA floor 2–4 and 6–9 oracle fixtures",
+        "AAA-AAA-AAA floors 2–3 exact pre-mobs/pre-items RNG parity, including SacrificeRoom Room.center burns and floor-3 WaterBridge exit placement",
         "AAA-AAA-AAA floor-7 painter RNG parity through PitRoom's UnstableSpellbook constructor, exact central skeleton stack lifecycle, PillarsRoom geometry, and the exact pre-mobs boundary"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
-        "AAA-AAA-AAA floor 3 first diverges between the exact pre-paint and pre-mobs boundaries; later histories still require phase-by-phase parity checks"
+        "Later preserved-run floors still require phase-by-phase parity checks"
       ],
       "impact": "Room selection, bounds, connections, or downstream RNG can differ on uncovered generation paths.",
       "evidence": [
@@ -108,7 +109,6 @@
       ],
       "remaining": [
         "ToxicGas vent and gas blob facts are not yet exported as exact additive render facts",
-        "AAA-AAA-AAA floor 3 first diverges in WaterBridgeExitRoom: Rust places the exit at cell 308 while pinned Java places it at 237; its bridge-space selection and transition rejection lifecycle need tracing",
         "Uncovered room painters can produce incomplete terrain or markers",
         "Visual baselines cover a small deterministic seed and floor set"
       ],

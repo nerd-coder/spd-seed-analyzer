@@ -3,8 +3,8 @@ use super::pit_secrets::{
     pit_prizes, secret_chest_chasm, secret_maze_prize, secret_summoning_prize,
 };
 use super::trap_rooms::{
-    magical_fire_prizes, sacrifice_prize, secret_honeypot, sentry_prize, toxic_gas_prizes,
-    traps_prize,
+    burn_sacrifice_center_offset, magical_fire_prizes, sacrifice_prize, secret_honeypot,
+    sentry_prize, toxic_gas_prizes, traps_prize,
 };
 use crate::geom::Point;
 use crate::items::model::ItemCategory;
@@ -47,6 +47,32 @@ fn sacrifice_prize_is_cursed_weapon() {
     assert_eq!(loot.item.category, ItemCategory::Weapon);
     // uncursed weapons get a free upgrade before the curse is forced
     assert!(loot.item.level >= 1 || loot.item.enchantment.is_some());
+}
+
+#[test]
+fn sacrifice_center_burns_follow_room_center_odd_spans() {
+    let odd_spans = test_room("SacrificeRoom", 7, 7);
+    Random::push_generator_seeded(0xC3A7E2);
+    burn_sacrifice_center_offset(&[odd_spans], 0);
+    let actual = Random::int();
+    Random::pop_generator();
+
+    Random::push_generator_seeded(0xC3A7E2);
+    let _ = Random::int_max(2);
+    let _ = Random::int_max(2);
+    let expected = Random::int();
+    Random::pop_generator();
+    assert_eq!(actual, expected);
+
+    let even_spans = test_room("SacrificeRoom", 8, 8);
+    Random::push_generator_seeded(0xC3A7E2);
+    burn_sacrifice_center_offset(&[even_spans], 0);
+    let actual = Random::int();
+    Random::pop_generator();
+    Random::push_generator_seeded(0xC3A7E2);
+    let expected = Random::int();
+    Random::pop_generator();
+    assert_eq!(actual, expected);
 }
 
 #[test]
