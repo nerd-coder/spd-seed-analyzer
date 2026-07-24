@@ -12,7 +12,6 @@ import {
   setMode,
   startSessionRehydrate,
 } from '@/stores/app'
-import { AppFloatingAction } from './components/AppFloatingAction'
 
 export default function App() {
   const mode = useStore($mode)
@@ -36,7 +35,6 @@ export default function App() {
           <div className="grid grid-cols-1 lg:grid-cols-[max-content_1fr]">
             <AppSidebar mode={mode} />
             <main className="relative min-w-0 flex-1">
-              <AppFloatingAction className="max-md:hidden" />
               <TabsContent value="analyze" className="mt-0">
                 <AnalyzerWorkspace />
               </TabsContent>

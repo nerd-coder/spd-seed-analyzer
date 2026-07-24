@@ -51,33 +51,26 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
 
   return (
     <aside className="border-border text-sidebar-foreground lg:sticky lg:top-0 lg:max-h-svh lg:h-full lg:w-80 lg:shrink-0 lg:self-start lg:overflow-y-auto lg:border-r">
+      <div
+        className="relative w-full bg-black"
+        style={{ aspectRatio: '616/200' }}
+      >
+        <img
+          src="/assets/title.gif"
+          alt="Shattered Pixel Dungeon"
+          className="absolute inset-0 h-full w-full object-contain"
+          style={{ imageRendering: 'pixelated' }}
+        />
+        <img
+          src="/assets/title_overlay.png"
+          alt="SEED Analyzer"
+          className="absolute inset-0 h-full w-full object-contain"
+          style={{ imageRendering: 'pixelated' }}
+        />
+        <AppFloatingAction />
+      </div>
       <div className="flex flex-col gap-4 p-4 lg:h-full">
-        <Card size="sm" className="relative overflow-hidden py-0">
-          <div
-            className="relative w-full bg-black"
-            style={{ aspectRatio: '616/200' }}
-          >
-            <img
-              src="/assets/title.gif"
-              alt="Shattered Pixel Dungeon"
-              className="absolute inset-0 h-full w-full object-contain"
-              style={{ imageRendering: 'pixelated' }}
-            />
-            <img
-              src="/assets/title_overlay.png"
-              alt="SEED Analyzer"
-              className="absolute inset-0 h-full w-full object-contain"
-              style={{ imageRendering: 'pixelated' }}
-            />
-            <AppFloatingAction className="lg:hidden" />
-          </div>
-          <CardContent className="flex flex-col gap-2 pb-3">
-            <p className="text-muted-foreground text-xs leading-relaxed">
-              Seed analysis - layout, loot, and quest rewards.
-            </p>
-            <AccuracyWarning />
-          </CardContent>
-        </Card>
+        <AccuracyWarning />
 
         <TabsList
           className="grid w-full grid-cols-2"
@@ -89,7 +82,7 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
           </TabsTrigger>
           <TabsTrigger value="finder">
             <BinocularsIcon data-icon="inline-start" />
-            Find seeds
+            Find
           </TabsTrigger>
         </TabsList>
 

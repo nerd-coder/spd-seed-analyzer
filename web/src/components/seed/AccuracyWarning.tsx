@@ -19,7 +19,7 @@ import accuracy from '../../../../specs/accuracy.json'
 
 export function AccuracyWarning() {
   return (
-    <Alert variant="warning">
+    <Alert variant="warning" className="pr-2">
       <WarningIcon />
       <AlertTitle>Partial accuracy</AlertTitle>
       <AlertDescription>
@@ -28,74 +28,73 @@ export function AccuracyWarning() {
           {accuracy.target.version}
         </Badge>
       </AlertDescription>
-      <AlertAction>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              aria-label="View accuracy details"
-            >
-              <InfoIcon />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            align="end"
-            className="max-h-[min(36rem,calc(100vh-2rem))] w-160 max-w-[calc(100vw-2rem)] overflow-auto"
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-xs"
+            aria-label="View accuracy details"
+            className="absolute top-1 right-1"
           >
-            <PopoverHeader>
-              <PopoverTitle>Accuracy details</PopoverTitle>
-              <PopoverDescription>
-                {accuracy.summary} Last reviewed {accuracy.lastReviewed} for{' '}
-                {accuracy.target.version}.
-              </PopoverDescription>
-            </PopoverHeader>
-            <div className="overflow-x-auto ring-1 ring-foreground/10">
-              <table className="w-full min-w-144 border-collapse text-left text-xs/relaxed">
-                <thead className="bg-muted text-foreground">
-                  <tr>
-                    <th className="px-2 py-1.5 font-medium">Area</th>
-                    <th className="px-2 py-1.5 font-medium">Implemented</th>
-                    <th className="px-2 py-1.5 font-medium">Remaining</th>
-                    <th className="px-2 py-1.5 font-medium">Impact</th>
-                    <th className="px-2 py-1.5 font-medium">Status</th>
+            <InfoIcon />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="end"
+          className="max-h-[min(36rem,calc(100vh-2rem))] w-160 max-w-[calc(100vw-2rem)] overflow-auto"
+        >
+          <PopoverHeader>
+            <PopoverTitle>Accuracy details</PopoverTitle>
+            <PopoverDescription>
+              {accuracy.summary} Last reviewed {accuracy.lastReviewed} for{' '}
+              {accuracy.target.version}.
+            </PopoverDescription>
+          </PopoverHeader>
+          <div className="overflow-x-auto ring-1 ring-foreground/10">
+            <table className="w-full min-w-144 border-collapse text-left text-xs/relaxed">
+              <thead className="bg-muted text-foreground">
+                <tr>
+                  <th className="px-2 py-1.5 font-medium">Area</th>
+                  <th className="px-2 py-1.5 font-medium">Implemented</th>
+                  <th className="px-2 py-1.5 font-medium">Remaining</th>
+                  <th className="px-2 py-1.5 font-medium">Impact</th>
+                  <th className="px-2 py-1.5 font-medium">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {accuracy.areas.map((area) => (
+                  <tr key={area.id} className="border-t">
+                    <th className="min-w-28 px-2 py-2 align-top font-medium">
+                      {area.area}
+                    </th>
+                    <td className="min-w-48 px-2 py-2 align-top text-muted-foreground">
+                      <ul className="flex list-disc flex-col gap-1 pl-4">
+                        {area.implemented.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td className="min-w-48 px-2 py-2 align-top text-muted-foreground">
+                      <ul className="flex list-disc flex-col gap-1 pl-4">
+                        {area.remaining.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td className="min-w-40 px-2 py-2 align-top text-muted-foreground">
+                      {area.impact}
+                    </td>
+                    <td className="px-2 py-2 align-top text-warning capitalize">
+                      {area.status.replaceAll('-', ' ')}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {accuracy.areas.map((area) => (
-                    <tr key={area.id} className="border-t">
-                      <th className="min-w-28 px-2 py-2 align-top font-medium">
-                        {area.area}
-                      </th>
-                      <td className="min-w-48 px-2 py-2 align-top text-muted-foreground">
-                        <ul className="flex list-disc flex-col gap-1 pl-4">
-                          {area.implemented.map((item) => (
-                            <li key={item}>{item}</li>
-                          ))}
-                        </ul>
-                      </td>
-                      <td className="min-w-48 px-2 py-2 align-top text-muted-foreground">
-                        <ul className="flex list-disc flex-col gap-1 pl-4">
-                          {area.remaining.map((item) => (
-                            <li key={item}>{item}</li>
-                          ))}
-                        </ul>
-                      </td>
-                      <td className="min-w-40 px-2 py-2 align-top text-muted-foreground">
-                        {area.impact}
-                      </td>
-                      <td className="px-2 py-2 align-top text-warning capitalize">
-                        {area.status.replaceAll('-', ' ')}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </PopoverContent>
-        </Popover>
-      </AlertAction>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </PopoverContent>
+      </Popover>
     </Alert>
   )
 }

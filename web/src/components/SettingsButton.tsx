@@ -61,7 +61,7 @@ export function SettingsButton({ className }: SettingsButtonProps) {
           <SpoilerToggle
             id={`${uid}-map-spoilers`}
             label="Floor maps"
-            info="Shows 128×128 floor map thumbnails (click to expand). Heavily spoils layout before you play."
+            info="Shows floor map thumbnails and mobs. Heavily spoils the game before you play."
             checked={mapSpoilers}
             onCheckedChange={setMapSpoilers}
           />

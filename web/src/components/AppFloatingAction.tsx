@@ -8,12 +8,12 @@ type AppFloatingActionProps = {
 
 export function AppFloatingAction({ className }: AppFloatingActionProps) {
   const buttonClasses =
-    'max-md:border-white/20 max-md:bg-black/55 max-md:text-white max-md:hover:bg-black/70 max-md:hover:text-white'
+    'border-white/20 bg-black/55 text-white hover:bg-black/70 hover:text-white'
 
   return (
     <div
       className={cn(
-        'absolute lg:fixed items-center gap-1.5 shrink-0 top-2 right-2 lg:right-[calc((100vw-72rem)/2+24px)] z-30 lg:flex',
+        'absolute items-center gap-1.5 shrink-0 top-2 left-2 z-30',
         className
       )}
     >
