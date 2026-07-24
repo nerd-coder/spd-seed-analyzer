@@ -168,7 +168,7 @@ fn paint_special(
                 .expect("placed ArmoryRoom has an entrance");
             special_rooms::armory_prizes_on_map(dungeon, room, map, entrance, items_to_spawn)
         }
-        "LibraryRoom" => special_rooms::library_prizes(dungeon, room, items_to_spawn),
+        "LibraryRoom" => special_rooms::library_prizes(dungeon, room, map, items_to_spawn),
         "TreasuryRoom" => special_rooms::treasury_prizes_on_map(dungeon, room, map, items_to_spawn),
         "PoolRoom" => {
             let prize = special_rooms::pool_prize_on_map(dungeon, room, map, items_to_spawn);

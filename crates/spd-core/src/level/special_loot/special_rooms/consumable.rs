@@ -13,13 +13,21 @@ use crate::rooms::room::Room;
 pub fn library_prizes(
     dungeon: &mut DungeonState,
     room: &Room,
+    map: &mut TerrainMap,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
     let mut out = Vec::new();
     let n = Random::normal_int_range(1, 3);
-    let mut occupied = Vec::new();
     for i in 0..n {
-        burn_drop_pos(room, &mut occupied);
+        let cell = loop {
+            let point = room.random();
+            let cell = map
+                .point_to_cell(point.x, point.y)
+                .expect("LibraryRoom point is on map");
+            if map.map[cell] == EMPTY_SP && !map.heap_occupied[cell] {
+                break cell;
+            }
+        };
         let mut item = if i == 0 {
             if Random::int_max(2) == 0 {
                 GeneratedItem::new("ScrollOfIdentify", ItemCategory::Scroll)
@@ -30,6 +38,7 @@ pub fn library_prizes(
             library_prize(dungeon, items_to_spawn)
         };
         item.source = Some("LibraryRoom".into());
+        map.record_heap(cell, "heap", item.clone());
         out.push(PlacedLoot {
             item,
             heap_type: "heap",

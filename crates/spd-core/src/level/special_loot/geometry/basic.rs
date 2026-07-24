@@ -1,9 +1,9 @@
-//! Weak-floor and demon-spawner room painters.
+//! Basic special-room terrain painters.
 
 use crate::geom::Point;
 use crate::level::painter::DoorMap;
 use crate::level::terrain::{
-    TerrainMap, CHASM, EMPTY, EMPTY_SP, GRASS, HIGH_GRASS, PEDESTAL, WALL, WATER,
+    TerrainMap, BOOKSHELF, CHASM, EMPTY, EMPTY_SP, GRASS, HIGH_GRASS, PEDESTAL, WALL, WATER,
 };
 use crate::random::Random;
 use crate::rooms::room::Room;
@@ -54,6 +54,18 @@ pub(super) fn paint_garden(map: &mut TerrainMap, room: &Room) {
     fill_room(map, room, WALL);
     fill_margin(map, room, 1, HIGH_GRASS);
     fill_margin(map, room, 2, GRASS);
+}
+
+/// Pinned `LibraryRoom.paint` canvas, including the bookshelf interrupted by
+/// the one-cell entrance passage.
+pub(super) fn paint_library(map: &mut TerrainMap, room: &Room, room_index: usize, doors: &DoorMap) {
+    fill_room(map, room, WALL);
+    fill_margin(map, room, 1, EMPTY_SP);
+    for x in (room.left + 1)..room.right {
+        set(map, Point::new(x, room.top + 1), BOOKSHELF);
+    }
+    let door = entrance(room, room_index, doors).expect("placed LibraryRoom has an entrance");
+    draw_inside(map, room, door, 1, EMPTY_SP);
 }
 
 pub(super) fn paint_runestone(

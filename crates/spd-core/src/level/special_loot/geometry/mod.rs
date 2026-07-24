@@ -33,6 +33,10 @@ pub(super) fn paint(
             basic::paint_garden(map, room);
             None
         }
+        "LibraryRoom" => {
+            basic::paint_library(map, room, room_index, doors);
+            None
+        }
         "PoolRoom" => basic::paint_pool(map, room, room_index, doors),
         "RunestoneRoom" => {
             basic::paint_runestone(map, room, room_index, doors);

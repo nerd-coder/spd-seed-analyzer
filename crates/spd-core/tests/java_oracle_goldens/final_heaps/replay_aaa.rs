@@ -3,7 +3,7 @@ use super::*;
 use std::ffi::OsStr;
 
 #[test]
-fn aaa_replay_pins_floors_six_through_nine_and_matches_vault_garden_then_armory() {
+fn aaa_replay_pins_floors_six_through_nine_and_matches_through_library() {
     let fixtures: Vec<_> = (6..=9)
         .map(|depth| {
             let name = format!("aaa-aaa-aaa-final-heaps-floor-{depth}.json");
@@ -132,6 +132,11 @@ fn aaa_replay_pins_floors_six_through_nine_and_matches_vault_garden_then_armory(
             );
             assert_eq!(map.tiles[1285], 2, "{context} planted grass cell");
             assert_armory_boundary(map, expected, &context);
+            assert_library(map, expected, &context);
+            assert_ne!(
+                actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
+                "{context} retains a pinned post-Library divergence"
+            );
         }
 
         if depth == 6 {
@@ -159,6 +164,75 @@ fn aaa_replay_pins_floors_six_through_nine_and_matches_vault_garden_then_armory(
             assert_crystal_vault_terrain(map, expected, &context);
         }
     }
+}
+
+fn assert_library(map: &spd_core::report::FloorMap, expected: &OracleFloor, context: &str) {
+    let room = expected
+        .room_bounds
+        .iter()
+        .find(|room| room.class_name == "LibraryRoom")
+        .unwrap_or_else(|| panic!("{context} LibraryRoom bounds"));
+    let oracle = expected.terrain.as_ref().expect("pinned terrain");
+
+    // EMPTY_SP floors may be decorated later, while the wall/bookshelf shell
+    // and entrance passage persist through the completed painter.
+    for y in room.top..=room.bottom {
+        for x in room.left..=room.right {
+            let cell = (y * expected.width as i32 + x) as usize;
+            if matches!(oracle[cell], 0 | 10 | 27) {
+                assert_eq!(
+                    map.tiles[cell], oracle[cell],
+                    "{context} Library cell {cell}"
+                );
+            }
+        }
+    }
+
+    let heaps: Vec<_> = map
+        .heaps
+        .iter()
+        .filter(|heap| {
+            let x = heap.cell as i32 % expected.width as i32;
+            let y = heap.cell as i32 / expected.width as i32;
+            x > room.left && x < room.right && y > room.top && y < room.bottom
+        })
+        .map(|heap| {
+            (
+                heap.cell,
+                heap.heap_type.as_str(),
+                heap.items[0].class_name.as_str(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        heaps,
+        [(2121, "heap", "ScrollOfRemoveCurse")],
+        "{context} first remaining divergence: Library enters at the wrong RNG state"
+    );
+    let oracle_heaps: Vec<_> = expected
+        .final_heaps
+        .iter()
+        .filter(|heap| {
+            let x = heap.cell as i32 % expected.width as i32;
+            let y = heap.cell as i32 / expected.width as i32;
+            x > room.left && x < room.right && y > room.top && y < room.bottom
+        })
+        .map(|heap| {
+            (
+                heap.cell,
+                heap.heap_type.as_str(),
+                heap.items[0].class_name.as_str(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        oracle_heaps,
+        [
+            (2071, "heap", "ScrollOfIdentify"),
+            (2121, "heap", "ScrollOfUpgrade"),
+        ],
+        "{context} pinned Java Library prizes"
+    );
 }
 
 fn assert_armory_boundary(map: &spd_core::report::FloorMap, expected: &OracleFloor, context: &str) {

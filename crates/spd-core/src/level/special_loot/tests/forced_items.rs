@@ -95,7 +95,9 @@ fn library_room_pushes_iron_key() {
     d.depth = 4;
     let room = test_room("LibraryRoom", 8, 8);
     let mut spawn = Vec::new();
-    let loot = library_prizes(&mut d, &room, &mut spawn);
+    let mut map = paint_minimal(std::slice::from_ref(&room)).expect("test map");
+    let loot = library_prizes(&mut d, &room, &mut map, &mut spawn);
+    let tail = Random::peek_ints(4);
     Random::pop_generator();
 
     assert!((1..=3).contains(&loot.len()));
@@ -106,6 +108,14 @@ fn library_room_pushes_iron_key() {
     assert_eq!(spawn.len(), 1);
     assert_eq!(spawn[0].class_name, "IronKey");
     assert_eq!(spawn[0].category, ItemCategory::Other);
+    assert_eq!(
+        map.known_heaps[36].as_ref().unwrap().items[0].class_name,
+        "ScrollOfRemoveCurse"
+    );
+    assert_eq!(
+        tail,
+        [-1_945_822_120, -228_609_341, -1_193_648_905, -889_589_932]
+    );
 }
 
 #[test]
