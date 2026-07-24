@@ -62,11 +62,13 @@
       "implemented": [
         "Forced drops, generator decks (including pinned concrete-class undoDrop no-op semantics), main RegularLevel createItems drops, and supported special-room prizes",
         "Item identities and exact heap capture on committed Java-oracle fixtures, including UnstableSpellbook constructor RNG",
+        "AAA-AAA-AAA floor-7 exact five main Generator drops, including cells, heap types, classes, quantities, levels, and curse state",
         "Supported quest rewards and covered shop stock flows",
         "Seed finder optional minimum item upgrade-level matching across the analyzed floor range"
       ],
       "remaining": [
         "Loot tied to uncovered room paint or lifecycle paths can be incomplete or misplaced",
+        "AAA-AAA-AAA floor-6 weapon-tier deck classes still diverge despite matching overall item categories and placement cells",
         "Shop and crystal-room loot outside verified flows should be treated as approximate",
         "Later-shop bag selection cannot be exact without player inventory and Hourglass sandbag input"
       ],

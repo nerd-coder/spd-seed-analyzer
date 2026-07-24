@@ -12,30 +12,23 @@ pinned checkout, normally at
 
 ## Checkpoint
 
-- `AAA-AAA-AAA` floors 2–4 match exact pre-mobs/pre-items RNG. Floors 2 and 4
-  also match exact seeded heaps; floor 4 now records the `StudyRoom` prize on
-  its center pedestal.
-- Floor 3 matches its regular exit at cell 237 and exact lifecycle boundaries.
-- Floor 7 still has exact local paint/mob boundaries, but its five main drops
-  diverge because the earlier overall Generator category history differs.
+- `AAA-AAA-AAA` floor 7 matches all five main Generator drops exactly, including
+  cells, heap types, classes, quantities, levels, and curse state.
+- The earliest known preserved-run item mismatch is floor 6's private weapon
+  decks: overall categories and placement cells match, but weapon classes do not.
+- Isolated WEP_T4 draws match pinned Java, so the floor-6 replay discrepancy must
+  be localized with lifecycle-boundary deck snapshots before changing behavior.
 
 ## Next phase
 
-Replay floors 5–7 and compare Generator category state at each floor boundary;
-port the earliest mismatch responsible for floor-7 main-drop divergence. Do not remove
-`TunnelRoom.getDoorCenter` burns: pinned Java unconditionally evaluates both
-`Random.Float()` calls, and RingTunnel caches its second lookup. The target
-floor-7 main drops remain:
-
-- `ThrowingSpear(3)` at 281, heap
-- `ScrollOfIdentify` at 662, heap
-- `ScrollOfLullaby` at 812, heap
-- `Gold(156)` at 997, heap
-- `PotionOfPurity` at 2131, chest
+Add pinned Java and Rust Generator snapshots spanning floor 3's SacrificeRoom
+through floor 6 `createItems`. Compare WEP_T2/WEP_T4 seeds, dropped counts, and
+probability vectors at each lifecycle boundary; port the earliest proven mismatch.
+Pin the corrected floor-6 main and shop weapon classes in the replay fixture.
 
 ## Known limits
 
-- Uncovered room painters and earlier generator histories may diverge.
+- Uncovered room painters and Generator histories may diverge.
 - ToxicGas vents/gas blobs are not exact exported additive facts.
 - VaultLevel branches and player-dependent later-shop bags are out of scope.
 - The unseeded early Guidebook page is intentionally out of scope.
