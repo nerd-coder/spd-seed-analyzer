@@ -1,5 +1,5 @@
 import { ArrowsOut } from '@phosphor-icons/react'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 
 import { FloorMapCanvas } from '@/components/FloorMapCanvas'
 import { MapSettingsPanel } from '@/components/MapSettingsPanel'
@@ -39,6 +39,7 @@ function initialZoom(map: FloorMap): string {
  */
 export function FloorMapPreview({ map, identities, depth, className }: Props) {
   const viewport = useMemo(() => mapViewport(map), [map])
+  const dialogContentRef = useRef<HTMLDivElement>(null)
   const [zoom, setZoom] = useState(() => initialZoom(map))
   const [showItems, setShowItems] = useState(false)
   const [showMobs, setShowMobs] = useState(false)
@@ -80,7 +81,12 @@ export function FloorMapPreview({ map, identities, depth, className }: Props) {
         </button>
       </DialogTrigger>
       <DialogContent
+        ref={dialogContentRef}
         className="inset-0 flex h-dvh max-h-none w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-3 sm:top-1/2 sm:left-1/2 sm:h-[min(94vh,72rem)] sm:w-[min(96vw,80rem)] sm:max-w-[min(96vw,80rem)] sm:-translate-x-1/2 sm:-translate-y-1/2"
+        onOpenAutoFocus={(event) => {
+          event.preventDefault()
+          dialogContentRef.current?.focus()
+        }}
         showCloseButton
       >
         <DialogHeader>

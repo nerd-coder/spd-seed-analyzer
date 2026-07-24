@@ -239,6 +239,27 @@ test('floor rooms open from a title chip and desktop maps use a large dialog', a
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
+test('map dialog initially focuses its container instead of a control', async ({
+  page,
+}) => {
+  const browserErrors = await openAnalyzer(page, 'CXG-FJT-BFQ')
+  await page.getByRole('button', { name: 'Expand floor 1 map' }).click()
+
+  const dialog = page.getByRole('dialog')
+  await expect(dialog).toBeVisible()
+  await expect(dialog).toBeFocused()
+  await expect(
+    dialog.getByRole('button', { name: /Switch map/ })
+  ).not.toBeFocused()
+  await expect(dialog.getByRole('button', { name: 'Close' })).not.toBeFocused()
+
+  await page.keyboard.press('Tab')
+  await expect(dialog.getByRole('button', { name: /Switch map/ })).toBeFocused()
+
+  expect(browserErrors.console, 'browser console errors').toEqual([])
+  expect(browserErrors.page, 'uncaught page errors').toEqual([])
+})
+
 test('animated liquid advances on the pixel-aligned canvas path', async ({
   page,
 }) => {
