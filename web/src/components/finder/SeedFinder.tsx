@@ -8,14 +8,8 @@ import {
 import { useRef } from 'react'
 import { ScrollableSessionTabs } from '@/components/ScrollableSessionTabs'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty'
 import { Tabs, TabsContent, TabsTrigger } from '@/components/ui/tabs'
+import { WorkspaceEmptyPlaceholder } from '@/components/WorkspaceEmptyPlaceholder'
 import { useSeedTabsHeight } from '@/hooks/useSeedTabsHeight'
 import type { SeedSearchMatch } from '@/lib/spd-wasm'
 import {
@@ -44,17 +38,11 @@ export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
 
   if (sessions.length === 0) {
     return (
-      <Empty>
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <BinocularsIcon />
-          </EmptyMedia>
-          <EmptyTitle>No searches yet</EmptyTitle>
-          <EmptyDescription>
-            Configure item constraints in the sidebar to start a search.
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
+      <WorkspaceEmptyPlaceholder
+        icon={BinocularsIcon}
+        title="No searches yet"
+        description="Configure item constraints in the sidebar to start a search."
+      />
     )
   }
 

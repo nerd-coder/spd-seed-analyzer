@@ -11,7 +11,6 @@ import { FinderForm } from '@/components/finder/FinderForm'
 import { AccuracyWarning } from '@/components/seed/AccuracyWarning'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
 import {
   Field,
   FieldDescription,

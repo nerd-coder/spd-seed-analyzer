@@ -1,16 +1,12 @@
-import { MAX_SAVED_SEEDS } from '@/stores/app'
+import { MagnifyingGlassIcon } from '@phosphor-icons/react'
+import { WorkspaceEmptyPlaceholder } from '@/components/WorkspaceEmptyPlaceholder'
 
 export function EmptyAnalysisPlaceholder() {
   return (
-    <div className="flex min-h-[min(60svh,28rem)] flex-col items-center justify-center gap-3 px-6 text-center">
-      <h2 className="font-heading text-base font-medium">
-        No seeds analyzed yet
-      </h2>
-      <p className="text-muted-foreground max-w-sm text-sm leading-relaxed">
-        Enter a seed in the left panel and press Enter (or the search icon).
-        Open seeds stay as tabs until you close them (max {MAX_SAVED_SEEDS}),
-        and are restored after a refresh.
-      </p>
-    </div>
+    <WorkspaceEmptyPlaceholder
+      icon={MagnifyingGlassIcon}
+      title="No seeds analyzed yet"
+      description="Enter a seed in the sidebar to start an analysis."
+    />
   )
 }
