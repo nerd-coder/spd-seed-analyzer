@@ -134,9 +134,8 @@ fn aaa_replay_pins_floors_six_through_nine_and_matches_through_library() {
             assert_armory_boundary(map, expected, &context);
             assert_library(map, expected, &context);
             assert_eq!(
-                actual.pre_mobs_rng_probe[..7],
-                expected.pre_mobs_rng[1..],
-                "{context} next divergence is one extra post-Library RNG call"
+                actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
+                "{context} pre-mobs RNG after PitRoom crystal-door paint"
             );
         }
 

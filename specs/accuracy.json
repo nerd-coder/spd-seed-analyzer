@@ -18,12 +18,13 @@
         "Generic and region-specific standard-room geometry",
         "Pinned standard, special, and secret room-count tables",
         "Pinned SecretLarderRoom minimum dimensions and food-placement viability",
-        "Depth-one lifecycle fixtures across ten seeds, full HKT-JZN-XQQ floor 6–8 parity, and preserved-state AAA-AAA-AAA floor 6–9 oracle fixtures with exact room bounds"
+        "Depth-one lifecycle fixtures across ten seeds, full HKT-JZN-XQQ floor 6–8 parity, and preserved-state AAA-AAA-AAA floor 6–9 oracle fixtures with exact room bounds",
+        "AAA-AAA-AAA floor-7 pre-mobs RNG parity through StatueRoom, PerimeterRoom, PitRoom crystal entrance, paintDoors, and isolated painter transition"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
-        "The AAA-AAA-AAA floor-7 replay matches LibraryRoom prizes and now consumes StatueRoom.center() before Statue.random(); the next pre-mobs boundary still diverges after the remaining painter lifecycle"
+        "Coverage is fixture-specific; later createMobs/createItems histories still require phase-by-phase parity checks"
       ],
       "impact": "Room selection, bounds, connections, or downstream RNG can differ on uncovered generation paths.",
       "evidence": [

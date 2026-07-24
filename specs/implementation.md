@@ -14,19 +14,19 @@ pinned checkout, normally at
 
 - `AAA-AAA-AAA` preserves Java-oracle floors 6–9 with exact room bounds;
   floor 6 matches through pre-items.
-- Floor 7 matches room paint through `LibraryRoom`, including its exact prizes.
-- The earliest later mismatch was `StatueRoom.paint` omitting its RNG-bearing
-  `center()` call; that call now precedes `Statue.random()` as in pinned Java.
-- Exact pre-mobs parity is not restored; status remains `partial`.
+- Floor 7 now matches the exact pre-mobs RNG boundary through all room paint,
+  `paintDoors`, and the isolated painter-generator transition.
+- `PitRoom.paint` now marks its entrance `CRYSTAL`, preventing the erroneous
+  hidden-door roll that previously left Rust one main-stream draw ahead.
+- Overall status remains `partial`.
 
 ## Next phase
 
-Continue the floor-7 trace from the corrected `StatueRoom` boundary:
+Continue floor 7 from the restored pre-mobs boundary:
 
-1. Compare the end of `StatueRoom`, the final `PerimeterRoom`, `paintDoors`,
-   and the `Random.Long()` transition into the isolated painter generator.
+1. Compare `createMobs` and its quest hook against the pinned oracle.
 2. Port the earliest missing or extra call only.
-3. Re-enable exact pre-mobs parity if reached, then stop at the next divergence.
+3. Re-enable exact pre-items parity if reached, then stop at the next divergence.
 
 ## Known limits
 

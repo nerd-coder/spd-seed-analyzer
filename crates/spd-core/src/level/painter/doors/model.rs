@@ -166,8 +166,9 @@ fn special_door_type(name: &str) -> DoorType {
         "CryptRoom" | "ArmoryRoom" | "LibraryRoom" | "TreasuryRoom" | "RunestoneRoom"
         | "LaboratoryRoom" | "StatueRoom" | "GardenRoom" | "MagicWellRoom" | "CrystalVaultRoom"
         | "CrystalChoiceRoom" | "RotGardenRoom" => DoorType::Locked,
+        "PitRoom" => DoorType::Crystal,
         "PoolRoom" | "TrapsRoom" | "SentryRoom" | "ToxicGasRoom" | "MagicalFireRoom"
-        | "WeakFloorRoom" | "CrystalPathRoom" | "PitRoom" => DoorType::Regular,
+        | "WeakFloorRoom" | "CrystalPathRoom" => DoorType::Regular,
         _ => DoorType::Regular,
     }
 }
@@ -180,5 +181,10 @@ mod tests {
     fn storage_is_the_barricaded_special_room() {
         assert_eq!(special_door_type("StorageRoom"), DoorType::Barricade);
         assert_eq!(special_door_type("MagicalFireRoom"), DoorType::Regular);
+    }
+
+    #[test]
+    fn pit_room_has_a_crystal_door() {
+        assert_eq!(special_door_type("PitRoom"), DoorType::Crystal);
     }
 }
