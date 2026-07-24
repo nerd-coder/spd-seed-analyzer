@@ -23,12 +23,12 @@
         "AAA-AAA-AAA floor-7 painter RNG parity through PitRoom's UnstableSpellbook constructor, exact central skeleton stack lifecycle, PillarsRoom geometry, and the exact pre-mobs boundary",
         "AAA-AAA-AAA floors 8–9 and 11 exact pre-paint, pre-mobs, and pre-items RNG boundaries; floor 11 preserves the floor-10 Tengu lifecycle",
         "AAA-AAA-AAA floor 12 exact FigureEightBuilder room classes and bounds, pre-paint, pre-mobs, and pre-items RNG boundaries, including CaveExitRoom size probabilities and SecretRunestoneRoom's exact three-drop painter",
-        "AAA-AAA-AAA floor 13 exact room classes and normalized bounds plus the pre-paint, pre-mobs, and pre-items RNG boundaries"
+        "AAA-AAA-AAA floor 13 exact room classes and normalized bounds plus the pre-paint, pre-mobs, and pre-items RNG boundaries and final mob facts"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
-        "AAA-AAA-AAA floor 13 remains unverified after the pre-items boundary",
+        "AAA-AAA-AAA floor 13 final heap facts remain unverified",
         "Preserved-run floors beyond depth 13 still require phase-by-phase parity checks"
       ],
       "impact": "Room selection, bounds, connections, or downstream RNG can differ on uncovered generation paths.",
@@ -91,7 +91,7 @@
       "status": "partial",
       "implemented": [
         "Source-ported RegularLevel ambient mob selection through floor 24",
-        "Depth-one mob lifecycle, full HKT-JZN-XQQ floor 6–8 mob parity, exact AAA-AAA-AAA floor 6–9 and 11 mob facts, including floor-7 ambient plus StatueRoom mobs",
+        "Depth-one mob lifecycle, full HKT-JZN-XQQ floor 6–8 mob parity, exact AAA-AAA-AAA floor 6–9, 11, and 13 mob facts, including floor-7 ambient plus StatueRoom mobs and floor-13 Blacksmith placement",
         "Ghost, Wandmaker, Blacksmith, and Imp selection and reward flows"
       ],
       "remaining": [

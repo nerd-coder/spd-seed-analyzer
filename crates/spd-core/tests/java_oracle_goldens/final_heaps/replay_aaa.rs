@@ -483,7 +483,7 @@ fn aaa_floor_twelve_matches_the_pinned_layout_and_item_lifecycle() {
 }
 
 #[test]
-fn aaa_floor_thirteen_matches_the_pinned_pre_items_boundary() {
+fn aaa_floor_thirteen_matches_the_pinned_final_mobs() {
     let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-13.json");
     let path = fixture_paths()
         .into_iter()
@@ -527,6 +527,18 @@ fn aaa_floor_thirteen_matches_the_pinned_pre_items_boundary() {
         actual.pre_items_rng_probe, expected.pre_items_rng,
         "floor-13 pre-items RNG boundary"
     );
+    let actual_mobs: Vec<_> = actual
+        .map
+        .as_ref()
+        .expect("floor-13 map")
+        .mobs
+        .iter()
+        .map(|mob| OracleMob {
+            cell: mob.cell,
+            class_name: mob.class_name.clone(),
+        })
+        .collect();
+    assert_eq!(actual_mobs, expected.final_mobs, "floor-13 final mobs");
 }
 
 fn oracle_item_class(class_name: &str) -> &str {
