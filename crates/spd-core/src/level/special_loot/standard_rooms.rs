@@ -22,7 +22,7 @@ pub(super) fn paint_center_loot(
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
     match (room.name.as_str(), center) {
-        ("StudyRoom", Some(_)) => vec![study_prize(dungeon, items_to_spawn)],
+        ("StudyRoom", Some(center)) => study_prize(dungeon, map, center, items_to_spawn),
         ("RitualRoom", Some(center)) => {
             halls_graves::ritual_prize(dungeon, map, center, items_to_spawn)
         }
@@ -58,7 +58,12 @@ fn ring_prize(
     }]
 }
 
-fn study_prize(dungeon: &mut DungeonState, items_to_spawn: &mut Vec<GeneratedItem>) -> PlacedLoot {
+fn study_prize(
+    dungeon: &mut DungeonState,
+    map: &mut TerrainMap,
+    center: Point,
+    items_to_spawn: &mut Vec<GeneratedItem>,
+) -> Vec<PlacedLoot> {
     let mut prize = if Random::int_max(2) == 0 {
         find_prize_item(items_to_spawn, None)
     } else {
@@ -69,10 +74,13 @@ fn study_prize(dungeon: &mut DungeonState, items_to_spawn: &mut Vec<GeneratedIte
         dungeon.generator.random_category(category, dungeon.depth)
     });
     prize.source = Some("StudyRoom".into());
-    PlacedLoot {
+    if let Some(cell) = map.point_to_cell(center.x, center.y) {
+        map.record_heap(cell, "heap", prize.clone());
+    }
+    vec![PlacedLoot {
         item: prize,
         heap_type: "heap",
-    }
+    }]
 }
 
 fn suspicious_chest(
@@ -180,15 +188,19 @@ mod tests {
             );
             Random::pop_generator();
             if items.is_empty() {
-                selected = loot.into_iter().next();
+                selected = loot.into_iter().next().map(|loot| (loot, map));
                 break;
             }
         }
 
-        let loot = selected.expect("a seed should select the forced prize");
+        let (loot, map) = selected.expect("a seed should select the forced prize");
         assert_eq!(loot.item.class_name, "PotionOfStrength");
         assert_eq!(loot.item.source.as_deref(), Some("StudyRoom"));
         assert_eq!(loot.item.category, ItemCategory::Potion);
+        let center = map.point_to_cell(5, 5).expect("study center");
+        let heap = map.known_heaps[center].as_ref().expect("study heap");
+        assert_eq!(heap.items.len(), 1);
+        assert_eq!(heap.items[0].class_name, "PotionOfStrength");
     }
 
     #[test]

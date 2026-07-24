@@ -3,7 +3,7 @@ use super::*;
 use std::ffi::OsStr;
 
 #[test]
-fn aaa_replay_pins_floor_two_and_floor_three_painter_boundary() {
+fn aaa_replay_pins_floors_two_through_four() {
     let fixtures: Vec<_> = (2..=4)
         .map(|depth| {
             let name = format!("aaa-aaa-aaa-final-heaps-floor-{depth}.json");
@@ -132,6 +132,39 @@ fn aaa_replay_pins_floor_two_and_floor_three_painter_boundary() {
             assert_eq!(
                 actual.pre_items_rng_probe, expected.pre_items_rng,
                 "{context} pre-items RNG"
+            );
+        } else if depth == 4 {
+            assert_eq!(
+                actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
+                "{context} pre-mobs RNG"
+            );
+            assert_eq!(
+                actual.pre_items_rng_probe, expected.pre_items_rng,
+                "{context} pre-items RNG"
+            );
+            let map = actual.map.as_ref().expect("regular floor map");
+            let actual_heaps: Vec<_> = map
+                .heaps
+                .iter()
+                .map(|heap| OracleHeap {
+                    cell: heap.cell,
+                    heap_type: heap.heap_type.clone(),
+                    items: heap
+                        .items
+                        .iter()
+                        .map(|item| OracleItem {
+                            class_name: item.class_name.clone(),
+                            quantity: item.quantity,
+                            level: item.level,
+                            cursed: item.cursed,
+                        })
+                        .collect(),
+                })
+                .collect();
+            assert_eq!(
+                seeded_heaps(&actual_heaps),
+                seeded_heaps(&expected.final_heaps),
+                "{context} exact seeded heaps"
             );
         }
     }

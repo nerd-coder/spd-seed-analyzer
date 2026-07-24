@@ -12,19 +12,17 @@ pinned checkout, normally at
 
 ## Checkpoint
 
-- `AAA-AAA-AAA` floors 1–2 match through pre-items RNG; floor 2 also matches
-  exact seeded heaps after porting GrassyGrave tombs and SecretChestChasm
-  chests, keys, and terrain.
-- Floor 3 matches through exact pre-mobs/pre-items RNG, including its regular
-  exit at cell 237. `SacrificeRoom` now preserves `Room.center()` odd-span
-  burns before its entrance-alignment nudge.
+- `AAA-AAA-AAA` floors 2–4 match exact pre-mobs/pre-items RNG. Floors 2 and 4
+  also match exact seeded heaps; floor 4 now records the `StudyRoom` prize on
+  its center pedestal.
+- Floor 3 matches its regular exit at cell 237 and exact lifecycle boundaries.
 - Floor 7 still has exact local paint/mob boundaries, but its five main drops
   diverge because the earlier overall Generator category history differs.
 
 ## Next phase
 
-Continue exact floor 4 and replay through floor 7. Compare durable boundaries
-first, then port the earliest pinned source lifecycle mismatch. Do not remove
+Replay floors 5–7 and compare Generator category state at each floor boundary;
+port the earliest mismatch responsible for floor-7 main-drop divergence. Do not remove
 `TunnelRoom.getDoorCenter` burns: pinned Java unconditionally evaluates both
 `Random.Float()` calls, and RingTunnel caches its second lookup. The target
 floor-7 main drops remain:

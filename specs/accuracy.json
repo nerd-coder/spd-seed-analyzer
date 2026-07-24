@@ -19,7 +19,7 @@
         "Pinned standard, special, and secret room-count tables",
         "Pinned SecretLarderRoom minimum dimensions and food-placement viability",
         "Depth-one lifecycle fixtures across ten seeds, full HKT-JZN-XQQ floor 6–8 parity, and preserved-state AAA-AAA-AAA floor 2–4 and 6–9 oracle fixtures",
-        "AAA-AAA-AAA floors 2–3 exact pre-mobs/pre-items RNG parity, including SacrificeRoom Room.center burns and floor-3 WaterBridge exit placement",
+        "AAA-AAA-AAA floors 2–4 exact pre-mobs/pre-items RNG parity, including SacrificeRoom Room.center burns, floor-3 WaterBridge exit placement, and floor-4 StudyRoom center-heap placement",
         "AAA-AAA-AAA floor-7 painter RNG parity through PitRoom's UnstableSpellbook constructor, exact central skeleton stack lifecycle, PillarsRoom geometry, and the exact pre-mobs boundary"
       ],
       "remaining": [
