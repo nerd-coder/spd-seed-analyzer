@@ -236,7 +236,9 @@ fn paint_special(
             trap_rooms::toxic_gas_prizes(dungeon, rooms, ri, map, doors, items_to_spawn)
         }
         "SecretHoneypotRoom" => trap_rooms::secret_honeypot(room),
-        "CrystalVaultRoom" => crystal::crystal_vault(dungeon, rooms, ri, items_to_spawn),
+        "CrystalVaultRoom" => {
+            crystal::crystal_vault(dungeon, rooms, ri, map, doors, items_to_spawn)
+        }
         "CrystalChoiceRoom" => {
             crystal::crystal_choice(dungeon, rooms, ri, map, doors, items_to_spawn)
         }

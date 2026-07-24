@@ -12,6 +12,8 @@ pub struct LevelState {
     pub feeling: Feeling,
     pub builder: Option<BuilderKind>,
     pub rooms: Vec<String>,
+    #[doc(hidden)]
+    pub room_bounds: Vec<LevelRoomFact>,
     pub build_ok: bool,
     pub forced_items: Vec<GeneratedItem>,
     pub placed_items: Vec<GeneratedItem>,
@@ -27,6 +29,15 @@ pub struct LevelState {
     /// Non-consuming parity probe before `RegularPainter.paint`.
     #[doc(hidden)]
     pub pre_paint_rng_probe: Vec<i32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct LevelRoomFact {
+    pub class_name: String,
+    pub left: i32,
+    pub top: i32,
+    pub right: i32,
+    pub bottom: i32,
 }
 
 impl LevelState {

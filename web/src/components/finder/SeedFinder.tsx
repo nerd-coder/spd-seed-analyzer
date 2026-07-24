@@ -1,13 +1,7 @@
 import { useStore } from '@nanostores/react'
-import {
-  BinocularsIcon,
-  SpinnerGapIcon,
-  WarningIcon,
-  XIcon,
-} from '@phosphor-icons/react'
+import { BinocularsIcon, SpinnerGapIcon, XIcon } from '@phosphor-icons/react'
 import { useRef, useState } from 'react'
 import { ScrollableSessionTabs } from '@/components/ScrollableSessionTabs'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -30,9 +24,6 @@ import {
   setActiveFinder,
 } from '@/stores/app'
 import { FinderResults } from './FinderResults'
-
-const PARTIAL_MESSAGE =
-  'The finder uses the partial analyzer. Generated loot is incomplete and results may not match the pinned game.'
 
 export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
   const sessions = useStore($finderSessions)

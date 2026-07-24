@@ -55,9 +55,9 @@ public final class JavaOracle {
 				? null
 				: Integer.valueOf(args[finalHeaps ? 2 : 1]);
 		if (depth != null
-				&& (depth != 1 && (!finalHeaps || (depth != 6 && depth != 7 && depth != 8)))) {
+				&& (depth != 1 && (!finalHeaps || (depth != 6 && depth != 7 && depth != 8 && depth != 9)))) {
 			System.err.println(
-					"The floor oracle supports depth 1, plus depths 6-8 for final-heaps");
+					"The floor oracle supports depth 1, plus depths 6-9 for final-heaps");
 			System.exit(2);
 		}
 
@@ -215,6 +215,15 @@ public final class JavaOracle {
 		for (int index = 0; index < floor.rooms.size(); index++) {
 			if (index > 0) json.append(", ");
 			json.append('"').append(escape(floor.rooms.get(index))).append('"');
+		}
+		json.append("],\n");
+		json.append("      \"room_bounds\": [");
+		for (int index = 0; index < floor.roomBounds.size(); index++) {
+			if (index > 0) json.append(", ");
+			FloorOracle.RoomFact room = floor.roomBounds.get(index);
+			json.append("{\"class\": \"").append(escape(room.roomClass)).append("\", \"left\": ")
+					.append(room.left).append(", \"top\": ").append(room.top)
+					.append(", \"right\": ").append(room.right).append(", \"bottom\": ").append(room.bottom).append('}');
 		}
 		json.append("],\n");
 		json.append("      \"pre_paint_rng\": [");

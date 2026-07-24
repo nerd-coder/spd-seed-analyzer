@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "final_heaps/replay_aaa.rs"]
+mod replay_aaa;
+
 fn report_blacklists(class_name: &str) -> bool {
     matches!(
         class_name,

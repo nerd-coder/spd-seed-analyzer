@@ -6,7 +6,7 @@ ring identity mappings. Schema v2 adds an intentionally narrow floor contract:
 the ordered depth-one `itemsToSpawn` queue at the exact pre-`build()` boundary.
 Schema v3 is a separately scoped level contract that snapshots final heaps and
 mobs after the real `Level.create()` lifecycle completes. Sewer depth 1 and
-Prison depths 6, 7, and 8 are supported. Depth 1 is generated directly; deeper
+Prison depths 6 through 9 are supported. Depth 1 is generated directly; deeper
 targets are generated after completing every prior floor so run-persistent state is
 preserved. A separate generator-deck contract records exact category draws and
 RNG probes across a deck reset without running a floor. A separate shop-bag
@@ -38,6 +38,7 @@ From the analyzer repository root:
 ./tools/java-oracle/run --final-heaps-depth 6 HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 7 HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 8 HKT-JZN-XQQ
+./tools/java-oracle/run --final-heaps-depth 9 AAA-AAA-AAA
 ./tools/java-oracle/run --generator-deck-rollover AAA-AAA-AAA
 ./tools/java-oracle/run --shop-bag-selection AAA-AAA-AAA
 ```
@@ -121,9 +122,10 @@ heap and mob and pins the Pool chest at cell 315. The
 AAA-AAA-AFO, AAA-AAA-AFU, AAA-AAA-AAZ, and HKT floor-one fixtures also require
 exact terrain, discoverability, tile variance, transitions, traps, structured
 heaps/mobs, plants, and active blobs.
-The floor-six, floor-seven, and floor-eight fixtures pin full Java
-observations, and Rust matches all three complete lifecycles for the committed
-fresh-run replays.
+The deeper fixtures pin full Java observations. Rust matches the complete HKT
+floor 6–8 lifecycles; the AAA floor 6–9 replay pins the next independent
+history and currently verifies layout boundaries plus exact CrystalVaultRoom
+facts without claiming parity past the next divergence.
 
 The `GFX-PZH-DCH` floor-one fixture additionally pins CrystalPathRoom's six
 alternating potion/scroll drops to their exact cells. Its focused Rust test
@@ -230,7 +232,7 @@ floor item.
 ### Schema version 3: final placed heaps
 
 Passing `--final-heaps-depth 1` runs the exact pinned initialization followed
-by `Dungeon.newLevel()` for a depth-one `SewerLevel`. Passing depth 6, 7, or 8
+by `Dungeon.newLevel()` for a depth-one `SewerLevel`. Passing depth 6 through 9
 first runs `Dungeon.newLevel()` for every preceding floor, then creates the
 target `PrisonLevel`. The oracle snapshots
 `level.heaps` and `level.mobs` only after `Level.create()` returns (build,
@@ -304,5 +306,6 @@ desynchronized. This is an exact-pin observation contract. The nine committed
 depth-one fixtures currently match their strongest honest Rust projection;
 AAA-AAA-AFO, AAA-AAA-AFU, AAA-AAA-AAZ, and HKT floor 1 opt into the additive
 render-fact assertions. HKT floors 6, 7, and 8 are full Rust lifecycle matches
-for their committed sequential fresh-run replays. These fixtures are not
+for their committed sequential fresh-run replays. AAA floors 6 through 9 pin a
+second run, with exact CrystalVaultRoom parity established on floor 6. These fixtures are not
 evidence that every room set, deeper floor, or full heap fact matches.

@@ -99,10 +99,14 @@ final class FloorOracle {
 			questRewards.add(itemFact(Wandmaker.Quest.wand2));
 		}
 		List<String> rooms = new ArrayList<>();
+		List<RoomFact> roomBounds = new ArrayList<>();
 		for (Room room : level.rooms()) {
 			rooms.add(room.getClass().getSimpleName());
+			roomBounds.add(new RoomFact(room.getClass().getSimpleName(), room.left, room.top, room.right, room.bottom));
 		}
 		rooms.sort(String::compareTo);
+		roomBounds.sort(Comparator.comparing((RoomFact room) -> room.roomClass)
+				.thenComparingInt(room -> room.left).thenComparingInt(room -> room.top));
 		int width = level.width();
 		int height = level.height();
 		FloorVisualFacts visualFacts = FloorVisualFacts.capture(level);
@@ -114,6 +118,7 @@ final class FloorOracle {
 				width,
 				height,
 				rooms,
+				roomBounds,
 				heaps,
 				mobs,
 				questRewards,
@@ -262,6 +267,7 @@ final class FloorOracle {
 		final int width;
 		final int height;
 		final List<String> rooms;
+		final List<RoomFact> roomBounds;
 		final List<HeapFact> heaps;
 		final List<MobFact> mobs;
 		final List<ItemFact> questRewards;
@@ -281,6 +287,7 @@ final class FloorOracle {
 				int width,
 				int height,
 				List<String> rooms,
+				List<RoomFact> roomBounds,
 				List<HeapFact> heaps,
 				List<MobFact> mobs,
 				List<ItemFact> questRewards,
@@ -292,6 +299,7 @@ final class FloorOracle {
 			this.width = width;
 			this.height = height;
 			this.rooms = rooms;
+			this.roomBounds = roomBounds;
 			this.heaps = heaps;
 			this.mobs = mobs;
 			this.questRewards = questRewards;
@@ -305,6 +313,15 @@ final class FloorOracle {
 			this.traps = visualFacts.traps;
 			this.plants = visualFacts.plants;
 			this.blobs = visualFacts.blobs;
+		}
+	}
+
+	static final class RoomFact {
+		final String roomClass;
+		final int left, top, right, bottom;
+		RoomFact(String roomClass, int left, int top, int right, int bottom) {
+			this.roomClass = roomClass; this.left = left; this.top = top;
+			this.right = right; this.bottom = bottom;
 		}
 	}
 

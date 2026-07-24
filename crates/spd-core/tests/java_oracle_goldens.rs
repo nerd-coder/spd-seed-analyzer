@@ -74,6 +74,8 @@ struct OracleFloor {
     #[serde(default)]
     rooms: Vec<String>,
     #[serde(default)]
+    room_bounds: Vec<OracleRoomFact>,
+    #[serde(default)]
     forced_items: Vec<OracleItem>,
     #[serde(default)]
     final_heaps: Vec<OracleHeap>,
@@ -88,6 +90,16 @@ struct OracleFloor {
     traps: Option<Vec<OracleTrap>>,
     plants: Option<Vec<OraclePlant>>,
     blobs: Option<Vec<OracleBlob>>,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+struct OracleRoomFact {
+    #[serde(rename = "class")]
+    class_name: String,
+    left: i32,
+    top: i32,
+    right: i32,
+    bottom: i32,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Eq)]

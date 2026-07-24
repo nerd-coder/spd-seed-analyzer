@@ -12,27 +12,23 @@ pinned checkout, normally at
 
 ## Checkpoint
 
-- Depth-one schema-v3 fixtures pin lifecycle probes, room classes, map bounds,
-  final heaps, and final mobs; `HKT-JZN-XQQ` also replays floors 6–8.
-- `GFX-PZH-DCH` now pins CrystalPathRoom geometry/reward order and all six exact
-  item-to-cell heap associations. That family no longer emits `Room loot`.
-- Coverage remains partial; unported room painters and deeper histories can
-  still diverge.
+- `AAA-AAA-AAA` is the second preserved-state replay, with complete Java facts
+  and exact room bounds pinned for floors 6–9. It broadens coverage with Vault,
+  Larder, Sentry, Treasury, WeakFloor, Armory, Garden, Library, Pit, Aquarium,
+  and Burned room families.
+- Its first divergence, `CrystalVaultRoom`, is source-ported through geometry,
+  locked entrance, pedestals, chest cells, and exact item association. Floor 6
+  now reaches the mob/items lifecycle boundaries; floor 7 diverges during paint.
+- Status remains `partial`; fixtures beyond that boundary are evidence and next
+  work, not a claim of full replay parity.
 
 ## Next phase
 
-Add a second independent replay seed across floors 6–9:
+Continue `AAA-AAA-AAA` floor 7 from its pinned pre-paint boundary:
 
-1. Select a seed that exercises room families not dominant in `HKT-JZN-XQQ`.
-2. Regenerate every target floor with the pinned Java oracle, preserving all
-   prior-floor run state.
-3. Pin room classes/bounds, all lifecycle probes, final heaps, final mobs, and
-   additive render facts before fixing the first divergence.
-4. Port only the divergence reached by that replay and update
-   `specs/accuracy.json` in the same change.
-
-After that replay, convert another fixture-backed family that still emits a
-legacy `Room loot` marker.
+1. Identify the first painter/RNG divergence without changing later families.
+2. Port only that room path from pinned SPD and strengthen the replay assertion.
+3. Then convert another fixture-backed family that still emits `Room loot`.
 
 ## Known limits
 

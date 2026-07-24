@@ -18,12 +18,12 @@
         "Generic and region-specific standard-room geometry",
         "Pinned standard, special, and secret room-count tables",
         "Pinned SecretLarderRoom minimum dimensions and food-placement viability",
-        "Depth-one lifecycle fixtures across ten seeds and replay fixtures for HKT-JZN-XQQ floors 6–8"
+        "Depth-one lifecycle fixtures across ten seeds, full HKT-JZN-XQQ floor 6–8 parity, and preserved-state AAA-AAA-AAA floor 6–9 oracle fixtures with exact room bounds"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
-        "Additional replay seeds are needed before deeper regions can be considered broadly verified"
+        "The AAA-AAA-AAA replay is pinned but parity currently stops after its floor-6 CrystalVaultRoom; later painter divergences remain"
       ],
       "impact": "Room selection, bounds, connections, or downstream RNG can differ on uncovered generation paths.",
       "evidence": [
@@ -36,7 +36,7 @@
       "area": "Special & secret rooms",
       "status": "partial",
       "implemented": [
-        "Exact structured heap capture for Crypt, Pool, Runestone, MagicalFire, Traps, Sentry, Storage, ToxicGas, and CrystalPath fixture paths",
+        "Exact structured heap capture for Crypt, Pool, Runestone, MagicalFire, Traps, Sentry, Storage, ToxicGas, CrystalPath, and CrystalVault fixture paths",
         "Full SecretMaze layout plus covered RotGarden, WeakFloor, DemonSpawner, Summoning, and ToxicGas paint behavior",
         "Special and secret-room prize generation for supported room families"
       ],
@@ -81,7 +81,7 @@
       "status": "partial",
       "implemented": [
         "Source-ported RegularLevel ambient mob selection through floor 24",
-        "Depth-one mob lifecycle and HKT-JZN-XQQ floor 6–8 mob facts on committed fixtures",
+        "Depth-one mob lifecycle, full HKT-JZN-XQQ floor 6–8 mob parity, and pinned AAA-AAA-AAA floor 6–9 mob facts",
         "Ghost, Wandmaker, Blacksmith, and Imp selection and reward flows"
       ],
       "remaining": [
