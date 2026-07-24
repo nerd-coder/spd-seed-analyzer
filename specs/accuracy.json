@@ -26,12 +26,14 @@
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
+        "AAA-AAA-AAA floor 12 selects the pinned non-connection room families, then diverges inside FigureEightBuilder placement: Rust currently returns 22 rooms versus Java's 19",
         "Preserved-run floors beyond depth 11 still require phase-by-phase parity checks"
       ],
       "impact": "Room selection, bounds, connections, or downstream RNG can differ on uncovered generation paths.",
       "evidence": [
         "crates/spd-core/tests/java_oracle_goldens.rs",
-        "crates/spd-core/tests/java_oracle_goldens/final_heaps"
+        "crates/spd-core/tests/java_oracle_goldens/final_heaps",
+        "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-12.json"
       ]
     },
     {

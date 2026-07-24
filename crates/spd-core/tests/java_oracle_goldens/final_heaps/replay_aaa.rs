@@ -382,6 +382,62 @@ fn aaa_replay_pins_floors_six_through_eleven_across_the_tengu_lifecycle() {
     }
 }
 
+#[test]
+fn aaa_floor_twelve_records_figure_eight_layout_gap_after_room_selection() {
+    let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-12.json");
+    let path = fixture_paths()
+        .into_iter()
+        .find(|path| path.file_name().is_some_and(|file| file == name))
+        .expect("missing AAA floor-12 fixture");
+    let fixture = read_fixture(&path);
+    let expected = fixture.floors.first().expect("floor-12 oracle facts");
+
+    let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
+    let mut actual = None;
+    for depth in 1_i32..=12 {
+        dungeon.depth = depth;
+        actual = Some(create_level_partial(&mut dungeon));
+    }
+    let actual = actual.expect("floor-12 replay");
+    let mut actual_rooms = actual.rooms;
+    actual_rooms.sort();
+
+    let is_connection = |name: &&String| {
+        matches!(
+            name.as_str(),
+            "TunnelRoom"
+                | "BridgeRoom"
+                | "PerimeterRoom"
+                | "WalkwayRoom"
+                | "RingTunnelRoom"
+                | "RingBridgeRoom"
+                | "MazeConnectionRoom"
+        )
+    };
+    let actual_selected: Vec<_> = actual_rooms
+        .iter()
+        .filter(|name| !is_connection(name))
+        .cloned()
+        .collect();
+    let expected_selected: Vec<_> = expected
+        .rooms
+        .iter()
+        .filter(|name| !is_connection(name))
+        .cloned()
+        .collect();
+
+    assert_eq!(
+        actual_selected, expected_selected,
+        "floor-12 room selection is aligned before builder-added connections"
+    );
+    assert_eq!(actual_rooms.len(), 22, "recorded Rust layout room count");
+    assert_eq!(expected.rooms.len(), 19, "pinned Java layout room count");
+    assert_ne!(
+        actual_rooms, expected.rooms,
+        "known FigureEightBuilder placement gap; promote floor 12 to the exact replay only after this closes"
+    );
+}
+
 fn oracle_item_class(class_name: &str) -> &str {
     // Java's `getSimpleName()` cannot distinguish nested Plant.Seed classes.
     match class_name {

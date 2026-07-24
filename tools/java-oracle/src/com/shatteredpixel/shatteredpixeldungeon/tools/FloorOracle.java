@@ -111,9 +111,9 @@ final class FloorOracle {
 		int height = level.height();
 		FloorVisualFacts visualFacts = FloorVisualFacts.capture(level);
 		List<Integer> prePaintRng = generatePrePaintRng(seed, depth);
-		List<Integer> preDoorsRng = depth <= 4 || depth == 11
+		List<Integer> preDoorsRng = depth <= 4 || (depth >= 11 && depth <= 12)
 				? generateDoorRng(seed, depth, false) : new ArrayList<>();
-		List<Integer> postDoorsRng = depth <= 4 || depth == 11
+		List<Integer> postDoorsRng = depth <= 4 || (depth >= 11 && depth <= 12)
 				? generateDoorRng(seed, depth, true) : new ArrayList<>();
 		List<Integer> preMobsRng = generatePreMobsRng(seed, depth);
 		List<Integer> preItemsRng = generatePreItemsRng(seed, depth);
