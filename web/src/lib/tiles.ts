@@ -197,9 +197,13 @@ function drawWater(
 ) {
   const tileWidth = water.naturalWidth * scale
   const tileHeight = water.naturalHeight * scale
+  // Keep the pixel-art texture aligned to the backing-store grid. Fractional
+  // drawImage destinations can shimmer or expose seams between repeated tiles,
+  // even with image smoothing disabled (this also covers the Halls lava skin).
+  const pixelOffset = Math.floor(offset)
   const xOffset = -(((originX * scale) % tileWidth) + tileWidth) % tileWidth
   const yOffset =
-    ((((offset - originY) * scale) % tileHeight) + tileHeight) % tileHeight
+    ((((pixelOffset - originY) * scale) % tileHeight) + tileHeight) % tileHeight
   for (let y = yOffset - tileHeight; y < height; y += tileHeight) {
     for (let x = xOffset; x < width; x += tileWidth) {
       ctx.drawImage(water, x, y, tileWidth, tileHeight)

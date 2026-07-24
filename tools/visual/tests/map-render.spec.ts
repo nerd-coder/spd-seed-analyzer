@@ -20,14 +20,18 @@ const floorRegions = [
   { first: 21, last: 24, name: /^Halls/ },
 ] as const
 
-async function openAnalyzer(page: Page, seed: string): Promise<BrowserErrors> {
+async function openAnalyzer(
+  page: Page,
+  seed: string,
+  reducedMotion: 'reduce' | 'no-preference' = 'reduce'
+): Promise<BrowserErrors> {
   const errors: BrowserErrors = { console: [], page: [] }
   page.on('console', (message) => {
     if (message.type() === 'error') errors.console.push(message.text())
   })
   page.on('pageerror', (error) => errors.page.push(error.message))
 
-  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion })
   await page.addInitScript((storage) => {
     localStorage.clear()
     localStorage.setItem(storage.mapSpoilers, '1')
@@ -167,11 +171,18 @@ test('mobile map dialog fills the viewport and supports 1x and 2x zoom', async (
     name: /Shattered Pixel Dungeon floor map/,
   })
   await waitForCanvasPaint(canvas)
-  await dialog.getByRole('radio', { name: 'Zoom map to 1x' }).click()
   const oneXWidth = await canvas.evaluate(
     (node) => (node as HTMLCanvasElement).width
   )
-  await dialog.getByRole('radio', { name: 'Zoom map to 2x' }).click()
+  await dialog.getByRole('button', { name: 'Switch map to 2x zoom' }).click()
+  await expect
+    .poll(() => canvas.evaluate((node) => (node as HTMLCanvasElement).width))
+    .toBe(oneXWidth * 2)
+  await dialog.getByRole('button', { name: 'Switch map to 1x zoom' }).click()
+  await expect
+    .poll(() => canvas.evaluate((node) => (node as HTMLCanvasElement).width))
+    .toBe(oneXWidth)
+  await dialog.getByRole('button', { name: 'Switch map to 2x zoom' }).click()
   await expect
     .poll(() => canvas.evaluate((node) => (node as HTMLCanvasElement).width))
     .toBe(oneXWidth * 2)
@@ -179,6 +190,12 @@ test('mobile map dialog fills the viewport and supports 1x and 2x zoom', async (
   const settingsPanel = dialog.getByTestId('map-settings-panel')
   const scrollContainer = dialog.getByTestId('map-scroll-container')
   await expect(settingsPanel).toHaveClass(/\bdark\b/)
+  await expect(settingsPanel).toHaveClass(/bg-background\/30/)
+  const panelButtons = settingsPanel.getByRole('button')
+  await expect(panelButtons).toHaveCount(3)
+  for (const button of await panelButtons.all()) {
+    await expect(button).toHaveAttribute('data-variant', 'ghost')
+  }
   const panelBounds = await settingsPanel.boundingBox()
   await scrollContainer.evaluate((node) => {
     node.scrollTo({ left: node.scrollWidth, top: node.scrollHeight })
@@ -215,8 +232,32 @@ test('floor rooms open from a title chip and desktop maps use a large dialog', a
     .poll(async () => (await dialog.boundingBox())?.height)
     .toBeGreaterThan(1100)
   await expect(
-    dialog.getByRole('radio', { name: 'Zoom map to 1x' })
+    dialog.getByRole('button', { name: /Switch map to [12]x zoom/ })
   ).toBeVisible()
+
+  expect(browserErrors.console, 'browser console errors').toEqual([])
+  expect(browserErrors.page, 'uncaught page errors').toEqual([])
+})
+
+test('animated liquid advances on the pixel-aligned canvas path', async ({
+  page,
+}) => {
+  const browserErrors = await openAnalyzer(page, 'CXG-FJT-BFQ', 'no-preference')
+  await page.getByRole('button', { name: 'Expand floor 1 map' }).click()
+
+  const canvas = page.getByRole('dialog').getByRole('img', {
+    name: /Shattered Pixel Dungeon floor map/,
+  })
+  await waitForCanvasPaint(canvas)
+  await expect(canvas).toHaveAttribute('data-water-animation', 'running')
+  const firstFrame = await canvas.evaluate((node) =>
+    (node as HTMLCanvasElement).toDataURL('image/png')
+  )
+  await page.waitForTimeout(300)
+  const laterFrame = await canvas.evaluate((node) =>
+    (node as HTMLCanvasElement).toDataURL('image/png')
+  )
+  expect(laterFrame).not.toBe(firstFrame)
 
   expect(browserErrors.console, 'browser console errors').toEqual([])
   expect(browserErrors.page, 'uncaught page errors').toEqual([])

@@ -43,7 +43,9 @@ thin consumers.
 
 - Floor titles expose generated room classes from a count chip and popover.
   Expanded maps fill the mobile viewport, use a larger bounded desktop dialog,
-  and pin dark, icon-only zoom and marker controls to the map container.
+  and pin a translucent dark panel with a single zoom toggle and ghost marker
+  controls to the map container. Animated liquid textures stay pixel-aligned at
+  both zoom levels to avoid seams and shimmer (including the Halls lava skin).
 
 - Java `Random`, watabou generator stacks, seed codes, run identities,
   generator decks, depth seeds, forced drops, and supported shop/quest flows

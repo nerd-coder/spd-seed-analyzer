@@ -1,12 +1,11 @@
 import {
-  MagnifyingGlass,
+  MagnifyingGlassMinus,
   MagnifyingGlassPlus,
   TreasureChest,
   UsersThree,
 } from '@phosphor-icons/react'
 
-import { Toggle } from '@/components/ui/toggle'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { Button } from '@/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
@@ -34,51 +33,41 @@ export function MapSettingsPanel({
   showMobs,
   onShowMobsChange,
 }: Props) {
+  const isZoomed = zoom === '2'
+
   return (
     <div
-      className="dark absolute top-2 left-2 z-10 flex items-center gap-1 bg-background/90 p-1 text-foreground shadow-md ring-1 ring-foreground/10 backdrop-blur-sm"
+      className="dark absolute top-2 left-2 z-10 flex items-center gap-0.5 bg-background/30 p-1 text-foreground shadow-sm ring-1 ring-foreground/15 backdrop-blur-[2px]"
       data-testid="map-settings-panel"
     >
-      <ToggleGroup
-        type="single"
-        variant="outline"
-        size="sm"
-        spacing={0}
-        value={zoom}
-        onValueChange={(value) => {
-          if (value) onZoomChange(value)
-        }}
-        aria-label="Map zoom"
-      >
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <ToggleGroupItem value="1" aria-label="Zoom map to 1x">
-              <MagnifyingGlass />
-            </ToggleGroupItem>
-          </TooltipTrigger>
-          <TooltipContent className="dark">1× zoom</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <ToggleGroupItem value="2" aria-label="Zoom map to 2x">
-              <MagnifyingGlassPlus />
-            </ToggleGroupItem>
-          </TooltipTrigger>
-          <TooltipContent className="dark">2× zoom</TooltipContent>
-        </Tooltip>
-      </ToggleGroup>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => onZoomChange(isZoomed ? '1' : '2')}
+            aria-label={`Switch map to ${isZoomed ? '1x' : '2x'} zoom`}
+          >
+            {isZoomed ? <MagnifyingGlassMinus /> : <MagnifyingGlassPlus />}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent className="dark">
+          Switch to {isZoomed ? '1×' : '2×'} zoom
+        </TooltipContent>
+      </Tooltip>
       {itemMarkers > 0 && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Toggle
-              variant="outline"
-              size="sm"
-              pressed={showItems}
-              onPressedChange={onShowItemsChange}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-pressed={showItems}
+              onClick={() => onShowItemsChange(!showItems)}
               aria-label={`Show items (${itemMarkers})`}
+              className="aria-pressed:bg-muted"
             >
               <TreasureChest />
-            </Toggle>
+            </Button>
           </TooltipTrigger>
           <TooltipContent className="dark">
             Items ({itemMarkers}) · engine-confirmed cells only
@@ -88,15 +77,16 @@ export function MapSettingsPanel({
       {mobMarkers > 0 && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Toggle
-              variant="outline"
-              size="sm"
-              pressed={showMobs}
-              onPressedChange={onShowMobsChange}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-pressed={showMobs}
+              onClick={() => onShowMobsChange(!showMobs)}
               aria-label={`Show known mobs (${mobMarkers})`}
+              className="aria-pressed:bg-muted"
             >
               <UsersThree />
-            </Toggle>
+            </Button>
           </TooltipTrigger>
           <TooltipContent className="dark">
             Known mobs ({mobMarkers}) · exact on depth 1, partial on some later
