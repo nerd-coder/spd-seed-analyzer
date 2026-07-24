@@ -8,13 +8,13 @@
 
 ## Next phase
 
-Compare AAA-AAA-AAA floor 13 at the pre-items RNG boundary. Fix only the first
-semantic difference, then stop; defer final heap and mob facts.
+Capture and compare AAA-AAA-AAA floor 13 final mob facts. Fix only the first
+semantic difference, then stop; defer final heap facts.
 
 ## Current checkpoint
 
-- Floor 13 matches Java's room classes, normalized bounds, pre-paint, and
-  pre-mobs RNG boundaries. Its pinned oracle fixture covers later checkpoints.
+- Floor 13 matches Java's room classes, normalized bounds, pre-paint, pre-mobs,
+  and pre-items RNG boundaries. Final mob and heap facts are not yet pinned.
 - Floor 12 remains exact through its documented final-heap boundary.
 
 Run the complete CI `check` sequence from `AGENTS.md` before committing.
