@@ -383,7 +383,7 @@ fn aaa_replay_pins_floors_six_through_eleven_across_the_tengu_lifecycle() {
 }
 
 #[test]
-fn aaa_floor_twelve_matches_the_pinned_figure_eight_layout() {
+fn aaa_floor_twelve_matches_the_pinned_layout_and_item_lifecycle() {
     let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-12.json");
     let path = fixture_paths()
         .into_iter()
@@ -450,6 +450,35 @@ fn aaa_floor_twelve_matches_the_pinned_figure_eight_layout() {
     assert_eq!(
         actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
         "floor-12 pre-mobs RNG boundary"
+    );
+    assert_eq!(
+        actual.pre_items_rng_probe, expected.pre_items_rng,
+        "floor-12 pre-items RNG boundary"
+    );
+    let actual_heaps: Vec<_> = actual
+        .map
+        .as_ref()
+        .expect("floor-12 map")
+        .heaps
+        .iter()
+        .map(|heap| OracleHeap {
+            cell: heap.cell,
+            heap_type: heap.heap_type.clone(),
+            items: heap
+                .items
+                .iter()
+                .map(|item| OracleItem {
+                    class_name: oracle_item_class(&item.class_name).into(),
+                    quantity: item.quantity,
+                    level: item.level,
+                    cursed: item.cursed,
+                })
+                .collect(),
+        })
+        .collect();
+    assert_eq!(
+        actual_heaps, expected.final_heaps,
+        "floor-12 normalized heaps"
     );
 }
 
