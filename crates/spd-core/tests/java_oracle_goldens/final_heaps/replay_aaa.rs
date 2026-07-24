@@ -3,7 +3,7 @@ use super::*;
 use std::ffi::OsStr;
 
 #[test]
-fn aaa_replay_pins_floors_six_through_nine_and_matches_floor_six_vault() {
+fn aaa_replay_pins_floors_six_through_nine_and_matches_vault_then_garden() {
     let fixtures: Vec<_> = (6..=9)
         .map(|depth| {
             let name = format!("aaa-aaa-aaa-final-heaps-floor-{depth}.json");
@@ -108,6 +108,32 @@ fn aaa_replay_pins_floors_six_through_nine_and_matches_floor_six_vault() {
                 actual.pre_items_rng_probe, expected.pre_items_rng,
                 "{context} pre-items RNG"
             );
+        }
+
+        if depth == 7 {
+            let oracle = expected.terrain.as_ref().unwrap();
+            let garden = expected
+                .room_bounds
+                .iter()
+                .find(|room| room.class_name == "GardenRoom")
+                .expect("floor-7 garden bounds");
+            let mut actual_cells = Vec::new();
+            let mut oracle_cells = Vec::new();
+            for y in garden.top..=garden.bottom {
+                for x in garden.left..=garden.right {
+                    let cell = (y * expected.width as i32 + x) as usize;
+                    actual_cells.push(map.tiles[cell]);
+                    oracle_cells.push(oracle[cell]);
+                }
+            }
+            assert_eq!(
+                actual_cells, oracle_cells,
+                "{context} full GardenRoom terrain"
+            );
+            assert_eq!(map.tiles[1285], 2, "{context} planted grass cell");
+        }
+
+        if depth == 6 {
             let vault_heaps: Vec<_> = map
                 .heaps
                 .iter()

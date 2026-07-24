@@ -16,19 +16,20 @@ pinned checkout, normally at
   and exact room bounds pinned for floors 6–9. It broadens coverage with Vault,
   Larder, Sentry, Treasury, WeakFloor, Armory, Garden, Library, Pit, Aquarium,
   and Burned room families.
-- Its first divergence, `CrystalVaultRoom`, is source-ported through geometry,
-  locked entrance, pedestals, chest cells, and exact item association. Floor 6
-  now reaches the mob/items lifecycle boundaries; floor 7 diverges during paint.
+- Floor 6 matches through `CrystalVaultRoom` and the mob/items boundaries.
+  Floor 7 now matches its first divergent `GardenRoom` through exact terrain
+  and planted cell; the next divergence is `ArmoryRoom` later in painter order.
 - Status remains `partial`; fixtures beyond that boundary are evidence and next
   work, not a claim of full replay parity.
 
 ## Next phase
 
-Continue `AAA-AAA-AAA` floor 7 from its pinned pre-paint boundary:
+Continue `AAA-AAA-AAA` floor 7 from the verified Garden boundary:
 
-1. Identify the first painter/RNG divergence without changing later families.
-2. Port only that room path from pinned SPD and strengthen the replay assertion.
-3. Then convert another fixture-backed family that still emits `Room loot`.
+1. Port pinned `ArmoryRoom.paint`, including carpet/statue geometry and exact
+   equipment placement/RNG order.
+2. Extend the replay assertion to the Armory bounds and re-check pre-mobs RNG.
+3. Then continue to the next first divergence only.
 
 ## Known limits
 

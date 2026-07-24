@@ -10,6 +10,7 @@ use crate::rooms::room::Room;
 /// `GardenRoom.paint` — IronKey + 0–2 plant seeds (Sungrass / Blandfruit).
 pub(super) fn garden_prizes(
     room: &Room,
+    map: &mut TerrainMap,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
     items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
@@ -19,24 +20,38 @@ pub(super) fn garden_prizes(
     let mut occupied = Vec::new();
     match bushes {
         0 => {
-            burn_drop_pos(room, &mut occupied);
+            plant_pos(room, map, &mut occupied);
             out.push(plant_loot("SungrassSeed", "GardenRoom"));
         }
         1 => {
-            burn_drop_pos(room, &mut occupied);
+            plant_pos(room, map, &mut occupied);
             out.push(plant_loot("BlandfruitBushSeed", "GardenRoom"));
         }
         _ => {
             // 20% both seeds
             if Random::int_max(5) == 0 {
-                burn_drop_pos(room, &mut occupied);
+                plant_pos(room, map, &mut occupied);
                 out.push(plant_loot("SungrassSeed", "GardenRoom"));
-                burn_drop_pos(room, &mut occupied);
+                plant_pos(room, map, &mut occupied);
                 out.push(plant_loot("BlandfruitBushSeed", "GardenRoom"));
             }
         }
     }
     out
+}
+
+fn plant_pos(room: &Room, map: &mut TerrainMap, occupied: &mut Vec<(i32, i32)>) {
+    let before = occupied.len();
+    burn_drop_pos(room, occupied);
+    if let Some(&(x, y)) = occupied.get(before) {
+        if let Some(cell) = map.point_to_cell(x, y) {
+            map.plant_occupied[cell] = true;
+            // `Level.plant` converts HIGH_GRASS under the plant to GRASS.
+            if map.map[cell] == crate::level::terrain::HIGH_GRASS {
+                map.map[cell] = crate::level::terrain::GRASS;
+            }
+        }
+    }
 }
 
 /// `SecretGardenRoom.paint` — Starflower + Seedpod + Dewcatcher + 50% extra.

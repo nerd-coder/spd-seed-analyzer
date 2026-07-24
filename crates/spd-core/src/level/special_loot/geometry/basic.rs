@@ -2,7 +2,9 @@
 
 use crate::geom::Point;
 use crate::level::painter::DoorMap;
-use crate::level::terrain::{TerrainMap, CHASM, EMPTY, EMPTY_SP, PEDESTAL, WALL, WATER};
+use crate::level::terrain::{
+    TerrainMap, CHASM, EMPTY, EMPTY_SP, GRASS, HIGH_GRASS, PEDESTAL, WALL, WATER,
+};
 use crate::random::Random;
 use crate::rooms::room::Room;
 
@@ -44,6 +46,14 @@ pub(super) fn paint_pool(
         map.item_allowed[cell] = false;
     }
     cell
+}
+
+/// Pinned `GardenRoom.paint` terrain layers. The loot helper performs the
+/// subsequent bush and `plantPos` rolls in Java order.
+pub(super) fn paint_garden(map: &mut TerrainMap, room: &Room) {
+    fill_room(map, room, WALL);
+    fill_margin(map, room, 1, HIGH_GRASS);
+    fill_margin(map, room, 2, GRASS);
 }
 
 pub(super) fn paint_runestone(

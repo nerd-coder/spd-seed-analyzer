@@ -29,6 +29,10 @@ pub(super) fn paint(
             rot_garden::paint(map, room, room_index, doors);
             None
         }
+        "GardenRoom" => {
+            basic::paint_garden(map, room);
+            None
+        }
         "PoolRoom" => basic::paint_pool(map, room, room_index, doors),
         "RunestoneRoom" => {
             basic::paint_runestone(map, room, room_index, doors);

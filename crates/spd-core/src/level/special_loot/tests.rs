@@ -355,7 +355,8 @@ fn garden_and_well_prizes() {
     Random::push_generator_seeded(2);
     let room = test_room("GardenRoom", 7, 7);
     let mut spawn = Vec::new();
-    let garden = garden_prizes(&room, &mut spawn);
+    let mut map = paint_minimal(std::slice::from_ref(&room)).expect("garden map");
+    let garden = garden_prizes(&room, &mut map, &mut spawn);
     Random::pop_generator();
     assert_eq!(spawn[0].class_name, "IronKey");
     // bushes roll may yield 0–2 plants
