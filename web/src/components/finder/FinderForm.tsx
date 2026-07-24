@@ -135,7 +135,7 @@ export function FinderForm({
 
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-3">
-      <FieldGroup className="gap-4">
+      <FieldGroup className="gap-2">
         <SearchScopeFields
           startSeed={startSeed}
           candidateCount={candidateCount}
