@@ -1,7 +1,8 @@
 import { useLayoutEffect } from 'react'
 
 /**
- * Publish seed-tab bar height so region tabs stick beneath it.
+ * Publish seed-tab bar height so region tabs stick beneath it. ResizeObserver
+ * keeps the offset current when desktop session tabs wrap onto another row.
  * Re-runs when `active` flips (sessions mount/unmount the bar).
  */
 export function useSeedTabsHeight(

@@ -12,7 +12,7 @@ export const ScrollableSessionTabs = forwardRef<
     >
       <TabsList
         variant="line"
-        className="h-auto w-0 min-w-0 flex-1 flex-nowrap justify-start gap-1 overflow-x-auto"
+        className="h-auto w-0 min-w-0 flex-1 flex-nowrap justify-start gap-1 overflow-x-auto lg:h-auto! lg:flex-wrap lg:overflow-x-visible"
       >
         {children}
       </TabsList>

@@ -21,11 +21,21 @@ export function FloorsSection({
   const groups = groupFloorsByRegion(floors)
   const stickyBarRef = useRef<HTMLDivElement>(null)
   const regionContentRefs = useRef(new Map<string, HTMLElement>())
+  const scrollRequestRef = useRef(0)
 
   const scrollRegionIntoView = useCallback((regionId: string) => {
+    const requestId = ++scrollRequestRef.current
+
+    // Stop an in-flight smooth scroll before measuring the newly selected
+    // region. Otherwise its remaining frames can move the viewport after the
+    // new region has been aligned.
+    window.scrollTo({ top: window.scrollY, behavior: 'auto' })
+
     // Double rAF: wait for Radix to show the new TabsContent and for layout.
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
+        if (requestId !== scrollRequestRef.current) return
+
         const content = regionContentRefs.current.get(regionId)
         const sticky = stickyBarRef.current
         if (!content || !sticky) return

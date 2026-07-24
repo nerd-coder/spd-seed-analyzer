@@ -28,7 +28,10 @@ thin consumers.
   Search progress identifies the in-flight numeric seed, one-based candidate
   number, analysis depth, and matches found so far. Cancelling retains the last
   completed progress snapshot and displays any matches already found; finder
-  tab captions include their live result count.
+  tab captions include their live result count. Session tabs scroll
+  horizontally on narrow screens and wrap on desktop, with the sticky floor
+  navigation tracking the wrapped tab bar's height. Region changes coalesce
+  pending scroll work so rapid selections align only the latest region.
   Every execution opens a result tab named for its single requested item or
   `Find N items` for multiple constraints; the oldest instance is dropped at
   the cap. Search parameters live in the sidebar, and finder tabs use the same
