@@ -145,7 +145,19 @@ pub fn find_free_space(start: Point, collision: &[Room], max_size: i32) -> Rect 
 /// Place `next` next to `prev` at approximately `angle` degrees. Returns angle or -1.
 /// `next` is identified by index into `rooms` which must include all collision rooms + next.
 pub fn place_room(rooms: &mut [Room], prev: usize, next: usize, angle: f32) -> f32 {
-    place_room_with_prepare(rooms, prev, next, angle, &mut |_| {})
+    place_room_impl(rooms, None, prev, next, angle, &mut |_| {})
+}
+
+/// Place a room while matching a Java caller that passes a narrower collision list.
+pub(super) fn place_room_with_collision_ids(
+    rooms: &mut [Room],
+    collision_ids: &[usize],
+    prev: usize,
+    next: usize,
+    angle: f32,
+) -> f32 {
+    let collision: Vec<_> = collision_ids.iter().map(|&id| rooms[id].clone()).collect();
+    place_room_impl(rooms, Some(&collision), prev, next, angle, &mut |_| {})
 }
 
 /// ShopRoom computes its minimum dimensions lazily from generated stock.
@@ -153,6 +165,17 @@ pub fn place_room(rooms: &mut [Room], prev: usize, next: usize, angle: f32) -> f
 /// `findFreeSpace`, but before the room-size draws.
 pub(super) fn place_room_with_prepare(
     rooms: &mut [Room],
+    prev: usize,
+    next: usize,
+    angle: f32,
+    prepare: &mut impl FnMut(&mut Room),
+) -> f32 {
+    place_room_impl(rooms, None, prev, next, angle, prepare)
+}
+
+fn place_room_impl(
+    rooms: &mut [Room],
+    collision: Option<&[Room]>,
     prev: usize,
     next: usize,
     mut angle: f32,
@@ -202,8 +225,9 @@ pub(super) fn place_room_with_prepare(
     }
 
     let max_dim = rooms[next].max_width().max(rooms[next].max_height());
-    // collision list: all rooms except empty next? Java uses full list including unplaced empties
-    let space = find_free_space(start, rooms, max_dim);
+    // Most Java callers pass the full room list; LoopBuilder's closing stitch
+    // deliberately passes only the rooms already belonging to its loop.
+    let space = find_free_space(start, collision.unwrap_or(rooms), max_dim);
     prepare(&mut rooms[next]);
     if !rooms[next].set_size_with_limit(space.raw_width() + 1, space.raw_height() + 1) {
         return -1.0;

@@ -1,19 +1,20 @@
 //! Sentry, traps, fire, sacrifice, toxic gas, and honeypot room prizes.
 
 mod sentry;
+mod toxic_gas;
 mod traps;
 
 pub(super) use sentry::paint as sentry_prize;
+pub(super) use toxic_gas::paint as toxic_gas_prizes;
 pub(super) use traps::paint as traps_prize;
 
 use super::crystal::vault_entrance_cell;
-use super::placement::{burn_drop_pos, burn_drop_pos_margin, find_prize_item};
+use super::placement::burn_drop_pos;
 use super::special_rooms::{bomb_random, is_curse_enchant, storage_prize};
 use crate::dungeon::DungeonState;
 use crate::geom::{Point, Rect};
 use crate::items::enchants;
 use crate::items::model::{GeneratedItem, ItemCategory};
-use crate::items::randomize::randomize_item;
 use crate::level::create_items::PlacedLoot;
 use crate::level::painter::DoorMap;
 use crate::level::terrain::{TerrainMap, EMPTY, EMPTY_SP, WALL};
@@ -244,56 +245,6 @@ fn burn_sacrifice_center_offset(rooms: &[Room], ri: usize) {
     if side_door || end_door {
         let _ = Random::int_max(2);
     }
-}
-
-/// `ToxicGasRoom.paint` — skeleton 2×gold + 2 chests (cata/gold) + trap placement RNG.
-pub(super) fn toxic_gas_prizes(
-    dungeon: &mut DungeonState,
-    room: &Room,
-    items_to_spawn: &mut Vec<GeneratedItem>,
-) -> Vec<PlacedLoot> {
-    // Vent traps: min(w-2, h-2) placements at random(2) on EMPTY (approx unique).
-    let traps = (room.width() - 2).min(room.height() - 2).max(0);
-    let mut occupied = Vec::new();
-    for _ in 0..traps {
-        burn_drop_pos_margin(room, 2, &mut occupied);
-    }
-
-    // 8 candidate gold positions at random(2); furthest becomes skeleton (trueDistance
-    // pick is pure geometry — no extra RNG).
-    for _ in 0..8 {
-        burn_drop_pos_margin(room, 2, &mut occupied);
-    }
-
-    let mut out = Vec::new();
-
-    // Main gold ×2 on skeleton heap (blacklisted from report; still for RNG parity).
-    let mut main = GeneratedItem::new("Gold", ItemCategory::Gold);
-    randomize_item(&mut main, dungeon.depth);
-    main.quantity = main.quantity.saturating_mul(2);
-    main.source = Some("ToxicGasRoom".into());
-    out.push(PlacedLoot {
-        item: main,
-        heap_type: "skeleton",
-    });
-
-    // Two chests: TrinketCatalyst prize item or random gold
-    for _ in 0..2 {
-        let mut item =
-            find_prize_item(items_to_spawn, Some("TrinketCatalyst")).unwrap_or_else(|| {
-                let mut g = GeneratedItem::new("Gold", ItemCategory::Gold);
-                randomize_item(&mut g, dungeon.depth);
-                g
-            });
-        item.source = Some("ToxicGasRoom".into());
-        out.push(PlacedLoot {
-            item,
-            heap_type: "chest",
-        });
-    }
-
-    items_to_spawn.push(GeneratedItem::new("PotionOfPurity", ItemCategory::Potion));
-    out
 }
 
 /// `SecretHoneypotRoom.paint` — shattered pot (geom) + honeypot + Bomb.random().

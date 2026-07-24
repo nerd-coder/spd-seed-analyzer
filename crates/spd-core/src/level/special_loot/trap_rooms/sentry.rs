@@ -29,12 +29,7 @@ pub(crate) fn paint(
         .map(|door| Point::new(door.x, door.y))
         .expect("placed SentryRoom has an entrance door");
 
-    let center = loop {
-        let center = room.as_rect().center_room();
-        if center.x != entrance.x && center.y != entrance.y {
-            break center;
-        }
-    };
+    let center = select_center(room, entrance);
     let (sentry, treasure) = positions_and_path(map, room, entrance, center);
     set(map, sentry, PEDESTAL);
     let sentry_cell = cell(map, sentry);
@@ -63,6 +58,39 @@ pub(crate) fn paint(
         item: prize,
         heap_type: "chest",
     }
+}
+
+fn select_center(room: &Room, entrance: Point) -> Point {
+    let base = room.as_rect().center_deterministic();
+    let x_can_differ =
+        base.x != entrance.x || ((room.right - room.left) % 2 == 1 && base.x + 1 != entrance.x);
+    let y_can_differ =
+        base.y != entrance.y || ((room.bottom - room.top) % 2 == 1 && base.y + 1 != entrance.y);
+
+    if x_can_differ && y_can_differ {
+        loop {
+            let center = room.as_rect().center_room();
+            if center.x != entrance.x && center.y != entrance.y {
+                return center;
+            }
+        }
+    }
+
+    // Pinned Java layouts make the retry above satisfiable through exact door
+    // placement. Approximate layouts may violate that invariant; use a safe
+    // interior fallback rather than spinning forever in WASM.
+    Point::new(
+        if base.x == entrance.x {
+            (base.x + 1).min(room.right - 1)
+        } else {
+            base.x
+        },
+        if base.y == entrance.y {
+            (base.y + 1).min(room.bottom - 1)
+        } else {
+            base.y
+        },
+    )
 }
 
 fn generate_prize(dungeon: &mut DungeonState, spawn: &mut Vec<GeneratedItem>) -> GeneratedItem {

@@ -85,6 +85,8 @@ these commands (stdout is the default when `--output` is omitted):
   --output tools/java-oracle/fixtures/aaa-aaa-afu-final-heaps-floor-1.json AAA-AAA-AFU
 ./tools/java-oracle/run --final-heaps-depth 1 \
   --output tools/java-oracle/fixtures/aaa-aaa-aaz-final-heaps-floor-1.json AAA-AAA-AAZ
+./tools/java-oracle/run --final-heaps-depth 1 \
+  --output tools/java-oracle/fixtures/aaa-aaa-acb-final-heaps-floor-1.json AAA-AAA-ACB
 ./tools/java-oracle/run --final-heaps-depth 6 \
   --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-6.json HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 7 \
@@ -107,10 +109,10 @@ fields are normalized to JSON `null` after generation and then Biome-formatted.
 The commands above reproduce the underlying Java observation; byte-for-byte
 regeneration of those lifecycle-only fixtures also requires that normalization.
 AAA-AAA-AFO, AAA-AAA-AFU, AAA-AAA-AAZ, and the HKT fixtures retain the emitted
-render facts.
+render facts. AAA-AAA-ACB is likewise lifecycle-only.
 
 The Rust golden consumer validates every `fixtures/*.json` file. The schema-v3
-test requires all nine committed depth-one fixtures to match lifecycle probes,
+test requires all ten committed depth-one fixtures to match lifecycle probes,
 map bounds, heap cells, mob facts, and the report-visible item projection. The
 AAA-AAA-AFO, AAA-AAA-AFU, AAA-AAA-AAZ, and HKT floor-one fixtures also require
 exact terrain, discoverability, tile variance, transitions, traps, structured

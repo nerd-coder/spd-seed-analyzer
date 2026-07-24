@@ -95,6 +95,14 @@ fn sentry_prize_deterministic() {
 }
 
 #[test]
+fn cxg_floor_nine_aligned_sentry_completes() {
+    let report = crate::analyze_seed("CXG-FJT-BFQ", 9).expect("analyze CXG through floor nine");
+    let floor = &report.floors[8];
+    assert!(floor.rooms.iter().any(|room| room == "SentryRoom"));
+    assert!(floor.map.is_some(), "floor nine completed map generation");
+}
+
+#[test]
 fn traps_prize_adds_levitation() {
     Random::reset_generators();
     let run = init_run(99);
@@ -219,9 +227,21 @@ fn toxic_gas_burns_layout_and_adds_purity() {
     Random::push_generator_seeded(88);
     let mut d = dungeon_from_run(run);
     d.depth = 7;
-    let room = test_room("ToxicGasRoom", 9, 9);
+    let mut room = test_room("ToxicGasRoom", 9, 9);
+    room.connected.push(1);
+    let mut neighbour = Room::new(1, "TunnelRoom", RoomKind::Connection, 1, 16, 3, 10, 3, 10);
+    neighbour.left = -4;
+    neighbour.top = 2;
+    neighbour.right = 0;
+    neighbour.bottom = 6;
+    neighbour.connected.push(0);
+    let rooms = vec![room, neighbour];
+    let mut map = paint_minimal(&rooms).expect("test map");
+    let mut doors = DoorMap::new();
+    doors.insert_test_point(0, 1, Point::new(0, 3));
     let mut spawn = Vec::new();
-    let loot = toxic_gas_prizes(&mut d, &room, &mut spawn);
+    let loot = toxic_gas_prizes(&mut d, &rooms, 0, &mut map, &doors, &mut spawn);
+    let tail = Random::peek_ints(4);
     Random::pop_generator();
 
     // skeleton gold + 2 chests
@@ -229,6 +249,19 @@ fn toxic_gas_burns_layout_and_adds_purity() {
     assert_eq!(loot[0].heap_type, "skeleton");
     assert_eq!(loot[1].heap_type, "chest");
     assert_eq!(loot[2].heap_type, "chest");
+    let heaps: Vec<_> = map
+        .known_heaps
+        .iter()
+        .enumerate()
+        .filter_map(|(cell, heap)| heap.as_ref().map(|heap| (cell, heap.heap_type)))
+        .collect();
+    assert_eq!(heaps.len(), 3);
+    assert_eq!(heaps.iter().filter(|(_, kind)| *kind == "chest").count(), 2);
+    assert_eq!(
+        heaps.iter().filter(|(_, kind)| *kind == "skeleton").count(),
+        1
+    );
+    assert_eq!(tail, [1903202524, -1296431000, 628023840, -1257185094]);
     assert_eq!(
         spawn.last().map(|i| i.class_name.as_str()),
         Some("PotionOfPurity")

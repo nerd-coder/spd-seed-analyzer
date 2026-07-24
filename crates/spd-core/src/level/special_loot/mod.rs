@@ -232,7 +232,9 @@ fn paint_special(
             trap_rooms::magical_fire_prizes(dungeon, rooms, ri, map, doors, items_to_spawn)
         }
         "SacrificeRoom" => vec![trap_rooms::sacrifice_prize(dungeon, rooms, ri)],
-        "ToxicGasRoom" => trap_rooms::toxic_gas_prizes(dungeon, room, items_to_spawn),
+        "ToxicGasRoom" => {
+            trap_rooms::toxic_gas_prizes(dungeon, rooms, ri, map, doors, items_to_spawn)
+        }
         "SecretHoneypotRoom" => trap_rooms::secret_honeypot(room),
         "CrystalVaultRoom" => crystal::crystal_vault(dungeon, rooms, ri, items_to_spawn),
         "CrystalChoiceRoom" => {

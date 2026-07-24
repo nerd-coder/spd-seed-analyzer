@@ -2,7 +2,8 @@
 
 use crate::builders::connection;
 use crate::builders::place::{
-    angle_between_rooms, find_neighbours, place_room, place_room_with_prepare,
+    angle_between_rooms, find_neighbours, place_room, place_room_with_collision_ids,
+    place_room_with_prepare,
 };
 use crate::builders::regular::{
     create_branches, loop_center, setup_rooms, target_angle, weight_rooms, BranchAngles,
@@ -66,7 +67,7 @@ pub(super) fn build(
         let id = rooms.len();
         rooms.push(connection::create(id, depth));
         let angle = angle_between_rooms(&rooms[prev], &rooms[entrance]);
-        if place_room(rooms, prev, id, angle) == -1.0 {
+        if place_room_with_collision_ids(rooms, &loop_ids, prev, id, angle) == -1.0 {
             return None;
         }
         loop_ids.push(id);
