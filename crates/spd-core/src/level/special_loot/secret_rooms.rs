@@ -6,7 +6,7 @@ use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::items::randomize::randomize_item;
 use crate::level::create_items::PlacedLoot;
-use crate::level::terrain::{TerrainMap, ALCHEMY, EMPTY_SP, WALL};
+use crate::level::terrain::{TerrainMap, ALCHEMY, EMPTY, EMPTY_SP, WALL};
 use crate::random::Random;
 use crate::rooms::room::Room;
 
@@ -39,6 +39,7 @@ pub(super) fn secret_library(
 pub(super) fn secret_runestone(
     dungeon: &mut DungeonState,
     room: &Room,
+    map: &mut TerrainMap,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
     // SecretRunestoneRoom.java:64 — pushed before the stone drops (zero-RNG append)
@@ -46,18 +47,27 @@ pub(super) fn secret_runestone(
         "PotionOfLiquidFlame",
         ItemCategory::Potion,
     ));
-    let n = Random::int_range_inclusive(2, 3);
     let mut out = Vec::new();
-    let mut occupied = Vec::new();
-    for _ in 0..n {
-        burn_drop_pos(room, &mut occupied);
-        let mut item =
-            find_prize_item(items_to_spawn, Some("TrinketCatalyst")).unwrap_or_else(|| {
-                dungeon
-                    .generator
-                    .random_category(Category::Stone, dungeon.depth)
-            });
+    for index in 0..3 {
+        let required = if index == 2 { EMPTY_SP } else { EMPTY };
+        let cell = loop {
+            let point = room.random();
+            let cell = map
+                .point_to_cell(point.x, point.y)
+                .expect("room point is on map");
+            if map.map[cell] == required && (index != 1 || !map.heap_occupied[cell]) {
+                break cell;
+            }
+        };
+        let mut item = if index == 2 {
+            GeneratedItem::new("StoneOfEnchantment", ItemCategory::Stone)
+        } else {
+            dungeon
+                .generator
+                .random_using_defaults(Category::Stone, dungeon.depth)
+        };
         item.source = Some("SecretRunestoneRoom".into());
+        map.record_heap(cell, "heap", item.clone());
         out.push(PlacedLoot {
             item,
             heap_type: "heap",

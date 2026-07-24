@@ -8,18 +8,17 @@
 
 ## Next phase
 
-With floor-12 FigureEightBuilder classes and bounds aligned, compare the
-AAA-AAA-AAA pre-paint RNG probe with the pinned oracle. Fix only the first
-painter or room-construction semantic difference, then stop and record the next
-boundary. Do not claim floor-12 lifecycle parity until pre-mobs and pre-items
-probes also match.
+Compare AAA-AAA-AAA floor 12's pre-items RNG probe and normalized heaps with the
+pinned oracle. Fix only the first post-mob or item-lifecycle semantic difference,
+then stop. Do not claim full floor-12 lifecycle parity until both match.
 
 ## Current checkpoint
 
-- Floor-12 FigureEightBuilder now matches Java's 19 room classes and normalized
-  bounds. CaveExitRoom uses the pinned `{2, 1, 0}` size-category probabilities;
-  this preserves Java's failed loop attempts and successful fourth layout.
-- Painter, pre-mobs, and pre-items parity are not claimed for floor 12.
+- Floor 12 matches Java's room classes, normalized bounds, pre-paint boundary,
+  and pre-mobs boundary.
+- SecretRunestoneRoom now paints its terrain and performs Java's exact two
+  generated-stone drops plus fixed StoneOfEnchantment drop.
+- Pre-items and final heap parity are not yet claimed for floor 12.
 - Floor 11 remains exact at its documented deterministic boundaries.
 
 Run the complete CI `check` sequence from `AGENTS.md` before committing.

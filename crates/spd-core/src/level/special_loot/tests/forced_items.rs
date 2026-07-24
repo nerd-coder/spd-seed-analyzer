@@ -9,7 +9,7 @@ use super::test_room;
 use crate::geom::Point;
 use crate::items::model::ItemCategory;
 use crate::level::painter::DoorMap;
-use crate::level::terrain::paint_minimal;
+use crate::level::terrain::{paint_minimal, EMPTY, EMPTY_SP};
 use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
@@ -300,11 +300,23 @@ fn secret_runestone_pushes_liquid_flame() {
     let mut d = dungeon_from_run(run);
     d.depth = 10;
     let room = test_room("SecretRunestoneRoom", 8, 8);
+    let mut map = paint_minimal(std::slice::from_ref(&room)).unwrap();
+    for y in (room.top + 1)..room.bottom {
+        for x in (room.left + 1)..room.right {
+            let cell = map.point_to_cell(x, y).unwrap();
+            map.map[cell] = if x > room.left + room.width() / 2 {
+                EMPTY_SP
+            } else {
+                EMPTY
+            };
+        }
+    }
     let mut spawn = Vec::new();
-    let loot = secret_runestone(&mut d, &room, &mut spawn);
+    let loot = secret_runestone(&mut d, &room, &mut map, &mut spawn);
     Random::pop_generator();
 
-    assert!((2..=3).contains(&loot.len()));
+    assert_eq!(loot.len(), 3);
+    assert_eq!(loot[2].item.class_name, "StoneOfEnchantment");
     assert!(loot
         .iter()
         .all(|p| p.item.source.as_deref() == Some("SecretRunestoneRoom")));

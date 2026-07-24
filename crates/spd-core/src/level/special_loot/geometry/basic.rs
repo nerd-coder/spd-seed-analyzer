@@ -83,6 +83,48 @@ pub(super) fn paint_runestone(
     fill_margin(map, room, 2, EMPTY);
 }
 
+pub(super) fn paint_secret_runestone(
+    map: &mut TerrainMap,
+    room: &Room,
+    room_index: usize,
+    doors: &DoorMap,
+) {
+    fill_room(map, room, WALL);
+    fill_margin(map, room, 1, EMPTY);
+    let door =
+        entrance(room, room_index, doors).expect("placed SecretRunestoneRoom has an entrance");
+    let center = room.as_rect().center_room();
+    if door.x == room.left || door.x == room.right {
+        for y in (room.top + 1)..room.bottom {
+            set(map, Point::new(center.x, y), BOOKSHELF);
+        }
+        let (left, right) = if door.x == room.left {
+            (center.x + 1, room.right - 1)
+        } else {
+            (room.left + 1, center.x - 1)
+        };
+        for y in (room.top + 1)..room.bottom {
+            for x in left..=right {
+                set(map, Point::new(x, y), EMPTY_SP);
+            }
+        }
+    } else {
+        for x in (room.left + 1)..room.right {
+            set(map, Point::new(x, center.y), BOOKSHELF);
+        }
+        let (top, bottom) = if door.y == room.top {
+            (center.y + 1, room.bottom - 1)
+        } else {
+            (room.top + 1, center.y - 1)
+        };
+        for y in top..=bottom {
+            for x in (room.left + 1)..room.right {
+                set(map, Point::new(x, y), EMPTY_SP);
+            }
+        }
+    }
+}
+
 pub(super) fn paint_weak_floor(
     map: &mut TerrainMap,
     room: &Room,

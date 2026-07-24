@@ -443,6 +443,14 @@ fn aaa_floor_twelve_matches_the_pinned_figure_eight_layout() {
         })
         .collect();
     assert_eq!(bounds, expected.room_bounds, "floor-12 room bounds");
+    assert_eq!(
+        actual.pre_paint_rng_probe, expected.pre_paint_rng,
+        "floor-12 pre-paint RNG boundary"
+    );
+    assert_eq!(
+        actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
+        "floor-12 pre-mobs RNG boundary"
+    );
 }
 
 fn oracle_item_class(class_name: &str) -> &str {

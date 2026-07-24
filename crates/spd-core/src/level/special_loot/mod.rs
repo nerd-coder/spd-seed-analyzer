@@ -196,7 +196,7 @@ fn paint_special(
             )]
         }
         "SecretLibraryRoom" => secret_rooms::secret_library(dungeon, room, items_to_spawn),
-        "SecretRunestoneRoom" => secret_rooms::secret_runestone(dungeon, room, items_to_spawn),
+        "SecretRunestoneRoom" => secret_rooms::secret_runestone(dungeon, room, map, items_to_spawn),
         "SecretArtilleryRoom" => secret_rooms::secret_artillery(dungeon, room),
         "SecretLaboratoryRoom" => secret_rooms::secret_laboratory(room, map),
         "SecretLarderRoom" => secret_rooms::secret_larder(dungeon.depth, room, map),

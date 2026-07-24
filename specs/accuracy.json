@@ -22,12 +22,12 @@
         "AAA-AAA-AAA floors 2–4 exact pre-mobs/pre-items RNG parity, including SacrificeRoom Room.center burns, floor-3 WaterBridge exit placement, and floor-4 StudyRoom center-heap placement",
         "AAA-AAA-AAA floor-7 painter RNG parity through PitRoom's UnstableSpellbook constructor, exact central skeleton stack lifecycle, PillarsRoom geometry, and the exact pre-mobs boundary",
         "AAA-AAA-AAA floors 8–9 and 11 exact pre-paint, pre-mobs, and pre-items RNG boundaries; floor 11 preserves the floor-10 Tengu lifecycle",
-        "AAA-AAA-AAA floor 12 exact FigureEightBuilder room classes and bounds, including CaveExitRoom's pinned non-default size-category probabilities"
+        "AAA-AAA-AAA floor 12 exact FigureEightBuilder room classes and bounds, pre-paint and pre-mobs RNG boundaries, including CaveExitRoom size probabilities and SecretRunestoneRoom's exact three-drop painter"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
-        "AAA-AAA-AAA floor 12 painter and lifecycle RNG boundaries are not yet verified",
+        "AAA-AAA-AAA floor 12 pre-items and final lifecycle boundaries are not yet verified",
         "Preserved-run floors beyond depth 12 still require phase-by-phase parity checks"
       ],
       "impact": "Room selection, bounds, connections, or downstream RNG can differ on uncovered generation paths.",
@@ -44,7 +44,7 @@
       "implemented": [
         "Exact structured heap capture for Crypt, GrassyGrave, SecretChestChasm, Pool, Runestone, MagicalFire, Traps, Sentry, Storage, ToxicGas, CrystalPath, and CrystalVault fixture paths",
         "Full SecretMaze layout plus covered Armory, Garden, Library, Pit, RotGarden, WeakFloor, DemonSpawner, Summoning, and ToxicGas paint behavior",
-        "Special and secret-room prize generation for supported room families, including exact floor-11 SecretHoardRoom gold heaps and trap RNG lifecycle"
+        "Special and secret-room prize generation for supported room families, including exact floor-11 SecretHoardRoom gold heaps, trap RNG lifecycle, and SecretRunestoneRoom terrain and three-drop sequence"
       ],
       "remaining": [
         "Legacy Room loot families beyond the fixture-backed Pool and CrystalPath paths still need fixture-first geometry and lifecycle parity",
