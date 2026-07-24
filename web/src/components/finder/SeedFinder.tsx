@@ -6,6 +6,7 @@ import {
   XIcon,
 } from '@phosphor-icons/react'
 import { useRef } from 'react'
+import { ScrollableSessionTabs } from '@/components/ScrollableSessionTabs'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   Empty,
@@ -14,7 +15,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsTrigger } from '@/components/ui/tabs'
 import { useSeedTabsHeight } from '@/hooks/useSeedTabsHeight'
 import type { SeedSearchMatch } from '@/lib/spd-wasm'
 import {
@@ -63,40 +64,32 @@ export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
       onValueChange={setActiveFinder}
       className="gap-0 overflow-visible"
     >
-      <div
-        ref={tabsRef}
-        className="border-border bg-background/95 sticky top-0 z-20 flex min-w-0 max-w-full items-start gap-2 border-b px-3 pt-3 pb-0 backdrop-blur supports-backdrop-filter:bg-background/80"
-      >
-        <TabsList
-          variant="line"
-          className="h-auto w-0 min-w-0 flex-1 flex-nowrap justify-start gap-1 overflow-x-auto sm:flex-wrap sm:overflow-x-visible"
-        >
-          {sessions.map((session) => (
-            <div
-              key={session.id}
-              className="group/finder-tab flex min-w-0 max-w-[14rem] shrink-0 items-center"
+      <ScrollableSessionTabs ref={tabsRef}>
+        {sessions.map((session) => (
+          <div
+            key={session.id}
+            className="group/finder-tab flex min-w-0 max-w-[14rem] shrink-0 items-center"
+          >
+            <TabsTrigger
+              value={session.id}
+              className="min-w-0 max-w-[12rem] gap-1 pr-1"
             >
-              <TabsTrigger
-                value={session.id}
-                className="min-w-0 max-w-[12rem] gap-1 pr-1"
-              >
-                {session.run.status === 'running' ? (
-                  <SpinnerGapIcon className="shrink-0 animate-spin" />
-                ) : null}
-                <span className="truncate text-xs">{session.name}</span>
-              </TabsTrigger>
-              <button
-                type="button"
-                className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex size-5 shrink-0 items-center justify-center rounded-none opacity-60 group-hover/finder-tab:opacity-100"
-                aria-label={`Close ${session.name}`}
-                onClick={() => closeFinderSession(session.id)}
-              >
-                <XIcon className="size-3" />
-              </button>
-            </div>
-          ))}
-        </TabsList>
-      </div>
+              {session.run.status === 'running' ? (
+                <SpinnerGapIcon className="shrink-0 animate-spin" />
+              ) : null}
+              <span className="truncate text-xs">{session.name}</span>
+            </TabsTrigger>
+            <button
+              type="button"
+              className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex size-5 shrink-0 items-center justify-center rounded-none opacity-60 group-hover/finder-tab:opacity-100"
+              aria-label={`Close ${session.name}`}
+              onClick={() => closeFinderSession(session.id)}
+            >
+              <XIcon className="size-3" />
+            </button>
+          </div>
+        ))}
+      </ScrollableSessionTabs>
 
       <div className="flex flex-col gap-4 p-4 md:p-6">
         {sessions.map((session) => (
