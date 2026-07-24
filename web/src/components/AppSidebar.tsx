@@ -71,18 +71,8 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
           </div>
           <CardContent className="flex flex-col gap-2 pb-3">
             <p className="text-muted-foreground text-xs leading-relaxed">
-              Partial seed analysis — layout, loot, and quest rewards (not full
-              game parity).
+              Seed analysis - layout, loot, and quest rewards.
             </p>
-            {meta ? (
-              <p className="text-muted-foreground text-xs leading-relaxed">
-                Tested on{' '}
-                <span className="font-bold">Shattered Pixel Dungeon</span>{' '}
-                <Badge variant="secondary" className="font-mono text-[10px]">
-                  {meta.version}
-                </Badge>
-              </p>
-            ) : null}
             <AccuracyWarning />
           </CardContent>
         </Card>

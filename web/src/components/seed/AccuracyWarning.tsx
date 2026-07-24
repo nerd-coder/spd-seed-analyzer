@@ -5,6 +5,7 @@ import {
   AlertDescription,
   AlertTitle,
 } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -23,7 +24,9 @@ export function AccuracyWarning() {
       <AlertTitle>Partial accuracy</AlertTitle>
       <AlertDescription>
         Results may differ from Shattered Pixel Dungeon{' '}
-        {accuracy.target.version}.
+        <Badge variant="outline" className="font-mono text-[10px]">
+          {accuracy.target.version}
+        </Badge>
       </AlertDescription>
       <AlertAction>
         <Popover>
