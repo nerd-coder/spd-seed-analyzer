@@ -60,6 +60,7 @@ GitHub Actions `check` job (`.github/workflows/ci.yaml`) runs, in order:
 
 - **RNG-PARITY** — Match SPD call order and algorithms (`java.util.Random`, watabou stack, decks). Prefer porting from the pinned clone over inventing shortcuts.
 - **NO-CLAIM** — Do not claim full seed-finder accuracy while status is `partial`. Call out incompleteness.
+- **ACCURACY-MANIFEST** — `specs/accuracy.json` is the canonical source of truth for user-facing implementation coverage, parity evidence, known gaps, and accuracy status. Any change that adds, removes, verifies, or invalidates generation behavior must update the manifest in the same change. Keep its pinned version/commit and overall status aligned with `spd-core`; do not duplicate detailed coverage prose in Rust or UI code—the backend message stays generic and the UI renders the manifest.
 - **CORE-FIRST** — Generation logic in `spd-core` only; `spd-wasm` stays a thin façade; UI does not reimplement RNG.
 - **BUN-WEB** — Package manager is Bun. UI: Vite + React + shadcn. Do not introduce npm/yarn as primary.
 - **WASM-REBUILD** — After Rust changes, rebuild wasm (`bun run build:wasm` / `dev`) before treating UI as verified.

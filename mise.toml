@@ -2,7 +2,7 @@
 bun = "1.3.14"
 java = "temurin-17"
 # Rust with WASM target (mise handles rustup components automatically)
-rust = { version = "1.96.1", components = ["clippy", "rustfmt"] }
+rust = { version = "1.97.1", components = ["clippy", "rustfmt"] }
 # Speeds up cargo:* installs via prebuilt binaries (mise uses this automatically).
 cargo-binstall = "1.21.0"
 "cargo:wasm-pack" = "latest"

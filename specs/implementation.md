@@ -6,6 +6,11 @@
 
 **Status:** `partial` — do not claim full seed-finder accuracy
 
+**Canonical coverage manifest:** `specs/accuracy.json` — update it in the same
+change whenever implementation coverage, parity evidence, known limits, or the
+overall accuracy status changes. The sidebar accuracy popover renders this
+file.
+
 ## Objective
 
 Make `spd-core` a call-for-call RNG and generation match for the pinned Java

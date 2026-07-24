@@ -7,6 +7,7 @@ import {
 } from '@phosphor-icons/react'
 import type { FormEvent } from 'react'
 import { AppFloatingAction } from '@/components/AppFloatingAction'
+import { AccuracyWarning } from '@/components/seed/AccuracyWarning'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -68,7 +69,7 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
             />
             <AppFloatingAction className="lg:hidden" />
           </div>
-          <CardContent className="flex flex-col gap-1 pb-3">
+          <CardContent className="flex flex-col gap-2 pb-3">
             <p className="text-muted-foreground text-xs leading-relaxed">
               Partial seed analysis — layout, loot, and quest rewards (not full
               game parity).
@@ -82,6 +83,7 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
                 </Badge>
               </p>
             ) : null}
+            <AccuracyWarning />
           </CardContent>
         </Card>
 

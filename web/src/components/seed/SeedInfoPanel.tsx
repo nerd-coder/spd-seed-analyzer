@@ -1,6 +1,5 @@
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -42,13 +41,6 @@ export function SeedInfoPanel({ report }: { report: SeedReport }) {
           </p>
         </CardDescription>
       </CardHeader>
-      {report.message && (
-        <CardContent>
-          <p className="text-muted-foreground text-xs leading-relaxed">
-            {report.message}
-          </p>
-        </CardContent>
-      )}
     </Card>
   )
 }

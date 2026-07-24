@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "target": {
+    "game": "Shattered Pixel Dungeon",
+    "version": "v3.3.8",
+    "commit": "7b8b845a7"
+  },
+  "overallStatus": "partial",
+  "summary": "Seed analysis is still partial. Covered paths are tested against the pinned game, but results can diverge when generation reaches an incomplete or unverified path.",
+  "lastReviewed": "2026-07-24",
+  "areas": [
+    {
+      "id": "layout-and-room-selection",
+      "area": "Layout & room selection",
+      "status": "partial",
+      "implemented": [
+        "Loop and figure-eight builders, including connection-room placement",
+        "Generic and region-specific standard-room geometry",
+        "Pinned standard, special, and secret room-count tables",
+        "Depth-one lifecycle fixtures across ten seeds and replay fixtures for HKT-JZN-XQQ floors 6–8"
+      ],
+      "remaining": [
+        "Coverage is fixture-specific; unrecorded builder histories can still diverge",
+        "VaultLevel-only branches are not part of the regular-floor analyzer",
+        "Additional replay seeds are needed before deeper regions can be considered broadly verified"
+      ],
+      "impact": "Room selection, bounds, connections, or downstream RNG can differ on uncovered generation paths.",
+      "evidence": [
+        "crates/spd-core/tests/java_oracle_goldens.rs",
+        "crates/spd-core/tests/java_oracle_goldens/final_heaps"
+      ]
+    },
+    {
+      "id": "special-and-secret-rooms",
+      "area": "Special & secret rooms",
+      "status": "partial",
+      "implemented": [
+        "Exact structured heap capture for Crypt, Runestone, MagicalFire, Traps, Sentry, Storage, and ToxicGas fixture paths",
+        "Full SecretMaze layout plus covered RotGarden, WeakFloor, DemonSpawner, Summoning, and ToxicGas paint behavior",
+        "Special and secret-room prize generation for supported room families"
+      ],
+      "remaining": [
+        "At least one legacy Room loot family still needs fixture-first geometry and lifecycle parity",
+        "Other uncovered special or secret-room paint paths may retain legacy or fallback behavior",
+        "Some additive terrain, trap, blob, or entity facts are not verified outside their committed fixtures"
+      ],
+      "impact": "Room terrain, prize positions, heap types, and later RNG may not match the game for an uncovered room family.",
+      "evidence": [
+        "crates/spd-core/src/level/special_loot",
+        "crates/spd-core/tests/java_oracle_goldens/toxic_gas.rs"
+      ]
+    },
+    {
+      "id": "items-and-loot",
+      "area": "Items & loot",
+      "status": "partial",
+      "implemented": [
+        "Forced drops, generator decks, main RegularLevel createItems drops, and supported special-room prizes",
+        "Item identities and exact heap capture on committed Java-oracle fixtures",
+        "Supported quest rewards and covered shop stock flows"
+      ],
+      "remaining": [
+        "Loot tied to uncovered room paint or lifecycle paths can be incomplete or misplaced",
+        "Shop and crystal-room loot outside verified flows should be treated as approximate",
+        "Later-shop bag selection cannot be exact without player inventory and Hourglass sandbag input"
+      ],
+      "impact": "An item can be missing, different, or placed on a different cell even when earlier seed facts match.",
+      "evidence": [
+        "crates/spd-core/src/level/create_items",
+        "crates/spd-core/src/level/shop.rs",
+        "crates/spd-core/tests/java_oracle_goldens/final_heaps.rs"
+      ]
+    },
+    {
+      "id": "mobs-and-quests",
+      "area": "Mobs & quests",
+      "status": "partial",
+      "implemented": [
+        "Source-ported RegularLevel ambient mob selection through floor 24",
+        "Depth-one mob lifecycle and HKT-JZN-XQQ floor 6–8 mob facts on committed fixtures",
+        "Ghost, Wandmaker, Blacksmith, and Imp selection and reward flows"
+      ],
+      "remaining": [
+        "Mob parity is not established for every deeper-floor generation history",
+        "Unsupported level types and uncovered room-specific entities can diverge",
+        "Correct mob tables alone do not prove full lifecycle or RNG parity"
+      ],
+      "impact": "Mob classes, counts, positions, quest presence, or rewards can differ after an uncovered RNG boundary.",
+      "evidence": [
+        "crates/spd-core/src/level/create_mobs",
+        "crates/spd-core/src/quests",
+        "crates/spd-core/tests/java_oracle_goldens/final_heaps"
+      ]
+    },
+    {
+      "id": "terrain-and-map-rendering",
+      "area": "Terrain & map rendering",
+      "status": "partial",
+      "implemented": [
+        "Water, grass, trap, door merge, and graph painting for supported regular-floor paths",
+        "Deterministic browser map baselines for CXG-FJT-BFQ floor 1 and HKT-JZN-XQQ floors 1, 6, and 8",
+        "Fixture-backed terrain and render facts for selected special rooms"
+      ],
+      "remaining": [
+        "ToxicGas vent and gas blob facts are not yet exported as exact additive render facts",
+        "Uncovered room painters can produce incomplete terrain or markers",
+        "Visual baselines cover a small deterministic seed and floor set"
+      ],
+      "impact": "Map previews can omit or misplace terrain, traps, blobs, doors, entities, or room details.",
+      "evidence": [
+        "crates/spd-core/src/level/painter",
+        "tools/visual/tests/map-render.spec.ts"
+      ]
+    },
+    {
+      "id": "intentional-scope-limits",
+      "area": "Intentional scope limits",
+      "status": "out-of-scope",
+      "implemented": [
+        "Deterministic seeded generation needed by the regular-floor analyzer"
+      ],
+      "remaining": [
+        "The unseeded early Guidebook page is intentionally excluded",
+        "Player decisions and inventory changes are not inferred",
+        "Full parity claims remain blocked until the overall status is explicitly promoted from partial"
+      ],
+      "impact": "These inputs or behaviors are not predictions and should not be interpreted as analyzer errors.",
+      "evidence": ["specs/implementation.md"]
+    }
+  ]
+}

@@ -33,20 +33,20 @@ export function AnalyzerWorkspace() {
     >
       <div
         ref={seedTabsRef}
-        className="border-border bg-background/95 sticky top-0 z-20 flex items-start gap-2 border-b px-3 pt-3 pb-0 backdrop-blur supports-backdrop-filter:bg-background/80"
+        className="border-border bg-background/95 sticky top-0 z-20 flex min-w-0 max-w-full items-start gap-2 border-b px-3 pt-3 pb-0 backdrop-blur supports-backdrop-filter:bg-background/80"
       >
         <TabsList
           variant="line"
-          className="h-auto min-w-0 flex-1 flex-wrap justify-start gap-1"
+          className="h-auto w-0 min-w-0 flex-1 flex-nowrap justify-start gap-1 overflow-x-auto sm:flex-wrap sm:overflow-x-visible"
         >
           {sessions.map((session) => (
             <div
               key={session.id}
-              className="group/seed-tab flex max-w-[14rem] items-center"
+              className="group/seed-tab flex min-w-0 max-w-[14rem] shrink-0 items-center"
             >
               <TabsTrigger
                 value={session.id}
-                className="max-w-[12rem] gap-1 pr-1"
+                className="min-w-0 max-w-[12rem] gap-1 pr-1"
               >
                 {session.status === 'loading' ||
                 session.status === 'pending' ? (

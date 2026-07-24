@@ -74,8 +74,7 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
         floors: floor_reports,
         status: "partial".to_string(),
         message: Some(
-            "Partial analysis: pinned loop/figure-eight builders + connection-room geometry + special/secret-room prizes (including full SecretMaze layout, RotGarden, WeakFloor, and DemonSpawner paint) + shop/crystal loot (approx.) + Ghost/Wandmaker/Blacksmith/Imp quest rewards + water/grass/trap painter + paintDoors merge/Graph + generic/region standard-room geometry + region-specific standard/special room-count tables + source-ported RegularLevel createMobs through floor 24 + main createItems drops. Remaining special-room geometry and deeper-floor lifecycle parity are still incomplete — results may not match the game yet."
-                .to_string(),
+            "Analysis accuracy is partial; results may differ from the pinned game.".to_string(),
         ),
     })
 }
@@ -83,6 +82,17 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
 #[cfg(test)]
 mod analyze_smoke {
     use super::*;
+
+    #[test]
+    fn accuracy_manifest_matches_engine_contract() {
+        let manifest: serde_json::Value =
+            serde_json::from_str(include_str!("../../../specs/accuracy.json"))
+                .expect("accuracy manifest must be valid JSON");
+
+        assert_eq!(manifest["target"]["version"], SPD_VERSION);
+        assert_eq!(manifest["target"]["commit"], SPD_COMMIT);
+        assert_eq!(manifest["overallStatus"], "partial");
+    }
 
     #[test]
     fn analyze_seed_smoke() {
