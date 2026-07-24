@@ -113,16 +113,7 @@ export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
       <div className="flex flex-col gap-4 p-4 md:p-6">
         {sessions.map((session) => (
           <TabsContent key={session.id} value={session.id} className="mt-0">
-            <div className="flex flex-col gap-4">
-              <Alert>
-                <WarningIcon />
-                <AlertTitle>Partial-accuracy search</AlertTitle>
-                <AlertDescription>
-                  {session.run.message ?? PARTIAL_MESSAGE}
-                </AlertDescription>
-              </Alert>
-              <FinderResults run={session.run} onAnalyze={analyzeMatch} />
-            </div>
+            <FinderResults run={session.run} onAnalyze={analyzeMatch} />
           </TabsContent>
         ))}
       </div>
