@@ -1,16 +1,39 @@
-import { WarningIcon } from '@phosphor-icons/react'
+import { useStore } from '@nanostores/react'
+import {
+  BinocularsIcon,
+  SpinnerGapIcon,
+  WarningIcon,
+  XIcon,
+} from '@phosphor-icons/react'
+import { useRef } from 'react'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useSeedTabsHeight } from '@/hooks/useSeedTabsHeight'
 import type { SeedSearchMatch } from '@/lib/spd-wasm'
-import { analyzeSeedInput } from '@/stores/app'
-import { FinderForm } from './FinderForm'
+import {
+  $activeFinderId,
+  $finderSessions,
+  analyzeSeedInput,
+  closeFinderSession,
+  setActiveFinder,
+} from '@/stores/app'
 import { FinderResults } from './FinderResults'
-import { useSeedFinder } from './useSeedFinder'
 
 const PARTIAL_MESSAGE =
   'The finder uses the partial analyzer. Generated loot is incomplete and results may not match the pinned game.'
 
 export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
-  const { run, start, cancel } = useSeedFinder()
+  const sessions = useStore($finderSessions)
+  const activeId = useStore($activeFinderId)
+  const tabsRef = useRef<HTMLDivElement>(null)
+  useSeedTabsHeight(tabsRef, sessions.length > 0)
 
   function analyzeMatch(match: SeedSearchMatch) {
     const input = match.seed.code ?? String(match.seed.numeric)
@@ -18,35 +41,79 @@ export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
     onOpenAnalyze()
   }
 
-  return (
-    <div className="flex flex-col gap-4 p-4 pt-0 md:p-6 md:pt-0">
-      <div className="sticky top-0 z-20 -mx-4 md:-mx-6 bg-background/95 border-b px-4 py-2 md:px-6 md:py-4 backdrop-blur supports-backdrop-filter:bg-background/80">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <h1 className="font-heading text-base font-medium">Seed finder</h1>
-            <p className="text-muted-foreground max-w-2xl text-xs/relaxed">
-              Search a deliberate numeric range for exact generated items, then
-              open promising seeds in the analyzer.
-            </p>
-          </div>
-        </div>
+  if (sessions.length === 0) {
+    return (
+      <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <BinocularsIcon />
+          </EmptyMedia>
+          <EmptyTitle>No searches yet</EmptyTitle>
+          <EmptyDescription>
+            Configure item constraints in the sidebar to start a search.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    )
+  }
 
-        <div className="absolute bottom-0 left-4 right-4 h-4 bg-linear-to-t from-background/95 to-transparent pointer-events-none md:left-6 md:right-6" />
+  return (
+    <Tabs
+      value={activeId ?? sessions[0].id}
+      onValueChange={setActiveFinder}
+      className="gap-0 overflow-visible"
+    >
+      <div
+        ref={tabsRef}
+        className="border-border bg-background/95 sticky top-0 z-20 flex min-w-0 max-w-full items-start gap-2 border-b px-3 pt-3 pb-0 backdrop-blur supports-backdrop-filter:bg-background/80"
+      >
+        <TabsList
+          variant="line"
+          className="h-auto w-0 min-w-0 flex-1 flex-nowrap justify-start gap-1 overflow-x-auto sm:flex-wrap sm:overflow-x-visible"
+        >
+          {sessions.map((session) => (
+            <div
+              key={session.id}
+              className="group/finder-tab flex min-w-0 max-w-[14rem] shrink-0 items-center"
+            >
+              <TabsTrigger
+                value={session.id}
+                className="min-w-0 max-w-[12rem] gap-1 pr-1"
+              >
+                {session.run.status === 'running' ? (
+                  <SpinnerGapIcon className="shrink-0 animate-spin" />
+                ) : null}
+                <span className="truncate text-xs">{session.name}</span>
+              </TabsTrigger>
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex size-5 shrink-0 items-center justify-center rounded-none opacity-60 group-hover/finder-tab:opacity-100"
+                aria-label={`Close ${session.name}`}
+                onClick={() => closeFinderSession(session.id)}
+              >
+                <XIcon className="size-3" />
+              </button>
+            </div>
+          ))}
+        </TabsList>
       </div>
 
-      <Alert>
-        <WarningIcon />
-        <AlertTitle>Partial-accuracy search</AlertTitle>
-        <AlertDescription>{run.message ?? PARTIAL_MESSAGE}</AlertDescription>
-      </Alert>
-
-      <FinderForm
-        running={run.status === 'running'}
-        cancelRequested={run.cancelRequested}
-        onSearch={(config) => void start(config)}
-        onCancel={cancel}
-      />
-      <FinderResults run={run} onAnalyze={analyzeMatch} />
-    </div>
+      <div className="flex flex-col gap-4 p-4 md:p-6">
+        {sessions.map((session) => (
+          <TabsContent key={session.id} value={session.id} className="mt-0">
+            <div className="flex flex-col gap-4">
+              <Alert>
+                <WarningIcon />
+                <AlertTitle>Partial-accuracy search</AlertTitle>
+                <AlertDescription>
+                  {session.run.message ?? PARTIAL_MESSAGE}
+                </AlertDescription>
+              </Alert>
+              <FinderResults run={session.run} onAnalyze={analyzeMatch} />
+            </div>
+          </TabsContent>
+        ))}
+      </div>
+    </Tabs>
   )
 }

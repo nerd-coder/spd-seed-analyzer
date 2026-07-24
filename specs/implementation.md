@@ -21,6 +21,12 @@ thin consumers.
 
 ## Verified state
 
+- The seed finder UI keeps up to ten in-memory search instances in nanostores.
+  Every execution opens a result tab named for its single requested item or
+  `Find N items` for multiple constraints; the oldest instance is dropped at
+  the cap. Search parameters live in the sidebar, and finder tabs use the same
+  pinned, horizontally scrollable treatment as analyze tabs.
+
 - Java `Random`, watabou generator stacks, seed codes, run identities,
   generator decks, depth seeds, forced drops, and supported shop/quest flows
   have focused coverage.

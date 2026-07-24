@@ -4,7 +4,6 @@ import { ItemIcon } from '@/components/ItemIcon'
 import { Button } from '@/components/ui/button'
 import {
   Field,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
@@ -13,7 +12,11 @@ import {
   FieldSet,
   FieldTitle,
 } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group'
 import {
   NativeSelect,
   NativeSelectOptGroup,
@@ -48,10 +51,7 @@ export function ConstraintEditor({
   return (
     <FieldSet data-disabled={running ? true : undefined}>
       <FieldLegend variant="label">Item constraints</FieldLegend>
-      <FieldDescription>
-        Choose exact item types; internal game class names stay hidden.
-      </FieldDescription>
-      <FieldGroup className="gap-4">
+      <FieldGroup className="gap-3">
         {constraints.map((constraint, index) => {
           const minInvalid = !isIntegerInRange(constraint.minDepth, 1, floors)
           const maxInvalid =
@@ -79,8 +79,11 @@ export function ConstraintEditor({
                     <TrashIcon />
                   </Button>
                 </Field>
-                <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_6rem_6rem]">
-                  <Field data-disabled={running ? true : undefined}>
+                <FieldGroup className="grid grid-cols-2 gap-2">
+                  <Field
+                    className="col-span-2"
+                    data-disabled={running ? true : undefined}
+                  >
                     <FieldLabel htmlFor={`finder-item-${constraint.id}`}>
                       Item type
                     </FieldLabel>
@@ -125,24 +128,29 @@ export function ConstraintEditor({
                     <FieldLabel htmlFor={`finder-min-${constraint.id}`}>
                       Min floor
                     </FieldLabel>
-                    <Input
-                      id={`finder-min-${constraint.id}`}
-                      type="number"
-                      min={1}
-                      max={floors}
-                      step={1}
-                      value={constraint.minDepth}
-                      disabled={running}
-                      aria-invalid={attempted && minInvalid}
-                      onChange={(event) =>
-                        onUpdate(constraint.id, {
-                          minDepth:
-                            event.currentTarget.value === ''
-                              ? ''
-                              : event.currentTarget.valueAsNumber,
-                        })
-                      }
-                    />
+                    <InputGroup>
+                      <InputGroupInput
+                        id={`finder-min-${constraint.id}`}
+                        type="number"
+                        min={1}
+                        max={floors}
+                        step={1}
+                        value={constraint.minDepth}
+                        disabled={running}
+                        aria-invalid={attempted && minInvalid}
+                        onChange={(event) =>
+                          onUpdate(constraint.id, {
+                            minDepth:
+                              event.currentTarget.value === ''
+                                ? ''
+                                : event.currentTarget.valueAsNumber,
+                          })
+                        }
+                      />
+                      <InputGroupAddon align="inline-end">
+                        floor
+                      </InputGroupAddon>
+                    </InputGroup>
                   </Field>
                   <Field
                     data-invalid={attempted && maxInvalid ? true : undefined}
@@ -151,26 +159,33 @@ export function ConstraintEditor({
                     <FieldLabel htmlFor={`finder-max-${constraint.id}`}>
                       Max floor
                     </FieldLabel>
-                    <Input
-                      id={`finder-max-${constraint.id}`}
-                      type="number"
-                      min={constraint.minDepth === '' ? 1 : constraint.minDepth}
-                      max={floors}
-                      step={1}
-                      value={constraint.maxDepth}
-                      disabled={running}
-                      aria-invalid={attempted && maxInvalid}
-                      onChange={(event) =>
-                        onUpdate(constraint.id, {
-                          maxDepth:
-                            event.currentTarget.value === ''
-                              ? ''
-                              : event.currentTarget.valueAsNumber,
-                        })
-                      }
-                    />
+                    <InputGroup>
+                      <InputGroupInput
+                        id={`finder-max-${constraint.id}`}
+                        type="number"
+                        min={
+                          constraint.minDepth === '' ? 1 : constraint.minDepth
+                        }
+                        max={floors}
+                        step={1}
+                        value={constraint.maxDepth}
+                        disabled={running}
+                        aria-invalid={attempted && maxInvalid}
+                        onChange={(event) =>
+                          onUpdate(constraint.id, {
+                            maxDepth:
+                              event.currentTarget.value === ''
+                                ? ''
+                                : event.currentTarget.valueAsNumber,
+                          })
+                        }
+                      />
+                      <InputGroupAddon align="inline-end">
+                        floor
+                      </InputGroupAddon>
+                    </InputGroup>
                   </Field>
-                </div>
+                </FieldGroup>
                 {attempted && (minInvalid || maxInvalid) ? (
                   <FieldError>
                     Use an inclusive range between floor 1 and {floors}.

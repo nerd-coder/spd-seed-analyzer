@@ -6,14 +6,6 @@ import {
 import { type FormEvent, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
   FieldDescription,
   FieldGroup,
   FieldLegend,
@@ -158,90 +150,79 @@ export function FinderForm({
   }
 
   return (
-    <form onSubmit={submit} noValidate>
-      <Card>
-        <CardHeader>
-          <CardTitle>Search parameters</CardTitle>
-          <CardDescription>
-            Scan a fixed numeric range. Each item must appear within its
-            inclusive floor range.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <FieldGroup>
-            <SearchScopeFields
-              startSeed={startSeed}
-              candidateCount={candidateCount}
-              floors={floors}
-              maxMatches={maxMatches}
-              running={running}
-              attempted={attempted}
-              onStartSeedChange={setStartSeed}
-              onCandidateCountChange={setCandidateCount}
-              onFloorsChange={updateFloors}
-              onMaxMatchesChange={setMaxMatches}
-            />
+    <form onSubmit={submit} noValidate className="flex flex-col gap-3">
+      <FieldGroup className="gap-4">
+        <SearchScopeFields
+          startSeed={startSeed}
+          candidateCount={candidateCount}
+          floors={floors}
+          maxMatches={maxMatches}
+          running={running}
+          attempted={attempted}
+          onStartSeedChange={setStartSeed}
+          onCandidateCountChange={setCandidateCount}
+          onFloorsChange={updateFloors}
+          onMaxMatchesChange={setMaxMatches}
+        />
 
-            <FieldSet data-disabled={running ? true : undefined}>
-              <FieldLegend variant="label">Match rule</FieldLegend>
-              <ToggleGroup
-                type="single"
-                variant="outline"
-                value={matchMode}
-                disabled={running}
-                aria-label="Item constraint match rule"
-                onValueChange={(value) => {
-                  if (value === 'any' || value === 'all') setMatchMode(value)
-                }}
-                spacing={0}
-              >
-                <ToggleGroupItem value="all">All items</ToggleGroupItem>
-                <ToggleGroupItem value="any">Any item</ToggleGroupItem>
-              </ToggleGroup>
-              <FieldDescription>
-                {matchMode === 'all'
-                  ? 'Every configured item constraint must match.'
-                  : 'At least one configured item constraint must match.'}
-              </FieldDescription>
-            </FieldSet>
+        <FieldSet data-disabled={running ? true : undefined}>
+          <FieldLegend variant="label">Match rule</FieldLegend>
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            value={matchMode}
+            disabled={running}
+            aria-label="Item constraint match rule"
+            onValueChange={(value) => {
+              if (value === 'any' || value === 'all') setMatchMode(value)
+            }}
+            spacing={0}
+          >
+            <ToggleGroupItem value="all">All items</ToggleGroupItem>
+            <ToggleGroupItem value="any">Any item</ToggleGroupItem>
+          </ToggleGroup>
+          <FieldDescription>
+            {matchMode === 'all'
+              ? 'Every configured item constraint must match.'
+              : 'At least one configured item constraint must match.'}
+          </FieldDescription>
+        </FieldSet>
 
-            <ConstraintEditor
-              constraints={constraints}
-              floors={floors}
-              running={running}
-              attempted={attempted}
-              onAdd={addConstraint}
-              onRemove={removeConstraint}
-              onUpdate={updateConstraint}
-            />
-          </FieldGroup>
-        </CardContent>
-        <CardFooter className="justify-end">
-          {running ? (
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={cancelRequested}
-              onClick={onCancel}
-            >
-              {cancelRequested ? (
-                <SpinnerGapIcon
-                  data-icon="inline-start"
-                  className="animate-spin"
-                />
-              ) : (
-                <StopIcon data-icon="inline-start" />
-              )}
-              {cancelRequested ? 'Cancelling…' : 'Cancel'}
-            </Button>
-          ) : (
-            <Button type="submit">
-              <MagnifyingGlassIcon data-icon="inline-start" />
-              Find seeds
-            </Button>
-          )}
-        </CardFooter>
-      </Card>
+        <ConstraintEditor
+          constraints={constraints}
+          floors={floors}
+          running={running}
+          attempted={attempted}
+          onAdd={addConstraint}
+          onRemove={removeConstraint}
+          onUpdate={updateConstraint}
+        />
+      </FieldGroup>
+      <div className="flex justify-end">
+        {running ? (
+          <Button
+            type="button"
+            variant="destructive"
+            disabled={cancelRequested}
+            onClick={onCancel}
+          >
+            {cancelRequested ? (
+              <SpinnerGapIcon
+                data-icon="inline-start"
+                className="animate-spin"
+              />
+            ) : (
+              <StopIcon data-icon="inline-start" />
+            )}
+            {cancelRequested ? 'Cancelling…' : 'Cancel'}
+          </Button>
+        ) : (
+          <Button type="submit">
+            <MagnifyingGlassIcon data-icon="inline-start" />
+            Find seeds
+          </Button>
+        )}
+      </div>
     </form>
   )
 }

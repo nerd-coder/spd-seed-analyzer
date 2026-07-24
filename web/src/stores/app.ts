@@ -13,6 +13,17 @@
 
 import { persistentAtom } from '@nanostores/persistent'
 
+export {
+  $activeFinderId,
+  $activeFinderSession,
+  $finderSessions,
+  cancelFinderSearch,
+  closeFinderSession,
+  type FinderSession,
+  MAX_FINDER_SESSIONS,
+  setActiveFinder,
+  startFinderSearch,
+} from './finder'
 export { $meta, loadSpdMeta, type SpdMeta } from './meta'
 export {
   $activeSeedId,

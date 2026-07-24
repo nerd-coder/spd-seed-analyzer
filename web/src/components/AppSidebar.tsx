@@ -7,9 +7,9 @@ import {
 } from '@phosphor-icons/react'
 import type { FormEvent } from 'react'
 import { AppFloatingAction } from '@/components/AppFloatingAction'
+import { FinderForm } from '@/components/finder/FinderForm'
 import { AccuracyWarning } from '@/components/seed/AccuracyWarning'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import {
@@ -25,22 +25,24 @@ import {
 } from '@/components/ui/input-group'
 import { TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
+  $activeFinderSession,
   $analyzing,
   $formError,
-  $meta,
   $seedInput,
   type AppMode,
   analyzeDraftSeed,
+  cancelFinderSearch,
   MAX_SAVED_SEEDS,
   normalizeSeedInput,
   setSeedInput,
+  startFinderSearch,
 } from '@/stores/app'
 
 export function AppSidebar({ mode }: { mode: AppMode }) {
   const seedInput = useStore($seedInput)
   const analyzing = useStore($analyzing)
   const formError = useStore($formError)
-  const meta = useStore($meta)
+  const activeFinder = useStore($activeFinderSession)
 
   async function onAnalyze(event: FormEvent) {
     event.preventDefault()
@@ -135,13 +137,14 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
             </FieldGroup>
           </form>
         ) : (
-          <div className="flex flex-col gap-1">
-            <p className="text-xs font-medium">Bounded item search</p>
-            <p className="text-muted-foreground text-xs/relaxed">
-              Scan up to 250 numeric candidates at a time. Search settings and
-              results are cleared when this page reloads.
-            </p>
-          </div>
+          <FinderForm
+            running={activeFinder?.run.status === 'running'}
+            cancelRequested={activeFinder?.run.cancelRequested ?? false}
+            onSearch={(config) => void startFinderSearch(config)}
+            onCancel={() => {
+              if (activeFinder) cancelFinderSearch(activeFinder.id)
+            }}
+          />
         )}
 
         {mode === 'analyze' && formError ? (
