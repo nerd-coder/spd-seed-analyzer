@@ -12,23 +12,25 @@ pinned checkout, normally at
 
 ## Checkpoint
 
-- Preserved `AAA-AAA-AAA` replay is exact through floor 9 at the available
+- Preserved `AAA-AAA-AAA` replay now crosses floor 10 and matches floor 11 at
   pre-paint, pre-mobs, and pre-items RNG boundaries.
-- Floors 8–9 also match all pinned mobs and normalized structured heaps; no
-  shop occurs on either floor.
-- No generation change was needed for floors 8–9.
+- Floor 11 matches exact mobs and SecretHoardRoom heaps after replacing its
+  approximate painter with the pinned gold/trap lifecycle.
+- Other floor-11 heaps are not exact: later-shop bag state and additive
+  GuidePage/key/drop placement still differ.
 
 ## Next phase
 
-Extend the preserved `AAA-AAA-AAA` Java oracle beyond floor 9. Preserve any
-depth-10 lifecycle state needed to capture floor 11, compare RNG boundaries,
-mobs, and structured heaps, then port only the earliest proven divergence.
+Resolve the earliest floor-11 heap divergence without disturbing the exact RNG
+boundaries. Start with the later-shop bag choice (`MagicalHolster` in Java vs
+`PotionBandolier` in Rust), then compare GuidePage/key/main-drop placement.
 
 ## Known limits
 
 - Fixture-specific room painters and Generator histories may still diverge.
 - ToxicGas vents/gas blobs are not exact exported additive facts.
-- VaultLevel branches and player-dependent later-shop bags are out of scope.
+- VaultLevel branches and general player-dependent later-shop bags are out of
+  scope; only pinned deterministic inventory profiles can be verified.
 - The unseeded early Guidebook page is intentionally out of scope.
 
 Before committing, run the complete CI `check` sequence from `AGENTS.md`.

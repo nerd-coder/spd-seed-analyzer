@@ -233,16 +233,54 @@ pub(super) fn secret_larder(depth: i32, room: &Room, map: &mut TerrainMap) -> Ve
     out
 }
 
-pub(super) fn secret_hoard(dungeon: &mut DungeonState, room: &Room) -> Vec<PlacedLoot> {
-    // Approximate: gold piles (blacklisted from report — still burn RNG)
-    let n = Random::int_range_inclusive(3, 5);
-    let mut occupied = Vec::new();
-    for _ in 0..n {
-        burn_drop_pos(room, &mut occupied);
+pub(super) fn secret_hoard(
+    dungeon: &mut DungeonState,
+    room: &Room,
+    map: &mut TerrainMap,
+) -> Vec<PlacedLoot> {
+    // SecretHoardRoom paints half its interior as roughly eight piles' worth
+    // of gold, then rolls a visible trap at every point in its inclusive rect.
+    let trap_name = if Random::int_max(2) == 0 {
+        "RockfallTrap"
+    } else if dungeon.depth >= 10 {
+        "DisintegrationTrap"
+    } else {
+        "PoisonDartTrap"
+    };
+    let total_gold = ((room.width() - 2) * (room.height() - 2)) / 2;
+    let gold_ratio = 8.0 / total_gold as f32;
+    let mut out = Vec::new();
+    for _ in 0..total_gold {
+        let cell = loop {
+            let x = Random::int_range_inclusive(room.left + 1, room.right - 1);
+            let y = Random::int_range_inclusive(room.top + 1, room.bottom - 1);
+            let cell = map.point_to_cell(x, y).expect("hoard interior cell");
+            if !map.heap_occupied[cell] {
+                break cell;
+            }
+        };
         let mut g = GeneratedItem::new("Gold", ItemCategory::Gold);
         randomize_item(&mut g, dungeon.depth);
+        g.quantity = (g.quantity as f32 * gold_ratio).round() as i32;
         g.source = Some("SecretHoardRoom".into());
-        let _ = g;
+        map.record_heap(cell, "heap", g.clone());
+        out.push(PlacedLoot {
+            item: g,
+            heap_type: "heap",
+        });
     }
-    Vec::new()
+    for y in room.top..=room.bottom {
+        for x in room.left..=room.right {
+            if Random::int_max(2) != 0 {
+                continue;
+            }
+            let cell = map.point_to_cell(x, y).expect("hoard room cell");
+            if map.map[cell] == crate::level::terrain::EMPTY {
+                map.map[cell] = crate::level::terrain::TRAP;
+                map.trap_names[cell] = Some(trap_name);
+                map.trap_destroys_items[cell] = true;
+            }
+        }
+    }
+    out
 }

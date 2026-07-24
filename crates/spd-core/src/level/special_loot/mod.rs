@@ -200,7 +200,7 @@ fn paint_special(
         "SecretArtilleryRoom" => secret_rooms::secret_artillery(dungeon, room),
         "SecretLaboratoryRoom" => secret_rooms::secret_laboratory(room, map),
         "SecretLarderRoom" => secret_rooms::secret_larder(dungeon.depth, room, map),
-        "SecretHoardRoom" => secret_rooms::secret_hoard(dungeon, room),
+        "SecretHoardRoom" => secret_rooms::secret_hoard(dungeon, room, map),
         // Garden / well / pit / remaining secrets with portable prizes
         "GardenRoom" => gardens::garden_prizes(room, map, items_to_spawn),
         "SecretGardenRoom" => gardens::secret_garden_prizes(room),

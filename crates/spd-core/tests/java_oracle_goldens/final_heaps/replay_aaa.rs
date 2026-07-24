@@ -3,8 +3,9 @@ use super::*;
 use std::ffi::OsStr;
 
 #[test]
-fn aaa_replay_pins_floors_six_through_nine_with_exact_late_prison_facts() {
-    let fixtures: Vec<_> = (6..=9)
+fn aaa_replay_pins_floors_six_through_eleven_across_the_tengu_lifecycle() {
+    let fixtures: Vec<_> = [6, 7, 8, 9, 11]
+        .into_iter()
         .map(|depth| {
             let name = format!("aaa-aaa-aaa-final-heaps-floor-{depth}.json");
             let path = fixture_paths()
@@ -19,13 +20,14 @@ fn aaa_replay_pins_floors_six_through_nine_with_exact_late_prison_facts() {
         .collect();
 
     let mut dungeon = dungeon_from_run(init_run(fixtures[0].input.numeric));
-    for depth in 1_u32..=9 {
+    for depth in 1_u32..=11 {
         dungeon.depth = depth as i32;
         let actual = create_level_partial(&mut dungeon);
-        if depth < 6 {
+        if depth < 6 || depth == 10 {
             continue;
         }
-        let fixture = &fixtures[(depth - 6) as usize];
+        let fixture_index = if depth == 11 { 4 } else { (depth - 6) as usize };
+        let fixture = &fixtures[fixture_index];
         let expected = fixture.floors.first().expect("replay oracle floor");
         let context = format!("AAA floor-{depth}");
         assert_eq!(
@@ -99,7 +101,7 @@ fn aaa_replay_pins_floors_six_through_nine_with_exact_late_prison_facts() {
             "{context} pinned final mobs"
         );
 
-        if matches!(depth, 6 | 8 | 9) {
+        if matches!(depth, 6 | 8 | 9 | 11) {
             assert_eq!(
                 actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
                 "{context} pre-mobs RNG"
@@ -244,7 +246,7 @@ fn aaa_replay_pins_floors_six_through_nine_with_exact_late_prison_facts() {
             );
         }
 
-        if depth == 8 || depth == 9 {
+        if matches!(depth, 8 | 9 | 11) {
             let actual_mobs: Vec<_> = map
                 .mobs
                 .iter()
@@ -273,7 +275,28 @@ fn aaa_replay_pins_floors_six_through_nine_with_exact_late_prison_facts() {
                         .collect(),
                 })
                 .collect();
-            assert_eq!(actual_heaps, expected.final_heaps, "{context} exact heaps");
+            if depth == 11 {
+                let hoard = expected
+                    .room_bounds
+                    .iter()
+                    .find(|room| room.class_name == "SecretHoardRoom")
+                    .expect("floor-11 SecretHoardRoom bounds");
+                let in_hoard = |heap: &OracleHeap| {
+                    let x = heap.cell as i32 % expected.width as i32;
+                    let y = heap.cell as i32 / expected.width as i32;
+                    x > hoard.left && x < hoard.right && y > hoard.top && y < hoard.bottom
+                };
+                let actual_hoard: Vec<_> =
+                    actual_heaps.iter().filter(|heap| in_hoard(heap)).collect();
+                let expected_hoard: Vec<_> = expected
+                    .final_heaps
+                    .iter()
+                    .filter(|heap| in_hoard(heap))
+                    .collect();
+                assert_eq!(actual_hoard, expected_hoard, "{context} exact hoard heaps");
+            } else {
+                assert_eq!(actual_heaps, expected.final_heaps, "{context} exact heaps");
+            }
         }
 
         if depth == 6 {
