@@ -12,29 +12,32 @@ pinned checkout, normally at
 
 ## Checkpoint
 
-- `AAA-AAA-AAA` preserves exact room bounds on floors 6–9 and exact floor-7
-  pre-mobs/pre-items RNG plus mobs.
-- Floor 7's PitRoom now matches its pinned central skeleton stack exactly:
-  `CrystalKey`, `Gold(162)`, `UnstableSpellbook`. The key is dropped into that
-  heap, not deferred through `itemsToSpawn`.
-- Overall accuracy remains `partial`.
+- `AAA-AAA-AAA` floors 6–9 preserve exact room bounds; floor 7 preserves the
+  exact pre-items RNG boundary, mobs, and PitRoom skeleton heap.
+- Concrete `Generator.undoDrop` calls now match pinned Java's effective no-op.
+- Floor-7 main drops still diverge because earlier floors consume a different
+  sequence of overall Generator categories.
 
 ## Next phase
 
-Continue `AAA-AAA-AAA` floor-7 item parity from the exact pre-items boundary:
+Trace `AAA-AAA-AAA` floors 2–4 from Java-oracle fixtures and reconcile the first
+missing room-paint or loot lifecycle that changes `Generator.random()` category
+consumption. Add a boundary fixture at the earliest divergence, then restore
+the five floor-7 main drops without seed-specific state injection.
 
-1. Reconcile Generator category/deck state entering `createItems`; Rust's five
-   main drops begin with scroll categories where pinned SPD begins with a
-   missile.
-2. Match the five main item classes, heap types, and cells without regressing
-   floor-6 fixtures, the PitRoom stack, or floor-7 mobs.
+Pinned floor-7 target:
+
+- `ThrowingSpear(3)` at 281, heap
+- `ScrollOfIdentify` at 662, heap
+- `ScrollOfLullaby` at 812, heap
+- `Gold(156)` at 997, heap
+- `PotionOfPurity` at 2131, chest
 
 ## Known limits
 
-- Uncovered room painters and deeper histories may diverge.
+- Uncovered room painters and earlier generator histories may diverge.
 - ToxicGas vents/gas blobs are not exact exported additive facts.
-- VaultLevel branches and player-dependent later-shop bags are outside the
-  current regular-floor contract.
+- VaultLevel branches and player-dependent later-shop bags are out of scope.
 - The unseeded early Guidebook page is intentionally out of scope.
 
 Before committing, run the complete CI `check` sequence from `AGENTS.md`.

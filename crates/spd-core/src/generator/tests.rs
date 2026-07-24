@@ -83,3 +83,21 @@ fn unstable_spellbook_constructor_burns_one_roll_per_selectable_scroll() {
     assert_eq!(Random::int(), before[11]);
     Random::pop_generator();
 }
+
+#[test]
+fn concrete_undo_drop_preserves_pinned_java_no_op_semantics() {
+    Random::reset_generators();
+    Random::push_generator_seeded(0xA11CE);
+    let mut generator = GeneratorState::full_reset_ordered();
+
+    let wand = generator.random_category(Category::Wand, 7);
+    let state_after_draw = generator.deck_state(Category::Wand);
+    generator.undo_drop(&wand.class_name);
+
+    assert_eq!(
+        generator.deck_state(Category::Wand),
+        state_after_draw,
+        "Generator.undoDrop(concreteClass) is a no-op at pinned SPD's inverted assignability check"
+    );
+    Random::pop_generator();
+}

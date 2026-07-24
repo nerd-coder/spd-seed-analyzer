@@ -59,7 +59,7 @@
       "area": "Items & loot",
       "status": "partial",
       "implemented": [
-        "Forced drops, generator decks, main RegularLevel createItems drops, and supported special-room prizes",
+        "Forced drops, generator decks (including pinned concrete-class undoDrop no-op semantics), main RegularLevel createItems drops, and supported special-room prizes",
         "Item identities and exact heap capture on committed Java-oracle fixtures, including UnstableSpellbook constructor RNG",
         "Supported quest rewards and covered shop stock flows",
         "Seed finder optional minimum item upgrade-level matching across the analyzed floor range"
