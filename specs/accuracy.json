@@ -23,12 +23,11 @@
         "AAA-AAA-AAA floor-7 painter RNG parity through PitRoom's UnstableSpellbook constructor, exact central skeleton stack lifecycle, PillarsRoom geometry, and the exact pre-mobs boundary",
         "AAA-AAA-AAA floors 8–9 and 11 exact pre-paint, pre-mobs, and pre-items RNG boundaries; floor 11 preserves the floor-10 Tengu lifecycle",
         "AAA-AAA-AAA floor 12 exact FigureEightBuilder room classes and bounds, pre-paint, pre-mobs, and pre-items RNG boundaries, including CaveExitRoom size probabilities and SecretRunestoneRoom's exact three-drop painter",
-        "AAA-AAA-AAA floor 13 exact room classes and normalized bounds plus the pre-paint, pre-mobs, and pre-items RNG boundaries and final mob facts"
+        "AAA-AAA-AAA floor 13 exact room classes and normalized bounds plus the pre-paint, pre-mobs, and pre-items RNG boundaries, final mob facts, and normalized final heaps"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
-        "AAA-AAA-AAA floor 13 final heap facts remain unverified",
         "Preserved-run floors beyond depth 13 still require phase-by-phase parity checks"
       ],
       "impact": "Room selection, bounds, connections, or downstream RNG can differ on uncovered generation paths.",
@@ -68,7 +67,7 @@
       "implemented": [
         "Forced drops, generator decks (including pinned concrete-class undoDrop no-op semantics), main RegularLevel createItems drops, and supported special-room prizes",
         "Item identities and exact heap capture on committed Java-oracle fixtures, including UnstableSpellbook constructor RNG",
-        "AAA-AAA-AAA floor-6 Generator weapon lifecycle from floor-3 SacrificeRoom through shop and createItems, floor-7 exact five main Generator drops, floors 8–9 and 12 exact normalized heaps, and floor-11 exact deterministic heaps including Mimic reward lifecycle, forced drops, CrystalKeys, and GuidePage placement",
+        "AAA-AAA-AAA floor-6 Generator weapon lifecycle from floor-3 SacrificeRoom through shop and createItems, floor-7 exact five main Generator drops, floors 8–9, 12, and 13 exact normalized heaps, and floor-11 exact deterministic heaps including Mimic reward lifecycle, forced drops, CrystalKeys, and GuidePage placement",
         "Supported quest rewards and covered shop stock flows",
         "Seed finder optional minimum item upgrade-level matching across the analyzed floor range"
       ],

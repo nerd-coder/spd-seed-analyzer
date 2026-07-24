@@ -6,13 +6,13 @@
 
 ## Next phase
 
-Compare AAA-AAA-AAA floor 13 final heap facts. Fix only the first semantic
+Capture the pinned Java oracle fixture for preserved-run AAA-AAA-AAA floor 14.
+Compare room classes and normalized bounds first; fix only the first semantic
 difference, then stop.
 
 ## Current checkpoint
 
-- Floor 13 matches Java's room classes, normalized bounds, RNG boundaries, and
-  all eight final mobs. Final heaps are not yet verified.
-- Floor 12 remains exact through its documented final-heap boundary.
+- Floor 13 matches Java's room classes, normalized bounds, RNG boundaries,
+  final mobs, and normalized final heaps.
 
 Run the complete CI `check` sequence from `AGENTS.md` before committing.

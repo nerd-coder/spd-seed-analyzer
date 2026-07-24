@@ -141,9 +141,8 @@ floor 6–8 lifecycles. The AAA replay is exact through floor 9, preserves the
 floor-10 Tengu lifecycle, and pins floor 11 through exact RNG boundaries, mobs,
 and SecretHoardRoom heaps. Other floor-11 heaps remain outside that exact claim.
 The floor-12 fixture is exact through its normalized final heaps. The floor-13
-fixture currently pins exact room classes and bounds plus the pre-paint,
-pre-mobs, and pre-items RNG boundaries; final mob and heap facts remain outside
-that parity claim.
+fixture is exact through its room classes, normalized bounds, RNG boundaries,
+final mobs, and normalized final heaps.
 
 The `GFX-PZH-DCH` floor-one fixture additionally pins CrystalPathRoom's six
 alternating potion/scroll drops to their exact cells. Its focused Rust test
