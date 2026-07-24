@@ -246,6 +246,8 @@ fn pool_equip(dungeon: &mut DungeonState) -> GeneratedItem {
 pub fn statue_weapon(
     dungeon: &mut DungeonState,
     room: &Room,
+    map: &mut TerrainMap,
+    entrance: Point,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> PlacedLoot {
     // StatueRoom.java:46 — IronKey pushed before Statue.random() (zero-RNG append)
@@ -253,7 +255,21 @@ pub fn statue_weapon(
     // StatueRoom.paint selects its mob position from Room.center() before
     // Statue.random(). Odd room spans therefore consume the pinned Int(2)
     // center jitter even though this analyzer only exports the statue weapon.
-    let _center = room.as_rect().center_room();
+    let mut center = room.as_rect().center_room();
+    if entrance.x == room.left {
+        center.x = room.right - 2;
+    } else if entrance.x == room.right {
+        center.x = room.left + 2;
+    } else if entrance.y == room.top {
+        center.y = room.bottom - 2;
+    } else if entrance.y == room.bottom {
+        center.y = room.top + 2;
+    }
+    let cell = map
+        .point_to_cell(center.x, center.y)
+        .expect("placed StatueRoom center is inside map bounds");
+    map.mob_occupied[cell] = true;
+    map.known_mobs[cell] = Some("Statue");
     // Statue.random: 10% armored (rat skull default)
     let _armored = Random::float() < 0.1;
     let mut weapon = dungeon

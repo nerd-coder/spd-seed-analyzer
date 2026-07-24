@@ -221,7 +221,9 @@ fn statue_room_consumes_center_jitter_before_weapon_and_pushes_iron_key() {
     d.depth = 8;
     let room = test_room("StatueRoom", 7, 7);
     let mut spawn = Vec::new();
-    let loot = statue_weapon(&mut d, &room, &mut spawn);
+    let mut map = paint_minimal(std::slice::from_ref(&room)).expect("map");
+    let entrance = Point::new(room.left, room.top + 2);
+    let loot = statue_weapon(&mut d, &room, &mut map, entrance, &mut spawn);
     assert_eq!(
         Random::peek_ints(3),
         [-519_812_201, 2_064_769_344, -1_269_687_844],
@@ -237,6 +239,14 @@ fn statue_room_consumes_center_jitter_before_weapon_and_pushes_iron_key() {
     assert_eq!(spawn.len(), 1);
     assert_eq!(spawn[0].class_name, "IronKey");
     assert_eq!(spawn[0].category, ItemCategory::Other);
+    let statues: Vec<_> = map
+        .known_mobs
+        .iter()
+        .enumerate()
+        .filter_map(|(cell, mob)| (*mob == Some("Statue")).then_some(cell))
+        .collect();
+    assert_eq!(statues.len(), 1);
+    assert!(map.mob_occupied[statues[0]]);
 }
 
 #[test]

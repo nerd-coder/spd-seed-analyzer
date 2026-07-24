@@ -137,6 +137,25 @@ fn aaa_replay_pins_floors_six_through_nine_and_matches_through_library() {
                 actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
                 "{context} pre-mobs RNG after PitRoom crystal-door paint"
             );
+            assert_eq!(
+                actual.pre_items_rng_probe, expected.pre_items_rng,
+                "{context} pre-items RNG after quest hook and createMobs"
+            );
+            let actual_mobs: Vec<_> = map
+                .mobs
+                .iter()
+                .map(|mob| OracleMob {
+                    cell: mob.cell,
+                    class_name: mob.class_name.clone(),
+                })
+                .collect();
+            assert!(
+                actual_mobs.contains(&OracleMob {
+                    cell: 2138,
+                    class_name: "Statue".into(),
+                }),
+                "{context} pinned StatueRoom mob"
+            );
         }
 
         if depth == 6 {

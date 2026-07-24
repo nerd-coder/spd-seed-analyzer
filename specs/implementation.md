@@ -14,19 +14,20 @@ pinned checkout, normally at
 
 - `AAA-AAA-AAA` preserves Java-oracle floors 6–9 with exact room bounds;
   floor 6 matches through pre-items.
-- Floor 7 now matches the exact pre-mobs RNG boundary through all room paint,
-  `paintDoors`, and the isolated painter-generator transition.
-- `PitRoom.paint` now marks its entrance `CRYSTAL`, preventing the erroneous
-  hidden-door roll that previously left Rust one main-stream draw ahead.
+- Floor 7 matches both pre-mobs and pre-items RNG boundaries, including the
+  Wandmaker hook and ambient `createMobs` draw shape.
+- `StatueRoom` exports and reserves its pinned Statue cell (`2138`).
+- Remaining floor-7 mob mismatch: Guard is at Rust cell `232` versus oracle
+  cell `278`; cell `232` is incorrectly passable PillarsRoom terrain.
 - Overall status remains `partial`.
 
 ## Next phase
 
-Continue floor 7 from the restored pre-mobs boundary:
+Continue floor 7 from the exact pre-items boundary:
 
-1. Compare `createMobs` and its quest hook against the pinned oracle.
-2. Port the earliest missing or extra call only.
-3. Re-enable exact pre-items parity if reached, then stop at the next divergence.
+1. Compare pinned `PillarsRoom` terrain/flags around cells `232` and `278`.
+2. Port the narrow geometry correction without regressing floor 6 fixtures.
+3. Require exact floor-7 mobs, then continue to the earliest item divergence.
 
 ## Known limits
 

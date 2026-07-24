@@ -183,7 +183,21 @@ fn paint_special(
         "LaboratoryRoom" => {
             special_rooms::paint_laboratory(dungeon, room, ri, map, doors, items_to_spawn)
         }
-        "StatueRoom" => vec![special_rooms::statue_weapon(dungeon, room, items_to_spawn)],
+        "StatueRoom" => {
+            let entrance = room
+                .connected
+                .iter()
+                .find_map(|&other| doors.get(ri, other))
+                .map(|door| crate::geom::Point::new(door.x, door.y))
+                .expect("placed StatueRoom has an entrance");
+            vec![special_rooms::statue_weapon(
+                dungeon,
+                room,
+                map,
+                entrance,
+                items_to_spawn,
+            )]
+        }
         "SecretLibraryRoom" => secret_rooms::secret_library(dungeon, room, items_to_spawn),
         "SecretRunestoneRoom" => secret_rooms::secret_runestone(dungeon, room, items_to_spawn),
         "SecretArtilleryRoom" => secret_rooms::secret_artillery(dungeon, room),

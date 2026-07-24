@@ -82,7 +82,7 @@
       "status": "partial",
       "implemented": [
         "Source-ported RegularLevel ambient mob selection through floor 24",
-        "Depth-one mob lifecycle, full HKT-JZN-XQQ floor 6–8 mob parity, and pinned AAA-AAA-AAA floor 6–9 mob facts",
+        "Depth-one mob lifecycle, full HKT-JZN-XQQ floor 6–8 mob parity, pinned AAA-AAA-AAA floor 6–9 mob facts, and exact AAA floor-7 StatueRoom entity placement",
         "Ghost, Wandmaker, Blacksmith, and Imp selection and reward flows"
       ],
       "remaining": [
