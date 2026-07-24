@@ -150,6 +150,48 @@ fn aaa_replay_pins_floors_six_through_nine_and_matches_through_library() {
                 })
                 .collect();
             assert_eq!(actual_mobs, expected.final_mobs, "{context} exact mobs");
+            let pit_heaps: Vec<_> = map
+                .heaps
+                .iter()
+                .filter(|heap| heap.cell == 359)
+                .map(|heap| OracleHeap {
+                    cell: heap.cell,
+                    heap_type: heap.heap_type.clone(),
+                    items: heap
+                        .items
+                        .iter()
+                        .map(|item| OracleItem {
+                            class_name: item.class_name.clone(),
+                            quantity: item.quantity,
+                            level: item.level,
+                            cursed: item.cursed,
+                        })
+                        .collect(),
+                })
+                .collect();
+            let expected_pit_heaps: Vec<_> = expected
+                .final_heaps
+                .iter()
+                .filter(|heap| heap.cell == 359)
+                .map(|heap| OracleHeap {
+                    cell: heap.cell,
+                    heap_type: heap.heap_type.clone(),
+                    items: heap
+                        .items
+                        .iter()
+                        .map(|item| OracleItem {
+                            class_name: item.class_name.clone(),
+                            quantity: item.quantity,
+                            level: item.level,
+                            cursed: item.cursed,
+                        })
+                        .collect(),
+                })
+                .collect();
+            assert_eq!(
+                pit_heaps, expected_pit_heaps,
+                "{context} exact PitRoom heap"
+            );
             assert!(
                 actual_mobs.contains(&OracleMob {
                     cell: 2138,

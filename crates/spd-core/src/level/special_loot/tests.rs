@@ -334,20 +334,23 @@ fn pit_room_skeleton_and_crystal_key() {
     Random::push_generator_seeded(66);
     let mut d = dungeon_from_run(run);
     d.depth = 12;
-    let mut spawn = Vec::new();
     let room = test_room("PitRoom", 6, 6);
-    let loot = pit_prizes(&mut d, &room, &mut spawn);
+    let mut map = paint_minimal(std::slice::from_ref(&room)).expect("pit map");
+    let loot = pit_prizes(&mut d, &room, &mut map);
     Random::pop_generator();
 
-    assert!((2..=3).contains(&loot.len())); // main + 1–2 side prizes
+    assert!((3..=4).contains(&loot.len())); // main + 1–2 side prizes + key
     assert!(loot.iter().all(|p| p.heap_type == "skeleton"));
     assert!(loot
         .iter()
         .all(|p| p.item.source.as_deref() == Some("PitRoom")));
     assert_eq!(
-        spawn.last().map(|i| i.class_name.as_str()),
+        loot.last().map(|p| p.item.class_name.as_str()),
         Some("CrystalKey")
     );
+    let heap = map.known_heaps.iter().flatten().next().expect("pit heap");
+    assert_eq!(heap.heap_type, "skeleton");
+    assert_eq!(heap.items[0].class_name, "CrystalKey");
 }
 
 #[test]

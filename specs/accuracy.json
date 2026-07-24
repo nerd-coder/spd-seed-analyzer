@@ -19,7 +19,7 @@
         "Pinned standard, special, and secret room-count tables",
         "Pinned SecretLarderRoom minimum dimensions and food-placement viability",
         "Depth-one lifecycle fixtures across ten seeds, full HKT-JZN-XQQ floor 6–8 parity, and preserved-state AAA-AAA-AAA floor 6–9 oracle fixtures with exact room bounds",
-        "AAA-AAA-AAA floor-7 painter RNG parity through PitRoom's UnstableSpellbook constructor, PillarsRoom geometry, and the exact pre-mobs boundary"
+        "AAA-AAA-AAA floor-7 painter RNG parity through PitRoom's UnstableSpellbook constructor, exact central skeleton stack lifecycle, PillarsRoom geometry, and the exact pre-mobs boundary"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",

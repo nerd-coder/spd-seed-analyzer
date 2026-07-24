@@ -5,6 +5,7 @@ use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::level::create_items::PlacedLoot;
+use crate::level::terrain::TerrainMap;
 use crate::random::Random;
 use crate::rooms::room::Room;
 
@@ -12,14 +13,17 @@ use crate::rooms::room::Room;
 pub(super) fn pit_prizes(
     dungeon: &mut DungeonState,
     room: &Room,
-    items_to_spawn: &mut Vec<GeneratedItem>,
+    map: &mut TerrainMap,
 ) -> Vec<PlacedLoot> {
     // Well corner: Random.Int(2) (door side is geometric from entrance).
     let _ = Random::int_max(2);
 
     // `level.pointToCell(center())` chooses the shared skeleton heap cell.
     // `Room.center()` burns one `Random.Int(2)` per even-sized dimension.
-    let _ = room.as_rect().center_room();
+    let remains = room.as_rect().center_room();
+    let remains = map
+        .point_to_cell(remains.x, remains.y)
+        .expect("placed PitRoom center is inside the map");
 
     // Main loot: ring / artifact / equip (weapon×2, missile, armor×2).
     // Challenges.isItemBlocked is always false without challenges — single draw.
@@ -65,7 +69,18 @@ pub(super) fn pit_prizes(
         });
     }
 
-    items_to_spawn.push(GeneratedItem::new("CrystalKey", ItemCategory::Other));
+    let mut key = GeneratedItem::new("CrystalKey", ItemCategory::Other);
+    key.source = Some("PitRoom".into());
+    out.push(PlacedLoot {
+        item: key,
+        heap_type: "skeleton",
+    });
+
+    // `Heap.items.add(item)` inserts at the front, so the final observable
+    // stack is the reverse of PitRoom's drop order.
+    for prize in out.iter().rev() {
+        map.record_heap(remains, "skeleton", prize.item.clone());
+    }
     out
 }
 

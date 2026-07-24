@@ -12,24 +12,22 @@ pinned checkout, normally at
 
 ## Checkpoint
 
-- `AAA-AAA-AAA` preserves exact Java room bounds on floors 6–9; floor 6 still
-  matches through pre-items.
-- Floor 7 now has exact pre-mobs/pre-items boundaries and exact mobs. The
-  Guard placement mismatch was caused before `PillarsRoom`: constructing the
-  PitRoom's `UnstableSpellbook` must randomize its scroll list with 11
-  `Random.chances` draws.
-- `PillarsRoom (34,2)–(42,10)` now enters at the pinned RNG state and paints
-  the Guard-blocking pillars exactly.
+- `AAA-AAA-AAA` preserves exact room bounds on floors 6–9 and exact floor-7
+  pre-mobs/pre-items RNG plus mobs.
+- Floor 7's PitRoom now matches its pinned central skeleton stack exactly:
+  `CrystalKey`, `Gold(162)`, `UnstableSpellbook`. The key is dropped into that
+  heap, not deferred through `itemsToSpawn`.
 - Overall accuracy remains `partial`.
 
 ## Next phase
 
-Continue `AAA-AAA-AAA` floor 7 from the exact pre-items boundary:
+Continue `AAA-AAA-AAA` floor-7 item parity from the exact pre-items boundary:
 
-1. Compare final structured heaps/items and locate the earliest mismatch.
-2. Port the responsible pinned item/placement lifecycle behavior.
-3. Preserve exact floor-6 fixtures and exact floor-7 mobs while advancing
-   toward full floor-7 terrain and heap parity.
+1. Reconcile Generator category/deck state entering `createItems`; Rust's five
+   main drops begin with scroll categories where pinned SPD begins with a
+   missile.
+2. Match the five main item classes, heap types, and cells without regressing
+   floor-6 fixtures, the PitRoom stack, or floor-7 mobs.
 
 ## Known limits
 
