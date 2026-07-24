@@ -16,18 +16,20 @@ pinned checkout, normally at
   exact seeded heaps after porting GrassyGrave tombs and SecretChestChasm
   chests, keys, and terrain.
 - Floor 3 matches room classes, bounds, and pre-paint RNG. Durable pre/post-door
-  probes show Rust consumes four extra base-stream draws during room painting;
-  door painting preserves the offset and the isolated painter tail is exact.
+  probes isolate a four-draw room-paint offset. The first durable fact mismatch
+  is `WaterBridgeExitRoom`: Rust exit cell 308 versus pinned Java cell 237.
 - Floor 7 still has exact local paint/mob boundaries, but its five main drops
   diverge because the earlier overall Generator category history differs.
 
 ## Next phase
 
-Trace the four extra floor-3 room-paint draws room by room. Start with the final
-two `TunnelRoom` painters, which consume two draws each in Rust, and compare
-their `getDoorCenter` call lifecycle and connection iteration against pinned
-Java. Identify the exact source-backed mismatch, remove it generally, then
-advance floor 3 from exact pre-paint parity through pre-mobs and pre-items.
+Trace floor-3 `WaterBridgeExitRoom` from its `StandardBridgeRoom` orientation,
+widest-gap selection, and `spaceRect` through rejected `random(2)` transition
+candidates. Explain why Java accepts cell 237 while Rust accepts 308, then make
+the general source-backed fix and advance parity through pre-mobs/pre-items.
+
+Do not remove `TunnelRoom.getDoorCenter` burns: pinned Java unconditionally
+evaluates both `Random.Float()` calls, and RingTunnel caches its second lookup.
 
 After floor 3 is exact, continue floor 4 and replay through floor 7. The target
 floor-7 main drops remain:

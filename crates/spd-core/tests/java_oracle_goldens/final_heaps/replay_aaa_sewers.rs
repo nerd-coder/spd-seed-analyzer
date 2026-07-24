@@ -80,6 +80,24 @@ fn aaa_replay_pins_floor_two_and_floor_three_painter_boundary() {
                 "{context} pre-items RNG"
             );
         } else if depth == 3 {
+            let map = actual.map.as_ref().expect("regular floor map");
+            let actual_exit = map
+                .transitions
+                .iter()
+                .find(|transition| transition.transition_type == "REGULAR_EXIT")
+                .expect("AAA floor-3 regular exit");
+            let java_exit = expected
+                .transitions
+                .as_ref()
+                .expect("AAA floor-3 Java transitions")
+                .iter()
+                .find(|transition| transition.transition_type == "REGULAR_EXIT")
+                .expect("AAA floor-3 Java regular exit");
+            assert_eq!(
+                (actual_exit.cell, java_exit.cell),
+                (308, 237),
+                "{context} first durable room-paint fact localizes the divergence to WaterBridgeExitRoom"
+            );
             assert_eq!(
                 expected.pre_doors_rng,
                 [

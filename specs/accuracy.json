@@ -108,12 +108,14 @@
       ],
       "remaining": [
         "ToxicGas vent and gas blob facts are not yet exported as exact additive render facts",
+        "AAA-AAA-AAA floor 3 first diverges in WaterBridgeExitRoom: Rust places the exit at cell 308 while pinned Java places it at 237; its bridge-space selection and transition rejection lifecycle need tracing",
         "Uncovered room painters can produce incomplete terrain or markers",
         "Visual baselines cover a small deterministic seed and floor set"
       ],
       "impact": "Map previews can omit or misplace terrain, traps, blobs, doors, entities, or room details.",
       "evidence": [
         "crates/spd-core/src/level/painter",
+        "crates/spd-core/tests/java_oracle_goldens/final_heaps/replay_aaa_sewers.rs",
         "tools/visual/tests/map-render.spec.ts"
       ]
     },
