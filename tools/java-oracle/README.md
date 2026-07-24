@@ -6,7 +6,7 @@ ring identity mappings. Schema v2 adds an intentionally narrow floor contract:
 the ordered depth-one `itemsToSpawn` queue at the exact pre-`build()` boundary.
 Schema v3 is a separately scoped level contract that snapshots final heaps and
 mobs after the real `Level.create()` lifecycle completes. Sewer depths 1 through
-4, Prison depths 6 through 9, and Caves depths 11 through 12 are supported. Depth 1 is generated directly; deeper
+4, Prison depths 6 through 9, and Caves depths 11 through 14 are supported. Depth 1 is generated directly; deeper
 targets are generated after completing every prior floor so run-persistent state is
 preserved. A separate generator-deck contract records exact category draws and
 RNG probes across a deck reset without running a floor. A separate shop-bag
@@ -43,6 +43,7 @@ From the analyzer repository root:
 ./tools/java-oracle/run --final-heaps-depth 11 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 12 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 13 AAA-AAA-AAA
+./tools/java-oracle/run --final-heaps-depth 14 AAA-AAA-AAA
 ./tools/java-oracle/run --generator-deck-rollover AAA-AAA-AAA
 ./tools/java-oracle/run --generator-lifecycle AAA-AAA-AAA
 ./tools/java-oracle/run --shop-bag-selection AAA-AAA-AAA
@@ -105,6 +106,8 @@ these commands (stdout is the default when `--output` is omitted):
   --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-12.json AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 13 \
   --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-13.json AAA-AAA-AAA
+./tools/java-oracle/run --final-heaps-depth 14 \
+  --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-14.json AAA-AAA-AAA
 ./tools/java-oracle/run --generator-deck-rollover \
   --output tools/java-oracle/fixtures/generator/aaa-aaa-aaa-food-rollover.json \
   AAA-AAA-AAA
@@ -142,7 +145,8 @@ floor-10 Tengu lifecycle, and pins floor 11 through exact RNG boundaries, mobs,
 and SecretHoardRoom heaps. Other floor-11 heaps remain outside that exact claim.
 The floor-12 fixture is exact through its normalized final heaps. The floor-13
 fixture is exact through its room classes, normalized bounds, RNG boundaries,
-final mobs, and normalized final heaps.
+final mobs, and normalized final heaps. The floor-14 fixture currently pins
+room classes, normalized bounds, RNG boundaries, and final mobs.
 
 The `GFX-PZH-DCH` floor-one fixture additionally pins CrystalPathRoom's six
 alternating potion/scroll drops to their exact cells. Its focused Rust test

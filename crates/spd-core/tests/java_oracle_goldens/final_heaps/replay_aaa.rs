@@ -564,6 +564,65 @@ fn aaa_floor_thirteen_matches_the_pinned_final_facts() {
     assert_eq!(actual_heaps, expected.final_heaps, "floor-13 final heaps");
 }
 
+#[test]
+fn aaa_floor_fourteen_matches_the_pinned_layout_rng_and_mobs() {
+    let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-14.json");
+    let path = fixture_paths()
+        .into_iter()
+        .find(|path| path.file_name().is_some_and(|file| file == name))
+        .expect("missing AAA floor-14 fixture");
+    let fixture = read_fixture(&path);
+    let expected = fixture.floors.first().expect("floor-14 oracle facts");
+
+    let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
+    let mut actual = None;
+    for depth in 1_i32..=14 {
+        dungeon.depth = depth;
+        actual = Some(create_level_partial(&mut dungeon));
+    }
+    let actual = actual.expect("floor-14 replay");
+    let mut actual_rooms = actual.rooms.clone();
+    actual_rooms.sort();
+    assert_eq!(actual_rooms, expected.rooms, "floor-14 room classes");
+
+    let bounds: Vec<_> = actual
+        .room_bounds
+        .iter()
+        .map(|room| OracleRoomFact {
+            class_name: room.class_name.clone(),
+            left: room.left,
+            top: room.top,
+            right: room.right,
+            bottom: room.bottom,
+        })
+        .collect();
+    assert_eq!(bounds, expected.room_bounds, "floor-14 room bounds");
+    assert_eq!(
+        actual.pre_paint_rng_probe, expected.pre_paint_rng,
+        "floor-14 pre-paint RNG boundary"
+    );
+    assert_eq!(
+        actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
+        "floor-14 pre-mobs RNG boundary"
+    );
+    assert_eq!(
+        actual.pre_items_rng_probe, expected.pre_items_rng,
+        "floor-14 pre-items RNG boundary"
+    );
+    let actual_mobs: Vec<_> = actual
+        .map
+        .as_ref()
+        .expect("floor-14 map")
+        .mobs
+        .iter()
+        .map(|mob| OracleMob {
+            cell: mob.cell,
+            class_name: mob.class_name.clone(),
+        })
+        .collect();
+    assert_eq!(actual_mobs, expected.final_mobs, "floor-14 final mobs");
+}
+
 fn oracle_item_class(class_name: &str) -> &str {
     // Java's `getSimpleName()` cannot distinguish nested Plant.Seed classes.
     match class_name {

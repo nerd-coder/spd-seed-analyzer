@@ -103,6 +103,10 @@ fn suspicious_chest(
     }
 
     if Random::float() < 1.0 / 3.0 {
+        if let Some(cell) = map.point_to_cell(center.x, center.y) {
+            map.mob_occupied[cell] = true;
+            map.known_mobs[cell] = Some("Mimic");
+        }
         prize.source = Some("SuspiciousChestRoom:mimic".into());
         let mut reward = mimic_reward(dungeon);
         reward.source = Some("SuspiciousChestRoom:mimic".into());
@@ -231,6 +235,12 @@ mod tests {
                 .is_some_and(|source| source.starts_with("SuspiciousChestRoom"))
         }));
         assert!(loot.iter().all(|drop| drop.heap_type == "mimic"));
+        assert_eq!(
+            map.known_mobs.iter().flatten().copied().collect::<Vec<_>>(),
+            ["Mimic"]
+        );
+        let center = map.point_to_cell(5, 5).expect("room center");
+        assert!(map.mob_occupied[center]);
         assert_eq!(map.map.iter().filter(|&&tile| tile == PEDESTAL).count(), 1);
     }
 
