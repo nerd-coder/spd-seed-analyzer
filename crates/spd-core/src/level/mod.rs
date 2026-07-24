@@ -204,7 +204,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         // before room shuffle / placeDoors / special paint.
         terrain::shift_rooms_for_painter(&mut floor.rooms, feeling == Feeling::Chasm);
         let n_traps = painter::n_traps(dungeon.depth);
-        if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14) {
+        if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16) {
             pre_paint_rng_probe = Random::peek_ints(8);
         }
 
@@ -307,7 +307,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             // run before the regular population, matching SewerLevel/PrisonLevel
             // overrides. The population pass is source-ported for every regular
             // depth, though final parity still depends on the preceding lifecycle.
-            if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14) {
+            if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16) {
                 pre_mobs_rng_probe = Random::peek_ints(8);
             }
             if let Some(exit) = floor.rooms.iter().find(|r| r.is_exit() && !r.is_empty()) {
@@ -344,7 +344,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 false
             };
 
-            if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14) {
+            if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16) {
                 pre_items_rng_probe = Random::peek_ints(8);
             }
             let loot = create_items::create_items_main(

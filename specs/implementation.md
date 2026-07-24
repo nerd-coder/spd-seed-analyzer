@@ -6,12 +6,13 @@
 
 ## Next phase
 
-Extend the pinned Java final-heaps oracle through floor 16, preserving the
-floor-15 boss lifecycle. Compare AAA-AAA-AAA floor 16 room classes and
-normalized bounds first; fix only the first semantic difference, then stop.
+Extend the pinned Java final-heaps oracle through floor 17. Compare
+AAA-AAA-AAA room classes and normalized bounds first, then RNG boundaries,
+mobs, and heaps. Fix only the first semantic difference, then stop.
 
 ## Current checkpoint
 
-- AAA-AAA-AAA floor 14 matches Java through normalized final heaps.
+- AAA-AAA-AAA floor 16 matches Java through normalized final heaps, with the
+  floor-15 DM-300 lifecycle preserved.
 
 Run the complete CI `check` sequence from `AGENTS.md` before committing.

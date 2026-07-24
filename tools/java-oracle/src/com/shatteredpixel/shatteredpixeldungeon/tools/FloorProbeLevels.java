@@ -8,6 +8,7 @@ package com.shatteredpixel.shatteredpixeldungeon.tools;
 
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.CavesLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.CityLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.PrisonLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
@@ -35,6 +36,7 @@ final class FloorProbeLevels {
 		if (depth >= 1 && depth <= 4) return new PrePaintSewerLevel();
 		if (depth >= 6 && depth <= 9) return new PrePaintPrisonLevel();
 		if (depth >= 11 && depth <= 14) return new PrePaintCavesLevel();
+		if (depth == 16) return new PrePaintCityLevel();
 		throw unsupported(depth);
 	}
 
@@ -42,6 +44,7 @@ final class FloorProbeLevels {
 		if (depth >= 1 && depth <= 4) return new PreMobsSewerLevel();
 		if (depth >= 6 && depth <= 9) return new PreMobsPrisonLevel();
 		if (depth >= 11 && depth <= 14) return new PreMobsCavesLevel();
+		if (depth == 16) return new PreMobsCityLevel();
 		throw unsupported(depth);
 	}
 
@@ -61,6 +64,7 @@ final class FloorProbeLevels {
 		if (depth >= 1 && depth <= 4) return new PreItemsSewerLevel();
 		if (depth >= 6 && depth <= 9) return new PreItemsPrisonLevel();
 		if (depth >= 11 && depth <= 14) return new PreItemsCavesLevel();
+		if (depth == 16) return new PreItemsCityLevel();
 		throw unsupported(depth);
 	}
 
@@ -152,6 +156,16 @@ final class FloorProbeLevels {
 			return recordingPainter(this);
 		}
 
+		@Override public Level level() { return this; }
+		@Override public List<Integer> rngProbe() { return rngProbe; }
+		@Override public void setRngProbe(List<Integer> probe) { rngProbe = probe; }
+	}
+
+	private static final class PrePaintCityLevel extends CityLevel
+			implements Probe, ProbeOwner {
+		private List<Integer> rngProbe;
+
+		@Override protected Painter painter() { super.painter(); return recordingPainter(this); }
 		@Override public Level level() { return this; }
 		@Override public List<Integer> rngProbe() { return rngProbe; }
 		@Override public void setRngProbe(List<Integer> probe) { rngProbe = probe; }
@@ -260,6 +274,14 @@ final class FloorProbeLevels {
 		@Override public List<Integer> rngProbe() { return rngProbe; }
 	}
 
+	private static final class PreMobsCityLevel extends CityLevel implements Probe {
+		private List<Integer> rngProbe;
+
+		@Override protected void createMobs() { rngProbe = captureRng(); throw new FloorOracle.SnapshotComplete(); }
+		@Override public Level level() { return this; }
+		@Override public List<Integer> rngProbe() { return rngProbe; }
+	}
+
 	private static final class PreItemsSewerLevel extends SewerLevel implements Probe {
 		private List<Integer> rngProbe;
 
@@ -309,6 +331,14 @@ final class FloorProbeLevels {
 			throw new FloorOracle.SnapshotComplete();
 		}
 
+		@Override public Level level() { return this; }
+		@Override public List<Integer> rngProbe() { return rngProbe; }
+	}
+
+	private static final class PreItemsCityLevel extends CityLevel implements Probe {
+		private List<Integer> rngProbe;
+
+		@Override protected void createItems() { rngProbe = captureRng(); throw new FloorOracle.SnapshotComplete(); }
 		@Override public Level level() { return this; }
 		@Override public List<Integer> rngProbe() { return rngProbe; }
 	}
