@@ -109,11 +109,15 @@ fields are normalized to JSON `null` after generation and then Biome-formatted.
 The commands above reproduce the underlying Java observation; byte-for-byte
 regeneration of those lifecycle-only fixtures also requires that normalization.
 AAA-AAA-AFO, AAA-AAA-AFU, AAA-AAA-AAZ, and the HKT fixtures retain the emitted
-render facts. AAA-AAA-ACB is likewise lifecycle-only.
+render facts. AAA-AAA-ACB is likewise lifecycle-only. The AAA-AAA-AAA fixture's
+lifecycle-only scope includes exact PoolRoom geometry-dependent chest placement
+and item association; its unrelated additive render fields remain normalized.
 
 The Rust golden consumer validates every `fixtures/*.json` file. The schema-v3
 test requires all ten committed depth-one fixtures to match lifecycle probes,
 map bounds, heap cells, mob facts, and the report-visible item projection. The
+AAA-AAA-AAA focused PoolRoom test additionally compares every final structured
+heap and mob and pins the Pool chest at cell 315. The
 AAA-AAA-AFO, AAA-AAA-AFU, AAA-AAA-AAZ, and HKT floor-one fixtures also require
 exact terrain, discoverability, tile variance, transitions, traps, structured
 heaps/mobs, plants, and active blobs.

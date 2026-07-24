@@ -170,12 +170,12 @@ fn paint_special(
         }
         "LibraryRoom" => special_rooms::library_prizes(dungeon, room, items_to_spawn),
         "TreasuryRoom" => special_rooms::treasury_prizes_on_map(dungeon, room, map, items_to_spawn),
-        "PoolRoom" => vec![special_rooms::pool_prize_on_map(
-            dungeon,
-            room,
-            map,
-            items_to_spawn,
-        )],
+        "PoolRoom" => {
+            let prize = special_rooms::pool_prize_on_map(dungeon, room, map, items_to_spawn);
+            let cell = geometry_prize_cell.expect("PoolRoom geometry returns its pedestal cell");
+            map.record_heap(cell, "chest", prize.item.clone());
+            vec![prize]
+        }
         "StorageRoom" => special_rooms::storage_prizes(dungeon, room, map, items_to_spawn),
         "RunestoneRoom" => {
             special_rooms::runestone_prizes_on_map(dungeon, room, map, items_to_spawn)

@@ -201,11 +201,22 @@ fn pool_prize_without_piranhas(
     dungeon: &mut DungeonState,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> PlacedLoot {
-    let mut prize = if Random::int_max(3) == 0 {
-        find_prize_item(items_to_spawn, None).unwrap_or_else(|| pool_equip(dungeon))
-    } else {
-        pool_equip(dungeon)
-    };
+    // Java returns immediately when `findPrizeItem` succeeds. In particular,
+    // that path does not consume the equipment-category or upgrade rolls.
+    if Random::int_max(3) == 0 {
+        if let Some(mut prize) = find_prize_item(items_to_spawn, None) {
+            prize.source = Some("PoolRoom".into());
+            items_to_spawn.push(GeneratedItem::new(
+                "PotionOfInvisibility",
+                ItemCategory::Potion,
+            ));
+            return PlacedLoot {
+                item: prize,
+                heap_type: "chest",
+            };
+        }
+    }
+    let mut prize = pool_equip(dungeon);
     prize.cursed = false;
     if is_curse_enchant(&prize) {
         prize.enchantment = None;

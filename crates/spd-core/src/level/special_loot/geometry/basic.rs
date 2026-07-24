@@ -6,13 +6,16 @@ use crate::level::terrain::{TerrainMap, CHASM, EMPTY, EMPTY_SP, PEDESTAL, WALL, 
 use crate::random::Random;
 use crate::rooms::room::Room;
 
-pub(super) fn paint_pool(map: &mut TerrainMap, room: &Room, room_index: usize, doors: &DoorMap) {
+pub(super) fn paint_pool(
+    map: &mut TerrainMap,
+    room: &Room,
+    room_index: usize,
+    doors: &DoorMap,
+) -> Option<usize> {
     fill_room(map, room, WALL);
     fill_margin(map, room, 1, WATER);
 
-    let Some(door) = entrance(room, room_index, doors) else {
-        return;
-    };
+    let door = entrance(room, room_index, doors)?;
     let pedestal = if door.x == room.left {
         for y in (room.top + 1)..room.bottom {
             set(map, Point::new(room.left + 1, y), EMPTY_SP);
@@ -35,10 +38,12 @@ pub(super) fn paint_pool(map: &mut TerrainMap, room: &Room, room_index: usize, d
         Point::new(room.left + room.width() / 2, room.top + 1)
     };
     set(map, pedestal, PEDESTAL);
-    if let Some(cell) = map.point_to_cell(pedestal.x, pedestal.y) {
+    let cell = map.point_to_cell(pedestal.x, pedestal.y);
+    if let Some(cell) = cell {
         map.heap_occupied[cell] = true;
         map.item_allowed[cell] = false;
     }
+    cell
 }
 
 pub(super) fn paint_runestone(

@@ -36,18 +36,19 @@
       "area": "Special & secret rooms",
       "status": "partial",
       "implemented": [
-        "Exact structured heap capture for Crypt, Runestone, MagicalFire, Traps, Sentry, Storage, and ToxicGas fixture paths",
+        "Exact structured heap capture for Crypt, Pool, Runestone, MagicalFire, Traps, Sentry, Storage, and ToxicGas fixture paths",
         "Full SecretMaze layout plus covered RotGarden, WeakFloor, DemonSpawner, Summoning, and ToxicGas paint behavior",
         "Special and secret-room prize generation for supported room families"
       ],
       "remaining": [
-        "At least one legacy Room loot family still needs fixture-first geometry and lifecycle parity",
+        "Legacy Room loot families beyond the fixture-backed Pool path still need fixture-first geometry and lifecycle parity",
         "Other uncovered special or secret-room paint paths may retain legacy or fallback behavior",
         "Some additive terrain, trap, blob, or entity facts are not verified outside their committed fixtures"
       ],
       "impact": "Room terrain, prize positions, heap types, and later RNG may not match the game for an uncovered room family.",
       "evidence": [
         "crates/spd-core/src/level/special_loot",
+        "crates/spd-core/tests/java_oracle_goldens/pool.rs",
         "crates/spd-core/tests/java_oracle_goldens/toxic_gas.rs"
       ]
     },

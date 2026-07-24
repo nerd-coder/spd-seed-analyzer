@@ -12,6 +12,8 @@ const FINAL_HEAPS_SCHEMA_VERSION: u32 = 3;
 
 #[path = "java_oracle_goldens/final_heaps.rs"]
 mod final_heaps;
+#[path = "java_oracle_goldens/pool.rs"]
+mod pool;
 #[path = "java_oracle_goldens/toxic_gas.rs"]
 mod toxic_gas;
 
