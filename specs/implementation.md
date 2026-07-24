@@ -12,23 +12,21 @@ pinned checkout, normally at
 
 ## Checkpoint
 
-- `AAA-AAA-AAA` weapon-deck state now matches pinned Java from floor 3's
-  SacrificeRoom through floor 6 `createItems`.
-- SacrificeRoom uses the actual painted entrance door, restoring Java's center
-  nudge, WEP_T2 Spear prize, and downstream floor-6 Quarterstaff, Crossbow, and
-  Katana classes.
-- Floor 7's five main Generator drops remain exact.
+- Preserved `AAA-AAA-AAA` replay is exact through floor 9 at the available
+  pre-paint, pre-mobs, and pre-items RNG boundaries.
+- Floors 8–9 also match all pinned mobs and normalized structured heaps; no
+  shop occurs on either floor.
+- No generation change was needed for floors 8–9.
 
 ## Next phase
 
-Find the earliest remaining `AAA-AAA-AAA` heap or item mismatch after floor 7.
-Compare floor 8, then floor 9, at room-paint, shop, mobs, and `createItems`
-boundaries. Add a pinned Java fixture for the first divergence and port only the
-earliest proven RNG or generation mismatch.
+Extend the preserved `AAA-AAA-AAA` Java oracle beyond floor 9. Preserve any
+depth-10 lifecycle state needed to capture floor 11, compare RNG boundaries,
+mobs, and structured heaps, then port only the earliest proven divergence.
 
 ## Known limits
 
-- Uncovered room painters and Generator histories may diverge.
+- Fixture-specific room painters and Generator histories may still diverge.
 - ToxicGas vents/gas blobs are not exact exported additive facts.
 - VaultLevel branches and player-dependent later-shop bags are out of scope.
 - The unseeded early Guidebook page is intentionally out of scope.

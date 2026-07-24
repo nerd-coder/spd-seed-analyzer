@@ -3,7 +3,7 @@ use super::*;
 use std::ffi::OsStr;
 
 #[test]
-fn aaa_replay_pins_floors_six_through_nine_and_matches_through_library() {
+fn aaa_replay_pins_floors_six_through_nine_with_exact_late_prison_facts() {
     let fixtures: Vec<_> = (6..=9)
         .map(|depth| {
             let name = format!("aaa-aaa-aaa-final-heaps-floor-{depth}.json");
@@ -99,7 +99,7 @@ fn aaa_replay_pins_floors_six_through_nine_and_matches_through_library() {
             "{context} pinned final mobs"
         );
 
-        if depth == 6 {
+        if matches!(depth, 6 | 8 | 9) {
             assert_eq!(
                 actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
                 "{context} pre-mobs RNG"
@@ -244,6 +244,38 @@ fn aaa_replay_pins_floors_six_through_nine_and_matches_through_library() {
             );
         }
 
+        if depth == 8 || depth == 9 {
+            let actual_mobs: Vec<_> = map
+                .mobs
+                .iter()
+                .map(|mob| OracleMob {
+                    cell: mob.cell,
+                    class_name: mob.class_name.clone(),
+                })
+                .collect();
+            assert_eq!(actual_mobs, expected.final_mobs, "{context} exact mobs");
+
+            let actual_heaps: Vec<_> = map
+                .heaps
+                .iter()
+                .map(|heap| OracleHeap {
+                    cell: heap.cell,
+                    heap_type: heap.heap_type.clone(),
+                    items: heap
+                        .items
+                        .iter()
+                        .map(|item| OracleItem {
+                            class_name: oracle_item_class(&item.class_name).into(),
+                            quantity: item.quantity,
+                            level: item.level,
+                            cursed: item.cursed,
+                        })
+                        .collect(),
+                })
+                .collect();
+            assert_eq!(actual_heaps, expected.final_heaps, "{context} exact heaps");
+        }
+
         if depth == 6 {
             let weapon_heaps: Vec<_> = map
                 .heaps
@@ -293,6 +325,16 @@ fn aaa_replay_pins_floors_six_through_nine_and_matches_through_library() {
             );
             assert_crystal_vault_terrain(map, expected, &context);
         }
+    }
+}
+
+fn oracle_item_class(class_name: &str) -> &str {
+    // Java's `getSimpleName()` cannot distinguish nested Plant.Seed classes.
+    match class_name {
+        "RotberrySeed" | "SungrassSeed" | "FadeleafSeed" | "IcecapSeed" | "FirebloomSeed"
+        | "SorrowmossSeed" | "SwiftthistleSeed" | "BlindweedSeed" | "StormvineSeed"
+        | "EarthrootSeed" | "MageroyalSeed" | "StarflowerSeed" => "Seed",
+        _ => class_name,
     }
 }
 
