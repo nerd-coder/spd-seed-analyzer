@@ -36,11 +36,11 @@ export function AnalyzerWorkspace() {
         {sessions.map((session) => (
           <div
             key={session.id}
-            className="group/seed-tab flex min-w-0 max-w-[14rem] shrink-0 items-center"
+            className="group/seed-tab flex min-w-0 max-w-56 shrink-0 items-center"
           >
             <TabsTrigger
               value={session.id}
-              className="min-w-0 max-w-[12rem] gap-1 pr-1"
+              className="min-w-0 max-w-48 gap-1 pr-1"
             >
               {session.status === 'loading' || session.status === 'pending' ? (
                 <SpinnerGapIcon className="shrink-0 animate-spin" />

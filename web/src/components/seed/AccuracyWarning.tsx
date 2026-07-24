@@ -14,7 +14,7 @@ import accuracy from '../../../../specs/accuracy.json'
 
 export function AccuracyWarning() {
   return (
-    <Alert variant="warning" className="pr-2">
+    <Alert className="border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50 pr-2">
       <WarningIcon />
       <AlertTitle>Partial accuracy</AlertTitle>
       <AlertDescription>
@@ -47,7 +47,7 @@ export function AccuracyWarning() {
             </PopoverDescription>
           </PopoverHeader>
           <div className="overflow-x-auto ring-1 ring-foreground/10">
-            <table className="w-full min-w-144 border-collapse text-left text-xs/relaxed">
+            <table className="w-full min-w-xl border-collapse text-left text-xs/relaxed">
               <thead className="bg-muted text-foreground">
                 <tr>
                   <th className="px-2 py-1.5 font-medium">Area</th>
