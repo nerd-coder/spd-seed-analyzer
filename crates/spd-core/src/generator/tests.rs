@@ -70,3 +70,16 @@ fn cumulative_default_consumable_selection_skips_exotic_conversion_draw() {
 
     Random::pop_generator();
 }
+
+#[test]
+fn unstable_spellbook_constructor_burns_one_roll_per_selectable_scroll() {
+    Random::reset_generators();
+    Random::push_generator_seeded(0x5_0E11);
+    let generator = GeneratorState::full_reset_ordered();
+    let before = Random::peek_ints(12);
+
+    generator.burn_unstable_spellbook_setup();
+
+    assert_eq!(Random::int(), before[11]);
+    Random::pop_generator();
+}

@@ -321,9 +321,28 @@ impl GeneratorState {
 
         self.cats[idx].probs[i as usize] -= 1.0;
         let class_name = self.cats[idx].def.classes[i as usize];
+        if class_name == "UnstableSpellbook" {
+            self.burn_unstable_spellbook_setup();
+        }
         let mut item = GeneratedItem::new(class_name, ItemCategory::Artifact);
         randomize_item(&mut item, depth);
         Some(item)
+    }
+
+    /// `UnstableSpellbook` constructor drains the positive weights from
+    /// `defaultProbsTotal`, consuming one chances roll per selectable scroll.
+    pub(super) fn burn_unstable_spellbook_setup(&self) {
+        let mut probs = self.cats[Category::Scroll.index()]
+            .default_probs_total
+            .clone()
+            .expect("scrolls have combined default probabilities");
+        loop {
+            let index = Random::chances(&probs);
+            if index < 0 {
+                break;
+            }
+            probs[index as usize] = 0.0;
+        }
     }
 
     pub fn using_first_deck(&self) -> bool {

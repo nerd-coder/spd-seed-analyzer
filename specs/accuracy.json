@@ -19,7 +19,7 @@
         "Pinned standard, special, and secret room-count tables",
         "Pinned SecretLarderRoom minimum dimensions and food-placement viability",
         "Depth-one lifecycle fixtures across ten seeds, full HKT-JZN-XQQ floor 6–8 parity, and preserved-state AAA-AAA-AAA floor 6–9 oracle fixtures with exact room bounds",
-        "AAA-AAA-AAA floor-7 pre-mobs RNG parity through StatueRoom, PerimeterRoom, PitRoom crystal entrance, paintDoors, and isolated painter transition"
+        "AAA-AAA-AAA floor-7 painter RNG parity through PitRoom's UnstableSpellbook constructor, PillarsRoom geometry, and the exact pre-mobs boundary"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
@@ -60,7 +60,7 @@
       "status": "partial",
       "implemented": [
         "Forced drops, generator decks, main RegularLevel createItems drops, and supported special-room prizes",
-        "Item identities and exact heap capture on committed Java-oracle fixtures",
+        "Item identities and exact heap capture on committed Java-oracle fixtures, including UnstableSpellbook constructor RNG",
         "Supported quest rewards and covered shop stock flows",
         "Seed finder optional minimum item upgrade-level matching across the analyzed floor range"
       ],
@@ -82,7 +82,7 @@
       "status": "partial",
       "implemented": [
         "Source-ported RegularLevel ambient mob selection through floor 24",
-        "Depth-one mob lifecycle, full HKT-JZN-XQQ floor 6–8 mob parity, pinned AAA-AAA-AAA floor 6–9 mob facts, and exact AAA floor-7 StatueRoom entity placement",
+        "Depth-one mob lifecycle, full HKT-JZN-XQQ floor 6–8 mob parity, pinned AAA-AAA-AAA floor 6–9 mob facts, and exact AAA floor-7 ambient plus StatueRoom mobs",
         "Ghost, Wandmaker, Blacksmith, and Imp selection and reward flows"
       ],
       "remaining": [

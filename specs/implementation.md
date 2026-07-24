@@ -12,28 +12,24 @@ pinned checkout, normally at
 
 ## Checkpoint
 
-- `AAA-AAA-AAA` preserves Java-oracle floors 6–9 with exact room bounds;
-  floor 6 matches through pre-items.
-- Floor 7 matches both pre-mobs and pre-items RNG boundaries, including the
-  Wandmaker hook and ambient `createMobs` draw shape.
-- `StatueRoom` exports and reserves its pinned Statue cell (`2138`).
-- Remaining floor-7 mob mismatch: Guard is at Rust cell `232` versus oracle
-  cell `278`. Rust cell `232` is `EMPTY_DECO` while the oracle has `WALL` in
-  the `PillarsRoom` bounded by `(34,2)–(42,10)`.
-- The Rust `PillarsRoom` formulas match pinned source, including Room's
-  inclusive width/height override. Replacing them with watabou Rect spans is
-  incorrect: it regresses the exact floor-6 pre-mobs boundary and terrain.
-- Overall status remains `partial`.
+- `AAA-AAA-AAA` preserves exact Java room bounds on floors 6–9; floor 6 still
+  matches through pre-items.
+- Floor 7 now has exact pre-mobs/pre-items boundaries and exact mobs. The
+  Guard placement mismatch was caused before `PillarsRoom`: constructing the
+  PitRoom's `UnstableSpellbook` must randomize its scroll list with 11
+  `Random.chances` draws.
+- `PillarsRoom (34,2)–(42,10)` now enters at the pinned RNG state and paints
+  the Guard-blocking pillars exactly.
+- Overall accuracy remains `partial`.
 
 ## Next phase
 
-Continue floor 7 from the exact pre-items boundary:
+Continue `AAA-AAA-AAA` floor 7 from the exact pre-items boundary:
 
-1. Probe the painter RNG immediately before the `(34,2)–(42,10)` PillarsRoom
-   in Java and Rust; the geometry implementation itself is source-equivalent.
-2. Correct the earliest painter-order/RNG-entry divergence while preserving
-   the exact floor-6 boundary and terrain fixtures.
-3. Require exact floor-7 mobs, then continue to the earliest item divergence.
+1. Compare final structured heaps/items and locate the earliest mismatch.
+2. Port the responsible pinned item/placement lifecycle behavior.
+3. Preserve exact floor-6 fixtures and exact floor-7 mobs while advancing
+   toward full floor-7 terrain and heap parity.
 
 ## Known limits
 

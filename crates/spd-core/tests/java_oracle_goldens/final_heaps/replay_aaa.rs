@@ -149,6 +149,7 @@ fn aaa_replay_pins_floors_six_through_nine_and_matches_through_library() {
                     class_name: mob.class_name.clone(),
                 })
                 .collect();
+            assert_eq!(actual_mobs, expected.final_mobs, "{context} exact mobs");
             assert!(
                 actual_mobs.contains(&OracleMob {
                     cell: 2138,
