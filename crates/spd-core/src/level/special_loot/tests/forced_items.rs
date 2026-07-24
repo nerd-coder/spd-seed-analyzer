@@ -213,7 +213,7 @@ fn crypt_room_pushes_iron_key() {
 }
 
 #[test]
-fn statue_room_pushes_iron_key() {
+fn statue_room_consumes_center_jitter_before_weapon_and_pushes_iron_key() {
     Random::reset_generators();
     let run = init_run(36);
     Random::push_generator_seeded(106);
@@ -222,6 +222,11 @@ fn statue_room_pushes_iron_key() {
     let room = test_room("StatueRoom", 7, 7);
     let mut spawn = Vec::new();
     let loot = statue_weapon(&mut d, &room, &mut spawn);
+    assert_eq!(
+        Random::peek_ints(3),
+        [-519_812_201, 2_064_769_344, -1_269_687_844],
+        "pinned StatueRoom center + Statue.random weapon boundary"
+    );
     Random::pop_generator();
 
     assert_eq!(loot.heap_type, "statue");

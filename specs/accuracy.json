@@ -23,7 +23,7 @@
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
-        "The AAA-AAA-AAA floor-7 replay now matches LibraryRoom geometry and exact Identify/Upgrade prize cells; the pre-mobs probe remains one RNG call ahead after the later painter pass"
+        "The AAA-AAA-AAA floor-7 replay matches LibraryRoom prizes and now consumes StatueRoom.center() before Statue.random(); the next pre-mobs boundary still diverges after the remaining painter lifecycle"
       ],
       "impact": "Room selection, bounds, connections, or downstream RNG can differ on uncovered generation paths.",
       "evidence": [
