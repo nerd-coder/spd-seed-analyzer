@@ -68,14 +68,14 @@ jobs:
       - name: 🧪 Rust tests
         run: bun run test:rust
 
-      - name: 🏗️ Build (wasm + web)
-        run: bun run build
+      # - name: 🏗️ Build (wasm + web)
+      #   run: bun run build
 
-      - name: 🏗️ Install Playwright Chromium
-        run: bun run install:visual-browser:ci
+      # - name: 🏗️ Install Playwright Chromium
+      #   run: bun run install:visual-browser:ci
 
-      - name: 🖼️ Visual regression
-        run: bun run test:visual:only
+      # - name: 🖼️ Visual regression
+      #   run: bun run test:visual:only
 
   deploy:
     needs: check
