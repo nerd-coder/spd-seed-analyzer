@@ -42,6 +42,7 @@ From the analyzer repository root:
 ./tools/java-oracle/run --final-heaps-depth 9 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 11 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 12 AAA-AAA-AAA
+./tools/java-oracle/run --final-heaps-depth 13 AAA-AAA-AAA
 ./tools/java-oracle/run --generator-deck-rollover AAA-AAA-AAA
 ./tools/java-oracle/run --generator-lifecycle AAA-AAA-AAA
 ./tools/java-oracle/run --shop-bag-selection AAA-AAA-AAA
@@ -102,6 +103,8 @@ these commands (stdout is the default when `--output` is omitted):
   --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-11.json AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 12 \
   --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-12.json AAA-AAA-AAA
+./tools/java-oracle/run --final-heaps-depth 13 \
+  --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-13.json AAA-AAA-AAA
 ./tools/java-oracle/run --generator-deck-rollover \
   --output tools/java-oracle/fixtures/generator/aaa-aaa-aaa-food-rollover.json \
   AAA-AAA-AAA
@@ -137,8 +140,9 @@ The deeper fixtures pin full Java observations. Rust matches the complete HKT
 floor 6–8 lifecycles. The AAA replay is exact through floor 9, preserves the
 floor-10 Tengu lifecycle, and pins floor 11 through exact RNG boundaries, mobs,
 and SecretHoardRoom heaps. Other floor-11 heaps remain outside that exact claim.
-The floor-12 fixture pins exact FigureEightBuilder room classes and bounds.
-Painter and later lifecycle boundaries remain outside that parity claim.
+The floor-12 fixture is exact through its normalized final heaps. The floor-13
+fixture currently pins exact room classes and bounds plus the pre-paint RNG
+boundary; later floor-13 lifecycle boundaries remain outside that parity claim.
 
 The `GFX-PZH-DCH` floor-one fixture additionally pins CrystalPathRoom's six
 alternating potion/scroll drops to their exact cells. Its focused Rust test

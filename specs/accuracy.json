@@ -22,18 +22,21 @@
         "AAA-AAA-AAA floors 2–4 exact pre-mobs/pre-items RNG parity, including SacrificeRoom Room.center burns, floor-3 WaterBridge exit placement, and floor-4 StudyRoom center-heap placement",
         "AAA-AAA-AAA floor-7 painter RNG parity through PitRoom's UnstableSpellbook constructor, exact central skeleton stack lifecycle, PillarsRoom geometry, and the exact pre-mobs boundary",
         "AAA-AAA-AAA floors 8–9 and 11 exact pre-paint, pre-mobs, and pre-items RNG boundaries; floor 11 preserves the floor-10 Tengu lifecycle",
-        "AAA-AAA-AAA floor 12 exact FigureEightBuilder room classes and bounds, pre-paint, pre-mobs, and pre-items RNG boundaries, including CaveExitRoom size probabilities and SecretRunestoneRoom's exact three-drop painter"
+        "AAA-AAA-AAA floor 12 exact FigureEightBuilder room classes and bounds, pre-paint, pre-mobs, and pre-items RNG boundaries, including CaveExitRoom size probabilities and SecretRunestoneRoom's exact three-drop painter",
+        "AAA-AAA-AAA floor 13 exact room classes and normalized bounds plus the pre-paint RNG boundary"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
-        "Preserved-run floors beyond depth 12 still require phase-by-phase parity checks"
+        "AAA-AAA-AAA floor 13 remains unverified after the pre-paint boundary",
+        "Preserved-run floors beyond depth 13 still require phase-by-phase parity checks"
       ],
       "impact": "Room selection, bounds, connections, or downstream RNG can differ on uncovered generation paths.",
       "evidence": [
         "crates/spd-core/tests/java_oracle_goldens.rs",
         "crates/spd-core/tests/java_oracle_goldens/final_heaps",
-        "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-12.json"
+        "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-12.json",
+        "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-13.json"
       ]
     },
     {

@@ -8,14 +8,13 @@
 
 ## Next phase
 
-Generate and commit the pinned AAA-AAA-AAA floor-13 oracle fixture. Compare room
-classes and bounds plus the pre-paint RNG probe. Fix only the first semantic
-difference, then stop; defer later floor-13 boundaries to following phases.
+Compare AAA-AAA-AAA floor 13 at the pre-mobs RNG boundary. Fix only the first
+semantic difference, then stop; defer the pre-items boundary and final facts.
 
 ## Current checkpoint
 
-- Floor 12 matches Java's room classes, normalized bounds, pre-paint, pre-mobs,
-  and pre-items RNG boundaries plus all 16 normalized final heaps.
-- Floor 11 remains exact at its documented deterministic boundaries.
+- Floor 13 matches Java's room classes, normalized bounds, and pre-paint RNG
+  boundary. Its pinned oracle fixture is committed for later checkpoints.
+- Floor 12 remains exact through its documented final-heap boundary.
 
 Run the complete CI `check` sequence from `AGENTS.md` before committing.

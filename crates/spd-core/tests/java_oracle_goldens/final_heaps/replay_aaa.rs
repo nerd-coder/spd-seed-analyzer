@@ -482,6 +482,45 @@ fn aaa_floor_twelve_matches_the_pinned_layout_and_item_lifecycle() {
     );
 }
 
+#[test]
+fn aaa_floor_thirteen_matches_the_pinned_layout_boundary() {
+    let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-13.json");
+    let path = fixture_paths()
+        .into_iter()
+        .find(|path| path.file_name().is_some_and(|file| file == name))
+        .expect("missing AAA floor-13 fixture");
+    let fixture = read_fixture(&path);
+    let expected = fixture.floors.first().expect("floor-13 oracle facts");
+
+    let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
+    let mut actual = None;
+    for depth in 1_i32..=13 {
+        dungeon.depth = depth;
+        actual = Some(create_level_partial(&mut dungeon));
+    }
+    let actual = actual.expect("floor-13 replay");
+    let mut actual_rooms = actual.rooms.clone();
+    actual_rooms.sort();
+    assert_eq!(actual_rooms, expected.rooms, "floor-13 room classes");
+
+    let bounds: Vec<_> = actual
+        .room_bounds
+        .iter()
+        .map(|room| OracleRoomFact {
+            class_name: room.class_name.clone(),
+            left: room.left,
+            top: room.top,
+            right: room.right,
+            bottom: room.bottom,
+        })
+        .collect();
+    assert_eq!(bounds, expected.room_bounds, "floor-13 room bounds");
+    assert_eq!(
+        actual.pre_paint_rng_probe, expected.pre_paint_rng,
+        "floor-13 pre-paint RNG boundary"
+    );
+}
+
 fn oracle_item_class(class_name: &str) -> &str {
     // Java's `getSimpleName()` cannot distinguish nested Plant.Seed classes.
     match class_name {
