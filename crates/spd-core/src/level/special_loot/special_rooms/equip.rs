@@ -151,9 +151,7 @@ fn set_terrain(map: &mut TerrainMap, point: Point, terrain: i32) {
 pub fn bomb_random() -> GeneratedItem {
     // Bomb.random: 1/4 DoubleBomb else Bomb
     if Random::int_max(4) == 0 {
-        let mut b = GeneratedItem::new("DoubleBomb", ItemCategory::Other);
-        b.quantity = 2;
-        b
+        GeneratedItem::new("DoubleBomb", ItemCategory::Other)
     } else {
         GeneratedItem::new("Bomb", ItemCategory::Other)
     }

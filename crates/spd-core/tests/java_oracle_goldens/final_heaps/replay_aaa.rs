@@ -3,7 +3,7 @@ use super::*;
 use std::ffi::OsStr;
 
 #[test]
-fn aaa_replay_pins_floors_six_through_nine_and_matches_vault_then_garden() {
+fn aaa_replay_pins_floors_six_through_nine_and_matches_vault_garden_then_armory() {
     let fixtures: Vec<_> = (6..=9)
         .map(|depth| {
             let name = format!("aaa-aaa-aaa-final-heaps-floor-{depth}.json");
@@ -131,6 +131,7 @@ fn aaa_replay_pins_floors_six_through_nine_and_matches_vault_then_garden() {
                 "{context} full GardenRoom terrain"
             );
             assert_eq!(map.tiles[1285], 2, "{context} planted grass cell");
+            assert_armory_boundary(map, expected, &context);
         }
 
         if depth == 6 {
@@ -158,6 +159,63 @@ fn aaa_replay_pins_floors_six_through_nine_and_matches_vault_then_garden() {
             assert_crystal_vault_terrain(map, expected, &context);
         }
     }
+}
+
+fn assert_armory_boundary(map: &spd_core::report::FloorMap, expected: &OracleFloor, context: &str) {
+    let room = expected
+        .room_bounds
+        .iter()
+        .find(|room| room.class_name == "ArmoryRoom")
+        .unwrap_or_else(|| panic!("{context} ArmoryRoom bounds"));
+    let oracle = expected.terrain.as_ref().expect("pinned terrain");
+
+    // Later water/grass/trap/decorate passes may replace EMPTY tiles. Pin the
+    // Armory painter's persistent boundary, locked entrance, and statue.
+    for y in room.top..=room.bottom {
+        for x in room.left..=room.right {
+            let cell = (y * expected.width as i32 + x) as usize;
+            if x == room.left
+                || x == room.right
+                || y == room.top
+                || y == room.bottom
+                || oracle[cell] == 25
+            {
+                assert_eq!(
+                    map.tiles[cell], oracle[cell],
+                    "{context} Armory cell {cell}"
+                );
+            }
+        }
+    }
+
+    let heaps: Vec<_> = map
+        .heaps
+        .iter()
+        .filter(|heap| {
+            let x = heap.cell as i32 % expected.width as i32;
+            let y = heap.cell as i32 / expected.width as i32;
+            x > room.left && x < room.right && y > room.top && y < room.bottom
+        })
+        .map(|heap| {
+            let item = &heap.items[0];
+            (
+                heap.cell,
+                heap.heap_type.as_str(),
+                item.class_name.as_str(),
+                item.quantity,
+                item.level,
+                item.cursed,
+            )
+        })
+        .collect();
+    assert_eq!(
+        heaps,
+        [
+            (2076, "heap", "DoubleBomb", 1, 0, false),
+            (2268, "heap", "ThrowingSpear", 3, 1, true),
+        ],
+        "{context} Armory prize placement"
+    );
 }
 
 fn assert_crystal_vault_terrain(

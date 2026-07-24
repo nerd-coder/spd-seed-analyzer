@@ -23,7 +23,7 @@
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
-        "The AAA-AAA-AAA replay is pinned through exact floor-7 GardenRoom terrain and plant placement; its later ArmoryRoom painter path remains divergent"
+        "The AAA-AAA-AAA replay is pinned through floor-7 ArmoryRoom boundary/statue geometry and exact prize placement; its later LibraryRoom painter path remains divergent"
       ],
       "impact": "Room selection, bounds, connections, or downstream RNG can differ on uncovered generation paths.",
       "evidence": [
@@ -37,7 +37,7 @@
       "status": "partial",
       "implemented": [
         "Exact structured heap capture for Crypt, Pool, Runestone, MagicalFire, Traps, Sentry, Storage, ToxicGas, CrystalPath, and CrystalVault fixture paths",
-        "Full SecretMaze layout plus covered Garden, RotGarden, WeakFloor, DemonSpawner, Summoning, and ToxicGas paint behavior",
+        "Full SecretMaze layout plus covered Armory, Garden, RotGarden, WeakFloor, DemonSpawner, Summoning, and ToxicGas paint behavior",
         "Special and secret-room prize generation for supported room families"
       ],
       "remaining": [
