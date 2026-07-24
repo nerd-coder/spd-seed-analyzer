@@ -49,6 +49,9 @@ export type FinderRunState = {
   status: FinderStatus
   scanned: number
   requestedCandidates: number
+  currentCandidateNumber: number | null
+  currentCandidateSeed: number | null
+  currentDepth: number | null
   nextSeed: number | null
   exhausted: boolean
   cancelRequested: boolean
@@ -56,12 +59,17 @@ export type FinderRunState = {
   matches: SeedSearchMatch[]
   message: string | null
   error: string | null
+  startedAt: number | null
+  finishedAt: number | null
 }
 
 export const INITIAL_FINDER_RUN: FinderRunState = {
   status: 'idle',
   scanned: 0,
   requestedCandidates: 0,
+  currentCandidateNumber: null,
+  currentCandidateSeed: null,
+  currentDepth: null,
   nextSeed: null,
   exhausted: false,
   cancelRequested: false,
@@ -69,4 +77,6 @@ export const INITIAL_FINDER_RUN: FinderRunState = {
   matches: [],
   message: null,
   error: null,
+  startedAt: null,
+  finishedAt: null,
 }

@@ -4,11 +4,9 @@ import {
   type FinderConfig,
   type FinderRunState,
   INITIAL_FINDER_RUN,
-  MAX_RESULTS,
 } from '@/components/finder/finder-types'
-import { type SeedSearchMatch, searchSeeds } from '@/lib/spd-wasm'
+import { searchSeedsInWorker, type WorkerTask } from '@/lib/spd-worker-client'
 
-const SEARCH_CHUNK_SIZE = 5
 export const MAX_FINDER_SESSIONS = 10
 
 export type FinderSession = {
@@ -27,6 +25,7 @@ export const $activeFinderSession = computed(
 )
 
 const cancelledIds = new Set<string>()
+const searchTasks = new Map<string, WorkerTask<unknown>>()
 let nextFinderId = 1
 
 function searchName(config: FinderConfig): string {
@@ -47,16 +46,14 @@ function patchFinderSession(id: string, run: FinderRunState) {
   return true
 }
 
-function yieldToBrowser(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 0))
-}
-
 export function setActiveFinder(id: string | null) {
   $activeFinderId.set(id)
 }
 
 export function closeFinderSession(id: string) {
   cancelledIds.add(id)
+  searchTasks.get(id)?.cancel()
+  searchTasks.delete(id)
   const sessions = $finderSessions.get()
   const index = sessions.findIndex((session) => session.id === id)
   if (index < 0) return
@@ -69,11 +66,25 @@ export function closeFinderSession(id: string) {
   }
 }
 
-export function cancelFinderSearch(id: string) {
-  cancelledIds.add(id)
-  const session = $finderSessions.get().find((item) => item.id === id)
-  if (session?.run.status === 'running') {
-    patchFinderSession(id, { ...session.run, cancelRequested: true })
+export function cancelFinderSearch(id?: string) {
+  const targetIds = id
+    ? [id]
+    : $finderSessions
+        .get()
+        .filter((session) => session.run.status === 'running')
+        .map((session) => session.id)
+  for (const targetId of targetIds) {
+    cancelledIds.add(targetId)
+    searchTasks.get(targetId)?.cancel()
+    searchTasks.delete(targetId)
+    const session = $finderSessions.get().find((item) => item.id === targetId)
+    if (session?.run.status !== 'running') continue
+    patchFinderSession(targetId, {
+      ...session.run,
+      status: 'cancelled',
+      cancelRequested: false,
+      finishedAt: Date.now(),
+    })
   }
 }
 
@@ -87,7 +98,10 @@ export async function startFinderSearch(config: FinderConfig) {
       ...INITIAL_FINDER_RUN,
       status: 'running',
       requestedCandidates: config.candidateCount,
+      currentDepth: config.floors,
       nextSeed: config.startSeed,
+      startedAt: Date.now(),
+      finishedAt: null,
     },
   }
   const existing = $finderSessions.get()
@@ -98,102 +112,72 @@ export async function startFinderSearch(config: FinderConfig) {
   for (const item of dropped) cancelledIds.add(item.id)
   $finderSessions.set([...existing.slice(dropped.length), session])
   $activeFinderId.set(id)
-  await yieldToBrowser()
-
-  let scanned = 0
-  let cursor: number | null = config.startSeed
-  let exhausted = false
-  let message: string | null = null
-  const matchesBySeed = new Map<number, SeedSearchMatch>()
-
   try {
-    while (
-      scanned < config.candidateCount &&
-      matchesBySeed.size < config.maxMatches &&
-      cursor !== null &&
-      !exhausted &&
-      !cancelledIds.has(id)
-    ) {
-      const candidateCount = Math.min(
-        SEARCH_CHUNK_SIZE,
-        config.candidateCount - scanned
-      )
-      const result = await searchSeeds({
-        ...config,
-        startSeed: cursor,
-        candidateCount,
-        maxMatches: Math.min(
-          MAX_RESULTS,
-          config.maxMatches - matchesBySeed.size
-        ),
-      })
-      scanned += result.candidatesScanned
-      cursor = result.nextSeed
-      exhausted = result.exhausted
-      message = result.message
-      for (const match of result.matches) {
-        if (!matchesBySeed.has(match.seed.numeric)) {
-          matchesBySeed.set(match.seed.numeric, match)
-        }
-      }
-      if (
-        !patchFinderSession(id, {
-          status: 'running',
-          scanned,
-          requestedCandidates: config.candidateCount,
-          nextSeed: cursor,
-          exhausted,
-          cancelRequested: cancelledIds.has(id),
-          completionReason: null,
-          matches: Array.from(matchesBySeed.values()),
-          message,
-          error: null,
+    const task = searchSeedsInWorker(
+      config,
+      (result) => {
+        const current = $finderSessions.get().find((item) => item.id === id)
+        if (current?.run.status !== 'running') return
+        patchFinderSession(id, {
+          ...current.run,
+          scanned: result.candidatesScanned,
+          nextSeed: result.nextSeed,
+          exhausted: result.exhausted,
+          matches: result.matches,
+          message: result.message,
         })
-      )
-        return
-      if (
-        result.candidatesScanned === 0 ||
-        matchesBySeed.size >= config.maxMatches ||
-        exhausted ||
-        cursor === null
-      )
-        break
-      await yieldToBrowser()
-    }
-
-    const wasCancelled = cancelledIds.has(id)
+      },
+      ({ candidateNumber, seed, depth }) => {
+        const current = $finderSessions.get().find((item) => item.id === id)
+        if (current?.run.status !== 'running') return
+        patchFinderSession(id, {
+          ...current.run,
+          currentCandidateNumber: candidateNumber,
+          currentCandidateSeed: seed,
+          currentDepth: depth,
+        })
+      }
+    )
+    searchTasks.set(id, task)
+    const result = await task.promise
+    if (cancelledIds.has(id)) return
     patchFinderSession(id, {
-      status: wasCancelled ? 'cancelled' : 'completed',
-      scanned,
+      status: 'completed',
+      scanned: result.candidatesScanned,
       requestedCandidates: config.candidateCount,
-      nextSeed: cursor,
-      exhausted,
+      currentCandidateNumber: result.candidatesScanned || null,
+      currentCandidateSeed:
+        result.candidatesScanned > 0
+          ? config.startSeed + result.candidatesScanned - 1
+          : null,
+      currentDepth: config.floors,
+      nextSeed: result.nextSeed,
+      exhausted: result.exhausted,
       cancelRequested: false,
-      completionReason: wasCancelled
-        ? null
-        : exhausted
-          ? 'exhausted'
-          : matchesBySeed.size >= config.maxMatches
-            ? 'result-limit'
-            : 'scanned',
-      matches: Array.from(matchesBySeed.values()),
-      message,
+      completionReason: result.exhausted
+        ? 'exhausted'
+        : result.matches.length >= config.maxMatches
+          ? 'result-limit'
+          : 'scanned',
+      matches: result.matches,
+      message: result.message,
       error: null,
+      startedAt: session.run.startedAt,
+      finishedAt: Date.now(),
     })
   } catch (error) {
+    if (cancelledIds.has(id)) return
     patchFinderSession(id, {
-      status: cancelledIds.has(id) ? 'cancelled' : 'error',
-      scanned,
-      requestedCandidates: config.candidateCount,
-      nextSeed: cursor,
-      exhausted,
+      ...($finderSessions.get().find((item) => item.id === id)?.run ??
+        session.run),
+      status: 'error',
       cancelRequested: false,
       completionReason: null,
-      matches: Array.from(matchesBySeed.values()),
-      message,
       error: error instanceof Error ? error.message : String(error),
+      finishedAt: Date.now(),
     })
   } finally {
+    searchTasks.delete(id)
     cancelledIds.delete(id)
   }
 }

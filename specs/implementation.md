@@ -22,6 +22,13 @@ thin consumers.
 ## Verified state
 
 - The seed finder UI keeps up to ten in-memory search instances in nanostores.
+  Finder searches and full seed analyses execute in dedicated web workers, so
+  synchronous WASM generation cannot block the browser UI. Both flows expose
+  live elapsed time and terminate their worker immediately when cancelled.
+  Search progress identifies the in-flight numeric seed, one-based candidate
+  number, analysis depth, and matches found so far. Cancelling retains the last
+  completed progress snapshot and displays any matches already found; finder
+  tab captions include their live result count.
   Every execution opens a result tab named for its single requested item or
   `Find N items` for multiple constraints; the oldest instance is dropped at
   the cap. Search parameters live in the sidebar, and finder tabs use the same

@@ -36,6 +36,7 @@ export {
   ANALYZE_FLOORS,
   analyzeDraftSeed,
   analyzeSeedInput,
+  cancelSeedAnalysis,
   closeSeedSession,
   MAX_SAVED_SEEDS,
   normalizeSeedInput,

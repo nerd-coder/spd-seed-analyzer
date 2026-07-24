@@ -3,7 +3,13 @@ import {
   SpinnerGapIcon,
   StopIcon,
 } from '@phosphor-icons/react'
-import { type FormEvent, useRef, useState } from 'react'
+import {
+  type FormEvent,
+  type MouseEvent,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import { Button } from '@/components/ui/button'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
@@ -23,6 +29,7 @@ import {
 import { SearchScopeFields } from './SearchScopeFields'
 
 const INITIAL_FLOORS = 10
+const CANCEL_COOLDOWN_MS = 1_000
 
 type FinderFormProps = {
   running: boolean
@@ -38,7 +45,9 @@ export function FinderForm({
   onCancel,
 }: FinderFormProps) {
   const nextConstraintId = useRef(2)
+  const suppressNextSubmit = useRef(false)
   const [attempted, setAttempted] = useState(false)
+  const [cancelCooldown, setCancelCooldown] = useState(false)
   const [startSeed, setStartSeed] = useState<FinderNumericInput>(0)
   const [candidateCount, setCandidateCount] = useState<FinderNumericInput>(100)
   const [floors, setFloors] = useState(INITIAL_FLOORS)
@@ -69,6 +78,15 @@ export function FinderForm({
     candidateCountInvalid ||
     maxMatchesInvalid ||
     constraintsInvalid
+
+  useEffect(() => {
+    if (!cancelCooldown) return
+    const timer = window.setTimeout(
+      () => setCancelCooldown(false),
+      CANCEL_COOLDOWN_MS
+    )
+    return () => window.clearTimeout(timer)
+  }, [cancelCooldown])
 
   function updateFloors(value: number) {
     setFloors(value)
@@ -114,6 +132,10 @@ export function FinderForm({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (suppressNextSubmit.current || cancelCooldown) {
+      suppressNextSubmit.current = false
+      return
+    }
     setAttempted(true)
     if (invalid) return
     onSearch({
@@ -131,6 +153,17 @@ export function FinderForm({
       matchMode,
       maxMatches: Number(maxMatches),
     })
+  }
+
+  function cancel(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault()
+    event.stopPropagation()
+    suppressNextSubmit.current = true
+    setCancelCooldown(true)
+    onCancel()
+    window.setTimeout(() => {
+      suppressNextSubmit.current = false
+    }, 0)
   }
 
   return (
@@ -176,7 +209,7 @@ export function FinderForm({
             type="button"
             variant="destructive"
             disabled={cancelRequested}
-            onClick={onCancel}
+            onClick={cancel}
           >
             {cancelRequested ? (
               <SpinnerGapIcon
@@ -189,7 +222,7 @@ export function FinderForm({
             {cancelRequested ? 'Cancelling…' : 'Cancel'}
           </Button>
         ) : (
-          <Button type="submit">
+          <Button type="submit" disabled={cancelCooldown}>
             <MagnifyingGlassIcon data-icon="inline-start" />
             Find seeds
           </Button>

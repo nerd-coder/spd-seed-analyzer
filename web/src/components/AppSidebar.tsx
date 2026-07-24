@@ -133,9 +133,7 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
             running={activeFinder?.run.status === 'running'}
             cancelRequested={activeFinder?.run.cancelRequested ?? false}
             onSearch={(config) => void startFinderSearch(config)}
-            onCancel={() => {
-              if (activeFinder) cancelFinderSearch(activeFinder.id)
-            }}
+            onCancel={() => cancelFinderSearch()}
           />
         )}
 

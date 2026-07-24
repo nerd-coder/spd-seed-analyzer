@@ -8,7 +8,8 @@
 import { persistentAtom } from '@nanostores/persistent'
 import { atom, computed } from 'nanostores'
 
-import { analyzeSeed, type SeedReport } from '@/lib/spd-wasm'
+import type { SeedReport } from '@/lib/spd-wasm'
+import { analyzeSeedInWorker, type WorkerTask } from '@/lib/spd-worker-client'
 
 // —— keys / limits ————————————————————————————————————————————————
 
@@ -26,7 +27,12 @@ const REANALYZE_GAP_MS = 350
 
 // —— types ————————————————————————————————————————————————————————
 
-export type SessionStatus = 'pending' | 'loading' | 'ready' | 'error'
+export type SessionStatus =
+  | 'pending'
+  | 'loading'
+  | 'ready'
+  | 'cancelled'
+  | 'error'
 
 export type SeedSession = {
   /** Stable tab id (normalized input key). */
@@ -36,6 +42,8 @@ export type SeedSession = {
   status: SessionStatus
   report: SeedReport | null
   error: string | null
+  startedAt: number | null
+  finishedAt: number | null
 }
 
 // —— helpers ——————————————————————————————————————————————————————
@@ -113,6 +121,7 @@ export const $sessionCount = computed($sessions, (s) => s.length)
 // —— internal rehydrate control ————————————————————————————————————
 
 const closedIds = new Set<string>()
+const analyzeTasks = new Map<string, WorkerTask<SeedReport>>()
 let rehydrateGen = 0
 
 // —— pure mutations ————————————————————————————————————————————————
@@ -146,18 +155,36 @@ function patchSession(id: string, patch: Partial<SeedSession>) {
 }
 
 async function runAnalyze(id: string, input: string): Promise<boolean> {
-  patchSession(id, { status: 'loading', error: null })
+  patchSession(id, {
+    status: 'loading',
+    error: null,
+    startedAt: Date.now(),
+    finishedAt: null,
+  })
+  const task = analyzeSeedInWorker(input, ANALYZE_FLOORS)
+  analyzeTasks.get(id)?.cancel()
+  analyzeTasks.set(id, task)
   try {
-    const report = await analyzeSeed(input, ANALYZE_FLOORS)
-    patchSession(id, { status: 'ready', report, error: null })
+    const report = await task.promise
+    if (analyzeTasks.get(id) !== task) return false
+    patchSession(id, {
+      status: 'ready',
+      report,
+      error: null,
+      finishedAt: Date.now(),
+    })
     return true
   } catch (err) {
+    if (analyzeTasks.get(id) !== task) return false
     patchSession(id, {
       status: 'error',
       report: null,
       error: err instanceof Error ? err.message : String(err),
+      finishedAt: Date.now(),
     })
     return false
+  } finally {
+    if (analyzeTasks.get(id) === task) analyzeTasks.delete(id)
   }
 }
 
@@ -176,6 +203,8 @@ export function setActiveSeed(id: string | null) {
  */
 export function closeSeedSession(id: string) {
   closedIds.add(id)
+  analyzeTasks.get(id)?.cancel()
+  analyzeTasks.delete(id)
   const prev = $sessions.get()
   const idx = prev.findIndex((s) => s.id === id)
   if (idx < 0) return
@@ -186,6 +215,15 @@ export function closeSeedSession(id: string) {
     const fallback = next[idx] ?? next[idx - 1] ?? next[0] ?? null
     $activeSeedId.set(fallback?.id ?? null)
   }
+}
+
+export function cancelSeedAnalysis(id: string) {
+  const session = $sessions.get().find((item) => item.id === id)
+  if (session?.status !== 'loading' && session?.status !== 'pending') return
+  analyzeTasks.get(id)?.cancel()
+  analyzeTasks.delete(id)
+  patchSession(id, { status: 'cancelled', error: null, finishedAt: Date.now() })
+  $analyzing.set(analyzeTasks.size > 0)
 }
 
 async function analyzeSeedInputInternal(
@@ -228,6 +266,8 @@ async function analyzeSeedInputInternal(
     status: 'loading',
     report: null,
     error: null,
+    startedAt: Date.now(),
+    finishedAt: null,
   }
   nextSessions = [...nextSessions, session]
   $sessions.set(nextSessions)
@@ -292,6 +332,8 @@ export function startSessionRehydrate(): () => void {
     status: 'pending' as const,
     report: null,
     error: null,
+    startedAt: null,
+    finishedAt: null,
   }))
 
   closedIds.clear()

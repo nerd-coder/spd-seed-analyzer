@@ -5,9 +5,19 @@ import {
   WarningIcon,
   XIcon,
 } from '@phosphor-icons/react'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { ScrollableSessionTabs } from '@/components/ScrollableSessionTabs'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsTrigger } from '@/components/ui/tabs'
 import { WorkspaceEmptyPlaceholder } from '@/components/WorkspaceEmptyPlaceholder'
 import { useSeedTabsHeight } from '@/hooks/useSeedTabsHeight'
@@ -27,6 +37,9 @@ const PARTIAL_MESSAGE =
 export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
   const sessions = useStore($finderSessions)
   const activeId = useStore($activeFinderId)
+  const [closeConfirmationId, setCloseConfirmationId] = useState<string | null>(
+    null
+  )
   const tabsRef = useRef<HTMLDivElement>(null)
   useSeedTabsHeight(tabsRef, sessions.length > 0)
 
@@ -34,6 +47,20 @@ export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
     const input = match.seed.code ?? String(match.seed.numeric)
     void analyzeSeedInput(input)
     onOpenAnalyze()
+  }
+
+  function requestClose(id: string, running: boolean) {
+    if (running) {
+      setCloseConfirmationId(id)
+      return
+    }
+    closeFinderSession(id)
+  }
+
+  function confirmClose() {
+    if (!closeConfirmationId) return
+    closeFinderSession(closeConfirmationId)
+    setCloseConfirmationId(null)
   }
 
   if (sessions.length === 0) {
@@ -56,22 +83,26 @@ export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
         {sessions.map((session) => (
           <div
             key={session.id}
-            className="group/finder-tab flex min-w-0 max-w-[14rem] shrink-0 items-center"
+            className="group/finder-tab flex min-w-0 max-w-56 shrink-0 items-center"
           >
             <TabsTrigger
               value={session.id}
-              className="min-w-0 max-w-[12rem] gap-1 pr-1"
+              className="min-w-0 max-w-48 gap-1 pr-1"
             >
               {session.run.status === 'running' ? (
                 <SpinnerGapIcon className="shrink-0 animate-spin" />
               ) : null}
-              <span className="truncate text-xs">{session.name}</span>
+              <span className="truncate text-xs">
+                {session.name} ({session.run.matches.length})
+              </span>
             </TabsTrigger>
             <button
               type="button"
               className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex size-5 shrink-0 items-center justify-center rounded-none opacity-60 group-hover/finder-tab:opacity-100"
               aria-label={`Close ${session.name}`}
-              onClick={() => closeFinderSession(session.id)}
+              onClick={() =>
+                requestClose(session.id, session.run.status === 'running')
+              }
             >
               <XIcon className="size-3" />
             </button>
@@ -95,6 +126,32 @@ export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
           </TabsContent>
         ))}
       </div>
+      <Dialog
+        open={closeConfirmationId !== null}
+        onOpenChange={(open) => {
+          if (!open) setCloseConfirmationId(null)
+        }}
+      >
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Cancel and close search?</DialogTitle>
+            <DialogDescription>
+              This search is still running. Closing its tab will cancel the
+              search and discard its results.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                Keep searching
+              </Button>
+            </DialogClose>
+            <Button type="button" variant="destructive" onClick={confirmClose}>
+              Cancel search and close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Tabs>
   )
 }

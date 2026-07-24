@@ -35,6 +35,7 @@ import {
   ItemTitle,
 } from '@/components/ui/item'
 import { Progress } from '@/components/ui/progress'
+import { formatElapsed, useElapsedTime } from '@/hooks/useElapsedTime'
 import { formatItemSource } from '@/lib/labels'
 import type { SeedSearchMatch } from '@/lib/spd-wasm'
 import type { FinderRunState } from './finder-types'
@@ -47,15 +48,15 @@ function statusCopy(run: FinderRunState): {
     return {
       label: run.cancelRequested ? 'Cancelling' : 'Searching',
       description: run.cancelRequested
-        ? 'The current five-seed chunk will finish before search stops.'
-        : 'Scanning in five-seed chunks so progress and cancellation stay responsive.',
+        ? 'Stopping the search worker.'
+        : 'Scanning in a background worker so the interface stays responsive.',
     }
   }
   if (run.status === 'cancelled') {
     return {
       label: 'Cancelled',
       description:
-        'The scan stopped between chunks. Results found so far are retained.',
+        'The background worker stopped. Results found so far are retained.',
     }
   }
   if (run.status === 'error') {
@@ -169,6 +170,7 @@ export function FinderResults({
   run: FinderRunState
   onAnalyze: (match: SeedSearchMatch) => void
 }) {
+  const elapsed = useElapsedTime(run.startedAt, run.status === 'running')
   if (run.status === 'idle') {
     return (
       <Empty>
@@ -216,10 +218,16 @@ export function FinderResults({
           <span>
             {run.scanned} / {run.requestedCandidates} scanned
           </span>
-          {run.nextSeed !== null ? (
-            <span className="font-mono">Next: {run.nextSeed}</span>
+          <span className="font-mono">Elapsed {formatElapsed(elapsed)}</span>
+          {run.currentCandidateSeed !== null ? (
+            <span className="font-mono">
+              {run.status === 'running' ? 'Current' : 'Last'}:{' '}
+              {run.currentCandidateSeed} (candidate{' '}
+              {run.currentCandidateNumber ?? run.scanned}) · depth{' '}
+              {run.currentDepth ?? '—'}
+            </span>
           ) : (
-            <span>End of seed range</span>
+            <span>No candidate evaluated</span>
           )}
         </CardFooter>
       </Card>
@@ -237,7 +245,9 @@ export function FinderResults({
           <StopIcon />
           <AlertTitle>Search cancelled</AlertTitle>
           <AlertDescription>
-            You can adjust the range and start a new bounded search.
+            Stopped after {run.scanned} candidates with {run.matches.length}{' '}
+            {run.matches.length === 1 ? 'result' : 'results'} found. Results
+            found before cancellation are shown below.
           </AlertDescription>
         </Alert>
       ) : null}
