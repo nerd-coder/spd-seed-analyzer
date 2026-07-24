@@ -245,6 +245,31 @@ fn aaa_replay_pins_floors_six_through_nine_and_matches_through_library() {
         }
 
         if depth == 6 {
+            let weapon_heaps: Vec<_> = map
+                .heaps
+                .iter()
+                .filter_map(|heap| {
+                    let item = heap.items.first()?;
+                    matches!(
+                        item.class_name.as_str(),
+                        "Quarterstaff" | "Crossbow" | "Katana"
+                    )
+                    .then_some((
+                        heap.cell,
+                        heap.heap_type.as_str(),
+                        item.class_name.as_str(),
+                    ))
+                })
+                .collect();
+            assert_eq!(
+                weapon_heaps,
+                [
+                    (140, "for_sale", "Quarterstaff"),
+                    (669, "heap", "Crossbow"),
+                    (1647, "chest", "Katana"),
+                ],
+                "{context} exact shop, main-drop, and chest weapon classes"
+            );
             let vault_heaps: Vec<_> = map
                 .heaps
                 .iter()

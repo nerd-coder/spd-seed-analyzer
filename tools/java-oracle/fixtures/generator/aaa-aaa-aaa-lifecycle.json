@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "contract": "generator_lifecycle",
+  "spd": { "version": "v3.3.8", "commit": "7b8b845a7" },
+  "input": { "seed": "AAA-AAA-AAA", "numeric": 0 },
+  "boundaries": [
+    {
+      "boundary": "floor_2_complete",
+      "wep_t2": {
+        "seed": 7210592536021473452,
+        "dropped": 0,
+        "probabilities": [2, 2, 2, 2, 2, 2, 0]
+      },
+      "wep_t4": {
+        "seed": 7287648844454157976,
+        "dropped": 0,
+        "probabilities": [2, 2, 2, 2, 2, 2, 2]
+      }
+    },
+    {
+      "boundary": "floor_3_after_sacrifice_room",
+      "wep_t2": {
+        "seed": 7210592536021473452,
+        "dropped": 1,
+        "probabilities": [2, 2, 1, 2, 2, 2, 0]
+      },
+      "wep_t4": {
+        "seed": 7287648844454157976,
+        "dropped": 0,
+        "probabilities": [2, 2, 2, 2, 2, 2, 2]
+      }
+    },
+    {
+      "boundary": "floor_3_create_items_complete",
+      "wep_t2": {
+        "seed": 7210592536021473452,
+        "dropped": 1,
+        "probabilities": [2, 2, 1, 2, 2, 2, 0]
+      },
+      "wep_t4": {
+        "seed": 7287648844454157976,
+        "dropped": 0,
+        "probabilities": [2, 2, 2, 2, 2, 2, 2]
+      }
+    },
+    {
+      "boundary": "floor_4_create_items_complete",
+      "wep_t2": {
+        "seed": 7210592536021473452,
+        "dropped": 1,
+        "probabilities": [2, 2, 1, 2, 2, 2, 0]
+      },
+      "wep_t4": {
+        "seed": 7287648844454157976,
+        "dropped": 0,
+        "probabilities": [2, 2, 2, 2, 2, 2, 2]
+      }
+    },
+    {
+      "boundary": "floor_6_create_items_complete",
+      "wep_t2": {
+        "seed": 7210592536021473452,
+        "dropped": 2,
+        "probabilities": [2, 2, 1, 1, 2, 2, 0]
+      },
+      "wep_t4": {
+        "seed": 7287648844454157976,
+        "dropped": 2,
+        "probabilities": [2, 2, 2, 2, 2, 1, 1]
+      }
+    }
+  ]
+}

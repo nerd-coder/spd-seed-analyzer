@@ -185,7 +185,7 @@ final class FloorOracle {
 		return level.rngProbe();
 	}
 
-	private static void generatePriorFloors(int targetDepth) {
+	static void generatePriorFloors(int targetDepth) {
 		Dungeon.daily = true;
 		try {
 			for (int depth = 1; depth < targetDepth; depth++) {
@@ -202,7 +202,7 @@ final class FloorOracle {
 		Actor.clear();
 	}
 
-	private static void markTargetFloorGenerated(int depth) {
+	static void markTargetFloorGenerated(int depth) {
 		Dungeon.generatedLevels.add(depth);
 	}
 

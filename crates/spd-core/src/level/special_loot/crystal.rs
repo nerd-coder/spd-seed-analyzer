@@ -2,7 +2,7 @@
 
 mod choice;
 
-use super::{door_spots, DoorMap};
+use super::DoorMap;
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::geom::Point;
@@ -133,23 +133,6 @@ fn fill_inset(map: &mut TerrainMap, room: &Room, inset: i32, terrain: i32) {
 fn set(map: &mut TerrainMap, point: Point, terrain: i32) {
     if let Some(cell) = map.point_to_cell(point.x, point.y) {
         map.map[cell] = terrain;
-    }
-}
-
-/// Entrance door cell used by crystal vault pedestals and sacrifice center offset.
-pub(super) fn vault_entrance_cell(rooms: &[Room], ri: usize) -> Option<Point> {
-    let room = &rooms[ri];
-    let ni = *room.connected.first()?;
-    let other = rooms.get(ni)?;
-    if other.is_empty() {
-        return None;
-    }
-    let spots = door_spots(room, other);
-    // placeDoors already burned element(); door is geometric mid-edge — pick mid.
-    if spots.is_empty() {
-        None
-    } else {
-        Some(spots[spots.len() / 2])
     }
 }
 

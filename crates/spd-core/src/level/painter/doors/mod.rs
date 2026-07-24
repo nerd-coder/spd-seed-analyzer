@@ -18,7 +18,7 @@ use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
 
-pub use model::{apply_room_door_types, door_spots, place_doors_for_room, DoorMap, DoorType};
+pub use model::{apply_room_door_types, place_doors_for_room, DoorMap, DoorType};
 
 pub(super) use merge::merge_rooms_with_terrain;
 use merge::{is_mergeable_standard, is_normal_size, merge_rooms};

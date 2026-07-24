@@ -33,9 +33,6 @@ use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
 
-// Re-export for crystal path door placement.
-pub(super) use crate::level::painter::door_spots;
-
 /// Result of special-room paint pass (prizes + doors for `paintDoors`).
 pub struct SpecialPaintResult {
     pub loot: Vec<PlacedLoot>,
@@ -247,7 +244,7 @@ fn paint_special(
         "MagicalFireRoom" => {
             trap_rooms::magical_fire_prizes(dungeon, rooms, ri, map, doors, items_to_spawn)
         }
-        "SacrificeRoom" => vec![trap_rooms::sacrifice_prize(dungeon, rooms, ri)],
+        "SacrificeRoom" => vec![trap_rooms::sacrifice_prize(dungeon, rooms, ri, doors)],
         "ToxicGasRoom" => {
             trap_rooms::toxic_gas_prizes(dungeon, rooms, ri, map, doors, items_to_spawn)
         }

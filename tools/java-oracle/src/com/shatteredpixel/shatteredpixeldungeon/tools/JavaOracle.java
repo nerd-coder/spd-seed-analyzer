@@ -29,7 +29,7 @@ public final class JavaOracle {
 	public static void main(String[] args) {
 		if (args.length < 1 || args.length > 3) {
 			System.err.println(
-					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH | generator-deck-rollover | shop-bag-selection]");
+					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection]");
 			System.exit(2);
 		}
 
@@ -38,6 +38,8 @@ public final class JavaOracle {
 		boolean finalHeaps = args.length == 3 && "final-heaps".equals(args[1]);
 		boolean generatorDeckRollover =
 				args.length == 2 && "generator-deck-rollover".equals(args[1]);
+		boolean generatorLifecycle =
+				args.length == 2 && "generator-lifecycle".equals(args[1]);
 		boolean shopBagSelection =
 				args.length == 2 && "shop-bag-selection".equals(args[1]);
 		if (args.length == 3 && !finalHeaps) {
@@ -46,12 +48,13 @@ public final class JavaOracle {
 		}
 		if (args.length == 2
 				&& !generatorDeckRollover
+				&& !generatorLifecycle
 				&& !shopBagSelection
 				&& !args[1].matches("\\d+")) {
 			System.err.println("Unknown oracle contract: " + args[1]);
 			System.exit(2);
 		}
-		Integer depth = args.length == 1 || generatorDeckRollover || shopBagSelection
+		Integer depth = args.length == 1 || generatorDeckRollover || generatorLifecycle || shopBagSelection
 				? null
 				: Integer.valueOf(args[finalHeaps ? 2 : 1]);
 		if (depth != null
@@ -64,6 +67,10 @@ public final class JavaOracle {
 		try {
 			if (generatorDeckRollover) {
 				System.out.print(GeneratorDeckOracle.generateJson(inputSeed, numericSeed));
+				return;
+			}
+			if (generatorLifecycle) {
+				System.out.print(GeneratorLifecycleOracle.generateJson(inputSeed, numericSeed));
 				return;
 			}
 			if (shopBagSelection) {

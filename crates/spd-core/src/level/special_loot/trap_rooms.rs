@@ -8,7 +8,6 @@ pub(super) use sentry::paint as sentry_prize;
 pub(super) use toxic_gas::paint as toxic_gas_prizes;
 pub(super) use traps::paint as traps_prize;
 
-use super::crystal::vault_entrance_cell;
 use super::placement::burn_drop_pos;
 use super::special_rooms::{bomb_random, is_curse_enchant, storage_prize};
 use crate::dungeon::DungeonState;
@@ -188,9 +187,14 @@ fn set_magical_tile(map: &mut TerrainMap, x: i32, y: i32, terrain: i32) {
 }
 
 /// `SacrificeRoom.paint` — cursed upgraded weapon on sacrificial fire.
-pub(super) fn sacrifice_prize(dungeon: &mut DungeonState, rooms: &[Room], ri: usize) -> PlacedLoot {
+pub(super) fn sacrifice_prize(
+    dungeon: &mut DungeonState,
+    rooms: &[Room],
+    ri: usize,
+    doors: &DoorMap,
+) -> PlacedLoot {
     // Center offset when door is mid-wall aligned with room center.
-    burn_sacrifice_center_offset(rooms, ri);
+    burn_sacrifice_center_offset(rooms, ri, doors);
 
     // 1 floor set higher than normal
     let mut prize = dungeon
@@ -231,7 +235,7 @@ fn is_good_weapon_enchant(item: &GeneratedItem) -> bool {
 }
 
 /// Burn `Random.Int(2)` center nudge when entrance is mid-edge (SacrificeRoom).
-pub(super) fn burn_sacrifice_center_offset(rooms: &[Room], ri: usize) {
+pub(super) fn burn_sacrifice_center_offset(rooms: &[Room], ri: usize, doors: &DoorMap) {
     let room = &rooms[ri];
     if room.is_empty() {
         return;
@@ -252,7 +256,10 @@ pub(super) fn burn_sacrifice_center_offset(rooms: &[Room], ri: usize) {
                 0
             },
     );
-    let Some(door) = vault_entrance_cell(rooms, ri) else {
+    let Some(ni) = room.connected.first() else {
+        return;
+    };
+    let Some(door) = doors.get(ri, *ni).map(|door| Point::new(door.x, door.y)) else {
         return;
     };
     let side_door = (door.x == room.left || door.x == room.right) && door.y == c.y;

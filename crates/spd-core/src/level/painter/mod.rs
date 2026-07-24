@@ -17,7 +17,7 @@ use crate::random::Random;
 use crate::rooms::room::Room;
 
 pub(crate) use connection_rooms::paint as paint_connection_room;
-pub use doors::{apply_room_door_types, door_spots, paint_doors, place_doors_for_room, DoorMap};
+pub use doors::{apply_room_door_types, paint_doors, place_doors_for_room, DoorMap};
 pub use params::n_traps;
 pub(crate) use params::trap_metadata;
 pub(crate) use room_geometry::paint_standard_room;

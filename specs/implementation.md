@@ -1,6 +1,6 @@
 # SPD Seed Analyzer — Accuracy Handoff
 
-**Updated:** 2026-07-24
+**Updated:** 2026-07-25
 
 **Pinned SPD:** v3.3.8 @ `7b8b845a7`
 
@@ -12,19 +12,19 @@ pinned checkout, normally at
 
 ## Checkpoint
 
-- `AAA-AAA-AAA` floor 7 matches all five main Generator drops exactly, including
-  cells, heap types, classes, quantities, levels, and curse state.
-- The earliest known preserved-run item mismatch is floor 6's private weapon
-  decks: overall categories and placement cells match, but weapon classes do not.
-- Isolated WEP_T4 draws match pinned Java, so the floor-6 replay discrepancy must
-  be localized with lifecycle-boundary deck snapshots before changing behavior.
+- `AAA-AAA-AAA` weapon-deck state now matches pinned Java from floor 3's
+  SacrificeRoom through floor 6 `createItems`.
+- SacrificeRoom uses the actual painted entrance door, restoring Java's center
+  nudge, WEP_T2 Spear prize, and downstream floor-6 Quarterstaff, Crossbow, and
+  Katana classes.
+- Floor 7's five main Generator drops remain exact.
 
 ## Next phase
 
-Add pinned Java and Rust Generator snapshots spanning floor 3's SacrificeRoom
-through floor 6 `createItems`. Compare WEP_T2/WEP_T4 seeds, dropped counts, and
-probability vectors at each lifecycle boundary; port the earliest proven mismatch.
-Pin the corrected floor-6 main and shop weapon classes in the replay fixture.
+Find the earliest remaining `AAA-AAA-AAA` heap or item mismatch after floor 7.
+Compare floor 8, then floor 9, at room-paint, shop, mobs, and `createItems`
+boundaries. Add a pinned Java fixture for the first divergence and port only the
+earliest proven RNG or generation mismatch.
 
 ## Known limits
 

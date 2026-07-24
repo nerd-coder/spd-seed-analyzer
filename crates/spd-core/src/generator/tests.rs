@@ -1,6 +1,9 @@
 use super::*;
 use crate::random::Random;
 
+#[path = "tests/lifecycle.rs"]
+mod lifecycle;
+
 #[test]
 fn full_reset_and_random_deterministic() {
     Random::reset_generators();

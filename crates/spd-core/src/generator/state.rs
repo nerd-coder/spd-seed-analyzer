@@ -26,6 +26,14 @@ pub struct GeneratorState {
     cats: Vec<CatRuntime>,
 }
 
+#[cfg(test)]
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) struct DeckSnapshot {
+    pub seed: i64,
+    pub dropped: i32,
+    pub probabilities: Vec<f32>,
+}
+
 impl GeneratorState {
     /// `Generator.fullReset()` matching Java call order.
     pub fn full_reset_ordered() -> Self {
@@ -347,6 +355,16 @@ impl GeneratorState {
 
     pub fn using_first_deck(&self) -> bool {
         self.using_first_deck
+    }
+
+    #[cfg(test)]
+    pub(crate) fn deck_snapshot(&self, cat: Category) -> DeckSnapshot {
+        let runtime = &self.cats[cat.index()];
+        DeckSnapshot {
+            seed: runtime.seed.expect("deck category seed"),
+            dropped: runtime.dropped,
+            probabilities: runtime.probs.clone(),
+        }
     }
 
     #[cfg(test)]

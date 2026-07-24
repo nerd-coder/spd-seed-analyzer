@@ -38,7 +38,7 @@ fn sacrifice_prize_is_cursed_weapon() {
     let mut d = dungeon_from_run(run);
     d.depth = 6;
     let room = test_room("SacrificeRoom", 7, 7);
-    let loot = sacrifice_prize(&mut d, &[room], 0);
+    let loot = sacrifice_prize(&mut d, &[room], 0, &DoorMap::new());
     Random::pop_generator();
 
     assert_eq!(loot.item.source.as_deref(), Some("SacrificeRoom"));
@@ -53,7 +53,7 @@ fn sacrifice_prize_is_cursed_weapon() {
 fn sacrifice_center_burns_follow_room_center_odd_spans() {
     let odd_spans = test_room("SacrificeRoom", 7, 7);
     Random::push_generator_seeded(0xC3A7E2);
-    burn_sacrifice_center_offset(&[odd_spans], 0);
+    burn_sacrifice_center_offset(&[odd_spans], 0, &DoorMap::new());
     let actual = Random::int();
     Random::pop_generator();
 
@@ -66,7 +66,7 @@ fn sacrifice_center_burns_follow_room_center_odd_spans() {
 
     let even_spans = test_room("SacrificeRoom", 8, 8);
     Random::push_generator_seeded(0xC3A7E2);
-    burn_sacrifice_center_offset(&[even_spans], 0);
+    burn_sacrifice_center_offset(&[even_spans], 0, &DoorMap::new());
     let actual = Random::int();
     Random::pop_generator();
     Random::push_generator_seeded(0xC3A7E2);
