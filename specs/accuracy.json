@@ -23,12 +23,12 @@
         "AAA-AAA-AAA floor-7 painter RNG parity through PitRoom's UnstableSpellbook constructor, exact central skeleton stack lifecycle, PillarsRoom geometry, and the exact pre-mobs boundary",
         "AAA-AAA-AAA floors 8–9 and 11 exact pre-paint, pre-mobs, and pre-items RNG boundaries; floor 11 preserves the floor-10 Tengu lifecycle",
         "AAA-AAA-AAA floor 12 exact FigureEightBuilder room classes and bounds, pre-paint, pre-mobs, and pre-items RNG boundaries, including CaveExitRoom size probabilities and SecretRunestoneRoom's exact three-drop painter",
-        "AAA-AAA-AAA floor 13 exact room classes and normalized bounds plus the pre-paint RNG boundary"
+        "AAA-AAA-AAA floor 13 exact room classes and normalized bounds plus the pre-paint and pre-mobs RNG boundaries"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
-        "AAA-AAA-AAA floor 13 remains unverified after the pre-paint boundary",
+        "AAA-AAA-AAA floor 13 remains unverified after the pre-mobs boundary",
         "Preserved-run floors beyond depth 13 still require phase-by-phase parity checks"
       ],
       "impact": "Room selection, bounds, connections, or downstream RNG can differ on uncovered generation paths.",

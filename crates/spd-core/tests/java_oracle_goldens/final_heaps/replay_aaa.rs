@@ -483,7 +483,7 @@ fn aaa_floor_twelve_matches_the_pinned_layout_and_item_lifecycle() {
 }
 
 #[test]
-fn aaa_floor_thirteen_matches_the_pinned_layout_boundary() {
+fn aaa_floor_thirteen_matches_the_pinned_pre_mobs_boundary() {
     let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-13.json");
     let path = fixture_paths()
         .into_iter()
@@ -518,6 +518,10 @@ fn aaa_floor_thirteen_matches_the_pinned_layout_boundary() {
     assert_eq!(
         actual.pre_paint_rng_probe, expected.pre_paint_rng,
         "floor-13 pre-paint RNG boundary"
+    );
+    assert_eq!(
+        actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
+        "floor-13 pre-mobs RNG boundary"
     );
 }
 
