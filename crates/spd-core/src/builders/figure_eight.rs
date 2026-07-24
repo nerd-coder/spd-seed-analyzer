@@ -2,7 +2,7 @@
 
 use crate::builders::connection;
 use crate::builders::place::{
-    angle_between_rooms, find_neighbours, place_room, place_room_with_prepare,
+    angle_between_rooms, find_neighbours, place_room_with_collision_ids, place_room_with_prepare,
 };
 use crate::builders::regular::{
     create_branches, loop_center, setup_rooms, target_angle, weight_rooms, BranchAngles,
@@ -49,13 +49,20 @@ fn place_loop(
     start_angle: f32,
     params: &BuilderParams,
     depth: i32,
+    collision_order: &mut Vec<usize>,
 ) -> Option<()> {
+    // Connection objects are created for both loops up front, but pinned Java
+    // adds each one to the builder's collision list only after it is placed.
+    // In particular, the first closing stitch precedes second-loop tunnels.
     let mut prev = landmark;
     for i in 1..loop_ids.len() {
         let room = loop_ids[i];
         let angle = start_angle + target_angle(i as f32 / loop_ids.len() as f32, params);
-        if place_room(rooms, prev, room, angle) == -1.0 {
+        if place_room_with_collision_ids(rooms, collision_order, prev, room, angle) == -1.0 {
             return None;
+        }
+        if !collision_order.contains(&room) {
+            collision_order.push(room);
         }
         prev = room;
     }
@@ -66,10 +73,11 @@ fn place_loop(
         let id = rooms.len();
         rooms.push(connection::create(id, depth));
         let angle = angle_between_rooms(&rooms[prev], &rooms[landmark]);
-        if place_room(rooms, prev, id, angle) == -1.0 {
+        if place_room_with_collision_ids(rooms, collision_order, prev, id, angle) == -1.0 {
             return None;
         }
         loop_ids.push(id);
+        collision_order.push(id);
         prev = id;
     }
     None
@@ -209,7 +217,16 @@ pub(super) fn build(
 
     rooms[landmark].set_size();
     rooms[landmark].set_pos(0, 0);
-    place_loop(rooms, &mut first_loop, landmark, start_angle, params, depth)?;
+    let mut collision_order = (0..base_len).collect::<Vec<_>>();
+    place_loop(
+        rooms,
+        &mut first_loop,
+        landmark,
+        start_angle,
+        params,
+        depth,
+        &mut collision_order,
+    )?;
     place_loop(
         rooms,
         &mut second_loop,
@@ -217,6 +234,7 @@ pub(super) fn build(
         start_angle + 180.0,
         params,
         depth,
+        &mut collision_order,
     )?;
 
     if let Some(shop) = setup.shop {
@@ -352,5 +370,48 @@ mod tests {
         assert_eq!(rooms[4].connected, [3, 1]);
         assert_eq!(rooms[0].neighbours, [5, 8]);
         assert_eq!(rooms[5].neighbours, [0, 6]);
+    }
+
+    #[test]
+    fn incremental_loop_collision_order_changes_order_sensitive_placement() {
+        use crate::builders::place::{place_room, place_room_with_collision_ids};
+        let mut base = vec![
+            room(0, "Prev", RoomKind::Standard),
+            room(1, "LaterSecondLoopTunnel", RoomKind::Connection),
+            room(2, "FirstLoopStitch", RoomKind::Connection),
+            room(3, "NextSecondLoopTunnel", RoomKind::Connection),
+        ];
+        base[0].resize(5, 5);
+        base[0].set_pos(0, 0);
+        base[1].resize(5, 5);
+        base[1].set_pos(-8, -8);
+        base[2].resize(5, 5);
+        base[2].set_pos(-8, -3);
+
+        let mut java = base.clone();
+        Random::reset_generators();
+        Random::push_generator_seeded(7);
+        let java_angle = place_room_with_collision_ids(&mut java, &[0, 2, 1], 0, 3, 315.0);
+        Random::pop_generator();
+
+        let mut old_full_vector = base;
+        Random::push_generator_seeded(7);
+        let old_angle = place_room(&mut old_full_vector, 0, 3, 315.0);
+        Random::pop_generator();
+
+        assert_eq!(
+            (java[3].left, java[3].top, java[3].right, java[3].bottom),
+            (-3, -4, 0, 2)
+        );
+        assert_eq!(
+            (
+                old_full_vector[3].left,
+                old_full_vector[3].top,
+                old_full_vector[3].right,
+                old_full_vector[3].bottom
+            ),
+            (-3, -3, 0, 3)
+        );
+        assert_ne!(java_angle, old_angle);
     }
 }

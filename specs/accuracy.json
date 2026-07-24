@@ -14,7 +14,7 @@
       "area": "Layout & room selection",
       "status": "partial",
       "implemented": [
-        "Loop and figure-eight builders, including connection-room placement",
+        "Loop and figure-eight builders, including connection-room placement and pinned incremental collision-list order",
         "Generic and region-specific standard-room geometry",
         "Pinned standard, special, and secret room-count tables",
         "Pinned SecretLarderRoom minimum dimensions and food-placement viability",
@@ -26,7 +26,7 @@
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
-        "AAA-AAA-AAA floor 12 selects the pinned non-connection room families, then diverges inside FigureEightBuilder placement: Rust currently returns 22 rooms versus Java's 19",
+        "AAA-AAA-AAA floor 12 selects the pinned non-connection room families and now matches FigureEightBuilder's incremental connection collision order, but still returns 22 rooms versus Java's 19",
         "Preserved-run floors beyond depth 11 still require phase-by-phase parity checks"
       ],
       "impact": "Room selection, bounds, connections, or downstream RNG can differ on uncovered generation paths.",
