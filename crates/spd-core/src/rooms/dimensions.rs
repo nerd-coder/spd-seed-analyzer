@@ -23,6 +23,9 @@ pub fn dims_for_kind(kind: RoomKind, size_factor: i32, name: &str) -> (i32, i32,
         "CrystalVaultRoom" => return (7, 7, 7, 7),
         "CrystalChoiceRoom" | "CrystalPathRoom" => return (7, 10, 7, 10),
         "SecretMazeRoom" => return (14, 18, 14, 18),
+        // SecretLarderRoom overrides both minima so its 3x3 water pool cannot
+        // consume the entire interior and starve the food-placement loop.
+        "SecretLarderRoom" => return (6, 10, 6, 10),
         "SecretChestChasmRoom" => return (8, 9, 8, 9),
         "SecretSummoningRoom" => return (5, 8, 5, 8),
         "PitRoom" => return (6, 9, 6, 9),
@@ -178,6 +181,7 @@ mod tests {
             (RoomKind::Entrance, 1, "StatuesEntranceRoom", (7, 10, 7, 10)),
             (RoomKind::Standard, 1, "SkullsRoom", (7, 10, 7, 10)),
             (RoomKind::Standard, 1, "RitualRoom", (9, 10, 9, 10)),
+            (RoomKind::Secret, 1, "SecretLarderRoom", (6, 10, 6, 10)),
             (RoomKind::Special, 1, "PoolRoom", (6, 10, 6, 10)),
             (RoomKind::Special, 1, "RunestoneRoom", (6, 10, 6, 10)),
             (RoomKind::Special, 1, "MagicalFireRoom", (7, 10, 7, 10)),

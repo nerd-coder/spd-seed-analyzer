@@ -77,6 +77,7 @@ pub(crate) fn create_regular(
     let mut rotation = Vec::new();
     let mut room_cursor = 0usize;
     let mut current_mob = None;
+    let mut failed_placements = 0usize;
     while remaining > 0 {
         if current_mob.is_none() {
             current_mob = Some(next_mob(depth, &mut rotation));
@@ -91,6 +92,7 @@ pub(crate) fn create_regular(
             &entrance_fov,
             &entrance_distance,
         ) {
+            failed_placements = 0;
             let mob = current_mob.take().expect("mob is present while placing");
             place_mob(map, cell, mob);
             remaining -= 1;
@@ -110,6 +112,17 @@ pub(crate) fn create_regular(
                     place_mob(map, cell, mob);
                     remaining -= 1;
                 }
+            }
+        } else {
+            failed_placements += 1;
+            // Compatibility guard for the partial painter: pinned SPD retries
+            // forever because a fully painted valid level guarantees at least
+            // one legal spawn cell. Our incomplete painter cannot guarantee that
+            // invariant yet. Remove this guard once every supported layout is
+            // fully painted and validity-checked like the pinned game.
+            // One traversal gives every weighted room 31 placement probes.
+            if failed_placements >= spawn_rooms.len() {
+                return false;
             }
         }
     }

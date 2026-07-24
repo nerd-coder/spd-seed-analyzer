@@ -54,6 +54,10 @@ thin consumers.
   quest/blob facts.
 - Exact structured heap capture is pinned for Crypt, Runestone, MagicalFire,
   Traps, Sentry, Storage, and ToxicGas room paths covered by the fixtures.
+- `SecretLarderRoom` uses the pinned 6×6 minimum, preserving legal food-drop
+  cells around its 3×3 pool. Ambient mob placement has a documented partial-
+  painter escape guard until every supported layout guarantees a fully painted
+  valid level like the pinned game.
 - `AAA-AAA-ACB` pins ToxicGasRoom at its source-exact 7×7 minimum and matches
   all lifecycle probes/final heaps/mobs. Toxic heaps are Gold chests at cells
   947 (×61) and 998 (×71), plus a Gold skeleton at 1096 (×92). Its additive

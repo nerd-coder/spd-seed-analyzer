@@ -17,6 +17,7 @@
         "Loop and figure-eight builders, including connection-room placement",
         "Generic and region-specific standard-room geometry",
         "Pinned standard, special, and secret room-count tables",
+        "Pinned SecretLarderRoom minimum dimensions and food-placement viability",
         "Depth-one lifecycle fixtures across ten seeds and replay fixtures for HKT-JZN-XQQ floors 6–8"
       ],
       "remaining": [

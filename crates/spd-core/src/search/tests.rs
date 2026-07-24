@@ -1,5 +1,26 @@
 use super::*;
 
+#[test]
+fn depth_four_search_completes_with_minimum_size_secret_larder() {
+    let result = search_seeds(&SeedSearchRequest {
+        start_seed: 2_718_251_756_419,
+        candidate_count: 10,
+        floors: 4,
+        constraints: vec![ItemConstraint {
+            class_name: "RingOfWealth".into(),
+            min_level: None,
+            min_depth: 1,
+            max_depth: 4,
+        }],
+        match_mode: MatchMode::Any,
+        max_matches: 10,
+    })
+    .expect("the bounded search should complete");
+
+    assert_eq!(result.candidates_scanned, 10);
+    assert_eq!(result.next_seed, Some(2_718_251_756_429));
+}
+
 fn constraint(class_name: &str, min_depth: u32, max_depth: u32) -> ItemConstraint {
     ItemConstraint {
         class_name: class_name.to_string(),
