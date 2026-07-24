@@ -70,6 +70,7 @@ pub fn create_items_main(
             }
             5 => {
                 if dungeon.depth > 1 {
+                    generate_mimic_prize(dungeon);
                     to_drop.source = Some("mimic".into());
                     out.push(CreatedLoot {
                         loot: PlacedLoot {
@@ -223,6 +224,38 @@ pub fn create_items_main(
     Random::pop_generator();
 
     out
+}
+
+/// `Mimic.spawnAt(...).generatePrize(true)` for an ordinary main-loop mimic.
+/// The carried reward is not a floor heap, but its Generator/deck mutations
+/// affect every later `randomDropCell` shuffle and must remain in lifecycle.
+fn generate_mimic_prize(dungeon: &mut DungeonState) {
+    match Random::int_max(5) {
+        0 => {
+            let _ = Random::int_range_inclusive(30 + dungeon.depth * 10, 60 + dungeon.depth * 20);
+        }
+        1 => {
+            let _ = dungeon
+                .generator
+                .random_missile(dungeon.depth / 5, false, dungeon.depth);
+        }
+        2 => {
+            let _ = dungeon
+                .generator
+                .random_armor(dungeon.depth / 5, dungeon.depth);
+        }
+        3 => {
+            let _ = dungeon
+                .generator
+                .random_weapon(dungeon.depth / 5, false, dungeon.depth);
+        }
+        4 => {
+            let _ = dungeon
+                .generator
+                .random_category(crate::generator::Category::Ring, dungeon.depth);
+        }
+        _ => unreachable!("Random.Int(5) stays in range"),
+    }
 }
 
 fn flatten_grass(map: &mut TerrainMap, cell: usize) {

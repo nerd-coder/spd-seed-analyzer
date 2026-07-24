@@ -63,7 +63,7 @@
       "implemented": [
         "Forced drops, generator decks (including pinned concrete-class undoDrop no-op semantics), main RegularLevel createItems drops, and supported special-room prizes",
         "Item identities and exact heap capture on committed Java-oracle fixtures, including UnstableSpellbook constructor RNG",
-        "AAA-AAA-AAA floor-6 Generator weapon lifecycle from floor-3 SacrificeRoom through shop and createItems, floor-7 exact five main Generator drops, floors 8–9 exact normalized heaps, and floor-11 exact SecretHoardRoom heaps",
+        "AAA-AAA-AAA floor-6 Generator weapon lifecycle from floor-3 SacrificeRoom through shop and createItems, floor-7 exact five main Generator drops, floors 8–9 exact normalized heaps, and floor-11 exact deterministic heaps including Mimic reward lifecycle, forced drops, CrystalKeys, and GuidePage placement",
         "Supported quest rewards and covered shop stock flows",
         "Seed finder optional minimum item upgrade-level matching across the analyzed floor range"
       ],

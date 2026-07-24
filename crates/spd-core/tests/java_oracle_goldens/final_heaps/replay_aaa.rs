@@ -276,6 +276,37 @@ fn aaa_replay_pins_floors_six_through_eleven_across_the_tengu_lifecycle() {
                 })
                 .collect();
             if depth == 11 {
+                // ChooseBag ties depend on JVM identity-hash iteration. Keep
+                // that single class portable while pinning every heap cell,
+                // type, and all deterministic item facts on this floor.
+                let deterministic_actual: Vec<_> = actual_heaps
+                    .iter()
+                    .filter(|heap| heap.cell != 267)
+                    .collect();
+                let deterministic_expected: Vec<_> = expected
+                    .final_heaps
+                    .iter()
+                    .filter(|heap| heap.cell != 267)
+                    .collect();
+                assert_eq!(
+                    deterministic_actual, deterministic_expected,
+                    "{context} exact deterministic heaps"
+                );
+                for heaps in [&actual_heaps, &expected.final_heaps] {
+                    let bag = heaps
+                        .iter()
+                        .find(|heap| heap.cell == 267)
+                        .expect("floor-11 identity-hash-dependent shop bag");
+                    assert_eq!(bag.heap_type, "for_sale");
+                    assert_eq!(
+                        (
+                            bag.items[0].quantity,
+                            bag.items[0].level,
+                            bag.items[0].cursed
+                        ),
+                        (1, 0, false)
+                    );
+                }
                 let hoard = expected
                     .room_bounds
                     .iter()
