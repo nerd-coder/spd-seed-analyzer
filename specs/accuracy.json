@@ -21,13 +21,14 @@
         "Depth-one lifecycle fixtures across ten seeds, full HKT-JZN-XQQ floor 6–8 parity, and preserved-state AAA-AAA-AAA floor 2–4, 6–9, and 11 oracle fixtures",
         "AAA-AAA-AAA floors 2–4 exact pre-mobs/pre-items RNG parity, including SacrificeRoom Room.center burns, floor-3 WaterBridge exit placement, and floor-4 StudyRoom center-heap placement",
         "AAA-AAA-AAA floor-7 painter RNG parity through PitRoom's UnstableSpellbook constructor, exact central skeleton stack lifecycle, PillarsRoom geometry, and the exact pre-mobs boundary",
-        "AAA-AAA-AAA floors 8–9 and 11 exact pre-paint, pre-mobs, and pre-items RNG boundaries; floor 11 preserves the floor-10 Tengu lifecycle"
+        "AAA-AAA-AAA floors 8–9 and 11 exact pre-paint, pre-mobs, and pre-items RNG boundaries; floor 11 preserves the floor-10 Tengu lifecycle",
+        "AAA-AAA-AAA floor 12 exact FigureEightBuilder room classes and bounds, including CaveExitRoom's pinned non-default size-category probabilities"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
-        "AAA-AAA-AAA floor 12 selects the pinned non-connection room families and now matches FigureEightBuilder's incremental connection collision order, but still returns 22 rooms versus Java's 19",
-        "Preserved-run floors beyond depth 11 still require phase-by-phase parity checks"
+        "AAA-AAA-AAA floor 12 painter and lifecycle RNG boundaries are not yet verified",
+        "Preserved-run floors beyond depth 12 still require phase-by-phase parity checks"
       ],
       "impact": "Room selection, bounds, connections, or downstream RNG can differ on uncovered generation paths.",
       "evidence": [

@@ -383,7 +383,7 @@ fn aaa_replay_pins_floors_six_through_eleven_across_the_tengu_lifecycle() {
 }
 
 #[test]
-fn aaa_floor_twelve_records_figure_eight_layout_gap_after_room_selection() {
+fn aaa_floor_twelve_matches_the_pinned_figure_eight_layout() {
     let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-12.json");
     let path = fixture_paths()
         .into_iter()
@@ -399,7 +399,7 @@ fn aaa_floor_twelve_records_figure_eight_layout_gap_after_room_selection() {
         actual = Some(create_level_partial(&mut dungeon));
     }
     let actual = actual.expect("floor-12 replay");
-    let mut actual_rooms = actual.rooms;
+    let mut actual_rooms = actual.rooms.clone();
     actual_rooms.sort();
 
     let is_connection = |name: &&String| {
@@ -430,12 +430,19 @@ fn aaa_floor_twelve_records_figure_eight_layout_gap_after_room_selection() {
         actual_selected, expected_selected,
         "floor-12 room selection is aligned before builder-added connections"
     );
-    assert_eq!(actual_rooms.len(), 22, "recorded Rust layout room count");
-    assert_eq!(expected.rooms.len(), 19, "pinned Java layout room count");
-    assert_ne!(
-        actual_rooms, expected.rooms,
-        "known FigureEightBuilder placement gap; promote floor 12 to the exact replay only after this closes"
-    );
+    assert_eq!(actual_rooms, expected.rooms, "floor-12 room classes");
+    let bounds: Vec<_> = actual
+        .room_bounds
+        .iter()
+        .map(|room| OracleRoomFact {
+            class_name: room.class_name.clone(),
+            left: room.left,
+            top: room.top,
+            right: room.right,
+            bottom: room.bottom,
+        })
+        .collect();
+    assert_eq!(bounds, expected.room_bounds, "floor-12 room bounds");
 }
 
 fn oracle_item_class(class_name: &str) -> &str {

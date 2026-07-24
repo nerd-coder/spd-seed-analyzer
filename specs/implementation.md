@@ -8,20 +8,18 @@
 
 ## Next phase
 
-Continue the AAA-AAA-AAA floor-12 FigureEightBuilder trace immediately after
-the now-aligned incremental collision-list behavior. Compare each remaining
-`placeRoom` result, closing stitch, and branch retry on the first build attempt;
-fix only the next pinned-source semantic difference. Promote floor 12 only
-after the 19-room Java layout matches, then verify pre-paint, pre-mobs, and
-pre-items RNG boundaries.
+With floor-12 FigureEightBuilder classes and bounds aligned, compare the
+AAA-AAA-AAA pre-paint RNG probe with the pinned oracle. Fix only the first
+painter or room-construction semantic difference, then stop and record the next
+boundary. Do not claim floor-12 lifecycle parity until pre-mobs and pre-items
+probes also match.
 
 ## Current checkpoint
 
-- Floor-12 room selection, builder choice/intensity, and post-`initRooms` RNG
-  match. Figure-eight loop placement now uses Java's incremental collision
-  order, including first-loop stitches before second-loop tunnels.
-- The next builder difference is unlocated: Rust still has 22 rooms, Java 19.
-  Painter and lifecycle parity are not claimed for floor 12.
+- Floor-12 FigureEightBuilder now matches Java's 19 room classes and normalized
+  bounds. CaveExitRoom uses the pinned `{2, 1, 0}` size-category probabilities;
+  this preserves Java's failed loop attempts and successful fourth layout.
+- Painter, pre-mobs, and pre-items parity are not claimed for floor 12.
 - Floor 11 remains exact at its documented deterministic boundaries.
 
 Run the complete CI `check` sequence from `AGENTS.md` before committing.

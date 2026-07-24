@@ -137,9 +137,8 @@ The deeper fixtures pin full Java observations. Rust matches the complete HKT
 floor 6–8 lifecycles. The AAA replay is exact through floor 9, preserves the
 floor-10 Tengu lifecycle, and pins floor 11 through exact RNG boundaries, mobs,
 and SecretHoardRoom heaps. Other floor-11 heaps remain outside that exact claim.
-The floor-12 fixture is a gap oracle, not a parity claim: its focused test pins
-matching non-connection room selection and the current FigureEightBuilder
-layout divergence before painting.
+The floor-12 fixture pins exact FigureEightBuilder room classes and bounds.
+Painter and later lifecycle boundaries remain outside that parity claim.
 
 The `GFX-PZH-DCH` floor-one fixture additionally pins CrystalPathRoom's six
 alternating potion/scroll drops to their exact cells. Its focused Rust test
