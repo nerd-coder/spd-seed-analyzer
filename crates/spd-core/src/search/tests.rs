@@ -3,6 +3,7 @@ use super::*;
 fn constraint(class_name: &str, min_depth: u32, max_depth: u32) -> ItemConstraint {
     ItemConstraint {
         class_name: class_name.to_string(),
+        min_level: None,
         min_depth,
         max_depth,
     }
@@ -52,6 +53,13 @@ fn validation_rejects_unbounded_and_malformed_requests() {
     assert!(matches!(
         value.validate(),
         Err(SearchError::InvalidDepthRange { index: 0 })
+    ));
+
+    value.constraints = vec![constraint("Food", 1, 1)];
+    value.constraints[0].min_level = Some(5);
+    assert!(matches!(
+        value.validate(),
+        Err(SearchError::InvalidLevel { index: 0 })
     ));
 
     value.constraints = vec![constraint("Food", 1, 1)];
@@ -106,6 +114,22 @@ fn depth_ranges_are_inclusive_and_scoped() {
     value.constraints[0] = constraint("PotionOfStrength", 1, 1);
     assert!(search_seeds(&value)
         .expect("depth one search")
+        .matches
+        .is_empty());
+}
+
+#[test]
+fn minimum_upgrade_levels_are_optional_and_inclusive() {
+    let mut value = request(vec![constraint("PotionOfStrength", 1, 1)], MatchMode::All);
+    value.start_seed = 1;
+    assert!(!search_seeds(&value)
+        .expect("unrestricted upgrade search")
+        .matches
+        .is_empty());
+
+    value.constraints[0].min_level = Some(1);
+    assert!(search_seeds(&value)
+        .expect("upgraded search")
         .matches
         .is_empty());
 }

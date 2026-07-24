@@ -135,6 +135,7 @@ function ResultCard({
                   </ItemTitle>
                   <ItemDescription>
                     Floor {evidence.depth}
+                    {evidence.level > 0 ? ` · +${evidence.level}` : ''}
                     {source ? ` · ${source}` : ''}
                   </ItemDescription>
                 </ItemContent>

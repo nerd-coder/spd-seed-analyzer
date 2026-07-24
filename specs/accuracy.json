@@ -57,7 +57,8 @@
       "implemented": [
         "Forced drops, generator decks, main RegularLevel createItems drops, and supported special-room prizes",
         "Item identities and exact heap capture on committed Java-oracle fixtures",
-        "Supported quest rewards and covered shop stock flows"
+        "Supported quest rewards and covered shop stock flows",
+        "Seed finder optional minimum item upgrade-level matching across the analyzed floor range"
       ],
       "remaining": [
         "Loot tied to uncovered room paint or lifecycle paths can be incomplete or misplaced",

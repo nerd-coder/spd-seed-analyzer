@@ -13,6 +13,10 @@ type Props = {
   appearance?: string | null
   /** Display size in CSS pixels (default 16 = native sprite). */
   size?: number
+  /** Visible frame size within the 16×16 atlas cell. */
+  sourceWidth?: number
+  sourceHeight?: number
+  scaleSource?: boolean
   title?: string
 }
 
@@ -25,6 +29,9 @@ export function ItemIcon({
   category,
   appearance,
   size = 16,
+  sourceWidth,
+  sourceHeight,
+  scaleSource,
   title,
 }: Props) {
   const opts: IconResolveOpts = { category, appearance }
@@ -34,8 +41,22 @@ export function ItemIcon({
       role="img"
       aria-label={title ?? classNameItem ?? 'item'}
       title={title ?? classNameItem ?? undefined}
-      className={cn('inline-block align-middle', className)}
-      style={itemIconStyle(index, size)}
-    />
+      className={cn(
+        'inline-grid shrink-0 place-items-center align-middle',
+        className
+      )}
+      style={{ width: size, height: size }}
+    >
+      <span
+        aria-hidden="true"
+        style={itemIconStyle(
+          index,
+          size,
+          sourceWidth,
+          sourceHeight,
+          scaleSource
+        )}
+      />
+    </span>
   )
 }

@@ -134,3 +134,20 @@ export const FINDER_ITEM_GROUPS = GROUP_ORDER.map((label) => ({
     .filter((item) => item.group === label)
     .sort((a, b) => a.label.localeCompare(b.label)),
 })).filter((group) => group.items.length > 0)
+
+const UPGRADEABLE_GROUPS = new Set<FinderItemGroup>([
+  'Rings',
+  'Weapons',
+  'Armor',
+  'Missiles & darts',
+  'Wands',
+])
+
+const ITEM_GROUP_BY_CLASS = new Map(
+  allOptions.map((item) => [item.className, item.group])
+)
+
+export function isFinderItemUpgradeable(className: string): boolean {
+  const group = ITEM_GROUP_BY_CLASS.get(className)
+  return group !== undefined && UPGRADEABLE_GROUPS.has(group)
+}

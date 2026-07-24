@@ -1,49 +1,33 @@
 import { PlusIcon, TrashIcon } from '@phosphor-icons/react'
-import { Fragment } from 'react'
 import { ItemIcon } from '@/components/ItemIcon'
 import { Button } from '@/components/ui/button'
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-  FieldLegend,
-  FieldSeparator,
-  FieldSet,
-  FieldTitle,
-} from '@/components/ui/field'
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from '@/components/ui/input-group'
+import { Field, FieldGroup, FieldLegend, FieldSet } from '@/components/ui/field'
+import { InputGroup, InputGroupAddon } from '@/components/ui/input-group'
 import {
   NativeSelect,
   NativeSelectOptGroup,
   NativeSelectOption,
 } from '@/components/ui/native-select'
-import { FINDER_ITEM_GROUPS } from './finder-items'
 import {
-  type FinderConstraint,
-  isIntegerInRange,
-  MAX_CONSTRAINTS,
-} from './finder-types'
+  FINDER_ITEM_GROUPS,
+  finderItemLabel,
+  isFinderItemUpgradeable,
+} from './finder-items'
+import { type FinderConstraint, MAX_CONSTRAINTS } from './finder-types'
 
 type ConstraintEditorProps = {
   constraints: FinderConstraint[]
-  floors: number
   running: boolean
-  attempted: boolean
   onAdd: () => void
   onRemove: (id: number) => void
   onUpdate: (id: number, patch: Partial<Omit<FinderConstraint, 'id'>>) => void
 }
 
+const UPGRADE_LEVELS = [1, 2, 3, 4] as const
+
 export function ConstraintEditor({
   constraints,
-  floors,
   running,
-  attempted,
   onAdd,
   onRemove,
   onUpdate,
@@ -51,162 +35,118 @@ export function ConstraintEditor({
   return (
     <FieldSet data-disabled={running ? true : undefined}>
       <FieldLegend variant="label">Item constraints</FieldLegend>
-      <FieldGroup className="gap-3">
+      <FieldGroup className="gap-2">
         {constraints.map((constraint, index) => {
-          const minInvalid = !isIntegerInRange(constraint.minDepth, 1, floors)
-          const maxInvalid =
-            minInvalid ||
-            !isIntegerInRange(
-              constraint.maxDepth,
-              Number(constraint.minDepth),
-              floors
-            )
+          const itemLabel = finderItemLabel(constraint.className)
+          const upgradeable = isFinderItemUpgradeable(constraint.className)
+          const isFirst = index === 0
           return (
-            <Fragment key={constraint.id}>
-              {index > 0 ? <FieldSeparator /> : null}
-              <FieldGroup className="gap-2">
-                <Field orientation="horizontal">
-                  <FieldTitle>Item {index + 1}</FieldTitle>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={running || constraints.length === 1}
-                    onClick={() => onRemove(constraint.id)}
-                    aria-label={`Remove item ${index + 1}`}
-                    className="ml-auto"
+            <Field
+              key={constraint.id}
+              data-disabled={running ? true : undefined}
+            >
+              <div className="flex items-center gap-1">
+                <InputGroup className="min-w-0 flex-1">
+                  <InputGroupAddon align="inline-start" className="py-0">
+                    <ItemIcon
+                      classNameItem={constraint.className}
+                      size={16}
+                      sourceWidth={
+                        constraint.className.startsWith('RingOf')
+                          ? 8
+                          : undefined
+                      }
+                      sourceHeight={
+                        constraint.className.startsWith('RingOf')
+                          ? 10
+                          : undefined
+                      }
+                      scaleSource={false}
+                      title={itemLabel}
+                    />
+                  </InputGroupAddon>
+                  <NativeSelect
+                    value={constraint.className}
+                    disabled={running}
+                    aria-label={`Item ${index + 1} type`}
+                    onChange={(event) => {
+                      const className = event.target.value
+                      onUpdate(constraint.id, {
+                        className,
+                        minLevel: isFinderItemUpgradeable(className)
+                          ? constraint.minLevel
+                          : null,
+                      })
+                    }}
+                    className="min-w-0 flex-1 [&_[data-slot=native-select]]:border-0 [&_[data-slot=native-select]]:bg-transparent [&_[data-slot=native-select]]:focus-visible:ring-0"
                   >
-                    <TrashIcon />
-                  </Button>
-                </Field>
-                <FieldGroup className="grid grid-cols-2 gap-2">
-                  <Field
-                    className="col-span-2"
-                    data-disabled={running ? true : undefined}
-                  >
-                    <FieldLabel htmlFor={`finder-item-${constraint.id}`}>
-                      Item type
-                    </FieldLabel>
-                    <div className="flex items-center gap-2">
-                      <ItemIcon
-                        classNameItem={constraint.className}
-                        size={24}
-                      />
-                      <NativeSelect
-                        id={`finder-item-${constraint.id}`}
-                        value={constraint.className}
-                        disabled={running}
-                        onChange={(event) =>
-                          onUpdate(constraint.id, {
-                            className: event.target.value,
-                          })
-                        }
-                        className="min-w-0 flex-1"
+                    {FINDER_ITEM_GROUPS.map((group) => (
+                      <NativeSelectOptGroup
+                        key={group.label}
+                        label={group.label}
                       >
-                        {FINDER_ITEM_GROUPS.map((group) => (
-                          <NativeSelectOptGroup
-                            key={group.label}
-                            label={group.label}
+                        {group.items.map((item) => (
+                          <NativeSelectOption
+                            key={item.className}
+                            value={item.className}
                           >
-                            {group.items.map((item) => (
-                              <NativeSelectOption
-                                key={item.className}
-                                value={item.className}
-                              >
-                                {item.label}
-                              </NativeSelectOption>
-                            ))}
-                          </NativeSelectOptGroup>
+                            {item.label}
+                          </NativeSelectOption>
                         ))}
-                      </NativeSelect>
-                    </div>
-                  </Field>
-                  <Field
-                    data-invalid={attempted && minInvalid ? true : undefined}
-                    data-disabled={running ? true : undefined}
-                  >
-                    <FieldLabel htmlFor={`finder-min-${constraint.id}`}>
-                      Min floor
-                    </FieldLabel>
-                    <InputGroup>
-                      <InputGroupInput
-                        id={`finder-min-${constraint.id}`}
-                        type="number"
-                        min={1}
-                        max={floors}
-                        step={1}
-                        value={constraint.minDepth}
-                        disabled={running}
-                        aria-invalid={attempted && minInvalid}
-                        onChange={(event) =>
-                          onUpdate(constraint.id, {
-                            minDepth:
-                              event.currentTarget.value === ''
-                                ? ''
-                                : event.currentTarget.valueAsNumber,
-                          })
-                        }
-                      />
-                      <InputGroupAddon align="inline-end">
-                        floor
-                      </InputGroupAddon>
-                    </InputGroup>
-                  </Field>
-                  <Field
-                    data-invalid={attempted && maxInvalid ? true : undefined}
-                    data-disabled={running ? true : undefined}
-                  >
-                    <FieldLabel htmlFor={`finder-max-${constraint.id}`}>
-                      Max floor
-                    </FieldLabel>
-                    <InputGroup>
-                      <InputGroupInput
-                        id={`finder-max-${constraint.id}`}
-                        type="number"
-                        min={
-                          constraint.minDepth === '' ? 1 : constraint.minDepth
-                        }
-                        max={floors}
-                        step={1}
-                        value={constraint.maxDepth}
-                        disabled={running}
-                        aria-invalid={attempted && maxInvalid}
-                        onChange={(event) =>
-                          onUpdate(constraint.id, {
-                            maxDepth:
-                              event.currentTarget.value === ''
-                                ? ''
-                                : event.currentTarget.valueAsNumber,
-                          })
-                        }
-                      />
-                      <InputGroupAddon align="inline-end">
-                        floor
-                      </InputGroupAddon>
-                    </InputGroup>
-                  </Field>
-                </FieldGroup>
-                {attempted && (minInvalid || maxInvalid) ? (
-                  <FieldError>
-                    Use an inclusive range between floor 1 and {floors}.
-                  </FieldError>
-                ) : null}
-              </FieldGroup>
-            </Fragment>
+                      </NativeSelectOptGroup>
+                    ))}
+                  </NativeSelect>
+                  {upgradeable ? (
+                    <NativeSelect
+                      value={
+                        constraint.minLevel === null
+                          ? 'any'
+                          : String(constraint.minLevel)
+                      }
+                      disabled={running}
+                      aria-label={`Item ${index + 1} upgrade level`}
+                      onChange={(event) =>
+                        onUpdate(constraint.id, {
+                          minLevel:
+                            event.target.value === 'any'
+                              ? null
+                              : Number(event.target.value),
+                        })
+                      }
+                      className="w-20 shrink-0 border-l [&_[data-slot=native-select]]:border-0 [&_[data-slot=native-select]]:bg-transparent [&_[data-slot=native-select]]:focus-visible:ring-0"
+                    >
+                      <NativeSelectOption value="any">Any</NativeSelectOption>
+                      {UPGRADE_LEVELS.map((level) => (
+                        <NativeSelectOption key={level} value={level}>
+                          ≥ +{level}
+                        </NativeSelectOption>
+                      ))}
+                    </NativeSelect>
+                  ) : null}
+                </InputGroup>
+                <Button
+                  type="button"
+                  size="icon-sm"
+                  variant="ghost"
+                  className={
+                    isFirst
+                      ? undefined
+                      : 'text-destructive hover:bg-destructive/10 hover:text-destructive'
+                  }
+                  disabled={
+                    running ||
+                    (isFirst && constraints.length >= MAX_CONSTRAINTS)
+                  }
+                  onClick={isFirst ? onAdd : () => onRemove(constraint.id)}
+                  aria-label={isFirst ? 'Add item' : `Remove item ${index + 1}`}
+                >
+                  {isFirst ? <PlusIcon /> : <TrashIcon />}
+                </Button>
+              </div>
+            </Field>
           )
         })}
       </FieldGroup>
-      <Field orientation="horizontal">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={running || constraints.length >= MAX_CONSTRAINTS}
-          onClick={onAdd}
-        >
-          <PlusIcon data-icon="inline-start" />
-          Add item
-        </Button>
-      </Field>
     </FieldSet>
   )
 }

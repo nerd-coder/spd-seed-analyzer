@@ -135,6 +135,7 @@ export type SeedSearchMatchMode = 'any' | 'all'
 
 export type SeedSearchConstraint = {
   className: string
+  minLevel: number | null
   minDepth: number
   maxDepth: number
 }
@@ -153,6 +154,7 @@ export type SeedSearchEvidence = {
   className: string
   depth: number
   name: string
+  level: number
   source?: string | null
 }
 

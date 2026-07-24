@@ -49,6 +49,7 @@ impl LevelState {
                 name,
                 class_name: Some(item.class_name.clone()),
                 category: format!("{:?}", item.category).to_ascii_lowercase(),
+                level: item.level,
                 cursed: item.cursed,
                 source: item.source.clone(),
             });

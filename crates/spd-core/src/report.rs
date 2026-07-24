@@ -167,6 +167,9 @@ pub struct ItemEntry {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub class_name: Option<String>,
     pub category: String,
+    /// Current SPD item upgrade level (`0` is unupgraded).
+    #[serde(default)]
+    pub level: i32,
     #[serde(default)]
     #[serde(skip_serializing_if = "std::ops::Not::not")]
     pub cursed: bool,

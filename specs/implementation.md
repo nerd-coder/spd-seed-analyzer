@@ -25,7 +25,14 @@ thin consumers.
   Every execution opens a result tab named for its single requested item or
   `Find N items` for multiple constraints; the oldest instance is dropped at
   the cap. Search parameters live in the sidebar, and finder tabs use the same
-  pinned, horizontally scrollable treatment as analyze tabs.
+  pinned, horizontally scrollable treatment as analyze tabs. Item constraints
+  match an exact class and optional minimum upgrade level across the selected
+  analysis depth. Candidate count (default 100, UI range 10–10,000), depth,
+  and result-limit controls share a dedicated parameter row below the start
+  seed and above Item constraints. The first constraint row ends with an
+  icon-only add action, while every later row ends with a remove action. The
+  All/Any match switch sits left of the Find seeds action. The engine accepts
+  bounded chunks up to 10,000 candidates.
 
 - Java `Random`, watabou generator stacks, seed codes, run identities,
   generator decks, depth seeds, forced drops, and supported shop/quest flows

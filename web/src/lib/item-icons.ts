@@ -365,11 +365,15 @@ export function resolveItemIconIndex(
   return CATEGORY_HOLDER.other
 }
 
-/** Background style for a 16×16 cell on items.png (pixel-art, no smoothing). */
+/** Clipped sprite style for a frame within a 16×16 items.png atlas cell. */
 export function itemIconStyle(
   index: number,
-  displayPx = 16
+  displayPx = 16,
+  sourceWidth: number = ITEM_SHEET.size,
+  sourceHeight: number = ITEM_SHEET.size,
+  scaleSource = true
 ): {
+  display: 'block'
   width: number
   height: number
   backgroundImage: string
@@ -381,14 +385,17 @@ export function itemIconStyle(
 } {
   const col = index % ITEM_SHEET.cols
   const row = Math.floor(index / ITEM_SHEET.cols)
-  const scale = displayPx / ITEM_SHEET.size
+  const scale = scaleSource
+    ? displayPx / Math.max(sourceWidth, sourceHeight)
+    : 1
   return {
-    width: displayPx,
-    height: displayPx,
+    display: 'block',
+    width: sourceWidth * scale,
+    height: sourceHeight * scale,
     backgroundImage: `url(${ITEM_SHEET.url})`,
     backgroundRepeat: 'no-repeat',
     backgroundSize: `${ITEM_SHEET.width * scale}px ${ITEM_SHEET.height * scale}px`,
-    backgroundPosition: `-${col * displayPx}px -${row * displayPx}px`,
+    backgroundPosition: `-${col * ITEM_SHEET.size * scale}px -${row * ITEM_SHEET.size * scale}px`,
     imageRendering: 'pixelated',
     flexShrink: 0,
   }

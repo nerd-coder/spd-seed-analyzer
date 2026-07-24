@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::{analyze_seed, AnalyzeError, SeedInfo, TOTAL_SEEDS};
 
 /// Maximum candidate seeds evaluated by one search call.
-pub const MAX_SEARCH_CANDIDATES: u32 = 250;
+pub const MAX_SEARCH_CANDIDATES: u32 = 10_000;
 /// Maximum item constraints accepted by one search call.
 pub const MAX_SEARCH_CONSTRAINTS: usize = 32;
 /// Maximum matching seeds returned by one search call.
@@ -29,6 +29,9 @@ pub struct SeedSearchRequest {
 pub struct ItemConstraint {
     /// Exact Java simple class name, such as `PotionOfHealing`.
     pub class_name: String,
+    /// Optional minimum requested upgrade level (`None` accepts any level).
+    #[serde(default)]
+    pub min_level: Option<i32>,
     pub min_depth: u32,
     pub max_depth: u32,
 }
@@ -73,6 +76,7 @@ pub struct ItemMatchEvidence {
     pub class_name: String,
     pub depth: u32,
     pub name: String,
+    pub level: i32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
 }
@@ -93,6 +97,8 @@ pub enum SearchError {
     EmptyClassName { index: usize },
     #[error("constraints[{index}].className must be at most 128 characters")]
     ClassNameTooLong { index: usize },
+    #[error("constraints[{index}].minLevel must be between 1 and 4 when present")]
+    InvalidLevel { index: usize },
     #[error("constraints[{index}] depths must satisfy 1 <= minDepth <= maxDepth <= floors")]
     InvalidDepthRange { index: usize },
     #[error("maxMatches must be between 1 and {MAX_SEARCH_MATCHES}")]
@@ -128,6 +134,12 @@ impl SeedSearchRequest {
             }
             if constraint.class_name.chars().count() > 128 {
                 return Err(SearchError::ClassNameTooLong { index });
+            }
+            if constraint
+                .min_level
+                .is_some_and(|level| !(1..=4).contains(&level))
+            {
+                return Err(SearchError::InvalidLevel { index });
             }
             if constraint.min_depth == 0
                 || constraint.min_depth > constraint.max_depth
@@ -211,15 +223,18 @@ fn matching_evidence(
                 })
                 .find_map(|floor| {
                     floor.items.iter().find_map(|item| {
-                        (item.class_name.as_deref() == Some(constraint.class_name.as_str())).then(
-                            || ItemMatchEvidence {
-                                constraint_index: constraint_index as u32,
-                                class_name: constraint.class_name.clone(),
-                                depth: floor.depth,
-                                name: item.name.clone(),
-                                source: item.source.clone(),
-                            },
-                        )
+                        (item.class_name.as_deref() == Some(constraint.class_name.as_str())
+                            && constraint
+                                .min_level
+                                .is_none_or(|minimum| item.level >= minimum))
+                        .then(|| ItemMatchEvidence {
+                            constraint_index: constraint_index as u32,
+                            class_name: constraint.class_name.clone(),
+                            depth: floor.depth,
+                            name: item.name.clone(),
+                            level: item.level,
+                            source: item.source.clone(),
+                        })
                     })
                 })
         })

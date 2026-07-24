@@ -5,7 +5,8 @@ import type {
 } from '@/lib/spd-wasm'
 
 export const TOTAL_SEEDS = 5_429_503_678_976
-export const MAX_CANDIDATES = 250
+export const MIN_CANDIDATES = 10
+export const MAX_CANDIDATES = 10_000
 export const MAX_CONSTRAINTS = 32
 export const MAX_FLOORS = 26
 export const MAX_RESULTS = 100
@@ -25,14 +26,7 @@ export function isIntegerInRange(
   )
 }
 
-export type FinderConstraint = Omit<
-  SeedSearchConstraint,
-  'minDepth' | 'maxDepth'
-> & {
-  id: number
-  minDepth: FinderNumericInput
-  maxDepth: FinderNumericInput
-}
+export type FinderConstraint = SeedSearchConstraint & { id: number }
 
 export type FinderConfig = {
   startSeed: number
