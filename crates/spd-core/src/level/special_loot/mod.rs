@@ -195,7 +195,7 @@ fn paint_special(
         "SecretGardenRoom" => gardens::secret_garden_prizes(room),
         "MagicWellRoom" => gardens::magic_well(room, map, items_to_spawn),
         "SecretWellRoom" => gardens::secret_well(),
-        "PitRoom" => pit_secrets::pit_prizes(dungeon, items_to_spawn),
+        "PitRoom" => pit_secrets::pit_prizes(dungeon, room, items_to_spawn),
         "SecretMazeRoom" => {
             let prize = pit_secrets::secret_maze_prize(dungeon);
             let cell = geometry_prize_cell.expect("SecretMazeRoom geometry returns a prize cell");

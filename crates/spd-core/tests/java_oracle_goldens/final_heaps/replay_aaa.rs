@@ -133,9 +133,10 @@ fn aaa_replay_pins_floors_six_through_nine_and_matches_through_library() {
             assert_eq!(map.tiles[1285], 2, "{context} planted grass cell");
             assert_armory_boundary(map, expected, &context);
             assert_library(map, expected, &context);
-            assert_ne!(
-                actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
-                "{context} retains a pinned post-Library divergence"
+            assert_eq!(
+                actual.pre_mobs_rng_probe[..7],
+                expected.pre_mobs_rng[1..],
+                "{context} next divergence is one extra post-Library RNG call"
             );
         }
 
@@ -204,11 +205,6 @@ fn assert_library(map: &spd_core::report::FloorMap, expected: &OracleFloor, cont
             )
         })
         .collect();
-    assert_eq!(
-        heaps,
-        [(2121, "heap", "ScrollOfRemoveCurse")],
-        "{context} first remaining divergence: Library enters at the wrong RNG state"
-    );
     let oracle_heaps: Vec<_> = expected
         .final_heaps
         .iter()
@@ -233,6 +229,7 @@ fn assert_library(map: &spd_core::report::FloorMap, expected: &OracleFloor, cont
         ],
         "{context} pinned Java Library prizes"
     );
+    assert_eq!(heaps, oracle_heaps, "{context} exact Library prizes");
 }
 
 fn assert_armory_boundary(map: &spd_core::report::FloorMap, expected: &OracleFloor, context: &str) {

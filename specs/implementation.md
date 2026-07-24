@@ -14,22 +14,20 @@ pinned checkout, normally at
 
 - `AAA-AAA-AAA` preserves Java-oracle floors 6–9 with exact room bounds;
   floor 6 matches through pre-items.
-- Floor-7 `LibraryRoom.paint` terrain and terrain-aware drop rejection are
-  source-ported. Its persistent wall/bookshelf geometry matches the fixture.
-- The Library prize roll exposes the first remaining divergence: Rust enters
-  with the wrong RNG state and drops one Remove Curse scroll at cell 2121;
-  Java drops Identify at 2071 and Upgrade at 2121. Status remains `partial`.
+- Floor-7 painter probes match through `SegmentedRoom`; the first gap was
+  `PitRoom` omitting the RNG-bearing `center()` call for its skeleton heap.
+- `LibraryRoom` now enters at the pinned RNG state and matches the Java
+  Identify/Upgrade prizes at cells 2071/2121. Status remains `partial`.
+- The floor-7 pre-mobs probe is still one call ahead after later painters.
 
 ## Next phase
 
-Trace the floor-7 painter RNG boundary immediately before `LibraryRoom`:
+Trace the single floor-7 RNG call consumed after `LibraryRoom`:
 
-1. Add a pinned Java/Rust probe after `RegionDecoLineExitRoom` and before
-   `LibraryRoom` (paint order places Library after that room).
-2. Find the earliest preceding painter boundary that differs; port only that
-   room's missing RNG/call-order behavior.
-3. Re-enable exact Library prize parity, then re-check pre-mobs RNG and stop at
-   the next first divergence.
+1. Probe the remaining shuffled rooms, `paintDoors`, and the transition into
+   the isolated water/grass/trap generator.
+2. Port the earliest missing or extra call only.
+3. Re-enable exact pre-mobs parity, then stop at the next lifecycle divergence.
 
 ## Known limits
 

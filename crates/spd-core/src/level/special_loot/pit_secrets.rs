@@ -6,14 +6,20 @@ use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::level::create_items::PlacedLoot;
 use crate::random::Random;
+use crate::rooms::room::Room;
 
 /// `PitRoom.paint` — skeleton main loot (ring/artifact/equip) + 1–2 consumables + CrystalKey.
 pub(super) fn pit_prizes(
     dungeon: &mut DungeonState,
+    room: &Room,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
     // Well corner: Random.Int(2) (door side is geometric from entrance).
     let _ = Random::int_max(2);
+
+    // `level.pointToCell(center())` chooses the shared skeleton heap cell.
+    // `Room.center()` burns one `Random.Int(2)` per even-sized dimension.
+    let _ = room.as_rect().center_room();
 
     // Main loot: ring / artifact / equip (weapon×2, missile, armor×2).
     // Challenges.isItemBlocked is always false without challenges — single draw.

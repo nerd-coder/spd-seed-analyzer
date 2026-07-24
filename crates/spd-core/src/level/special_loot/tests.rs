@@ -335,7 +335,8 @@ fn pit_room_skeleton_and_crystal_key() {
     let mut d = dungeon_from_run(run);
     d.depth = 12;
     let mut spawn = Vec::new();
-    let loot = pit_prizes(&mut d, &mut spawn);
+    let room = test_room("PitRoom", 6, 6);
+    let loot = pit_prizes(&mut d, &room, &mut spawn);
     Random::pop_generator();
 
     assert!((2..=3).contains(&loot.len())); // main + 1–2 side prizes
