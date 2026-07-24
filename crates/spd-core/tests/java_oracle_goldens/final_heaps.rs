@@ -2,6 +2,8 @@ use super::*;
 
 #[path = "final_heaps/replay_aaa.rs"]
 mod replay_aaa;
+#[path = "final_heaps/replay_aaa_sewers.rs"]
+mod replay_aaa_sewers;
 
 fn report_blacklists(class_name: &str) -> bool {
     matches!(

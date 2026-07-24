@@ -73,6 +73,7 @@ pub(super) fn grassy_graves(
         item.source = Some("GrassyGraveRoom".into());
         if let Some(cell) = map.point_to_cell(x, y) {
             map.item_allowed[cell] = false;
+            map.record_heap(cell, "tomb", item.clone());
         }
         graves.push(PlacedLoot {
             item,

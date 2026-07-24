@@ -3,6 +3,7 @@
 use super::special_rooms::is_curse_enchant;
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
+use crate::geom::Point;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::level::create_items::PlacedLoot;
 use crate::level::terrain::TerrainMap;
@@ -127,22 +128,46 @@ pub(super) fn secret_summoning_prize(dungeon: &mut DungeonState) -> PlacedLoot {
 /// `SecretChestChasmRoom.paint` — 4 locked chests (`randomUsingDefaults`) + golden keys + levitation.
 pub(super) fn secret_chest_chasm(
     dungeon: &mut DungeonState,
+    room: &Room,
+    map: &mut TerrainMap,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
     let mut out = Vec::new();
-    // Geometry is fixed; four locked chests always drop (heaps non-null without blocked items).
-    for _ in 0..4 {
+    fill_room(map, room, crate::level::terrain::WALL);
+    fill_margin(map, room, 1, crate::level::terrain::CHASM);
+    let chest_points = [
+        Point::new(room.left + 3, room.top + 3),
+        Point::new(room.right - 3, room.top + 3),
+        Point::new(room.right - 3, room.bottom - 3),
+        Point::new(room.left + 3, room.bottom - 3),
+    ];
+    for point in chest_points {
         let mut item = dungeon.generator.random_using_defaults_any(dungeon.depth);
         item.source = Some("SecretChestChasmRoom".into());
+        let cell = map
+            .point_to_cell(point.x, point.y)
+            .expect("secret chest cell");
+        map.map[cell] = crate::level::terrain::EMPTY_SP;
+        map.record_heap(cell, "locked_chest", item.clone());
         out.push(PlacedLoot {
             item,
             heap_type: "locked_chest",
         });
     }
-    // Four golden keys for the four chests (reported so seed-finder can see key count)
-    for _ in 0..4 {
+    let key_points = [
+        Point::new(room.left + 1, room.top + 1),
+        Point::new(room.right - 1, room.top + 1),
+        Point::new(room.right - 1, room.bottom - 1),
+        Point::new(room.left + 1, room.bottom - 1),
+    ];
+    for point in key_points {
         let mut key = GeneratedItem::new("GoldenKey", ItemCategory::Other);
         key.source = Some("SecretChestChasmRoom".into());
+        let cell = map
+            .point_to_cell(point.x, point.y)
+            .expect("secret key cell");
+        map.map[cell] = crate::level::terrain::EMPTY_SP;
+        map.record_heap(cell, "heap", key.clone());
         out.push(PlacedLoot {
             item: key,
             heap_type: "heap",
@@ -153,4 +178,24 @@ pub(super) fn secret_chest_chasm(
         ItemCategory::Potion,
     ));
     out
+}
+
+fn fill_room(map: &mut TerrainMap, room: &Room, terrain: i32) {
+    for y in room.top..=room.bottom {
+        for x in room.left..=room.right {
+            if let Some(cell) = map.point_to_cell(x, y) {
+                map.map[cell] = terrain;
+            }
+        }
+    }
+}
+
+fn fill_margin(map: &mut TerrainMap, room: &Room, margin: i32, terrain: i32) {
+    for y in (room.top + margin)..=(room.bottom - margin) {
+        for x in (room.left + margin)..=(room.right - margin) {
+            if let Some(cell) = map.point_to_cell(x, y) {
+                map.map[cell] = terrain;
+            }
+        }
+    }
 }

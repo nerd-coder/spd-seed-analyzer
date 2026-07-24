@@ -223,7 +223,9 @@ fn paint_special(
             map.record_heap(cell, "skeleton", prize.item.clone());
             vec![prize]
         }
-        "SecretChestChasmRoom" => pit_secrets::secret_chest_chasm(dungeon, items_to_spawn),
+        "SecretChestChasmRoom" => {
+            pit_secrets::secret_chest_chasm(dungeon, room, map, items_to_spawn)
+        }
         // Layout-only (no portable prize items)
         "WeakFloorRoom" | "DemonSpawnerRoom" => Vec::new(),
         "SentryRoom" => vec![trap_rooms::sentry_prize(

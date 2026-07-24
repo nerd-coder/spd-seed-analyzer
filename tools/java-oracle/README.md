@@ -5,8 +5,8 @@ Dungeon Java implementation. Schema v1 covers run-level potion, scroll, and
 ring identity mappings. Schema v2 adds an intentionally narrow floor contract:
 the ordered depth-one `itemsToSpawn` queue at the exact pre-`build()` boundary.
 Schema v3 is a separately scoped level contract that snapshots final heaps and
-mobs after the real `Level.create()` lifecycle completes. Sewer depth 1 and
-Prison depths 6 through 9 are supported. Depth 1 is generated directly; deeper
+mobs after the real `Level.create()` lifecycle completes. Sewer depths 1 through
+4 and Prison depths 6 through 9 are supported. Depth 1 is generated directly; deeper
 targets are generated after completing every prior floor so run-persistent state is
 preserved. A separate generator-deck contract records exact category draws and
 RNG probes across a deck reset without running a floor. A separate shop-bag
@@ -35,6 +35,7 @@ From the analyzer repository root:
 ./tools/java-oracle/run AAA-AAA-AAA
 ./tools/java-oracle/run --depth 1 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 1 AAA-AAA-AAA
+./tools/java-oracle/run --final-heaps-depth 2 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 6 HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 7 HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 8 HKT-JZN-XQQ
@@ -232,9 +233,9 @@ floor item.
 ### Schema version 3: final placed heaps
 
 Passing `--final-heaps-depth 1` runs the exact pinned initialization followed
-by `Dungeon.newLevel()` for a depth-one `SewerLevel`. Passing depth 6 through 9
-first runs `Dungeon.newLevel()` for every preceding floor, then creates the
-target `PrisonLevel`. The oracle snapshots
+by `Dungeon.newLevel()` for a depth-one `SewerLevel`. Passing depths 2 through 4
+or 6 through 9 first runs `Dungeon.newLevel()` for every preceding floor, then
+creates the target region-appropriate level. The oracle snapshots
 `level.heaps` and `level.mobs` only after `Level.create()` returns (build,
 painter, mob pass, and `createItems` have all run). The oracle uses a fresh
 Warrior hero with no challenges and a fresh in-memory preference store. The

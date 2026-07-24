@@ -276,7 +276,9 @@ fn secret_chest_chasm_four_locked_plus_levitation() {
     let mut d = dungeon_from_run(run);
     d.depth = 9;
     let mut spawn = Vec::new();
-    let loot = secret_chest_chasm(&mut d, &mut spawn);
+    let room = test_room("SecretChestChasmRoom", 8, 8);
+    let mut map = paint_minimal(std::slice::from_ref(&room)).expect("secret room map");
+    let loot = secret_chest_chasm(&mut d, &room, &mut map, &mut spawn);
     Random::pop_generator();
 
     let chests: Vec<_> = loot
@@ -287,6 +289,10 @@ fn secret_chest_chasm_four_locked_plus_levitation() {
     assert!(chests
         .iter()
         .all(|p| p.item.source.as_deref() == Some("SecretChestChasmRoom")));
+    assert_eq!(
+        map.known_heaps.iter().filter(|heap| heap.is_some()).count(),
+        8
+    );
     assert_eq!(
         spawn.last().map(|i| i.class_name.as_str()),
         Some("PotionOfLevitation")

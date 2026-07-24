@@ -12,20 +12,25 @@ pinned checkout, normally at
 
 ## Checkpoint
 
-- `AAA-AAA-AAA` floors 6–9 preserve exact room bounds; floor 7 preserves the
-  exact pre-items RNG boundary, mobs, and PitRoom skeleton heap.
-- Concrete `Generator.undoDrop` calls now match pinned Java's effective no-op.
-- Floor-7 main drops still diverge because earlier floors consume a different
-  sequence of overall Generator categories.
+- `AAA-AAA-AAA` floors 1–2 match through pre-items RNG; floor 2 also matches
+  exact seeded heaps after porting GrassyGrave tombs and SecretChestChasm
+  chests, keys, and terrain.
+- Floor 3 matches room classes, bounds, and pre-paint RNG. At pre-mobs, Rust is
+  exactly four base-stream draws ahead of Java.
+- Floor 7 still has exact local paint/mob boundaries, but its five main drops
+  diverge because the earlier overall Generator category history differs.
 
 ## Next phase
 
-Trace `AAA-AAA-AAA` floors 2–4 from Java-oracle fixtures and reconcile the first
-missing room-paint or loot lifecycle that changes `Generator.random()` category
-consumption. Add a boundary fixture at the earliest divergence, then restore
-the five floor-7 main drops without seed-specific state injection.
+Trace the four missing floor-3 paint-stage base RNG draws. Compare the pinned
+SewerLevel painter lifecycle from the exact pre-paint boundary through
+`paintDoors`, room paint, and the isolated water/grass/traps/decorate tail.
+Add the narrowest intermediate oracle probe that identifies the call site,
+then port the general behavior and advance the floor-3 boundary toward
+pre-items.
 
-Pinned floor-7 target:
+After floor 3 is exact, continue floor 4 and replay through floor 7. The target
+floor-7 main drops remain:
 
 - `ThrowingSpear(3)` at 281, heap
 - `ScrollOfIdentify` at 662, heap

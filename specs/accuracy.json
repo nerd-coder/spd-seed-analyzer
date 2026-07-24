@@ -18,13 +18,13 @@
         "Generic and region-specific standard-room geometry",
         "Pinned standard, special, and secret room-count tables",
         "Pinned SecretLarderRoom minimum dimensions and food-placement viability",
-        "Depth-one lifecycle fixtures across ten seeds, full HKT-JZN-XQQ floor 6–8 parity, and preserved-state AAA-AAA-AAA floor 6–9 oracle fixtures with exact room bounds",
+        "Depth-one lifecycle fixtures across ten seeds, full HKT-JZN-XQQ floor 6–8 parity, and preserved-state AAA-AAA-AAA floor 2–4 and 6–9 oracle fixtures",
         "AAA-AAA-AAA floor-7 painter RNG parity through PitRoom's UnstableSpellbook constructor, exact central skeleton stack lifecycle, PillarsRoom geometry, and the exact pre-mobs boundary"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
-        "Coverage is fixture-specific; later createMobs/createItems histories still require phase-by-phase parity checks"
+        "AAA-AAA-AAA floor 3 first diverges between the exact pre-paint and pre-mobs boundaries; later histories still require phase-by-phase parity checks"
       ],
       "impact": "Room selection, bounds, connections, or downstream RNG can differ on uncovered generation paths.",
       "evidence": [
@@ -37,7 +37,7 @@
       "area": "Special & secret rooms",
       "status": "partial",
       "implemented": [
-        "Exact structured heap capture for Crypt, Pool, Runestone, MagicalFire, Traps, Sentry, Storage, ToxicGas, CrystalPath, and CrystalVault fixture paths",
+        "Exact structured heap capture for Crypt, GrassyGrave, SecretChestChasm, Pool, Runestone, MagicalFire, Traps, Sentry, Storage, ToxicGas, CrystalPath, and CrystalVault fixture paths",
         "Full SecretMaze layout plus covered Armory, Garden, Library, Pit, RotGarden, WeakFloor, DemonSpawner, Summoning, and ToxicGas paint behavior",
         "Special and secret-room prize generation for supported room families"
       ],
