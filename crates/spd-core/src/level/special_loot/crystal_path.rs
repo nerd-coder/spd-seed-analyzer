@@ -109,15 +109,24 @@ pub(super) fn paint(
         if shuffle == 1 { prize1 } else { prize2 },
         if shuffle == 1 { prize2 } else { prize1 },
     ];
-    for point in cells {
-        if let Some(cell) = map.point_to_cell(point.x, point.y) {
-            map.heap_occupied[cell] = true;
-        }
-    }
-
     let mut out = Vec::new();
-    for mut item in potions.into_iter().chain(scrolls) {
+    // Java drops alternating potion/scroll pairs into progressively more
+    // valuable rooms. Preserve that order when associating items with cells;
+    // the report may still group them by source, but the map must not.
+    let rewards = [
+        potions.remove(0),
+        scrolls.remove(0),
+        potions.remove(0),
+        scrolls.remove(0),
+        potions.remove(0),
+        scrolls.remove(0),
+    ];
+    for (mut item, point) in rewards.into_iter().zip(cells) {
         item.source = Some("CrystalPathRoom".into());
+        let cell = map
+            .point_to_cell(point.x, point.y)
+            .expect("CrystalPathRoom reward cell is inside the map");
+        map.record_heap(cell, "heap", item.clone());
         out.push(PlacedLoot {
             item,
             heap_type: "heap",

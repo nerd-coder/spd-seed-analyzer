@@ -6,67 +6,41 @@
 
 **Status:** `partial` — do not claim full seed-finder accuracy
 
-`specs/accuracy.json` is the canonical coverage manifest. Update it with every
-generation/parity change. Port only from the pinned checkout, normally at
+`specs/accuracy.json` is the coverage source of truth. Port only from the
+pinned checkout, normally at
 `/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`.
 
-## Current checkpoint
+## Checkpoint
 
-- Java RNG, generator decks, run identities, depth seeds, forced drops, and
-  supported shop/quest flows have focused parity coverage.
-- Ten depth-one schema-v3 fixtures pin lifecycle RNG boundaries, room classes,
-  bounds, final heaps, and final mobs. `HKT-JZN-XQQ` also replays floors 6–8.
-- Structured heap capture is fixture-backed for Crypt, Pool, Runestone,
-  MagicalFire, Traps, Sentry, Storage, and ToxicGas paths.
-- `AAA-AAA-AAA` pins PoolRoom's chest at cell 315 and the complete final
-  heap/mob set. The Pool prize early-return and piranha RNG order match Java.
-- Full additive map facts are verified only for selected fixtures. Overall
-  coverage remains partial; legacy room painters and deeper histories can
+- Depth-one schema-v3 fixtures pin lifecycle probes, room classes, map bounds,
+  final heaps, and final mobs; `HKT-JZN-XQQ` also replays floors 6–8.
+- `GFX-PZH-DCH` now pins CrystalPathRoom geometry/reward order and all six exact
+  item-to-cell heap associations. That family no longer emits `Room loot`.
+- Coverage remains partial; unported room painters and deeper histories can
   still diverge.
 
 ## Next phase
 
-Convert one more RegularLevel room family that still produces a legacy
-`Room loot` marker:
+Add a second independent replay seed across floors 6–9:
 
-1. Find or reuse a compact schema-v3 fixture containing the room; independently
-   regenerate it with the pinned Java oracle.
-2. Before changing Rust, pin room classes, bounds, all three lifecycle RNG
-   probes, every final heap, and every final mob.
-3. Port exact geometry, retry predicates, RNG/item order, heap type, and
-   item-to-cell association into `spd-core`.
-4. Remove the legacy marker only for that covered family; retain it elsewhere.
-5. Update `specs/accuracy.json`, oracle notes, and this handoff.
+1. Select a seed that exercises room families not dominant in `HKT-JZN-XQQ`.
+2. Regenerate every target floor with the pinned Java oracle, preserving all
+   prior-floor run state.
+3. Pin room classes/bounds, all lifecycle probes, final heaps, final mobs, and
+   additive render facts before fixing the first divergence.
+4. Port only the divergence reached by that replay and update
+   `specs/accuracy.json` in the same change.
 
-Prefer a family already reachable through `RegularLevel`. Inspect candidates
-with:
-
-```bash
-rg -n 'heap_occupied|Room loot|PlacedLoot|record_heap' crates/spd-core/src/level
-```
-
-After the next room family, prioritize a second replay seed across floors 6–9
-to reduce single-history overfitting.
+After that replay, convert another fixture-backed family that still emits a
+legacy `Room loot` marker.
 
 ## Known limits
 
-- Uncovered special/secret paint geometry and deeper generation histories may
-  diverge even when earlier facts match.
-- ToxicGas vents and gas blobs are not exact exported additive facts for
+- Uncovered special/secret geometry and deeper histories may diverge.
+- ToxicGas vents/gas blobs are not exact exported additive facts for
   `AAA-AAA-ACB`.
-- VaultLevel-only branches are outside the regular-floor analyzer.
-- Later-shop bag selection needs player inventory and Hourglass sandbag input.
+- VaultLevel branches and player-dependent later-shop bag selection are out of
+  the current regular-floor contract.
 - The unseeded early Guidebook page is intentionally out of scope.
 
-## Validation
-
-Oracle usage is documented in `tools/java-oracle/README.md`. Before committing
-a Rust phase, run the full CI `check` sequence from `AGENTS.md`:
-
-```bash
-mise exec -- bun run check
-CARGO_TARGET_DIR=/private/tmp/spd-seed-review-target mise exec -- bun run check:rust
-CARGO_TARGET_DIR=/private/tmp/spd-seed-review-target mise exec -- bun run test:rust
-CARGO_TARGET_DIR=/private/tmp/spd-seed-review-target mise exec -- bun run build
-mise exec -- bun run test:visual:only
-```
+Before committing, run the complete CI `check` sequence from `AGENTS.md`.

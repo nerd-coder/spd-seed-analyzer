@@ -10,6 +10,8 @@ const IDENTITY_SCHEMA_VERSION: u32 = 1;
 const FLOOR_SCHEMA_VERSION: u32 = 2;
 const FINAL_HEAPS_SCHEMA_VERSION: u32 = 3;
 
+#[path = "java_oracle_goldens/crystal_path.rs"]
+mod crystal_path;
 #[path = "java_oracle_goldens/final_heaps.rs"]
 mod final_heaps;
 #[path = "java_oracle_goldens/pool.rs"]

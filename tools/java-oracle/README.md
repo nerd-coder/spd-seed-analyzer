@@ -123,7 +123,14 @@ exact terrain, discoverability, tile variance, transitions, traps, structured
 heaps/mobs, plants, and active blobs.
 The floor-six, floor-seven, and floor-eight fixtures pin full Java
 observations, and Rust matches all three complete lifecycles for the committed
-fresh-run replays:
+fresh-run replays.
+
+The `GFX-PZH-DCH` floor-one fixture additionally pins CrystalPathRoom's six
+alternating potion/scroll drops to their exact cells. Its focused Rust test
+checks all lifecycle probes, room classes, map bounds, final heaps, final mobs,
+and the absence of legacy `Room loot` markers.
+
+Run all fixture comparisons with:
 
 ```bash
 cargo test -p spd-core --test java_oracle_goldens
