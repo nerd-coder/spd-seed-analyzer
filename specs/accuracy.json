@@ -23,7 +23,8 @@
         "AAA-AAA-AAA floor-7 painter RNG parity through PitRoom's UnstableSpellbook constructor, exact central skeleton stack lifecycle, PillarsRoom geometry, and the exact pre-mobs boundary",
         "AAA-AAA-AAA floors 8–9 and 11 exact pre-paint, pre-mobs, and pre-items RNG boundaries; floor 11 preserves the floor-10 Tengu lifecycle",
         "AAA-AAA-AAA floor 12 exact FigureEightBuilder room classes and bounds, pre-paint, pre-mobs, and pre-items RNG boundaries, including CaveExitRoom size probabilities and SecretRunestoneRoom's exact three-drop painter",
-        "AAA-AAA-AAA floors 13–14 and 16 exact room classes and normalized bounds plus pre-paint, pre-mobs, and pre-items RNG boundaries, normalized heaps, and final mobs; floor 16 preserves the floor-15 DM-300 lifecycle"
+        "AAA-AAA-AAA floors 13–14 and 16 exact room classes and normalized bounds plus pre-paint, pre-mobs, and pre-items RNG boundaries, normalized heaps, and final mobs; floor 16 preserves the floor-15 DM-300 lifecycle",
+        "AAA-AAA-AAA floor 17 exact room classes, normalized bounds, and pre-paint RNG boundary"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
@@ -37,7 +38,8 @@
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-12.json",
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-13.json",
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-14.json",
-        "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-16.json"
+        "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-16.json",
+        "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-17.json"
       ]
     },
     {

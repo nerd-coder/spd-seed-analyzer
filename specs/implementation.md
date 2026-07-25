@@ -6,13 +6,13 @@
 
 ## Next phase
 
-Extend the pinned Java final-heaps oracle through floor 17. Compare
-AAA-AAA-AAA room classes and normalized bounds first, then RNG boundaries,
-mobs, and heaps. Fix only the first semantic difference, then stop.
+Continue AAA-AAA-AAA floor-17 parity at the pre-mobs RNG boundary, then compare
+the pre-items boundary, mobs, and normalized heaps. Fix only the first semantic
+difference, then stop.
 
 ## Current checkpoint
 
-- AAA-AAA-AAA floor 16 matches Java through normalized final heaps, with the
-  floor-15 DM-300 lifecycle preserved.
+- Floor 17 matches Java room classes, normalized bounds, and pre-paint RNG.
+- The next known difference is missing Rust pre-mobs probe capture at floor 17.
 
 Run the complete CI `check` sequence from `AGENTS.md` before committing.
