@@ -6,10 +6,11 @@
 
 ## Next phase
 
-Resume floor 21 at its FigureEightBuilder divergence. Compare Java and Rust
-connection placement from the exact post-room-selection boundary; fix only a
-source-backed call-order or collection-order mismatch, then carry parity
-through painting and final map facts.
+Instrument the pinned Java oracle and Rust FigureEightBuilder with matching
+per-attempt traces: start/end RNG probes, failure stage, room insertion order,
+and bounds. Use the first differing attempt boundary to make only a
+source-backed retry, placement, or collection-order fix; then carry floor 21
+parity through painting and final map facts.
 
 ## Checkpoint
 
@@ -19,3 +20,7 @@ through painting and final map facts.
   source-only quest-branch reference because branch maps are not analyzed.
 - Floor 21 room selection matches Java, but Rust still emits seven TunnelRooms
   where Java emits six. Overall accuracy stays `partial`.
+- Rust attempt 0 fails with 15 rooms and attempt 1 succeeds with 17. Java's
+  pre-paint RNG state is 297 integer draws later; forcing attempt 1 to fail
+  makes Rust attempt 2 succeed with 18 rooms and does not converge. Existing
+  fixtures therefore cannot justify suppressing a retry or changing geometry.
