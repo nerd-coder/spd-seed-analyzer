@@ -201,16 +201,24 @@ fn heap_item(item: &GeneratedItem) -> MapHeapItem {
 fn transitions(map: &TerrainMap, depth: i32, branch: i32) -> Vec<MapTransition> {
     let mut transitions = Vec::new();
     for (cell, &tile) in map.map.iter().enumerate() {
-        let (transition_type, dest_depth, dest_type) = match tile {
+        let (transition_type, dest_depth, dest_branch, dest_type) = match tile {
+            terrain::EXIT if map.branch_exits.contains(&cell) => (
+                "BRANCH_EXIT",
+                depth,
+                branch + 1,
+                Some("BRANCH_ENTRANCE".to_string()),
+            ),
             terrain::EXIT => (
                 "REGULAR_EXIT",
                 depth + 1,
+                branch,
                 Some("REGULAR_ENTRANCE".to_string()),
             ),
-            terrain::ENTRANCE | terrain::ENTRANCE_SP if depth == 1 => ("SURFACE", 0, None),
+            terrain::ENTRANCE | terrain::ENTRANCE_SP if depth == 1 => ("SURFACE", 0, branch, None),
             terrain::ENTRANCE | terrain::ENTRANCE_SP => (
                 "REGULAR_ENTRANCE",
                 depth - 1,
+                branch,
                 Some("REGULAR_EXIT".to_string()),
             ),
             _ => continue,
@@ -225,7 +233,7 @@ fn transitions(map: &TerrainMap, depth: i32, branch: i32) -> Vec<MapTransition> 
             right: x,
             bottom: y,
             dest_depth,
-            dest_branch: branch,
+            dest_branch,
             dest_type,
         });
     }

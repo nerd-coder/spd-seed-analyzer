@@ -3,7 +3,7 @@ use super::*;
 use std::ffi::OsStr;
 
 #[test]
-fn aaa_floor_nineteen_matches_through_final_heaps() {
+fn aaa_floor_nineteen_matches_through_traps() {
     let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-19.json");
     let path = fixture_paths()
         .into_iter()
@@ -81,4 +81,42 @@ fn aaa_floor_nineteen_matches_through_final_heaps() {
         })
         .collect();
     assert_eq!(heaps, expected.final_heaps, "floor-19 final heaps");
+    let map = actual.map.as_ref().expect("floor-19 map facts");
+    let transitions = map
+        .transitions
+        .iter()
+        .map(|transition| OracleTransition {
+            cell: transition.cell,
+            transition_type: transition.transition_type.clone(),
+            left: transition.left,
+            top: transition.top,
+            right: transition.right,
+            bottom: transition.bottom,
+            dest_depth: transition.dest_depth,
+            dest_branch: transition.dest_branch,
+            dest_type: transition.dest_type.clone(),
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        &transitions,
+        expected.transitions.as_ref().expect("floor-19 transitions"),
+        "floor-19 transitions"
+    );
+    let traps = map
+        .traps
+        .iter()
+        .map(|trap| OracleTrap {
+            cell: trap.cell,
+            class_name: trap.class_name.clone(),
+            visible: trap.visible,
+            active: trap.active,
+            color: trap.color,
+            shape: trap.shape,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        &traps,
+        expected.traps.as_ref().expect("floor-19 traps"),
+        "floor-19 traps"
+    );
 }

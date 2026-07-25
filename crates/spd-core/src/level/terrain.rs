@@ -109,6 +109,8 @@ pub struct TerrainMap {
     pub trap_destroys_items: Vec<bool>,
     /// Optional trap class name for debugging / future UI.
     pub trap_names: Vec<Option<&'static str>>,
+    /// `EXIT` cells backed by an explicit quest-branch transition.
+    pub branch_exits: Vec<usize>,
 }
 
 impl TerrainMap {
@@ -403,6 +405,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
     let known_blobs = Vec::new();
     let trap_destroys_items = vec![false; len];
     let trap_names = vec![None; len];
+    let branch_exits = Vec::new();
 
     Some(TerrainMap {
         width,
@@ -425,6 +428,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
         known_blobs,
         trap_destroys_items,
         trap_names,
+        branch_exits,
     })
 }
 
