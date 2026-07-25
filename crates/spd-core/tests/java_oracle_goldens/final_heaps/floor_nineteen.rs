@@ -3,7 +3,7 @@ use super::*;
 use std::ffi::OsStr;
 
 #[test]
-fn aaa_floor_nineteen_matches_through_discoverability() {
+fn aaa_floor_nineteen_matches_through_tile_variance() {
     let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-19.json");
     let path = fixture_paths()
         .into_iter()
@@ -108,6 +108,14 @@ fn aaa_floor_nineteen_matches_through_discoverability() {
             .as_ref()
             .expect("floor-19 discoverable mask"),
         "floor-19 discoverable mask"
+    );
+    assert_eq!(
+        &map.tile_variance,
+        expected
+            .tile_variance
+            .as_ref()
+            .expect("floor-19 tile variance"),
+        "floor-19 tile variance"
     );
     let transitions = map
         .transitions
