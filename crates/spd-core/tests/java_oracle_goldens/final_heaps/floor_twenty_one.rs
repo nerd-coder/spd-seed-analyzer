@@ -19,24 +19,7 @@ fn aaa_floor_twenty_one_pins_first_generation_divergence_fix() {
         actual = Some(create_level_partial(&mut dungeon));
     }
     let actual = actual.expect("floor-21 replay");
-    assert_eq!(
-        actual.pre_paint_rng_probe,
-        [
-            -1_716_804_766,
-            -1_527_035_254,
-            -349_652_823,
-            -966_449_763,
-            -421_397_997,
-            -824_908_010,
-            -138_537_706,
-            1_360_956_948,
-        ],
-        "floor-21 post-ChasmRoom correction boundary"
-    );
-    assert_ne!(
-        actual.pre_paint_rng_probe, expected.pre_paint_rng,
-        "floor-21 still has a later init/build divergence"
-    );
+    assert_eq!(actual.pre_paint_rng_probe, expected.pre_paint_rng);
     let mut rooms = actual.rooms.clone();
     rooms.sort();
     assert_eq!(
@@ -58,9 +41,8 @@ fn aaa_floor_twenty_one_pins_first_generation_divergence_fix() {
             "TunnelRoom",
             "TunnelRoom",
             "TunnelRoom",
-            "TunnelRoom",
         ],
-        "floor-21 exact post-ChasmRoom room classes"
+        "floor-21 exact room classes"
     );
     let ordinary_rooms = rooms
         .iter()
@@ -86,8 +68,5 @@ fn aaa_floor_twenty_one_pins_first_generation_divergence_fix() {
             bottom: room.bottom,
         })
         .collect();
-    assert_ne!(
-        bounds, expected.room_bounds,
-        "floor-21 FigureEightBuilder layout remains the next divergence"
-    );
+    assert_eq!(bounds, expected.room_bounds);
 }

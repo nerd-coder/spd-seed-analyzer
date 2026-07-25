@@ -26,12 +26,11 @@
         "AAA-AAA-AAA floors 13–14 and 16–17 exact room classes and normalized bounds plus pre-paint, pre-mobs, and pre-items RNG boundaries, normalized heaps, and final mobs; floor 16 preserves the floor-15 DM-300 lifecycle",
         "AAA-AAA-AAA floor 18 exact room classes and normalized bounds plus pre-paint, pre-mobs, and pre-items RNG boundaries, final mobs, final heaps, terrain, discoverability, tile variance, transitions, traps, plants, and GardenRoom Foliage blob facts, including SecretArtilleryRoom's exact placement, fixed DoubleBomb, and two default-pool missiles",
         "AAA-AAA-AAA floor 19 exact room classes and normalized bounds plus pre-paint, pre-mobs, and pre-items RNG boundaries, final mobs, final heaps, terrain, discoverability, transitions, ordinary plus SecretSummoning traps, PlantsRoom plants, and the LaboratoryRoom Alchemy blob, including AmbitiousImpRoom painter eligibility and branch-transition metadata",
-        "AAA-AAA-AAA floor 21 source-backed ChasmRoom size-category parity and exact non-connection room selection after preserving the floor-20 Dwarf King level lifecycle"
+        "AAA-AAA-AAA floor 21 exact FigureEightBuilder attempt boundaries, room classes, normalized bounds, six TunnelRooms, and pre-paint RNG parity after restoring ChasmExitRoom size probabilities and preserving the floor-20 Dwarf King lifecycle"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
-        "AAA-AAA-AAA floor 21 still diverges in FigureEightBuilder connection count, normalized bounds, and the pre-paint RNG boundary",
         "Later floors still require phase-by-phase parity checks"
       ],
       "impact": "Room selection, bounds, connections, or downstream RNG can differ on uncovered generation paths.",
@@ -45,7 +44,8 @@
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-17.json",
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-18.json",
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-19.json",
-        "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-21.json"
+        "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-21.json",
+        "tools/java-oracle/fixtures/traces/aaa-aaa-aaa-floor-21-figure-eight.json"
       ]
     },
     {
@@ -83,6 +83,7 @@
       ],
       "remaining": [
         "Loot tied to uncovered room paint or lifecycle paths can be incomplete or misplaced",
+        "HKT-JZN-XQQ floor 13 SacrificeRoom reward identity, curse, and enhancement lifecycle is not yet verified against the observed cursed Corrupting Whip +2 with Parchment Scrap +3 player state",
         "Shop and crystal-room loot outside verified flows should be treated as approximate",
         "Later-shop bags require player inventory, and equal-score ChooseBag ties follow non-seeded JVM identity-hash HashMap iteration; HKT and AAA oracle processes choose different bags for equivalent fresh inventories",
         "Hourglass sandbag input is unavailable"
@@ -91,7 +92,8 @@
       "evidence": [
         "crates/spd-core/src/level/create_items",
         "crates/spd-core/src/level/shop.rs",
-        "crates/spd-core/tests/java_oracle_goldens/final_heaps.rs"
+        "crates/spd-core/tests/java_oracle_goldens/final_heaps.rs",
+        "specs/observed-outcomes.json"
       ]
     },
     {

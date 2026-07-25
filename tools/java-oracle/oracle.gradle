@@ -18,6 +18,8 @@ gradle.beforeProject { project ->
                 gradle.startParameter.projectProperties['oracleGeneratorLifecycle']
         def shopBagSelection =
                 gradle.startParameter.projectProperties['oracleShopBagSelection']
+		def figureEightTrace =
+				gradle.startParameter.projectProperties['oracleFigureEightTrace']
         if (sourceDir == null || seed == null) {
             throw new GradleException('javaOracleDump requires oracleSourceDir and oracleSeed')
         }
@@ -60,6 +62,9 @@ gradle.beforeProject { project ->
             if (shopBagSelection != null) {
                 args('shop-bag-selection')
             }
+			if (figureEightTrace != null) {
+				args('figure-eight-trace', figureEightTrace)
+			}
         }
     }
 }

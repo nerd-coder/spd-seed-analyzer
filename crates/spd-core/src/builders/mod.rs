@@ -23,6 +23,13 @@ struct FigureEightAttemptTrace {
     success: bool,
 }
 
+#[cfg(test)]
+thread_local! {
+    static LAST_FIGURE_EIGHT_TRACE: std::cell::RefCell<Vec<FigureEightAttemptTrace>> = const {
+        std::cell::RefCell::new(Vec::new())
+    };
+}
+
 /// Place rooms with one Java builder instance. Failed inner attempts retain
 /// FigureEightBuilder's selected landmark, while appended connection rooms are discarded.
 pub fn build_rooms(
@@ -42,7 +49,9 @@ pub fn build_rooms(
     };
 
     let mut figure_state = figure_eight::FigureEightState::default();
-    for _ in 0..max_tries {
+    #[cfg(test)]
+    LAST_FIGURE_EIGHT_TRACE.with(|trace| trace.borrow_mut().clear());
+    for _attempt in 0..max_tries {
         clear_all_connections(rooms);
         for r in rooms.iter_mut() {
             r.set_empty();
@@ -56,7 +65,33 @@ pub fn build_rooms(
         let ok = match kind {
             BuilderKind::Loop => loop_builder::build(rooms, &params, depth, prepare_shop).is_some(),
             BuilderKind::FigureEight => {
-                figure_eight::build(rooms, &params, depth, &mut figure_state, prepare_shop).is_ok()
+                #[cfg(test)]
+                let start_rng_probe = crate::random::Random::peek_ints(8);
+                let result =
+                    figure_eight::build(rooms, &params, depth, &mut figure_state, prepare_shop);
+                #[cfg(test)]
+                LAST_FIGURE_EIGHT_TRACE.with(|trace| {
+                    trace.borrow_mut().push(FigureEightAttemptTrace {
+                        attempt: _attempt,
+                        start_rng_probe,
+                        end_rng_probe: crate::random::Random::peek_ints(8),
+                        failure_stage: result.as_ref().err().copied(),
+                        rooms: rooms
+                            .iter()
+                            .map(|room| {
+                                (
+                                    room.name.clone(),
+                                    room.left,
+                                    room.top,
+                                    room.right,
+                                    room.bottom,
+                                )
+                            })
+                            .collect(),
+                        success: result.is_ok(),
+                    });
+                });
+                result.is_ok()
             }
         };
         if ok {
@@ -125,6 +160,95 @@ mod tests {
     use crate::random::Random;
     use crate::rooms::room::dims_for_kind;
     use crate::rooms::types::RoomKind;
+
+    #[test]
+    fn aaa_floor_twenty_one_matches_java_attempt_boundaries() {
+        use crate::level::create_level_partial;
+        use crate::run::{dungeon_from_run, init_run};
+
+        let mut dungeon = dungeon_from_run(init_run(0));
+        let mut floor = None;
+        for depth in 1..=21 {
+            dungeon.depth = depth;
+            floor = Some(create_level_partial(&mut dungeon));
+        }
+        let trace = LAST_FIGURE_EIGHT_TRACE.with(|trace| trace.borrow().clone());
+        assert_eq!(trace.len(), 3);
+        assert_eq!(
+            trace
+                .iter()
+                .map(|attempt| (attempt.failure_stage, attempt.success))
+                .collect::<Vec<_>>(),
+            [
+                (Some(figure_eight::FailureStage::FirstLoop), false),
+                (Some(figure_eight::FailureStage::SecondLoop), false),
+                (None, true),
+            ]
+        );
+        assert_eq!(
+            trace
+                .iter()
+                .map(|attempt| attempt.start_rng_probe.clone())
+                .collect::<Vec<_>>(),
+            [
+                vec![
+                    755658038,
+                    2119033571,
+                    -291089650,
+                    -193444257,
+                    -598165080,
+                    1384792528,
+                    -1540666710,
+                    1084686982
+                ],
+                vec![
+                    2147435541,
+                    1330567029,
+                    -897766932,
+                    -2036202939,
+                    864136891,
+                    -1643441563,
+                    -98025121,
+                    908687397
+                ],
+                vec![
+                    1271526477,
+                    -1171829326,
+                    592264908,
+                    48167381,
+                    -335136343,
+                    -1591169427,
+                    -1718249634,
+                    137460704
+                ],
+            ]
+        );
+        assert!(trace
+            .windows(2)
+            .all(|pair| pair[0].end_rng_probe == pair[1].start_rng_probe));
+        let floor = floor.unwrap();
+        assert_eq!(
+            floor
+                .rooms
+                .iter()
+                .filter(|name| name.as_str() == "TunnelRoom")
+                .count(),
+            6
+        );
+        assert_eq!(
+            floor.pre_paint_rng_probe,
+            [
+                1830028298,
+                1789541391,
+                49840001,
+                -704551720,
+                -499241945,
+                1437454582,
+                780588159,
+                -1009167912
+            ]
+        );
+    }
 
     fn room(id: usize, name: &str, kind: RoomKind, size: i32, connections: i32) -> Room {
         let (min_w, max_w, min_h, max_h) = dims_for_kind(kind, size, name);

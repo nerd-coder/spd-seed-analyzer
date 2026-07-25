@@ -13,11 +13,13 @@ final_heaps_depth=""
 generator_deck_rollover=""
 generator_lifecycle=""
 shop_bag_selection=""
+figure_eight_trace=""
 
 usage() {
 	cat >&2 <<'EOF'
 Usage: tools/java-oracle/run [--source PATH] [--output FILE]
                              [--depth 1 | --final-heaps-depth 1|2|3|4|6|7|8|9|11|12|13|14|16|17|18|19 |
+                             --figure-eight-trace DEPTH |
                              --generator-deck-rollover | --generator-lifecycle |
                              --shop-bag-selection] SEED
 
@@ -29,6 +31,8 @@ must be pinned at 7b8b845a7. With --generator-deck-rollover, records the exact
 Food deck draw sequence and private/base RNG probes through its first reset.
 With --shop-bag-selection, calls the pinned ShopRoom.ChooseBag against two
 unique-winner floor-11 backpack profiles without generating a floor.
+With --figure-eight-trace, records non-advancing RNG probes and room bounds for
+every FigureEightBuilder attempt on the target floor.
 EOF
 }
 
@@ -66,6 +70,11 @@ while (($# > 0)); do
 			shop_bag_selection="1"
 			shift
 			;;
+		--figure-eight-trace)
+			[[ $# -ge 2 ]] || { usage; exit 2; }
+			figure_eight_trace="$2"
+			shift 2
+			;;
 		-h|--help)
 			usage
 			exit 0
@@ -101,6 +110,7 @@ selected_contracts=0
 [[ -n "$generator_deck_rollover" ]] && ((selected_contracts += 1))
 [[ -n "$generator_lifecycle" ]] && ((selected_contracts += 1))
 [[ -n "$shop_bag_selection" ]] && ((selected_contracts += 1))
+[[ -n "$figure_eight_trace" ]] && ((selected_contracts += 1))
 if ((selected_contracts > 1)); then
 	echo "Choose only one oracle contract" >&2
 	exit 2
@@ -160,6 +170,9 @@ if [[ -n "$generator_lifecycle" ]]; then
 fi
 if [[ -n "$shop_bag_selection" ]]; then
 	gradle_args+=(-PoracleShopBagSelection=true)
+fi
+if [[ -n "$figure_eight_trace" ]]; then
+	gradle_args+=(-PoracleFigureEightTrace="$figure_eight_trace")
 fi
 gradle_args+=(:core:javaOracleDump)
 

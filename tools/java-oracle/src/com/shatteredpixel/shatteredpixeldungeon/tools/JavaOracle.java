@@ -42,6 +42,12 @@ public final class JavaOracle {
 				args.length == 2 && "generator-lifecycle".equals(args[1]);
 		boolean shopBagSelection =
 				args.length == 2 && "shop-bag-selection".equals(args[1]);
+		boolean figureEightTrace =
+				args.length == 3 && "figure-eight-trace".equals(args[1]);
+		if (figureEightTrace) {
+			System.out.print(FigureEightTraceOracle.generate(numericSeed, Integer.parseInt(args[2])));
+			return;
+		}
 		if (args.length == 3 && !finalHeaps) {
 			System.err.println("Unknown floor oracle contract: " + args[1]);
 			System.exit(2);
