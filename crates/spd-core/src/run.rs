@@ -54,6 +54,7 @@ pub fn dungeon_from_run(run: RunState) -> DungeonState {
         limited: LimitedDrops::reset(),
         hero_inventory: HeroInventory::fresh_warrior(),
         sacrifice_parchment_scrap_level: None,
+        public_generation_tainted: false,
         items_to_spawn: Vec::new(),
         ghost: crate::quests::GhostQuestState::default(),
         wandmaker: crate::quests::WandmakerQuestState::default(),

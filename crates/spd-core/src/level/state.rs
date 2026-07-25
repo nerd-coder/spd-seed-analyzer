@@ -6,6 +6,10 @@ use crate::rooms::init_rooms::BuilderKind;
 
 use super::Feeling;
 
+#[path = "state/forced_queue.rs"]
+mod forced_queue;
+use forced_queue::public_entries as forced_public_entries;
+
 #[path = "state_map.rs"]
 mod state_map;
 use state_map::reported_level;
@@ -34,13 +38,8 @@ fn prediction_kind(item: &GeneratedItem) -> ItemPredictionKind {
             | QuestRewardRole::BlacksmithArmor { .. }
             | QuestRewardRole::BlacksmithRoomArmor { .. },
         ) => ItemPredictionKind::Exact,
-        ItemProvenance::Room(_) => ItemPredictionKind::Constrained,
-        _ => match item.source.as_deref() {
-            // The exact weapon depends on persistent generator state advanced by
-            // runtime/player history before the room is painted.
-            Some("SacrificeRoom") => ItemPredictionKind::Constrained,
-            _ => ItemPredictionKind::Exact,
-        },
+        ItemProvenance::Room(_) | ItemProvenance::Forced(_) => ItemPredictionKind::Constrained,
+        _ => ItemPredictionKind::Exact,
     }
 }
 
@@ -64,8 +63,10 @@ pub struct LevelState {
     pub room_bounds: Vec<LevelRoomFact>,
     pub build_ok: bool,
     pub forced_items: Vec<GeneratedItem>,
-    /// Seed-derived queue snapshot before room callbacks consume/reposition it.
-    pub public_forced_items: Vec<GeneratedItem>,
+    /// Exact initial queue snapshot before room callbacks consume/reposition it.
+    /// Internal parity evidence only; public output uses static queue contracts.
+    #[doc(hidden)]
+    pub initial_forced_items: Vec<GeneratedItem>,
     pub placed_items: Vec<GeneratedItem>,
     /// First placed-item index generated after a runtime-sensitive shop rare
     /// artifact call. Internal facts remain exact; public projection omits the
@@ -85,6 +86,9 @@ pub struct LevelState {
     /// Builder and room metadata can depend on a pre-build player-state callback.
     #[doc(hidden)]
     pub runtime_sensitive_layout: bool,
+    /// The baseline feeling can be overridden by held trinkets before build.
+    #[doc(hidden)]
+    pub runtime_sensitive_feeling: bool,
     #[doc(hidden)]
     pub room_public_facts: Vec<super::room_public::RoomPublicFact>,
     #[doc(hidden)]
@@ -112,28 +116,22 @@ pub struct LevelRoomFact {
 
 impl LevelState {
     pub fn to_floor_report(&self) -> FloorReport {
-        let mut items = Vec::new();
+        let mut items = forced_public_entries(self.depth, &self.initial_forced_items);
         let mut shop_items = Vec::new();
         let mut has_shop = false;
-        for (index, item) in self
-            .public_forced_items
-            .iter()
-            .map(|item| (None, item))
-            .chain(
-                self.placed_items
-                    .iter()
-                    .enumerate()
-                    .map(|(index, item)| (Some(index), item)),
-            )
-        {
-            if index.is_some_and(|index| {
-                self.runtime_sensitive_placed_items_from
-                    .is_some_and(|boundary| index >= boundary)
-            }) && item.source.as_deref() != Some("SacrificeRoom")
+        for (index, item) in self.placed_items.iter().enumerate() {
+            if self
+                .runtime_sensitive_placed_items_from
+                .is_some_and(|boundary| index >= boundary)
             {
                 continue;
             }
             if is_blacklisted(item) || is_runtime_sensitive_main_loot(item) {
+                continue;
+            }
+            // Sacrifice is represented only by its static room contract. The
+            // sampled weapon remains internal for Java parity.
+            if item.source.as_deref() == Some("SacrificeRoom") {
                 continue;
             }
             if item.provenance == ItemProvenance::Quest(QuestRewardRole::WandmakerPersisted) {
@@ -150,7 +148,10 @@ impl LevelState {
                     has_shop = true;
                     Some(role)
                 }
-                ItemProvenance::None | ItemProvenance::Quest(_) | ItemProvenance::Room(_) => None,
+                ItemProvenance::None
+                | ItemProvenance::Quest(_)
+                | ItemProvenance::Room(_)
+                | ItemProvenance::Forced(_) => None,
             };
             // Bag presence and identity depend on inventory/limited-drop
             // history. A single conditional constraint is added below.
@@ -280,8 +281,6 @@ impl LevelState {
                     vec!["The two reward wands are distinct, uncursed, and each receives one upgrade; concrete identities and levels depend on prior wand history.".into()]
                 } else if quest_role == Some(QuestRewardRole::ImpRing) {
                     vec!["The concrete ring identity depends on prior ring history; the reported level is stable after two upgrades and the reward is forced cursed.".into()]
-                } else if item.source.as_deref() == Some("SacrificeRoom") {
-                    vec!["Parchment Scrap may alter the weapon's enchantment chance.".into()]
                 } else {
                     Vec::new()
                 },
@@ -334,7 +333,7 @@ impl LevelState {
         }
         FloorReport {
             depth: self.depth as u32,
-            feeling: Some(self.feeling.as_str().to_string()),
+            feeling: (!self.runtime_sensitive_feeling).then(|| self.feeling.as_str().to_string()),
             builder: (!self.runtime_sensitive_layout)
                 .then(|| {
                     self.builder.map(|builder| match builder {

@@ -41,6 +41,31 @@ fn request(constraints: Vec<ItemConstraint>, match_mode: MatchMode) -> SeedSearc
     }
 }
 
+fn exact_floor(depth: u32, classes: &[(&str, i32)]) -> crate::FloorReport {
+    crate::FloorReport {
+        depth,
+        feeling: None,
+        builder: None,
+        rooms: vec![],
+        items: classes
+            .iter()
+            .map(|(class_name, level)| crate::report::ItemEntry {
+                name: (*class_name).into(),
+                class_name: Some((*class_name).into()),
+                category: "other".into(),
+                tier: None,
+                level: Some(*level),
+                cursed: Some(false),
+                prediction: ItemPredictionKind::Exact,
+                conditional_notes: vec![],
+                source: Some("test".into()),
+            })
+            .collect(),
+        quests: vec![],
+        map: None,
+    }
+}
+
 #[test]
 fn validation_rejects_unbounded_and_malformed_requests() {
     let mut value = request(vec![constraint("Food", 1, 1)], MatchMode::Any);
@@ -93,66 +118,46 @@ fn validation_rejects_unbounded_and_malformed_requests() {
 
 #[test]
 fn any_and_all_modes_use_each_constraint_independently() {
-    let any = search_seeds(&request(
-        vec![
-            constraint("Food", 1, 1),
-            constraint("PotionOfStrength", 1, 1),
-        ],
-        MatchMode::Any,
-    ))
-    .expect("ANY search");
-    assert_eq!(
-        any.matches
-            .iter()
-            .map(|found| found.seed.numeric)
-            .collect::<Vec<_>>(),
-        vec![0, 1]
+    let floor = exact_floor(3, &[("Honeypot", 0), ("ShatteredPot", 0)]);
+    let any = matching_evidence(
+        std::slice::from_ref(&floor),
+        &[constraint("Honeypot", 3, 3), constraint("Missing", 3, 3)],
     );
-    assert_eq!(any.matches[0].evidence[0].class_name, "Food");
-    assert_eq!(any.matches[1].evidence[0].class_name, "PotionOfStrength");
-
-    let all = search_seeds(&request(
-        vec![
-            constraint("Pasty", 1, 1),
-            constraint("PotionOfStrength", 1, 1),
+    assert_eq!(any.len(), 1);
+    let all = matching_evidence(
+        &[floor],
+        &[
+            constraint("ShatteredPot", 3, 3),
+            constraint("Honeypot", 3, 3),
         ],
-        MatchMode::All,
-    ))
-    .expect("ALL search");
-    assert_eq!(all.matches.len(), 1);
-    assert_eq!(all.matches[0].seed.numeric, 1);
-    assert_eq!(all.matches[0].evidence.len(), 2);
+    );
+    assert_eq!(all.len(), 2);
 }
 
 #[test]
 fn depth_ranges_are_inclusive_and_scoped() {
-    let mut value = request(vec![constraint("PotionOfStrength", 2, 2)], MatchMode::All);
-    value.candidate_count = 1;
-    value.floors = 2;
-    let depth_two = search_seeds(&value).expect("depth two search");
-    assert_eq!(depth_two.matches[0].evidence[0].depth, 2);
-
-    value.constraints[0] = constraint("PotionOfStrength", 1, 1);
-    assert!(search_seeds(&value)
-        .expect("depth one search")
-        .matches
-        .is_empty());
+    let floor = exact_floor(3, &[("Honeypot", 0)]);
+    assert_eq!(
+        matching_evidence(
+            std::slice::from_ref(&floor),
+            &[constraint("Honeypot", 3, 3)]
+        )[0]
+        .depth,
+        3
+    );
+    assert!(matching_evidence(&[floor], &[constraint("Honeypot", 2, 2)]).is_empty());
 }
 
 #[test]
 fn minimum_upgrade_levels_are_optional_and_inclusive() {
-    let mut value = request(vec![constraint("PotionOfStrength", 1, 1)], MatchMode::All);
-    value.start_seed = 1;
-    assert!(!search_seeds(&value)
-        .expect("unrestricted upgrade search")
-        .matches
-        .is_empty());
-
-    value.constraints[0].min_level = Some(1);
-    assert!(search_seeds(&value)
-        .expect("upgraded search")
-        .matches
-        .is_empty());
+    let floor = exact_floor(3, &[("Sword", 2)]);
+    assert_eq!(
+        matching_evidence(std::slice::from_ref(&floor), &[constraint("Sword", 3, 3)]).len(),
+        1
+    );
+    let mut upgraded = constraint("Sword", 3, 3);
+    upgraded.min_level = Some(3);
+    assert!(matching_evidence(&[floor], &[upgraded]).is_empty());
 }
 
 #[test]
@@ -183,6 +188,33 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
         max_depth: 13,
     }];
     assert!(matching_evidence(&[floor], &constraints).is_empty());
+}
+
+#[test]
+fn initial_forced_queue_contracts_never_match_exact_item_searches() {
+    for class_name in [
+        "Food",
+        "Pasty",
+        "PotionOfStrength",
+        "ScrollOfUpgrade",
+        "Stylus",
+        "StoneOfIntuition",
+        "TrinketCatalyst",
+    ] {
+        let result = search_seeds(&SeedSearchRequest {
+            start_seed: 0,
+            candidate_count: 4,
+            floors: 1,
+            constraints: vec![constraint(class_name, 1, 1)],
+            match_mode: MatchMode::Any,
+            max_matches: 4,
+        })
+        .expect("forced queue search");
+        assert!(
+            result.matches.is_empty(),
+            "{class_name} queue contract leaked into exact search"
+        );
+    }
 }
 
 #[test]
@@ -250,18 +282,15 @@ fn real_constrained_quest_class_never_matches_exact_search() {
 }
 
 #[test]
-fn result_limit_preserves_ascending_resume_position() {
-    let mut value = request(
-        vec![constraint("Food", 1, 1), constraint("Pasty", 1, 1)],
-        MatchMode::Any,
-    );
+fn bounded_search_preserves_ascending_resume_position_without_matches() {
+    let mut value = request(vec![constraint("NoSuchItemClass", 1, 1)], MatchMode::Any);
     value.max_matches = 1;
 
     let result = search_seeds(&value).expect("bounded search");
-    assert_eq!(result.matches[0].seed.numeric, 0);
-    assert_eq!(result.candidates_scanned, 1);
-    assert_eq!(result.next_seed, Some(1));
-    assert!(result.match_limit_reached);
+    assert!(result.matches.is_empty());
+    assert_eq!(result.candidates_scanned, 2);
+    assert_eq!(result.next_seed, Some(2));
+    assert!(!result.match_limit_reached);
     assert!(!result.exhausted);
     assert_eq!(result.status, "partial");
 }

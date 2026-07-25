@@ -197,13 +197,18 @@ fn sentry_prize_deterministic() {
 
 #[test]
 fn cxg_floor_nine_aligned_sentry_completes() {
-    let report = crate::analyze_seed("CXG-FJT-BFQ", 9).expect("analyze CXG through floor nine");
-    let floor = &report.floors[8];
+    let seed = crate::parse_seed("CXG-FJT-BFQ").expect("seed").numeric;
+    let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(seed));
+    let mut floor = None;
+    for depth in 1..=9 {
+        dungeon.depth = depth;
+        floor = Some(crate::level::create_level_partial(&mut dungeon));
+    }
+    let floor = floor.expect("floor nine");
     assert!(floor.rooms.iter().any(|room| room == "SentryRoom"));
-    assert!(
-        floor.map.is_none(),
-        "runtime-sensitive Sentry tail is hidden"
-    );
+    let public = floor.to_floor_report();
+    assert!(public.rooms.is_empty());
+    assert!(public.map.is_none());
 }
 
 #[test]

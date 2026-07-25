@@ -183,6 +183,10 @@ fn artifact_rare_branch_redacts_layout_and_post_callback_floor_tail() {
     let boundary = state
         .runtime_sensitive_placed_items_from
         .expect("artifact branch boundary");
+    assert_eq!(
+        boundary, 0,
+        "inherited taint must remain earlier than the artifact callback"
+    );
     assert!(
         boundary < state.placed_items.len(),
         "real floor has post-shop generated item facts"
@@ -196,6 +200,7 @@ fn artifact_rare_branch_redacts_layout_and_post_callback_floor_tail() {
     let quest_boundary = state
         .runtime_sensitive_quests_from
         .expect("artifact branch quest boundary");
+    assert_eq!(quest_boundary, 0);
     assert_eq!(
         public.quests,
         state.quests[..quest_boundary],

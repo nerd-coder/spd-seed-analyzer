@@ -45,6 +45,7 @@ impl RoomPublicFact {
             };
             if let Some(class_name) = exact_class {
                 entry.class_name = Some(class_name.into());
+                entry.level = Some(0);
                 entry.prediction = ItemPredictionKind::Exact;
             }
         }
@@ -86,6 +87,7 @@ fn contracts(room: &str) -> Vec<Contract> {
         "PoolRoom" | "SentryRoom" => vec![("single room reward source", "other", None, "May consume an eligible queued prize; fallback is weapon, missile weapon, or armor from the room's floor-set distribution, forced uncursed with curse-enchantment stripped and a possible +1 upgrade.")],
         "TrapsRoom" => vec![("single room reward source", "other", None, "May consume an eligible queued prize; fallback is weapon, missile weapon, or armor from the room's floor-set distribution, forced uncursed with curse-enchantment stripped.")],
         "StatueRoom" => vec![("Statue weapon", "weapon", Some(false), "A positively enchanted melee weapon is carried; Rat Skull may change the statue encounter variant.")],
+        "SacrificeRoom" => vec![("weapon reward", "weapon", Some(true), "A cursed weapon drawn from the one-higher floor-set tier distribution; concrete tier, identity, level, enchantment, and placement are not asserted, and Parchment Scrap may alter enchantment chance.")],
         "CrystalVaultRoom" => vec![("two crystal-vault reward sources", "other", None, "Categories rotate among wand, ring, and artifact; an exhausted artifact pool falls back to a ring, and the second chest may conditionally be a Crystal Mimic.")],
         "CrystalChoiceRoom" => vec![("3–4 potion/scroll sources", "other", None, "Base potion/scroll identities are not asserted."), ("hidden crystal-choice reward", "other", None, "Wand, ring, or artifact; an exhausted artifact pool falls back to a ring.")],
         "CrystalPathRoom" => vec![("three potion sources", "potion", None, "Concrete regular/exotic identities and cells are not asserted."), ("three scroll sources", "scroll", None, "Concrete regular/exotic identities and cells are not asserted.")],
@@ -159,6 +161,43 @@ mod tests {
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].class_name.as_deref(), Some("Pasty"));
         assert_eq!(entries[0].prediction, ItemPredictionKind::Exact);
+    }
+
+    #[test]
+    fn sacrifice_contract_preserves_only_the_distribution_and_forced_curse() {
+        for depth in [1, 4, 6, 9, 11, 14, 16, 19, 21, 24] {
+            let entries = RoomPublicFact::new("SacrificeRoom", depth)
+                .expect("Sacrifice contract")
+                .entries();
+            assert_eq!(entries.len(), 1);
+            let entry = &entries[0];
+            assert_eq!(entry.name, "weapon reward");
+            assert_eq!(entry.category, "weapon");
+            assert_eq!(entry.tier, None);
+            assert_eq!(entry.cursed, Some(true));
+            assert_eq!(entry.class_name, None);
+            assert_eq!(entry.level, None);
+            assert_eq!(entry.prediction, ItemPredictionKind::Constrained);
+        }
+    }
+
+    #[test]
+    fn exact_fixed_room_items_expose_a_proven_default_level() {
+        for room in [
+            "SecretArtilleryRoom",
+            "SecretLaboratoryRoom",
+            "SecretRunestoneRoom",
+            "SecretHoneypotRoom",
+        ] {
+            for entry in RoomPublicFact::new(room, 12)
+                .expect("room contract")
+                .entries()
+            {
+                if entry.prediction == ItemPredictionKind::Exact {
+                    assert_eq!(entry.level, Some(0), "{} in {room}", entry.name);
+                }
+            }
+        }
     }
 
     #[test]

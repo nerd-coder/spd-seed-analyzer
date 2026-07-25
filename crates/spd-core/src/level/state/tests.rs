@@ -2,6 +2,11 @@ use super::*;
 use crate::items::model::{ItemCategory, ItemProvenance, RoomLootRole, ShopStockRole};
 use crate::report::{MapHeap, MapHeapItem, MapMarker, MapMarkerKind, MapMob};
 
+#[path = "tests/forced_queue.rs"]
+mod forced_queue;
+#[path = "tests/sacrifice.rs"]
+mod sacrifice;
+
 fn item(class_name: &str, source: &str) -> GeneratedItem {
     let mut item = GeneratedItem::new(class_name, ItemCategory::Potion);
     item.source = Some(source.into());
@@ -19,7 +24,7 @@ fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
         room_bounds: vec![],
         build_ok: true,
         forced_items: vec![item("PotionOfStrength", "forced")],
-        public_forced_items: vec![item("PotionOfStrength", "forced")],
+        initial_forced_items: vec![item("PotionOfStrength", "forced")],
         placed_items: vec![
             item("PotionOfHealing", "chest:heap"),
             item("PotionOfMindVision", "mimic:mimic"),
@@ -31,6 +36,7 @@ fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
         quest_public_labels: vec![],
         runtime_sensitive_map: false,
         runtime_sensitive_layout: false,
+        runtime_sensitive_feeling: false,
         room_public_facts: vec![],
         complete: true,
         map: Some(FloorMap {
@@ -111,11 +117,11 @@ fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
     };
 
     let report = floor.to_floor_report();
-    assert_eq!(report.items.len(), 1);
-    assert_eq!(
-        report.items[0].class_name.as_deref(),
-        Some("PotionOfStrength")
-    );
+    assert!(report.items.iter().all(|item| item.class_name.is_none()));
+    assert!(report.items.iter().any(|item| {
+        item.name == "food-category queued source"
+            && item.prediction == ItemPredictionKind::Constrained
+    }));
     let map = report.map.expect("map");
     assert_eq!(
         map.heaps.iter().map(|heap| heap.cell).collect::<Vec<_>>(),
@@ -141,44 +147,12 @@ fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
 
     let mut consumed_internally = floor.clone();
     consumed_internally.forced_items.clear();
+    consumed_internally.initial_forced_items.clear();
     let guarded = consumed_internally.to_floor_report();
-    assert!(guarded
-        .items
-        .iter()
-        .any(|item| item.class_name.as_deref() == Some("PotionOfStrength")));
-}
-
-#[test]
-fn public_projection_omits_intro_history_sensitive_maps_on_depths_one_and_two() {
-    for seed in 0..8 {
-        let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(seed));
-        for depth in 1..=2 {
-            dungeon.depth = depth;
-            let state = crate::level::create_level_partial(&mut dungeon);
-            assert!(
-                state.map.is_some(),
-                "internal depth-{depth} map for seed {seed}"
-            );
-            assert!(
-                state.to_floor_report().map.is_none(),
-                "public depth-{depth} map for seed {seed}"
-            );
-        }
-    }
-}
-
-#[test]
-fn public_projection_retains_a_verified_non_sensitive_depth_four_map() {
-    let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(5));
-    let mut state = None;
-    for depth in 1..=4 {
-        dungeon.depth = depth;
-        state = Some(crate::level::create_level_partial(&mut dungeon));
-    }
-    let state = state.expect("depth-four state");
-    assert!(!state.runtime_sensitive_map);
-    assert!(state.map.is_some(), "internal exact map");
-    assert!(state.to_floor_report().map.is_some(), "public safe map");
+    assert_eq!(
+        serde_json::to_value(report.items).expect("original forced contracts"),
+        serde_json::to_value(guarded.items).expect("consumed forced contracts")
+    );
 }
 
 #[test]
@@ -211,7 +185,7 @@ fn artifact_or_ring_shop_fallback_never_promises_a_level() {
 }
 
 #[test]
-fn real_shop_public_serialization_redacts_internal_roles_but_keeps_fixed_stock_exact() {
+fn real_shop_stays_internal_after_inherited_generation_taint() {
     let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(0));
     let mut floor_six = None;
     for depth in 1..=6 {
@@ -224,56 +198,20 @@ fn real_shop_public_serialization_redacts_internal_roles_but_keeps_fixed_stock_e
         .iter()
         .filter_map(|item| match item.provenance {
             ItemProvenance::Shop(role) => Some((role, item.class_name.clone())),
-            ItemProvenance::None | ItemProvenance::Quest(_) | ItemProvenance::Room(_) => None,
+            ItemProvenance::None
+            | ItemProvenance::Quest(_)
+            | ItemProvenance::Room(_)
+            | ItemProvenance::Forced(_) => None,
         })
         .collect();
     assert!(!internal_shop.is_empty());
 
     let report = state.to_floor_report();
-    for (role, concrete_class) in &internal_shop {
-        let public_name = match role {
-            ShopStockRole::DeckWeapon { .. } => Some("weapon stock"),
-            ShopStockRole::DeckMissile { .. } => Some("missile weapon stock"),
-            ShopStockRole::ChooseBag => Some("inventory-dependent bag stock"),
-            ShopStockRole::DeckRareWand => Some("wand stock"),
-            ShopStockRole::DeckRareRing => Some("ring stock"),
-            ShopStockRole::DeckRareArtifactOrRing => Some("artifact or ring stock"),
-            ShopStockRole::Fixed => None,
-        };
-        let Some(public_name) = public_name else {
-            continue;
-        };
-        let entry = report
-            .items
-            .iter()
-            .find(|entry| entry.name == public_name)
-            .expect("constrained shop entry");
-        assert_eq!(entry.prediction, ItemPredictionKind::Constrained);
-        assert!(entry.class_name.is_none());
-        let entry_json = serde_json::to_string(entry).expect("serialize constrained entry");
-        assert!(
-            !entry_json.contains(concrete_class),
-            "internal {concrete_class} leaked through {public_name}"
-        );
-    }
-
-    let armor = report
-        .items
-        .iter()
-        .find(|entry| {
-            entry.source.as_deref() == Some("ShopRoom")
-                && entry.class_name.as_deref() == Some("LeatherArmor")
-        })
-        .expect("fixed shop armor remains public");
-    assert_eq!(armor.prediction, ItemPredictionKind::Exact);
-    assert!(serde_json::to_string(armor)
-        .expect("serialize fixed entry")
-        .contains("LeatherArmor"));
-
-    if let Some(map) = &report.map {
-        let map_json = serde_json::to_string(map).expect("serialize public map");
-        assert!(!map_json.contains("for_sale"));
-    }
+    assert!(report.items.iter().all(|entry| {
+        entry.source.as_deref() == Some("initial forced queue")
+            && entry.prediction == ItemPredictionKind::Constrained
+    }));
+    assert!(report.map.is_none());
 
     let search = crate::search_seeds(&crate::SeedSearchRequest {
         start_seed: 0,
@@ -289,8 +227,7 @@ fn real_shop_public_serialization_redacts_internal_roles_but_keeps_fixed_stock_e
         max_matches: 1,
     })
     .expect("search fixed shop armor");
-    assert_eq!(search.matches.len(), 1);
-    assert_eq!(search.matches[0].evidence[0].class_name, "LeatherArmor");
+    assert!(search.matches.is_empty());
 }
 
 #[test]
@@ -303,7 +240,7 @@ fn room_reward_projection_hides_all_concrete_fields_and_deduplicates_counts() {
         room_bounds: vec![],
         build_ok: true,
         forced_items: vec![],
-        public_forced_items: vec![],
+        initial_forced_items: vec![],
         placed_items: vec![],
         runtime_sensitive_placed_items_from: None,
         runtime_sensitive_quests_from: None,
@@ -311,6 +248,7 @@ fn room_reward_projection_hides_all_concrete_fields_and_deduplicates_counts() {
         quest_public_labels: vec![],
         runtime_sensitive_map: false,
         runtime_sensitive_layout: false,
+        runtime_sensitive_feeling: false,
         room_public_facts: vec![
             super::super::room_public::RoomPublicFact::new("ArmoryRoom", 7)
                 .expect("Armory contract"),
@@ -332,8 +270,11 @@ fn room_reward_projection_hides_all_concrete_fields_and_deduplicates_counts() {
     }
 
     let report = floor.to_floor_report();
-    assert_eq!(report.items.len(), 1);
-    let entry = &report.items[0];
+    let entry = report
+        .items
+        .iter()
+        .find(|item| item.source.as_deref() == Some("ArmoryRoom"))
+        .expect("Armory contract");
     assert_eq!(entry.prediction, ItemPredictionKind::Constrained);
     assert!(entry.class_name.is_none());
     assert_eq!(entry.category, "other");
@@ -383,7 +324,14 @@ fn standard_center_room_sampled_classes_do_not_leak_to_report_or_searchable_entr
     }
     let (report, sampled) = found.expect("standard center-room loot fixture");
     let json = serde_json::to_string(&report).expect("serialize public report");
-    assert!(json.contains("reward"));
+    if report.rooms.is_empty() {
+        assert!(report
+            .items
+            .iter()
+            .all(|item| { item.source.as_deref() == Some("initial forced queue") }));
+    } else {
+        assert!(json.contains("reward"));
+    }
     assert!(
         report.map.is_none(),
         "divergent callback suppresses sampled map"

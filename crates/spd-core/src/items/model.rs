@@ -32,6 +32,19 @@ pub enum ItemProvenance {
     Shop(ShopStockRole),
     Quest(QuestRewardRole),
     Room(RoomLootRole),
+    Forced(ForcedDropRole),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ForcedDropRole {
+    BaseFood,
+    LargeFeelingFood,
+    StrengthPotion,
+    UpgradeScroll { forbidden_runes_sensitive: bool },
+    ArcaneStylus,
+    EnchantmentStone,
+    IntuitionStone,
+    TrinketCatalyst,
 }
 
 /// A reward produced while painting a room whose concrete generator result can

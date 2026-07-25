@@ -311,22 +311,26 @@ fn depth_one_forced_items_match_pinned_java_oracle() {
                 cursed: item.cursed,
             })
             .collect();
-        let report = analyze_seed(&fixture.input.seed, 1)
-            .unwrap_or_else(|error| panic!("failed to analyze seed in {context}: {error}"));
-        let actual: Vec<_> = report.floors[0]
-            .items
+        let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
+        dungeon.depth = 1;
+        let floor = create_level_partial(&mut dungeon);
+        let actual: Vec<_> = floor
+            .initial_forced_items
             .iter()
-            .filter(|item| item.source.as_deref() == Some("forced"))
             .map(|item| ComparableItem {
-                class_name: item
-                    .class_name
-                    .clone()
-                    .expect("all analyzed items have a Java class name"),
-                cursed: item.cursed.expect("exact forced items expose curse state"),
+                class_name: item.class_name.clone(),
+                cursed: item.cursed,
             })
             .collect();
         assert_eq!(actual, expected, "ordered forced items in {context}");
-        assert_eq!(report.status, "partial", "accuracy status in {context}");
+        let report = floor.to_floor_report();
+        assert!(
+            report
+                .items
+                .iter()
+                .all(|item| item.source.as_deref() != Some("forced")),
+            "sampled forced items stay internal in {context}"
+        );
         compared += 1;
     }
     assert!(compared > 0, "no schema v2 floor fixtures were compared");

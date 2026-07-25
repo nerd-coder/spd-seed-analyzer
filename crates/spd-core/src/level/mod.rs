@@ -16,7 +16,7 @@ mod terrain;
 
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
-use crate::items::model::{GeneratedItem, ItemCategory};
+use crate::items::model::{ForcedDropRole, GeneratedItem, ItemCategory, ItemProvenance};
 use crate::random::Random;
 use crate::report::FloorReport;
 
@@ -54,12 +54,15 @@ impl Feeling {
 
 /// Level.create partial: forced drops → initRooms → build → minimal paint → createItems.
 pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
+    let inherited_public_taint = dungeon.public_generation_tainted;
     let depth_seed = dungeon.seed_cur_depth();
     Random::push_generator_seeded(depth_seed);
 
     let mut forced = Vec::new();
     let mut feeling = Feeling::None;
     let mut items_to_spawn: Vec<GeneratedItem> = Vec::new();
+    let mut runtime_sensitive_prebuild = false;
+    let mut challenge_sensitive_upgrade_queue = false;
 
     // Forced drops + feelings only on RegularLevel (not boss / LastLevel).
     if dungeon.regular_level() {
@@ -67,6 +70,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             .generator
             .random_category(Category::Food, dungeon.depth);
         food.source = Some("forced".into());
+        food.provenance = ItemProvenance::Forced(ForcedDropRole::BaseFood);
         // food goes to itemsToSpawn in Java Level.create
         items_to_spawn.push(food.clone());
         forced.push(food);
@@ -75,13 +79,21 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             dungeon.limited.strength_potions += 1;
             let mut pot = GeneratedItem::new("PotionOfStrength", ItemCategory::Potion);
             pot.source = Some("forced".into());
+            pot.provenance = ItemProvenance::Forced(ForcedDropRole::StrengthPotion);
             items_to_spawn.push(pot.clone());
             forced.push(pot);
         }
         if dungeon.sou_needed() {
             dungeon.limited.upgrade_scrolls += 1;
+            challenge_sensitive_upgrade_queue = dungeon.limited.upgrade_scrolls % 2 == 0;
+            if challenge_sensitive_upgrade_queue {
+                dungeon.public_generation_tainted = true;
+            }
             let mut sou = GeneratedItem::new("ScrollOfUpgrade", ItemCategory::Scroll);
             sou.source = Some("forced".into());
+            sou.provenance = ItemProvenance::Forced(ForcedDropRole::UpgradeScroll {
+                forbidden_runes_sensitive: challenge_sensitive_upgrade_queue,
+            });
             items_to_spawn.push(sou.clone());
             forced.push(sou);
         }
@@ -89,6 +101,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             dungeon.limited.arcane_styli += 1;
             let mut st = GeneratedItem::new("Stylus", ItemCategory::Other);
             st.source = Some("forced".into());
+            st.provenance = ItemProvenance::Forced(ForcedDropRole::ArcaneStylus);
             items_to_spawn.push(st.clone());
             forced.push(st);
         }
@@ -96,6 +109,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             dungeon.limited.ench_stone = true;
             let mut st = GeneratedItem::new("StoneOfEnchantment", ItemCategory::Stone);
             st.source = Some("forced".into());
+            st.provenance = ItemProvenance::Forced(ForcedDropRole::EnchantmentStone);
             items_to_spawn.push(st.clone());
             forced.push(st);
         }
@@ -103,6 +117,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             dungeon.limited.int_stone = true;
             let mut st = GeneratedItem::new("StoneOfIntuition", ItemCategory::Stone);
             st.source = Some("forced".into());
+            st.provenance = ItemProvenance::Forced(ForcedDropRole::IntuitionStone);
             items_to_spawn.push(st.clone());
             forced.push(st);
         }
@@ -110,6 +125,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             dungeon.limited.trinket_cata = true;
             let mut st = GeneratedItem::new("TrinketCatalyst", ItemCategory::Other);
             st.source = Some("forced".into());
+            st.provenance = ItemProvenance::Forced(ForcedDropRole::TrinketCatalyst);
             items_to_spawn.push(st.clone());
             forced.push(st);
         }
@@ -126,12 +142,15 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                         .generator
                         .random_category(Category::Food, dungeon.depth);
                     food2.source = Some("forced".into());
+                    food2.provenance = ItemProvenance::Forced(ForcedDropRole::LargeFeelingFood);
                     items_to_spawn.push(food2.clone());
                     forced.push(food2);
                 }
                 5 => feeling = Feeling::Traps,
                 6 => feeling = Feeling::Secrets,
                 _ => {
+                    runtime_sensitive_prebuild = true;
+                    dungeon.public_generation_tainted = true;
                     let _ = Random::float();
                     let _ = Random::float();
                     feeling = Feeling::None;
@@ -145,15 +164,17 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
     let mut room_bounds = Vec::new();
     let mut build_ok = false;
     let mut placed_items = Vec::new();
-    let mut runtime_sensitive_placed_items_from = None;
-    let mut runtime_sensitive_quests_from = None;
+    runtime_sensitive_prebuild |= inherited_public_taint;
+    let mut runtime_sensitive_placed_items_from = runtime_sensitive_prebuild.then_some(0);
+    let mut runtime_sensitive_quests_from = runtime_sensitive_prebuild.then_some(0);
     let mut floor_map = None;
     let mut quests = Vec::new();
     let mut quest_public_labels = Vec::new();
-    let mut runtime_sensitive_map = false;
-    let mut runtime_sensitive_layout = false;
+    let mut runtime_sensitive_map = runtime_sensitive_prebuild || challenge_sensitive_upgrade_queue;
+    let mut runtime_sensitive_layout = runtime_sensitive_prebuild;
+    let runtime_sensitive_feeling = runtime_sensitive_prebuild;
     let mut room_public_facts = Vec::new();
-    let public_forced_items = forced.clone();
+    let initial_forced_items = forced.clone();
     let mut pre_items_rng_probe = Vec::new();
     let mut pre_mobs_rng_probe = Vec::new();
     let mut pre_paint_rng_probe = Vec::new();
@@ -171,7 +192,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 room_bounds,
                 build_ok,
                 forced_items: forced,
-                public_forced_items,
+                initial_forced_items,
                 placed_items,
                 runtime_sensitive_placed_items_from,
                 runtime_sensitive_quests_from,
@@ -179,6 +200,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 quest_public_labels,
                 runtime_sensitive_map,
                 runtime_sensitive_layout,
+                runtime_sensitive_feeling,
                 room_public_facts,
                 complete: false,
                 map: floor_map,
@@ -231,10 +253,11 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                         crate::items::model::ShopStockRole::DeckRareArtifactOrRing,
                     )
             }) {
-                runtime_sensitive_placed_items_from = Some(placed_items.len());
-                runtime_sensitive_quests_from = Some(quests.len());
+                runtime_sensitive_placed_items_from.get_or_insert(placed_items.len());
+                runtime_sensitive_quests_from.get_or_insert(quests.len());
                 runtime_sensitive_map = true;
                 runtime_sensitive_layout = true;
+                dungeon.public_generation_tainted = true;
             }
 
             // Special/secret room paint loot (before createItems; may consume itemsToSpawn).
@@ -260,6 +283,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                     .get_or_insert(placed_items.len() + first_sensitive_loot_index);
                 runtime_sensitive_quests_from.get_or_insert(quests.len());
                 runtime_sensitive_map = true;
+                dungeon.public_generation_tainted = true;
             }
             for p in special_loot_items {
                 // Drop matching forced clones when a prize was pulled from itemsToSpawn.
@@ -339,8 +363,9 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             quests.extend(spawned.summaries);
             quest_public_labels.extend(spawned.public_labels);
             if spawned.wand_rng_tail_sensitive {
-                runtime_sensitive_placed_items_from = Some(placed_items.len());
+                runtime_sensitive_placed_items_from.get_or_insert(placed_items.len());
                 runtime_sensitive_map = true;
+                dungeon.public_generation_tainted = true;
             }
 
             let _ambient_mobs_consumed = if dungeon.regular_level() {
@@ -427,7 +452,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         room_bounds,
         build_ok,
         forced_items: forced,
-        public_forced_items,
+        initial_forced_items,
         placed_items,
         runtime_sensitive_placed_items_from,
         runtime_sensitive_quests_from,
@@ -435,6 +460,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         quest_public_labels,
         runtime_sensitive_map,
         runtime_sensitive_layout,
+        runtime_sensitive_feeling,
         room_public_facts,
         complete: build_ok,
         map: floor_map,

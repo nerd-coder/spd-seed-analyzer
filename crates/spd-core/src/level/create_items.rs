@@ -136,6 +136,7 @@ pub fn create_items_main(
             flatten_grass(map, cell);
         }
         if item.class_name == "TrinketCatalyst" {
+            let catalyst_provenance = item.provenance;
             out.push(CreatedLoot {
                 loot: PlacedLoot {
                     item,
@@ -148,6 +149,7 @@ pub fn create_items_main(
                 flatten_grass(map, key_cell as usize);
                 let mut key = GeneratedItem::new("GoldenKey", ItemCategory::Other);
                 key.source = Some("forced".into());
+                key.provenance = catalyst_provenance;
                 out.push(CreatedLoot {
                     loot: PlacedLoot {
                         item: key,

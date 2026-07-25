@@ -134,12 +134,13 @@ fn assert_aaa_aad_public_report_facts(
         return;
     }
 
-    assert!(
+    assert_eq!(
         floor
             .items
             .iter()
             .any(|item| item.source.as_deref() == Some("SacrificeRoom")),
-        "public report retains the blob-held SacrificeRoom reward in {context}"
+        floor.rooms.iter().any(|room| room == "SacrificeRoom"),
+        "Sacrifice contract is public only when room selection is seed-safe in {context}"
     );
     assert!(
         floor.items.iter().all(|item| item.category != "seed"),

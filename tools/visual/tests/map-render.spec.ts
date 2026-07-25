@@ -7,12 +7,100 @@ const APP_STORAGE = {
   theme: 'spd-analyzer-theme',
 } as const
 
-const GENERIC_MAP_SEED = '5'
+const GENERIC_MAP_SEED = 'VISUAL-MAP'
 const GENERIC_MAP_FLOOR = 4
 
 type BrowserErrors = {
   console: string[]
   page: string[]
+}
+
+async function installSyntheticMapReport(page: Page) {
+  await page.addInitScript(() => {
+    const width = 20
+    const height = 30
+    const tiles = Array.from({ length: width * height }, (_, cell) =>
+      cell > width * 3 && cell < width * 7 ? 29 : 1
+    )
+    const floors = Array.from({ length: 4 }, (_, index) => ({
+      depth: index + 1,
+      feeling: 'none',
+      builder: 'loop',
+      rooms: ['SyntheticRoom'],
+      items: [],
+      quests: [],
+      map:
+        index === 3
+          ? {
+              width,
+              height,
+              tileset: 'sewers',
+              tiles,
+              tile_variance: Array(width * height).fill(0),
+              discoverable: Array(width * height).fill(true),
+              markers: [
+                { cell: 26, kind: 'item', label: 'Synthetic item' },
+                { cell: 93, kind: 'mob', label: 'Synthetic mob' },
+              ],
+              heaps: [
+                {
+                  cell: 26,
+                  heap_type: 'HEAP',
+                  items: [
+                    {
+                      class: 'StoneOfIntuition',
+                      quantity: 1,
+                      level: 0,
+                      cursed: false,
+                    },
+                  ],
+                },
+              ],
+              mobs: [{ cell: 93, class: 'Rat' }],
+              transitions: [],
+              traps: [],
+              plants: [],
+              blobs: [],
+            }
+          : null,
+    }))
+    const report = {
+      seed: {
+        input: 'VISUAL-MAP',
+        numeric: 0,
+        code: null,
+        formatted: 'VISUAL-MAP',
+      },
+      spd_version: 'v3.3.8',
+      spd_commit: '7b8b845a7',
+      floors_requested: 4,
+      identities: { potions: [], scrolls: [], rings: [] },
+      floors,
+      status: 'partial',
+      message: 'Synthetic Playwright renderer fixture.',
+    }
+    class VisualFixtureWorker {
+      onmessage: ((event: MessageEvent) => void) | null = null
+      onerror: ((event: ErrorEvent) => void) | null = null
+      postMessage(message: { type?: string }) {
+        if (message.type !== 'analyze') return
+        setTimeout(() => {
+          this.onmessage?.(
+            new MessageEvent('message', {
+              data: { type: 'analysis-complete', report },
+            })
+          )
+        }, 0)
+      }
+      terminate() {}
+      addEventListener() {}
+      removeEventListener() {}
+      dispatchEvent() {
+        return true
+      }
+    }
+    Object.assign(window, { Worker: VisualFixtureWorker })
+  })
 }
 
 const floorRegions = [
@@ -167,6 +255,7 @@ test('mobile map dialog fills the viewport and supports 1x and 2x zoom', async (
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 })
+  await installSyntheticMapReport(page)
   const browserErrors = await openAnalyzer(page, GENERIC_MAP_SEED)
   await page
     .getByRole('button', { name: `Expand floor ${GENERIC_MAP_FLOOR} map` })
@@ -227,6 +316,7 @@ test('floor rooms open from a title chip and desktop maps use a large dialog', a
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1200 })
+  await installSyntheticMapReport(page)
   const browserErrors = await openAnalyzer(page, GENERIC_MAP_SEED)
 
   const rooms = page
@@ -259,6 +349,7 @@ test('floor rooms open from a title chip and desktop maps use a large dialog', a
 test('map dialog initially focuses its container instead of a control', async ({
   page,
 }) => {
+  await installSyntheticMapReport(page)
   const browserErrors = await openAnalyzer(page, GENERIC_MAP_SEED)
   await page
     .getByRole('button', { name: `Expand floor ${GENERIC_MAP_FLOOR} map` })
@@ -322,6 +413,7 @@ test('accuracy details use a responsive modal and restore trigger focus', async 
 test('animated liquid advances on the pixel-aligned canvas path', async ({
   page,
 }) => {
+  await installSyntheticMapReport(page)
   const browserErrors = await openAnalyzer(
     page,
     GENERIC_MAP_SEED,

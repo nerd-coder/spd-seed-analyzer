@@ -80,6 +80,7 @@ impl MapFacts {
                             matches!(
                                 item.provenance,
                                 crate::items::model::ItemProvenance::Room(_)
+                                    | crate::items::model::ItemProvenance::Forced(_)
                             )
                         })
                     })
@@ -122,6 +123,12 @@ impl MapFacts {
         };
         let loot = &created.loot;
         if super::state::is_runtime_sensitive_main_loot(&loot.item) {
+            self.runtime_sensitive_loot_cells.push(cell as u32);
+        }
+        if matches!(
+            loot.item.provenance,
+            crate::items::model::ItemProvenance::Forced(_)
+        ) {
             self.runtime_sensitive_loot_cells.push(cell as u32);
         }
         match loot.heap_type {

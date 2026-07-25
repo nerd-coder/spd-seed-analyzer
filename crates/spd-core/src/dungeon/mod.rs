@@ -27,6 +27,8 @@ pub struct DungeonState {
     pub hero_inventory: HeroInventory,
     /// Explicit Parchment Scrap state for the supported SacrificeRoom prize contract.
     pub sacrifice_parchment_scrap_level: Option<i32>,
+    /// Once player state can alter generation, later sampled public facts are tainted.
+    pub public_generation_tainted: bool,
     /// Items forced onto the next level (`Level.itemsToSpawn`).
     pub items_to_spawn: Vec<GeneratedItem>,
     pub ghost: GhostQuestState,
