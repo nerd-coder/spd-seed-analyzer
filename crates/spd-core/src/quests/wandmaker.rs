@@ -56,6 +56,9 @@ pub struct WandmakerQuestState {
     /// Set true on the floor where `spawnRoom` adds the quest room.
     pub quest_room_spawned: bool,
     pub depth: i32,
+    /// Persistent quest choices, matching `Wandmaker.Quest.wand1/wand2`.
+    pub wand1: Option<GeneratedItem>,
+    pub wand2: Option<GeneratedItem>,
 }
 
 #[derive(Debug, Clone)]
@@ -145,6 +148,8 @@ pub fn try_spawn_wandmaker(
     let quest_type = WandmakerQuestType::from_int(dungeon.wandmaker.quest_type);
 
     let (wand1, wand2) = generate_wands(dungeon);
+    dungeon.wandmaker.wand1 = Some(wand1.clone());
+    dungeon.wandmaker.wand2 = Some(wand2.clone());
 
     let summary = format!(
         "Old Wandmaker ({}) — {} / {}",

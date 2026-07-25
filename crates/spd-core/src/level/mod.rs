@@ -200,6 +200,16 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             placed_items.push(imp.reward);
         }
 
+        // The pinned oracle exposes Wandmaker.Quest's static reward choices on
+        // every later floor, not only where the Wandmaker was spawned.
+        if let (Some(wand1), Some(wand2)) = (
+            dungeon.wandmaker.wand1.as_ref(),
+            dungeon.wandmaker.wand2.as_ref(),
+        ) {
+            placed_items.push(wand1.clone());
+            placed_items.push(wand2.clone());
+        }
+
         // RegularPainter: nTraps() is rolled when constructing the painter,
         // before room shuffle / placeDoors / special paint.
         terrain::shift_rooms_for_painter(&mut floor.rooms, feeling == Feeling::Chasm);

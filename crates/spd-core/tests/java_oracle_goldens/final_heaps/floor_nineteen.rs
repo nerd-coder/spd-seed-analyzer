@@ -19,6 +19,39 @@ fn aaa_floor_nineteen_matches_through_tile_variance() {
         actual = Some(create_level_partial(&mut dungeon));
     }
     let actual = actual.expect("floor-19 replay");
+    let quest_rewards = actual
+        .placed_items
+        .iter()
+        .filter(|item| item.source.as_deref() == Some("Wandmaker.Quest"))
+        .map(|item| OracleItem {
+            class_name: item.class_name.clone(),
+            quantity: item.quantity,
+            level: item.level,
+            cursed: item.cursed,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        quest_rewards, expected.quest_rewards,
+        "floor-19 persistent Wandmaker rewards"
+    );
+    assert_eq!(
+        quest_rewards,
+        vec![
+            OracleItem {
+                class_name: "WandOfTransfusion".into(),
+                quantity: 1,
+                level: 1,
+                cursed: false,
+            },
+            OracleItem {
+                class_name: "WandOfFrost".into(),
+                quantity: 1,
+                level: 2,
+                cursed: false,
+            },
+        ],
+        "floor-19 exact persistent quest reward identities and state"
+    );
     let mut rooms = actual.rooms.clone();
     rooms.sort();
     assert_eq!(rooms, expected.rooms, "floor-19 room classes");
