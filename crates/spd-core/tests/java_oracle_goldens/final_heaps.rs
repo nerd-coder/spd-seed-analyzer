@@ -141,15 +141,9 @@ fn assert_aaa_aad_public_report_facts(
             .any(|item| item.source.as_deref() == Some("SacrificeRoom")),
         "public report retains the blob-held SacrificeRoom reward in {context}"
     );
-    let seed = floor
-        .items
-        .iter()
-        .find(|item| item.category == "seed")
-        .expect("AAA-AAD report contains its random seed heap");
-    assert_eq!(
-        seed.class_name.as_deref(),
-        Some("EarthrootSeed"),
-        "public report retains the precise seed class for icons/search in {context}"
+    assert!(
+        floor.items.iter().all(|item| item.category != "seed"),
+        "public report omits the runtime-history-sensitive random seed heap in {context}"
     );
 }
 
@@ -268,7 +262,9 @@ fn depth_one_final_heaps_match_report_projection() {
         let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
         dungeon.depth = 1;
         let level = create_level_partial(&mut dungeon);
-        let map = report.floors[0].map.as_ref().expect("depth-one map");
+        // Oracle parity inspects the exact internal map. The public report
+        // intentionally omits runtime-history-sensitive createItems cells.
+        let map = level.map.as_ref().expect("depth-one internal map");
         magical_fire::assert_abc_magical_fire_facts(&fixture, map, &context);
         runestone::assert_aaa_afu_facts(&fixture, map, &context);
         traps::assert_hello_traps_facts(&fixture, map, &context);
@@ -466,19 +462,19 @@ fn depth_one_final_heaps_match_report_projection() {
         // Java seed implementations are nested `*.Seed` classes, so its
         // `getSimpleName()` observation is canonicalized here without
         // flattening the analyzer's precise item class names.
-        let mut actual_projection: Vec<_> = report.floors[0]
-            .items
+        let mut actual_projection: Vec<_> = level
+            .forced_items
             .iter()
+            .chain(&level.placed_items)
+            .filter(|item| !report_blacklists(&item.class_name))
             .filter(|item| item.source.as_deref() != Some("SacrificeRoom"))
             .map(|item| ComparableItem {
-                class_name: if item.category == "seed" {
+                class_name: if item.class_name.ends_with("Seed") {
                     "Seed".to_string()
                 } else {
-                    item.class_name
-                        .clone()
-                        .expect("all analyzed items have a Java class name")
+                    item.class_name.clone()
                 },
-                cursed: item.cursed.expect("exact items expose curse state"),
+                cursed: item.cursed,
             })
             .collect();
         actual_projection.sort();
@@ -486,7 +482,7 @@ fn depth_one_final_heaps_match_report_projection() {
         assert_aaa_regression_facts(&fixture, expected_floor, &expected_projection, &context);
         assert_eq!(
             actual_projection, expected_projection,
-            "report-visible item projection in {context}"
+            "internal exact item projection in {context}"
         );
         assert_eq!(report.status, "partial", "accuracy status in {context}");
         compared += 1;

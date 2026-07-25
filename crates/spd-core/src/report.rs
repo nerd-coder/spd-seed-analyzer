@@ -49,6 +49,11 @@ pub struct FloorMap {
     /// Active pinned Java blob concentrations, sorted by class then cell.
     #[serde(default)]
     pub blobs: Vec<MapBlob>,
+    /// Internal provenance for cells whose main-loop loot facts depend on
+    /// runtime-sensitive persistent Generator history. Never serialized.
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub runtime_sensitive_loot_cells: Vec<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

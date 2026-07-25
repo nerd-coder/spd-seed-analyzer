@@ -99,6 +99,16 @@ mod analyze_smoke {
         let r = analyze_seed("GFX-PZH-DCH", 4).expect("analyze");
         eprintln!("status={} floors={}", r.status, r.floors.len());
         for f in &r.floors {
+            assert!(
+                f.items.iter().all(|item| {
+                    !item
+                        .source
+                        .as_deref()
+                        .and_then(|source| source.rsplit(':').next())
+                        .is_some_and(|origin| matches!(origin, "heap" | "mimic" | "golden_mimic"))
+                }),
+                "public analysis must omit runtime-sensitive regular and Mimic loot"
+            );
             eprintln!(
                 "  floor {} rooms={} items={} quests={:?} map={:?}",
                 f.depth,

@@ -21,7 +21,7 @@ fn crystal_path_room_lifecycle_matches_oracle() {
     assert_eq!(level.pre_items_rng_probe, expected.pre_items_rng);
 
     let report = analyze_seed(&fixture.input.seed, 1).expect("analyze CrystalPathRoom seed");
-    let actual = report.floors[0].map.as_ref().expect("depth-one map");
+    let actual = level.map.as_ref().expect("depth-one internal map");
     let mut actual_rooms = report.floors[0].rooms.clone();
     actual_rooms.sort();
     assert_eq!(actual_rooms, expected.rooms);

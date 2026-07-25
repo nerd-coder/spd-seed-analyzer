@@ -7,8 +7,10 @@ fn toxic_gas_room_lifecycle_matches_oracle() {
             .join("../../tools/java-oracle/fixtures/aaa-aaa-acb-final-heaps-floor-1.json"),
     );
     let expected = &fixture.floors[0];
-    let report = analyze_seed(&fixture.input.seed, 1).expect("analyze ToxicGasRoom seed");
-    let actual = report.floors[0].map.as_ref().expect("depth-one map");
+    let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
+    dungeon.depth = 1;
+    let level = create_level_partial(&mut dungeon);
+    let actual = level.map.as_ref().expect("depth-one internal map");
     assert_eq!(
         (actual.width, actual.height),
         (expected.width, expected.height)

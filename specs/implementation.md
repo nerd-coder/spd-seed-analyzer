@@ -14,15 +14,15 @@ lists, map heaps/markers, WASM, search evidence, and UI.
 
 ## Next phase
 
-Extend the new `exact` / `constrained` projection beyond SacrificeRoom. Audit
-and classify every item-producing path, fixture-first, starting with:
+Continue the fixture-first seed-only audit:
 
-1. Regular heaps plus Mimic and GoldenMimic rewards.
-2. Shop stock, especially inventory-dependent bag selection.
-3. Ghost, Wandmaker, Blacksmith, and Imp reward identities.
-4. Crypt, Armory, Pool, Statue, Sentry, Traps, crystal, and secret-room loot.
-5. Quantity, level, curse, enchantment, heap type, and cell independently;
+1. Shop stock, especially inventory-dependent bag selection.
+2. Ghost, Wandmaker, Blacksmith, and Imp reward identities.
+3. Crypt, Armory, Pool, Statue, Sentry, Traps, crystal, and secret-room loot.
+4. Quantity, level, curse, enchantment, heap type, and cell independently;
    redact only fields that are not seed-invariant.
+5. Decide whether createItems grass-flattening requires a pre-items public
+   terrain projection; its heap/mob/marker cells are already omitted.
 
 Add regression tests proving constrained values cannot leak through serialized
 reports, maps, or exact seed-finder matches. Fixed forced drops may remain exact
@@ -34,5 +34,8 @@ when pinned evidence proves every reported field is seed-only.
   reports only `weapon reward`, the derived stable tier, forced curse, source,
   and a conditional Parchment Scrap enchantment-chance note.
 - Sacrificial heap items and concrete item marker labels are redacted publicly.
+- Regular createItems heap, Mimic, and GoldenMimic facts remain internal only;
+  their public item entries and map heap/mob/marker cells are omitted. Stable
+  room-hosted Mimic cells remain visible while their rewards are omitted.
 - Exact item searches ignore constrained predictions.
 - Overall and item accuracy remain `partial`; do not claim full accuracy.

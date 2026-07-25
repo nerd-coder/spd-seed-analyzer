@@ -17,6 +17,7 @@ pub(super) struct MapFacts {
     pub heaps: Vec<MapHeap>,
     pub mobs: Vec<MapMob>,
     pub markers: Vec<MapMarker>,
+    runtime_sensitive_loot_cells: Vec<u32>,
 }
 
 impl MapFacts {
@@ -71,6 +72,7 @@ impl MapFacts {
             heaps,
             mobs,
             markers,
+            runtime_sensitive_loot_cells: Vec::new(),
         }
     }
 
@@ -79,6 +81,9 @@ impl MapFacts {
             return;
         };
         let loot = &created.loot;
+        if super::state::is_runtime_sensitive_main_loot(&loot.item) {
+            self.runtime_sensitive_loot_cells.push(cell as u32);
+        }
         match loot.heap_type {
             "mimic" | "golden_mimic" => {
                 let class_name = if loot.heap_type == "mimic" {
@@ -145,6 +150,7 @@ impl MapFacts {
             traps: traps(map),
             plants: plants(map),
             blobs: blobs(map),
+            runtime_sensitive_loot_cells: self.runtime_sensitive_loot_cells,
         }
     }
 }

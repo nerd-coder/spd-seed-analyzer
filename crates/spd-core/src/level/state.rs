@@ -15,6 +15,16 @@ fn prediction_kind(item: &GeneratedItem) -> ItemPredictionKind {
     }
 }
 
+pub(super) fn is_runtime_sensitive_main_loot(item: &GeneratedItem) -> bool {
+    is_runtime_sensitive_loot_source(item.source.as_deref())
+}
+
+pub(super) fn is_runtime_sensitive_loot_source(source: Option<&str>) -> bool {
+    source
+        .and_then(|source| source.rsplit(':').next())
+        .is_some_and(|origin| matches!(origin, "heap" | "mimic" | "golden_mimic"))
+}
+
 #[derive(Debug, Clone)]
 pub struct LevelState {
     pub depth: i32,
@@ -53,7 +63,7 @@ impl LevelState {
     pub fn to_floor_report(&self) -> FloorReport {
         let mut items = Vec::new();
         for item in self.forced_items.iter().chain(&self.placed_items) {
-            if is_blacklisted(item) {
+            if is_blacklisted(item) || is_runtime_sensitive_main_loot(item) {
                 continue;
             }
             let prediction = prediction_kind(item);
@@ -101,6 +111,14 @@ impl LevelState {
             items,
             quests: self.quests.clone(),
             map: self.map.clone().map(|mut map| {
+                let runtime_sensitive_cells = map.runtime_sensitive_loot_cells.clone();
+                map.heaps
+                    .retain(|heap| !runtime_sensitive_cells.contains(&heap.cell));
+                map.mobs
+                    .retain(|mob| !runtime_sensitive_cells.contains(&mob.cell));
+                map.markers
+                    .retain(|marker| !runtime_sensitive_cells.contains(&marker.cell));
+                map.runtime_sensitive_loot_cells.clear();
                 let mut sacrificial_cells = Vec::new();
                 for heap in &mut map.heaps {
                     if heap.heap_type == "sacrificial" {
@@ -137,4 +155,137 @@ fn is_blacklisted(item: &GeneratedItem) -> bool {
             | "CeremonialCandle"
             | "Pickaxe"
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::items::model::ItemCategory;
+    use crate::report::{MapHeap, MapHeapItem, MapMarker, MapMarkerKind, MapMob};
+
+    fn item(class_name: &str, source: &str) -> GeneratedItem {
+        let mut item = GeneratedItem::new(class_name, ItemCategory::Potion);
+        item.source = Some(source.into());
+        item
+    }
+
+    #[test]
+    fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
+        let runtime_cells = vec![7, 9];
+        let floor = LevelState {
+            depth: 3,
+            feeling: Feeling::None,
+            builder: None,
+            rooms: vec![],
+            room_bounds: vec![],
+            build_ok: true,
+            forced_items: vec![item("PotionOfStrength", "forced")],
+            placed_items: vec![
+                item("PotionOfHealing", "chest:heap"),
+                item("PotionOfMindVision", "mimic:mimic"),
+                item("PotionOfHaste", "golden_mimic:golden_mimic"),
+            ],
+            quests: vec![],
+            complete: true,
+            map: Some(FloorMap {
+                width: 4,
+                height: 4,
+                tileset: "sewers".into(),
+                tiles: vec![0; 16],
+                tile_variance: vec![0; 16],
+                discoverable: vec![true; 16],
+                markers: vec![
+                    MapMarker {
+                        cell: 7,
+                        kind: MapMarkerKind::Item,
+                        label: "Potion of Healing".into(),
+                    },
+                    MapMarker {
+                        cell: 9,
+                        kind: MapMarkerKind::Mob,
+                        label: "Mimic".into(),
+                    },
+                    MapMarker {
+                        cell: 12,
+                        kind: MapMarkerKind::Item,
+                        label: "Potion of Strength".into(),
+                    },
+                ],
+                heaps: vec![
+                    MapHeap {
+                        cell: 7,
+                        heap_type: "chest".into(),
+                        items: vec![MapHeapItem {
+                            class_name: "PotionOfHealing".into(),
+                            quantity: 1,
+                            level: 0,
+                            cursed: false,
+                        }],
+                    },
+                    MapHeap {
+                        cell: 12,
+                        heap_type: "heap".into(),
+                        items: vec![MapHeapItem {
+                            class_name: "PotionOfStrength".into(),
+                            quantity: 1,
+                            level: 0,
+                            cursed: false,
+                        }],
+                    },
+                ],
+                mobs: vec![MapMob {
+                    cell: 9,
+                    class_name: "Mimic".into(),
+                }],
+                transitions: vec![],
+                traps: vec![],
+                plants: vec![],
+                blobs: vec![],
+                runtime_sensitive_loot_cells: runtime_cells,
+            }),
+            pre_items_rng_probe: vec![],
+            pre_mobs_rng_probe: vec![],
+            pre_paint_rng_probe: vec![],
+        };
+
+        let report = floor.to_floor_report();
+        assert_eq!(report.items.len(), 1);
+        assert_eq!(
+            report.items[0].class_name.as_deref(),
+            Some("PotionOfStrength")
+        );
+        let map = report.map.expect("map");
+        assert_eq!(
+            map.heaps.iter().map(|heap| heap.cell).collect::<Vec<_>>(),
+            [12]
+        );
+        assert!(map.mobs.is_empty());
+        assert_eq!(
+            map.markers
+                .iter()
+                .map(|marker| marker.cell)
+                .collect::<Vec<_>>(),
+            [12]
+        );
+        assert!(map.runtime_sensitive_loot_cells.is_empty());
+
+        let json = serde_json::to_string(&map).expect("serialize public map");
+        assert!(!json.contains("PotionOfHealing"));
+        assert!(!json.contains("Mimic"));
+        assert!(!json.contains("runtime_sensitive_loot_cells"));
+    }
+
+    #[test]
+    fn main_loot_classification_uses_source_provenance() {
+        assert!(is_runtime_sensitive_main_loot(&item("Anything", "heap")));
+        assert!(is_runtime_sensitive_main_loot(&item(
+            "Anything",
+            "locked_chest:heap"
+        )));
+        assert!(is_runtime_sensitive_main_loot(&item(
+            "Anything",
+            "mimic:mimic"
+        )));
+        assert!(!is_runtime_sensitive_main_loot(&item("Mimic", "forced")));
+    }
 }
