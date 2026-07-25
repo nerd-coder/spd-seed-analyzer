@@ -11,7 +11,7 @@ use std::collections::{HashMap, VecDeque};
 
 use crate::geom::Point;
 use crate::level::terrain::{
-    TerrainMap, BARRICADE, DOOR, EMPTY, LOCKED_DOOR, SECRET_DOOR, WALL, WATER,
+    TerrainMap, BARRICADE, CRYSTAL_DOOR, DOOR, EMPTY, LOCKED_DOOR, SECRET_DOOR, WALL, WATER,
 };
 use crate::level::Feeling;
 use crate::random::Random;
@@ -174,7 +174,7 @@ pub fn paint_doors(
                 DoorType::Hidden => SECRET_DOOR,
                 DoorType::Barricade => BARRICADE,
                 DoorType::Locked => LOCKED_DOOR,
-                DoorType::Crystal => LOCKED_DOOR,
+                DoorType::Crystal => CRYSTAL_DOOR,
                 DoorType::Wall => WALL,
             };
             if let Some(i) = map.point_to_cell(dx, dy) {
@@ -236,6 +236,25 @@ mod tests {
         apply_room_door_types(&rooms, 0, &mut doors);
         Random::pop_generator();
         assert_eq!(doors.get(0, 1).expect("door").door_type, DoorType::Water);
+    }
+
+    #[test]
+    fn pit_room_crystal_door_paints_crystal_terrain() {
+        let mut pit = named_room(0, "PitRoom", 1, 1, 8, 8);
+        pit.kind = RoomKind::Special;
+        let mut standard = box_room(1, RoomKind::Standard, 8, 1, 15, 8);
+        pit.connected.push(1);
+        standard.connected.push(0);
+        let rooms = vec![pit, standard];
+        let mut doors = DoorMap::new();
+        doors.insert_test_point(0, 1, Point::new(8, 4));
+        apply_room_door_types(&rooms, 0, &mut doors);
+
+        let mut map = terrain::paint_minimal(&rooms).expect("map");
+        paint_doors(&mut map, &rooms, &[0, 1], 18, Feeling::None, &mut doors);
+
+        let door = map.point_to_cell(8, 4).expect("door cell");
+        assert_eq!(map.map[door], terrain::CRYSTAL_DOOR);
     }
 
     #[test]
