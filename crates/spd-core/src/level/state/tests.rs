@@ -14,7 +14,7 @@ fn item(class_name: &str, source: &str) -> GeneratedItem {
 }
 
 #[test]
-fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
+fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts() {
     let runtime_cells = vec![7, 9];
     let floor = LevelState {
         depth: 3,
@@ -37,7 +37,10 @@ fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
         runtime_sensitive_map: false,
         runtime_sensitive_layout: false,
         runtime_sensitive_feeling: false,
-        room_public_facts: vec![],
+        room_public_facts: vec![
+            super::super::room_public::RoomPublicFact::new("SacrificeRoom", 3)
+                .expect("Sacrifice contract"),
+        ],
         complete: true,
         map: Some(FloorMap {
             width: 4,
@@ -66,6 +69,11 @@ fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
                     cell: 14,
                     kind: MapMarkerKind::Item,
                     label: "Shop stock".into(),
+                },
+                MapMarker {
+                    cell: 15,
+                    kind: MapMarkerKind::Item,
+                    label: "Guide Page".into(),
                 },
             ],
             heaps: vec![
@@ -99,6 +107,16 @@ fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
                         cursed: false,
                     }],
                 },
+                MapHeap {
+                    cell: 15,
+                    heap_type: "heap".into(),
+                    items: vec![MapHeapItem {
+                        class_name: "GuidePage".into(),
+                        quantity: 1,
+                        level: 0,
+                        cursed: false,
+                    }],
+                },
             ],
             mobs: vec![MapMob {
                 cell: 9,
@@ -122,28 +140,22 @@ fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
         item.name == "food-category queued source"
             && item.prediction == ItemPredictionKind::Constrained
     }));
-    let map = report.map.expect("map");
-    assert_eq!(
-        map.heaps.iter().map(|heap| heap.cell).collect::<Vec<_>>(),
-        [12]
-    );
-    assert!(map.mobs.is_empty());
-    assert_eq!(
-        map.markers
-            .iter()
-            .map(|marker| marker.cell)
-            .collect::<Vec<_>>(),
-        [12]
-    );
-    assert!(map.runtime_sensitive_loot_cells.is_empty());
-
-    let json = serde_json::to_string(&map).expect("serialize public map");
-    assert!(!json.contains("PotionOfHealing"));
-    assert!(!json.contains("Mimic"));
-    assert!(!json.contains("LeatherArmor"));
-    assert!(!json.contains("for_sale"));
-    assert!(!json.contains("runtime_sensitive_loot_cells"));
-    assert!(!json.contains("constrained_equipment_cells"));
+    assert!(report.map.is_none());
+    assert!(report.items.iter().any(|item| {
+        item.source.as_deref() == Some("SacrificeRoom")
+            && item.prediction == ItemPredictionKind::Constrained
+    }));
+    let json = serde_json::to_string(&report).expect("serialize public report");
+    for unsafe_map_fact in [
+        "GuidePage",
+        "Guide Page",
+        "PotionOfHealing",
+        "Mimic",
+        "LeatherArmor",
+        "for_sale",
+    ] {
+        assert!(!json.contains(unsafe_map_fact), "leaked {unsafe_map_fact}");
+    }
 
     let mut consumed_internally = floor.clone();
     consumed_internally.forced_items.clear();

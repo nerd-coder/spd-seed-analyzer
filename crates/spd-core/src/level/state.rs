@@ -361,11 +361,12 @@ impl LevelState {
                         .to_string()
                 })
                 .collect(),
-            map: if self.runtime_sensitive_map || self.depth <= 2 {
-                None
-            } else {
-                self.map.clone().map(state_map::sanitize_public_map)
-            },
+            // Every FloorMap produced by this state belongs to RegularLevel.
+            // Its final cells include createMobs/createItems and lifecycle
+            // placements whose runtime/meta inputs are not modeled publicly.
+            // Retain the exact map above for oracle parity, but expose no
+            // regular map until per-cell finality is proven.
+            map: None,
         }
     }
 }

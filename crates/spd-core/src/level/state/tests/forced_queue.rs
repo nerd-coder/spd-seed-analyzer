@@ -2,10 +2,10 @@ use super::*;
 use crate::items::model::ForcedDropRole;
 
 #[test]
-fn public_projection_omits_intro_history_sensitive_maps_on_depths_one_and_two() {
+fn public_projection_omits_every_regular_map_while_retaining_internal_maps() {
     for seed in 0..8 {
         let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(seed));
-        for depth in 1..=2 {
+        for depth in 1..=4 {
             dungeon.depth = depth;
             let state = crate::level::create_level_partial(&mut dungeon);
             assert!(
@@ -15,6 +15,29 @@ fn public_projection_omits_intro_history_sensitive_maps_on_depths_one_and_two() 
             assert!(state.to_floor_report().map.is_none());
         }
     }
+}
+
+#[test]
+fn otherwise_untainted_regular_floor_keeps_constraints_without_a_public_map() {
+    for seed in 0..256 {
+        let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(seed));
+        dungeon.depth = 3;
+        let state = crate::level::create_level_partial(&mut dungeon);
+        if state.map.is_some()
+            && !state.runtime_sensitive_map
+            && !state.runtime_sensitive_layout
+            && !state.runtime_sensitive_feeling
+        {
+            let public = state.to_floor_report();
+            assert!(public.map.is_none());
+            assert!(public.items.iter().any(|item| {
+                item.source.as_deref() == Some("initial forced queue")
+                    && item.prediction == ItemPredictionKind::Constrained
+            }));
+            return;
+        }
+    }
+    panic!("expected an otherwise-untainted depth-three regular floor");
 }
 
 #[test]

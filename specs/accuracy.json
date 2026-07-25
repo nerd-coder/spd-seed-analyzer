@@ -77,7 +77,7 @@
       "implemented": [
         "Forced drops, generator decks (including pinned concrete-class undoDrop no-op semantics), main RegularLevel createItems drops, and supported special-room prizes",
         "Item identities and exact heap capture on committed Java-oracle fixtures, including UnstableSpellbook constructor RNG",
-        "AAA-AAA-AAA floor-6 Generator weapon lifecycle from floor-3 SacrificeRoom through shop and createItems, floor-7 exact five main Generator drops, floors 8–9, 12–14, and 16–19 exact normalized heaps, and floor-11 exact deterministic heaps including Mimic reward lifecycle, forced drops, CrystalKeys, and GuidePage placement",
+        "AAA-AAA-AAA floor-6 Generator weapon lifecycle from floor-3 SacrificeRoom through shop and createItems, floor-7 exact five main Generator drops, floors 8–9, 12–14, and 16–19 exact normalized heaps, and floor-11 exact deterministic heaps including Mimic reward lifecycle, forced drops, CrystalKeys, and fresh-meta GuidePage placement retained solely as internal Java-parity evidence",
         "Supported quest rewards retain exact internal parity state, including AAA-AAA-AAA floor-19 persistence of both Wandmaker reward identities, while public reports apply reward-specific seed-only contracts",
         "Seed finder optional minimum item upgrade-level matching across the analyzed floor range for exact predictions only",
         "Seed-only reporting classification that preserves exact generation internally while exposing SacrificeRoom rewards only as a cursed weapon from the one-higher floor-set tier distribution; concrete tier and map contents remain hidden",
@@ -89,8 +89,8 @@
         "Ghost reporting keeps the exact armor class, shared reward level, weapon tier, and forced uncursed state while hiding the generator-history-sensitive weapon class and treating Parchment Scrap enchantment/glyph effects as conditional",
         "Wandmaker reporting exposes two distinct uncursed wand rewards with one upgrade each but hides concrete identities and levels; duplicate-retry history suppresses later placed items and the entire public map on the spawn floor because createItems can flatten grass",
         "The Blacksmith's initial four-option pool keeps exact default-probability identities, tiers, shared level, and uncursed state while omitting Parchment-dependent enchantment/glyph outcomes; later player-triggered pool regeneration is not predicted",
-        "BlacksmithRoom's two painted equipment rewards use separate provenance: runtime-sensitive weapon/missile identities are constrained to category and tier, armor identity remains exact, and all curse/enchantment/glyph properties are omitted as Parchment-sensitive; stable heap cells remain visible with generic labels and empty contents",
-        "Imp reporting exposes a forced-cursed ring with its stable post-two-upgrade level while hiding only the concrete identity; isolated ring-deck selection and class-independent Ring.random calls preserve the public room order, map, and later floor tail",
+        "BlacksmithRoom's two painted equipment rewards use separate provenance: runtime-sensitive weapon/missile identities are constrained to category and tier, armor identity remains exact, and all curse/enchantment/glyph properties are omitted as Parchment-sensitive; cells, heap types, and markers remain internal with the regular-floor map",
+        "Imp reporting exposes a forced-cursed ring with its stable post-two-upgrade level while hiding only the concrete identity; isolated ring-deck selection and class-independent Ring.random calls preserve the public room order and later floor tail, while the regular-floor map remains internal",
         "Quest summaries preserve the seed-safe quest type/target prefix while replacing the concrete reward-title suffix with a generic reward label",
         "Wandmaker choices persisted into later internal floor states for Java-oracle parity are explicitly internal-only and are not repeated publicly after the spawn floor, where the player may already have claimed one",
         "Explicit Parchment Scrap state and pinned HKT-JZN-XQQ floor-13 Java-oracle parity evidence, retained as internal evidence rather than a public concrete prediction",
@@ -107,7 +107,7 @@
         "Artifact-branch shop floors intentionally expose no builder, room list, static room facts, map, or post-ShopRoom item facts because runtime artifact history can change the build and painter RNG tail",
         "Concrete Ghost weapon, Wandmaker wand, and Imp ring identities are intentionally excluded; Wandmaker duplicate retries suppress its affected downstream item and map facts",
         "Parchment-dependent Ghost and Blacksmith enchantment/glyph outcomes are conditional and not asserted; player-triggered Blacksmith reward regeneration is outside the floor-generation report",
-        "Concrete BlacksmithRoom weapon/missile identities and all equipment properties in its map heaps are intentionally excluded; only stable cells, heap types, generic markers, and separately proven item constraints are public",
+        "Concrete BlacksmithRoom weapon/missile identities, equipment properties, cells, heap types, and markers are intentionally excluded; only separately proven item constraints are public",
         "ChooseBag ties follow non-seeded JVM identity-hash HashMap iteration; HKT and AAA oracle processes choose different bags for equivalent fresh inventories, while Hourglass state input remains unavailable",
         "Concrete forced-food identity depends on persistent Generator history; initial forced-queue cells and contents are omitted from public maps even when the enqueue contract is stable"
       ],
@@ -149,6 +149,7 @@
       "status": "partial",
       "implemented": [
         "Water, grass, trap, door merge, and graph painting for supported regular-floor paths",
+        "All regular-floor maps are omitted from public reports pending proof of per-cell finality across createMobs, createItems, and runtime/meta-sensitive lifecycle placements; exact FloorMap state remains internal for pinned Java-oracle parity",
         "Real-seed CXG-FJT-BFQ and HKT-JZN-XQQ map references are retained as source evidence but assert intentional public omission; a Playwright-only synthetic FloorMap exercises dialog, zoom, focus, responsive layout, and liquid animation without exposing unsafe production cells",
         "Pinned gameplay references for HKT-JZN-XQQ floor 12 and its Troll Blacksmith MiningLevel branch, with the branch explicitly retained as source-only evidence",
         "Fixture-backed terrain and render facts for selected special rooms",
@@ -156,15 +157,14 @@
         "AAA-AAA-AAA floor-19 full final terrain, discoverability, and tile-variance parity, exact regular and AmbitiousImp branch transitions, ordinary and SecretSummoning traps, PlantsRoom plant cells and identities, and LaboratoryRoom Alchemy blob concentration at cell 1223"
       ],
       "remaining": [
-        "Public maps are omitted on depths 1–2 because intro and guidebook history can change entrance-door visibility; exact internal maps remain available for parity",
         "When the seeded feeling roll takes the default branch, held Mossy Clump or Trap Mechanism state can override the feeling and change the pre-build RNG tail; public feeling, builder, rooms, room facts, map, and downstream item/quest facts are omitted on those floors",
-        "Public maps are also omitted when a scheduled Scroll of Upgrade can be suppressed by Forbidden Runes, because queue composition changes room consumption or final placement and grass flattening",
+        "Per-cell public finality is not established: createMobs, createItems grass flattening, forced-item placement, GuidePage/meta state, and other lifecycle branches can change final terrain or entities",
         "ToxicGas vent and gas blob facts are not yet exported as exact additive render facts",
         "Uncovered room painters and other floors can produce incomplete terrain or markers",
-        "Public real-seed maps are conservatively omitted after inherited generation taint; renderer interaction coverage uses a synthetic test-only map and does not establish gameplay-map accuracy",
+        "All public real-seed regular maps are conservatively omitted; renderer interaction coverage uses a synthetic test-only map and does not establish gameplay-map accuracy",
         "Quest-branch levels, including the Troll Blacksmith MiningLevel reference, are not generated or rendered by the analyzer"
       ],
-      "impact": "Map previews can omit or misplace terrain, traps, blobs, doors, entities, or room details.",
+      "impact": "Public gameplay map previews are unavailable; internal parity maps can still be incomplete for uncovered terrain, entities, or room details.",
       "evidence": [
         "crates/spd-core/src/level/painter",
         "crates/spd-core/tests/java_oracle_goldens/final_heaps/replay_aaa_sewers.rs",
