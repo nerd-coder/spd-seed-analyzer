@@ -31,6 +31,16 @@ pub enum ItemProvenance {
     None,
     Shop(ShopStockRole),
     Quest(QuestRewardRole),
+    Room(RoomLootRole),
+}
+
+/// A reward produced while painting a room whose concrete generator result can
+/// depend on persistent decks, limited drops, inventory, or trinkets.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RoomLootRole {
+    CryptArmor,
+    StatueWeapon,
+    RuntimeSensitive,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -8,11 +8,12 @@ const VISUAL_FIXTURE_DIRECTORY = new URL('../fixtures/', import.meta.url)
 describe('map-render visual fixtures', () => {
   test('registers every on-disk PNG with matching seed and floor metadata', async () => {
     const registeredFiles: string[] = MAP_RENDER_FIXTURES.map(
-      ({ seed, floor, referenceFile, target }) => {
+      ({ seed, floor, referenceFile, target, expectation }) => {
         expect(seed).toMatch(/^[A-Z]{3}(?:-[A-Z]{3}){2}$/)
         expect(floor).toBeGreaterThan(0)
         const suffix = target === 'quest-branch' ? '_Q' : ''
         expect(String(referenceFile)).toBe(`${seed}_F${floor}${suffix}.png`)
+        expect(['rendered', 'intentionally-omitted']).toContain(expectation)
         return String(referenceFile)
       }
     )
@@ -26,12 +27,13 @@ describe('map-render visual fixtures', () => {
     expect([...registeredFiles].sort()).toEqual(onDiskFiles)
   })
 
-  test('includes the CXG-FJT-BFQ floor-one test map', () => {
+  test('includes the CXG-FJT-BFQ floor-one suppression fixture', () => {
     expect(MAP_RENDER_FIXTURES).toContainEqual({
       seed: 'CXG-FJT-BFQ',
       floor: 1,
       referenceFile: 'CXG-FJT-BFQ_F1.png',
       target: 'regular-floor',
+      expectation: 'intentionally-omitted',
     })
   })
 })

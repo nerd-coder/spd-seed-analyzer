@@ -8,6 +8,7 @@ mod maze;
 mod painter;
 pub mod patch;
 mod quest_rewards;
+mod room_public;
 mod shop;
 mod special_loot;
 mod state;
@@ -150,6 +151,8 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
     let mut quests = Vec::new();
     let mut quest_public_labels = Vec::new();
     let mut runtime_sensitive_map = false;
+    let mut room_public_facts = Vec::new();
+    let public_forced_items = forced.clone();
     let mut pre_items_rng_probe = Vec::new();
     let mut pre_mobs_rng_probe = Vec::new();
     let mut pre_paint_rng_probe = Vec::new();
@@ -167,12 +170,14 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 room_bounds,
                 build_ok,
                 forced_items: forced,
+                public_forced_items,
                 placed_items,
                 runtime_sensitive_placed_items_from,
                 runtime_sensitive_quests_from,
                 quests,
                 quest_public_labels,
                 runtime_sensitive_map,
+                room_public_facts,
                 complete: false,
                 map: floor_map,
                 pre_items_rng_probe: Vec::new(),
@@ -243,7 +248,16 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 loot: special_loot_items,
                 mut doors,
                 paint_order,
+                first_sensitive_loot_index,
+                room_public_facts: special_room_public_facts,
             } = special;
+            room_public_facts.extend(special_room_public_facts);
+            if let Some(first_sensitive_loot_index) = first_sensitive_loot_index {
+                runtime_sensitive_placed_items_from
+                    .get_or_insert(placed_items.len() + first_sensitive_loot_index);
+                runtime_sensitive_quests_from.get_or_insert(quests.len());
+                runtime_sensitive_map = true;
+            }
             for p in special_loot_items {
                 // Drop matching forced clones when a prize was pulled from itemsToSpawn.
                 if p.item
@@ -410,12 +424,14 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         room_bounds,
         build_ok,
         forced_items: forced,
+        public_forced_items,
         placed_items,
         runtime_sensitive_placed_items_from,
         runtime_sensitive_quests_from,
         quests,
         quest_public_labels,
         runtime_sensitive_map,
+        room_public_facts,
         complete: build_ok,
         map: floor_map,
         pre_items_rng_probe,

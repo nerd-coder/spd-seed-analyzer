@@ -28,6 +28,7 @@ pub(super) fn ritual_prize(
         dungeon.generator.random_category(category, dungeon.depth)
     });
     prize.source = Some("RitualRoom".into());
+    super::tag_room_item(&mut prize);
     if let Some(cell) = map.point_to_cell(center.x, center.y) {
         map.item_allowed[cell] = false;
     }
@@ -71,6 +72,7 @@ pub(super) fn grassy_graves(
             gold
         };
         item.source = Some("GrassyGraveRoom".into());
+        super::tag_room_item(&mut item);
         if let Some(cell) = map.point_to_cell(x, y) {
             map.item_allowed[cell] = false;
             map.record_heap(cell, "tomb", item.clone());

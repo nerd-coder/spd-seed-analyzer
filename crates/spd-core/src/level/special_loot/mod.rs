@@ -21,7 +21,7 @@ mod trap_rooms;
 mod tests;
 
 use crate::dungeon::DungeonState;
-use crate::items::model::GeneratedItem;
+use crate::items::model::{GeneratedItem, ItemProvenance, RoomLootRole};
 use crate::level::create_items::PlacedLoot;
 use crate::level::painter::{
     apply_room_door_types, paint_connection_room, paint_standard_room, place_doors_for_room,
@@ -39,6 +39,10 @@ pub struct SpecialPaintResult {
     pub doors: DoorMap,
     /// Room indices in RegularPainter shuffle order (for `paintDoors` iteration).
     pub paint_order: Vec<usize>,
+    /// Number of portable room items painted before the first callback whose
+    /// RNG path can differ with player state/history.
+    pub first_sensitive_loot_index: Option<usize>,
+    pub room_public_facts: Vec<super::room_public::RoomPublicFact>,
 }
 
 /// Generate special/secret room prizes; may consume items from `items_to_spawn`
@@ -58,6 +62,8 @@ pub fn special_room_loot(
             loot: out,
             doors,
             paint_order: Vec::new(),
+            first_sensitive_loot_index: None,
+            room_public_facts: Vec::new(),
         };
     }
 
@@ -65,10 +71,22 @@ pub fn special_room_loot(
     // RegularPainter.paint shuffles its ArrayList with Collections.shuffle.
     Random::shuffle_list(&mut order);
 
+    let mut first_sensitive_loot_index = None;
+    let mut room_public_facts = Vec::new();
     for &ri in &order {
         place_doors_for_room(rooms, ri, &mut doors);
 
         let room = &rooms[ri];
+        if let Some(fact) = super::room_public::RoomPublicFact::new(&room.name, dungeon.depth) {
+            room_public_facts.push(fact);
+        }
+        if first_sensitive_loot_index.is_none() && callback_tail_sensitive(&room.name) {
+            first_sensitive_loot_index = Some(
+                out.iter()
+                    .filter(|placed| placed.heap_type != "plant")
+                    .count(),
+            );
+        }
         if room.is_empty() {
             continue;
         }
@@ -135,6 +153,8 @@ pub fn special_room_loot(
         loot: out,
         doors,
         paint_order: order,
+        first_sensitive_loot_index,
+        room_public_facts,
     }
 }
 
@@ -149,7 +169,7 @@ fn paint_special(
 ) -> Vec<PlacedLoot> {
     let room = &rooms[ri];
     let name = room.name.as_str();
-    match name {
+    let mut loot = match name {
         "CryptRoom" => {
             let prize = special_rooms::crypt_prize(dungeon, items_to_spawn);
             let cell = geometry_prize_cell.expect("CryptRoom geometry returns its tomb cell");
@@ -268,5 +288,93 @@ fn paint_special(
             Vec::new()
         }
         _ => Vec::new(),
+    };
+
+    if runtime_sensitive_room(name) {
+        let role = match name {
+            "CryptRoom" => RoomLootRole::CryptArmor,
+            "StatueRoom" => RoomLootRole::StatueWeapon,
+            _ => RoomLootRole::RuntimeSensitive,
+        };
+        for placed in &mut loot {
+            placed.item.provenance = ItemProvenance::Room(role);
+        }
+        // Heap items were cloned before the common provenance pass. Tag those
+        // internal clones too so map projection never relies on source text.
+        for heap in map.known_heaps.iter_mut().flatten() {
+            for item in &mut heap.items {
+                if item
+                    .source
+                    .as_deref()
+                    .is_some_and(|source| source.split(':').next() == Some(name))
+                {
+                    item.provenance = ItemProvenance::Room(role);
+                }
+            }
+        }
     }
+    loot
+}
+
+fn runtime_sensitive_room(name: &str) -> bool {
+    matches!(
+        name,
+        "CryptRoom"
+            | "ArmoryRoom"
+            | "LibraryRoom"
+            | "TreasuryRoom"
+            | "StorageRoom"
+            | "RunestoneRoom"
+            | "LaboratoryRoom"
+            | "PoolRoom"
+            | "StatueRoom"
+            | "SentryRoom"
+            | "TrapsRoom"
+            | "MagicalFireRoom"
+            | "ToxicGasRoom"
+            | "CrystalVaultRoom"
+            | "CrystalChoiceRoom"
+            | "CrystalPathRoom"
+            | "PitRoom"
+            | "SecretLibraryRoom"
+            | "SecretRunestoneRoom"
+            | "SecretArtilleryRoom"
+            | "SecretLaboratoryRoom"
+            | "SecretLarderRoom"
+            | "SecretHoardRoom"
+            | "SecretGardenRoom"
+            | "SecretMazeRoom"
+            | "SecretSummoningRoom"
+            | "SecretChestChasmRoom"
+            | "SecretHoneypotRoom"
+    )
+}
+
+fn callback_tail_sensitive(name: &str) -> bool {
+    matches!(
+        name,
+        "ArmoryRoom"
+            | "StudyRoom"
+            | "RitualRoom"
+            | "RingRoom"
+            | "SuspiciousChestRoom"
+            | "GrassyGraveRoom"
+            | "LibraryRoom"
+            | "TreasuryRoom"
+            | "StorageRoom"
+            | "RunestoneRoom"
+            | "LaboratoryRoom"
+            | "PoolRoom"
+            | "StatueRoom"
+            | "SentryRoom"
+            | "TrapsRoom"
+            | "MagicalFireRoom"
+            | "ToxicGasRoom"
+            | "CrystalVaultRoom"
+            | "CrystalChoiceRoom"
+            | "CrystalPathRoom"
+            | "PitRoom"
+            | "SecretSummoningRoom"
+            | "SecretChestChasmRoom"
+    )
 }

@@ -5,7 +5,7 @@ mod halls_graves;
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::geom::Point;
-use crate::items::model::{GeneratedItem, ItemCategory};
+use crate::items::model::{GeneratedItem, ItemCategory, ItemProvenance, RoomLootRole};
 use crate::items::randomize::randomize_item;
 use crate::level::create_items::PlacedLoot;
 use crate::level::terrain::{TerrainMap, PEDESTAL};
@@ -13,6 +13,10 @@ use crate::random::Random;
 use crate::rooms::room::Room;
 
 use super::placement::find_prize_item;
+
+pub(super) fn tag_room_item(item: &mut GeneratedItem) {
+    item.provenance = ItemProvenance::Room(RoomLootRole::RuntimeSensitive);
+}
 
 pub(super) fn paint_center_loot(
     dungeon: &mut DungeonState,
@@ -47,6 +51,7 @@ fn ring_prize(
     } else {
         "RingRoom".into()
     });
+    tag_room_item(&mut prize);
     if let Some(cell) = map.point_to_cell(center.x, center.y) {
         // Java's heap occupies the center only when `findPrizeItem` succeeded.
         map.item_allowed[cell] = false;
@@ -74,6 +79,7 @@ fn study_prize(
         dungeon.generator.random_category(category, dungeon.depth)
     });
     prize.source = Some("StudyRoom".into());
+    tag_room_item(&mut prize);
     if let Some(cell) = map.point_to_cell(center.x, center.y) {
         map.record_heap(cell, "heap", prize.clone());
     }
@@ -110,6 +116,8 @@ fn suspicious_chest(
         prize.source = Some("SuspiciousChestRoom:mimic".into());
         let mut reward = mimic_reward(dungeon);
         reward.source = Some("SuspiciousChestRoom:mimic".into());
+        tag_room_item(&mut prize);
+        tag_room_item(&mut reward);
         vec![
             PlacedLoot {
                 item: prize,
@@ -122,6 +130,7 @@ fn suspicious_chest(
         ]
     } else {
         prize.source = Some("SuspiciousChestRoom".into());
+        tag_room_item(&mut prize);
         vec![PlacedLoot {
             item: prize,
             heap_type: "chest",

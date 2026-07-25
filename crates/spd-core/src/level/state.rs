@@ -34,6 +34,7 @@ fn prediction_kind(item: &GeneratedItem) -> ItemPredictionKind {
             | QuestRewardRole::BlacksmithArmor { .. }
             | QuestRewardRole::BlacksmithRoomArmor { .. },
         ) => ItemPredictionKind::Exact,
+        ItemProvenance::Room(_) => ItemPredictionKind::Constrained,
         _ => match item.source.as_deref() {
             // The exact weapon depends on persistent generator state advanced by
             // runtime/player history before the room is painted.
@@ -63,6 +64,8 @@ pub struct LevelState {
     pub room_bounds: Vec<LevelRoomFact>,
     pub build_ok: bool,
     pub forced_items: Vec<GeneratedItem>,
+    /// Seed-derived queue snapshot before room callbacks consume/reposition it.
+    pub public_forced_items: Vec<GeneratedItem>,
     pub placed_items: Vec<GeneratedItem>,
     /// First placed-item index generated after a runtime-sensitive shop rare
     /// artifact call. Internal facts remain exact; public projection omits the
@@ -79,6 +82,9 @@ pub struct LevelState {
     pub quest_public_labels: Vec<Option<String>>,
     #[doc(hidden)]
     pub runtime_sensitive_map: bool,
+    #[doc(hidden)]
+    pub room_public_facts: Vec<super::room_public::RoomPublicFact>,
+    #[doc(hidden)]
     pub complete: bool,
     pub map: Option<FloorMap>,
     /// Non-consuming parity probe at the `createItems` entry boundary.
@@ -106,16 +112,22 @@ impl LevelState {
         let mut items = Vec::new();
         let mut shop_items = Vec::new();
         let mut has_shop = false;
-        for (index, item) in self.forced_items.iter().map(|item| (None, item)).chain(
-            self.placed_items
-                .iter()
-                .enumerate()
-                .map(|(index, item)| (Some(index), item)),
-        ) {
+        for (index, item) in self
+            .public_forced_items
+            .iter()
+            .map(|item| (None, item))
+            .chain(
+                self.placed_items
+                    .iter()
+                    .enumerate()
+                    .map(|(index, item)| (Some(index), item)),
+            )
+        {
             if index.is_some_and(|index| {
                 self.runtime_sensitive_placed_items_from
                     .is_some_and(|boundary| index >= boundary)
-            }) {
+            }) && item.source.as_deref() != Some("SacrificeRoom")
+            {
                 continue;
             }
             if is_blacklisted(item) || is_runtime_sensitive_main_loot(item) {
@@ -124,13 +136,18 @@ impl LevelState {
             if item.provenance == ItemProvenance::Quest(QuestRewardRole::WandmakerPersisted) {
                 continue;
             }
+            // Room contracts are emitted independently of the sampled exact
+            // items so runtime-sensitive count/control flow cannot leak.
+            if matches!(item.provenance, ItemProvenance::Room(_)) {
+                continue;
+            }
             let prediction = prediction_kind(item);
             let shop_role = match item.provenance {
                 ItemProvenance::Shop(role) => {
                     has_shop = true;
                     Some(role)
                 }
-                ItemProvenance::None | ItemProvenance::Quest(_) => None,
+                ItemProvenance::None | ItemProvenance::Quest(_) | ItemProvenance::Room(_) => None,
             };
             // Bag presence and identity depend on inventory/limited-drop
             // history. A single conditional constraint is added below.
@@ -307,6 +324,9 @@ impl LevelState {
             (&a.name, &a.class_name, &a.category).cmp(&(&b.name, &b.class_name, &b.category))
         });
         items.extend(shop_items);
+        for fact in &self.room_public_facts {
+            items.extend(fact.entries());
+        }
         FloorReport {
             depth: self.depth as u32,
             feeling: Some(self.feeling.as_str().to_string()),

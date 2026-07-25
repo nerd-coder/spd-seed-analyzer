@@ -7,7 +7,7 @@
   },
   "overallStatus": "partial",
   "summary": "Seed analysis is still partial. Covered paths are tested against the pinned game, but results can diverge when generation reaches an incomplete or unverified path.",
-  "lastReviewed": "2026-07-25",
+  "lastReviewed": "2026-07-26",
   "areas": [
     {
       "id": "layout-and-room-selection",
@@ -93,13 +93,14 @@
         "Imp reporting exposes a forced-cursed ring with its stable post-two-upgrade level while hiding only the concrete identity; isolated ring-deck selection and class-independent Ring.random calls preserve the public room order, map, and later floor tail",
         "Quest summaries preserve the seed-safe quest type/target prefix while replacing the concrete reward-title suffix with a generic reward label",
         "Wandmaker choices persisted into later internal floor states for Java-oracle parity are explicitly internal-only and are not repeated publicly after the spawn floor, where the player may already have claimed one",
-        "Explicit Parchment Scrap state and pinned HKT-JZN-XQQ floor-13 Java-oracle parity evidence, retained as internal evidence rather than a public concrete prediction"
+        "Explicit Parchment Scrap state and pinned HKT-JZN-XQQ floor-13 Java-oracle parity evidence, retained as internal evidence rather than a public concrete prediction",
+        "Special-room rewards retain exact internal generation while public output comes from painter-emitted static room contracts rather than sampled items; this also covers Study, Ritual, Ring, SuspiciousChest, and GrassyGrave center callbacks; Crypt exposes only its floor-set armor distribution and forced curse, Statue exposes only its forced-uncursed positively enchanted weapon contract, and audited room families preserve invariant source counts/categories while omitting unsafe concrete fields and placements"
       ],
       "remaining": [
         "Loot tied to uncovered room paint or lifecycle paths can be incomplete or misplaced",
         "Concrete SacrificeRoom identity, level, and enchantment depend on prior generator/player history and are intentionally excluded from public reports and exact search matching",
         "Regular createItems random-loot existence/count, category, identity, heap or Mimic kind, properties, and cell are not asserted publicly because earlier runtime Generator history can alter downstream RNG consumption",
-        "Crystal-room loot outside verified flows should be treated as approximate",
+        "Crystal-room sampled concrete loot remains internal-only; public contracts preserve the proven two-source Vault category rotation, Choice's 3–4 potion/scroll sources plus hidden reward, and Path's three potion plus three scroll sources, including artifact-exhaustion fallback conditions",
         "Concrete shop deck-slot identities, bag identity/presence, Hourglass sand presence/count, and every FOR_SALE placement are intentionally excluded from public exact predictions",
         "Artifact-branch shop floors intentionally have no public map or post-ShopRoom item facts because runtime artifact history can change the builder and painter RNG tail",
         "Concrete Ghost weapon, Wandmaker wand, and Imp ring identities are intentionally excluded; Wandmaker duplicate retries suppress its affected downstream item and map facts",
@@ -111,6 +112,8 @@
       "evidence": [
         "crates/spd-core/src/level/create_items",
         "crates/spd-core/src/level/shop.rs",
+        "crates/spd-core/src/level/room_public.rs",
+        "crates/spd-core/src/level/special_loot/tests.rs",
         "crates/spd-core/tests/java_oracle_goldens/final_heaps.rs",
         "specs/observed-outcomes.json",
         "tools/java-oracle/fixtures/player-state/hkt-jzn-xqq-sacrifice-reward-parchment-3.json"

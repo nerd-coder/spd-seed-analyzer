@@ -48,9 +48,9 @@ async function openAnalyzer(
   await page.getByLabel('Enter your seed').fill(seed)
   await page.getByRole('button', { name: 'Analyze', exact: true }).click()
   await expect(page.getByRole('tab', { name: seed })).toBeVisible()
-  await expect(
-    page.getByRole('button', { name: 'Expand floor 1 map' })
-  ).toBeVisible({ timeout: 60_000 })
+  await expect(page.getByText('Floor 1', { exact: true })).toBeVisible({
+    timeout: 60_000,
+  })
 
   return errors
 }
@@ -139,15 +139,21 @@ async function captureFloor(page: Page, floor: number, snapshot: string) {
 }
 
 for (const fixture of AUTOMATED_MAP_RENDER_FIXTURES) {
-  test(`${fixture.seed} floor ${fixture.floor} deterministic map`, async ({
+  test(`${fixture.seed} floor ${fixture.floor} ${fixture.expectation}`, async ({
     page,
   }) => {
     const browserErrors = await openAnalyzer(page, fixture.seed)
-    await captureFloor(
-      page,
-      fixture.floor,
-      `${fixture.seed}-F${fixture.floor}.png`
-    )
+    if (fixture.expectation === 'rendered') {
+      await captureFloor(
+        page,
+        fixture.floor,
+        `${fixture.seed}-F${fixture.floor}.png`
+      )
+    } else {
+      await expect(
+        page.getByRole('button', { name: `Expand floor ${fixture.floor} map` })
+      ).toHaveCount(0)
+    }
 
     expect(browserErrors.console, 'browser console errors').toEqual([])
     expect(browserErrors.page, 'uncaught page errors').toEqual([])
@@ -158,7 +164,7 @@ test('mobile map dialog fills the viewport and supports 1x and 2x zoom', async (
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  const browserErrors = await openAnalyzer(page, 'CXG-FJT-BFQ')
+  const browserErrors = await openAnalyzer(page, '2')
   await page.getByRole('button', { name: 'Expand floor 1 map' }).click()
 
   const dialog = page.getByRole('dialog')
@@ -216,7 +222,7 @@ test('floor rooms open from a title chip and desktop maps use a large dialog', a
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1200 })
-  const browserErrors = await openAnalyzer(page, 'CXG-FJT-BFQ')
+  const browserErrors = await openAnalyzer(page, '2')
 
   const rooms = page.getByRole('button', { name: /^Rooms \(\d+\)$/ }).first()
   await rooms.click()
@@ -242,7 +248,7 @@ test('floor rooms open from a title chip and desktop maps use a large dialog', a
 test('map dialog initially focuses its container instead of a control', async ({
   page,
 }) => {
-  const browserErrors = await openAnalyzer(page, 'CXG-FJT-BFQ')
+  const browserErrors = await openAnalyzer(page, '2')
   await page.getByRole('button', { name: 'Expand floor 1 map' }).click()
 
   const dialog = page.getByRole('dialog')
@@ -264,7 +270,7 @@ test('accuracy details use a responsive modal and restore trigger focus', async 
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 600 })
-  const browserErrors = await openAnalyzer(page, 'CXG-FJT-BFQ')
+  const browserErrors = await openAnalyzer(page, '2')
   const trigger = page.getByRole('button', { name: 'View accuracy details' })
   await trigger.click()
 
@@ -303,7 +309,7 @@ test('accuracy details use a responsive modal and restore trigger focus', async 
 test('animated liquid advances on the pixel-aligned canvas path', async ({
   page,
 }) => {
-  const browserErrors = await openAnalyzer(page, 'CXG-FJT-BFQ', 'no-preference')
+  const browserErrors = await openAnalyzer(page, '2', 'no-preference')
   await page.getByRole('button', { name: 'Expand floor 1 map' }).click()
 
   const canvas = page.getByRole('dialog').getByRole('img', {

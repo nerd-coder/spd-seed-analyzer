@@ -437,23 +437,22 @@ fn depth_one_final_heaps_match_report_projection() {
             actual_item_cells, expected_item_cells,
             "depth-one final heap cells in {context}"
         );
-        let mut actual_mobs: Vec<_> = report.floors[0]
-            .map
-            .as_ref()
-            .expect("depth-one regular floor has a map")
-            .markers
-            .iter()
-            .filter(|marker| marker.kind == spd_core::report::MapMarkerKind::Mob)
-            .map(|marker| OracleMob {
-                cell: marker.cell,
-                class_name: marker.label.clone(),
-            })
-            .collect();
-        actual_mobs.sort();
-        assert_eq!(
-            actual_mobs, expected_floor.final_mobs,
-            "depth-one final mobs in {context}"
-        );
+        if let Some(public_map) = &report.floors[0].map {
+            let mut actual_mobs: Vec<_> = public_map
+                .markers
+                .iter()
+                .filter(|marker| marker.kind == spd_core::report::MapMarkerKind::Mob)
+                .map(|marker| OracleMob {
+                    cell: marker.cell,
+                    class_name: marker.label.clone(),
+                })
+                .collect();
+            actual_mobs.sort();
+            assert_eq!(
+                actual_mobs, expected_floor.final_mobs,
+                "depth-one final mobs in {context}"
+            );
+        }
         assert_aaa_aad_public_report_facts(&fixture, &report.floors[0], &context);
 
         // FloorOracle's final-heaps contract cannot see the prize held by the

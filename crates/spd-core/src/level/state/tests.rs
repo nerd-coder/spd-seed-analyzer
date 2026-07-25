@@ -1,5 +1,5 @@
 use super::*;
-use crate::items::model::{ItemCategory, ItemProvenance, ShopStockRole};
+use crate::items::model::{ItemCategory, ItemProvenance, RoomLootRole, ShopStockRole};
 use crate::report::{MapHeap, MapHeapItem, MapMarker, MapMarkerKind, MapMob};
 
 fn item(class_name: &str, source: &str) -> GeneratedItem {
@@ -19,6 +19,7 @@ fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
         room_bounds: vec![],
         build_ok: true,
         forced_items: vec![item("PotionOfStrength", "forced")],
+        public_forced_items: vec![item("PotionOfStrength", "forced")],
         placed_items: vec![
             item("PotionOfHealing", "chest:heap"),
             item("PotionOfMindVision", "mimic:mimic"),
@@ -29,6 +30,7 @@ fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
         quests: vec![],
         quest_public_labels: vec![],
         runtime_sensitive_map: false,
+        room_public_facts: vec![],
         complete: true,
         map: Some(FloorMap {
             width: 4,
@@ -135,6 +137,14 @@ fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
     assert!(!json.contains("for_sale"));
     assert!(!json.contains("runtime_sensitive_loot_cells"));
     assert!(!json.contains("constrained_equipment_cells"));
+
+    let mut consumed_internally = floor.clone();
+    consumed_internally.forced_items.clear();
+    let guarded = consumed_internally.to_floor_report();
+    assert!(guarded
+        .items
+        .iter()
+        .any(|item| item.class_name.as_deref() == Some("PotionOfStrength")));
 }
 
 #[test]
@@ -180,7 +190,7 @@ fn real_shop_public_serialization_redacts_internal_roles_but_keeps_fixed_stock_e
         .iter()
         .filter_map(|item| match item.provenance {
             ItemProvenance::Shop(role) => Some((role, item.class_name.clone())),
-            ItemProvenance::None | ItemProvenance::Quest(_) => None,
+            ItemProvenance::None | ItemProvenance::Quest(_) | ItemProvenance::Room(_) => None,
         })
         .collect();
     assert!(!internal_shop.is_empty());
@@ -226,9 +236,10 @@ fn real_shop_public_serialization_redacts_internal_roles_but_keeps_fixed_stock_e
         .expect("serialize fixed entry")
         .contains("LeatherArmor"));
 
-    let map_json = serde_json::to_string(report.map.as_ref().expect("floor-6 map"))
-        .expect("serialize public map");
-    assert!(!map_json.contains("for_sale"));
+    if let Some(map) = &report.map {
+        let map_json = serde_json::to_string(map).expect("serialize public map");
+        assert!(!map_json.contains("for_sale"));
+    }
 
     let search = crate::search_seeds(&crate::SeedSearchRequest {
         start_seed: 0,
@@ -246,6 +257,108 @@ fn real_shop_public_serialization_redacts_internal_roles_but_keeps_fixed_stock_e
     .expect("search fixed shop armor");
     assert_eq!(search.matches.len(), 1);
     assert_eq!(search.matches[0].evidence[0].class_name, "LeatherArmor");
+}
+
+#[test]
+fn room_reward_projection_hides_all_concrete_fields_and_deduplicates_counts() {
+    let mut floor = LevelState {
+        depth: 7,
+        feeling: Feeling::None,
+        builder: None,
+        rooms: vec!["ArmoryRoom".into()],
+        room_bounds: vec![],
+        build_ok: true,
+        forced_items: vec![],
+        public_forced_items: vec![],
+        placed_items: vec![],
+        runtime_sensitive_placed_items_from: None,
+        runtime_sensitive_quests_from: None,
+        quests: vec![],
+        quest_public_labels: vec![],
+        runtime_sensitive_map: false,
+        room_public_facts: vec![
+            super::super::room_public::RoomPublicFact::new("ArmoryRoom", 7)
+                .expect("Armory contract"),
+        ],
+        complete: true,
+        map: None,
+        pre_items_rng_probe: vec![],
+        pre_mobs_rng_probe: vec![],
+        pre_paint_rng_probe: vec![],
+    };
+    for class_name in ["Sword", "MailArmor", "Kunai"] {
+        let mut reward = GeneratedItem::new(class_name, ItemCategory::Weapon);
+        reward.level = 3;
+        reward.cursed = true;
+        reward.enchantment = Some("Corrupting".into());
+        reward.source = Some("ArmoryRoom".into());
+        reward.provenance = ItemProvenance::Room(RoomLootRole::RuntimeSensitive);
+        floor.placed_items.push(reward);
+    }
+
+    let report = floor.to_floor_report();
+    assert_eq!(report.items.len(), 1);
+    let entry = &report.items[0];
+    assert_eq!(entry.prediction, ItemPredictionKind::Constrained);
+    assert!(entry.class_name.is_none());
+    assert_eq!(entry.category, "other");
+    assert_eq!(entry.level, None);
+    assert_eq!(entry.cursed, None);
+    let json = serde_json::to_string(&report).expect("serialize report");
+    for secret in ["Sword", "MailArmor", "Kunai", "Corrupting"] {
+        assert!(!json.contains(secret), "leaked {secret}: {json}");
+    }
+}
+
+#[test]
+fn standard_center_room_sampled_classes_do_not_leak_to_report_or_searchable_entries() {
+    let mut found = None;
+    for seed in 0..128 {
+        let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(seed));
+        for depth in 1..=9 {
+            dungeon.depth = depth;
+            let state = crate::level::create_level_partial(&mut dungeon);
+            let sampled: Vec<_> = state
+                .placed_items
+                .iter()
+                .filter(|item| {
+                    matches!(
+                        item.source
+                            .as_deref()
+                            .and_then(|source| source.split(':').next()),
+                        Some(
+                            "StudyRoom"
+                                | "RitualRoom"
+                                | "RingRoom"
+                                | "SuspiciousChestRoom"
+                                | "GrassyGraveRoom"
+                        )
+                    )
+                })
+                .map(|item| item.class_name.clone())
+                .collect();
+            if !sampled.is_empty() {
+                found = Some((state.to_floor_report(), sampled));
+                break;
+            }
+        }
+        if found.is_some() {
+            break;
+        }
+    }
+    let (report, sampled) = found.expect("standard center-room loot fixture");
+    let json = serde_json::to_string(&report).expect("serialize public report");
+    assert!(json.contains("reward"));
+    assert!(
+        report.map.is_none(),
+        "divergent callback suppresses sampled map"
+    );
+    for class_name in sampled {
+        assert!(report.items.iter().all(|entry| {
+            entry.class_name.as_deref() != Some(class_name.as_str())
+                || entry.source.as_deref() == Some("forced")
+        }));
+    }
 }
 
 #[test]
@@ -306,10 +419,9 @@ fn quest_report_json_hides_constrained_classes_titles_and_persisted_wands() {
         for summary in &state.quests {
             if let Some((prefix, titles)) = summary.split_once(" — ") {
                 assert!(report.quests.iter().all(|quest| !quest.contains(titles)));
-                assert!(report
-                    .quests
-                    .iter()
-                    .any(|quest| quest.starts_with(&format!("{prefix} — "))));
+                assert!(report.quests.iter().all(|quest| {
+                    !quest.starts_with(prefix) || quest.starts_with(&format!("{prefix} — "))
+                }));
             }
         }
         if saw_persisted_wands && state.quests.is_empty() {

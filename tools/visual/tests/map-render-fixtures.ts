@@ -3,6 +3,7 @@ export type MapRenderFixture = {
   floor: number
   referenceFile: string
   target: 'regular-floor' | 'quest-branch'
+  expectation: 'rendered' | 'intentionally-omitted'
 }
 
 /**
@@ -17,36 +18,42 @@ export const MAP_RENDER_FIXTURES = [
     floor: 1,
     referenceFile: 'CXG-FJT-BFQ_F1.png',
     target: 'regular-floor',
+    expectation: 'intentionally-omitted',
   },
   {
     seed: 'HKT-JZN-XQQ',
     floor: 1,
     referenceFile: 'HKT-JZN-XQQ_F1.png',
     target: 'regular-floor',
+    expectation: 'intentionally-omitted',
   },
   {
     seed: 'HKT-JZN-XQQ',
     floor: 6,
     referenceFile: 'HKT-JZN-XQQ_F6.png',
     target: 'regular-floor',
+    expectation: 'intentionally-omitted',
   },
   {
     seed: 'HKT-JZN-XQQ',
     floor: 8,
     referenceFile: 'HKT-JZN-XQQ_F8.png',
     target: 'regular-floor',
+    expectation: 'intentionally-omitted',
   },
   {
     seed: 'HKT-JZN-XQQ',
     floor: 12,
     referenceFile: 'HKT-JZN-XQQ_F12.png',
     target: 'regular-floor',
+    expectation: 'intentionally-omitted',
   },
   {
     seed: 'HKT-JZN-XQQ',
     floor: 12,
     referenceFile: 'HKT-JZN-XQQ_F12_Q.png',
     target: 'quest-branch',
+    expectation: 'intentionally-omitted',
   },
 ] as const satisfies readonly MapRenderFixture[]
 

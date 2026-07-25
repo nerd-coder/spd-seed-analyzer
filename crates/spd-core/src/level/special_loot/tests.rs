@@ -51,6 +51,44 @@ fn sacrifice_prize_is_cursed_weapon() {
 }
 
 #[test]
+fn pool_find_prize_history_changes_internal_branch_not_public_contract() {
+    use super::special_rooms::pool_prize;
+    use crate::items::model::GeneratedItem;
+
+    let room = test_room("PoolRoom", 8, 8);
+    let mut observed = None;
+    for seed in 0..100 {
+        Random::reset_generators();
+        let mut queued_dungeon = dungeon_from_run(init_run(77));
+        queued_dungeon.depth = 8;
+        let mut fallback_dungeon = queued_dungeon.clone();
+        let mut queued = vec![GeneratedItem::new("PotionOfStrength", ItemCategory::Potion)];
+        let queued_public_snapshot = queued.clone();
+        let consumed_public_snapshot = queued_public_snapshot.clone();
+        Random::push_generator_seeded(seed);
+        let queued_item = pool_prize(&mut queued_dungeon, &room, &mut queued).item;
+        Random::pop_generator();
+        Random::push_generator_seeded(seed);
+        let fallback_item = pool_prize(&mut fallback_dungeon, &room, &mut Vec::new()).item;
+        Random::pop_generator();
+        if queued_item.class_name != fallback_item.class_name {
+            assert_eq!(queued_public_snapshot, consumed_public_snapshot);
+            observed = Some((queued_item.class_name, fallback_item.class_name));
+            break;
+        }
+    }
+    let (queued, fallback) = observed.expect("findPrize branch differs from fallback");
+    let json = serde_json::to_string(
+        &super::super::room_public::RoomPublicFact::new("PoolRoom", 8)
+            .expect("contract")
+            .entries(),
+    )
+    .expect("serialize contract");
+    assert!(!json.contains(&queued));
+    assert!(!json.contains(&fallback));
+}
+
+#[test]
 fn secret_artillery_has_fixed_bomb_and_two_default_missiles() {
     Random::reset_generators();
     let run = init_run(0);
@@ -162,7 +200,10 @@ fn cxg_floor_nine_aligned_sentry_completes() {
     let report = crate::analyze_seed("CXG-FJT-BFQ", 9).expect("analyze CXG through floor nine");
     let floor = &report.floors[8];
     assert!(floor.rooms.iter().any(|room| room == "SentryRoom"));
-    assert!(floor.map.is_some(), "floor nine completed map generation");
+    assert!(
+        floor.map.is_none(),
+        "runtime-sensitive Sentry tail is hidden"
+    );
 }
 
 #[test]

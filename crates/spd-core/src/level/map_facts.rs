@@ -69,6 +69,23 @@ impl MapFacts {
             });
         }
 
+        let runtime_sensitive_loot_cells = map
+            .known_heaps
+            .iter()
+            .enumerate()
+            .filter_map(|(cell, heap)| {
+                heap.as_ref()
+                    .is_some_and(|heap| {
+                        heap.items.iter().any(|item| {
+                            matches!(
+                                item.provenance,
+                                crate::items::model::ItemProvenance::Room(_)
+                            )
+                        })
+                    })
+                    .then_some(cell as u32)
+            })
+            .collect();
         let constrained_equipment_cells = map
             .known_heaps
             .iter()
@@ -94,7 +111,7 @@ impl MapFacts {
             heaps,
             mobs,
             markers,
-            runtime_sensitive_loot_cells: Vec::new(),
+            runtime_sensitive_loot_cells,
             constrained_equipment_cells,
         }
     }

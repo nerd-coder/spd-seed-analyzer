@@ -16,11 +16,12 @@ lists, map heaps/markers, WASM, search evidence, and UI.
 
 Continue the fixture-first seed-only audit:
 
-1. Crypt, Armory, Pool, Statue, Sentry, Traps, crystal, and secret-room loot.
-2. Quantity, level, curse, enchantment, heap type, and cell independently;
-   redact only fields that are not seed-invariant.
-3. Decide whether createItems grass-flattening requires a pre-items public
-   terrain projection; its heap/mob/marker cells are already omitted.
+1. Recover the seed-safe pre-callback portion of maps instead of omitting the
+   whole map after a runtime-sensitive room callback.
+2. Decide whether createItems grass-flattening requires a pre-items public
+   terrain projection.
+3. Audit initial forced-item identities, remaining uncovered room/lifecycle
+   loot, and the secret-room queue's main-path assumption.
 
 Add regression tests proving constrained values cannot leak through serialized
 reports, maps, or exact seed-finder matches. Fixed forced drops may remain exact
@@ -31,6 +32,14 @@ when pinned evidence proves every reported field is seed-only.
 - SacrificeRoom keeps its exact generated reward internally, but public output
   reports only `weapon reward`, the derived stable tier, forced curse, source,
   and a conditional Parchment Scrap enchantment-chance note.
+- Audited standard, special, crystal, and secret rooms keep sampled rewards
+  internal. Public output uses static room contracts containing only invariant
+  counts, categories, fixed identities, and explicitly conditional effects.
+- Runtime-sensitive room callbacks set an exact item-tail boundary. Their heap
+  cells are sanitized, and the whole public map is currently omitted where
+  later terrain, mobs, or markers may diverge.
+- The public forced-item queue is snapshotted before room callbacks, so moving a
+  queued prize into a room does not change its public existence.
 - Sacrificial heap items and concrete item marker labels are redacted publicly.
 - Regular createItems heap, Mimic, and GoldenMimic facts remain internal only;
   their public item entries and map heap/mob/marker cells are omitted. Stable
