@@ -17,6 +17,16 @@ pub(super) struct FigureEightState {
     landmark: Option<usize>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum FailureStage {
+    MissingLandmark,
+    MissingEntrance,
+    FirstLoop,
+    SecondLoop,
+    Shop,
+    Branches,
+}
+
 fn add_tunnels(
     rooms: &mut Vec<Room>,
     source: &[usize],
@@ -50,7 +60,7 @@ fn place_loop(
     params: &BuilderParams,
     depth: i32,
     collision_order: &mut Vec<usize>,
-) -> Option<()> {
+) -> Result<(), FailureStage> {
     // Connection objects are created for both loops up front, but pinned Java
     // adds each one to the builder's collision list only after it is placed.
     // In particular, the first closing stitch precedes second-loop tunnels.
@@ -59,7 +69,7 @@ fn place_loop(
         let room = loop_ids[i];
         let angle = start_angle + target_angle(i as f32 / loop_ids.len() as f32, params);
         if place_room_with_collision_ids(rooms, collision_order, prev, room, angle) == -1.0 {
-            return None;
+            return Err(FailureStage::FirstLoop);
         }
         if !collision_order.contains(&room) {
             collision_order.push(room);
@@ -68,19 +78,19 @@ fn place_loop(
     }
     for _ in 0..10_000 {
         if connect(rooms, prev, landmark) {
-            return Some(());
+            return Ok(());
         }
         let id = rooms.len();
         rooms.push(connection::create(id, depth));
         let angle = angle_between_rooms(&rooms[prev], &rooms[landmark]);
         if place_room_with_collision_ids(rooms, collision_order, prev, id, angle) == -1.0 {
-            return None;
+            return Err(FailureStage::FirstLoop);
         }
         loop_ids.push(id);
         collision_order.push(id);
         prev = id;
     }
-    None
+    Err(FailureStage::FirstLoop)
 }
 
 /// Restores the insertion order of Java's room list before branch placement.
@@ -156,7 +166,7 @@ pub(super) fn build(
     depth: i32,
     state: &mut FigureEightState,
     prepare_shop: &mut impl FnMut(&mut Room),
-) -> Option<()> {
+) -> Result<(), FailureStage> {
     let base_len = rooms.len();
     let mut setup = setup_rooms(rooms, params);
 
@@ -177,7 +187,7 @@ pub(super) fn build(
             setup.main_path.push(setup.multi.remove(0));
         }
     }
-    let landmark = state.landmark?;
+    let landmark = state.landmark.ok_or(FailureStage::MissingLandmark)?;
     setup.main_path.retain(|&room| room != landmark);
     setup.multi.retain(|&room| room != landmark);
 
@@ -190,7 +200,7 @@ pub(super) fn build(
 
     let mut first_temp = vec![landmark];
     first_temp.extend(rooms_to_loop.drain(..on_first));
-    let entrance = setup.entrance?;
+    let entrance = setup.entrance.ok_or(FailureStage::MissingEntrance)?;
     first_temp.insert(first_temp.len().div_ceil(2), entrance);
 
     let mut tunnel_chances = params.path_tunnel_chances.to_vec();
@@ -226,7 +236,8 @@ pub(super) fn build(
         params,
         depth,
         &mut collision_order,
-    )?;
+    )
+    .map_err(|_| FailureStage::FirstLoop)?;
     place_loop(
         rooms,
         &mut second_loop,
@@ -235,7 +246,8 @@ pub(super) fn build(
         params,
         depth,
         &mut collision_order,
-    )?;
+    )
+    .map_err(|_| FailureStage::SecondLoop)?;
 
     if let Some(shop) = setup.shop {
         let mut placed = false;
@@ -247,7 +259,7 @@ pub(super) fn build(
             }
         }
         if !placed {
-            return None;
+            return Err(FailureStage::Shop);
         }
     }
 
@@ -281,7 +293,7 @@ pub(super) fn build(
             second_center,
         },
     ) {
-        return None;
+        return Err(FailureStage::Branches);
     }
 
     find_neighbours(rooms);
@@ -295,7 +307,7 @@ pub(super) fn build(
             }
         }
     }
-    Some(())
+    Ok(())
 }
 
 #[cfg(test)]
