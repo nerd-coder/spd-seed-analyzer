@@ -185,6 +185,26 @@ mod analyze_smoke {
             "expected ShopRoom stock on depth 6, rooms={:?}",
             f6.rooms
         );
+        assert!(shop.iter().any(|item| {
+            item.prediction == report::ItemPredictionKind::Constrained
+                && item.name == "weapon stock"
+                && item.class_name.is_none()
+                && item.tier == Some(2)
+                && item.level == Some(0)
+                && item.cursed == Some(false)
+        }));
+        assert!(shop.iter().any(|item| {
+            item.prediction == report::ItemPredictionKind::Constrained
+                && item.name == "inventory-dependent bag stock"
+                && item.class_name.is_none()
+        }));
+        assert!(shop.iter().any(|item| {
+            item.prediction == report::ItemPredictionKind::Constrained
+                && item.name == "Hourglass sand stock"
+                && item.class_name.is_none()
+        }));
+        let map = f6.map.as_ref().expect("floor-6 map");
+        assert!(map.heaps.iter().all(|heap| heap.heap_type != "for_sale"));
     }
 
     #[test]

@@ -82,15 +82,20 @@
         "Seed finder optional minimum item upgrade-level matching across the analyzed floor range for exact predictions only",
         "Seed-only reporting classification that preserves exact generation internally while exposing SacrificeRoom rewards only as a tiered cursed weapon constraint; map heaps omit the runtime-sensitive concrete reward",
         "Regular createItems heap, ordinary Mimic, and GoldenMimic loot is retained for internal parity but omitted from public items, exact search inputs, heap/mob facts, and markers because persistent Generator history can change identity, heap kind, and placement; room-hosted Mimic cells remain visible independently of their omitted reward contents",
+        "Shop stock has internal pre-shuffle role provenance: fixed and default-probability identities remain exact; persistent-deck weapon, missile, wand, and ring slots expose stable category/tier plus forced level/curse constraints; the artifact-or-ring fallback omits its runtime-sensitive level; and ChooseBag plus Hourglass sand are conditional inventory-state facts",
+        "All FOR_SALE shop heap and marker cells are omitted publicly because bag availability and Hourglass sand count change the isolated shuffle length and therefore every stock position; constrained shop slots cannot satisfy exact seed searches",
+        "When the seeded rare-shop branch requests an Artifact, public projection also omits the map plus item and quest facts generated after the ShopRoom builder callback: prior artifact exhaustion can cause a Ring fallback and class-specific constructor RNG changes the remaining floor stream; feeling, builder choice, room classes, forced items, and pre-callback quest selections remain reportable",
+        "Public shop entries are sorted into a canonical reporting order rather than exposing the isolated internal shuffle, whose list length and RNG path can vary with bag, Hourglass, and artifact runtime state",
         "Explicit Parchment Scrap state and pinned HKT-JZN-XQQ floor-13 Java-oracle parity evidence, retained as internal evidence rather than a public concrete prediction"
       ],
       "remaining": [
         "Loot tied to uncovered room paint or lifecycle paths can be incomplete or misplaced",
         "Concrete SacrificeRoom identity, level, and enchantment depend on prior generator/player history and are intentionally excluded from public reports and exact search matching",
         "Regular createItems random-loot existence/count, category, identity, heap or Mimic kind, properties, and cell are not asserted publicly because earlier runtime Generator history can alter downstream RNG consumption",
-        "Shop and crystal-room loot outside verified flows should be treated as approximate",
-        "Later-shop bags require player inventory, and equal-score ChooseBag ties follow non-seeded JVM identity-hash HashMap iteration; HKT and AAA oracle processes choose different bags for equivalent fresh inventories",
-        "Hourglass sandbag input is unavailable"
+        "Crystal-room loot outside verified flows should be treated as approximate",
+        "Concrete shop deck-slot identities, bag identity/presence, Hourglass sand presence/count, and every FOR_SALE placement are intentionally excluded from public exact predictions",
+        "Artifact-branch shop floors intentionally have no public map or post-ShopRoom item facts because runtime artifact history can change the builder and painter RNG tail",
+        "ChooseBag ties follow non-seeded JVM identity-hash HashMap iteration; HKT and AAA oracle processes choose different bags for equivalent fresh inventories, while Hourglass state input remains unavailable"
       ],
       "impact": "An item can be missing, different, or placed on a different cell even when earlier seed facts match.",
       "evidence": [

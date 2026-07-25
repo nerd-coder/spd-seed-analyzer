@@ -130,3 +130,129 @@ fn fresh_warrior_shop_progression_uses_inventory_scores() {
     );
     assert_eq!(choose_bag_kind(&mut limited, &inventory), None);
 }
+
+#[test]
+fn generated_stock_is_role_tagged_before_shuffle_and_tags_are_internal() {
+    let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(0));
+    dungeon.depth = 6;
+    Random::push_generator_seeded(1234);
+    let stock = generate_items(&mut dungeon);
+    Random::reset_generators();
+
+    assert!(stock
+        .iter()
+        .all(|item| matches!(item.provenance, ItemProvenance::Shop(_))));
+    assert_eq!(
+        stock
+            .iter()
+            .filter(|item| matches!(
+                item.provenance,
+                ItemProvenance::Shop(ShopStockRole::DeckWeapon { tier: 2 })
+            ))
+            .count(),
+        1
+    );
+    assert_eq!(
+        stock
+            .iter()
+            .filter(|item| matches!(
+                item.provenance,
+                ItemProvenance::Shop(ShopStockRole::DeckMissile { tier: 2 })
+            ))
+            .count(),
+        1
+    );
+    let json = serde_json::to_string(&stock).expect("serialize exact internal stock");
+    assert!(!json.contains("provenance"));
+    assert!(!json.contains("DeckWeapon"));
+}
+
+#[test]
+fn artifact_rare_branch_redacts_only_the_post_callback_floor_tail() {
+    let state = (0..100)
+        .find_map(|seed| {
+            let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(seed));
+            let mut floor = None;
+            for depth in 1..=6 {
+                dungeon.depth = depth;
+                floor = Some(crate::level::create_level_partial(&mut dungeon));
+            }
+            floor.filter(|state| state.runtime_sensitive_placed_items_from.is_some())
+        })
+        .expect("an early seed selects the shop artifact-or-ring branch");
+    let boundary = state
+        .runtime_sensitive_placed_items_from
+        .expect("artifact branch boundary");
+    assert!(
+        boundary < state.placed_items.len(),
+        "real floor has post-shop generated item facts"
+    );
+    assert!(state.map.is_some(), "internal exact map is retained");
+
+    let public = state.to_floor_report();
+    assert!(public.map.is_none());
+    let quest_boundary = state
+        .runtime_sensitive_quests_from
+        .expect("artifact branch quest boundary");
+    assert_eq!(
+        public.quests,
+        state.quests[..quest_boundary],
+        "only pre-callback quest selections remain safe"
+    );
+
+    let mut safe_prefix = state.clone();
+    safe_prefix.placed_items.truncate(boundary);
+    safe_prefix.runtime_sensitive_placed_items_from = None;
+    safe_prefix.quests.truncate(quest_boundary);
+    safe_prefix.runtime_sensitive_quests_from = None;
+    safe_prefix.map = None;
+    let expected = safe_prefix.to_floor_report();
+    assert_eq!(
+        serde_json::to_value(&public.items).expect("serialize guarded public items"),
+        serde_json::to_value(&expected.items).expect("serialize pre-boundary item projection"),
+        "no post-shop item fact crosses the public boundary"
+    );
+    let json = serde_json::to_string(&public).expect("serialize guarded floor");
+    assert!(!json.contains("for_sale"));
+}
+
+#[test]
+fn public_shop_sequence_is_independent_of_internal_shuffle_order() {
+    let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(0));
+    let mut floor = None;
+    for depth in 1..=6 {
+        dungeon.depth = depth;
+        floor = Some(crate::level::create_level_partial(&mut dungeon));
+    }
+    let original = floor.expect("floor 6 state");
+    let mut reordered = original.clone();
+    let positions: Vec<_> = reordered
+        .placed_items
+        .iter()
+        .enumerate()
+        .filter_map(|(index, item)| {
+            matches!(item.provenance, ItemProvenance::Shop(_)).then_some(index)
+        })
+        .collect();
+    let reversed: Vec<_> = positions
+        .iter()
+        .rev()
+        .map(|&index| reordered.placed_items[index].clone())
+        .collect();
+    for (&index, item) in positions.iter().zip(reversed) {
+        reordered.placed_items[index] = item;
+    }
+
+    let public_shop = |state: &crate::level::LevelState| {
+        state
+            .to_floor_report()
+            .items
+            .into_iter()
+            .filter(|entry| entry.source.as_deref() == Some("ShopRoom"))
+            .collect::<Vec<_>>()
+    };
+    assert_eq!(
+        serde_json::to_value(public_shop(&original)).expect("serialize original public shop"),
+        serde_json::to_value(public_shop(&reordered)).expect("serialize reordered public shop")
+    );
+}

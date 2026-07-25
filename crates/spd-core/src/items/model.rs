@@ -23,6 +23,26 @@ pub enum ItemCategory {
     Other,
 }
 
+/// Internal reporting provenance. Exact generated values remain available to
+/// parity tests while public projection can enforce seed-only guarantees.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum ItemProvenance {
+    #[default]
+    None,
+    Shop(ShopStockRole),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ShopStockRole {
+    Fixed,
+    DeckWeapon { tier: i32 },
+    DeckMissile { tier: i32 },
+    ChooseBag,
+    DeckRareWand,
+    DeckRareRing,
+    DeckRareArtifactOrRing,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct GeneratedItem {
     /// Java simple class name (e.g. `Sword`, `PotionOfHealing`).
@@ -34,6 +54,10 @@ pub struct GeneratedItem {
     /// Enchantment or glyph simple name, if any.
     pub enchantment: Option<String>,
     pub source: Option<String>,
+    /// Never serialized: public reports derive safety from generation roles,
+    /// not from user-visible source strings.
+    #[serde(skip)]
+    pub provenance: ItemProvenance,
 }
 
 impl GeneratedItem {
@@ -46,6 +70,7 @@ impl GeneratedItem {
             cursed: false,
             enchantment: None,
             source: None,
+            provenance: ItemProvenance::None,
         }
     }
 

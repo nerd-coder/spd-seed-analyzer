@@ -1,17 +1,31 @@
 //! Internal per-floor state and its public report projection.
 
-use crate::items::model::GeneratedItem;
+use crate::items::model::{GeneratedItem, ItemProvenance, ShopStockRole};
 use crate::report::{FloorMap, FloorReport, ItemEntry, ItemPredictionKind};
 use crate::rooms::init_rooms::BuilderKind;
 
 use super::Feeling;
 
+#[path = "state_map.rs"]
+mod state_map;
+use state_map::reported_level;
+
 fn prediction_kind(item: &GeneratedItem) -> ItemPredictionKind {
-    match item.source.as_deref() {
-        // The exact weapon depends on persistent generator state advanced by
-        // runtime/player history before the room is painted.
-        Some("SacrificeRoom") => ItemPredictionKind::Constrained,
-        _ => ItemPredictionKind::Exact,
+    match item.provenance {
+        ItemProvenance::Shop(
+            ShopStockRole::DeckWeapon { .. }
+            | ShopStockRole::DeckMissile { .. }
+            | ShopStockRole::ChooseBag
+            | ShopStockRole::DeckRareWand
+            | ShopStockRole::DeckRareRing
+            | ShopStockRole::DeckRareArtifactOrRing,
+        ) => ItemPredictionKind::Constrained,
+        _ => match item.source.as_deref() {
+            // The exact weapon depends on persistent generator state advanced by
+            // runtime/player history before the room is painted.
+            Some("SacrificeRoom") => ItemPredictionKind::Constrained,
+            _ => ItemPredictionKind::Exact,
+        },
     }
 }
 
@@ -36,6 +50,14 @@ pub struct LevelState {
     pub build_ok: bool,
     pub forced_items: Vec<GeneratedItem>,
     pub placed_items: Vec<GeneratedItem>,
+    /// First placed-item index generated after a runtime-sensitive shop rare
+    /// artifact call. Internal facts remain exact; public projection omits the
+    /// tail because its RNG path can differ with artifact exhaustion/history.
+    #[doc(hidden)]
+    pub runtime_sensitive_placed_items_from: Option<usize>,
+    /// First quest summary selected after the runtime-sensitive shop callback.
+    #[doc(hidden)]
+    pub runtime_sensitive_quests_from: Option<usize>,
     pub quests: Vec<String>,
     pub complete: bool,
     pub map: Option<FloorMap>,
@@ -62,11 +84,36 @@ pub struct LevelRoomFact {
 impl LevelState {
     pub fn to_floor_report(&self) -> FloorReport {
         let mut items = Vec::new();
-        for item in self.forced_items.iter().chain(&self.placed_items) {
+        let mut shop_items = Vec::new();
+        let mut has_shop = false;
+        for (index, item) in self.forced_items.iter().map(|item| (None, item)).chain(
+            self.placed_items
+                .iter()
+                .enumerate()
+                .map(|(index, item)| (Some(index), item)),
+        ) {
+            if index.is_some_and(|index| {
+                self.runtime_sensitive_placed_items_from
+                    .is_some_and(|boundary| index >= boundary)
+            }) {
+                continue;
+            }
             if is_blacklisted(item) || is_runtime_sensitive_main_loot(item) {
                 continue;
             }
             let prediction = prediction_kind(item);
+            let shop_role = match item.provenance {
+                ItemProvenance::Shop(role) => {
+                    has_shop = true;
+                    Some(role)
+                }
+                ItemProvenance::None => None,
+            };
+            // Bag presence and identity depend on inventory/limited-drop
+            // history. A single conditional constraint is added below.
+            if shop_role == Some(ShopStockRole::ChooseBag) {
+                continue;
+            }
             let constrained = prediction == ItemPredictionKind::Constrained;
             let full_title = item.title();
             let exact_name = if item.cursed {
@@ -77,29 +124,84 @@ impl LevelState {
             } else {
                 full_title
             };
-            let tier = constrained
-                .then(|| crate::generator::weapon_tier_for_class(&item.class_name))
-                .flatten();
-            items.push(ItemEntry {
+            let tier = match shop_role {
+                Some(ShopStockRole::DeckWeapon { tier } | ShopStockRole::DeckMissile { tier }) => {
+                    Some(tier)
+                }
+                _ if constrained => crate::generator::weapon_tier_for_class(&item.class_name),
+                _ => None,
+            };
+            let constrained_name = match shop_role {
+                Some(ShopStockRole::DeckWeapon { .. }) => "weapon stock",
+                Some(ShopStockRole::DeckMissile { .. }) => "missile weapon stock",
+                Some(ShopStockRole::DeckRareWand) => "wand stock",
+                Some(ShopStockRole::DeckRareRing) => "ring stock",
+                Some(ShopStockRole::DeckRareArtifactOrRing) => "artifact or ring stock",
+                _ => "weapon reward",
+            };
+            let entry = ItemEntry {
                 name: if constrained {
-                    "weapon reward".to_string()
+                    constrained_name.to_string()
                 } else {
                     exact_name
                 },
                 class_name: (!constrained).then(|| item.class_name.clone()),
-                category: format!("{:?}", item.category).to_ascii_lowercase(),
+                category: if shop_role == Some(ShopStockRole::DeckRareArtifactOrRing) {
+                    "other".into()
+                } else {
+                    format!("{:?}", item.category).to_ascii_lowercase()
+                },
                 tier,
-                level: (!constrained).then_some(item.level),
+                level: reported_level(item, constrained, shop_role),
                 cursed: Some(item.cursed),
                 prediction,
-                conditional_notes: if constrained {
+                conditional_notes: if item.source.as_deref() == Some("SacrificeRoom") {
                     vec!["Parchment Scrap may alter the weapon's enchantment chance.".into()]
                 } else {
                     Vec::new()
                 },
                 source: item.source.clone(),
+            };
+            if shop_role.is_some() {
+                shop_items.push(entry);
+            } else {
+                items.push(entry);
+            }
+        }
+        if has_shop {
+            shop_items.push(ItemEntry {
+                name: "inventory-dependent bag stock".into(),
+                class_name: None,
+                category: "other".into(),
+                tier: None,
+                level: None,
+                cursed: None,
+                prediction: ItemPredictionKind::Constrained,
+                conditional_notes: vec![
+                    "A bag may be offered; its presence and identity depend on inventory and prior limited drops.".into(),
+                ],
+                source: Some("ShopRoom".into()),
+            });
+            shop_items.push(ItemEntry {
+                name: "Hourglass sand stock".into(),
+                class_name: None,
+                category: "other".into(),
+                tier: None,
+                level: None,
+                cursed: None,
+                prediction: ItemPredictionKind::Constrained,
+                conditional_notes: vec![
+                    "Sandbags may be offered depending on the hero's Timekeeper's Hourglass state; presence and quantity are not asserted.".into(),
+                ],
+                source: Some("ShopRoom".into()),
             });
         }
+        // The pinned isolated shuffle order is not public: bag/sand list size
+        // and artifact constructor/fallback RNG can change its permutation.
+        shop_items.sort_by(|a, b| {
+            (&a.name, &a.class_name, &a.category).cmp(&(&b.name, &b.class_name, &b.category))
+        });
+        items.extend(shop_items);
         FloorReport {
             depth: self.depth as u32,
             feeling: Some(self.feeling.as_str().to_string()),
@@ -109,34 +211,15 @@ impl LevelState {
             }),
             rooms: self.rooms.clone(),
             items,
-            quests: self.quests.clone(),
-            map: self.map.clone().map(|mut map| {
-                let runtime_sensitive_cells = map.runtime_sensitive_loot_cells.clone();
-                map.heaps
-                    .retain(|heap| !runtime_sensitive_cells.contains(&heap.cell));
-                map.mobs
-                    .retain(|mob| !runtime_sensitive_cells.contains(&mob.cell));
-                map.markers
-                    .retain(|marker| !runtime_sensitive_cells.contains(&marker.cell));
-                map.runtime_sensitive_loot_cells.clear();
-                let mut sacrificial_cells = Vec::new();
-                for heap in &mut map.heaps {
-                    if heap.heap_type == "sacrificial" {
-                        // The blob-held reward is runtime-history-sensitive. The
-                        // public item list carries its stable constraints.
-                        heap.items.clear();
-                        sacrificial_cells.push(heap.cell);
-                    }
-                }
-                for marker in &mut map.markers {
-                    if marker.kind == crate::report::MapMarkerKind::Item
-                        && sacrificial_cells.contains(&marker.cell)
-                    {
-                        marker.label = "Sacrifice reward".to_string();
-                    }
-                }
-                map
-            }),
+            quests: self.runtime_sensitive_quests_from.map_or_else(
+                || self.quests.clone(),
+                |boundary| self.quests[..boundary].to_vec(),
+            ),
+            map: if self.runtime_sensitive_placed_items_from.is_some() {
+                None
+            } else {
+                self.map.clone().map(state_map::sanitize_public_map)
+            },
         }
     }
 }
@@ -158,134 +241,5 @@ fn is_blacklisted(item: &GeneratedItem) -> bool {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::items::model::ItemCategory;
-    use crate::report::{MapHeap, MapHeapItem, MapMarker, MapMarkerKind, MapMob};
-
-    fn item(class_name: &str, source: &str) -> GeneratedItem {
-        let mut item = GeneratedItem::new(class_name, ItemCategory::Potion);
-        item.source = Some(source.into());
-        item
-    }
-
-    #[test]
-    fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
-        let runtime_cells = vec![7, 9];
-        let floor = LevelState {
-            depth: 3,
-            feeling: Feeling::None,
-            builder: None,
-            rooms: vec![],
-            room_bounds: vec![],
-            build_ok: true,
-            forced_items: vec![item("PotionOfStrength", "forced")],
-            placed_items: vec![
-                item("PotionOfHealing", "chest:heap"),
-                item("PotionOfMindVision", "mimic:mimic"),
-                item("PotionOfHaste", "golden_mimic:golden_mimic"),
-            ],
-            quests: vec![],
-            complete: true,
-            map: Some(FloorMap {
-                width: 4,
-                height: 4,
-                tileset: "sewers".into(),
-                tiles: vec![0; 16],
-                tile_variance: vec![0; 16],
-                discoverable: vec![true; 16],
-                markers: vec![
-                    MapMarker {
-                        cell: 7,
-                        kind: MapMarkerKind::Item,
-                        label: "Potion of Healing".into(),
-                    },
-                    MapMarker {
-                        cell: 9,
-                        kind: MapMarkerKind::Mob,
-                        label: "Mimic".into(),
-                    },
-                    MapMarker {
-                        cell: 12,
-                        kind: MapMarkerKind::Item,
-                        label: "Potion of Strength".into(),
-                    },
-                ],
-                heaps: vec![
-                    MapHeap {
-                        cell: 7,
-                        heap_type: "chest".into(),
-                        items: vec![MapHeapItem {
-                            class_name: "PotionOfHealing".into(),
-                            quantity: 1,
-                            level: 0,
-                            cursed: false,
-                        }],
-                    },
-                    MapHeap {
-                        cell: 12,
-                        heap_type: "heap".into(),
-                        items: vec![MapHeapItem {
-                            class_name: "PotionOfStrength".into(),
-                            quantity: 1,
-                            level: 0,
-                            cursed: false,
-                        }],
-                    },
-                ],
-                mobs: vec![MapMob {
-                    cell: 9,
-                    class_name: "Mimic".into(),
-                }],
-                transitions: vec![],
-                traps: vec![],
-                plants: vec![],
-                blobs: vec![],
-                runtime_sensitive_loot_cells: runtime_cells,
-            }),
-            pre_items_rng_probe: vec![],
-            pre_mobs_rng_probe: vec![],
-            pre_paint_rng_probe: vec![],
-        };
-
-        let report = floor.to_floor_report();
-        assert_eq!(report.items.len(), 1);
-        assert_eq!(
-            report.items[0].class_name.as_deref(),
-            Some("PotionOfStrength")
-        );
-        let map = report.map.expect("map");
-        assert_eq!(
-            map.heaps.iter().map(|heap| heap.cell).collect::<Vec<_>>(),
-            [12]
-        );
-        assert!(map.mobs.is_empty());
-        assert_eq!(
-            map.markers
-                .iter()
-                .map(|marker| marker.cell)
-                .collect::<Vec<_>>(),
-            [12]
-        );
-        assert!(map.runtime_sensitive_loot_cells.is_empty());
-
-        let json = serde_json::to_string(&map).expect("serialize public map");
-        assert!(!json.contains("PotionOfHealing"));
-        assert!(!json.contains("Mimic"));
-        assert!(!json.contains("runtime_sensitive_loot_cells"));
-    }
-
-    #[test]
-    fn main_loot_classification_uses_source_provenance() {
-        assert!(is_runtime_sensitive_main_loot(&item("Anything", "heap")));
-        assert!(is_runtime_sensitive_main_loot(&item(
-            "Anything",
-            "locked_chest:heap"
-        )));
-        assert!(is_runtime_sensitive_main_loot(&item(
-            "Anything",
-            "mimic:mimic"
-        )));
-        assert!(!is_runtime_sensitive_main_loot(&item("Mimic", "forced")));
-    }
-}
+#[path = "state/tests.rs"]
+mod tests;

@@ -144,6 +144,8 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
     let mut room_bounds = Vec::new();
     let mut build_ok = false;
     let mut placed_items = Vec::new();
+    let mut runtime_sensitive_placed_items_from = None;
+    let mut runtime_sensitive_quests_from = None;
     let mut floor_map = None;
     let mut quests = Vec::new();
     let mut pre_items_rng_probe = Vec::new();
@@ -164,6 +166,8 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 build_ok,
                 forced_items: forced,
                 placed_items,
+                runtime_sensitive_placed_items_from,
+                runtime_sensitive_quests_from,
                 quests,
                 complete: false,
                 map: floor_map,
@@ -227,6 +231,15 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             // ShopRoom lazily generates stock when the builder first asks for
             // its minimum size; `regular_rooms` retains that exact inventory.
             placed_items.extend(floor.shop_items.clone());
+            if floor.shop_items.iter().any(|item| {
+                item.provenance
+                    == crate::items::model::ItemProvenance::Shop(
+                        crate::items::model::ShopStockRole::DeckRareArtifactOrRing,
+                    )
+            }) {
+                runtime_sensitive_placed_items_from = Some(placed_items.len());
+                runtime_sensitive_quests_from = Some(quests.len());
+            }
 
             // Special/secret room paint loot (before createItems; may consume itemsToSpawn).
             // Includes RegularPainter shuffle + placeDoors + door-type upgrades.
@@ -428,6 +441,8 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         build_ok,
         forced_items: forced,
         placed_items,
+        runtime_sensitive_placed_items_from,
+        runtime_sensitive_quests_from,
         quests,
         complete: build_ok,
         map: floor_map,

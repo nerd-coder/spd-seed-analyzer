@@ -7,7 +7,7 @@
 
 use crate::dungeon::{BagAffinity, DungeonState, HeroInventory, LimitedDrops};
 use crate::generator::Category;
-use crate::items::model::{GeneratedItem, ItemCategory};
+use crate::items::model::{GeneratedItem, ItemCategory, ItemProvenance, ShopStockRole};
 use crate::random::Random;
 
 /// Generate FOR_SALE shop inventory for the current depth.
@@ -26,27 +26,40 @@ pub fn generate_items(dungeon: &mut DungeonState) -> Vec<GeneratedItem> {
     // Match Java generateItems: roll w/m first, then push armor, then cleared w/m.
     let mut w = dungeon.generator.random_category(wep_tier, depth);
     let mut m = dungeon.generator.random_category(mis_tier, depth);
-    items.push(with_shop_source(GeneratedItem::new(
-        armor_class,
-        ItemCategory::Armor,
-    )));
+    items.push(with_shop_role(
+        GeneratedItem::new(armor_class, ItemCategory::Armor),
+        ShopStockRole::Fixed,
+    ));
     w.enchantment = None;
     w.cursed = false;
     w.level = 0;
-    items.push(with_shop_source(w));
+    items.push(with_shop_role(
+        w,
+        ShopStockRole::DeckWeapon {
+            tier: weapon_tier(wep_tier),
+        },
+    ));
     m.enchantment = None;
     m.cursed = false;
     m.level = 0;
-    items.push(with_shop_source(m));
+    items.push(with_shop_role(
+        m,
+        ShopStockRole::DeckMissile {
+            tier: weapon_tier(mis_tier),
+        },
+    ));
 
-    items.push(with_shop_source(random_tipped_dart(dungeon, 2)));
+    items.push(with_shop_role(
+        random_tipped_dart(dungeon, 2),
+        ShopStockRole::Fixed,
+    ));
 
     let mut alchemize = GeneratedItem::new("Alchemize", ItemCategory::Other);
     alchemize.quantity = Random::int_range_inclusive(2, 3);
-    items.push(with_shop_source(alchemize));
+    items.push(with_shop_role(alchemize, ShopStockRole::Fixed));
 
     if let Some(bag) = choose_bag(dungeon) {
-        items.push(with_shop_source(bag));
+        items.push(with_shop_role(bag, ShopStockRole::ChooseBag));
     }
 
     items.push(with_shop_source(GeneratedItem::new(
@@ -128,22 +141,28 @@ pub fn generate_items(dungeon: &mut DungeonState) -> Vec<GeneratedItem> {
 
     // No TimekeepersHourglass without a hero — skip sand bags (0 RNG).
 
-    let mut rare = match Random::int_max(10) {
+    let (mut rare, rare_role) = match Random::int_max(10) {
         0 => {
             let mut w = dungeon.generator.random_category(Category::Wand, depth);
             w.level = 0;
-            w
+            (w, ShopStockRole::DeckRareWand)
         }
         1 => {
             let mut r = dungeon.generator.random_category(Category::Ring, depth);
             r.level = 0;
-            r
+            (r, ShopStockRole::DeckRareRing)
         }
-        2 => dungeon.generator.random_category(Category::Artifact, depth),
-        _ => GeneratedItem::new("Stylus", ItemCategory::Other),
+        2 => (
+            dungeon.generator.random_category(Category::Artifact, depth),
+            ShopStockRole::DeckRareArtifactOrRing,
+        ),
+        _ => (
+            GeneratedItem::new("Stylus", ItemCategory::Other),
+            ShopStockRole::Fixed,
+        ),
     };
     rare.cursed = false;
-    items.push(with_shop_source(rare));
+    items.push(with_shop_role(rare, rare_role));
 
     for _ in 0..torches {
         items.push(with_shop_source(GeneratedItem::new(
@@ -160,9 +179,24 @@ pub fn generate_items(dungeon: &mut DungeonState) -> Vec<GeneratedItem> {
     items
 }
 
-fn with_shop_source(mut item: GeneratedItem) -> GeneratedItem {
+fn with_shop_source(item: GeneratedItem) -> GeneratedItem {
+    with_shop_role(item, ShopStockRole::Fixed)
+}
+
+fn with_shop_role(mut item: GeneratedItem, role: ShopStockRole) -> GeneratedItem {
     item.source = Some("ShopRoom".into());
+    item.provenance = ItemProvenance::Shop(role);
     item
+}
+
+fn weapon_tier(category: Category) -> i32 {
+    match category {
+        Category::WepT2 | Category::MisT2 => 2,
+        Category::WepT3 | Category::MisT3 => 3,
+        Category::WepT4 | Category::MisT4 => 4,
+        Category::WepT5 | Category::MisT5 => 5,
+        _ => unreachable!("shop equipment category must have a tier"),
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

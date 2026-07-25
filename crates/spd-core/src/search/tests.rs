@@ -186,6 +186,36 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
 }
 
 #[test]
+fn constrained_shop_stock_never_matches_its_internal_concrete_class() {
+    let floor = crate::FloorReport {
+        depth: 6,
+        feeling: None,
+        builder: None,
+        rooms: vec!["ShopRoom".into()],
+        items: vec![crate::report::ItemEntry {
+            name: "weapon stock".into(),
+            class_name: None,
+            category: "weapon".into(),
+            tier: Some(2),
+            level: Some(0),
+            cursed: Some(false),
+            prediction: crate::report::ItemPredictionKind::Constrained,
+            conditional_notes: vec![],
+            source: Some("ShopRoom".into()),
+        }],
+        quests: vec![],
+        map: None,
+    };
+    let constraints = [ItemConstraint {
+        class_name: "Quarterstaff".into(),
+        min_level: None,
+        min_depth: 6,
+        max_depth: 6,
+    }];
+    assert!(matching_evidence(&[floor], &constraints).is_empty());
+}
+
+#[test]
 fn result_limit_preserves_ascending_resume_position() {
     let mut value = request(
         vec![constraint("Food", 1, 1), constraint("Pasty", 1, 1)],
