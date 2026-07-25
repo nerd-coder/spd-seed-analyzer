@@ -10,7 +10,7 @@ use super::trap_rooms::{
 use crate::geom::Point;
 use crate::items::model::ItemCategory;
 use crate::level::painter::DoorMap;
-use crate::level::terrain::paint_minimal;
+use crate::level::terrain::{paint_minimal, EMPTY_SP, STATUE_SP, WALL};
 use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
@@ -58,7 +58,8 @@ fn secret_artillery_has_fixed_bomb_and_two_default_missiles() {
     let mut dungeon = dungeon_from_run(run);
     dungeon.depth = 18;
     let room = test_room("SecretArtilleryRoom", 7, 7);
-    let loot = secret_artillery(&mut dungeon, &room);
+    let mut map = paint_minimal(std::slice::from_ref(&room)).expect("artillery map");
+    let loot = secret_artillery(&mut dungeon, &room, &mut map);
     Random::pop_generator();
 
     assert_eq!(loot.len(), 3);
@@ -67,6 +68,22 @@ fn secret_artillery_has_fixed_bomb_and_two_default_missiles() {
         drop.item.category == ItemCategory::Missile
             && drop.item.source.as_deref() == Some("SecretArtilleryRoom")
     }));
+    let heaps: Vec<_> = map.known_heaps.iter().flatten().collect();
+    assert_eq!(heaps.len(), 3);
+    assert!(heaps
+        .iter()
+        .any(|heap| heap.items[0].class_name == "DoubleBomb"));
+    assert_eq!(map.map.iter().filter(|&&tile| tile == STATUE_SP).count(), 1);
+    for y in room.top..=room.bottom {
+        for x in room.left..=room.right {
+            let cell = map.point_to_cell(x, y).expect("artillery tile");
+            if x == room.left || x == room.right || y == room.top || y == room.bottom {
+                assert_eq!(map.map[cell], WALL);
+            } else {
+                assert!(matches!(map.map[cell], EMPTY_SP | STATUE_SP));
+            }
+        }
+    }
 }
 
 #[test]

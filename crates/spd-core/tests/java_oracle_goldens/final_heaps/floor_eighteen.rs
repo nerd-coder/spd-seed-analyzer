@@ -3,7 +3,7 @@ use super::*;
 use std::ffi::OsStr;
 
 #[test]
-fn aaa_floor_eighteen_matches_rooms_bounds_phase_rng_and_mobs() {
+fn aaa_floor_eighteen_matches_rooms_bounds_phase_rng_mobs_and_heaps() {
     let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-18.json");
     let path = fixture_paths()
         .into_iter()
@@ -59,4 +59,26 @@ fn aaa_floor_eighteen_matches_rooms_bounds_phase_rng_and_mobs() {
         })
         .collect();
     assert_eq!(mobs, expected.final_mobs, "floor-18 final mobs");
+    let heaps: Vec<_> = actual
+        .map
+        .as_ref()
+        .expect("floor-18 map facts")
+        .heaps
+        .iter()
+        .map(|heap| OracleHeap {
+            cell: heap.cell,
+            heap_type: heap.heap_type.clone(),
+            items: heap
+                .items
+                .iter()
+                .map(|item| OracleItem {
+                    class_name: item.class_name.clone(),
+                    quantity: item.quantity,
+                    level: item.level,
+                    cursed: item.cursed,
+                })
+                .collect(),
+        })
+        .collect();
+    assert_eq!(heaps, expected.final_heaps, "floor-18 final heaps");
 }

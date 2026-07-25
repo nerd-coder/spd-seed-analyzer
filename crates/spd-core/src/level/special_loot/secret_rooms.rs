@@ -6,7 +6,7 @@ use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::items::randomize::randomize_item;
 use crate::level::create_items::PlacedLoot;
-use crate::level::terrain::{TerrainMap, ALCHEMY, EMPTY, EMPTY_SP, WALL};
+use crate::level::terrain::{TerrainMap, ALCHEMY, EMPTY, EMPTY_SP, STATUE_SP, WALL};
 use crate::random::Random;
 use crate::rooms::room::Room;
 
@@ -76,14 +76,42 @@ pub(super) fn secret_runestone(
     out
 }
 
-pub(super) fn secret_artillery(dungeon: &mut DungeonState, room: &Room) -> Vec<PlacedLoot> {
+pub(super) fn secret_artillery(
+    dungeon: &mut DungeonState,
+    room: &Room,
+    map: &mut TerrainMap,
+) -> Vec<PlacedLoot> {
     // SecretArtilleryRoom paints a center statue before placing exactly three
     // distinct heaps: a DoubleBomb, then two default-pool missile weapons.
-    let _ = room.as_rect().center_room();
+    for y in room.top..=room.bottom {
+        for x in room.left..=room.right {
+            let cell = map
+                .point_to_cell(x, y)
+                .expect("SecretArtilleryRoom tile is on map");
+            map.map[cell] =
+                if x == room.left || x == room.right || y == room.top || y == room.bottom {
+                    WALL
+                } else {
+                    EMPTY_SP
+                };
+        }
+    }
+    let center = room.as_rect().center_room();
+    let center = map
+        .point_to_cell(center.x, center.y)
+        .expect("SecretArtilleryRoom center is on map");
+    map.map[center] = STATUE_SP;
     let mut out = Vec::new();
-    let mut occupied = Vec::new();
     for index in 0..3 {
-        burn_drop_pos(room, &mut occupied);
+        let cell = loop {
+            let point = room.random();
+            let cell = map
+                .point_to_cell(point.x, point.y)
+                .expect("SecretArtilleryRoom point is on map");
+            if map.map[cell] == EMPTY_SP && !map.heap_occupied[cell] {
+                break cell;
+            }
+        };
         let mut item = if index == 0 {
             GeneratedItem::new("DoubleBomb", ItemCategory::Other)
         } else {
@@ -92,6 +120,7 @@ pub(super) fn secret_artillery(dungeon: &mut DungeonState, room: &Room) -> Vec<P
                 .random_missile(dungeon.depth / 5, true, dungeon.depth)
         };
         item.source = Some("SecretArtilleryRoom".into());
+        map.record_heap(cell, "heap", item.clone());
         out.push(PlacedLoot {
             item,
             heap_type: "heap",
