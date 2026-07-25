@@ -3,7 +3,7 @@ use super::*;
 use std::ffi::OsStr;
 
 #[test]
-fn aaa_floor_nineteen_matches_through_blobs() {
+fn aaa_floor_nineteen_matches_through_discoverability() {
     let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-19.json");
     let path = fixture_paths()
         .into_iter()
@@ -100,6 +100,14 @@ fn aaa_floor_nineteen_matches_through_blobs() {
     assert!(
         terrain_mismatches.is_empty(),
         "floor-19 terrain mismatches: {terrain_mismatches:?}"
+    );
+    assert_eq!(
+        &map.discoverable,
+        expected
+            .discoverable
+            .as_ref()
+            .expect("floor-19 discoverable mask"),
+        "floor-19 discoverable mask"
     );
     let transitions = map
         .transitions
