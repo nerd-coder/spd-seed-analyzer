@@ -77,14 +77,20 @@ pub(super) fn secret_runestone(
 }
 
 pub(super) fn secret_artillery(dungeon: &mut DungeonState, room: &Room) -> Vec<PlacedLoot> {
-    let n = Random::int_range_inclusive(2, 3);
+    // SecretArtilleryRoom paints a center statue before placing exactly three
+    // distinct heaps: a DoubleBomb, then two default-pool missile weapons.
+    let _ = room.as_rect().center_room();
     let mut out = Vec::new();
     let mut occupied = Vec::new();
-    for _ in 0..n {
+    for index in 0..3 {
         burn_drop_pos(room, &mut occupied);
-        let mut item = dungeon
-            .generator
-            .random_missile(dungeon.depth / 5, false, dungeon.depth);
+        let mut item = if index == 0 {
+            GeneratedItem::new("DoubleBomb", ItemCategory::Other)
+        } else {
+            dungeon
+                .generator
+                .random_missile(dungeon.depth / 5, true, dungeon.depth)
+        };
         item.source = Some("SecretArtilleryRoom".into());
         out.push(PlacedLoot {
             item,

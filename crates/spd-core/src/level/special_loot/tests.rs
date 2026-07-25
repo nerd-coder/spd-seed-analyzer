@@ -2,6 +2,7 @@ use super::gardens::{garden_prizes, magic_well, secret_garden_prizes};
 use super::pit_secrets::{
     pit_prizes, secret_chest_chasm, secret_maze_prize, secret_summoning_prize,
 };
+use super::secret_rooms::secret_artillery;
 use super::trap_rooms::{
     burn_sacrifice_center_offset, magical_fire_prizes, sacrifice_prize, secret_honeypot,
     sentry_prize, toxic_gas_prizes, traps_prize,
@@ -47,6 +48,25 @@ fn sacrifice_prize_is_cursed_weapon() {
     assert_eq!(loot.item.category, ItemCategory::Weapon);
     // uncursed weapons get a free upgrade before the curse is forced
     assert!(loot.item.level >= 1 || loot.item.enchantment.is_some());
+}
+
+#[test]
+fn secret_artillery_has_fixed_bomb_and_two_default_missiles() {
+    Random::reset_generators();
+    let run = init_run(0);
+    Random::push_generator_seeded(0xA471_11E7);
+    let mut dungeon = dungeon_from_run(run);
+    dungeon.depth = 18;
+    let room = test_room("SecretArtilleryRoom", 7, 7);
+    let loot = secret_artillery(&mut dungeon, &room);
+    Random::pop_generator();
+
+    assert_eq!(loot.len(), 3);
+    assert_eq!(loot[0].item.class_name, "DoubleBomb");
+    assert!(loot[1..].iter().all(|drop| {
+        drop.item.category == ItemCategory::Missile
+            && drop.item.source.as_deref() == Some("SecretArtilleryRoom")
+    }));
 }
 
 #[test]

@@ -157,8 +157,9 @@ The floor-12 fixture is exact through its normalized final heaps. Floors 13–14
 and 16 are exact through room classes, normalized bounds, RNG boundaries,
 final mobs, and normalized final heaps. Floor 16 preserves the real floor-15
 DM-300 boss-level generation lifecycle.
-Floors 17–18 match room classes, normalized bounds, and the pre-paint RNG
-boundary; later floor-18 lifecycle boundaries remain unverified.
+Floor 17 matches through pre-items; floor 18 matches room classes, normalized
+bounds, and the pre-mobs RNG boundary. Later floor-18 lifecycle boundaries
+remain unverified.
 
 The `GFX-PZH-DCH` floor-one fixture additionally pins CrystalPathRoom's six
 alternating potion/scroll drops to their exact cells. Its focused Rust test
