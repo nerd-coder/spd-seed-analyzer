@@ -38,6 +38,10 @@ pub(super) fn paint(
             None
         }
         "PoolRoom" => basic::paint_pool(map, room, room_index, doors),
+        "PitRoom" => {
+            basic::paint_pit(map, room, room_index, doors);
+            None
+        }
         "RunestoneRoom" => {
             basic::paint_runestone(map, room, room_index, doors);
             None

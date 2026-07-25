@@ -2,20 +2,20 @@
 
 **Pinned SPD:** v3.3.8 @ `7b8b845a7`
 
-**Status:** `partial` — `specs/accuracy.json` is the coverage source of truth.
+**Status:** `partial`; `specs/accuracy.json` is authoritative.
 
 ## Next phase
 
-Continue AAA-AAA-AAA floor-18 terrain comparison at cell 248 (x=18, y=5):
-Rust has `EMPTY_SP` (14), while the Java fixture has `WATER` (29).
-Fix only that next semantic difference, update the accuracy manifest, then stop.
+Continue AAA-AAA-AAA floor-18 terrain parity at cell 524 (x=12, y=12):
+Rust has `LOCKED_DOOR` (10), while Java has `CRYSTAL_DOOR` (31).
+Fix only that next semantic difference, update `specs/accuracy.json`, run the
+full CI `check` sequence from `AGENTS.md`, save this handoff, commit, and stop.
 
-## Current checkpoint
+## Checkpoint
 
-- Floor 18 matches Java through blobs and final terrain cells 0–247.
-- City decoration now uses SPD's exact wall-stitchable set; the first corrected
-  cell was wall 208 above a SegmentedLibraryRoom bookshelf.
-- Terrain after cell 247, discoverability, tile variance, and later additive
+- Floor 18 matches Java through final blobs and terrain cells 0–523.
+- The latest phase source-ported `PitRoom.paint`: ordinary `EMPTY` inset,
+  `EMPTY_WELL`, exact well RNG position, water eligibility, and room-local
+  grass/trap exclusions.
+- Terrain after cell 523, discoverability, tile variance, and later additive
   facts remain unverified.
-
-Run the complete CI `check` sequence from `AGENTS.md` before committing.

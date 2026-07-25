@@ -3,10 +3,57 @@
 use crate::geom::Point;
 use crate::level::painter::DoorMap;
 use crate::level::terrain::{
-    TerrainMap, BOOKSHELF, CHASM, EMPTY, EMPTY_SP, GRASS, HIGH_GRASS, PEDESTAL, WALL, WATER,
+    TerrainMap, BOOKSHELF, CHASM, EMPTY, EMPTY_SP, EMPTY_WELL, GRASS, HIGH_GRASS, PEDESTAL, WALL,
+    WATER,
 };
 use crate::random::Random;
 use crate::rooms::room::Room;
+
+/// Pinned `PitRoom.paint` canvas and well placement.
+pub(super) fn paint_pit(map: &mut TerrainMap, room: &Room, room_index: usize, doors: &DoorMap) {
+    fill_room(map, room, WALL);
+    fill_margin(map, room, 1, EMPTY);
+
+    let door = entrance(room, room_index, doors).expect("placed PitRoom has an entrance");
+    let well = if door.x == room.left {
+        Point::new(
+            room.right - 1,
+            if Random::int_max(2) == 0 {
+                room.top + 1
+            } else {
+                room.bottom - 1
+            },
+        )
+    } else if door.x == room.right {
+        Point::new(
+            room.left + 1,
+            if Random::int_max(2) == 0 {
+                room.top + 1
+            } else {
+                room.bottom - 1
+            },
+        )
+    } else if door.y == room.top {
+        Point::new(
+            if Random::int_max(2) == 0 {
+                room.left + 1
+            } else {
+                room.right - 1
+            },
+            room.bottom - 1,
+        )
+    } else {
+        Point::new(
+            if Random::int_max(2) == 0 {
+                room.left + 1
+            } else {
+                room.right - 1
+            },
+            room.top + 1,
+        )
+    };
+    set(map, well, EMPTY_WELL);
+}
 
 pub(super) fn paint_pool(
     map: &mut TerrainMap,

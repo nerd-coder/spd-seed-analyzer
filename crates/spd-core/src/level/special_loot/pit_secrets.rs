@@ -16,9 +16,6 @@ pub(super) fn pit_prizes(
     room: &Room,
     map: &mut TerrainMap,
 ) -> Vec<PlacedLoot> {
-    // Well corner: Random.Int(2) (door side is geometric from entrance).
-    let _ = Random::int_max(2);
-
     // `level.pointToCell(center())` chooses the shared skeleton heap cell.
     // `Room.center()` burns one `Random.Int(2)` per even-sized dimension.
     let remains = room.as_rect().center_room();

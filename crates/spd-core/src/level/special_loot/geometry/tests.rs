@@ -1,6 +1,8 @@
 use super::*;
 use crate::geom::Point;
-use crate::level::terrain::{self, CHASM, EMPTY, EMPTY_SP, GRASS, HIGH_GRASS, LOCKED_DOOR, WALL};
+use crate::level::terrain::{
+    self, CHASM, EMPTY, EMPTY_SP, EMPTY_WELL, GRASS, HIGH_GRASS, LOCKED_DOOR, WALL,
+};
 use crate::random::Random;
 use crate::rooms::types::RoomKind;
 
@@ -46,6 +48,32 @@ fn connected_room(name: &str, width: i32, height: i32) -> (Vec<Room>, DoorMap) {
     let mut doors = DoorMap::new();
     doors.insert_test_point(0, 1, Point::new(width, 1 + height / 2));
     (vec![target, neighbor], doors)
+}
+
+#[test]
+fn pit_repaints_special_floor_and_places_one_well() {
+    let (rooms, doors) = connected_room("PitRoom", 7, 8);
+    let mut map = terrain::paint_minimal(&rooms).expect("map");
+    Random::reset_generators();
+    Random::push_generator_seeded(0x5EED);
+    let _ = paint(&mut map, &rooms[0], 0, &doors);
+    Random::pop_generator();
+
+    let inset = (rooms[0].left + 1..rooms[0].right)
+        .flat_map(|x| (rooms[0].top + 1..rooms[0].bottom).map(move |y| (x, y)))
+        .map(|(x, y)| map.point_to_cell(x, y).expect("inset cell"))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        inset
+            .iter()
+            .filter(|&&cell| map.map[cell] == EMPTY_WELL)
+            .count(),
+        1
+    );
+    assert!(inset
+        .iter()
+        .all(|&cell| matches!(map.map[cell], EMPTY | EMPTY_WELL)));
+    assert!(inset.iter().all(|&cell| map.water_allowed[cell]));
 }
 
 #[test]

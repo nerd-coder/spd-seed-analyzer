@@ -106,6 +106,11 @@ fn paint_grass(
             let Some(room) = rooms.get(room_index).filter(|r| !r.is_empty()) else {
                 continue;
             };
+            // PitRoom rejects grass at the room level. Overlapping rooms still
+            // contribute their own points, so this must not be a global mask.
+            if room.name == "PitRoom" {
+                continue;
+            }
             for x in room.left..=room.right {
                 for y in room.top..=room.bottom {
                     if let Some(i) = map.point_to_cell(x, y) {
@@ -187,6 +192,9 @@ fn paint_traps(
             // rejected point in an entrance room can still be contributed by
             // an overlapping tunnel room, so this cannot use a global mask.
             if depth == 1 && room.kind == crate::rooms::types::RoomKind::Entrance {
+                continue;
+            }
+            if room.name == "PitRoom" {
                 continue;
             }
             for x in room.left..=room.right {

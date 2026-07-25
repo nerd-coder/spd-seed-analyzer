@@ -9,6 +9,7 @@ use crate::rooms::types::RoomKind;
 pub const CHASM: i32 = 0;
 pub const EMPTY: i32 = 1;
 pub const GRASS: i32 = 2;
+pub const EMPTY_WELL: i32 = 3;
 pub const WALL: i32 = 4;
 pub const DOOR: i32 = 5;
 pub const OPEN_DOOR: i32 = 6;
@@ -270,6 +271,7 @@ pub fn is_passable_tile(t: i32) -> bool {
         t,
         EMPTY
             | GRASS
+            | EMPTY_WELL
             | HIGH_GRASS
             | EMBERS
             | DOOR

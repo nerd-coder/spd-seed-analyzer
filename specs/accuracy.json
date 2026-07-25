@@ -118,11 +118,11 @@
         "Water, grass, trap, door merge, and graph painting for supported regular-floor paths",
         "Deterministic browser map baselines for CXG-FJT-BFQ floor 1 and HKT-JZN-XQQ floors 1, 6, and 8",
         "Fixture-backed terrain and render facts for selected special rooms",
-        "AAA-AAA-AAA floor-18 final terrain matches through cell 247, including CityPainter's exact wall-stitchable decoration guard above bookshelves"
+        "AAA-AAA-AAA floor-18 final terrain matches through cell 523, including CityPainter's wall-stitchable decoration guard and PitRoom's ordinary-floor inset, empty well, and lake water"
       ],
       "remaining": [
         "ToxicGas vent and gas blob facts are not yet exported as exact additive render facts",
-        "AAA-AAA-AAA floor-18 terrain from cell 248 onward and uncovered room painters can produce incomplete terrain or markers",
+        "AAA-AAA-AAA floor-18 terrain from cell 524 onward and uncovered room painters can produce incomplete terrain or markers",
         "Visual baselines cover a small deterministic seed and floor set"
       ],
       "impact": "Map previews can omit or misplace terrain, traps, blobs, doors, entities, or room details.",
