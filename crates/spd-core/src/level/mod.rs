@@ -204,7 +204,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         // before room shuffle / placeDoors / special paint.
         terrain::shift_rooms_for_painter(&mut floor.rooms, feeling == Feeling::Chasm);
         let n_traps = painter::n_traps(dungeon.depth);
-        if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=18) {
+        if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19) {
             pre_paint_rng_probe = Random::peek_ints(8);
         }
 

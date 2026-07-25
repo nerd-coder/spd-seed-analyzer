@@ -6,14 +6,12 @@
 
 ## Next phase
 
-Generate a pinned AAA-AAA-AAA floor-19 final-facts fixture. Compare room classes,
-normalized bounds, and the pre-paint RNG boundary first; fix only the first
-semantic divergence. Update the accuracy manifest, run the full CI `check`
-sequence, save this handoff, commit, and stop.
+Continue the pinned AAA-AAA-AAA floor-19 fixture from the exact pre-paint RNG
+boundary. Compare the post-paint/pre-mobs boundary next and fix only the first
+semantic divergence. Update the manifest, run CI parity, save, commit, and stop.
 
 ## Checkpoint
 
-- Floor 18 matches every recorded pinned-oracle fact, including exact 1,564-cell
-  terrain, discoverability, and tile-variance arrays.
-- Overall accuracy remains `partial`; coverage is fixture-specific and stops at
-  floor 18.
+- Floor 19 matches room classes, normalized bounds, and the pre-paint RNG
+  boundary. Later lifecycle and render facts are not yet verified.
+- Overall accuracy remains `partial`; coverage is fixture-specific.

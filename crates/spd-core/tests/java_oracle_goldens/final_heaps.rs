@@ -2,6 +2,8 @@ use super::*;
 
 #[path = "final_heaps/floor_eighteen.rs"]
 mod floor_eighteen;
+#[path = "final_heaps/floor_nineteen.rs"]
+mod floor_nineteen;
 #[path = "final_heaps/floor_seventeen.rs"]
 mod floor_seventeen;
 #[path = "final_heaps/floor_sixteen.rs"]

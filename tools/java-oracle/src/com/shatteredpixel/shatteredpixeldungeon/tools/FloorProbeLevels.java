@@ -36,7 +36,7 @@ final class FloorProbeLevels {
 		if (depth >= 1 && depth <= 4) return new PrePaintSewerLevel();
 		if (depth >= 6 && depth <= 9) return new PrePaintPrisonLevel();
 		if (depth >= 11 && depth <= 14) return new PrePaintCavesLevel();
-		if (depth >= 16 && depth <= 18) return new PrePaintCityLevel();
+		if (depth >= 16 && depth <= 19) return new PrePaintCityLevel();
 		throw unsupported(depth);
 	}
 
@@ -44,7 +44,7 @@ final class FloorProbeLevels {
 		if (depth >= 1 && depth <= 4) return new PreMobsSewerLevel();
 		if (depth >= 6 && depth <= 9) return new PreMobsPrisonLevel();
 		if (depth >= 11 && depth <= 14) return new PreMobsCavesLevel();
-		if (depth >= 16 && depth <= 18) return new PreMobsCityLevel();
+		if (depth >= 16 && depth <= 19) return new PreMobsCityLevel();
 		throw unsupported(depth);
 	}
 
@@ -64,7 +64,7 @@ final class FloorProbeLevels {
 		if (depth >= 1 && depth <= 4) return new PreItemsSewerLevel();
 		if (depth >= 6 && depth <= 9) return new PreItemsPrisonLevel();
 		if (depth >= 11 && depth <= 14) return new PreItemsCavesLevel();
-		if (depth >= 16 && depth <= 18) return new PreItemsCityLevel();
+		if (depth >= 16 && depth <= 19) return new PreItemsCityLevel();
 		throw unsupported(depth);
 	}
 

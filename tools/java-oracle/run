@@ -17,12 +17,12 @@ shop_bag_selection=""
 usage() {
 	cat >&2 <<'EOF'
 Usage: tools/java-oracle/run [--source PATH] [--output FILE]
-                             [--depth 1 | --final-heaps-depth 1|2|3|4|6|7|8|9|11|12|13|14|16|17|18 |
+                             [--depth 1 | --final-heaps-depth 1|2|3|4|6|7|8|9|11|12|13|14|16|17|18|19 |
                              --generator-deck-rollover | --generator-lifecycle |
                              --shop-bag-selection] SEED
 
 Dumps SPD v3.3.8 run facts as stable JSON. With --depth 1, includes the pinned
-depth-one pre-build item slice. With --final-heaps-depth 1-4, 6-9, 11-14, or 16-18, records
+depth-one pre-build item slice. With --final-heaps-depth 1-4, 6-9, 11-14, or 16-19, records
 heaps after the real level generation lifecycle completes. Floors 6-9 are
 generated after all prior floors to retain run-persistent state. The source checkout
 must be pinned at 7b8b845a7. With --generator-deck-rollover, records the exact
@@ -87,8 +87,8 @@ if [[ -n "$depth" && "$depth" != "1" ]]; then
 	echo "The floor oracle currently supports only --depth 1" >&2
 	exit 2
 fi
-if [[ -n "$final_heaps_depth" && "$final_heaps_depth" != "1" && "$final_heaps_depth" != "2" && "$final_heaps_depth" != "3" && "$final_heaps_depth" != "4" && "$final_heaps_depth" != "6" && "$final_heaps_depth" != "7" && "$final_heaps_depth" != "8" && "$final_heaps_depth" != "9" && "$final_heaps_depth" != "11" && "$final_heaps_depth" != "12" && "$final_heaps_depth" != "13" && "$final_heaps_depth" != "14" && "$final_heaps_depth" != "16" && "$final_heaps_depth" != "17" && "$final_heaps_depth" != "18" ]]; then
-	echo "The final-heaps oracle currently supports only --final-heaps-depth 1-4, 6-9, 11-14, or 16-18" >&2
+if [[ -n "$final_heaps_depth" && "$final_heaps_depth" != "1" && "$final_heaps_depth" != "2" && "$final_heaps_depth" != "3" && "$final_heaps_depth" != "4" && "$final_heaps_depth" != "6" && "$final_heaps_depth" != "7" && "$final_heaps_depth" != "8" && "$final_heaps_depth" != "9" && "$final_heaps_depth" != "11" && "$final_heaps_depth" != "12" && "$final_heaps_depth" != "13" && "$final_heaps_depth" != "14" && "$final_heaps_depth" != "16" && "$final_heaps_depth" != "17" && "$final_heaps_depth" != "18" && "$final_heaps_depth" != "19" ]]; then
+	echo "The final-heaps oracle currently supports only --final-heaps-depth 1-4, 6-9, 11-14, or 16-19" >&2
 	exit 2
 fi
 if [[ -n "$depth" && -n "$final_heaps_depth" ]]; then
