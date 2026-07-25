@@ -3,7 +3,7 @@ use super::*;
 use std::ffi::OsStr;
 
 #[test]
-fn aaa_floor_nineteen_matches_through_plants() {
+fn aaa_floor_nineteen_matches_through_blobs() {
     let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-19.json");
     let path = fixture_paths()
         .into_iter()
@@ -132,5 +132,40 @@ fn aaa_floor_nineteen_matches_through_plants() {
         &plants,
         expected.plants.as_ref().expect("floor-19 plants"),
         "floor-19 plants"
+    );
+    let blobs = map
+        .blobs
+        .iter()
+        .map(|blob| OracleBlob {
+            class_name: blob.class_name.clone(),
+            volume: blob.volume,
+            always_visible: blob.always_visible,
+            cells: blob
+                .cells
+                .iter()
+                .map(|cell| OracleBlobCell {
+                    cell: cell.cell,
+                    value: cell.value,
+                })
+                .collect(),
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        &blobs,
+        expected.blobs.as_ref().expect("floor-19 blobs"),
+        "floor-19 blobs"
+    );
+    assert_eq!(
+        blobs,
+        vec![OracleBlob {
+            class_name: "Alchemy".into(),
+            volume: 1,
+            always_visible: false,
+            cells: vec![OracleBlobCell {
+                cell: 1223,
+                value: 1,
+            }],
+        }],
+        "floor-19 LaboratoryRoom retains the exact Alchemy seed"
     );
 }
