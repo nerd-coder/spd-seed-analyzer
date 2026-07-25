@@ -6,19 +6,16 @@
 
 ## Next phase
 
-Capture an AAA-AAA-AAA floor 21 oracle fixture, preserving the floor-20 Dwarf
-King lifecycle. Compare the first RNG boundary and room layout with pinned
-source, fix only the first source-backed divergence, add exact assertions,
-update the accuracy manifest, run CI parity, save, commit, and stop.
+Register and match the two supplied HKT-JZN-XQQ floor-12 visual fixtures:
+the full floor and Troll Blacksmith quest-room reference. Extend the fixture
+contract as needed, fix only source-backed generation/render divergences,
+update the accuracy manifest, run CI parity, save, commit, and stop. Then
+resume floor 21 at its FigureEightBuilder divergence.
 
 ## Checkpoint
 
-- Floor 19 matches room classes/bounds, RNG boundaries, final mobs/heaps, full
-  terrain, discoverability, tile variance, transitions, traps, plants, and the
-  LaboratoryRoom Alchemy blob at cell 1223.
-- Tile variance matches `DungeonTileSheet.setupVariance` cell-for-cell; no
-  generation change was needed.
-- Floor 19 retains the exact Wandmaker rewards (`WandOfTransfusion` +1 and
-  `WandOfFrost` +2, both uncursed), matching Java's persistent quest state.
-- The committed oracle does not capture the Imp's single ring reward. Overall
-  accuracy remains `partial`; coverage is fixture-specific.
+- Floor 21 preserves Java's floor-20 `CityBossLevel` generation lifecycle.
+- ChasmRoom now uses pinned `{4,2,1}` size-category probabilities; floor-21
+  non-connection room selection matches Java exactly.
+- Rust still emits seven TunnelRooms where Java emits six, so bounds and the
+  pre-paint RNG boundary remain divergent. Overall accuracy stays `partial`.

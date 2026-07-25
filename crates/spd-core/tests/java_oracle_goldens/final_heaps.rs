@@ -8,6 +8,8 @@ mod floor_nineteen;
 mod floor_seventeen;
 #[path = "final_heaps/floor_sixteen.rs"]
 mod floor_sixteen;
+#[path = "final_heaps/floor_twenty_one.rs"]
+mod floor_twenty_one;
 #[path = "final_heaps/replay_aaa.rs"]
 mod replay_aaa;
 #[path = "final_heaps/replay_aaa_sewers.rs"]

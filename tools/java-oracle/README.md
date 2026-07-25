@@ -49,6 +49,7 @@ From the analyzer repository root:
 ./tools/java-oracle/run --final-heaps-depth 17 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 18 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 19 AAA-AAA-AAA
+./tools/java-oracle/run --final-heaps-depth 21 AAA-AAA-AAA
 ./tools/java-oracle/run --generator-deck-rollover AAA-AAA-AAA
 ./tools/java-oracle/run --generator-lifecycle AAA-AAA-AAA
 ./tools/java-oracle/run --shop-bag-selection AAA-AAA-AAA
@@ -121,6 +122,8 @@ these commands (stdout is the default when `--output` is omitted):
   --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-18.json AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 19 \
   --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-19.json AAA-AAA-AAA
+./tools/java-oracle/run --final-heaps-depth 21 \
+  --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-21.json AAA-AAA-AAA
 ./tools/java-oracle/run --generator-deck-rollover \
   --output tools/java-oracle/fixtures/generator/aaa-aaa-aaa-food-rollover.json \
   AAA-AAA-AAA
