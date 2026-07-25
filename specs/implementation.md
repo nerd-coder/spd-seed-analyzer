@@ -6,13 +6,12 @@
 
 ## Next phase
 
-Extend the AAA-AAA-AAA floor-18 preserved-state comparison from pre-mobs to the
-pre-items RNG boundary. Fix only the first semantic difference, update the
-accuracy manifest, then stop.
+Compare AAA-AAA-AAA floor-18 final mobs with the preserved Java fixture. Fix only
+the first semantic difference, update the accuracy manifest, then stop.
 
 ## Current checkpoint
 
-- Floor 18 matches Java through the pre-mobs RNG boundary.
-- SecretArtilleryRoom now matches its fixed bomb-plus-two-missiles painter.
+- Floor 18 matches Java through the pre-items RNG boundary.
+- Final mobs and heaps remain unverified.
 
 Run the complete CI `check` sequence from `AGENTS.md` before committing.
