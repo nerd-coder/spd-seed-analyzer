@@ -169,4 +169,21 @@ fn aaa_floor_eighteen_matches_through_blobs() {
     let expected_terrain = expected.terrain.as_ref().expect("floor-18 terrain");
     let actual_terrain = &actual.map.as_ref().expect("floor-18 map facts").tiles;
     assert_eq!(actual_terrain, expected_terrain, "floor-18 terrain");
+    let actual_map = actual.map.as_ref().expect("floor-18 map facts");
+    assert_eq!(
+        &actual_map.discoverable,
+        expected
+            .discoverable
+            .as_ref()
+            .expect("floor-18 discoverable mask"),
+        "floor-18 discoverable mask"
+    );
+    assert_eq!(
+        &actual_map.tile_variance,
+        expected
+            .tile_variance
+            .as_ref()
+            .expect("floor-18 tile variance"),
+        "floor-18 tile variance"
+    );
 }
