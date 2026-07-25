@@ -307,7 +307,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             // run before the regular population, matching SewerLevel/PrisonLevel
             // overrides. The population pass is source-ported for every regular
             // depth, though final parity still depends on the preceding lifecycle.
-            if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=18) {
+            if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19) {
                 pre_mobs_rng_probe = Random::peek_ints(8);
             }
             if let Some(exit) = floor.rooms.iter().find(|r| r.is_exit() && !r.is_empty()) {

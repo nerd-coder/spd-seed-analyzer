@@ -25,7 +25,7 @@
         "AAA-AAA-AAA floor 12 exact FigureEightBuilder room classes and bounds, pre-paint, pre-mobs, and pre-items RNG boundaries, including CaveExitRoom size probabilities and SecretRunestoneRoom's exact three-drop painter",
         "AAA-AAA-AAA floors 13–14 and 16–17 exact room classes and normalized bounds plus pre-paint, pre-mobs, and pre-items RNG boundaries, normalized heaps, and final mobs; floor 16 preserves the floor-15 DM-300 lifecycle",
         "AAA-AAA-AAA floor 18 exact room classes and normalized bounds plus pre-paint, pre-mobs, and pre-items RNG boundaries, final mobs, final heaps, terrain, discoverability, tile variance, transitions, traps, plants, and GardenRoom Foliage blob facts, including SecretArtilleryRoom's exact placement, fixed DoubleBomb, and two default-pool missiles",
-        "AAA-AAA-AAA floor 19 exact room classes, normalized bounds, and pre-paint RNG boundary"
+        "AAA-AAA-AAA floor 19 exact room classes and normalized bounds plus pre-paint and pre-mobs RNG boundaries"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",

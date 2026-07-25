@@ -3,7 +3,7 @@ use super::*;
 use std::ffi::OsStr;
 
 #[test]
-fn aaa_floor_nineteen_matches_through_the_pre_paint_boundary() {
+fn aaa_floor_nineteen_matches_through_the_pre_mobs_boundary() {
     let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-19.json");
     let path = fixture_paths()
         .into_iter()
@@ -38,5 +38,9 @@ fn aaa_floor_nineteen_matches_through_the_pre_paint_boundary() {
     assert_eq!(
         actual.pre_paint_rng_probe, expected.pre_paint_rng,
         "floor-19 pre-paint RNG boundary"
+    );
+    assert_eq!(
+        actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
+        "floor-19 pre-mobs RNG boundary"
     );
 }
