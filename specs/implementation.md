@@ -6,13 +6,12 @@
 
 ## Next phase
 
-Compare AAA-AAA-AAA floor-18 additive map facts with the preserved Java fixture.
+Compare AAA-AAA-AAA floor-18 blob facts with the preserved Java fixture.
 Fix only the first semantic difference, update the accuracy manifest, then stop.
 
 ## Current checkpoint
 
-- Floor 18 matches Java through final heaps, including exact SecretArtilleryRoom
-  terrain and its three placed drops.
-- Traps, plants, blobs, transitions, and other additive map facts remain unverified.
+- Floor 18 matches Java through transitions, traps, and its GardenRoom Sungrass.
+- Blob facts and any later additive facts remain unverified.
 
 Run the complete CI `check` sequence from `AGENTS.md` before committing.

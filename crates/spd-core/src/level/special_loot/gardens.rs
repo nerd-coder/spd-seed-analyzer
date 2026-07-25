@@ -20,19 +20,19 @@ pub(super) fn garden_prizes(
     let mut occupied = Vec::new();
     match bushes {
         0 => {
-            plant_pos(room, map, &mut occupied);
+            plant_pos(room, map, &mut occupied, "Sungrass", 3);
             out.push(plant_loot("SungrassSeed", "GardenRoom"));
         }
         1 => {
-            plant_pos(room, map, &mut occupied);
+            plant_pos(room, map, &mut occupied, "BlandfruitBush", 12);
             out.push(plant_loot("BlandfruitBushSeed", "GardenRoom"));
         }
         _ => {
             // 20% both seeds
             if Random::int_max(5) == 0 {
-                plant_pos(room, map, &mut occupied);
+                plant_pos(room, map, &mut occupied, "Sungrass", 3);
                 out.push(plant_loot("SungrassSeed", "GardenRoom"));
-                plant_pos(room, map, &mut occupied);
+                plant_pos(room, map, &mut occupied, "BlandfruitBush", 12);
                 out.push(plant_loot("BlandfruitBushSeed", "GardenRoom"));
             }
         }
@@ -40,12 +40,18 @@ pub(super) fn garden_prizes(
     out
 }
 
-fn plant_pos(room: &Room, map: &mut TerrainMap, occupied: &mut Vec<(i32, i32)>) {
+fn plant_pos(
+    room: &Room,
+    map: &mut TerrainMap,
+    occupied: &mut Vec<(i32, i32)>,
+    class_name: &'static str,
+    image: u8,
+) {
     let before = occupied.len();
     burn_drop_pos(room, occupied);
     if let Some(&(x, y)) = occupied.get(before) {
         if let Some(cell) = map.point_to_cell(x, y) {
-            map.plant_occupied[cell] = true;
+            map.record_plant(cell, class_name, image);
             // `Level.plant` converts HIGH_GRASS under the plant to GRASS.
             if map.map[cell] == crate::level::terrain::HIGH_GRASS {
                 map.map[cell] = crate::level::terrain::GRASS;

@@ -437,6 +437,18 @@ fn garden_and_well_prizes() {
     assert!(garden
         .iter()
         .all(|p| p.heap_type == "plant" && p.item.source.as_deref() == Some("GardenRoom")));
+    let known_plants: Vec<_> = map.known_plants.iter().flatten().collect();
+    assert_eq!(known_plants.len(), garden.len());
+    for prize in &garden {
+        let expected = match prize.item.class_name.as_str() {
+            "SungrassSeed" => ("Sungrass", 3),
+            "BlandfruitBushSeed" => ("BlandfruitBush", 12),
+            other => panic!("unexpected GardenRoom plant seed {other}"),
+        };
+        assert!(known_plants
+            .iter()
+            .any(|plant| (plant.class_name, plant.image) == expected));
+    }
 
     Random::reset_generators();
     Random::push_generator_seeded(3);

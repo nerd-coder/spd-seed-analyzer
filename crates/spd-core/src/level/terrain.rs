@@ -53,6 +53,12 @@ pub(crate) struct KnownBlob {
     pub cells: Vec<(usize, u32)>,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct KnownPlant {
+    pub class_name: &'static str,
+    pub image: u8,
+}
+
 #[derive(Debug, Clone)]
 pub struct TerrainMap {
     pub width: i32,
@@ -77,6 +83,8 @@ pub struct TerrainMap {
     pub mob_occupied: Vec<bool>,
     /// Cells occupied by plants; Java rejects these separately during mob placement.
     pub plant_occupied: Vec<bool>,
+    /// Exact planted identities retained for the structured map report.
+    pub(crate) known_plants: Vec<Option<KnownPlant>>,
     /// Exact known mob identity for room-painted and ambient cells.
     pub known_mobs: Vec<Option<&'static str>>,
     /// Cells occupied by heaps placed during room paint.
@@ -149,6 +157,11 @@ impl TerrainMap {
                 cells: vec![(cell, value)],
             });
         }
+    }
+
+    pub(crate) fn record_plant(&mut self, cell: usize, class_name: &'static str, image: u8) {
+        self.plant_occupied[cell] = true;
+        self.known_plants[cell] = Some(KnownPlant { class_name, image });
     }
 
     pub fn point_to_cell(&self, x: i32, y: i32) -> Option<usize> {
@@ -370,6 +383,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
     let character_allowed = vec![true; len];
     let mob_occupied = vec![false; len];
     let plant_occupied = vec![false; len];
+    let known_plants = vec![None; len];
     let known_mobs = vec![None; len];
     let heap_occupied = vec![false; len];
     let known_heaps = vec![None; len];
@@ -391,6 +405,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
         character_allowed,
         mob_occupied,
         plant_occupied,
+        known_plants,
         known_mobs,
         heap_occupied,
         known_heaps,

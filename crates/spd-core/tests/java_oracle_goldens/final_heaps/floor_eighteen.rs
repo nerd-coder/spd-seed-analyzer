@@ -3,7 +3,7 @@ use super::*;
 use std::ffi::OsStr;
 
 #[test]
-fn aaa_floor_eighteen_matches_rooms_bounds_phase_rng_mobs_and_heaps() {
+fn aaa_floor_eighteen_matches_through_traps_and_plants() {
     let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-18.json");
     let path = fixture_paths()
         .into_iter()
@@ -81,4 +81,64 @@ fn aaa_floor_eighteen_matches_rooms_bounds_phase_rng_mobs_and_heaps() {
         })
         .collect();
     assert_eq!(heaps, expected.final_heaps, "floor-18 final heaps");
+    let transitions = actual
+        .map
+        .as_ref()
+        .expect("floor-18 map facts")
+        .transitions
+        .iter()
+        .map(|transition| OracleTransition {
+            cell: transition.cell,
+            transition_type: transition.transition_type.clone(),
+            left: transition.left,
+            top: transition.top,
+            right: transition.right,
+            bottom: transition.bottom,
+            dest_depth: transition.dest_depth,
+            dest_branch: transition.dest_branch,
+            dest_type: transition.dest_type.clone(),
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        &transitions,
+        expected.transitions.as_ref().expect("floor-18 transitions"),
+        "floor-18 transitions"
+    );
+    let traps = actual
+        .map
+        .as_ref()
+        .expect("floor-18 map facts")
+        .traps
+        .iter()
+        .map(|trap| OracleTrap {
+            cell: trap.cell,
+            class_name: trap.class_name.clone(),
+            visible: trap.visible,
+            active: trap.active,
+            color: trap.color,
+            shape: trap.shape,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        &traps,
+        expected.traps.as_ref().expect("floor-18 traps"),
+        "floor-18 traps"
+    );
+    let plants = actual
+        .map
+        .as_ref()
+        .expect("floor-18 map facts")
+        .plants
+        .iter()
+        .map(|plant| OraclePlant {
+            cell: plant.cell,
+            class_name: plant.class_name.clone(),
+            image: plant.image,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        &plants,
+        expected.plants.as_ref().expect("floor-18 plants"),
+        "floor-18 plants"
+    );
 }

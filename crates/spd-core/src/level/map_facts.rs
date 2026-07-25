@@ -7,7 +7,7 @@ use crate::level::terrain::{self, TerrainMap};
 use crate::random::Random;
 use crate::report::{
     FloorMap, MapBlob, MapBlobCell, MapHeap, MapHeapItem, MapMarker, MapMarkerKind, MapMob,
-    MapTransition, MapTrap,
+    MapPlant, MapTransition, MapTrap,
 };
 
 #[cfg(test)]
@@ -143,10 +143,24 @@ impl MapFacts {
             mobs: self.mobs,
             transitions: transitions(map, depth, branch),
             traps: traps(map),
-            plants: Vec::new(),
+            plants: plants(map),
             blobs: blobs(map),
         }
     }
+}
+
+fn plants(map: &TerrainMap) -> Vec<MapPlant> {
+    map.known_plants
+        .iter()
+        .enumerate()
+        .filter_map(|(cell, plant)| {
+            plant.map(|plant| MapPlant {
+                cell: cell as u32,
+                class_name: plant.class_name.to_string(),
+                image: plant.image,
+            })
+        })
+        .collect()
 }
 
 fn blobs(map: &TerrainMap) -> Vec<MapBlob> {
