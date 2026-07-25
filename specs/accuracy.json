@@ -25,7 +25,7 @@
         "AAA-AAA-AAA floor 12 exact FigureEightBuilder room classes and bounds, pre-paint, pre-mobs, and pre-items RNG boundaries, including CaveExitRoom size probabilities and SecretRunestoneRoom's exact three-drop painter",
         "AAA-AAA-AAA floors 13–14 and 16–17 exact room classes and normalized bounds plus pre-paint, pre-mobs, and pre-items RNG boundaries, normalized heaps, and final mobs; floor 16 preserves the floor-15 DM-300 lifecycle",
         "AAA-AAA-AAA floor 18 exact room classes and normalized bounds plus pre-paint, pre-mobs, and pre-items RNG boundaries, final mobs, final heaps, terrain, discoverability, tile variance, transitions, traps, plants, and GardenRoom Foliage blob facts, including SecretArtilleryRoom's exact placement, fixed DoubleBomb, and two default-pool missiles",
-        "AAA-AAA-AAA floor 19 exact room classes and normalized bounds plus pre-paint, pre-mobs, and pre-items RNG boundaries, final mobs, final heaps, transitions, ordinary plus SecretSummoning traps, PlantsRoom plants, and the LaboratoryRoom Alchemy blob, including AmbitiousImpRoom painter eligibility and branch-transition metadata"
+        "AAA-AAA-AAA floor 19 exact room classes and normalized bounds plus pre-paint, pre-mobs, and pre-items RNG boundaries, final mobs, final heaps, terrain, transitions, ordinary plus SecretSummoning traps, PlantsRoom plants, and the LaboratoryRoom Alchemy blob, including AmbitiousImpRoom painter eligibility and branch-transition metadata"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
@@ -121,7 +121,7 @@
         "Deterministic browser map baselines for CXG-FJT-BFQ floor 1 and HKT-JZN-XQQ floors 1, 6, and 8",
         "Fixture-backed terrain and render facts for selected special rooms",
         "AAA-AAA-AAA floor-18 full final terrain, discoverability, and tile-variance parity, including CityPainter's wall-stitchable decoration guard and PitRoom's ordinary-floor inset, empty well, lake water, and crystal entrance door",
-        "AAA-AAA-AAA floor-19 exact regular and AmbitiousImp branch transitions, ordinary and SecretSummoning traps, PlantsRoom plant cells and identities, and LaboratoryRoom Alchemy blob concentration at cell 1223"
+        "AAA-AAA-AAA floor-19 full final terrain parity, exact regular and AmbitiousImp branch transitions, ordinary and SecretSummoning traps, PlantsRoom plant cells and identities, and LaboratoryRoom Alchemy blob concentration at cell 1223"
       ],
       "remaining": [
         "ToxicGas vent and gas blob facts are not yet exported as exact additive render facts",

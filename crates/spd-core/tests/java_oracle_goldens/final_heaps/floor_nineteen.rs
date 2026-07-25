@@ -82,6 +82,25 @@ fn aaa_floor_nineteen_matches_through_blobs() {
         .collect();
     assert_eq!(heaps, expected.final_heaps, "floor-19 final heaps");
     let map = actual.map.as_ref().expect("floor-19 map facts");
+    let expected_terrain = expected.terrain.as_ref().expect("floor-19 terrain");
+    assert_eq!(
+        map.tiles.len(),
+        expected_terrain.len(),
+        "floor-19 terrain length"
+    );
+    let terrain_mismatches = map
+        .tiles
+        .iter()
+        .zip(expected_terrain)
+        .enumerate()
+        .filter_map(|(cell, (&actual, &expected))| {
+            (actual != expected).then_some((cell, actual, expected))
+        })
+        .collect::<Vec<_>>();
+    assert!(
+        terrain_mismatches.is_empty(),
+        "floor-19 terrain mismatches: {terrain_mismatches:?}"
+    );
     let transitions = map
         .transitions
         .iter()
