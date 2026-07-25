@@ -27,6 +27,8 @@ pub const SECRET_TRAP: i32 = 17;
 pub const TRAP: i32 = 18;
 pub const INACTIVE_TRAP: i32 = 19;
 pub const EMPTY_DECO: i32 = 20;
+pub const LOCKED_EXIT: i32 = 21;
+pub const UNLOCKED_EXIT: i32 = 22;
 pub const WELL: i32 = 24;
 pub const STATUE: i32 = 25;
 pub const STATUE_SP: i32 = 26;
@@ -39,6 +41,15 @@ pub const CUSTOM_DECO_EMPTY: i32 = 32;
 pub const REGION_DECO: i32 = 33;
 pub const REGION_DECO_ALT: i32 = 34;
 pub const ENTRANCE_SP: i32 = 37;
+const NULL_TILE: i32 = -1;
+
+/// Pinned `DungeonTileSheet.wallStitcheable` terrain subset.
+pub(crate) fn wall_stitchable(tile: i32) -> bool {
+    matches!(
+        tile,
+        WALL | WALL_DECO | SECRET_DOOR | LOCKED_EXIT | UNLOCKED_EXIT | BOOKSHELF | NULL_TILE
+    )
+}
 
 #[derive(Debug, Clone)]
 pub(crate) struct KnownHeap {
@@ -418,6 +429,24 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn wall_stitchable_matches_pinned_dungeon_tile_sheet_set() {
+        for tile in [
+            WALL,
+            WALL_DECO,
+            SECRET_DOOR,
+            LOCKED_EXIT,
+            UNLOCKED_EXIT,
+            BOOKSHELF,
+            NULL_TILE,
+        ] {
+            assert!(wall_stitchable(tile), "terrain {tile}");
+        }
+        for tile in [EMPTY, EMPTY_SP, STATUE, REGION_DECO] {
+            assert!(!wall_stitchable(tile), "terrain {tile}");
+        }
+    }
 
     #[test]
     fn chasm_feeling_adds_two_cell_chasm_padding() {

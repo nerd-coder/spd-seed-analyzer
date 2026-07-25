@@ -166,4 +166,16 @@ fn aaa_floor_eighteen_matches_through_blobs() {
         expected.blobs.as_ref().expect("floor-18 blobs"),
         "floor-18 blobs"
     );
+    let expected_terrain = expected.terrain.as_ref().expect("floor-18 terrain");
+    let actual_terrain = &actual.map.as_ref().expect("floor-18 map facts").tiles;
+    assert_eq!(
+        &actual_terrain[..248],
+        &expected_terrain[..248],
+        "floor-18 terrain through the first corrected semantic boundary"
+    );
+    assert_eq!(
+        (actual_terrain[248], expected_terrain[248]),
+        (14, 29),
+        "floor-18 next terrain checkpoint"
+    );
 }

@@ -164,9 +164,8 @@ fn decorate_city(map: &mut TerrainMap, depth: i32) {
         if map.map[i] == EMPTY && Random::int_max(10) == 0 {
             map.map[i] = EMPTY_DECO;
         } else if map.map[i] == WALL {
-            // !wallStitcheable(map[i+w]) approx: below is not wall
             let below = map.map[i + w as usize];
-            if below != WALL && below != WALL_DECO && Random::int_max(21 - depth) == 0 {
+            if !crate::level::terrain::wall_stitchable(below) && Random::int_max(21 - depth) == 0 {
                 map.map[i] = WALL_DECO;
             }
         }
