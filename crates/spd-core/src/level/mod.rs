@@ -7,6 +7,7 @@ mod map_facts;
 mod maze;
 mod painter;
 pub mod patch;
+mod quest_rewards;
 mod shop;
 mod special_loot;
 mod state;
@@ -15,7 +16,6 @@ mod terrain;
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
-use crate::quests;
 use crate::random::Random;
 use crate::report::FloorReport;
 
@@ -148,6 +148,8 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
     let mut runtime_sensitive_quests_from = None;
     let mut floor_map = None;
     let mut quests = Vec::new();
+    let mut quest_public_labels = Vec::new();
+    let mut runtime_sensitive_map = false;
     let mut pre_items_rng_probe = Vec::new();
     let mut pre_mobs_rng_probe = Vec::new();
     let mut pre_paint_rng_probe = Vec::new();
@@ -169,6 +171,8 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 runtime_sensitive_placed_items_from,
                 runtime_sensitive_quests_from,
                 quests,
+                quest_public_labels,
+                runtime_sensitive_map,
                 complete: false,
                 map: floor_map,
                 pre_items_rng_probe: Vec::new(),
@@ -179,39 +183,22 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         builder = Some(floor.builder_kind);
         build_ok = true;
 
-        // Blacksmith.Quest generates smithRewards during initRooms (before shuffle/build).
-        if let Some(bs) = quests::take_blacksmith_pending(&mut dungeon.blacksmith) {
-            quests.push(bs.summary.clone());
-            for mut reward in bs.rewards {
-                // Apply stored enchant/glyph for display (SPD keeps them separate
-                // until the player picks the smith option — still useful in report).
-                if reward.category == crate::items::model::ItemCategory::Weapon {
-                    if let Some(ref e) = bs.smith_enchant {
-                        reward.enchantment = Some(e.clone());
-                    }
-                } else if reward.category == crate::items::model::ItemCategory::Armor {
-                    if let Some(ref g) = bs.smith_glyph {
-                        reward.enchantment = Some(g.clone());
-                    }
-                }
-                placed_items.push(reward);
-            }
-        }
+        let pending_quests = quest_rewards::take_pending(dungeon);
+        placed_items.extend(pending_quests.items);
+        quests.extend(pending_quests.summaries);
+        quest_public_labels.extend(pending_quests.public_labels);
 
-        // Imp.Quest generates its ring during initRooms (before shuffle/build).
-        if let Some(imp) = quests::take_imp_pending(&mut dungeon.imp) {
-            quests.push(imp.summary.clone());
-            placed_items.push(imp.reward);
-        }
-
-        // The pinned oracle exposes Wandmaker.Quest's static reward choices on
-        // every later floor, not only where the Wandmaker was spawned.
         if let (Some(wand1), Some(wand2)) = (
             dungeon.wandmaker.wand1.as_ref(),
             dungeon.wandmaker.wand2.as_ref(),
         ) {
-            placed_items.push(wand1.clone());
-            placed_items.push(wand2.clone());
+            for wand in [wand1, wand2] {
+                let mut persisted = wand.clone();
+                persisted.provenance = crate::items::model::ItemProvenance::Quest(
+                    crate::items::model::QuestRewardRole::WandmakerPersisted,
+                );
+                placed_items.push(persisted);
+            }
         }
 
         // RegularPainter: nTraps() is rolled when constructing the painter,
@@ -239,6 +226,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
             }) {
                 runtime_sensitive_placed_items_from = Some(placed_items.len());
                 runtime_sensitive_quests_from = Some(quests.len());
+                runtime_sensitive_map = true;
             }
 
             // Special/secret room paint loot (before createItems; may consume itemsToSpawn).
@@ -326,34 +314,16 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 .filter_map(|&index| floor.rooms.get(index).cloned())
                 .collect();
 
-            // The probe records the createMobs entry boundary. Quest hooks then
-            // run before the regular population, matching SewerLevel/PrisonLevel
-            // overrides. The population pass is source-ported for every regular
-            // depth, though final parity still depends on the preceding lifecycle.
             if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21) {
                 pre_mobs_rng_probe = Random::peek_ints(8);
             }
-            if let Some(exit) = floor.rooms.iter().find(|r| r.is_exit() && !r.is_empty()) {
-                if let Some(ghost) = quests::try_spawn_ghost(dungeon, exit, &map) {
-                    map.mob_occupied[ghost.cell] = true;
-                    map.known_mobs[ghost.cell] = Some("Ghost");
-                    quests.push(ghost.summary.clone());
-                    placed_items.push(ghost.weapon);
-                    placed_items.push(ghost.armor);
-                }
-            }
-            if let Some(entrance) = floor
-                .rooms
-                .iter()
-                .find(|r| r.is_entrance() && !r.is_empty())
-            {
-                if let Some(wm) = quests::try_spawn_wandmaker(dungeon, entrance, &map) {
-                    map.mob_occupied[wm.cell] = true;
-                    map.known_mobs[wm.cell] = Some("Wandmaker");
-                    quests.push(wm.summary.clone());
-                    placed_items.push(wm.wand1);
-                    placed_items.push(wm.wand2);
-                }
+            let spawned = quest_rewards::spawn_npcs(dungeon, &floor.rooms, &mut map);
+            placed_items.extend(spawned.items);
+            quests.extend(spawned.summaries);
+            quest_public_labels.extend(spawned.public_labels);
+            if spawned.wand_rng_tail_sensitive {
+                runtime_sensitive_placed_items_from = Some(placed_items.len());
+                runtime_sensitive_map = true;
             }
 
             let _ambient_mobs_consumed = if dungeon.regular_level() {
@@ -444,6 +414,8 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         runtime_sensitive_placed_items_from,
         runtime_sensitive_quests_from,
         quests,
+        quest_public_labels,
+        runtime_sensitive_map,
         complete: build_ok,
         map: floor_map,
         pre_items_rng_probe,
@@ -465,25 +437,5 @@ pub fn analyze_floors(dungeon: &mut DungeonState, max_floors: u32) -> Vec<FloorR
 }
 
 #[cfg(test)]
-mod map_report_tests {
-    use super::*;
-
-    #[test]
-    fn tile_variance_is_deterministic_and_does_not_consume_level_rng() {
-        Random::reset_generators();
-        Random::push_generator_seeded(77);
-        let first = Random::int();
-        let variance = map_facts::tile_variance(8, 1234);
-        let after_variance = Random::int();
-        Random::pop_generator();
-
-        Random::reset_generators();
-        Random::push_generator_seeded(77);
-        assert_eq!(Random::int(), first);
-        assert_eq!(Random::int(), after_variance);
-        Random::pop_generator();
-
-        assert_eq!(variance, map_facts::tile_variance(8, 1234));
-        assert!(variance.iter().all(|&value| value < 100));
-    }
-}
+#[path = "map_report_tests.rs"]
+mod map_report_tests;

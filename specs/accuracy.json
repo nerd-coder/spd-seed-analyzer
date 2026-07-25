@@ -78,7 +78,7 @@
         "Forced drops, generator decks (including pinned concrete-class undoDrop no-op semantics), main RegularLevel createItems drops, and supported special-room prizes",
         "Item identities and exact heap capture on committed Java-oracle fixtures, including UnstableSpellbook constructor RNG",
         "AAA-AAA-AAA floor-6 Generator weapon lifecycle from floor-3 SacrificeRoom through shop and createItems, floor-7 exact five main Generator drops, floors 8–9, 12–14, and 16–19 exact normalized heaps, and floor-11 exact deterministic heaps including Mimic reward lifecycle, forced drops, CrystalKeys, and GuidePage placement",
-        "Supported quest rewards and covered shop stock flows, including exact AAA-AAA-AAA floor-19 persistence of the two Wandmaker reward identities and item state",
+        "Supported quest rewards retain exact internal parity state, including AAA-AAA-AAA floor-19 persistence of both Wandmaker reward identities, while public reports apply reward-specific seed-only contracts",
         "Seed finder optional minimum item upgrade-level matching across the analyzed floor range for exact predictions only",
         "Seed-only reporting classification that preserves exact generation internally while exposing SacrificeRoom rewards only as a tiered cursed weapon constraint; map heaps omit the runtime-sensitive concrete reward",
         "Regular createItems heap, ordinary Mimic, and GoldenMimic loot is retained for internal parity but omitted from public items, exact search inputs, heap/mob facts, and markers because persistent Generator history can change identity, heap kind, and placement; room-hosted Mimic cells remain visible independently of their omitted reward contents",
@@ -86,6 +86,13 @@
         "All FOR_SALE shop heap and marker cells are omitted publicly because bag availability and Hourglass sand count change the isolated shuffle length and therefore every stock position; constrained shop slots cannot satisfy exact seed searches",
         "When the seeded rare-shop branch requests an Artifact, public projection also omits the map plus item and quest facts generated after the ShopRoom builder callback: prior artifact exhaustion can cause a Ring fallback and class-specific constructor RNG changes the remaining floor stream; feeling, builder choice, room classes, forced items, and pre-callback quest selections remain reportable",
         "Public shop entries are sorted into a canonical reporting order rather than exposing the isolated internal shuffle, whose list length and RNG path can vary with bag, Hourglass, and artifact runtime state",
+        "Ghost reporting keeps the exact armor class, shared reward level, weapon tier, and forced uncursed state while hiding the generator-history-sensitive weapon class and treating Parchment Scrap enchantment/glyph effects as conditional",
+        "Wandmaker reporting exposes two distinct uncursed wand rewards with one upgrade each but hides concrete identities and levels; duplicate-retry history suppresses later placed items and the entire public map on the spawn floor because createItems can flatten grass",
+        "The Blacksmith's initial four-option pool keeps exact default-probability identities, tiers, shared level, and uncursed state while omitting Parchment-dependent enchantment/glyph outcomes; later player-triggered pool regeneration is not predicted",
+        "BlacksmithRoom's two painted equipment rewards use separate provenance: runtime-sensitive weapon/missile identities are constrained to category and tier, armor identity remains exact, and all curse/enchantment/glyph properties are omitted as Parchment-sensitive; stable heap cells remain visible with generic labels and empty contents",
+        "Imp reporting exposes a forced-cursed ring with its stable post-two-upgrade level while hiding only the concrete identity; isolated ring-deck selection and class-independent Ring.random calls preserve the public room order, map, and later floor tail",
+        "Quest summaries preserve the seed-safe quest type/target prefix while replacing the concrete reward-title suffix with a generic reward label",
+        "Wandmaker choices persisted into later internal floor states for Java-oracle parity are explicitly internal-only and are not repeated publicly after the spawn floor, where the player may already have claimed one",
         "Explicit Parchment Scrap state and pinned HKT-JZN-XQQ floor-13 Java-oracle parity evidence, retained as internal evidence rather than a public concrete prediction"
       ],
       "remaining": [
@@ -95,6 +102,9 @@
         "Crystal-room loot outside verified flows should be treated as approximate",
         "Concrete shop deck-slot identities, bag identity/presence, Hourglass sand presence/count, and every FOR_SALE placement are intentionally excluded from public exact predictions",
         "Artifact-branch shop floors intentionally have no public map or post-ShopRoom item facts because runtime artifact history can change the builder and painter RNG tail",
+        "Concrete Ghost weapon, Wandmaker wand, and Imp ring identities are intentionally excluded; Wandmaker duplicate retries suppress its affected downstream item and map facts",
+        "Parchment-dependent Ghost and Blacksmith enchantment/glyph outcomes are conditional and not asserted; player-triggered Blacksmith reward regeneration is outside the floor-generation report",
+        "Concrete BlacksmithRoom weapon/missile identities and all equipment properties in its map heaps are intentionally excluded; only stable cells, heap types, generic markers, and separately proven item constraints are public",
         "ChooseBag ties follow non-seeded JVM identity-hash HashMap iteration; HKT and AAA oracle processes choose different bags for equivalent fresh inventories, while Hourglass state input remains unavailable"
       ],
       "impact": "An item can be missing, different, or placed on a different cell even when earlier seed facts match.",
@@ -113,7 +123,7 @@
       "implemented": [
         "Source-ported RegularLevel ambient mob selection through floor 24",
         "Depth-one mob lifecycle, full HKT-JZN-XQQ floor 6–8 mob parity, exact AAA-AAA-AAA floor 6–9, 11, 13–14, and 16–19 mob facts, including floor-7 ambient plus StatueRoom mobs, floor-13 Blacksmith placement, floor-14 SuspiciousChestRoom Mimic projection, and floor-18 Sentry placement",
-        "Ghost, Wandmaker, Blacksmith, and Imp selection and reward flows"
+        "Ghost, Wandmaker, Blacksmith, and Imp selection and internal reward flows, with seed-only public reward constraints and history-sensitive downstream boundaries"
       ],
       "remaining": [
         "Mob parity is not established for every deeper-floor generation history",

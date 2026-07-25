@@ -1,6 +1,6 @@
 //! Internal per-floor state and its public report projection.
 
-use crate::items::model::{GeneratedItem, ItemProvenance, ShopStockRole};
+use crate::items::model::{GeneratedItem, ItemProvenance, QuestRewardRole, ShopStockRole};
 use crate::report::{FloorMap, FloorReport, ItemEntry, ItemPredictionKind};
 use crate::rooms::init_rooms::BuilderKind;
 
@@ -20,6 +20,20 @@ fn prediction_kind(item: &GeneratedItem) -> ItemPredictionKind {
             | ShopStockRole::DeckRareRing
             | ShopStockRole::DeckRareArtifactOrRing,
         ) => ItemPredictionKind::Constrained,
+        ItemProvenance::Quest(
+            QuestRewardRole::GhostWeapon { .. }
+            | QuestRewardRole::WandmakerWand
+            | QuestRewardRole::ImpRing
+            | QuestRewardRole::BlacksmithRoomWeapon { .. }
+            | QuestRewardRole::BlacksmithRoomMissile { .. },
+        ) => ItemPredictionKind::Constrained,
+        ItemProvenance::Quest(
+            QuestRewardRole::GhostArmor { .. }
+            | QuestRewardRole::BlacksmithWeapon { .. }
+            | QuestRewardRole::BlacksmithMissile { .. }
+            | QuestRewardRole::BlacksmithArmor { .. }
+            | QuestRewardRole::BlacksmithRoomArmor { .. },
+        ) => ItemPredictionKind::Exact,
         _ => match item.source.as_deref() {
             // The exact weapon depends on persistent generator state advanced by
             // runtime/player history before the room is painted.
@@ -59,6 +73,12 @@ pub struct LevelState {
     #[doc(hidden)]
     pub runtime_sensitive_quests_from: Option<usize>,
     pub quests: Vec<String>,
+    /// Public-safe label for reward-bearing quest summaries. `None` means the
+    /// exact internal summary is safe to expose.
+    #[doc(hidden)]
+    pub quest_public_labels: Vec<Option<String>>,
+    #[doc(hidden)]
+    pub runtime_sensitive_map: bool,
     pub complete: bool,
     pub map: Option<FloorMap>,
     /// Non-consuming parity probe at the `createItems` entry boundary.
@@ -101,13 +121,16 @@ impl LevelState {
             if is_blacklisted(item) || is_runtime_sensitive_main_loot(item) {
                 continue;
             }
+            if item.provenance == ItemProvenance::Quest(QuestRewardRole::WandmakerPersisted) {
+                continue;
+            }
             let prediction = prediction_kind(item);
             let shop_role = match item.provenance {
                 ItemProvenance::Shop(role) => {
                     has_shop = true;
                     Some(role)
                 }
-                ItemProvenance::None => None,
+                ItemProvenance::None | ItemProvenance::Quest(_) => None,
             };
             // Bag presence and identity depend on inventory/limited-drop
             // history. A single conditional constraint is added below.
@@ -115,7 +138,17 @@ impl LevelState {
                 continue;
             }
             let constrained = prediction == ItemPredictionKind::Constrained;
-            let full_title = item.title();
+            let quest_role = match item.provenance {
+                ItemProvenance::Quest(role) => Some(role),
+                _ => None,
+            };
+            let full_title = if quest_role.is_some() {
+                let mut public_item = item.clone();
+                public_item.enchantment = None;
+                public_item.title()
+            } else {
+                item.title()
+            };
             let exact_name = if item.cursed {
                 full_title
                     .strip_prefix("cursed ")
@@ -124,19 +157,55 @@ impl LevelState {
             } else {
                 full_title
             };
-            let tier = match shop_role {
-                Some(ShopStockRole::DeckWeapon { tier } | ShopStockRole::DeckMissile { tier }) => {
-                    Some(tier)
-                }
+            let tier = match (shop_role, quest_role) {
+                (
+                    Some(ShopStockRole::DeckWeapon { tier } | ShopStockRole::DeckMissile { tier }),
+                    _,
+                ) => Some(tier),
+                (
+                    _,
+                    Some(
+                        QuestRewardRole::GhostWeapon { tier }
+                        | QuestRewardRole::GhostArmor { tier },
+                    ),
+                ) => Some(tier),
+                (
+                    _,
+                    Some(
+                        QuestRewardRole::BlacksmithWeapon { tier }
+                        | QuestRewardRole::BlacksmithMissile { tier }
+                        | QuestRewardRole::BlacksmithArmor { tier },
+                    ),
+                ) => Some(tier),
+                (
+                    _,
+                    Some(
+                        QuestRewardRole::BlacksmithRoomWeapon { tier }
+                        | QuestRewardRole::BlacksmithRoomMissile { tier }
+                        | QuestRewardRole::BlacksmithRoomArmor { tier },
+                    ),
+                ) => Some(tier),
                 _ if constrained => crate::generator::weapon_tier_for_class(&item.class_name),
                 _ => None,
             };
-            let constrained_name = match shop_role {
-                Some(ShopStockRole::DeckWeapon { .. }) => "weapon stock",
-                Some(ShopStockRole::DeckMissile { .. }) => "missile weapon stock",
-                Some(ShopStockRole::DeckRareWand) => "wand stock",
-                Some(ShopStockRole::DeckRareRing) => "ring stock",
-                Some(ShopStockRole::DeckRareArtifactOrRing) => "artifact or ring stock",
+            let constrained_name = match (shop_role, quest_role) {
+                (Some(ShopStockRole::DeckWeapon { .. }), _) => "weapon stock",
+                (Some(ShopStockRole::DeckMissile { .. }), _) => "missile weapon stock",
+                (Some(ShopStockRole::DeckRareWand), _) => "wand stock",
+                (Some(ShopStockRole::DeckRareRing), _) => "ring stock",
+                (Some(ShopStockRole::DeckRareArtifactOrRing), _) => "artifact or ring stock",
+                (_, Some(QuestRewardRole::GhostWeapon { .. })) => "Ghost weapon reward",
+                (_, Some(QuestRewardRole::GhostArmor { .. })) => "Ghost armor reward",
+                (_, Some(QuestRewardRole::WandmakerWand)) => "Wandmaker wand reward",
+                (_, Some(QuestRewardRole::BlacksmithWeapon { .. })) => "Blacksmith weapon option",
+                (_, Some(QuestRewardRole::BlacksmithMissile { .. })) => "Blacksmith missile option",
+                (_, Some(QuestRewardRole::BlacksmithArmor { .. })) => "Blacksmith armor option",
+                (_, Some(QuestRewardRole::BlacksmithRoomWeapon { .. })) => "Blacksmith room weapon",
+                (_, Some(QuestRewardRole::BlacksmithRoomMissile { .. })) => {
+                    "Blacksmith room missile weapon"
+                }
+                (_, Some(QuestRewardRole::BlacksmithRoomArmor { .. })) => "Blacksmith room armor",
+                (_, Some(QuestRewardRole::ImpRing)) => "Imp ring reward",
                 _ => "weapon reward",
             };
             let entry = ItemEntry {
@@ -152,10 +221,46 @@ impl LevelState {
                     format!("{:?}", item.category).to_ascii_lowercase()
                 },
                 tier,
-                level: reported_level(item, constrained, shop_role),
-                cursed: Some(item.cursed),
+                level: match quest_role {
+                    Some(QuestRewardRole::WandmakerWand) => None,
+                    Some(_) => Some(item.level),
+                    None => reported_level(item, constrained, shop_role),
+                },
+                cursed: if matches!(
+                    quest_role,
+                    Some(
+                        QuestRewardRole::BlacksmithRoomWeapon { .. }
+                            | QuestRewardRole::BlacksmithRoomMissile { .. }
+                            | QuestRewardRole::BlacksmithRoomArmor { .. }
+                    )
+                ) {
+                    None
+                } else {
+                    Some(item.cursed)
+                },
                 prediction,
-                conditional_notes: if item.source.as_deref() == Some("SacrificeRoom") {
+                conditional_notes: if matches!(
+                    quest_role,
+                    Some(
+                        QuestRewardRole::GhostWeapon { .. }
+                            | QuestRewardRole::GhostArmor { .. }
+                            | QuestRewardRole::BlacksmithWeapon { .. }
+                            | QuestRewardRole::BlacksmithMissile { .. }
+                            | QuestRewardRole::BlacksmithArmor { .. }
+                            | QuestRewardRole::BlacksmithRoomWeapon { .. }
+                            | QuestRewardRole::BlacksmithRoomMissile { .. }
+                            | QuestRewardRole::BlacksmithRoomArmor { .. }
+                    )
+                ) {
+                    vec![
+                        "Parchment Scrap may alter the reward's enchantment or glyph chance."
+                            .into(),
+                    ]
+                } else if quest_role == Some(QuestRewardRole::WandmakerWand) {
+                    vec!["The two reward wands are distinct, uncursed, and each receives one upgrade; concrete identities and levels depend on prior wand history.".into()]
+                } else if quest_role == Some(QuestRewardRole::ImpRing) {
+                    vec!["The concrete ring identity depends on prior ring history; the reported level is stable after two upgrades and the reward is forced cursed.".into()]
+                } else if item.source.as_deref() == Some("SacrificeRoom") {
                     vec!["Parchment Scrap may alter the weapon's enchantment chance.".into()]
                 } else {
                     Vec::new()
@@ -211,11 +316,20 @@ impl LevelState {
             }),
             rooms: self.rooms.clone(),
             items,
-            quests: self.runtime_sensitive_quests_from.map_or_else(
-                || self.quests.clone(),
-                |boundary| self.quests[..boundary].to_vec(),
-            ),
-            map: if self.runtime_sensitive_placed_items_from.is_some() {
+            quests: self.quests[..self
+                .runtime_sensitive_quests_from
+                .unwrap_or(self.quests.len())]
+                .iter()
+                .enumerate()
+                .map(|(index, exact)| {
+                    self.quest_public_labels
+                        .get(index)
+                        .and_then(|label| label.as_deref())
+                        .unwrap_or(exact)
+                        .to_string()
+                })
+                .collect(),
+            map: if self.runtime_sensitive_map {
                 None
             } else {
                 self.map.clone().map(state_map::sanitize_public_map)

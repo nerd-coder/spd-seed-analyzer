@@ -54,6 +54,11 @@ pub struct FloorMap {
     #[serde(skip)]
     #[doc(hidden)]
     pub runtime_sensitive_loot_cells: Vec<u32>,
+    /// Stable heap positions whose concrete equipment contents/properties are
+    /// player-state-sensitive. Never serialized.
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub constrained_equipment_cells: Vec<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

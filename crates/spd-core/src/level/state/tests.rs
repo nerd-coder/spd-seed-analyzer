@@ -27,6 +27,8 @@ fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
         runtime_sensitive_placed_items_from: None,
         runtime_sensitive_quests_from: None,
         quests: vec![],
+        quest_public_labels: vec![],
+        runtime_sensitive_map: false,
         complete: true,
         map: Some(FloorMap {
             width: 4,
@@ -98,6 +100,7 @@ fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
             plants: vec![],
             blobs: vec![],
             runtime_sensitive_loot_cells: runtime_cells,
+            constrained_equipment_cells: vec![],
         }),
         pre_items_rng_probe: vec![],
         pre_mobs_rng_probe: vec![],
@@ -131,6 +134,7 @@ fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
     assert!(!json.contains("LeatherArmor"));
     assert!(!json.contains("for_sale"));
     assert!(!json.contains("runtime_sensitive_loot_cells"));
+    assert!(!json.contains("constrained_equipment_cells"));
 }
 
 #[test]
@@ -176,7 +180,7 @@ fn real_shop_public_serialization_redacts_internal_roles_but_keeps_fixed_stock_e
         .iter()
         .filter_map(|item| match item.provenance {
             ItemProvenance::Shop(role) => Some((role, item.class_name.clone())),
-            ItemProvenance::None => None,
+            ItemProvenance::None | ItemProvenance::Quest(_) => None,
         })
         .collect();
     assert!(!internal_shop.is_empty());
@@ -242,4 +246,79 @@ fn real_shop_public_serialization_redacts_internal_roles_but_keeps_fixed_stock_e
     .expect("search fixed shop armor");
     assert_eq!(search.matches.len(), 1);
     assert_eq!(search.matches[0].evidence[0].class_name, "LeatherArmor");
+}
+
+#[test]
+fn quest_report_json_hides_constrained_classes_titles_and_persisted_wands() {
+    use crate::items::model::QuestRewardRole;
+
+    let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(0));
+    let mut saw_persisted_wands = false;
+    let mut checked_unique_constrained_class = false;
+    for depth in 1..=19 {
+        dungeon.depth = depth;
+        let state = crate::level::create_level_partial(&mut dungeon);
+        let report = state.to_floor_report();
+        let json = serde_json::to_string(&report).expect("serialize report");
+
+        for item in &state.placed_items {
+            if matches!(
+                item.provenance,
+                ItemProvenance::Quest(
+                    QuestRewardRole::GhostWeapon { .. }
+                        | QuestRewardRole::WandmakerWand
+                        | QuestRewardRole::BlacksmithRoomWeapon { .. }
+                        | QuestRewardRole::BlacksmithRoomMissile { .. }
+                        | QuestRewardRole::ImpRing
+                )
+            ) {
+                let class_is_exact_elsewhere = report
+                    .items
+                    .iter()
+                    .any(|entry| entry.class_name.as_deref() == Some(&item.class_name))
+                    || report.map.as_ref().is_some_and(|map| {
+                        map.heaps.iter().any(|heap| {
+                            heap.items
+                                .iter()
+                                .any(|entry| entry.class_name == item.class_name)
+                        })
+                    });
+                if !class_is_exact_elsewhere {
+                    assert!(
+                        !json.contains(&item.class_name),
+                        "leaked {}",
+                        item.class_name
+                    );
+                    checked_unique_constrained_class = true;
+                }
+                if let Some(enchantment) = &item.enchantment {
+                    assert!(report
+                        .items
+                        .iter()
+                        .filter(|entry| entry.source == item.source)
+                        .all(|entry| !entry.name.contains(enchantment)));
+                }
+            }
+            if item.provenance == ItemProvenance::Quest(QuestRewardRole::WandmakerPersisted) {
+                saw_persisted_wands = true;
+            }
+        }
+        for summary in &state.quests {
+            if let Some((prefix, titles)) = summary.split_once(" — ") {
+                assert!(report.quests.iter().all(|quest| !quest.contains(titles)));
+                assert!(report
+                    .quests
+                    .iter()
+                    .any(|quest| quest.starts_with(&format!("{prefix} — "))));
+            }
+        }
+        if saw_persisted_wands && state.quests.is_empty() {
+            assert!(report
+                .items
+                .iter()
+                .all(|item| item.source.as_deref() != Some("Wandmaker.Quest")));
+        }
+    }
+    assert!(saw_persisted_wands);
+    assert!(checked_unique_constrained_class);
 }

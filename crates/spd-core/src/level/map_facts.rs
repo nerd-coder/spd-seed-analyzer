@@ -18,6 +18,7 @@ pub(super) struct MapFacts {
     pub mobs: Vec<MapMob>,
     pub markers: Vec<MapMarker>,
     runtime_sensitive_loot_cells: Vec<u32>,
+    constrained_equipment_cells: Vec<u32>,
 }
 
 impl MapFacts {
@@ -68,11 +69,33 @@ impl MapFacts {
             });
         }
 
+        let constrained_equipment_cells = map
+            .known_heaps
+            .iter()
+            .enumerate()
+            .filter_map(|(cell, heap)| {
+                heap.as_ref()
+                    .is_some_and(|heap| {
+                        heap.items.iter().any(|item| {
+                            matches!(
+                                item.provenance,
+                                crate::items::model::ItemProvenance::Quest(
+                                    crate::items::model::QuestRewardRole::BlacksmithRoomWeapon { .. }
+                                        | crate::items::model::QuestRewardRole::BlacksmithRoomMissile { .. }
+                                        | crate::items::model::QuestRewardRole::BlacksmithRoomArmor { .. }
+                                )
+                            )
+                        })
+                    })
+                    .then_some(cell as u32)
+            })
+            .collect();
         Self {
             heaps,
             mobs,
             markers,
             runtime_sensitive_loot_cells: Vec::new(),
+            constrained_equipment_cells,
         }
     }
 
@@ -151,6 +174,7 @@ impl MapFacts {
             plants: plants(map),
             blobs: blobs(map),
             runtime_sensitive_loot_cells: self.runtime_sensitive_loot_cells,
+            constrained_equipment_cells: self.constrained_equipment_cells,
         }
     }
 }

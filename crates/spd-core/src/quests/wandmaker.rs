@@ -252,6 +252,12 @@ fn generate_wands(dungeon: &mut DungeonState) -> (GeneratedItem, GeneratedItem) 
 
     wand1.source = Some("Wandmaker.Quest".into());
     wand2.source = Some("Wandmaker.Quest".into());
+    wand1.provenance = crate::items::model::ItemProvenance::Quest(
+        crate::items::model::QuestRewardRole::WandmakerWand,
+    );
+    wand2.provenance = crate::items::model::ItemProvenance::Quest(
+        crate::items::model::QuestRewardRole::WandmakerWand,
+    );
 
     (wand1, wand2)
 }

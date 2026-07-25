@@ -7,7 +7,7 @@
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::items::enchants;
-use crate::items::model::{GeneratedItem, ItemCategory};
+use crate::items::model::{GeneratedItem, ItemCategory, ItemProvenance, QuestRewardRole};
 use crate::level::TerrainMap;
 use crate::random::Random;
 use crate::rooms::room::Room;
@@ -180,6 +180,12 @@ fn generate_rewards(dungeon: &mut DungeonState) -> (GeneratedItem, GeneratedItem
 
     weapon.source = Some("Ghost.Quest".into());
     armor.source = Some("Ghost.Quest".into());
+    weapon.provenance = ItemProvenance::Quest(QuestRewardRole::GhostWeapon {
+        tier: wep_tier as i32,
+    });
+    armor.provenance = ItemProvenance::Quest(QuestRewardRole::GhostArmor {
+        tier: armor_tier as i32,
+    });
 
     (weapon, armor)
 }

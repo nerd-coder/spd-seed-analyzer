@@ -172,6 +172,20 @@ pub(super) fn blacksmith_room_prizes(
         let cat = *Random::one_of(&[Category::Armor, Category::Weapon, Category::Missile]);
         let mut item = dungeon.generator.random_category(cat, dungeon.depth);
         item.source = Some("BlacksmithRoom".into());
+        let tier = crate::generator::equipment_tier_for_class(&item.class_name)
+            .expect("BlacksmithRoom equipment has a tier");
+        item.provenance = crate::items::model::ItemProvenance::Quest(match item.category {
+            ItemCategory::Weapon => {
+                crate::items::model::QuestRewardRole::BlacksmithRoomWeapon { tier }
+            }
+            ItemCategory::Missile => {
+                crate::items::model::QuestRewardRole::BlacksmithRoomMissile { tier }
+            }
+            ItemCategory::Armor => {
+                crate::items::model::QuestRewardRole::BlacksmithRoomArmor { tier }
+            }
+            _ => unreachable!("BlacksmithRoom equipment category"),
+        });
         let cell = map
             .point_to_cell(point.x, point.y)
             .expect("BlacksmithRoom heap is on map");

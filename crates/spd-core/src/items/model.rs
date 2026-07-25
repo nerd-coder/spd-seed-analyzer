@@ -30,6 +30,22 @@ pub enum ItemProvenance {
     #[default]
     None,
     Shop(ShopStockRole),
+    Quest(QuestRewardRole),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum QuestRewardRole {
+    GhostWeapon { tier: i32 },
+    GhostArmor { tier: i32 },
+    WandmakerWand,
+    WandmakerPersisted,
+    BlacksmithWeapon { tier: i32 },
+    BlacksmithMissile { tier: i32 },
+    BlacksmithArmor { tier: i32 },
+    BlacksmithRoomWeapon { tier: i32 },
+    BlacksmithRoomMissile { tier: i32 },
+    BlacksmithRoomArmor { tier: i32 },
+    ImpRing,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -104,6 +104,8 @@ fn generate_reward(generator: &mut GeneratorState, depth: i32) -> GeneratedItem 
     }
     reward.cursed = true;
     reward.source = Some("Imp.Quest".into());
+    reward.provenance =
+        crate::items::model::ItemProvenance::Quest(crate::items::model::QuestRewardRole::ImpRing);
     reward
 }
 
@@ -131,6 +133,32 @@ mod tests {
         assert!(r1.cursed);
         // randomize_ring level 0–2 then +2 → 2–4
         assert!((2..=4).contains(&r1.level), "level={}", r1.level);
+    }
+
+    #[test]
+    fn altered_ring_deck_changes_identity_without_changing_level_or_rng_tail() {
+        let mut fresh = init_run(42).generator;
+        let mut altered = fresh.clone();
+        Random::reset_generators();
+        Random::push_generator_seeded(123);
+        let _ = altered.random_category(Category::Ring, 18);
+        Random::pop_generator();
+
+        Random::reset_generators();
+        Random::push_generator_seeded(777);
+        let fresh_reward = generate_reward(&mut fresh, 18);
+        let fresh_tail = Random::peek_ints(8);
+        Random::pop_generator();
+
+        Random::reset_generators();
+        Random::push_generator_seeded(777);
+        let altered_reward = generate_reward(&mut altered, 18);
+        let altered_tail = Random::peek_ints(8);
+        Random::pop_generator();
+
+        assert_ne!(fresh_reward.class_name, altered_reward.class_name);
+        assert_eq!(fresh_reward.level, altered_reward.level);
+        assert_eq!(fresh_tail, altered_tail);
     }
 
     #[test]

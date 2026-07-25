@@ -313,6 +313,22 @@ pub(crate) fn weapon_tier_for_class(class_name: &str) -> Option<i32> {
         .map(|index| index as i32 + 1)
 }
 
+pub(crate) fn equipment_tier_for_class(class_name: &str) -> Option<i32> {
+    weapon_tier_for_class(class_name)
+        .or_else(|| {
+            ARMOR
+                .iter()
+                .position(|class| *class == class_name)
+                .map(|i| i as i32 + 1)
+        })
+        .or_else(|| {
+            [MIS_T1, MIS_T2, MIS_T3, MIS_T4, MIS_T5]
+                .iter()
+                .position(|classes| classes.contains(&class_name))
+                .map(|index| index as i32 + 1)
+        })
+}
+
 const ARMOR: &[&str] = &[
     "ClothArmor",
     "LeatherArmor",

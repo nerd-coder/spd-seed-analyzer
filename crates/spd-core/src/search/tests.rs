@@ -216,6 +216,40 @@ fn constrained_shop_stock_never_matches_its_internal_concrete_class() {
 }
 
 #[test]
+fn real_constrained_quest_class_never_matches_exact_search() {
+    use crate::items::model::{ItemProvenance, QuestRewardRole};
+
+    let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(0));
+    for depth in 1..=19 {
+        dungeon.depth = depth;
+        let state = crate::level::create_level_partial(&mut dungeon);
+        let Some(internal) = state.placed_items.iter().find(|item| {
+            matches!(
+                item.provenance,
+                ItemProvenance::Quest(
+                    QuestRewardRole::GhostWeapon { .. }
+                        | QuestRewardRole::WandmakerWand
+                        | QuestRewardRole::BlacksmithRoomWeapon { .. }
+                        | QuestRewardRole::BlacksmithRoomMissile { .. }
+                        | QuestRewardRole::ImpRing
+                )
+            )
+        }) else {
+            continue;
+        };
+        let constraints = [ItemConstraint {
+            class_name: internal.class_name.clone(),
+            min_level: None,
+            min_depth: depth as u32,
+            max_depth: depth as u32,
+        }];
+        assert!(matching_evidence(&[state.to_floor_report()], &constraints).is_empty());
+        return;
+    }
+    panic!("expected a constrained quest reward");
+}
+
+#[test]
 fn result_limit_preserves_ascending_resume_position() {
     let mut value = request(
         vec![constraint("Food", 1, 1), constraint("Pasty", 1, 1)],

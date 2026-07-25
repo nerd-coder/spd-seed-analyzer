@@ -170,6 +170,20 @@ fn generate_rewards(
         item.enchantment = None;
         item.cursed = false;
         item.source = Some("Blacksmith.Quest".into());
+        let tier = crate::generator::equipment_tier_for_class(&item.class_name)
+            .expect("blacksmith equipment has a tier");
+        item.provenance = crate::items::model::ItemProvenance::Quest(match item.category {
+            crate::items::model::ItemCategory::Weapon => {
+                crate::items::model::QuestRewardRole::BlacksmithWeapon { tier }
+            }
+            crate::items::model::ItemCategory::Missile => {
+                crate::items::model::QuestRewardRole::BlacksmithMissile { tier }
+            }
+            crate::items::model::ItemCategory::Armor => {
+                crate::items::model::QuestRewardRole::BlacksmithArmor { tier }
+            }
+            _ => unreachable!("blacksmith reward category"),
+        });
     }
 
     // Always generate first so outcome doesn't affect RNG roll count.

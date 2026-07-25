@@ -16,11 +16,10 @@ lists, map heaps/markers, WASM, search evidence, and UI.
 
 Continue the fixture-first seed-only audit:
 
-1. Ghost, Wandmaker, Blacksmith, and Imp reward identities.
-2. Crypt, Armory, Pool, Statue, Sentry, Traps, crystal, and secret-room loot.
-3. Quantity, level, curse, enchantment, heap type, and cell independently;
+1. Crypt, Armory, Pool, Statue, Sentry, Traps, crystal, and secret-room loot.
+2. Quantity, level, curse, enchantment, heap type, and cell independently;
    redact only fields that are not seed-invariant.
-4. Decide whether createItems grass-flattening requires a pre-items public
+3. Decide whether createItems grass-flattening requires a pre-items public
    terrain projection; its heap/mob/marker cells are already omitted.
 
 Add regression tests proving constrained values cannot leak through serialized
@@ -41,5 +40,13 @@ when pinned evidence proves every reported field is seed-only.
   hidden and public shop entries use canonical order.
 - On the rare Artifact shop branch, artifact history can perturb the remaining
   floor RNG, so the public map and post-ShopRoom item/quest tail are omitted.
+- Quest reward provenance keeps only proven fields public: Ghost weapon,
+  Wandmaker wand, BlacksmithRoom weapon/missile, and Imp ring identities are
+  constrained; Parchment-dependent properties are conditional.
+- Safe quest type/target summaries remain visible without concrete reward
+  titles. Persisted Wandmaker choices are internal-only on later floors.
+- Wandmaker duplicate retries suppress its later item/map tail. Imp and
+  BlacksmithRoom retain proven-stable structure and cells; constrained room
+  heaps use generic labels and empty contents.
 - Exact item searches ignore constrained predictions.
 - Overall and item accuracy remain `partial`; do not claim full accuracy.

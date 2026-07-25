@@ -29,6 +29,19 @@ pub(super) fn sanitize_public_map(mut map: FloorMap) -> FloorMap {
         .retain(|marker| !runtime_sensitive_cells.contains(&marker.cell));
     map.runtime_sensitive_loot_cells.clear();
 
+    let constrained_cells = map.constrained_equipment_cells.clone();
+    for heap in &mut map.heaps {
+        if constrained_cells.contains(&heap.cell) {
+            heap.items.clear();
+        }
+    }
+    for marker in &mut map.markers {
+        if marker.kind == MapMarkerKind::Item && constrained_cells.contains(&marker.cell) {
+            marker.label = "Blacksmith room equipment".into();
+        }
+    }
+    map.constrained_equipment_cells.clear();
+
     let for_sale_cells: Vec<_> = map
         .heaps
         .iter()
