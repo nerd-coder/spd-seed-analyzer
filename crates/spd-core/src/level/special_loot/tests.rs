@@ -449,6 +449,15 @@ fn garden_and_well_prizes() {
             .iter()
             .any(|plant| (plant.class_name, plant.image) == expected));
     }
+    assert_eq!(map.known_blobs.len(), 1);
+    let foliage = &map.known_blobs[0];
+    assert_eq!(foliage.class_name, "Foliage");
+    assert!(!foliage.always_visible);
+    assert_eq!(
+        foliage.cells.len(),
+        ((room.width() - 2) * (room.height() - 2)) as usize
+    );
+    assert!(foliage.cells.iter().all(|&(_, value)| value == 1));
 
     Random::reset_generators();
     Random::push_generator_seeded(3);

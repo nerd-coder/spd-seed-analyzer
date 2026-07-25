@@ -3,7 +3,7 @@ use super::*;
 use std::ffi::OsStr;
 
 #[test]
-fn aaa_floor_eighteen_matches_through_traps_and_plants() {
+fn aaa_floor_eighteen_matches_through_blobs() {
     let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-18.json");
     let path = fixture_paths()
         .into_iter()
@@ -140,5 +140,30 @@ fn aaa_floor_eighteen_matches_through_traps_and_plants() {
         &plants,
         expected.plants.as_ref().expect("floor-18 plants"),
         "floor-18 plants"
+    );
+    let blobs = actual
+        .map
+        .as_ref()
+        .expect("floor-18 map facts")
+        .blobs
+        .iter()
+        .map(|blob| OracleBlob {
+            class_name: blob.class_name.clone(),
+            volume: blob.volume,
+            always_visible: blob.always_visible,
+            cells: blob
+                .cells
+                .iter()
+                .map(|cell| OracleBlobCell {
+                    cell: cell.cell,
+                    value: cell.value,
+                })
+                .collect(),
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        &blobs,
+        expected.blobs.as_ref().expect("floor-18 blobs"),
+        "floor-18 blobs"
     );
 }

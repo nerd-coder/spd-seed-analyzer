@@ -37,6 +37,16 @@ pub(super) fn garden_prizes(
             }
         }
     }
+
+    // GardenRoom.paint seeds Foliage over the complete room interior after
+    // placing its bushes. This is additive blob state and consumes no RNG.
+    for y in (room.top + 1)..room.bottom {
+        for x in (room.left + 1)..room.right {
+            if let Some(cell) = map.point_to_cell(x, y) {
+                map.record_blob_cell("Foliage", false, cell, 1);
+            }
+        }
+    }
     out
 }
 
