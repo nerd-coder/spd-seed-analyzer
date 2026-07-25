@@ -6,13 +6,13 @@
 
 ## Next phase
 
-Continue AAA-AAA-AAA floor-17 parity at the pre-mobs RNG boundary, then compare
-the pre-items boundary, mobs, and normalized heaps. Fix only the first semantic
-difference, then stop.
+Record a pinned AAA-AAA-AAA floor-18 final-heaps fixture, replay preserved state
+through depth 18, and compare room classes, normalized bounds, and the pre-paint
+RNG boundary. Fix only the first semantic difference, then stop.
 
 ## Current checkpoint
 
-- Floor 17 matches Java room classes, normalized bounds, and pre-paint RNG.
-- The next known difference is missing Rust pre-mobs probe capture at floor 17.
+- Floor 17 matches Java through pre-paint, pre-mobs, pre-items, final mobs, and
+  normalized heaps.
 
 Run the complete CI `check` sequence from `AGENTS.md` before committing.
