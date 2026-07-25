@@ -7,6 +7,9 @@ const APP_STORAGE = {
   theme: 'spd-analyzer-theme',
 } as const
 
+const GENERIC_MAP_SEED = '5'
+const GENERIC_MAP_FLOOR = 4
+
 type BrowserErrors = {
   console: string[]
   page: string[]
@@ -164,8 +167,10 @@ test('mobile map dialog fills the viewport and supports 1x and 2x zoom', async (
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  const browserErrors = await openAnalyzer(page, '2')
-  await page.getByRole('button', { name: 'Expand floor 1 map' }).click()
+  const browserErrors = await openAnalyzer(page, GENERIC_MAP_SEED)
+  await page
+    .getByRole('button', { name: `Expand floor ${GENERIC_MAP_FLOOR} map` })
+    .click()
 
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
@@ -222,13 +227,19 @@ test('floor rooms open from a title chip and desktop maps use a large dialog', a
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1200 })
-  const browserErrors = await openAnalyzer(page, '2')
+  const browserErrors = await openAnalyzer(page, GENERIC_MAP_SEED)
 
-  const rooms = page.getByRole('button', { name: /^Rooms \(\d+\)$/ }).first()
+  const rooms = page
+    .getByRole('button', { name: /^Rooms \(\d+\)$/ })
+    .nth(GENERIC_MAP_FLOOR - 1)
   await rooms.click()
-  await expect(page.getByText(/^Rooms on floor 1$/)).toBeVisible()
+  await expect(
+    page.getByText(new RegExp(`^Rooms on floor ${GENERIC_MAP_FLOOR}$`))
+  ).toBeVisible()
 
-  await page.getByRole('button', { name: 'Expand floor 1 map' }).click()
+  await page
+    .getByRole('button', { name: `Expand floor ${GENERIC_MAP_FLOOR} map` })
+    .click()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
   await expect
@@ -248,8 +259,10 @@ test('floor rooms open from a title chip and desktop maps use a large dialog', a
 test('map dialog initially focuses its container instead of a control', async ({
   page,
 }) => {
-  const browserErrors = await openAnalyzer(page, '2')
-  await page.getByRole('button', { name: 'Expand floor 1 map' }).click()
+  const browserErrors = await openAnalyzer(page, GENERIC_MAP_SEED)
+  await page
+    .getByRole('button', { name: `Expand floor ${GENERIC_MAP_FLOOR} map` })
+    .click()
 
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
@@ -309,8 +322,14 @@ test('accuracy details use a responsive modal and restore trigger focus', async 
 test('animated liquid advances on the pixel-aligned canvas path', async ({
   page,
 }) => {
-  const browserErrors = await openAnalyzer(page, '2', 'no-preference')
-  await page.getByRole('button', { name: 'Expand floor 1 map' }).click()
+  const browserErrors = await openAnalyzer(
+    page,
+    GENERIC_MAP_SEED,
+    'no-preference'
+  )
+  await page
+    .getByRole('button', { name: `Expand floor ${GENERIC_MAP_FLOOR} map` })
+    .click()
 
   const canvas = page.getByRole('dialog').getByRole('img', {
     name: /Shattered Pixel Dungeon floor map/,

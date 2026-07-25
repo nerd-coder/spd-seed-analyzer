@@ -84,7 +84,7 @@
         "Regular createItems heap, ordinary Mimic, and GoldenMimic loot is retained for internal parity but omitted from public items, exact search inputs, heap/mob facts, and markers because persistent Generator history can change identity, heap kind, and placement; room-hosted Mimic cells remain visible independently of their omitted reward contents",
         "Shop stock has internal pre-shuffle role provenance: fixed and default-probability identities remain exact; persistent-deck weapon, missile, wand, and ring slots expose stable category/tier plus forced level/curse constraints; the artifact-or-ring fallback omits its runtime-sensitive level; and ChooseBag plus Hourglass sand are conditional inventory-state facts",
         "All FOR_SALE shop heap and marker cells are omitted publicly because bag availability and Hourglass sand count change the isolated shuffle length and therefore every stock position; constrained shop slots cannot satisfy exact seed searches",
-        "When the seeded rare-shop branch requests an Artifact, public projection also omits the map plus item and quest facts generated after the ShopRoom builder callback: prior artifact exhaustion can cause a Ring fallback and class-specific constructor RNG changes the remaining floor stream; feeling, builder choice, room classes, forced items, and pre-callback quest selections remain reportable",
+        "When the seeded rare-shop branch requests an Artifact, public projection omits builder choice, room classes, static room facts, the map, and item/quest facts generated after the ShopRoom callback: prior artifact exhaustion can cause a Ring fallback and class-specific constructor RNG changes the build and remaining floor stream; feeling, forced items, pending rewards selected on prior floors (semantically pre-callback even though inserted after the build returns), and other pre-callback quest selections remain reportable",
         "Public shop entries are sorted into a canonical reporting order rather than exposing the isolated internal shuffle, whose list length and RNG path can vary with bag, Hourglass, and artifact runtime state",
         "Ghost reporting keeps the exact armor class, shared reward level, weapon tier, and forced uncursed state while hiding the generator-history-sensitive weapon class and treating Parchment Scrap enchantment/glyph effects as conditional",
         "Wandmaker reporting exposes two distinct uncursed wand rewards with one upgrade each but hides concrete identities and levels; duplicate-retry history suppresses later placed items and the entire public map on the spawn floor because createItems can flatten grass",
@@ -102,7 +102,7 @@
         "Regular createItems random-loot existence/count, category, identity, heap or Mimic kind, properties, and cell are not asserted publicly because earlier runtime Generator history can alter downstream RNG consumption",
         "Crystal-room sampled concrete loot remains internal-only; public contracts preserve the proven two-source Vault category rotation, Choice's 3–4 potion/scroll sources plus hidden reward, and Path's three potion plus three scroll sources, including artifact-exhaustion fallback conditions",
         "Concrete shop deck-slot identities, bag identity/presence, Hourglass sand presence/count, and every FOR_SALE placement are intentionally excluded from public exact predictions",
-        "Artifact-branch shop floors intentionally have no public map or post-ShopRoom item facts because runtime artifact history can change the builder and painter RNG tail",
+        "Artifact-branch shop floors intentionally expose no builder, room list, static room facts, map, or post-ShopRoom item facts because runtime artifact history can change the build and painter RNG tail",
         "Concrete Ghost weapon, Wandmaker wand, and Imp ring identities are intentionally excluded; Wandmaker duplicate retries suppress its affected downstream item and map facts",
         "Parchment-dependent Ghost and Blacksmith enchantment/glyph outcomes are conditional and not asserted; player-triggered Blacksmith reward regeneration is outside the floor-generation report",
         "Concrete BlacksmithRoom weapon/missile identities and all equipment properties in its map heaps are intentionally excluded; only stable cells, heap types, generic markers, and separately proven item constraints are public",
@@ -153,6 +153,7 @@
         "AAA-AAA-AAA floor-19 full final terrain, discoverability, and tile-variance parity, exact regular and AmbitiousImp branch transitions, ordinary and SecretSummoning traps, PlantsRoom plant cells and identities, and LaboratoryRoom Alchemy blob concentration at cell 1223"
       ],
       "remaining": [
+        "Public maps are omitted on depths 1–2 because intro and guidebook history can change entrance-door visibility; exact internal maps remain available for parity",
         "ToxicGas vent and gas blob facts are not yet exported as exact additive render facts",
         "Uncovered room painters and other floors can produce incomplete terrain or markers",
         "Visual baselines cover a small deterministic seed and floor set",

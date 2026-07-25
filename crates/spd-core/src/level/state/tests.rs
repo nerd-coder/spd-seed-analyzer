@@ -30,6 +30,7 @@ fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
         quests: vec![],
         quest_public_labels: vec![],
         runtime_sensitive_map: false,
+        runtime_sensitive_layout: false,
         room_public_facts: vec![],
         complete: true,
         map: Some(FloorMap {
@@ -145,6 +146,39 @@ fn public_projection_omits_runtime_sensitive_main_loot_and_map_cells() {
         .items
         .iter()
         .any(|item| item.class_name.as_deref() == Some("PotionOfStrength")));
+}
+
+#[test]
+fn public_projection_omits_intro_history_sensitive_maps_on_depths_one_and_two() {
+    for seed in 0..8 {
+        let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(seed));
+        for depth in 1..=2 {
+            dungeon.depth = depth;
+            let state = crate::level::create_level_partial(&mut dungeon);
+            assert!(
+                state.map.is_some(),
+                "internal depth-{depth} map for seed {seed}"
+            );
+            assert!(
+                state.to_floor_report().map.is_none(),
+                "public depth-{depth} map for seed {seed}"
+            );
+        }
+    }
+}
+
+#[test]
+fn public_projection_retains_a_verified_non_sensitive_depth_four_map() {
+    let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(5));
+    let mut state = None;
+    for depth in 1..=4 {
+        dungeon.depth = depth;
+        state = Some(crate::level::create_level_partial(&mut dungeon));
+    }
+    let state = state.expect("depth-four state");
+    assert!(!state.runtime_sensitive_map);
+    assert!(state.map.is_some(), "internal exact map");
+    assert!(state.to_floor_report().map.is_some(), "public safe map");
 }
 
 #[test]
@@ -276,6 +310,7 @@ fn room_reward_projection_hides_all_concrete_fields_and_deduplicates_counts() {
         quests: vec![],
         quest_public_labels: vec![],
         runtime_sensitive_map: false,
+        runtime_sensitive_layout: false,
         room_public_facts: vec![
             super::super::room_public::RoomPublicFact::new("ArmoryRoom", 7)
                 .expect("Armory contract"),

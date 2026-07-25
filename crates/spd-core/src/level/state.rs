@@ -82,6 +82,9 @@ pub struct LevelState {
     pub quest_public_labels: Vec<Option<String>>,
     #[doc(hidden)]
     pub runtime_sensitive_map: bool,
+    /// Builder and room metadata can depend on a pre-build player-state callback.
+    #[doc(hidden)]
+    pub runtime_sensitive_layout: bool,
     #[doc(hidden)]
     pub room_public_facts: Vec<super::room_public::RoomPublicFact>,
     #[doc(hidden)]
@@ -324,17 +327,27 @@ impl LevelState {
             (&a.name, &a.class_name, &a.category).cmp(&(&b.name, &b.class_name, &b.category))
         });
         items.extend(shop_items);
-        for fact in &self.room_public_facts {
-            items.extend(fact.entries());
+        if !self.runtime_sensitive_layout {
+            for fact in &self.room_public_facts {
+                items.extend(fact.entries());
+            }
         }
         FloorReport {
             depth: self.depth as u32,
             feeling: Some(self.feeling.as_str().to_string()),
-            builder: self.builder.map(|builder| match builder {
-                BuilderKind::Loop => "loop".to_string(),
-                BuilderKind::FigureEight => "figure_eight".to_string(),
-            }),
-            rooms: self.rooms.clone(),
+            builder: (!self.runtime_sensitive_layout)
+                .then(|| {
+                    self.builder.map(|builder| match builder {
+                        BuilderKind::Loop => "loop".to_string(),
+                        BuilderKind::FigureEight => "figure_eight".to_string(),
+                    })
+                })
+                .flatten(),
+            rooms: if self.runtime_sensitive_layout {
+                Vec::new()
+            } else {
+                self.rooms.clone()
+            },
             items,
             quests: self.quests[..self
                 .runtime_sensitive_quests_from
@@ -349,7 +362,7 @@ impl LevelState {
                         .to_string()
                 })
                 .collect(),
-            map: if self.runtime_sensitive_map {
+            map: if self.runtime_sensitive_map || self.depth <= 2 {
                 None
             } else {
                 self.map.clone().map(state_map::sanitize_public_map)

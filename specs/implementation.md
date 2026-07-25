@@ -6,56 +6,34 @@
 
 ## Goal
 
-Public reports and search results are seed-only. Never expose a concrete item
-field that player runtime/history can change. Keep exact values internally for
-pinned parity, but publicly emit only proven invariant constraints and clearly
-labeled conditional player-state effects. Apply this rule equally to item
-lists, map heaps/markers, WASM, search evidence, and UI.
+Expose only seed-invariant facts. Keep runtime/history-sensitive sampled values
+internal for Java parity, and publish only proven constraints plus explicitly
+conditional player-state effects. Apply this to reports, maps, WASM, search,
+and UI.
 
 ## Next phase
 
-Continue the fixture-first seed-only audit:
+1. Audit the initial forced-item queue: identity, existence, quantity, and later
+   room consumption must each be proven seed-only before public exposure.
+2. Resolve createItems grass flattening with either pre-items terrain provenance
+   or conservative cell/map suppression.
+3. Audit remaining uncovered room/lifecycle loot and the secret-room queue's
+   main-path assumption.
 
-1. Recover the seed-safe pre-callback portion of maps instead of omitting the
-   whole map after a runtime-sensitive room callback.
-2. Decide whether createItems grass-flattening requires a pre-items public
-   terrain projection.
-3. Audit initial forced-item identities, remaining uncovered room/lifecycle
-   loot, and the secret-room queue's main-path assumption.
-
-Add regression tests proving constrained values cannot leak through serialized
-reports, maps, or exact seed-finder matches. Fixed forced drops may remain exact
-when pinned evidence proves every reported field is seed-only.
+Add altered-history regressions for every retained field. Do not restore
+partial rendered maps from painter snapshots: later doors, decoration, mobs,
+and items can rewrite earlier cells. Per-cell finality provenance is required.
 
 ## Checkpoint
 
-- SacrificeRoom keeps its exact generated reward internally, but public output
-  reports only `weapon reward`, the derived stable tier, forced curse, source,
-  and a conditional Parchment Scrap enchantment-chance note.
-- Audited standard, special, crystal, and secret rooms keep sampled rewards
-  internal. Public output uses static room contracts containing only invariant
-  counts, categories, fixed identities, and explicitly conditional effects.
-- Runtime-sensitive room callbacks set an exact item-tail boundary. Their heap
-  cells are sanitized, and the whole public map is currently omitted where
-  later terrain, mobs, or markers may diverge.
-- The public forced-item queue is snapshotted before room callbacks, so moving a
-  queued prize into a room does not change its public existence.
-- Sacrificial heap items and concrete item marker labels are redacted publicly.
-- Regular createItems heap, Mimic, and GoldenMimic facts remain internal only;
-  their public item entries and map heap/mob/marker cells are omitted. Stable
-  room-hosted Mimic cells remain visible while their rewards are omitted.
-- Shop deck slots expose only proven category/tier and forced-property
-  constraints. Bag and Hourglass stock are conditional; all FOR_SALE cells are
-  hidden and public shop entries use canonical order.
-- On the rare Artifact shop branch, artifact history can perturb the remaining
-  floor RNG, so the public map and post-ShopRoom item/quest tail are omitted.
-- Quest reward provenance keeps only proven fields public: Ghost weapon,
-  Wandmaker wand, BlacksmithRoom weapon/missile, and Imp ring identities are
-  constrained; Parchment-dependent properties are conditional.
-- Safe quest type/target summaries remain visible without concrete reward
-  titles. Persisted Wandmaker choices are internal-only on later floors.
-- Wandmaker duplicate retries suppress its later item/map tail. Imp and
-  BlacksmithRoom retain proven-stable structure and cells; constrained room
-  heaps use generic labels and empty contents.
-- Exact item searches ignore constrained predictions.
-- Overall and item accuracy remain `partial`; do not claim full accuracy.
+- Sacrifice, shop, quest, standard, special, crystal, and secret-room rewards
+  retain exact internal parity but use seed-safe public constraints.
+- Runtime-sensitive painter callbacks suppress the affected item/quest tail and
+  whole rendered map; sampled heap cells and concrete markers are sanitized.
+- Rare Artifact shop generation occurs before layout completion, so its public
+  floor omits builder, room list, static room facts, map, and downstream facts.
+- Depths 1–2 omit public maps because intro/guidebook history changes entrance
+  door visibility. Exact internal maps remain available to parity tests.
+- Fixed-shape sensitive callbacks may retain sanitized maps; exact searches
+  ignore constrained predictions.
+- Overall status remains `partial`; do not claim full accuracy.

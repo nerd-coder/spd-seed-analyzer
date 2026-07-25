@@ -151,6 +151,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
     let mut quests = Vec::new();
     let mut quest_public_labels = Vec::new();
     let mut runtime_sensitive_map = false;
+    let mut runtime_sensitive_layout = false;
     let mut room_public_facts = Vec::new();
     let public_forced_items = forced.clone();
     let mut pre_items_rng_probe = Vec::new();
@@ -177,6 +178,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 quests,
                 quest_public_labels,
                 runtime_sensitive_map,
+                runtime_sensitive_layout,
                 room_public_facts,
                 complete: false,
                 map: floor_map,
@@ -232,6 +234,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 runtime_sensitive_placed_items_from = Some(placed_items.len());
                 runtime_sensitive_quests_from = Some(quests.len());
                 runtime_sensitive_map = true;
+                runtime_sensitive_layout = true;
             }
 
             // Special/secret room paint loot (before createItems; may consume itemsToSpawn).
@@ -431,6 +434,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         quests,
         quest_public_labels,
         runtime_sensitive_map,
+        runtime_sensitive_layout,
         room_public_facts,
         complete: build_ok,
         map: floor_map,

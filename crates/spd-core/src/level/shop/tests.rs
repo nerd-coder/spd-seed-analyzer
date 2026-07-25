@@ -168,7 +168,7 @@ fn generated_stock_is_role_tagged_before_shuffle_and_tags_are_internal() {
 }
 
 #[test]
-fn artifact_rare_branch_redacts_only_the_post_callback_floor_tail() {
+fn artifact_rare_branch_redacts_layout_and_post_callback_floor_tail() {
     let state = (0..100)
         .find_map(|seed| {
             let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(seed));
@@ -177,7 +177,7 @@ fn artifact_rare_branch_redacts_only_the_post_callback_floor_tail() {
                 dungeon.depth = depth;
                 floor = Some(crate::level::create_level_partial(&mut dungeon));
             }
-            floor.filter(|state| state.runtime_sensitive_placed_items_from.is_some())
+            floor.filter(|state| state.runtime_sensitive_layout)
         })
         .expect("an early seed selects the shop artifact-or-ring branch");
     let boundary = state
@@ -191,6 +191,8 @@ fn artifact_rare_branch_redacts_only_the_post_callback_floor_tail() {
 
     let public = state.to_floor_report();
     assert!(public.map.is_none());
+    assert!(public.builder.is_none());
+    assert!(public.rooms.is_empty());
     let quest_boundary = state
         .runtime_sensitive_quests_from
         .expect("artifact branch quest boundary");
@@ -205,6 +207,7 @@ fn artifact_rare_branch_redacts_only_the_post_callback_floor_tail() {
     safe_prefix.runtime_sensitive_placed_items_from = None;
     safe_prefix.quests.truncate(quest_boundary);
     safe_prefix.runtime_sensitive_quests_from = None;
+    safe_prefix.runtime_sensitive_layout = true;
     safe_prefix.map = None;
     let expected = safe_prefix.to_floor_report();
     assert_eq!(
@@ -214,6 +217,21 @@ fn artifact_rare_branch_redacts_only_the_post_callback_floor_tail() {
     );
     let json = serde_json::to_string(&public).expect("serialize guarded floor");
     assert!(!json.contains("for_sale"));
+
+    let mut altered_hidden_layout = state.clone();
+    altered_hidden_layout.builder = Some(crate::rooms::init_rooms::BuilderKind::FigureEight);
+    altered_hidden_layout.rooms = vec!["SampledRuntimeRoom".into()];
+    altered_hidden_layout.room_public_facts =
+        vec![
+            crate::level::room_public::RoomPublicFact::new("ArmoryRoom", state.depth)
+                .expect("static room contract"),
+        ];
+    assert_eq!(
+        serde_json::to_value(&public).expect("serialize public floor"),
+        serde_json::to_value(altered_hidden_layout.to_floor_report())
+            .expect("serialize altered hidden layout"),
+        "pre-build runtime-sensitive layout metadata must not affect public output"
+    );
 }
 
 #[test]
