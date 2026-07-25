@@ -7,7 +7,7 @@ the ordered depth-one `itemsToSpawn` queue at the exact pre-`build()` boundary.
 Schema v3 is a separately scoped level contract that snapshots final heaps and
 mobs after the real `Level.create()` lifecycle completes. Sewer depths 1 through
 4, Prison depths 6 through 9, Caves depths 11 through 14, and City depths 16
-through 17 are supported. Depth 1 is generated directly; deeper
+through 18 are supported. Depth 1 is generated directly; deeper
 targets are generated after completing every prior floor so run-persistent state is
 preserved. A separate generator-deck contract records exact category draws and
 RNG probes across a deck reset without running a floor. A separate shop-bag
@@ -47,6 +47,7 @@ From the analyzer repository root:
 ./tools/java-oracle/run --final-heaps-depth 14 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 16 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 17 AAA-AAA-AAA
+./tools/java-oracle/run --final-heaps-depth 18 AAA-AAA-AAA
 ./tools/java-oracle/run --generator-deck-rollover AAA-AAA-AAA
 ./tools/java-oracle/run --generator-lifecycle AAA-AAA-AAA
 ./tools/java-oracle/run --shop-bag-selection AAA-AAA-AAA
@@ -115,6 +116,8 @@ these commands (stdout is the default when `--output` is omitted):
   --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-16.json AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 17 \
   --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-17.json AAA-AAA-AAA
+./tools/java-oracle/run --final-heaps-depth 18 \
+  --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-18.json AAA-AAA-AAA
 ./tools/java-oracle/run --generator-deck-rollover \
   --output tools/java-oracle/fixtures/generator/aaa-aaa-aaa-food-rollover.json \
   AAA-AAA-AAA
@@ -154,8 +157,8 @@ The floor-12 fixture is exact through its normalized final heaps. Floors 13–14
 and 16 are exact through room classes, normalized bounds, RNG boundaries,
 final mobs, and normalized final heaps. Floor 16 preserves the real floor-15
 DM-300 boss-level generation lifecycle.
-Floor 17 matches room classes, normalized bounds, and the pre-paint RNG
-boundary; later lifecycle boundaries remain unverified.
+Floors 17–18 match room classes, normalized bounds, and the pre-paint RNG
+boundary; later floor-18 lifecycle boundaries remain unverified.
 
 The `GFX-PZH-DCH` floor-one fixture additionally pins CrystalPathRoom's six
 alternating potion/scroll drops to their exact cells. Its focused Rust test
