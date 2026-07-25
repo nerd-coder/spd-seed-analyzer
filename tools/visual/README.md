@@ -3,14 +3,15 @@
 This package performs strict pixel comparisons of the analyzer's deterministic
 map canvas backing bitmap in Chromium. Capturing the backing bitmap avoids
 viewport clipping when a full-resolution map is taller than its dialog. The
-cases come from `tools/visual/tests/map-render-fixtures.ts`; browser-rendered
-baselines are committed in `tools/visual/snapshots/`.
+regular-floor cases come from `tools/visual/tests/map-render-fixtures.ts`;
+browser-rendered baselines are committed in `tools/visual/snapshots/`.
 
-The source screenshots under `tools/visual/fixtures/` remain unchanged. They
-contain gameplay-only state (hero position, explored FOV, and animation phase),
-so they are visual references rather than direct Playwright expectations. The
-Playwright snapshots cover the deterministic terrain, trap, heap, and mob
-layers rendered by the web app.
+The source screenshots under `tools/visual/fixtures/` remain unchanged. Quest
+branch references stay source-only until branch-level analysis is supported.
+The screenshots contain gameplay-only state (hero position, explored FOV, and
+animation phase), so they are visual references rather than direct Playwright
+expectations. The Playwright snapshots cover the deterministic terrain, trap,
+heap, and mob layers rendered by the web app.
 
 ## First-time setup
 

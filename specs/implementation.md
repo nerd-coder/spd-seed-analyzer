@@ -6,16 +6,16 @@
 
 ## Next phase
 
-Register and match the two supplied HKT-JZN-XQQ floor-12 visual fixtures:
-the full floor and Troll Blacksmith quest-room reference. Extend the fixture
-contract as needed, fix only source-backed generation/render divergences,
-update the accuracy manifest, run CI parity, save, commit, and stop. Then
-resume floor 21 at its FigureEightBuilder divergence.
+Resume floor 21 at its FigureEightBuilder divergence. Compare Java and Rust
+connection placement from the exact post-room-selection boundary; fix only a
+source-backed call-order or collection-order mismatch, then carry parity
+through painting and final map facts.
 
 ## Checkpoint
 
-- Floor 21 preserves Java's floor-20 `CityBossLevel` generation lifecycle.
-- ChasmRoom now uses pinned `{4,2,1}` size-category probabilities; floor-21
-  non-connection room selection matches Java exactly.
-- Rust still emits seven TunnelRooms where Java emits six, so bounds and the
-  pre-paint RNG boundary remain divergent. Overall accuracy stays `partial`.
+- HKT-JZN-XQQ floor 12 now has a deterministic browser baseline matching the
+  supplied regular-floor geometry and BlacksmithRoom placement.
+- Its `_Q` image is the separate branch-1 `MiningLevel`; it is registered as a
+  source-only quest-branch reference because branch maps are not analyzed.
+- Floor 21 room selection matches Java, but Rust still emits seven TunnelRooms
+  where Java emits six. Overall accuracy stays `partial`.

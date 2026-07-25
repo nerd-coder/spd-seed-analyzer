@@ -8,10 +8,11 @@ const VISUAL_FIXTURE_DIRECTORY = new URL('../fixtures/', import.meta.url)
 describe('map-render visual fixtures', () => {
   test('registers every on-disk PNG with matching seed and floor metadata', async () => {
     const registeredFiles: string[] = MAP_RENDER_FIXTURES.map(
-      ({ seed, floor, referenceFile }) => {
+      ({ seed, floor, referenceFile, target }) => {
         expect(seed).toMatch(/^[A-Z]{3}(?:-[A-Z]{3}){2}$/)
         expect(floor).toBeGreaterThan(0)
-        expect(String(referenceFile)).toBe(`${seed}_F${floor}.png`)
+        const suffix = target === 'quest-branch' ? '_Q' : ''
+        expect(String(referenceFile)).toBe(`${seed}_F${floor}${suffix}.png`)
         return String(referenceFile)
       }
     )
@@ -30,6 +31,7 @@ describe('map-render visual fixtures', () => {
       seed: 'CXG-FJT-BFQ',
       floor: 1,
       referenceFile: 'CXG-FJT-BFQ_F1.png',
+      target: 'regular-floor',
     })
   })
 })

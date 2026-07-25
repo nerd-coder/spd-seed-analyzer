@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from '@playwright/test'
-import { MAP_RENDER_FIXTURES } from './map-render-fixtures'
+import { AUTOMATED_MAP_RENDER_FIXTURES } from './map-render-fixtures'
 
 const APP_STORAGE = {
   mapSpoilers: 'spd-analyzer-map-spoilers',
@@ -138,7 +138,7 @@ async function captureFloor(page: Page, floor: number, snapshot: string) {
   await snapshotCanvas(canvas, snapshot, itemsEnabled || mobsEnabled)
 }
 
-for (const fixture of MAP_RENDER_FIXTURES) {
+for (const fixture of AUTOMATED_MAP_RENDER_FIXTURES) {
   test(`${fixture.seed} floor ${fixture.floor} deterministic map`, async ({
     page,
   }) => {
