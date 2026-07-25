@@ -234,8 +234,8 @@ mod analyze_smoke {
                         .find(|i| i.source.as_deref() == Some("Imp.Quest"));
                     if let Some(ring) = ring {
                         assert!(
-                            ring.cursed && ring.name.contains("Ring"),
-                            "imp reward cursed ring: cursed={} name={}",
+                            ring.cursed == Some(true) && ring.name.contains("Ring"),
+                            "imp reward cursed ring: cursed={:?} name={}",
                             ring.cursed,
                             ring.name
                         );

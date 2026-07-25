@@ -10,6 +10,7 @@ mod tests;
 #[path = "tests/rollover.rs"]
 mod rollover_tests;
 
+pub(crate) use categories::weapon_tier_for_class;
 pub use categories::{FLOOR_SET_TIER_PROBS, MIS_TIERS, WEP_TIERS};
 pub use state::{full_reset, GeneratorState};
 

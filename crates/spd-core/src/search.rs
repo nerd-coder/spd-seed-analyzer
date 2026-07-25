@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{analyze_seed, AnalyzeError, SeedInfo, TOTAL_SEEDS};
+use crate::{analyze_seed, report::ItemPredictionKind, AnalyzeError, SeedInfo, TOTAL_SEEDS};
 
 /// Maximum candidate seeds evaluated by one search call.
 pub const MAX_SEARCH_CANDIDATES: u32 = 10_000;
@@ -223,16 +223,17 @@ fn matching_evidence(
                 })
                 .find_map(|floor| {
                     floor.items.iter().find_map(|item| {
-                        (item.class_name.as_deref() == Some(constraint.class_name.as_str())
-                            && constraint
-                                .min_level
-                                .is_none_or(|minimum| item.level >= minimum))
+                        (item.prediction == ItemPredictionKind::Exact
+                            && item.class_name.as_deref() == Some(constraint.class_name.as_str())
+                            && constraint.min_level.is_none_or(|minimum| {
+                                item.level.is_some_and(|level| level >= minimum)
+                            }))
                         .then(|| ItemMatchEvidence {
                             constraint_index: constraint_index as u32,
                             class_name: constraint.class_name.clone(),
                             depth: floor.depth,
                             name: item.name.clone(),
-                            level: item.level,
+                            level: item.level.expect("exact predictions expose level"),
                             source: item.source.clone(),
                         })
                     })

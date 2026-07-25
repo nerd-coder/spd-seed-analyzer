@@ -24,8 +24,12 @@ export type ItemEntry = {
   /** Java simple class name for icon lookup. */
   class_name?: string | null
   category: string
+  tier?: number | null
+  level?: number | null
   /** Present when the item is cursed (chip in item list). */
-  cursed?: boolean
+  cursed?: boolean | null
+  prediction: 'exact' | 'constrained'
+  conditional_notes?: string[]
   source?: string | null
 }
 

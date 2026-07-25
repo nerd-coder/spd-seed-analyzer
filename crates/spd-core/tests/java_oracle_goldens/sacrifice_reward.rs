@@ -71,11 +71,30 @@ fn parchment_three_floor_thirteen_sacrifice_reward_matches_java() {
     assert_eq!(reward.enchantment, fixture.reward.enchantment);
 
     let report = floor.to_floor_report();
-    assert!(report.items.iter().any(|item| {
-        item.source.as_deref() == Some("SacrificeRoom")
-            && item.class_name.as_deref() == Some(fixture.reward.class_name.as_str())
-            && item.level == fixture.reward.level
-            && item.cursed == fixture.reward.cursed
-            && item.name.contains("corrupting")
-    }));
+    let public = report
+        .items
+        .iter()
+        .find(|item| item.source.as_deref() == Some("SacrificeRoom"))
+        .expect("public constrained reward");
+    assert_eq!(public.class_name, None);
+    assert_eq!(public.level, None);
+    assert_eq!(public.cursed, Some(true));
+    assert_eq!(public.tier, Some(3));
+    assert_eq!(public.name, "weapon reward");
+    assert_eq!(
+        public.prediction,
+        spd_core::report::ItemPredictionKind::Constrained
+    );
+    assert!(!public.name.contains("corrupting"));
+    assert!(report
+        .map
+        .as_ref()
+        .into_iter()
+        .flat_map(|map| &map.heaps)
+        .filter(|heap| heap.heap_type == "sacrificial")
+        .all(|heap| heap.items.is_empty()));
+    let public_json = serde_json::to_string(&report).expect("serialize public floor report");
+    assert!(!public_json.contains(&fixture.reward.class_name));
+    assert!(!public_json.contains("Corrupting"));
+    assert!(!public_json.contains("+2"));
 }

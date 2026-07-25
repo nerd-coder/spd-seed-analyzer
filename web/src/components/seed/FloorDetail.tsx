@@ -72,7 +72,10 @@ export function FloorDetail({
                   />
                   <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
                     <ItemName name={item.name} />
-                    {item.cursed && (
+                    {item.tier != null && (
+                      <Badge variant="outline">tier {item.tier}</Badge>
+                    )}
+                    {item.cursed === true && (
                       <Badge
                         variant="destructive"
                         className="h-5 px-1.5 py-0 text-[10px] font-normal"
@@ -89,6 +92,14 @@ export function FloorDetail({
                         {sourceLabel}
                       </Badge>
                     )}
+                    {item.conditional_notes?.map((note) => (
+                      <span
+                        key={note}
+                        className="basis-full text-xs text-muted-foreground"
+                      >
+                        Conditional: {note}
+                      </span>
+                    ))}
                   </span>
                 </li>
               )

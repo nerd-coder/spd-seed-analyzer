@@ -167,14 +167,28 @@ pub struct ItemEntry {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub class_name: Option<String>,
     pub category: String,
+    /// Equipment tier when it is stable even though the concrete class is not.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tier: Option<i32>,
     /// Current SPD item upgrade level (`0` is unupgraded).
-    #[serde(default)]
-    pub level: i32,
-    #[serde(default)]
-    #[serde(skip_serializing_if = "std::ops::Not::not")]
-    pub cursed: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub level: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cursed: Option<bool>,
+    pub prediction: ItemPredictionKind,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub conditional_notes: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ItemPredictionKind {
+    /// Concrete identity and properties are safe to use for display and search.
+    Exact,
+    /// Only the explicitly populated constraints are seed-only guarantees.
+    Constrained,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

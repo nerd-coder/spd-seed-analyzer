@@ -478,7 +478,7 @@ fn depth_one_final_heaps_match_report_projection() {
                         .clone()
                         .expect("all analyzed items have a Java class name")
                 },
-                cursed: item.cursed,
+                cursed: item.cursed.expect("exact items expose curse state"),
             })
             .collect();
         actual_projection.sort();

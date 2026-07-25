@@ -79,12 +79,13 @@
         "Item identities and exact heap capture on committed Java-oracle fixtures, including UnstableSpellbook constructor RNG",
         "AAA-AAA-AAA floor-6 Generator weapon lifecycle from floor-3 SacrificeRoom through shop and createItems, floor-7 exact five main Generator drops, floors 8–9, 12–14, and 16–19 exact normalized heaps, and floor-11 exact deterministic heaps including Mimic reward lifecycle, forced drops, CrystalKeys, and GuidePage placement",
         "Supported quest rewards and covered shop stock flows, including exact AAA-AAA-AAA floor-19 persistence of the two Wandmaker reward identities and item state",
-        "Seed finder optional minimum item upgrade-level matching across the analyzed floor range",
-        "Explicit Parchment Scrap state for the SacrificeRoom weapon-randomization contract and pinned HKT-JZN-XQQ floor-13 reward evidence (Corrupting Sword +2 at floor entry)"
+        "Seed finder optional minimum item upgrade-level matching across the analyzed floor range for exact predictions only",
+        "Seed-only reporting classification that preserves exact generation internally while exposing SacrificeRoom rewards only as a tiered cursed weapon constraint; map heaps omit the runtime-sensitive concrete reward",
+        "Explicit Parchment Scrap state and pinned HKT-JZN-XQQ floor-13 Java-oracle parity evidence, retained as internal evidence rather than a public concrete prediction"
       ],
       "remaining": [
         "Loot tied to uncovered room paint or lifecycle paths can be incomplete or misplaced",
-        "The reported HKT-JZN-XQQ floor-13 Whip identity is not reproduced by Parchment Scrap +3 alone; exact prior generator/player-history state is still needed (the pinned floor-entry contract yields a cursed Corrupting Sword +2)",
+        "Concrete SacrificeRoom identity, level, and enchantment depend on prior generator/player history and are intentionally excluded from public reports and exact search matching",
         "Shop and crystal-room loot outside verified flows should be treated as approximate",
         "Later-shop bags require player inventory, and equal-score ChooseBag ties follow non-seeded JVM identity-hash HashMap iteration; HKT and AAA oracle processes choose different bags for equivalent fresh inventories",
         "Hourglass sandbag input is unavailable"

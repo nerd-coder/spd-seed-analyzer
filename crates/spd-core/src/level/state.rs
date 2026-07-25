@@ -1,10 +1,19 @@
 //! Internal per-floor state and its public report projection.
 
 use crate::items::model::GeneratedItem;
-use crate::report::{FloorMap, FloorReport, ItemEntry};
+use crate::report::{FloorMap, FloorReport, ItemEntry, ItemPredictionKind};
 use crate::rooms::init_rooms::BuilderKind;
 
 use super::Feeling;
+
+fn prediction_kind(item: &GeneratedItem) -> ItemPredictionKind {
+    match item.source.as_deref() {
+        // The exact weapon depends on persistent generator state advanced by
+        // runtime/player history before the room is painted.
+        Some("SacrificeRoom") => ItemPredictionKind::Constrained,
+        _ => ItemPredictionKind::Exact,
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct LevelState {
@@ -47,8 +56,10 @@ impl LevelState {
             if is_blacklisted(item) {
                 continue;
             }
+            let prediction = prediction_kind(item);
+            let constrained = prediction == ItemPredictionKind::Constrained;
             let full_title = item.title();
-            let name = if item.cursed {
+            let exact_name = if item.cursed {
                 full_title
                     .strip_prefix("cursed ")
                     .unwrap_or(&full_title)
@@ -56,12 +67,26 @@ impl LevelState {
             } else {
                 full_title
             };
+            let tier = constrained
+                .then(|| crate::generator::weapon_tier_for_class(&item.class_name))
+                .flatten();
             items.push(ItemEntry {
-                name,
-                class_name: Some(item.class_name.clone()),
+                name: if constrained {
+                    "weapon reward".to_string()
+                } else {
+                    exact_name
+                },
+                class_name: (!constrained).then(|| item.class_name.clone()),
                 category: format!("{:?}", item.category).to_ascii_lowercase(),
-                level: item.level,
-                cursed: item.cursed,
+                tier,
+                level: (!constrained).then_some(item.level),
+                cursed: Some(item.cursed),
+                prediction,
+                conditional_notes: if constrained {
+                    vec!["Parchment Scrap may alter the weapon's enchantment chance.".into()]
+                } else {
+                    Vec::new()
+                },
                 source: item.source.clone(),
             });
         }
@@ -75,7 +100,25 @@ impl LevelState {
             rooms: self.rooms.clone(),
             items,
             quests: self.quests.clone(),
-            map: self.map.clone(),
+            map: self.map.clone().map(|mut map| {
+                let mut sacrificial_cells = Vec::new();
+                for heap in &mut map.heaps {
+                    if heap.heap_type == "sacrificial" {
+                        // The blob-held reward is runtime-history-sensitive. The
+                        // public item list carries its stable constraints.
+                        heap.items.clear();
+                        sacrificial_cells.push(heap.cell);
+                    }
+                }
+                for marker in &mut map.markers {
+                    if marker.kind == crate::report::MapMarkerKind::Item
+                        && sacrificial_cells.contains(&marker.cell)
+                    {
+                        marker.label = "Sacrifice reward".to_string();
+                    }
+                }
+                map
+            }),
         }
     }
 }

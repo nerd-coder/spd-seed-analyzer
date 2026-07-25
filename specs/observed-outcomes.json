@@ -27,7 +27,7 @@
       },
       "status": "partially-reproduced",
       "source": "user playthrough report",
-      "notes": "Pinned Java reproduction with Parchment Scrap +3 at the floor-13 entry boundary produces a cursed Corrupting Sword +2. The reward is generated during room paint and stored in SacrificialFire; the later sacrifice only drops it. The reported Whip identity therefore requires additional persistent generator/player-history state beyond the stated trinket."
+      "notes": "The reward is generated during room paint and stored in SacrificialFire; the later sacrifice only drops it. Concrete identity, level, and enchantment vary with persistent generator/player-history state, so the public analyzer reports only the stable tiered cursed-weapon constraint and a conditional Parchment Scrap effect. Exact pinned Java output remains test-only parity evidence."
     }
   ]
 }

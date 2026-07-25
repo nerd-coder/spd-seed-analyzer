@@ -322,7 +322,7 @@ fn depth_one_forced_items_match_pinned_java_oracle() {
                     .class_name
                     .clone()
                     .expect("all analyzed items have a Java class name"),
-                cursed: item.cursed,
+                cursed: item.cursed.expect("exact forced items expose curse state"),
             })
             .collect();
         assert_eq!(actual, expected, "ordered forced items in {context}");

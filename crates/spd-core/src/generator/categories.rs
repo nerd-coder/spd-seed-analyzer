@@ -304,6 +304,15 @@ const WEP_T5: &[&str] = &[
 ];
 const WEP_T5_PROBS: &[f32] = &[2., 2., 2., 2., 2., 2., 2.];
 
+/// Stable equipment tier for a concrete weapon class. This is safe to expose
+/// when runtime history can change the class but not the selected tier.
+pub(crate) fn weapon_tier_for_class(class_name: &str) -> Option<i32> {
+    [WEP_T1, WEP_T2, WEP_T3, WEP_T4, WEP_T5]
+        .iter()
+        .position(|classes| classes.contains(&class_name))
+        .map(|index| index as i32 + 1)
+}
+
 const ARMOR: &[&str] = &[
     "ClothArmor",
     "LeatherArmor",

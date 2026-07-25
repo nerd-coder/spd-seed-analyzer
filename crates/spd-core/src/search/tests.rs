@@ -156,6 +156,36 @@ fn minimum_upgrade_levels_are_optional_and_inclusive() {
 }
 
 #[test]
+fn constrained_runtime_sensitive_items_never_match_exact_searches() {
+    let floor = crate::FloorReport {
+        depth: 13,
+        feeling: None,
+        builder: None,
+        rooms: vec!["SacrificeRoom".into()],
+        items: vec![crate::report::ItemEntry {
+            name: "weapon reward".into(),
+            class_name: None,
+            category: "weapon".into(),
+            tier: Some(3),
+            level: None,
+            cursed: Some(true),
+            prediction: crate::report::ItemPredictionKind::Constrained,
+            conditional_notes: vec!["Parchment Scrap may alter enchantment chance.".into()],
+            source: Some("SacrificeRoom".into()),
+        }],
+        quests: Vec::new(),
+        map: None,
+    };
+    let constraints = [ItemConstraint {
+        class_name: "Sword".into(),
+        min_level: None,
+        min_depth: 13,
+        max_depth: 13,
+    }];
+    assert!(matching_evidence(&[floor], &constraints).is_empty());
+}
+
+#[test]
 fn result_limit_preserves_ascending_resume_position() {
     let mut value = request(
         vec![constraint("Food", 1, 1), constraint("Pasty", 1, 1)],

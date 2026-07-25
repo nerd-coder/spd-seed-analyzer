@@ -4,30 +4,35 @@
 
 **Accuracy:** `partial`; `specs/accuracy.json` is authoritative.
 
+## Goal
+
+Public reports and search results are seed-only. Never expose a concrete item
+field that player runtime/history can change. Keep exact values internally for
+pinned parity, but publicly emit only proven invariant constraints and clearly
+labeled conditional player-state effects. Apply this rule equally to item
+lists, map heaps/markers, WASM, search evidence, and UI.
+
 ## Next phase
 
-Continue items-and-loot parity. Reproduce the reported HKT-JZN-XQQ floor-13
-cursed Corrupting Whip +2 by modeling the missing persistent player/generator
-history; Parchment Scrap +3 added at floor entry is now pinned and produces a
-cursed Corrupting Sword +2. Keep explicit state contracts and exact RNG/deck
-boundaries in Java-oracle fixtures. Do not special-case the reported identity.
+Extend the new `exact` / `constrained` projection beyond SacrificeRoom. Audit
+and classify every item-producing path, fixture-first, starting with:
 
-After the Whip history is explained, close remaining item gaps fixture-first:
+1. Regular heaps plus Mimic and GoldenMimic rewards.
+2. Shop stock, especially inventory-dependent bag selection.
+3. Ghost, Wandmaker, Blacksmith, and Imp reward identities.
+4. Crypt, Armory, Pool, Statue, Sentry, Traps, crystal, and secret-room loot.
+5. Quantity, level, curse, enchantment, heap type, and cell independently;
+   redact only fields that are not seed-invariant.
 
-1. Other SacrificeRoom player-state histories and reward lifecycle.
-2. Every special/secret-room loot family and placement lifecycle.
-3. Shops, crystal rooms, quest rewards, forced drops, and generator decks.
-4. Cross-floor persistence and inventory-dependent item choices.
-5. Exhaustive seed/floor/state parity for identity, quantity, level, curse,
-   enchantment, heap type, cell, and RNG boundaries.
-
-Keep layout work paused until `items-and-loot` has exhaustive pinned evidence,
-no known in-scope gaps, and can be marked `complete`.
+Add regression tests proving constrained values cannot leak through serialized
+reports, maps, or exact seed-finder matches. Fixed forced drops may remain exact
+when pinned evidence proves every reported field is seed-only.
 
 ## Checkpoint
 
-- The floor-13 reward is created during `SacrificeRoom.paint`, stored in
-  `SacrificialFire`, and only dropped by the later sacrifice interaction.
-- The explicit floor-entry Parchment Scrap +3 contract matches pinned Java:
-  cursed Corrupting Sword +2. The reported Whip needs earlier run history.
+- SacrificeRoom keeps its exact generated reward internally, but public output
+  reports only `weapon reward`, the derived stable tier, forced curse, source,
+  and a conditional Parchment Scrap enchantment-chance note.
+- Sacrificial heap items and concrete item marker labels are redacted publicly.
+- Exact item searches ignore constrained predictions.
 - Overall and item accuracy remain `partial`; do not claim full accuracy.
