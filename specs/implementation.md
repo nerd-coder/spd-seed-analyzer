@@ -6,12 +6,12 @@
 
 ## Next phase
 
-Compare AAA-AAA-AAA floor-18 final mobs with the preserved Java fixture. Fix only
+Compare AAA-AAA-AAA floor-18 final heaps with the preserved Java fixture. Fix only
 the first semantic difference, update the accuracy manifest, then stop.
 
 ## Current checkpoint
 
-- Floor 18 matches Java through the pre-items RNG boundary.
-- Final mobs and heaps remain unverified.
+- Floor 18 matches Java through final mobs, including the painted Sentry.
+- Final heaps remain unverified.
 
 Run the complete CI `check` sequence from `AGENTS.md` before committing.

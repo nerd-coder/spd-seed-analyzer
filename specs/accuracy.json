@@ -95,7 +95,7 @@
       "status": "partial",
       "implemented": [
         "Source-ported RegularLevel ambient mob selection through floor 24",
-        "Depth-one mob lifecycle, full HKT-JZN-XQQ floor 6–8 mob parity, exact AAA-AAA-AAA floor 6–9, 11, 13–14, and 16–17 mob facts, including floor-7 ambient plus StatueRoom mobs, floor-13 Blacksmith placement, and floor-14 SuspiciousChestRoom Mimic projection",
+        "Depth-one mob lifecycle, full HKT-JZN-XQQ floor 6–8 mob parity, exact AAA-AAA-AAA floor 6–9, 11, 13–14, and 16–18 mob facts, including floor-7 ambient plus StatueRoom mobs, floor-13 Blacksmith placement, floor-14 SuspiciousChestRoom Mimic projection, and floor-18 Sentry placement",
         "Ghost, Wandmaker, Blacksmith, and Imp selection and reward flows"
       ],
       "remaining": [
