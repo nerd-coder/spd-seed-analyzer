@@ -3,7 +3,7 @@ use super::*;
 use std::ffi::OsStr;
 
 #[test]
-fn aaa_floor_nineteen_matches_through_traps() {
+fn aaa_floor_nineteen_matches_through_plants() {
     let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-19.json");
     let path = fixture_paths()
         .into_iter()
@@ -118,5 +118,19 @@ fn aaa_floor_nineteen_matches_through_traps() {
         &traps,
         expected.traps.as_ref().expect("floor-19 traps"),
         "floor-19 traps"
+    );
+    let plants = map
+        .plants
+        .iter()
+        .map(|plant| OraclePlant {
+            cell: plant.cell,
+            class_name: plant.class_name.clone(),
+            image: plant.image,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        &plants,
+        expected.plants.as_ref().expect("floor-19 plants"),
+        "floor-19 plants"
     );
 }

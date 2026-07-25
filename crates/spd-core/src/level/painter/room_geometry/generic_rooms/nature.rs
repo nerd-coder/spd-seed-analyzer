@@ -52,22 +52,34 @@ pub(super) fn paint_plants(
     };
 
     for plant in plants {
-        random_non_firebloom_seed(generator, depth);
+        let (class_name, image) = random_non_firebloom_seed(generator, depth);
         if let Some(cell) = map.point_to_cell(plant.x, plant.y) {
             // Level.plant converts HIGH_GRASS/EMPTY/EMBERS to GRASS.
             map.map[cell] = GRASS;
             map.item_allowed[cell] = false;
             map.character_allowed[cell] = false;
-            map.plant_occupied[cell] = true;
+            map.record_plant(cell, class_name, image);
         }
     }
 }
 
-fn random_non_firebloom_seed(generator: &mut GeneratorState, depth: i32) {
+fn random_non_firebloom_seed(generator: &mut GeneratorState, depth: i32) -> (&'static str, u8) {
     loop {
         let seed = generator.random_using_defaults(Category::Seed, depth);
         if seed.class_name != "FirebloomSeed" {
-            return;
+            return match seed.class_name.as_str() {
+                "SungrassSeed" => ("Sungrass", 3),
+                "FadeleafSeed" => ("Fadeleaf", 4),
+                "IcecapSeed" => ("Icecap", 10),
+                "SorrowmossSeed" => ("Sorrowmoss", 6),
+                "SwiftthistleSeed" => ("Swiftthistle", 2),
+                "BlindweedSeed" => ("Blindweed", 11),
+                "StormvineSeed" => ("Stormvine", 5),
+                "EarthrootSeed" => ("Earthroot", 8),
+                "MageroyalSeed" => ("Mageroyal", 7),
+                "StarflowerSeed" => ("Starflower", 9),
+                other => panic!("unexpected PlantsRoom seed {other}"),
+            };
         }
     }
 }
