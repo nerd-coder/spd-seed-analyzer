@@ -284,6 +284,46 @@ pub(super) fn paint_demon_spawner(map: &mut TerrainMap, room: &Room) {
     }
 }
 
+/// Pinned `AmbitiousImpRoom.paint` canvas and placement permissions.
+pub(super) fn paint_ambitious_imp(
+    map: &mut TerrainMap,
+    room: &Room,
+    room_index: usize,
+    doors: &DoorMap,
+) {
+    fill_room(map, room, crate::level::terrain::WALL_DECO);
+    fill_margin(map, room, 1, crate::level::terrain::EMPTY);
+    let center = room.as_rect().center_room();
+    for (dx, dy) in [(-2, -2), (2, -2), (-2, 2), (2, 2)] {
+        set(
+            map,
+            Point::new(center.x + dx, center.y + dy),
+            crate::level::terrain::REGION_DECO,
+        );
+    }
+    for (dx, dy) in [(-3, -3), (3, -3), (-3, 3), (3, 3)] {
+        set(
+            map,
+            Point::new(center.x + dx, center.y + dy),
+            crate::level::terrain::WALL_DECO,
+        );
+    }
+    if let Some(door) = entrance(room, room_index, doors) {
+        draw_inside(map, room, door, 1, crate::level::terrain::EMPTY);
+    }
+    set(map, center, crate::level::terrain::EXIT);
+
+    for y in room.top..=room.bottom {
+        for x in room.left..=room.right {
+            if let Some(cell) = map.point_to_cell(x, y) {
+                map.item_allowed[cell] = false;
+                map.character_allowed[cell] = false;
+                map.trap_allowed[cell] = false;
+            }
+        }
+    }
+}
+
 fn entrance(room: &Room, room_index: usize, doors: &DoorMap) -> Option<Point> {
     room.connected.first().and_then(|&other| {
         doors

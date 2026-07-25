@@ -71,6 +71,10 @@ fn paint_water(
             for x in room.left..=room.right {
                 for y in room.top..=room.bottom {
                     // Room.canPlaceWater defaults true for all points in room rect.
+                    if room.name == "AmbitiousImpRoom" && !imp_room_environment_allowed(room, x, y)
+                    {
+                        continue;
+                    }
                     if let Some(i) = map.point_to_cell(x, y) {
                         if lake.get(i).copied().unwrap_or(false)
                             && map.water_allowed[i]
@@ -113,6 +117,10 @@ fn paint_grass(
             }
             for x in room.left..=room.right {
                 for y in room.top..=room.bottom {
+                    if room.name == "AmbitiousImpRoom" && !imp_room_environment_allowed(room, x, y)
+                    {
+                        continue;
+                    }
                     if let Some(i) = map.point_to_cell(x, y) {
                         if grass.get(i).copied().unwrap_or(false)
                             && map.grass_allowed[i]
@@ -174,6 +182,14 @@ fn paint_grass(
     }
 }
 
+fn imp_room_environment_allowed(room: &Room, x: i32, y: i32) -> bool {
+    let center_x = (room.left + room.right) / 2;
+    let center_y = (room.top + room.bottom) / 2;
+    let dx = x - center_x;
+    let dy = y - center_y;
+    dx * dx + dy * dy >= 9
+}
+
 fn paint_traps(
     map: &mut TerrainMap,
     rooms: &[Room],
@@ -195,6 +211,10 @@ fn paint_traps(
                 continue;
             }
             if room.name == "PitRoom" {
+                continue;
+            }
+            // Pinned AmbitiousImpRoom.canPlaceTrap always returns false.
+            if room.name == "AmbitiousImpRoom" {
                 continue;
             }
             for x in room.left..=room.right {

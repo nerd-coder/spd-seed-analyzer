@@ -58,6 +58,10 @@ pub(super) fn paint(
             basic::paint_demon_spawner(map, room);
             None
         }
+        "AmbitiousImpRoom" => {
+            basic::paint_ambitious_imp(map, room, room_index, doors);
+            None
+        }
         _ => None,
     }
 }
