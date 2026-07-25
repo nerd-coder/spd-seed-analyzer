@@ -3,7 +3,7 @@ use super::*;
 use std::ffi::OsStr;
 
 #[test]
-fn aaa_floor_nineteen_matches_through_the_pre_items_boundary() {
+fn aaa_floor_nineteen_matches_through_final_mobs() {
     let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-19.json");
     let path = fixture_paths()
         .into_iter()
@@ -47,4 +47,16 @@ fn aaa_floor_nineteen_matches_through_the_pre_items_boundary() {
         actual.pre_items_rng_probe, expected.pre_items_rng,
         "floor-19 pre-items RNG boundary"
     );
+    let mobs: Vec<_> = actual
+        .map
+        .as_ref()
+        .expect("floor-19 map")
+        .mobs
+        .iter()
+        .map(|mob| OracleMob {
+            cell: mob.cell,
+            class_name: mob.class_name.clone(),
+        })
+        .collect();
+    assert_eq!(mobs, expected.final_mobs, "floor-19 final mobs");
 }

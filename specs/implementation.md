@@ -6,12 +6,14 @@
 
 ## Next phase
 
-Continue the pinned AAA-AAA-AAA floor-19 fixture from the exact pre-items RNG
-boundary. Compare final mobs next and fix only the first semantic divergence.
+Continue the pinned AAA-AAA-AAA floor-19 fixture after exact final-mob parity.
+Compare final heaps next and fix only the first semantic divergence.
 Update the manifest, run CI parity, save, commit, and stop.
 
 ## Checkpoint
 
-- Floor 19 matches room classes, normalized bounds, and the pre-paint,
-  pre-mobs, and pre-items RNG boundaries. Final facts are not yet verified.
+- Floor 19 matches room classes, normalized bounds, the pre-paint, pre-mobs,
+  and pre-items RNG boundaries, and all ten final mob cells/classes.
+- Final heaps, terrain, discoverability, tile variance, transitions, traps,
+  plants, and blobs remain unverified.
 - Overall accuracy remains `partial`; coverage is fixture-specific.

@@ -25,7 +25,7 @@
         "AAA-AAA-AAA floor 12 exact FigureEightBuilder room classes and bounds, pre-paint, pre-mobs, and pre-items RNG boundaries, including CaveExitRoom size probabilities and SecretRunestoneRoom's exact three-drop painter",
         "AAA-AAA-AAA floors 13–14 and 16–17 exact room classes and normalized bounds plus pre-paint, pre-mobs, and pre-items RNG boundaries, normalized heaps, and final mobs; floor 16 preserves the floor-15 DM-300 lifecycle",
         "AAA-AAA-AAA floor 18 exact room classes and normalized bounds plus pre-paint, pre-mobs, and pre-items RNG boundaries, final mobs, final heaps, terrain, discoverability, tile variance, transitions, traps, plants, and GardenRoom Foliage blob facts, including SecretArtilleryRoom's exact placement, fixed DoubleBomb, and two default-pool missiles",
-        "AAA-AAA-AAA floor 19 exact room classes and normalized bounds plus pre-paint, pre-mobs, and pre-items RNG boundaries"
+        "AAA-AAA-AAA floor 19 exact room classes and normalized bounds plus pre-paint, pre-mobs, and pre-items RNG boundaries and final mobs"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
@@ -97,7 +97,7 @@
       "status": "partial",
       "implemented": [
         "Source-ported RegularLevel ambient mob selection through floor 24",
-        "Depth-one mob lifecycle, full HKT-JZN-XQQ floor 6–8 mob parity, exact AAA-AAA-AAA floor 6–9, 11, 13–14, and 16–18 mob facts, including floor-7 ambient plus StatueRoom mobs, floor-13 Blacksmith placement, floor-14 SuspiciousChestRoom Mimic projection, and floor-18 Sentry placement",
+        "Depth-one mob lifecycle, full HKT-JZN-XQQ floor 6–8 mob parity, exact AAA-AAA-AAA floor 6–9, 11, 13–14, and 16–19 mob facts, including floor-7 ambient plus StatueRoom mobs, floor-13 Blacksmith placement, floor-14 SuspiciousChestRoom Mimic projection, and floor-18 Sentry placement",
         "Ghost, Wandmaker, Blacksmith, and Imp selection and reward flows"
       ],
       "remaining": [
