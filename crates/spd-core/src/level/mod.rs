@@ -344,7 +344,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 false
             };
 
-            if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=18) {
+            if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19) {
                 pre_items_rng_probe = Random::peek_ints(8);
             }
             let loot = create_items::create_items_main(
