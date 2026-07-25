@@ -4,7 +4,7 @@ use super::categories::CategoryDef;
 use super::categories::{FLOOR_SET_TIER_PROBS, MIS_TIERS, WEP_TIERS};
 use super::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
-use crate::items::randomize::randomize_item;
+use crate::items::randomize::{randomize_item, randomize_item_with_parchment};
 use crate::random::Random;
 
 #[derive(Debug, Clone)]
@@ -208,6 +208,15 @@ impl GeneratorState {
     }
 
     fn random_deck_item(&mut self, cat: Category, depth: i32) -> GeneratedItem {
+        self.random_deck_item_with_parchment(cat, depth, None)
+    }
+
+    fn random_deck_item_with_parchment(
+        &mut self,
+        cat: Category,
+        depth: i32,
+        parchment_scrap_level: Option<i32>,
+    ) -> GeneratedItem {
         let idx = cat.index();
         // Push category seed deck if present
         let (seed, dropped) = {
@@ -235,7 +244,7 @@ impl GeneratorState {
             }
             // Fallback (should not happen with valid tables)
             let mut item = GeneratedItem::new("Gold", ItemCategory::Gold);
-            randomize_item(&mut item, depth);
+            randomize_item_with_parchment(&mut item, depth, parchment_scrap_level);
             return item;
         }
 
@@ -257,7 +266,7 @@ impl GeneratorState {
         } else {
             GeneratedItem::new(class_name, item_cat)
         };
-        randomize_item(&mut item, depth);
+        randomize_item_with_parchment(&mut item, depth, parchment_scrap_level);
         item
     }
 
@@ -284,6 +293,19 @@ impl GeneratorState {
         } else {
             self.random_deck_item(tier_cat, depth)
         }
+    }
+
+    /// SacrificeRoom's `Generator.randomWeapon` call with its explicit
+    /// Parchment Scrap contract applied only to isolated `Weapon.random()`.
+    pub fn random_sacrifice_weapon(
+        &mut self,
+        floor_set: i32,
+        depth: i32,
+        parchment_scrap_level: i32,
+    ) -> GeneratedItem {
+        let floor_set = floor_set.clamp(0, FLOOR_SET_TIER_PROBS.len() as i32 - 1) as usize;
+        let tier = Random::chances(&FLOOR_SET_TIER_PROBS[floor_set]) as usize;
+        self.random_deck_item_with_parchment(WEP_TIERS[tier], depth, Some(parchment_scrap_level))
     }
 
     pub fn random_missile(

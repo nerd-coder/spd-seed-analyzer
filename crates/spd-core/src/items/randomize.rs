@@ -1,4 +1,4 @@
-//! Per-class `Item.random()` ports (no trinket modifiers; multipliers = 1).
+//! Per-class `Item.random()` ports.
 
 use super::enchants;
 use super::model::{GeneratedItem, ItemCategory};
@@ -6,8 +6,19 @@ use crate::random::Random;
 
 /// Apply type-specific randomization after the item class is chosen.
 pub fn randomize_item(item: &mut GeneratedItem, dungeon_depth: i32) {
+    randomize_item_with_parchment(item, dungeon_depth, None);
+}
+
+/// Apply item randomization with an explicit Parchment Scrap level.
+pub fn randomize_item_with_parchment(
+    item: &mut GeneratedItem,
+    dungeon_depth: i32,
+    parchment_scrap_level: Option<i32>,
+) {
     match item.category {
-        ItemCategory::Weapon | ItemCategory::Missile => randomize_weapon(item),
+        ItemCategory::Weapon | ItemCategory::Missile => {
+            randomize_weapon(item, parchment_scrap_level)
+        }
         ItemCategory::Armor => randomize_armor(item),
         ItemCategory::Wand => randomize_wand(item),
         ItemCategory::Ring => randomize_ring(item),
@@ -18,7 +29,7 @@ pub fn randomize_item(item: &mut GeneratedItem, dungeon_depth: i32) {
     }
 }
 
-fn randomize_weapon(item: &mut GeneratedItem) {
+fn randomize_weapon(item: &mut GeneratedItem, parchment_scrap_level: Option<i32>) {
     // +0: 75%, +1: 20%, +2: 5%
     let mut n = 0;
     if Random::int_max(4) == 0 {
@@ -32,11 +43,17 @@ fn randomize_weapon(item: &mut GeneratedItem) {
     // Separate RNG so parchment scrap variance doesn't affect levelgen stream
     Random::push_generator_seeded(Random::long());
     let effect_roll = Random::float();
-    // multipliers default to 1 without trinkets
-    if effect_roll < 0.3 {
+    let (curse_multiplier, enchant_multiplier) = match parchment_scrap_level {
+        Some(0) => (1.5, 2.0),
+        Some(1) => (2.0, 4.0),
+        Some(2) => (1.0, 7.0),
+        Some(3) => (0.0, 10.0),
+        _ => (1.0, 1.0),
+    };
+    if effect_roll < 0.3 * curse_multiplier {
         item.enchantment = Some(enchants::random_weapon_curse(None).to_string());
         item.cursed = true;
-    } else if effect_roll >= 1.0 - 0.1 {
+    } else if effect_roll >= 1.0 - 0.1 * enchant_multiplier {
         item.enchantment = Some(enchants::random_weapon_enchant(None).to_string());
     }
     Random::pop_generator();

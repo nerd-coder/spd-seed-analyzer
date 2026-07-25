@@ -40,6 +40,7 @@ From the analyzer repository root:
 ./tools/java-oracle/run --final-heaps-depth 6 HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 7 HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 8 HKT-JZN-XQQ
+./tools/java-oracle/run --sacrifice-reward HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 9 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 11 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 12 AAA-AAA-AAA

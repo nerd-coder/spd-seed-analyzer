@@ -16,6 +16,8 @@ mod crystal_path;
 mod final_heaps;
 #[path = "java_oracle_goldens/pool.rs"]
 mod pool;
+#[path = "java_oracle_goldens/sacrifice_reward.rs"]
+mod sacrifice_reward;
 #[path = "java_oracle_goldens/toxic_gas.rs"]
 mod toxic_gas;
 

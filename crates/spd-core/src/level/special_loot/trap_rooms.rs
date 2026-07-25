@@ -197,9 +197,15 @@ pub(super) fn sacrifice_prize(
     burn_sacrifice_center_offset(rooms, ri, doors);
 
     // 1 floor set higher than normal
-    let mut prize = dungeon
-        .generator
-        .random_weapon((dungeon.depth / 5) + 1, false, dungeon.depth);
+    let mut prize = if let Some(level) = dungeon.sacrifice_parchment_scrap_level {
+        dungeon
+            .generator
+            .random_sacrifice_weapon((dungeon.depth / 5) + 1, dungeon.depth, level)
+    } else {
+        dungeon
+            .generator
+            .random_weapon((dungeon.depth / 5) + 1, false, dungeon.depth)
+    };
 
     // Always generate curse (parchment scrap isolation), matching CryptRoom pattern.
     let curse = enchants::random_weapon_curse(None).to_string();

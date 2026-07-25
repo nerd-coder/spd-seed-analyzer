@@ -44,6 +44,12 @@ public final class JavaOracle {
 				args.length == 2 && "shop-bag-selection".equals(args[1]);
 		boolean figureEightTrace =
 				args.length == 3 && "figure-eight-trace".equals(args[1]);
+		boolean sacrificeReward =
+				args.length == 2 && "sacrifice-reward".equals(args[1]);
+		if (sacrificeReward) {
+			System.out.print(SacrificeRewardOracle.generateJson(inputSeed, numericSeed));
+			return;
+		}
 		if (figureEightTrace) {
 			System.out.print(FigureEightTraceOracle.generate(numericSeed, Integer.parseInt(args[2])));
 			return;
@@ -56,6 +62,7 @@ public final class JavaOracle {
 				&& !generatorDeckRollover
 				&& !generatorLifecycle
 				&& !shopBagSelection
+				&& !sacrificeReward
 				&& !args[1].matches("\\d+")) {
 			System.err.println("Unknown oracle contract: " + args[1]);
 			System.exit(2);

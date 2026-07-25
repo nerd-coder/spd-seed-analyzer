@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "contract": "sacrifice_reward_player_state",
+  "spd": { "version": "v3.3.8", "commit": "7b8b845a7" },
+  "input": {
+    "seed": "HKT-JZN-XQQ",
+    "numeric": 1548095554788,
+    "depth": 13,
+    "parchment_scrap_level": 3
+  },
+  "lifecycle": "created_during_room_paint_and_stored_in_blob",
+  "reward": {
+    "class": "Sword",
+    "quantity": 1,
+    "level": 2,
+    "cursed": true,
+    "enchantment": "Corrupting"
+  }
+}

@@ -18,6 +18,8 @@ gradle.beforeProject { project ->
                 gradle.startParameter.projectProperties['oracleGeneratorLifecycle']
         def shopBagSelection =
                 gradle.startParameter.projectProperties['oracleShopBagSelection']
+		def sacrificeReward =
+				gradle.startParameter.projectProperties['oracleSacrificeReward']
 		def figureEightTrace =
 				gradle.startParameter.projectProperties['oracleFigureEightTrace']
         if (sourceDir == null || seed == null) {
@@ -62,6 +64,9 @@ gradle.beforeProject { project ->
             if (shopBagSelection != null) {
                 args('shop-bag-selection')
             }
+			if (sacrificeReward != null) {
+				args('sacrifice-reward')
+			}
 			if (figureEightTrace != null) {
 				args('figure-eight-trace', figureEightTrace)
 			}

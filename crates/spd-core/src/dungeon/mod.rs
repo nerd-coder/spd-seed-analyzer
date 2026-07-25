@@ -25,6 +25,8 @@ pub struct DungeonState {
     pub limited: LimitedDrops,
     /// Direct main-backpack contents used by `ShopRoom.ChooseBag`.
     pub hero_inventory: HeroInventory,
+    /// Explicit Parchment Scrap state for the supported SacrificeRoom prize contract.
+    pub sacrifice_parchment_scrap_level: Option<i32>,
     /// Items forced onto the next level (`Level.itemsToSpawn`).
     pub items_to_spawn: Vec<GeneratedItem>,
     pub ghost: GhostQuestState,

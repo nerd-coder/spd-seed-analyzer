@@ -13,6 +13,7 @@ final_heaps_depth=""
 generator_deck_rollover=""
 generator_lifecycle=""
 shop_bag_selection=""
+sacrifice_reward=""
 figure_eight_trace=""
 
 usage() {
@@ -21,7 +22,7 @@ Usage: tools/java-oracle/run [--source PATH] [--output FILE]
                              [--depth 1 | --final-heaps-depth 1|2|3|4|6|7|8|9|11|12|13|14|16|17|18|19 |
                              --figure-eight-trace DEPTH |
                              --generator-deck-rollover | --generator-lifecycle |
-                             --shop-bag-selection] SEED
+                             --shop-bag-selection | --sacrifice-reward] SEED
 
 Dumps SPD v3.3.8 run facts as stable JSON. With --depth 1, includes the pinned
 depth-one pre-build item slice. With --final-heaps-depth 1-4, 6-9, 11-14, or 16-19, records
@@ -33,6 +34,8 @@ With --shop-bag-selection, calls the pinned ShopRoom.ChooseBag against two
 unique-winner floor-11 backpack profiles without generating a floor.
 With --figure-eight-trace, records non-advancing RNG probes and room bounds for
 every FigureEightBuilder attempt on the target floor.
+With --sacrifice-reward, applies Parchment Scrap +3 at the floor-13 entry
+boundary and captures the reward stored in the SacrificialFire blob.
 EOF
 }
 
@@ -68,6 +71,10 @@ while (($# > 0)); do
 			;;
 		--shop-bag-selection)
 			shop_bag_selection="1"
+			shift
+			;;
+		--sacrifice-reward)
+			sacrifice_reward="1"
 			shift
 			;;
 		--figure-eight-trace)
@@ -110,6 +117,7 @@ selected_contracts=0
 [[ -n "$generator_deck_rollover" ]] && ((selected_contracts += 1))
 [[ -n "$generator_lifecycle" ]] && ((selected_contracts += 1))
 [[ -n "$shop_bag_selection" ]] && ((selected_contracts += 1))
+[[ -n "$sacrifice_reward" ]] && ((selected_contracts += 1))
 [[ -n "$figure_eight_trace" ]] && ((selected_contracts += 1))
 if ((selected_contracts > 1)); then
 	echo "Choose only one oracle contract" >&2
@@ -170,6 +178,9 @@ if [[ -n "$generator_lifecycle" ]]; then
 fi
 if [[ -n "$shop_bag_selection" ]]; then
 	gradle_args+=(-PoracleShopBagSelection=true)
+fi
+if [[ -n "$sacrifice_reward" ]]; then
+	gradle_args+=(-PoracleSacrificeReward=true)
 fi
 if [[ -n "$figure_eight_trace" ]]; then
 	gradle_args+=(-PoracleFigureEightTrace="$figure_eight_trace")
