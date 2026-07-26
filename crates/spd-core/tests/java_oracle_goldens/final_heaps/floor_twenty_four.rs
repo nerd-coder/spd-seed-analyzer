@@ -8,6 +8,7 @@ fn aaa_floor_twenty_four_halls_paint_trace_matches_preserved_run() {
         24,
         0,
         18,
+        None,
     );
 }
 
@@ -19,5 +20,6 @@ fn abc_floor_twenty_four_halls_paint_trace_matches_preserved_run() {
         24,
         0,
         15,
+        None,
     );
 }

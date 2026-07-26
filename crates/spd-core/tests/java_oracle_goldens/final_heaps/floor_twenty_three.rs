@@ -3,6 +3,7 @@ use super::*;
 use std::fs;
 
 use serde::Deserialize;
+use spd_core::rooms::init_rooms::BuilderKind;
 
 #[derive(Debug, Deserialize)]
 struct PaintTrace {
@@ -41,6 +42,7 @@ pub(super) fn assert_halls_paint_trace(
     depth: i32,
     expected_attempts: usize,
     expected_rooms: usize,
+    expected_builder: Option<BuilderKind>,
 ) {
     let trace_path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../tools/java-oracle/fixtures/traces")
@@ -69,6 +71,9 @@ pub(super) fn assert_halls_paint_trace(
         actual = Some(create_level_partial(&mut dungeon));
     }
     let actual = actual.expect("requested floor replay");
+    if let Some(expected_builder) = expected_builder {
+        assert_eq!(actual.builder, Some(expected_builder), "selected builder");
+    }
 
     let actual_pre_shuffle = actual
         .pre_shuffle_room_bounds
@@ -134,6 +139,7 @@ fn aaa_floor_twenty_three_halls_trace_matches_preserved_run() {
         23,
         1,
         21,
+        Some(BuilderKind::FigureEight),
     );
 }
 
@@ -145,5 +151,18 @@ fn abc_floor_twenty_three_halls_paint_trace_matches_preserved_run() {
         23,
         1,
         26,
+        Some(BuilderKind::FigureEight),
+    );
+}
+
+#[test]
+fn gfx_floor_twenty_three_halls_paint_trace_matches_loop_builder_history() {
+    assert_halls_paint_trace(
+        "GFX-PZH-DCH",
+        "gfx-pzh-dch-floor-23-halls-paint.json",
+        23,
+        0,
+        21,
+        Some(BuilderKind::Loop),
     );
 }
