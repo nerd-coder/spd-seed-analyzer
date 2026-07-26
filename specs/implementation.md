@@ -1,4 +1,4 @@
-# SPD Seed Analyzer — Next Implementation Phase
+# SPD Seed Analyzer — Implementation Goal
 
 Pinned target: SPD v3.3.8 @ `7b8b845a7`.
 
@@ -6,49 +6,82 @@ Accuracy remains `partial`. `specs/accuracy.json` is the authoritative record
 of verified coverage, evidence, and known gaps. Never claim full seed-finder
 accuracy while that manifest remains partial.
 
-## Product contract
+## Product goal
 
-- Report only seed-determined spawn facts. Exclude runtime-RNG events such as
-  combat drops.
-- Preserve independently proven properties when identity, placement, or player
-  state is uncertain. Represent bounded alternatives and their conditions.
-- Public maps are deterministic painter-complete layout snapshots captured
-  before NPC, mob, heap, forced-item, Guide Page, and other population.
-- Keep Rust reports, WASM, search, map projection, and UI consistent.
-- Port pinned Java behavior and RNG call order; generation logic belongs in
-  `spd-core`.
+The analyzer has two public outputs:
+
+1. Seed-determined item, loot, shop-stock, and quest-reward **spawn presence**.
+2. Seed-determined **structural floor layout** for regular, boss, and final
+   floors.
+
+Report an item or reward only when the pinned game is guaranteed to create it
+for the seed and stated conditions. Preserve independently proven properties
+when concrete identity depends on player state: for example, report a cursed
+`+2` weapon even if its class is not seed-determined. Represent bounded
+alternatives and their conditions. Exclude combat drops, player-triggered
+rewards, and other runtime-RNG results.
+
+Public maps are layout-only. They may show room geometry, walls, traversable
+floor, doors, and level entrances/exits needed to understand connectivity.
+They must not show or claim parity for mobs, NPCs, items, heaps, grass, water
+decoration, traps, plants, blobs, tile variance, or other painter decoration
+and population. Those facts may remain internal only when needed to preserve
+SPD RNG call order or provide parity evidence; they must not gate publication
+of an otherwise deterministic structural layout.
+
+Spawn presence and structural layout are separate projections. Uncertainty in
+entity placement must not suppress layout, and layout uncertainty must not
+erase independently proven item/reward presence.
+
+Keep Rust reports, WASM, search evidence, map projection, and UI consistent.
+Port pinned Java behavior and RNG call order; generation logic belongs in
+`spd-core`.
 
 ## Current boundary
 
-The AAA-AAA-AAA replay is fixture-backed through floor 21. Floor 21 now has
-exact room classes and bounds, pre-paint/pre-mobs/pre-items RNG boundaries,
-final mobs, and stable final heaps. Its structured Demon Spawner class matches
-the Java oracle while the public marker remains human-readable.
+Regular-level replay and painter coverage are fixture-backed on selected paths
+through floor 21, but coverage remains fixture-specific. Existing terrain,
+trap, plant, blob, mob, heap, and placement fixtures are internal parity
+evidence, not part of the public layout contract.
 
-Floor-21 Halls painter terrain/decor is not exact. Do not infer terrain,
-discoverability, tile variance, transitions, traps, plants, or blobs from the
-new population parity. Forced torches remain modeled by the forced-item
-contract rather than duplicated into internal map heaps; Rust resolves the
-fixture's generic `Seed` item to its deterministic subtype.
+Deterministic limited drops, supported special-room loot, quest rewards, and
+shop stock have partial public projections. Shop placement is intentionally
+excluded: inventory state can alter the shuffle and cells without changing
+every independently provable stock fact.
+
+Dedicated boss floors at depths 5, 10, 15, 20, and 25 and LastLevel at depth
+26 are listed but do not yet have generated structural layouts. Shop support
+is partial and can suppress unrelated facts on artifact-fallback paths.
 
 ## Next phase
 
-Complete AAA-AAA-AAA floor-21 painter parity before moving to floor 22.
+Complete the missing boss/final-floor layout projection and make deterministic
+shop stock a supported spawn-presence path.
 
-1. Diff Rust and Java terrain immediately after each Halls painter stage.
-2. Identify the first RNG or cell divergence in Halls decoration, including
-   region room painters, DemonSpawnerRoom, doors, water/grass/traps, and Halls
-   wall decoration.
-3. Port the minimum pinned behavior needed to restore parity; avoid
-   fixture-specific corrections.
-4. Extend the floor-21 oracle golden incrementally: terrain first, then
-   discoverability, tile variance, transitions, traps, plants, and blobs when
-   each is exact.
-5. Add focused unit tests for every corrected painter rule and update
-   `specs/accuracy.json` in the same change.
+1. Port the pinned level builders and structural painters for depths 5, 10,
+   15, 20, 25, and 26 into `spd-core`, preserving exact RNG call order.
+2. Add a dedicated structural-layout projection containing only geometry,
+   doors, and entrances/exits. Do not export grass, traps, decoration, mobs,
+   items, heaps, or their cells.
+3. Add pinned Java-oracle fixtures and focused Rust tests for each boss/final
+   floor's dimensions, structural terrain, transitions, and RNG boundaries.
+4. Audit `ShopRoom` generation and publish every stock identity or constrained
+   alternative guaranteed to spawn. Keep stock order and placement private
+   when inventory, Hourglass, bag, artifact, or JVM iteration state can alter
+   them.
+5. Decouple shop uncertainty from structural layout and from independently
+   selected pre-shop or invariant post-shop spawn facts. Surface explicit
+   conditions instead of dropping the whole floor whenever a narrower fact is
+   still provable.
+6. Keep exact seed-finder matching limited to exact spawn identities and
+   properties; constrained alternatives remain report evidence, not exact
+   matches.
+7. Update `specs/accuracy.json` with each newly verified behavior in the same
+   change. Do not mark boss layouts or full shop coverage implemented until
+   oracle-backed tests pass.
 
-If floor-21 painter parity exposes a broad missing room family, stop after the
-first cohesive source-backed fix and leave the next exact mismatch here.
+Quest-branch levels such as MiningLevel remain a later phase unless required
+to prove a deterministic reward spawn.
 
 ## Phase completion checklist
 
@@ -56,6 +89,8 @@ first cohesive source-backed fix and leave the next exact mismatch here.
 - Rebuild WASM after Rust changes.
 - Run CI parity: `bun run check`, `bun run check:rust`, `bun run test:rust`,
   `bun run build`, and `bun run test:visual:only`.
+- Verify public maps contain no mob, item, heap, grass, trap, plant, blob, or
+  decorative tile claims.
 - Keep `specs/accuracy.json` aligned with the proven boundary.
-- Rewrite this file to the next concise handoff, commit with a Conventional
-  Commit message, save state, and stop.
+- Rewrite this file to the next concise handoff and use a Conventional Commit
+  message.

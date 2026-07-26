@@ -6,7 +6,7 @@
     "commit": "7b8b845a7"
   },
   "overallStatus": "partial",
-  "summary": "Seed analysis is partial. Covered paths are tested against the pinned game; incomplete or unverified generation paths can still diverge.",
+  "summary": "Seed analysis is partial. The product targets guaranteed seed-determined item, loot, shop-stock, and reward spawns plus structural floor layouts; covered paths are tested against the pinned game, while boss/final-floor layouts and some spawn paths remain incomplete.",
   "lastReviewed": "2026-07-26",
   "areas": [
     {
@@ -18,22 +18,15 @@
         "Generic and region-specific standard-room geometry",
         "Pinned standard, special, and secret room-count tables",
         "Pinned SecretLarderRoom minimum dimensions and food-placement viability",
-        "Depth-1 lifecycle fixtures across ten seeds; full HKT-JZN-XQQ floor 6–8 parity; preserved-state AAA-AAA-AAA floor 2–4, 6–9, and 11 oracle fixtures",
-        "AAA-AAA-AAA floors 2–4 exact pre-mobs/pre-items RNG parity, including SacrificeRoom Room.center burns, floor-3 WaterBridge exit placement, and floor-4 StudyRoom center-heap placement",
-        "AAA-AAA-AAA floor-7 painter RNG parity through PitRoom's UnstableSpellbook constructor, exact central skeleton stack lifecycle, PillarsRoom geometry, and the exact pre-mobs boundary",
-        "AAA-AAA-AAA floors 8–9 and 11 exact pre-paint, pre-mobs, and pre-items RNG boundaries; floor 11 preserves the floor-10 Tengu lifecycle",
-        "AAA-AAA-AAA floor 12 exact FigureEightBuilder room classes and bounds, pre-paint, pre-mobs, and pre-items RNG boundaries, including CaveExitRoom size probabilities and SecretRunestoneRoom's exact three-drop painter",
-        "AAA-AAA-AAA floors 13–14 and 16–17 exact room classes, normalized bounds and heaps, pre-paint/pre-mobs/pre-items RNG boundaries, and final mobs; floor 16 preserves the floor-15 DM-300 lifecycle",
-        "AAA-AAA-AAA floor 18 exact room classes, normalized bounds, phase RNG boundaries, final mobs and heaps, terrain, discoverability, tile variance, transitions, traps, plants, and GardenRoom Foliage blob; SecretArtilleryRoom has exact placement, a fixed DoubleBomb, and two default-pool missiles",
-        "AAA-AAA-AAA floor 19 exact room classes, normalized bounds, phase RNG boundaries, final mobs and heaps, terrain, discoverability, transitions, ordinary and SecretSummoning traps, PlantsRoom plants, and the LaboratoryRoom Alchemy blob; includes AmbitiousImpRoom painter eligibility and branch-transition metadata",
-        "AAA-AAA-AAA floor 21 exact FigureEightBuilder attempt boundaries, room classes, normalized bounds, six TunnelRooms, pre-paint/pre-mobs/pre-items RNG boundaries, final mobs, and stable final heaps; preserves ChasmExitRoom size probabilities and the floor-20 Dwarf King lifecycle"
+        "Depth-1 lifecycle fixtures across ten seeds; full HKT-JZN-XQQ floor 6\u20138 parity; preserved-state AAA-AAA-AAA floor 2\u20134, 6\u20139, and 11 oracle fixtures"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
-        "Later floors still require phase-by-phase parity checks"
+        "Later regular floors still require phase-by-phase parity checks",
+        "Dedicated boss levels at depths 5, 10, 15, 20, and 25 and LastLevel at depth 26 do not yet have generated or verified structural layouts"
       ],
-      "impact": "Room selection, bounds, connections, or downstream RNG can differ on uncovered generation paths.",
+      "impact": "Structural room selection, bounds, connections, or downstream spawn facts can differ on uncovered generation paths.",
       "evidence": [
         "crates/spd-core/tests/java_oracle_goldens.rs",
         "crates/spd-core/tests/java_oracle_goldens/final_heaps",
@@ -78,43 +71,44 @@
       "implemented": [
         "Forced drops, generator decks (including pinned concrete-class undoDrop no-op semantics), main RegularLevel createItems drops, and supported special-room prizes",
         "Item identities and exact heap capture on committed Java-oracle fixtures, including UnstableSpellbook constructor RNG",
-        "AAA-AAA-AAA Generator and heap parity: floor 6 weapon lifecycle from floor-3 SacrificeRoom through shop and createItems; floor 7's five main Generator drops; exact normalized heaps on floors 8–9, 12–14, and 16–19; floor 11 deterministic heaps, Mimic reward lifecycle, forced drops, CrystalKeys, and fresh-meta GuidePage placement. These remain internal Java-parity evidence",
+        "AAA-AAA-AAA Generator and heap parity: floor 6 weapon lifecycle from floor-3 SacrificeRoom through shop and createItems; floor 7's five main Generator drops; exact normalized heaps on floors 8\u20139, 12\u201314, and 16\u201319; floor 11 deterministic heaps, Mimic reward lifecycle, forced drops, CrystalKeys, and fresh-meta GuidePage placement. These remain internal Java-parity evidence",
         "Supported quest rewards retain exact internal parity state, including both Wandmaker reward identities persisted through AAA-AAA-AAA floor 19; inherited population or Generator taint no longer hides a later independently selected quest, and public reports expose only reward-specific deterministic facts",
         "Seed finder optional minimum item upgrade-level matching across the analyzed floor range for exact predictions only",
-        "SacrificeRoom reports preserve exact generation internally and expose a cursed weapon with pinned one-higher floor-set tier bounds (tiers 2–5 on depths 1–4, 3–5 on depths 6–14, and 4–5 on depths 16–24) plus a final +0..+3 upgrade range; concrete identity, enchantment, and map contents remain hidden",
+        "SacrificeRoom reports preserve exact generation internally and expose a cursed weapon with pinned one-higher floor-set tier bounds (tiers 2\u20135 on depths 1\u20134, 3\u20135 on depths 6\u201314, and 4\u20135 on depths 16\u201324) plus a final +0..+3 upgrade range; concrete identity, enchantment, and map contents remain hidden",
         "Regular createItems heaps and ordinary/Golden Mimic loot remain internal because persistent Generator history can change identity, heap kind, and placement. Public reports, exact search, heap/mob facts, and markers omit them; room-hosted Mimic cells remain independently reportable",
         "Shop stock has internal pre-shuffle role provenance. Fixed and default-probability identities remain exact; persistent-deck weapon, missile, wand, and ring slots expose stable category/tier and forced level/curse constraints; the artifact-or-ring fallback omits its runtime-sensitive level; ChooseBag and Hourglass sand are conditional inventory-state facts",
         "Public reports omit all FOR_SALE shop heap and marker cells because bag availability and Hourglass sand count change shuffle length and every stock position; constrained shop slots cannot satisfy exact searches",
         "When a seeded rare-shop branch requests an Artifact, prior artifact exhaustion can force a Ring fallback whose constructor RNG changes the build and remaining floor stream. Public reports retain deterministic shop stock and label the uncertain slot as artifact or ring, but omit builder choice, room classes, static room facts, map, and post-ShopRoom item/quest facts; feeling, forced items, previously selected pending rewards, and other pre-callback quest selections remain reportable",
-        "Public shop entries use canonical report order, not the internal shuffle whose length and RNG path vary with bag, Hourglass, and artifact state",
+        "Public shop entries use canonical report order, not the internal shuffle whose length and RNG path vary with bag, Hourglass, and artifact state; this reports spawn presence rather than stock placement",
         "Ghost reporting keeps the exact armor class, shared reward level, weapon tier, and forced uncursed state while hiding the generator-history-sensitive weapon class and omitting enchantment/glyph outcomes",
-        "Wandmaker quest presence and type are selected during initRooms and remain public across later painter uncertainty. Reports render both distinct, uncursed choices concisely as +1…+3 wands without user-facing history warnings or concrete identities; duplicate-retry history suppresses later placed items and the spawn floor's public map because createItems can flatten grass",
+        "Wandmaker quest presence and type are selected during initRooms and remain public across later painter uncertainty. Reports render both distinct, uncursed choices concisely as +1\u2026+3 wands without user-facing history warnings or concrete identities; duplicate-retry history suppresses later placed items and the spawn floor's public map because createItems can flatten grass",
         "The Blacksmith's initial four-option pool retains exact default-probability identities, tiers, shared level, and uncursed state; enchantment/glyph outcomes are omitted, and later player-triggered pool regeneration is not predicted",
         "BlacksmithRoom's two painted equipment rewards have separate provenance. Runtime-sensitive weapon/missile identities are constrained to category and tier; armor identity remains exact; Parchment-sensitive curse/enchantment/glyph properties are omitted. Cells, heap types, and markers remain internal with the regular-floor map",
         "Imp reports render the reward as a concise +X ring with its stable post-two-upgrade level and forced curse, without a user-facing history warning or concrete ring identity. Isolated ring-deck selection and class-independent Ring.random calls preserve public room order and the later floor tail; the regular-floor map remains internal",
-        "Quest summaries preserve the seed-safe quest type/target prefix; Wandmaker uses the concise one of two +1…+3 wands label because prior wand history can change the final upgrade, and other quest reward-title suffixes use generic labels",
+        "Quest summaries preserve the seed-safe quest type/target prefix; Wandmaker uses the concise one of two +1\u2026+3 wands label because prior wand history can change the final upgrade, and other quest reward-title suffixes use generic labels",
         "The UI partitions ShopRoom stock and quest-provenance rewards into dedicated Shop and Quest rewards sections; those entries are not repeated under general floor items, and Blacksmith and Imp reward rows omit their redundant quest-source badges",
         "Wandmaker choices persisted into later internal floor states for Java-oracle parity are explicitly internal-only and are not repeated publicly after the spawn floor, where the player may already have claimed one",
         "Explicit Parchment Scrap state and pinned HKT-JZN-XQQ floor-13 Java-oracle parity evidence, retained as internal evidence rather than a public concrete prediction",
         "Special-room rewards retain exact internal generation; public output uses painter-emitted static contracts rather than sampled items. This covers Study, Ritual, Ring, SuspiciousChest, and GrassyGrave center callbacks. Crypt exposes its floor-set armor distribution and forced curse; Statue exposes its forced-uncursed, positively enchanted weapon contract; audited families retain invariant source counts/categories while omitting unsafe fields and placements",
-        "Armory reports expose the guaranteed 2–3 base-reward count, without-replacement bomb/weapon/armor/missile category set, depth floor-set equipment tier bounds, +0..+2 upgrade bounds, tierless +0 uncursed bomb branch, Parchment-sensitive equipment curse/enchantment condition, and the separately conditional queued Trinket Catalyst",
-        "Legacy special-room summaries now retain source-backed reward structure: Library's first-scroll pair and 1–3 count; Treasury's 2–3 gold/Catalyst sources plus conditional six-pile heap branch; Storage and Magical Fire's 3–4 count and category fallback; Runestone's 2–3 stone/Catalyst precedence; Laboratory's fixed five-crystal stack plus 1–2 prize sources and meta-dependent pages; and Toxic Gas's doubled main gold plus two gold/Catalyst chests",
-        "Guaranteed limited-drop identities are reported as exact floor spawns and can satisfy seed-finder searches. Every regular floor has a food spawn; floor 1 reports its exact seed-determined identity and item name, while later floors retain a food-category constraint. Halls depths 21–24 have one aggregate constraint for two Torches; seeded Large feelings add a second food spawn. Even-count Scrolls of Upgrade retain their Forbidden Runes removal condition",
-        "SecretLibraryRoom retains exact private-pool base scroll identities and placement internally, with its JVM HashMap order pinned by a targeted Java oracle; public output exposes only 2–3 distinct scroll-base rewards and labels Exotic Crystals conversion as conditional",
+        "Armory reports expose the guaranteed 2\u20133 base-reward count, without-replacement bomb/weapon/armor/missile category set, depth floor-set equipment tier bounds, +0..+2 upgrade bounds, tierless +0 uncursed bomb branch, Parchment-sensitive equipment curse/enchantment condition, and the separately conditional queued Trinket Catalyst",
+        "Legacy special-room summaries now retain source-backed reward structure: Library's first-scroll pair and 1\u20133 count; Treasury's 2\u20133 gold/Catalyst sources plus conditional six-pile heap branch; Storage and Magical Fire's 3\u20134 count and category fallback; Runestone's 2\u20133 stone/Catalyst precedence; Laboratory's fixed five-crystal stack plus 1\u20132 prize sources and meta-dependent pages; and Toxic Gas's doubled main gold plus two gold/Catalyst chests",
+        "Guaranteed limited-drop identities are reported as exact floor spawns and can satisfy seed-finder searches. Every regular floor has a food spawn; floor 1 reports its exact seed-determined identity and item name, while later floors retain a food-category constraint. Halls depths 21\u201324 have one aggregate constraint for two Torches; seeded Large feelings add a second food spawn. Even-count Scrolls of Upgrade retain their Forbidden Runes removal condition",
+        "SecretLibraryRoom retains exact private-pool base scroll identities and placement internally, with its JVM HashMap order pinned by a targeted Java oracle; public output exposes only 2\u20133 distinct scroll-base rewards and labels Exotic Crystals conversion as conditional",
         "Runtime-sensitive population taint persists across later floors for dependent Generator-backed identities, layout, maps, and ordinary item tails. Because each floor's level RNG is freshly seeded, inherited taint alone does not suppress that floor's independently selected quest or invariant reward facts; a current-floor pre-quest divergence still hides its dependent quest tail"
       ],
       "remaining": [
         "Loot tied to uncovered room paint or lifecycle paths can be incomplete or misplaced",
         "SacrificeRoom concrete identity, exact level within the proven +0..+3 range, and enchantment depend on prior Generator/player history and are excluded from public reports and exact search matching",
         "Regular createItems random-loot facts remain unavailable because earlier runtime Generator history can alter downstream RNG consumption",
-        "Crystal-room sampled concrete loot remains internal-only; public contracts preserve the proven two-source Vault category rotation, Choice's 3–4 potion/scroll sources plus hidden reward, and Path's three potion plus three scroll sources, including artifact-exhaustion fallback conditions",
+        "Crystal-room sampled concrete loot remains internal-only; public contracts preserve the proven two-source Vault category rotation, Choice's 3\u20134 potion/scroll sources plus hidden reward, and Path's three potion plus three scroll sources, including artifact-exhaustion fallback conditions",
         "Concrete shop deck-slot identities, bag identity/presence, Hourglass sand presence/count, and every FOR_SALE placement are intentionally excluded from public exact predictions",
         "Artifact-branch shop floors intentionally expose no builder, room list, static room facts, map, or post-ShopRoom item facts because runtime artifact history can change the build and painter RNG tail",
         "Concrete Ghost weapon, Wandmaker wand, and Imp ring identities are intentionally excluded; Wandmaker duplicate retries suppress its affected downstream item and map facts",
         "Ghost and Blacksmith enchantment or glyph outcomes are omitted because player state can change them; player-triggered Blacksmith reward regeneration is outside the floor-generation report",
         "Concrete BlacksmithRoom weapon/missile identities, equipment properties, cells, heap types, and markers are intentionally excluded; only separately proven item constraints are public",
         "ChooseBag ties follow non-seeded JVM identity-hash HashMap iteration; HKT and AAA oracle processes choose different bags for equivalent fresh inventories. Hourglass state input remains unavailable",
-        "Concrete forced-food identity after floor 1 remains constrained until gameplay-time Generator mutations are modeled explicitly"
+        "Concrete forced-food identity after floor 1 remains constrained until gameplay-time Generator mutations are modeled explicitly",
+        "Shop support remains partial: artifact exhaustion, bag availability, Hourglass state, persistent decks, and JVM iteration can leave identities conditional; independently provable stock must be retained without claiming order or cells"
       ],
       "impact": "An item can be missing, different, or placed on a different cell even when earlier seed facts match.",
       "evidence": [
@@ -128,51 +122,24 @@
       ]
     },
     {
-      "id": "mobs-and-quests",
-      "area": "Mobs & quests",
-      "status": "partial",
-      "implemented": [
-        "Source-ported RegularLevel ambient-mob selection through floor 24",
-        "Depth-one mob lifecycle, full HKT-JZN-XQQ floor 6–8 mob parity, exact AAA-AAA-AAA floor 6–9, 11, 13–14, and 16–19 mob facts, including floor-7 ambient plus StatueRoom mobs, floor-13 Blacksmith placement, floor-14 SuspiciousChestRoom Mimic projection, and floor-18 Sentry placement",
-        "Ghost, Wandmaker, Blacksmith, and Imp selection and internal reward flows, with deterministic public reward constraints preserved across unrelated inherited population taint and history-sensitive current-floor boundaries"
-      ],
-      "remaining": [
-        "Mob parity is not established for every deeper-floor generation history",
-        "Unsupported level types and uncovered room-specific entities can diverge",
-        "Correct mob tables alone do not prove full lifecycle or RNG parity"
-      ],
-      "impact": "Mob classes, counts, positions, quest presence, or rewards can differ after an uncovered RNG boundary.",
-      "evidence": [
-        "crates/spd-core/src/level/create_mobs",
-        "crates/spd-core/src/quests",
-        "crates/spd-core/tests/java_oracle_goldens/final_heaps"
-      ]
-    },
-    {
       "id": "terrain-and-map-rendering",
       "area": "Terrain & map rendering",
       "status": "partial",
       "implemented": [
-        "Water, grass, trap, door merge, and graph painting for supported regular-floor paths",
-        "Profiled analysis publishes painter-complete layout snapshots captured before NPC, mob, heap, forced-item placement, Guide Page, and other population. Each seed overview defaults to no map-affecting trinket and can configure a Mossy Clump or Trap Mechanism level plus the first floor where it is held; changing it regenerates every map for that seed. Exact public maps contain no item or mob facts",
-        "A dedicated sequential layout projection stops each floor at the painter-complete snapshot, so uncertain post-layout NPC, mob, heap, and item population no longer taints later floor layouts. Pre-layout item and room callbacks still execute when their RNG or persistent Generator effects can change painting",
+        "Structural room geometry, walls, traversable floor, door merge, graph painting, and entrances/exits for supported regular-floor paths",
+        "Profiled analysis captures a pre-population painter snapshot, from which the public contract projects structural layout only",
+        "A dedicated sequential layout projection prevents uncertain NPC, mob, heap, and item population from tainting later structural layouts. Internal callbacks still execute when their RNG or persistent Generator effects can change structure",
         "Real-seed CXG-FJT-BFQ and HKT-JZN-XQQ references document intentional public map omission. A Playwright-only synthetic FloorMap exercises dialog, zoom, focus, responsive layout, and liquid animation without exposing unsafe production cells",
         "Pinned gameplay references for HKT-JZN-XQQ floor 12 and its Troll Blacksmith MiningLevel branch, with the branch explicitly retained as source-only evidence",
-        "Fixture-backed terrain and render facts for selected special rooms",
-        "AAA-AAA-AAA floor-18 full final terrain, discoverability, and tile-variance parity, including CityPainter's wall-stitchable decoration guard and PitRoom's ordinary-floor inset, empty well, lake water, and crystal entrance door",
-        "AAA-AAA-AAA floor-19 full final terrain, discoverability, and tile-variance parity, exact regular and AmbitiousImp branch transitions, ordinary and SecretSummoning traps, PlantsRoom plant cells and identities, and LaboratoryRoom Alchemy blob concentration at cell 1223",
-        "Trap Mechanism visibility accumulation is modeled for regular painter traps, MinefieldRoom, BurnedRoom, and SecretSummoningRoom"
+        "Fixture-backed terrain and render facts for selected special rooms"
       ],
       "remaining": [
-        "The configured seed-scoped Mossy Clump or Trap Mechanism state and acquisition floor resolve the seeded default-feeling branch while preserving SPD's short-circuit Random.Float call order and persistent seeded feeling decks from the first held floor onward",
-        "Public layouts intentionally stop before population, so they do not predict createMobs, createItems grass flattening, forced-item placement, GuidePage/meta placement, heaps, or entity cells",
-        "ToxicGas vent and gas blob facts are not yet exported as exact additive render facts",
-        "Uncovered room painters and other floors can produce incomplete terrain or markers",
-        "Layouts whose builder, room set, feeling, or painter output can change with player state are not exact predictions; their optional baseline-assumption previews can differ from gameplay. Entity-only Generator, quest, inventory, and meta dependencies do not suppress an otherwise exact layout",
-        "Dedicated boss levels at depths 5, 10, 15, 20, and 25 plus LastLevel at depth 26 are visible in the floor report, but their level-specific builders and maps are not yet generated or rendered",
+        "Uncovered room painters and later regular floors can produce incomplete structural geometry, doors, or transitions",
+        "Layouts whose builder, room set, or structural painter output can change with player state are not exact predictions; entity-only Generator, quest, inventory, and meta dependencies must not suppress an otherwise exact structural layout",
+        "Dedicated boss levels at depths 5, 10, 15, 20, and 25 plus LastLevel at depth 26 are visible in the floor report, but their level-specific builders and structural maps are not yet generated, oracle-verified, or rendered",
         "Quest-branch levels, including the Troll Blacksmith MiningLevel reference, are not generated or rendered by the analyzer"
       ],
-      "impact": "Public previews show deterministic floor layout only; they intentionally do not predict the final populated gameplay map.",
+      "impact": "Public previews show deterministic structural floor layout only; they intentionally make no claims about decoration, traps, vegetation, entities, loot placement, or the final populated gameplay map.",
       "evidence": [
         "crates/spd-core/src/level/painter",
         "crates/spd-core/tests/java_oracle_goldens/final_heaps/replay_aaa_sewers.rs",
@@ -190,6 +157,7 @@
       "remaining": [
         "The unseeded early Guidebook page is intentionally excluded",
         "Player decisions and inventory changes are not inferred",
+        "Item, shop-stock, and reward placement cells are intentionally excluded; the public claim is guaranteed spawn presence and seed-determined properties",
         "Full parity claims remain blocked until the overall status is explicitly promoted from partial"
       ],
       "impact": "These inputs or behaviors are not predictions and should not be interpreted as analyzer errors.",
