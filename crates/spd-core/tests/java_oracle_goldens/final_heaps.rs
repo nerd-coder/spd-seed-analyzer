@@ -12,6 +12,8 @@ mod floor_sixteen;
 mod floor_twenty_four;
 #[path = "final_heaps/floor_twenty_one.rs"]
 mod floor_twenty_one;
+#[path = "final_heaps/floor_twenty_six.rs"]
+mod floor_twenty_six;
 #[path = "final_heaps/floor_twenty_three.rs"]
 mod floor_twenty_three;
 #[path = "final_heaps/floor_twenty_two.rs"]

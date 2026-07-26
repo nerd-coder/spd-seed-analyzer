@@ -6,6 +6,7 @@ use crate::report::{FloorMap, MapTransition};
 mod caves;
 mod data;
 mod halls;
+mod last_level;
 mod sewer;
 
 use data::{D10, D20, D26, T10, T20, T26};
@@ -53,6 +54,12 @@ pub(super) fn generated_layout(
         // same level RNG stream.
         15 => (0..10_000).find_map(|_| caves::build(dungeon, depth_seed)),
         25 => (0..10_000).find_map(|_| halls::build(dungeon, depth_seed)),
+        26 => Some(last_level::build(
+            dungeon,
+            expand(T26),
+            expand(D26),
+            depth_seed,
+        )),
         _ => fixed_layout(dungeon.depth),
     }
 }
@@ -102,6 +109,7 @@ fn transitions(depth: i32) -> Vec<MapTransition> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::report::MapCustomTile;
     use serde::Deserialize;
 
     #[derive(Deserialize)]
@@ -117,12 +125,42 @@ mod tests {
         discoverable: Vec<bool>,
         tile_variance: Vec<u8>,
         #[serde(default)]
-        custom_tiles: Vec<crate::report::MapCustomTile>,
+        custom_tiles: Vec<OracleCustomTile>,
         #[serde(default)]
-        custom_walls: Vec<crate::report::MapCustomTile>,
+        custom_walls: Vec<OracleCustomTile>,
         transitions: Vec<MapTransition>,
         #[serde(default)]
         pre_items_rng: Vec<i32>,
+    }
+
+    #[derive(Deserialize)]
+    struct OracleCustomTile {
+        #[serde(rename = "class")]
+        class_name: String,
+        #[serde(default)]
+        texture: Option<String>,
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+        static_data: Vec<i16>,
+    }
+
+    impl From<&OracleCustomTile> for MapCustomTile {
+        fn from(tile: &OracleCustomTile) -> Self {
+            Self {
+                class_name: tile.class_name.clone(),
+                texture: tile
+                    .texture
+                    .clone()
+                    .unwrap_or_else(|| "halls_special".into()),
+                x: tile.x,
+                y: tile.y,
+                width: tile.width,
+                height: tile.height,
+                static_data: tile.static_data.clone(),
+            }
+        }
     }
 
     #[test]
@@ -422,11 +460,21 @@ mod tests {
             let report = crate::analyze_seed_with_profile(seed, 25, Some(profile.clone())).unwrap();
             let actual = report.floors[24].map.as_ref().expect("depth-25 layout");
             assert_eq!(
-                actual.custom_tiles, oracle.custom_tiles,
+                actual.custom_tiles,
+                oracle
+                    .custom_tiles
+                    .iter()
+                    .map(MapCustomTile::from)
+                    .collect::<Vec<_>>(),
                 "{seed} custom tiles"
             );
             assert_eq!(
-                actual.custom_walls, oracle.custom_walls,
+                actual.custom_walls,
+                oracle
+                    .custom_walls
+                    .iter()
+                    .map(MapCustomTile::from)
+                    .collect::<Vec<_>>(),
                 "{seed} custom walls"
             );
         }

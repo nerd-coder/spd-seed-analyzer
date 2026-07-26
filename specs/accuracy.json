@@ -19,7 +19,7 @@
         "Pinned standard, special, and secret room-count tables",
         "Pinned SecretLarderRoom minimum dimensions and food-placement viability",
         "Depth-1 lifecycle fixtures across ten seeds; full HKT-JZN-XQQ floor 6\u20138 parity; preserved-state AAA-AAA-AAA floor 2\u20134, 6\u20139, and 11 oracle fixtures",
-        "Oracle-backed fixed-form structural layouts for PrisonBossLevel, CityBossLevel, and LastLevel at depths 10, 20, and 26",
+        "Oracle-backed fixed-form structural layouts for PrisonBossLevel and CityBossLevel, plus raw LastLevel terrain, tile variance, transitions, decoration RNG, and custom layers at depths 10, 20, and 26 across preserved AAA-AAA-AAA and ABC-DEF-GHI runs",
         "Pinned SewerBossLevel generation at depth 5: exact room initialization, Goo landmark FigureEight retries and extra connections, all four Goo room painters, Rat King cache RNG, SewerPainter environment, doors, transitions, and layout-only normalization across five Java-oracle seeds",
         "Pinned CavesBossLevel generation at depth 15: Java 23×23 elliptical arena, pylon patch placement and pathfinding retry lifecycle, entrance and corner variants, transitions, and normalized terrain/discoverability across four Java-oracle seeds",
         "Pinned HallsBossLevel generation at depth 25: five variable chambers, statue/decor and water patches, raw terrain, tile variance, center-piece terrain plus custom visual/wall layers, pathfinding retry lifecycle, transitions, and pre-items RNG across four Java-oracle seeds",
@@ -30,7 +30,7 @@
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
-        "Halls regular floors and HallsBoss visible layouts are proven through depth 25 for two preserved runs; replay LastLevel depth 26 before promoting complete floor-path coverage",
+        "Halls regular floors, HallsBoss, and LastLevel visible layouts are proven through depth 26 for two preserved runs; expand fixture coverage beyond these replay histories before promoting complete floor-path coverage",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
         "Later regular floors still require phase-by-phase parity checks"
       ],
@@ -59,6 +59,8 @@
         "tools/java-oracle/fixtures/zzz-zzz-zzz-final-heaps-floor-15.json",
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-25.json",
         "tools/java-oracle/fixtures/abc-def-ghi-final-heaps-floor-25.json",
+        "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-26.json",
+        "tools/java-oracle/fixtures/abc-def-ghi-final-heaps-floor-26.json",
         "tools/java-oracle/fixtures/gfx-pzh-dch-final-heaps-floor-25.json",
         "tools/java-oracle/fixtures/zzz-zzz-zzz-final-heaps-floor-25.json"
       ]
@@ -157,6 +159,7 @@
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-10.json",
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-20.json",
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-26.json",
+        "tools/java-oracle/fixtures/abc-def-ghi-final-heaps-floor-26.json",
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-5.json",
         "tools/java-oracle/fixtures/abc-def-ghi-final-heaps-floor-5.json",
         "tools/java-oracle/fixtures/gfx-pzh-dch-final-heaps-floor-5.json",

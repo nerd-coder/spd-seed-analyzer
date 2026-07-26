@@ -2,13 +2,12 @@
 
 Pinned target: SPD v3.3.8 @ `7b8b845a7`; accuracy remains `partial`.
 
-## Replay LastLevel parity at depth 26
+## Expand replay coverage beyond two preserved runs
 
-AAA-AAA-AAA and ABC-DEF-GHI now match Java's HallsBoss visible layout at
-depth 25: raw terrain, tile variance, transitions, pre-items RNG, and both
-center-piece custom layers.
+AAA-AAA-AAA and ABC-DEF-GHI now replay Java's public layout through depth 26,
+including LastLevel decoration RNG, variance, transitions, and custom layers.
 
-1. Capture both preserved runs at LastLevel depth 26.
-2. Compare terrain, decorations, transitions, and pre-items RNG.
-3. Continue remaining coverage gaps only after the complete floor path is
-   replayed.
+1. Add contrasting preserved runs for unproven Halls builder histories.
+2. Capture their Java checkpoints before changing core generation.
+3. Promote coverage only when every new replay preserves layout and
+   seed-determined spawn evidence.

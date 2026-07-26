@@ -99,6 +99,10 @@ struct OracleFloor {
     traps: Option<Vec<OracleTrap>>,
     plants: Option<Vec<OraclePlant>>,
     blobs: Option<Vec<OracleBlob>>,
+    #[serde(default)]
+    custom_tiles: Vec<OracleCustomTile>,
+    #[serde(default)]
+    custom_walls: Vec<OracleCustomTile>,
 }
 
 #[derive(Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -185,6 +189,19 @@ struct OracleBlob {
 struct OracleBlobCell {
     cell: u32,
     value: u32,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Eq)]
+struct OracleCustomTile {
+    #[serde(rename = "class")]
+    class_name: String,
+    #[serde(default)]
+    texture: Option<String>,
+    x: u32,
+    y: u32,
+    width: u32,
+    height: u32,
+    static_data: Vec<i16>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]

@@ -531,7 +531,7 @@ fn analyze_full_run_no_panic() {
         assert!(map.traps.is_empty());
         assert!(map.plants.is_empty());
         assert!(map.blobs.is_empty());
-        if depth == 25 {
+        if matches!(depth, 25 | 26) {
             assert!(!map.custom_tiles.is_empty());
             assert!(!map.custom_walls.is_empty());
         } else {
