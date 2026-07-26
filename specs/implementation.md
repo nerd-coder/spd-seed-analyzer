@@ -3,11 +3,12 @@
 Pinned target: SPD v3.3.8 @ `7b8b845a7`. Accuracy is `partial`; see
 `specs/accuracy.json`. Public maps are painter-complete structure only.
 
-## Next phase: depth 22 Halls painter boundary
+## Next phase: trace the depth-22 Halls painter boundary
 
-1. Use the AAA-AAA-AAA depth-22 Java fixture to isolate the two-draw desync
-   after room painting and before `createMobs`.
-2. Port only that first Halls room-painter/door lifecycle difference, then
-   assert post-paint RNG, structural terrain, discoverability, and transitions.
-3. Extend to one contrasting seed only after the first fixture is exact; update
-   the manifest and run CI parity before commit.
+1. Add a pinned Java oracle trace after each depth-22 room painter and door
+   pass for `AAA-AAA-AAA`; Rust is currently two main-stream draws ahead at
+   `createMobs`.
+2. Port only the first divergent Halls room-painter/door lifecycle and prove
+   post-paint RNG, terrain, discoverability, and transitions for that fixture.
+3. Add one contrasting seed only after the first fixture is exact; update the
+   accuracy manifest and run CI parity before committing behavior changes.
