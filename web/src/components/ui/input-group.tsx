@@ -123,14 +123,21 @@ function InputGroupInput({
 
 function InputGroupSelect({
   className,
+  startContent,
   ...props
-}: React.ComponentProps<'select'>) {
+}: React.ComponentProps<'select'> & { startContent?: React.ReactNode }) {
   return (
     <div className="relative flex min-w-0 flex-1 items-center border-r border-input last:border-r-0">
+      {startContent ? (
+        <span className="pointer-events-none absolute left-2 z-10 flex items-center">
+          {startContent}
+        </span>
+      ) : null}
       <select
         data-slot="input-group-control"
         className={cn(
-          'h-full w-full min-w-0 appearance-none bg-transparent py-1 pr-7 pl-2 text-xs outline-none disabled:cursor-not-allowed disabled:bg-transparent',
+          'h-full w-full min-w-0 appearance-none bg-transparent py-1 pr-7 text-xs outline-none disabled:cursor-not-allowed disabled:bg-transparent',
+          startContent ? 'pl-8' : 'pl-2',
           className
         )}
         {...props}

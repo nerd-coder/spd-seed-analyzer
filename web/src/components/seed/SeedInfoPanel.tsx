@@ -1,4 +1,5 @@
 import { SpinnerGapIcon } from '@phosphor-icons/react'
+import { ItemIcon } from '@/components/ItemIcon'
 import { SpoilerToggle } from '@/components/seed/SpoilerToggle'
 import {
   Card,
@@ -14,7 +15,6 @@ import {
   InputGroupSelect,
   InputGroupText,
 } from '@/components/ui/input-group'
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import type { MapProfile, MapTrinketProfile, SeedReport } from '@/lib/spd-wasm'
 import {
   changeSeedMapProfile,
@@ -114,29 +114,50 @@ export function SeedInfoPanel({
           <FieldLabel className="sr-only" htmlFor={`${sessionId}-trinket`}>
             Floor layout trinket
           </FieldLabel>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <NativeSelect
-              className="w-full sm:w-auto"
-              id={`${sessionId}-trinket`}
-              aria-label="Trinket"
-              value={kind}
-              disabled={refreshingLayout || !mapSpoilers}
-              onChange={(event) => {
-                const nextKind = event.target.value as TrinketKind
-                updateMapProfile({
-                  trinket: profileTrinket(nextKind, level),
-                })
-              }}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <InputGroup className="sm:w-52 sm:flex-none">
+              <InputGroupSelect
+                id={`${sessionId}-trinket`}
+                aria-label="Trinket"
+                value={kind}
+                disabled={!mapSpoilers}
+                startContent={
+                  kind !== 'none' ? (
+                    <ItemIcon
+                      classNameItem={
+                        kind === 'mossy_clump' ? 'MossyClump' : 'TrapMechanism'
+                      }
+                      size={20}
+                      title={
+                        kind === 'mossy_clump'
+                          ? 'Mossy Clump'
+                          : 'Trap Mechanism'
+                      }
+                    />
+                  ) : undefined
+                }
+                onChange={(event) => {
+                  const nextKind = event.target.value as TrinketKind
+                  updateMapProfile({
+                    trinket: profileTrinket(nextKind, level),
+                  })
+                }}
+              >
+                <option value="none">None</option>
+                <option value="mossy_clump">Mossy Clump</option>
+                <option value="trap_mechanism">Trap Mechanism</option>
+              </InputGroupSelect>
+              {refreshingLayout ? (
+                <InputGroupAddon align="inline-end" role="status">
+                  <SpinnerGapIcon className="animate-spin" aria-hidden />
+                  <span className="sr-only">Regenerating maps…</span>
+                </InputGroupAddon>
+              ) : null}
+            </InputGroup>
+            <InputGroup
+              className="sm:w-56 sm:flex-none"
+              data-disabled={kind === 'none'}
             >
-              <NativeSelectOption value="none">None</NativeSelectOption>
-              <NativeSelectOption value="mossy_clump">
-                Mossy Clump
-              </NativeSelectOption>
-              <NativeSelectOption value="trap_mechanism">
-                Trap Mechanism
-              </NativeSelectOption>
-            </NativeSelect>
-            <InputGroup data-disabled={kind === 'none'}>
               <InputGroupAddon>
                 <InputGroupText>Upgrade</InputGroupText>
               </InputGroupAddon>
@@ -180,12 +201,6 @@ export function SeedInfoPanel({
             The trinket is held starting when the selected floor is generated.
             Changing any value regenerates every map for this seed.
           </FieldDescription>
-          {refreshingLayout ? (
-            <p className="flex items-center gap-1 text-xs text-muted-foreground">
-              <SpinnerGapIcon className="animate-spin" aria-hidden />
-              Regenerating maps…
-            </p>
-          ) : null}
         </Field>
       </CardContent>
     </Card>
