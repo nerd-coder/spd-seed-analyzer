@@ -24,10 +24,12 @@
         "Pinned CavesBossLevel generation at depth 15: Java 23×23 elliptical arena, pylon patch placement and pathfinding retry lifecycle, entrance and corner variants, transitions, and normalized terrain/discoverability across four Java-oracle seeds",
         "Pinned HallsBossLevel generation at depth 25: five variable chambers, statue/decor and water patches, center-piece terrain, pathfinding retry lifecycle, transitions, and normalized terrain/discoverability across four Java-oracle seeds",
         "Depth-22 Halls lifecycle fixtures: AAA-AAA-AAA matches the Java pre-paint checkpoint, FigureEight pre-shuffle room list, room selection/bounds, room-paint callbacks, post-door RNG, affected door terrain/discoverability, and transitions; contrasting ABC-DEF-GHI pins the post-door RNG boundary. HallsPainter includes REGION_DECO_ALT variance and unconnected-neighbour terrain merges",
-        "AAA-AAA-AAA preserved-run depth-23 Halls: Java-matching FigureEight builder entry/exit RNG, all 21 pre-shuffle room bounds, room-paint callbacks, and post-door RNG boundary"
+        "AAA-AAA-AAA preserved-run depth-23 Halls: Java-matching FigureEight builder attempt, all 21 pre-shuffle room bounds, room-paint callbacks, and post-door RNG boundary",
+        "ABC-DEF-GHI contrasting depth-23 Halls oracle trace, exposing a first FigureEight builder-end RNG and pre-shuffle-bounds divergence for follow-up"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
+        "ABC-DEF-GHI depth 23 matches Java at FigureEight entry but diverges at its first builder-exit RNG boundary and pre-shuffle bounds; port that first mismatch before promoting its painter trace to parity",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
         "Later regular floors still require phase-by-phase parity checks"
       ],
@@ -46,6 +48,7 @@
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-22.json",
         "tools/java-oracle/fixtures/traces/aaa-aaa-aaa-floor-21-figure-eight.json",
         "tools/java-oracle/fixtures/traces/aaa-aaa-aaa-floor-23-halls-paint.json",
+        "tools/java-oracle/fixtures/traces/abc-def-ghi-floor-23-halls-paint.json",
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-5.json",
         "tools/java-oracle/fixtures/zzz-zzz-zzz-final-heaps-floor-5.json",
         "crates/spd-core/src/level/boss_layouts.rs",

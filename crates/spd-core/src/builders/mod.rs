@@ -338,6 +338,59 @@ mod tests {
         assert_eq!(attempt.rooms.len(), 21);
     }
 
+    #[test]
+    fn abc_floor_twenty_three_pins_java_builder_exit_divergence() {
+        use std::fs;
+        use std::path::Path;
+
+        use serde::Deserialize;
+
+        use crate::level::create_level_partial;
+        use crate::run::{dungeon_from_run, init_run};
+
+        #[derive(Deserialize)]
+        struct Trace {
+            build_attempts: Vec<Attempt>,
+        }
+
+        #[derive(Deserialize)]
+        struct Attempt {
+            attempt: u32,
+            start_rng: Vec<i32>,
+            end_rng: Vec<i32>,
+            success: bool,
+        }
+
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tools/java-oracle/fixtures/traces/abc-def-ghi-floor-23-halls-paint.json");
+        let expected: Trace = serde_json::from_str(
+            &fs::read_to_string(&path)
+                .unwrap_or_else(|error| panic!("read {}: {error}", path.display())),
+        )
+        .unwrap_or_else(|error| panic!("parse {}: {error}", path.display()));
+
+        let seed = crate::parse_seed("ABC-DEF-GHI").expect("valid seed");
+        let mut dungeon = dungeon_from_run(init_run(seed.numeric));
+        for depth in 1..=23 {
+            dungeon.depth = depth;
+            let _ = create_level_partial(&mut dungeon);
+        }
+        let actual = LAST_FIGURE_EIGHT_TRACE.with(|trace| trace.borrow().clone());
+        assert_eq!(actual.len(), expected.build_attempts.len());
+        let actual = actual.first().expect("Rust builder attempt");
+        let expected = expected
+            .build_attempts
+            .first()
+            .expect("Java builder attempt");
+        assert_eq!(actual.attempt, expected.attempt);
+        assert_eq!(actual.start_rng_probe, expected.start_rng);
+        assert_eq!(actual.success, expected.success);
+        assert_ne!(
+            actual.end_rng_probe, expected.end_rng,
+            "remove this diagnostic once ABC-DEF-GHI FigureEight builder parity is fixed"
+        );
+    }
+
     fn room(id: usize, name: &str, kind: RoomKind, size: i32, connections: i32) -> Room {
         let (min_w, max_w, min_h, max_h) = dims_for_kind(kind, size, name);
         Room::new(

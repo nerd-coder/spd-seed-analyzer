@@ -2,14 +2,14 @@
 
 Pinned target: SPD v3.3.8 @ `7b8b845a7`; accuracy remains `partial`.
 
-## Broaden Halls preserved-run parity
+## Fix the contrasting depth-23 Halls builder
 
-AAA-AAA-AAA depth 23 now matches Java through FigureEight build and room paint.
-Coverage remains fixture-specific and overall accuracy remains `partial`.
+AAA-AAA-AAA depth 23 has exact builder and painter parity. Contrasting
+ABC-DEF-GHI matches Java at FigureEight entry but diverges at the first
+builder-exit RNG boundary and its 26 pre-shuffle room bounds.
 
-1. Capture a contrasting regular-Halls depth-23 Java trace, including builder
-   attempts, pre-shuffle bounds, painter callbacks, and post-door RNG.
-2. Compare it against Rust, port the first proven mismatch if any, and retain
-   both fixtures as exact parity evidence.
-3. Continue the same fixture-first replay to depth 24, then audit remaining
-   regular-floor gaps before expanding public coverage.
+1. Trace that FigureEight attempt through room placement, connection creation,
+   and retry checks to locate the first mismatched RNG consumer or geometry rule.
+2. Port the proven behavior and promote the ABC depth-23 builder, painter, and
+   post-door fixture comparisons to exact parity.
+3. Then replay both histories to depth 24 before broadening public coverage.

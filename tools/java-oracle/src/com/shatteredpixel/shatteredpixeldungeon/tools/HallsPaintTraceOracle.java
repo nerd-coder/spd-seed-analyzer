@@ -10,6 +10,8 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.levels.HallsLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.builders.Builder;
+import com.shatteredpixel.shatteredpixeldungeon.levels.builders.FigureEightBuilder;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.levels.painters.HallsPainter;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
@@ -43,6 +45,7 @@ final class HallsPaintTraceOracle {
 		FloorOracle.markTargetFloorGenerated(depth);
 		TracePainter.checkpoints.clear();
 		TracePainter.preShuffleRooms = null;
+		TraceBuilder.attempts.clear();
 		Dungeon.daily = true;
 		try {
 			new TraceHallsLevel().create();
@@ -52,7 +55,12 @@ final class HallsPaintTraceOracle {
 			Dungeon.daily = false;
 		}
 		StringBuilder json = new StringBuilder("{\n  \"depth\": ").append(depth)
-				.append(",\n  \"pre_shuffle_rooms\": ").append(TracePainter.preShuffleRooms)
+				.append(",\n  \"build_attempts\": [");
+		for (int i = 0; i < TraceBuilder.attempts.size(); i++) {
+			if (i > 0) json.append(',');
+			json.append("\n    ").append(TraceBuilder.attempts.get(i));
+		}
+		json.append("\n  ],\n  \"pre_shuffle_rooms\": ").append(TracePainter.preShuffleRooms)
 				.append(",\n  \"checkpoints\": [");
 		for (int i = 0; i < TracePainter.checkpoints.size(); i++) {
 			if (i > 0) json.append(',');
@@ -62,11 +70,37 @@ final class HallsPaintTraceOracle {
 	}
 
 	private static final class TraceHallsLevel extends HallsLevel {
+		@Override protected Builder builder() {
+			Builder selected = super.builder();
+			if (!(selected instanceof FigureEightBuilder)) return selected;
+			try {
+				Field intensity = FigureEightBuilder.class.getDeclaredField("curveIntensity");
+				intensity.setAccessible(true);
+				return new TraceBuilder().setLoopShape(2, intensity.getFloat(selected), 0f);
+			} catch (ReflectiveOperationException error) {
+				throw new AssertionError(error);
+			}
+		}
+
 		@Override protected com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter painter() {
 			return new TracePainter()
 					.setWater(feeling == Level.Feeling.WATER ? 0.70f : 0.15f, 6)
 					.setGrass(feeling == Level.Feeling.GRASS ? 0.65f : 0.10f, 3)
 					.setTraps(nTraps(), trapClasses(), trapChances());
+		}
+	}
+
+	/** Records the FigureEightBuilder retry boundary without consuming RNG. */
+	private static final class TraceBuilder extends FigureEightBuilder {
+		static final List<String> attempts = new ArrayList<>();
+
+		@Override public ArrayList<Room> build(ArrayList<Room> rooms) {
+			List<Integer> start = probe();
+			ArrayList<Room> result = super.build(rooms);
+			attempts.add("{\"attempt\":" + attempts.size()
+					+ ",\"start_rng\":" + start + ",\"end_rng\":" + probe()
+					+ ",\"success\":" + (result != null) + "}");
+			return result;
 		}
 	}
 
