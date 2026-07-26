@@ -45,18 +45,21 @@ trap, plant, blob, mob, heap, and placement fixtures are internal parity
 evidence, not part of the public layout contract.
 
 Deterministic limited drops, supported special-room loot, quest rewards, and
-shop stock have partial public projections. Shop placement is intentionally
-excluded: inventory state can alter the shuffle and cells without changing
-every independently provable stock fact.
+seed-determined shop stock have public projections. Concrete identities or
+properties that depend on prior gameplay, persistent Generator state,
+inventory, artifact exhaustion, Hourglass state, or JVM iteration are product
+non-goals. Shop order and placement are also intentionally excluded. Preserve
+only independently provable spawn facts and constrained properties.
 
 Dedicated boss floors at depths 5, 10, 15, 20, and 25 and LastLevel at depth
-26 are listed but do not yet have generated structural layouts. Shop support
-is partial and can suppress unrelated facts on artifact-fallback paths.
+26 are listed but do not yet have generated structural layouts. Non-goal shop
+state can still suppress unrelated facts on artifact-fallback paths; that
+coupling should be removed without attempting to predict the shop state.
 
 ## Next phase
 
-Complete the missing boss/final-floor layout projection and make deterministic
-shop stock a supported spawn-presence path.
+Complete the missing boss/final-floor layout projection and continue expanding
+only seed-determined spawn-presence paths.
 
 1. Port the pinned level builders and structural painters for depths 5, 10,
    15, 20, 25, and 26 into `spd-core`, preserving exact RNG call order.
@@ -65,20 +68,18 @@ shop stock a supported spawn-presence path.
    items, heaps, or their cells.
 3. Add pinned Java-oracle fixtures and focused Rust tests for each boss/final
    floor's dimensions, structural terrain, transitions, and RNG boundaries.
-4. Audit `ShopRoom` generation and publish every stock identity or constrained
-   alternative guaranteed to spawn. Keep stock order and placement private
-   when inventory, Hourglass, bag, artifact, or JVM iteration state can alter
-   them.
-5. Decouple shop uncertainty from structural layout and from independently
-   selected pre-shop or invariant post-shop spawn facts. Surface explicit
-   conditions instead of dropping the whole floor whenever a narrower fact is
-   still provable.
+4. Retain every independently guaranteed shop spawn fact or constrained
+   property, but do not pursue concrete identities, order, or placement when
+   they depend on prior gameplay, inventory, Hourglass, bags, artifacts,
+   persistent decks, or JVM iteration.
+5. Keep non-goal shop state from suppressing structural layout or independently
+   selected spawn facts elsewhere on the floor.
 6. Keep exact seed-finder matching limited to exact spawn identities and
    properties; constrained alternatives remain report evidence, not exact
    matches.
 7. Update `specs/accuracy.json` with each newly verified behavior in the same
-   change. Do not mark boss layouts or full shop coverage implemented until
-   oracle-backed tests pass.
+   change. Do not mark boss layouts implemented until oracle-backed tests pass;
+   do not measure completeness against intentionally excluded shop state.
 
 Quest-branch levels such as MiningLevel remain a later phase unless required
 to prove a deterministic reward spawn.

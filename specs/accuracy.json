@@ -6,7 +6,7 @@
     "commit": "7b8b845a7"
   },
   "overallStatus": "partial",
-  "summary": "Seed analysis is partial. The product targets guaranteed seed-determined item, loot, shop-stock, and reward spawns plus structural floor layouts; covered paths are tested against the pinned game, while boss/final-floor layouts and some spawn paths remain incomplete.",
+  "summary": "Seed analysis is partial. The product targets guaranteed seed-determined item, loot, shop-stock, and reward spawns plus structural floor layouts; covered paths are tested against the pinned game, while boss/final-floor layouts and some seed-determined spawn paths remain incomplete. Identities dependent on prior gameplay or Generator state, state-dependent shop details, and entity-rich maps are intentional non-goals.",
   "lastReviewed": "2026-07-26",
   "areas": [
     {
@@ -98,19 +98,9 @@
       ],
       "remaining": [
         "Loot tied to uncovered room paint or lifecycle paths can be incomplete or misplaced",
-        "SacrificeRoom concrete identity, exact level within the proven +0..+3 range, and enchantment depend on prior Generator/player history and are excluded from public reports and exact search matching",
-        "Regular createItems random-loot facts remain unavailable because earlier runtime Generator history can alter downstream RNG consumption",
-        "Crystal-room sampled concrete loot remains internal-only; public contracts preserve the proven two-source Vault category rotation, Choice's 3\u20134 potion/scroll sources plus hidden reward, and Path's three potion plus three scroll sources, including artifact-exhaustion fallback conditions",
-        "Concrete shop deck-slot identities, bag identity/presence, Hourglass sand presence/count, and every FOR_SALE placement are intentionally excluded from public exact predictions",
-        "Artifact-branch shop floors intentionally expose no builder, room list, static room facts, map, or post-ShopRoom item facts because runtime artifact history can change the build and painter RNG tail",
-        "Concrete Ghost weapon, Wandmaker wand, and Imp ring identities are intentionally excluded; Wandmaker duplicate retries suppress its affected downstream item and map facts",
-        "Ghost and Blacksmith enchantment or glyph outcomes are omitted because player state can change them; player-triggered Blacksmith reward regeneration is outside the floor-generation report",
-        "Concrete BlacksmithRoom weapon/missile identities, equipment properties, cells, heap types, and markers are intentionally excluded; only separately proven item constraints are public",
-        "ChooseBag ties follow non-seeded JVM identity-hash HashMap iteration; HKT and AAA oracle processes choose different bags for equivalent fresh inventories. Hourglass state input remains unavailable",
-        "Concrete forced-food identity after floor 1 remains constrained until gameplay-time Generator mutations are modeled explicitly",
-        "Shop support remains partial: artifact exhaustion, bag availability, Hourglass state, persistent decks, and JVM iteration can leave identities conditional; independently provable stock must be retained without claiming order or cells"
+        "Seed-determined spawn families on uncovered generation paths still require fixture-backed verification"
       ],
-      "impact": "An item can be missing, different, or placed on a different cell even when earlier seed facts match.",
+      "impact": "A guaranteed seed-determined spawn or property can still be missing from the report on an uncovered generation path.",
       "evidence": [
         "crates/spd-core/src/level/create_items",
         "crates/spd-core/src/level/shop.rs",
@@ -157,7 +147,11 @@
       "remaining": [
         "The unseeded early Guidebook page is intentionally excluded",
         "Player decisions and inventory changes are not inferred",
+        "Concrete identities and properties that depend on prior gameplay or persistent Generator history are intentionally ignored; independently seed-determined constraints are retained",
+        "Concrete quest and special-room reward identities or equipment properties affected by player state, artifact history, Generator history, or player-triggered regeneration are intentionally excluded; proven invariant categories, counts, tiers, levels, curse states, and alternatives remain reportable",
+        "Shop identities, conditions, order, and placement that depend on artifact exhaustion, bag availability, Hourglass state, persistent decks, inventory state, or JVM iteration are intentionally excluded",
         "Item, shop-stock, and reward placement cells are intentionally excluded; the public claim is guaranteed spawn presence and seed-determined properties",
+        "Entity-rich maps are intentionally excluded: public maps contain structural layout only, without items, mobs, traps, plants, blobs, decoration, or loot placement",
         "Full parity claims remain blocked until the overall status is explicitly promoted from partial"
       ],
       "impact": "These inputs or behaviors are not predictions and should not be interpreted as analyzer errors.",
