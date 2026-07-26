@@ -97,7 +97,7 @@
         "Wandmaker choices persisted into later internal floor states for Java-oracle parity are explicitly internal-only and are not repeated publicly after the spawn floor, where the player may already have claimed one",
         "Explicit Parchment Scrap state and pinned HKT-JZN-XQQ floor-13 Java-oracle parity evidence, retained as internal evidence rather than a public concrete prediction",
         "Special-room rewards retain exact internal generation; public output uses painter-emitted static contracts rather than sampled items. This covers Study, Ritual, Ring, SuspiciousChest, and GrassyGrave center callbacks. Crypt exposes its floor-set armor distribution and forced curse; Statue exposes its forced-uncursed, positively enchanted weapon contract; audited families retain invariant source counts/categories while omitting unsafe fields and placements",
-        "Guaranteed limited-drop identities are reported as exact floor spawns and can satisfy seed-finder searches. Every regular floor has one guaranteed food-category item; Halls depths 21–24 have one aggregate constraint for two Torches; seeded Large feelings add a second guaranteed food-category item. Even-count Scrolls of Upgrade retain their Forbidden Runes removal condition",
+        "Guaranteed limited-drop identities are reported as exact floor spawns and can satisfy seed-finder searches. Every regular floor has a food spawn; floor 1 reports its exact seed-determined identity and item name, while later floors retain a food-category constraint. Halls depths 21–24 have one aggregate constraint for two Torches; seeded Large feelings add a second food spawn. Even-count Scrolls of Upgrade retain their Forbidden Runes removal condition",
         "SecretLibraryRoom retains exact private-pool base scroll identities and placement internally, with its JVM HashMap order pinned by a targeted Java oracle; public output exposes only 2–3 distinct scroll-base rewards and labels Exotic Crystals conversion as conditional",
         "Runtime-sensitive taint persists across later floors. After a trinket-sensitive default feeling, artifact-history branch, divergent room callback, Wandmaker tail, or conservatively tainted even Scroll schedule, sampled feeling, layout, room facts, map, item tail, and quest tail remain internal; independent guaranteed-spawn facts stay public"
       ],
@@ -112,7 +112,7 @@
         "Parchment Scrap can change Ghost and Blacksmith enchantment or glyph outcomes; player-triggered Blacksmith reward regeneration is outside the floor-generation report",
         "Concrete BlacksmithRoom weapon/missile identities, equipment properties, cells, heap types, and markers are intentionally excluded; only separately proven item constraints are public",
         "ChooseBag ties follow non-seeded JVM identity-hash HashMap iteration; HKT and AAA oracle processes choose different bags for equivalent fresh inventories. Hourglass state input remains unavailable",
-        "Concrete forced-food identity depends on persistent Generator history, so only its guaranteed food-category presence is public"
+        "Concrete forced-food identity after floor 1 remains constrained until gameplay-time Generator mutations are modeled explicitly"
       ],
       "impact": "An item can be missing, different, or placed on a different cell even when earlier seed facts match.",
       "evidence": [

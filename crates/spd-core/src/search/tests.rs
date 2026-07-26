@@ -197,13 +197,13 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
 }
 
 #[test]
-fn identity_unknown_guaranteed_spawns_never_match_exact_item_searches() {
+fn later_identity_unknown_food_spawns_never_match_exact_item_searches() {
     for class_name in ["Food", "Pasty"] {
         let result = search_seeds(&SeedSearchRequest {
             start_seed: 0,
             candidate_count: 4,
-            floors: 1,
-            constraints: vec![constraint(class_name, 1, 1)],
+            floors: 2,
+            constraints: vec![constraint(class_name, 2, 2)],
             match_mode: MatchMode::Any,
             max_matches: 4,
         })
@@ -213,6 +213,27 @@ fn identity_unknown_guaranteed_spawns_never_match_exact_item_searches() {
             "{class_name} identity constraint leaked into exact search"
         );
     }
+}
+
+#[test]
+fn floor_one_exact_food_identity_matches_exact_item_search() {
+    let report = crate::analyze_seed("0", 1).expect("floor-one report");
+    let class_name = report.floors[0]
+        .items
+        .iter()
+        .find(|item| item.category == "food")
+        .and_then(|item| item.class_name.clone())
+        .expect("exact floor-one food class");
+    let result = search_seeds(&SeedSearchRequest {
+        start_seed: 0,
+        candidate_count: 1,
+        floors: 1,
+        constraints: vec![constraint(&class_name, 1, 1)],
+        match_mode: MatchMode::Any,
+        max_matches: 1,
+    })
+    .expect("exact floor-one food search");
+    assert_eq!(result.matches.len(), 1);
 }
 
 #[test]

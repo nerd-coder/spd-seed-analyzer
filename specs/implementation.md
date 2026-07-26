@@ -24,6 +24,11 @@ than seed-generation state, such as combat drops. A player-state-dependent
 generation branch is not runtime RNG: model it as a conditional outcome when
 its inputs and alternatives can be bounded from the pinned source.
 
+The forced food created at the start of floor 1 is reported with its exact
+identity: it is drawn before mobs are created or gameplay can mutate Generator
+state. Later forced-food identities remain category constraints until relevant
+gameplay-time Generator calls are modeled.
+
 This contract must be identical in Rust reports, WASM, search matching, map
 markers/heaps, and UI copy.
 

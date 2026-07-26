@@ -48,10 +48,10 @@ fn analyze_seed_smoke() {
             );
         }
     }
-    assert!(r.floors.iter().all(|floor| floor.items.iter().any(|item| {
-        item.name == "guaranteed food-category item"
-            && item.prediction == report::ItemPredictionKind::Constrained
-    })));
+    assert!(r
+        .floors
+        .iter()
+        .all(|floor| floor.items.iter().any(|item| item.category == "food")));
 }
 
 #[test]
@@ -415,8 +415,7 @@ fn analyze_full_run_no_panic() {
         // A mid Halls floor should still generate
         let f24 = r.floors.iter().find(|f| f.depth == 24).expect("24");
         assert!(f24.items.iter().any(|item| {
-            item.name == "guaranteed food-category item"
-                && item.prediction == report::ItemPredictionKind::Constrained
+            item.name == "food" && item.prediction == report::ItemPredictionKind::Constrained
         }));
     }
 }

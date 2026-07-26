@@ -41,23 +41,54 @@ fn otherwise_untainted_regular_floor_keeps_constraints_without_a_public_map() {
 }
 
 #[test]
-fn projection_ignores_sampled_food_identity_and_room_consumption() {
+fn floor_one_projection_publishes_exact_food_identity() {
     let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(0));
     dungeon.depth = 1;
     let state = crate::level::create_level_partial(&mut dungeon);
-    let original = state.to_floor_report();
-    let mut altered = state.clone();
-    let food = altered
+    let generated = state
         .initial_forced_items
-        .iter_mut()
+        .iter()
         .find(|item| item.provenance == ItemProvenance::Forced(ForcedDropRole::BaseFood))
         .expect("base food queue item");
-    food.class_name = "MysteryMeat".into();
-    altered.forced_items.clear();
+    let report = state.to_floor_report();
+    let food = report
+        .items
+        .iter()
+        .find(|item| item.category == "food")
+        .expect("public food entry");
     assert_eq!(
-        serde_json::to_value(original).expect("original public report"),
-        serde_json::to_value(altered.to_floor_report()).expect("altered public report")
+        food.class_name.as_deref(),
+        Some(generated.class_name.as_str())
     );
+    assert_eq!(food.prediction, ItemPredictionKind::Exact);
+    assert!(food.conditional_notes.is_empty());
+    let expected_name = match generated.class_name.as_str() {
+        "Food" => "ration of food",
+        "Pasty" => "pasty",
+        "MysteryMeat" => "mystery meat",
+        _ => "food",
+    };
+    assert_eq!(food.name, expected_name);
+}
+
+#[test]
+fn later_food_is_constrained_without_generator_history_copy() {
+    let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(0));
+    for depth in 1..=2 {
+        dungeon.depth = depth;
+        let state = crate::level::create_level_partial(&mut dungeon);
+        if depth == 2 {
+            let food = state
+                .to_floor_report()
+                .items
+                .into_iter()
+                .find(|item| item.name == "food")
+                .expect("public food entry");
+            assert_eq!(food.prediction, ItemPredictionKind::Constrained);
+            assert!(food.class_name.is_none());
+            assert!(food.conditional_notes.is_empty());
+        }
+    }
 }
 
 #[test]

@@ -35,15 +35,46 @@ fn guaranteed_spawn_entry(name: &str, class_name: &str, category: &str) -> ItemE
     }
 }
 
+fn food_name(class_name: &str) -> &str {
+    match class_name {
+        "Food" => "ration of food",
+        "Pasty" => "pasty",
+        "MysteryMeat" => "mystery meat",
+        _ => "food",
+    }
+}
+
 pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemEntry> {
     if !matches!(depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=24) {
         return Vec::new();
     }
-    let mut entries = vec![constrained_spawn_entry(
-        "guaranteed food-category item",
-        "food",
-        "Its identity depends on persistent Generator history.",
-    )];
+    let mut entries = if depth == 1 {
+        initial
+            .iter()
+            .find(|item| item.provenance == ItemProvenance::Forced(ForcedDropRole::BaseFood))
+            .map(|item| {
+                vec![guaranteed_spawn_entry(
+                    food_name(&item.class_name),
+                    &item.class_name,
+                    "food",
+                )]
+            })
+            .unwrap_or_default()
+    } else {
+        vec![ItemEntry {
+            name: "food".into(),
+            class_name: None,
+            category: "food".into(),
+            tier: None,
+            tier_range: None,
+            level: None,
+            level_range: None,
+            cursed: None,
+            prediction: ItemPredictionKind::Constrained,
+            conditional_notes: Vec::new(),
+            source: Some("guaranteed floor spawn".into()),
+        }]
+    };
     if initial
         .iter()
         .any(|item| item.provenance == ItemProvenance::Forced(ForcedDropRole::HallsTorch))
@@ -54,11 +85,19 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
         .iter()
         .any(|item| item.provenance == ItemProvenance::Forced(ForcedDropRole::LargeFeelingFood))
     {
-        entries.push(constrained_spawn_entry(
-            "second guaranteed food-category item",
-            "food",
-            "Its identity depends on persistent Generator history.",
-        ));
+        entries.push(ItemEntry {
+            name: "food".into(),
+            class_name: None,
+            category: "food".into(),
+            tier: None,
+            tier_range: None,
+            level: None,
+            level_range: None,
+            cursed: None,
+            prediction: ItemPredictionKind::Constrained,
+            conditional_notes: Vec::new(),
+            source: Some("guaranteed floor spawn".into()),
+        });
     }
     for item in initial {
         let (name, class_name) = match item.provenance {
