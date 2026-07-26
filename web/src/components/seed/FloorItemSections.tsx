@@ -64,7 +64,7 @@ export function FloorItemList({
                   tier {item.tier_range.min}–{item.tier_range.max}
                 </Badge>
               ) : null}
-              {item.level_range ? (
+              {item.level_range && !item.name.includes('…') ? (
                 <Badge variant="outline">
                   +{item.level_range.min}…+{item.level_range.max}
                 </Badge>

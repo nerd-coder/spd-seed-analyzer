@@ -1,7 +1,7 @@
 //! Internal per-floor state and its public report projection.
 
 use crate::items::model::{GeneratedItem, ItemProvenance, QuestRewardRole, ShopStockRole};
-use crate::report::{FloorMap, FloorReport, ItemEntry, ItemPredictionKind};
+use crate::report::{FloorMap, FloorReport, ItemEntry, ItemPredictionKind, NumericRange};
 use crate::rooms::init_rooms::BuilderKind;
 
 use super::Feeling;
@@ -129,14 +129,22 @@ impl LevelState {
             let past_runtime_sensitive_boundary = self
                 .runtime_sensitive_placed_items_from
                 .is_some_and(|boundary| index >= boundary);
+            // Supported floors contain at most one quest. A boundary at zero
+            // means its selection is sensitive; a boundary after the first
+            // summary means that quest and all of its reward entries were
+            // already fixed before the divergent callback.
+            let quest_past_runtime_sensitive_boundary =
+                self.runtime_sensitive_quests_from == Some(0);
             // Shop stock is generated before the rare artifact constructor can
             // alter the remaining floor stream. Its fixed entries and public
             // deck constraints therefore remain safe even when that callback
             // suppresses the layout and later loot.
-            if past_runtime_sensitive_boundary
-                && !matches!(item.provenance, ItemProvenance::Shop(_))
-            {
-                continue;
+            if past_runtime_sensitive_boundary {
+                match item.provenance {
+                    ItemProvenance::Shop(_) => {}
+                    ItemProvenance::Quest(_) if !quest_past_runtime_sensitive_boundary => {}
+                    _ => continue,
+                }
             }
             if is_blacklisted(item) || is_runtime_sensitive_main_loot(item) {
                 continue;
@@ -229,7 +237,7 @@ impl LevelState {
                 (Some(ShopStockRole::DeckRareArtifactOrRing), _) => "artifact or ring",
                 (_, Some(QuestRewardRole::GhostWeapon { .. })) => "Ghost weapon reward",
                 (_, Some(QuestRewardRole::GhostArmor { .. })) => "Ghost armor reward",
-                (_, Some(QuestRewardRole::WandmakerWand)) => "Wandmaker wand reward",
+                (_, Some(QuestRewardRole::WandmakerWand)) => "+1…+3 wand",
                 (_, Some(QuestRewardRole::BlacksmithWeapon { .. })) => "Blacksmith weapon option",
                 (_, Some(QuestRewardRole::BlacksmithMissile { .. })) => "Blacksmith missile option",
                 (_, Some(QuestRewardRole::BlacksmithArmor { .. })) => "Blacksmith armor option",
@@ -238,11 +246,13 @@ impl LevelState {
                     "Blacksmith room missile weapon"
                 }
                 (_, Some(QuestRewardRole::BlacksmithRoomArmor { .. })) => "Blacksmith room armor",
-                (_, Some(QuestRewardRole::ImpRing)) => "Imp ring reward",
+                (_, Some(QuestRewardRole::ImpRing)) => "ring reward",
                 _ => "weapon reward",
             };
             let entry = ItemEntry {
-                name: if constrained {
+                name: if quest_role == Some(QuestRewardRole::ImpRing) {
+                    format!("+{} ring", item.level)
+                } else if constrained {
                     constrained_name.to_string()
                 } else {
                     exact_name
@@ -260,7 +270,8 @@ impl LevelState {
                     Some(_) => Some(item.level),
                     None => reported_level(item, constrained, shop_role),
                 },
-                level_range: None,
+                level_range: (quest_role == Some(QuestRewardRole::WandmakerWand))
+                    .then_some(NumericRange { min: 1, max: 3 }),
                 cursed: if matches!(
                     quest_role,
                     Some(
@@ -274,30 +285,7 @@ impl LevelState {
                     Some(item.cursed)
                 },
                 prediction,
-                conditional_notes: if matches!(
-                    quest_role,
-                    Some(
-                        QuestRewardRole::GhostWeapon { .. }
-                            | QuestRewardRole::GhostArmor { .. }
-                            | QuestRewardRole::BlacksmithWeapon { .. }
-                            | QuestRewardRole::BlacksmithMissile { .. }
-                            | QuestRewardRole::BlacksmithArmor { .. }
-                            | QuestRewardRole::BlacksmithRoomWeapon { .. }
-                            | QuestRewardRole::BlacksmithRoomMissile { .. }
-                            | QuestRewardRole::BlacksmithRoomArmor { .. }
-                    )
-                ) {
-                    vec![
-                        "Parchment Scrap may alter the reward's enchantment or glyph chance."
-                            .into(),
-                    ]
-                } else if quest_role == Some(QuestRewardRole::WandmakerWand) {
-                    vec!["The two reward wands are distinct, uncursed, and each receives one upgrade; concrete identities and levels depend on prior wand history.".into()]
-                } else if quest_role == Some(QuestRewardRole::ImpRing) {
-                    vec!["The concrete ring identity depends on prior ring history; the reported level is stable after two upgrades and the reward is forced cursed.".into()]
-                } else {
-                    Vec::new()
-                },
+                conditional_notes: Vec::new(),
                 source: item.source.clone(),
             };
             if shop_role.is_some() {

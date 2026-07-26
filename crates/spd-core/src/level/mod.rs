@@ -57,7 +57,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
     create_level_partial_with_profile(dungeon, false)
 }
 
-fn create_level_partial_with_profile(
+pub(crate) fn create_level_partial_with_profile(
     dungeon: &mut DungeonState,
     baseline_profile: bool,
 ) -> LevelState {
@@ -181,9 +181,15 @@ fn create_level_partial_with_profile(
     let mut room_bounds = Vec::new();
     let mut build_ok = false;
     let mut placed_items = Vec::new();
+    // A prior floor's divergent population can taint persistent Generator
+    // state, maps, and ordinary item identities. It does not taint this
+    // floor's freshly seeded quest-selection stream. Keep the current-floor
+    // boundary separate so later quest presence and invariant reward fields
+    // remain public.
+    let runtime_sensitive_quest_prebuild = runtime_sensitive_prebuild;
     runtime_sensitive_prebuild |= inherited_public_taint;
     let mut runtime_sensitive_placed_items_from = runtime_sensitive_prebuild.then_some(0);
-    let mut runtime_sensitive_quests_from = runtime_sensitive_prebuild.then_some(0);
+    let mut runtime_sensitive_quests_from = runtime_sensitive_quest_prebuild.then_some(0);
     let mut floor_map = None;
     let mut layout_map = None;
     let mut quests = Vec::new();
@@ -388,6 +394,14 @@ fn create_level_partial_with_profile(
             quests.extend(spawned.summaries);
             quest_public_labels.extend(spawned.public_labels);
             if spawned.wand_rng_tail_sensitive {
+                // The room and quest type were selected during initRooms,
+                // before painter callbacks. Even if painting makes the sampled
+                // wand identities unsafe, the public Wandmaker summary and the
+                // invariant two-wand reward contract remain valid. Only a
+                // pre-build divergence can invalidate the selection itself.
+                if !runtime_sensitive_quest_prebuild {
+                    runtime_sensitive_quests_from = None;
+                }
                 runtime_sensitive_placed_items_from.get_or_insert(placed_items.len());
                 runtime_sensitive_map = true;
                 dungeon.public_generation_tainted = true;

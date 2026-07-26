@@ -144,6 +144,22 @@ Acceptance for each source:
 3. For dependent facts, emit conditional branches or bounded outcomes instead
    of suppressing the entire layout/item/quest tail.
 
+Implemented increment: inherited population/Generator taint is now separated
+from the freshly seeded current-floor quest stream. A later independently
+selected quest remains public, along with each reward's proven tier, upgrade,
+curse, and category facts. Armor identity remains exact when its known tier has
+one armor class. Current-floor divergences before quest selection still
+suppress the dependent quest tail.
+
+Wandmaker's initRooms-selected presence/type now also survives later same-floor
+painter uncertainty; its two public wand contracts retain only their invariant
+facts. Ambitious Imp rewards use the concise `+X ring` presentation while the
+unsafe concrete ring class remains absent from the public projection.
+
+Wandmaker reward choices now use the corresponding concise `+1…+3 wand`
+presentation. The structured report retains the proven inclusive upgrade range
+and uncursed state, while identity and history-warning UI remain absent.
+
 Acceptance:
 
 - Each of the four divergence classes above has paired state fixtures showing

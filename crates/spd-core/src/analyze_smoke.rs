@@ -107,6 +107,56 @@ fn ghost_quest_spawns_within_sewers_sometime() {
 }
 
 #[test]
+fn inherited_population_taint_preserves_later_quest_constraints() {
+    let mut saw_quest = false;
+    for seed in 0..100 {
+        let mut dungeon = dungeon_from_run(init_run(seed));
+        dungeon.public_generation_tainted = true;
+        for depth in 2..=4 {
+            dungeon.depth = depth;
+            let state = level::create_level_partial_with_profile(&mut dungeon, true);
+            if state.quests.is_empty() || state.runtime_sensitive_quests_from.is_some() {
+                continue;
+            }
+            let report = state.to_floor_report();
+            saw_quest = true;
+            assert_eq!(report.quests.len(), state.quests.len());
+            let rewards: Vec<_> = report
+                .items
+                .iter()
+                .filter(|item| item.source.as_deref() == Some("Ghost.Quest"))
+                .collect();
+            assert_eq!(rewards.len(), 2);
+
+            let weapon = rewards
+                .iter()
+                .find(|item| item.category == "weapon")
+                .expect("Ghost weapon constraint");
+            assert_eq!(weapon.prediction, report::ItemPredictionKind::Constrained);
+            assert!(weapon.class_name.is_none());
+            assert!(weapon.tier.is_some());
+            assert!(weapon.level.is_some());
+            assert_eq!(weapon.cursed, Some(false));
+
+            let armor = rewards
+                .iter()
+                .find(|item| item.category == "armor")
+                .expect("Ghost armor identity");
+            assert_eq!(armor.prediction, report::ItemPredictionKind::Exact);
+            assert!(armor.class_name.is_some());
+            assert!(armor.tier.is_some());
+            assert!(armor.level.is_some());
+            assert_eq!(armor.cursed, Some(false));
+            break;
+        }
+        if saw_quest {
+            break;
+        }
+    }
+    assert!(saw_quest, "Ghost quest is guaranteed by sewer depth 4");
+}
+
+#[test]
 fn shop_stock_on_floor_6() {
     let mut dungeon = dungeon_from_run(init_run(0));
     let mut state = None;
@@ -158,7 +208,9 @@ fn wandmaker_quest_spawns_within_prison() {
                     item.prediction == report::ItemPredictionKind::Constrained
                         && item.class_name.is_none()
                         && item.level.is_none()
+                        && item.level_range == Some(report::NumericRange { min: 1, max: 3 })
                         && item.cursed == Some(false)
+                        && item.conditional_notes.is_empty()
                 }));
                 if let Some(map) = &f.map {
                     assert!(map.mobs.is_empty());
@@ -173,8 +225,10 @@ fn wandmaker_quest_spawns_within_prison() {
             break;
         }
     }
-    // Internal Wandmaker generation has dedicated quest/oracle coverage;
-    // inherited public taint may intentionally hide all sampled occurrences.
+    assert!(
+        saw,
+        "at least one sampled Wandmaker quest must remain public"
+    );
 }
 
 #[test]
@@ -205,10 +259,11 @@ fn imp_quest_spawns_within_city() {
                     .find(|i| i.source.as_deref() == Some("Imp.Quest"));
                 if let Some(ring) = ring {
                     assert_eq!(ring.prediction, report::ItemPredictionKind::Constrained);
-                    assert_eq!(ring.name, "Imp ring reward");
+                    assert_eq!(ring.name, format!("+{} ring", ring.level.unwrap()));
                     assert!(ring.class_name.is_none());
                     assert!(ring.level.is_some());
                     assert_eq!(ring.cursed, Some(true));
+                    assert!(ring.conditional_notes.is_empty());
                 }
                 break;
             }
