@@ -94,6 +94,8 @@ pub struct LevelState {
     #[doc(hidden)]
     pub complete: bool,
     pub map: Option<FloorMap>,
+    /// Snapshot after room/painter terrain, before NPC, mob, and item population.
+    pub layout_map: Option<FloorMap>,
     /// Non-consuming parity probe at the `createItems` entry boundary.
     #[doc(hidden)]
     pub pre_items_rng_probe: Vec<i32>,
@@ -116,6 +118,10 @@ pub struct LevelRoomFact {
 
 impl LevelState {
     pub fn to_floor_report(&self) -> FloorReport {
+        self.to_floor_report_with_map(false)
+    }
+
+    pub fn to_floor_report_with_map(&self, allow_map: bool) -> FloorReport {
         let mut items = forced_public_entries(self.depth, &self.initial_forced_items);
         let mut shop_items = Vec::new();
         let mut has_shop = false;
@@ -242,11 +248,13 @@ impl LevelState {
                     format!("{:?}", item.category).to_ascii_lowercase()
                 },
                 tier,
+                tier_range: None,
                 level: match quest_role {
                     Some(QuestRewardRole::WandmakerWand) => None,
                     Some(_) => Some(item.level),
                     None => reported_level(item, constrained, shop_role),
                 },
+                level_range: None,
                 cursed: if matches!(
                     quest_role,
                     Some(
@@ -298,7 +306,9 @@ impl LevelState {
                 class_name: None,
                 category: "other".into(),
                 tier: None,
+                tier_range: None,
                 level: None,
+                level_range: None,
                 cursed: None,
                 prediction: ItemPredictionKind::Constrained,
                 conditional_notes: vec![
@@ -311,7 +321,9 @@ impl LevelState {
                 class_name: None,
                 category: "other".into(),
                 tier: None,
+                tier_range: None,
                 level: None,
+                level_range: None,
                 cursed: None,
                 prediction: ItemPredictionKind::Constrained,
                 conditional_notes: vec![
@@ -361,12 +373,12 @@ impl LevelState {
                         .to_string()
                 })
                 .collect(),
-            // Every FloorMap produced by this state belongs to RegularLevel.
-            // Its final cells include createMobs/createItems and lifecycle
-            // placements whose runtime/meta inputs are not modeled publicly.
-            // Retain the exact map above for oracle parity, but expose no
-            // regular map until per-cell finality is proven.
-            map: None,
+            // Public maps are painter-complete floor layouts, captured before
+            // NPC, mob, and item population. Final entity maps remain internal.
+            map: allow_map
+                .then(|| self.layout_map.clone())
+                .flatten()
+                .filter(|_| !self.runtime_sensitive_layout),
         }
     }
 }

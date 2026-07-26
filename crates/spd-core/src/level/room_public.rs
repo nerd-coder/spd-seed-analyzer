@@ -1,6 +1,6 @@
 //! Static seed-only contracts emitted by room painters.
 
-use crate::report::{ItemEntry, ItemPredictionKind};
+use crate::report::{ItemEntry, ItemPredictionKind, NumericRange};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RoomPublicFact {
@@ -27,7 +27,9 @@ impl RoomPublicFact {
                 class_name: None,
                 category: category.into(),
                 tier: None,
+                tier_range: None,
                 level: None,
+                level_range: None,
                 cursed,
                 prediction: ItemPredictionKind::Constrained,
                 conditional_notes: vec![note.into()],
@@ -35,6 +37,10 @@ impl RoomPublicFact {
             })
             .collect();
         for entry in &mut entries {
+            if self.room == "SacrificeRoom" {
+                entry.tier_range = Some(sacrifice_tier_range(self.depth));
+                entry.level_range = Some(NumericRange { min: 0, max: 3 });
+            }
             let exact_class = match entry.name.as_str() {
                 "Double Bomb" => Some("DoubleBomb"),
                 "Stone of Enchantment" => Some("StoneOfEnchantment"),
@@ -63,7 +69,9 @@ fn larder_entries(depth: i32) -> Vec<ItemEntry> {
             class_name: Some(class_name.into()),
             category: "food".into(),
             tier: None,
+            tier_range: None,
             level: Some(0),
+            level_range: None,
             cursed: Some(false),
             prediction: ItemPredictionKind::Exact,
             conditional_notes: vec![format!(
@@ -72,6 +80,18 @@ fn larder_entries(depth: i32) -> Vec<ItemEntry> {
             source: Some("SecretLarderRoom".into()),
         })
         .collect()
+}
+
+fn sacrifice_tier_range(depth: i32) -> NumericRange {
+    // SacrificeRoom requests one floor set above the normal depth set. These
+    // are the non-zero bounds of pinned Generator.floorSetTierProbs.
+    match (depth / 5 + 1).clamp(0, 4) {
+        0 => NumericRange { min: 1, max: 5 },
+        1 => NumericRange { min: 2, max: 5 },
+        2 | 3 => NumericRange { min: 3, max: 5 },
+        4 => NumericRange { min: 4, max: 5 },
+        _ => unreachable!(),
+    }
 }
 
 type Contract = (&'static str, &'static str, Option<bool>, &'static str);
@@ -87,7 +107,7 @@ fn contracts(room: &str) -> Vec<Contract> {
         "PoolRoom" | "SentryRoom" => vec![("single room reward source", "other", None, "May consume an eligible queued prize; fallback is weapon, missile weapon, or armor from the room's floor-set distribution, forced uncursed with curse-enchantment stripped and a possible +1 upgrade.")],
         "TrapsRoom" => vec![("single room reward source", "other", None, "May consume an eligible queued prize; fallback is weapon, missile weapon, or armor from the room's floor-set distribution, forced uncursed with curse-enchantment stripped.")],
         "StatueRoom" => vec![("Statue weapon", "weapon", Some(false), "A positively enchanted melee weapon is carried; Rat Skull may change the statue encounter variant.")],
-        "SacrificeRoom" => vec![("weapon reward", "weapon", Some(true), "A cursed weapon drawn from the one-higher floor-set tier distribution; concrete tier, identity, level, enchantment, and placement are not asserted, and Parchment Scrap may alter enchantment chance.")],
+        "SacrificeRoom" => vec![("weapon reward", "weapon", Some(true), "A cursed weapon from the one-higher floor-set tier range. Its final upgrade is +0..+3; prior weapon-deck history can alter identity, and Parchment Scrap may alter enchantment chance.")],
         "CrystalVaultRoom" => vec![("two crystal-vault reward sources", "other", None, "Categories rotate among wand, ring, and artifact; an exhausted artifact pool falls back to a ring, and the second chest may conditionally be a Crystal Mimic.")],
         "CrystalChoiceRoom" => vec![("3–4 potion/scroll sources", "other", None, "Base potion/scroll identities are not asserted."), ("hidden crystal-choice reward", "other", None, "Wand, ring, or artifact; an exhausted artifact pool falls back to a ring.")],
         "CrystalPathRoom" => vec![("three potion sources", "potion", None, "Concrete regular/exotic identities and cells are not asserted."), ("three scroll sources", "scroll", None, "Concrete regular/exotic identities and cells are not asserted.")],
@@ -164,8 +184,19 @@ mod tests {
     }
 
     #[test]
-    fn sacrifice_contract_preserves_only_the_distribution_and_forced_curse() {
-        for depth in [1, 4, 6, 9, 11, 14, 16, 19, 21, 24] {
+    fn sacrifice_contract_preserves_tier_and_upgrade_bounds() {
+        for (depth, minimum_tier) in [
+            (1, 2),
+            (4, 2),
+            (6, 3),
+            (9, 3),
+            (11, 3),
+            (14, 3),
+            (16, 4),
+            (19, 4),
+            (21, 4),
+            (24, 4),
+        ] {
             let entries = RoomPublicFact::new("SacrificeRoom", depth)
                 .expect("Sacrifice contract")
                 .entries();
@@ -174,9 +205,17 @@ mod tests {
             assert_eq!(entry.name, "weapon reward");
             assert_eq!(entry.category, "weapon");
             assert_eq!(entry.tier, None);
+            assert_eq!(
+                entry.tier_range,
+                Some(NumericRange {
+                    min: minimum_tier,
+                    max: 5
+                })
+            );
             assert_eq!(entry.cursed, Some(true));
             assert_eq!(entry.class_name, None);
             assert_eq!(entry.level, None);
+            assert_eq!(entry.level_range, Some(NumericRange { min: 0, max: 3 }));
             assert_eq!(entry.prediction, ItemPredictionKind::Constrained);
         }
     }

@@ -1,4 +1,5 @@
 import type {
+  MapProfile,
   SeedReport,
   SeedSearchRequest,
   SeedSearchResult,
@@ -15,7 +16,8 @@ function createWorker() {
 
 export function analyzeSeedInWorker(
   input: string,
-  floors: number
+  floors: number,
+  mapProfile?: MapProfile
 ): WorkerTask<SeedReport> {
   const worker = createWorker()
   let rejectTask: (reason: Error) => void = () => {}
@@ -36,6 +38,7 @@ export function analyzeSeedInWorker(
       type: 'analyze',
       input,
       floors,
+      mapProfile,
     } satisfies SpdWorkerRequest)
   })
   return {

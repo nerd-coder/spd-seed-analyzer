@@ -29,13 +29,13 @@ migrateLegacyMapSpoilers()
 
 export const $mapSpoilers = persistentAtom<boolean>(
   MAP_SPOILERS_KEY,
-  false,
+  true,
   boolCodec
 )
 
 export const $identitySpoilers = persistentAtom<boolean>(
   IDENTITY_SPOILERS_KEY,
-  false,
+  true,
   boolCodec
 )
 

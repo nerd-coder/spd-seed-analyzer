@@ -25,7 +25,9 @@ export type ItemEntry = {
   class_name?: string | null
   category: string
   tier?: number | null
+  tier_range?: { min: number; max: number } | null
   level?: number | null
+  level_range?: { min: number; max: number } | null
   /** Present when the item is cursed (chip in item list). */
   cursed?: boolean | null
   prediction: 'exact' | 'constrained'
@@ -133,6 +135,12 @@ export type SeedReport = {
   floors: FloorReport[]
   status: string
   message?: string | null
+  map_profile?: MapProfile | null
+}
+
+export type MapProfile = {
+  trinket: 'no_map_affecting_trinkets'
+  meta: 'fresh'
 }
 
 export type SeedSearchMatchMode = 'any' | 'all'
@@ -198,9 +206,25 @@ export async function parseSeed(input: string): Promise<SeedInfo> {
 
 export async function analyzeSeed(
   input: string,
-  floors: number
+  floors: number,
+  mapProfile?: MapProfile
 ): Promise<SeedReport> {
   await ensureWasm()
+  if (mapProfile) {
+    const analyzeWithProfile = (
+      wasmBindings as unknown as {
+        analyze_seed_with_profile?: (
+          input: string,
+          floors: number,
+          profile: MapProfile
+        ) => SeedReport
+      }
+    ).analyze_seed_with_profile
+    if (!analyzeWithProfile) {
+      throw new Error('Map profiles are unavailable. Rebuild the WASM package.')
+    }
+    return analyzeWithProfile(input, floors, mapProfile)
+  }
   return wasmBindings.analyze_seed(input, floors) as SeedReport
 }
 

@@ -27,13 +27,13 @@ describe('map-render visual fixtures', () => {
     expect([...registeredFiles].sort()).toEqual(onDiskFiles)
   })
 
-  test('includes the CXG-FJT-BFQ floor-one suppression fixture', () => {
+  test('includes the CXG-FJT-BFQ floor-one layout fixture', () => {
     expect(MAP_RENDER_FIXTURES).toContainEqual({
       seed: 'CXG-FJT-BFQ',
       floor: 1,
       referenceFile: 'CXG-FJT-BFQ_F1.png',
       target: 'regular-floor',
-      expectation: 'intentionally-omitted',
+      expectation: 'rendered',
     })
   })
 })

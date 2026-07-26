@@ -24,6 +24,13 @@ export {
   setActiveFinder,
   startFinderSearch,
 } from './finder'
+export {
+  $assumeFreshMeta,
+  $assumeNoMapTrinkets,
+  mapProfile,
+  setAssumeFreshMeta,
+  setAssumeNoMapTrinkets,
+} from './map-profile'
 export { $meta, loadSpdMeta, type SpdMeta } from './meta'
 export {
   $activeSeedId,

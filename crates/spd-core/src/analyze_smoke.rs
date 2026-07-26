@@ -55,6 +55,39 @@ fn analyze_seed_smoke() {
 }
 
 #[test]
+fn explicit_baseline_profile_can_publish_proven_safe_maps() {
+    use crate::{analyze_seed_with_profile, MapMetaProfile, MapProfile, MapTrinketProfile};
+
+    let legacy = analyze_seed("GFX-PZH-DCH", 4).expect("legacy analysis");
+    assert!(legacy.floors.iter().all(|floor| floor.map.is_none()));
+
+    let profile = MapProfile {
+        trinket: MapTrinketProfile::NoMapAffectingTrinkets,
+        meta: MapMetaProfile::Fresh,
+    };
+    let profiled = (0..100)
+        .find_map(|seed| {
+            let report =
+                analyze_seed_with_profile(&seed.to_string(), 4, Some(profile.clone())).ok()?;
+            report
+                .floors
+                .iter()
+                .any(|floor| floor.map.is_some())
+                .then_some(report)
+        })
+        .expect("at least one baseline profile should have a public-safe map");
+    assert!(profiled.map_profile.is_some());
+    let layout = profiled
+        .floors
+        .iter()
+        .find_map(|floor| floor.map.as_ref())
+        .expect("profile should expose a layout");
+    assert!(layout.markers.is_empty());
+    assert!(layout.heaps.is_empty());
+    assert!(layout.mobs.is_empty());
+}
+
+#[test]
 fn ghost_quest_spawns_within_sewers_sometime() {
     let mut dungeon = dungeon_from_run(init_run(0));
     let mut saw = false;

@@ -41,14 +41,6 @@ export function FloorMapPreview({ map, identities, depth, className }: Props) {
   const viewport = useMemo(() => mapViewport(map), [map])
   const dialogContentRef = useRef<HTMLDivElement>(null)
   const [zoom, setZoom] = useState(() => initialZoom(map))
-  const [showItems, setShowItems] = useState(false)
-  const [showMobs, setShowMobs] = useState(false)
-  const itemMarkers = map.markers.filter(
-    (marker) => marker.kind === 'item'
-  ).length
-  const mobMarkers = map.markers.filter(
-    (marker) => marker.kind === 'mob'
-  ).length
 
   return (
     <Dialog>
@@ -93,20 +85,12 @@ export function FloorMapPreview({ map, identities, depth, className }: Props) {
           <DialogTitle className="font-mono">Floor {depth}</DialogTitle>
           <DialogDescription>
             {map.width}×{map.height} · {map.tileset} · discoverable crop{' '}
-            {viewport.width}×{viewport.height}
+            {viewport.width}×{viewport.height} · layout only, before mobs and
+            items
           </DialogDescription>
         </DialogHeader>
         <div className="relative min-h-0 flex-1 overflow-hidden bg-black/80">
-          <MapSettingsPanel
-            zoom={zoom}
-            onZoomChange={setZoom}
-            itemMarkers={itemMarkers}
-            showItems={showItems}
-            onShowItemsChange={setShowItems}
-            mobMarkers={mobMarkers}
-            showMobs={showMobs}
-            onShowMobsChange={setShowMobs}
-          />
+          <MapSettingsPanel zoom={zoom} onZoomChange={setZoom} />
           <div
             className="flex size-full items-start justify-start overflow-auto p-2"
             data-testid="map-scroll-container"
@@ -117,8 +101,6 @@ export function FloorMapPreview({ map, identities, depth, className }: Props) {
               className="m-auto"
               scale={Number(zoom)}
               animateWater
-              showItems={showItems}
-              showMobs={showMobs}
             />
           </div>
         </div>

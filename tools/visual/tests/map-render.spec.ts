@@ -172,22 +172,7 @@ async function waitForCanvasPaint(canvas: Locator) {
     .toBe(true)
 }
 
-async function enableMarkerLayer(dialog: Locator, name: RegExp) {
-  const toggle = dialog.getByRole('button', { name })
-  if ((await toggle.count()) === 0) return false
-  await toggle.click()
-  await expect(toggle).toHaveAttribute('aria-pressed', 'true')
-  return true
-}
-
-async function snapshotCanvas(
-  canvas: Locator,
-  snapshot: string,
-  markerLayersEnabled: boolean
-) {
-  if (markerLayersEnabled) {
-    await expect(canvas).toHaveAttribute('aria-label', /Visible markers:/)
-  }
+async function snapshotCanvas(canvas: Locator, snapshot: string) {
   const dataUrl = await canvas.evaluate(async (node) => {
     await new Promise<void>((resolve) => {
       requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
@@ -223,10 +208,10 @@ async function captureFloor(page: Page, floor: number, snapshot: string) {
   })
   await expect(canvas).toHaveAttribute('data-water-animation', 'paused')
   await waitForCanvasPaint(canvas)
-  const itemsEnabled = await enableMarkerLayer(dialog, /^Show items/)
-  const mobsEnabled = await enableMarkerLayer(dialog, /^Show known mobs/)
+  await expect(dialog.getByRole('button', { name: /^Show items/ })).toHaveCount(0)
+  await expect(dialog.getByRole('button', { name: /^Show known mobs/ })).toHaveCount(0)
 
-  await snapshotCanvas(canvas, snapshot, itemsEnabled || mobsEnabled)
+  await snapshotCanvas(canvas, snapshot)
 }
 
 for (const fixture of AUTOMATED_MAP_RENDER_FIXTURES) {
@@ -292,7 +277,7 @@ test('mobile map dialog fills the viewport and supports 1x and 2x zoom', async (
   await expect(settingsPanel).toHaveClass(/\bdark\b/)
   await expect(settingsPanel).toHaveClass(/bg-background\/30/)
   const panelButtons = settingsPanel.getByRole('button')
-  await expect(panelButtons).toHaveCount(3)
+  await expect(panelButtons).toHaveCount(1)
   for (const button of await panelButtons.all()) {
     await expect(button).toHaveAttribute('data-variant', 'ghost')
   }

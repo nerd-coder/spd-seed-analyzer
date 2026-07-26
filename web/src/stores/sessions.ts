@@ -10,6 +10,7 @@ import { atom, computed } from 'nanostores'
 
 import type { SeedReport } from '@/lib/spd-wasm'
 import { analyzeSeedInWorker, type WorkerTask } from '@/lib/spd-worker-client'
+import { mapProfile } from './map-profile'
 
 // —— keys / limits ————————————————————————————————————————————————
 
@@ -161,7 +162,7 @@ async function runAnalyze(id: string, input: string): Promise<boolean> {
     startedAt: Date.now(),
     finishedAt: null,
   })
-  const task = analyzeSeedInWorker(input, ANALYZE_FLOORS)
+  const task = analyzeSeedInWorker(input, ANALYZE_FLOORS, mapProfile())
   analyzeTasks.get(id)?.cancel()
   analyzeTasks.set(id, task)
   try {

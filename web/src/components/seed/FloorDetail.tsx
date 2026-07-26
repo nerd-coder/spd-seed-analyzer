@@ -75,6 +75,16 @@ export function FloorDetail({
                     {item.tier != null && (
                       <Badge variant="outline">tier {item.tier}</Badge>
                     )}
+                    {item.tier_range && (
+                      <Badge variant="outline">
+                        tier {item.tier_range.min}–{item.tier_range.max}
+                      </Badge>
+                    )}
+                    {item.level_range && (
+                      <Badge variant="outline">
+                        +{item.level_range.min}…+{item.level_range.max}
+                      </Badge>
+                    )}
                     {item.cursed === true && (
                       <Badge
                         variant="destructive"

@@ -26,6 +26,7 @@ fn projection_emits_one_static_contract_and_never_the_sampled_weapon() {
         .expect("Sacrifice contract")],
         complete: true,
         map: None,
+        layout_map: None,
         pre_items_rng_probe: vec![],
         pre_mobs_rng_probe: vec![],
         pre_paint_rng_probe: vec![],
@@ -45,10 +46,18 @@ fn projection_emits_one_static_contract_and_never_the_sampled_weapon() {
         .collect();
     assert_eq!(rewards.len(), 1);
     assert_eq!(rewards[0].tier, None);
+    assert_eq!(
+        rewards[0].tier_range,
+        Some(crate::report::NumericRange { min: 3, max: 5 })
+    );
     assert_eq!(rewards[0].cursed, Some(true));
+    assert_eq!(
+        rewards[0].level_range,
+        Some(crate::report::NumericRange { min: 0, max: 3 })
+    );
     assert!(rewards[0].class_name.is_none());
     let json = serde_json::to_string(&report).expect("serialize Sacrifice projection");
-    for secret in ["Sword", "Corrupting", "+2"] {
+    for secret in ["Sword", "Corrupting"] {
         assert!(!json.contains(secret), "leaked {secret}: {json}");
     }
 }

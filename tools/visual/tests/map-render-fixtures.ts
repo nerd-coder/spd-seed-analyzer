@@ -18,14 +18,14 @@ export const MAP_RENDER_FIXTURES = [
     floor: 1,
     referenceFile: 'CXG-FJT-BFQ_F1.png',
     target: 'regular-floor',
-    expectation: 'intentionally-omitted',
+    expectation: 'rendered',
   },
   {
     seed: 'HKT-JZN-XQQ',
     floor: 1,
     referenceFile: 'HKT-JZN-XQQ_F1.png',
     target: 'regular-floor',
-    expectation: 'intentionally-omitted',
+    expectation: 'rendered',
   },
   {
     seed: 'HKT-JZN-XQQ',

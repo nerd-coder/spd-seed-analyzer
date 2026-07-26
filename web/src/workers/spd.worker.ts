@@ -70,7 +70,11 @@ async function runSearch(
 context.onmessage = async (event: MessageEvent<SpdWorkerRequest>) => {
   try {
     if (event.data.type === 'analyze') {
-      const report = await analyzeSeed(event.data.input, event.data.floors)
+      const report = await analyzeSeed(
+        event.data.input,
+        event.data.floors,
+        event.data.mapProfile
+      )
       post({ type: 'analysis-complete', report })
       return
     }

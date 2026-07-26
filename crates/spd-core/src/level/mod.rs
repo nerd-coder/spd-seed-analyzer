@@ -54,6 +54,13 @@ impl Feeling {
 
 /// Level.create partial: forced drops → initRooms → build → minimal paint → createItems.
 pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
+    create_level_partial_with_profile(dungeon, false)
+}
+
+fn create_level_partial_with_profile(
+    dungeon: &mut DungeonState,
+    baseline_profile: bool,
+) -> LevelState {
     let inherited_public_taint = dungeon.public_generation_tainted;
     let depth_seed = dungeon.seed_cur_depth();
     Random::push_generator_seeded(depth_seed);
@@ -159,8 +166,8 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 5 => feeling = Feeling::Traps,
                 6 => feeling = Feeling::Secrets,
                 _ => {
-                    runtime_sensitive_prebuild = true;
-                    dungeon.public_generation_tainted = true;
+                    runtime_sensitive_prebuild = !baseline_profile;
+                    dungeon.public_generation_tainted |= !baseline_profile;
                     let _ = Random::float();
                     let _ = Random::float();
                     feeling = Feeling::None;
@@ -178,6 +185,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
     let mut runtime_sensitive_placed_items_from = runtime_sensitive_prebuild.then_some(0);
     let mut runtime_sensitive_quests_from = runtime_sensitive_prebuild.then_some(0);
     let mut floor_map = None;
+    let mut layout_map = None;
     let mut quests = Vec::new();
     let mut quest_public_labels = Vec::new();
     let mut runtime_sensitive_map = runtime_sensitive_prebuild || challenge_sensitive_upgrade_queue;
@@ -214,6 +222,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 room_public_facts,
                 complete: false,
                 map: floor_map,
+                layout_map,
                 pre_items_rng_probe: Vec::new(),
                 pre_mobs_rng_probe: Vec::new(),
                 pre_paint_rng_probe: Vec::new(),
@@ -357,6 +366,12 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
                 n_traps,
             );
 
+            layout_map = Some(
+                map_facts::MapFacts::from_room_paint(&map)
+                    .into_floor_map(&map, dungeon.depth, dungeon.branch, depth_seed)
+                    .into_layout_only(),
+            );
+
             // RegularPainter shuffles the actual Java `rooms` ArrayList in
             // place. Later createMobs/createItems therefore observe painter
             // order, not the builder's original room order.
@@ -474,6 +489,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
         room_public_facts,
         complete: build_ok,
         map: floor_map,
+        layout_map,
         pre_items_rng_probe,
         pre_mobs_rng_probe,
         pre_paint_rng_probe,
@@ -481,13 +497,21 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
 }
 
 pub fn analyze_floors(dungeon: &mut DungeonState, max_floors: u32) -> Vec<FloorReport> {
+    analyze_floors_with_profile(dungeon, max_floors, false)
+}
+
+pub fn analyze_floors_with_profile(
+    dungeon: &mut DungeonState,
+    max_floors: u32,
+    allow_maps: bool,
+) -> Vec<FloorReport> {
     let mut floors = Vec::new();
     let max = max_floors.clamp(1, 26) as i32;
     for depth in 1..=max {
         dungeon.depth = depth;
         dungeon.branch = 0;
-        let level = create_level_partial(dungeon);
-        floors.push(level.to_floor_report());
+        let level = create_level_partial_with_profile(dungeon, allow_maps);
+        floors.push(level.to_floor_report_with_map(allow_maps));
     }
     floors
 }

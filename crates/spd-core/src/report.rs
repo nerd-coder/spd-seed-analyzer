@@ -61,6 +61,18 @@ pub struct FloorMap {
     pub constrained_equipment_cells: Vec<u32>,
 }
 
+impl FloorMap {
+    /// Terrain/layout projection. Entity placement is intentionally excluded.
+    pub(crate) fn into_layout_only(mut self) -> Self {
+        self.markers.clear();
+        self.heaps.clear();
+        self.mobs.clear();
+        self.runtime_sensitive_loot_cells.clear();
+        self.constrained_equipment_cells.clear();
+        self
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct MapHeap {
     pub cell: u32,
@@ -180,9 +192,15 @@ pub struct ItemEntry {
     /// Equipment tier when it is stable even though the concrete class is not.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tier: Option<i32>,
+    /// Inclusive equipment-tier bounds when the tier is constrained but not exact.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tier_range: Option<NumericRange>,
     /// Current SPD item upgrade level (`0` is unupgraded).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub level: Option<i32>,
+    /// Inclusive upgrade-level bounds when the final level is constrained but not exact.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub level_range: Option<NumericRange>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cursed: Option<bool>,
     pub prediction: ItemPredictionKind,
@@ -190,6 +208,12 @@ pub struct ItemEntry {
     pub conditional_notes: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub struct NumericRange {
+    pub min: i32,
+    pub max: i32,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -213,6 +237,27 @@ pub struct SeedReport {
     pub status: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,
+    /// Player-state assumptions used when producing deterministic maps.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub map_profile: Option<MapProfile>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct MapProfile {
+    pub trinket: MapTrinketProfile,
+    pub meta: MapMetaProfile,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum MapTrinketProfile {
+    NoMapAffectingTrinkets,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum MapMetaProfile {
+    Fresh,
 }
 
 #[derive(Debug, thiserror::Error)]

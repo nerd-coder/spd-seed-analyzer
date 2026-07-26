@@ -21,7 +21,9 @@ pub use dungeon_seed::{DungeonSeed, SeedError, TOTAL_SEEDS};
 pub use items::IdentityMaps;
 pub use java_random::JavaRandom;
 pub use random::Random;
-pub use report::{AnalyzeError, FloorReport, SeedInfo, SeedReport};
+pub use report::{
+    AnalyzeError, FloorReport, MapMetaProfile, MapProfile, MapTrinketProfile, SeedInfo, SeedReport,
+};
 pub use run::{dungeon_from_run, init_run, RunState};
 pub use search::{
     search_seeds, ItemConstraint, ItemMatchEvidence, MatchMode, SearchError, SeedMatch,
@@ -58,12 +60,21 @@ pub fn parse_seed(input: &str) -> Result<SeedInfo, SeedError> {
 /// Returns identity maps plus **partial** per-floor data (forced drops / feelings).
 /// Full room loot is not yet ported.
 pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError> {
+    analyze_seed_with_profile(input, floors, None)
+}
+
+/// Analyze with explicit player-state assumptions for map projection.
+pub fn analyze_seed_with_profile(
+    input: &str,
+    floors: u32,
+    profile: Option<MapProfile>,
+) -> Result<SeedReport, AnalyzeError> {
     let info = parse_seed(input)?;
     let floors = floors.clamp(1, 26);
     let run = init_run(info.numeric);
     let mut dungeon = dungeon_from_run(run);
     let identities = dungeon.identities.clone();
-    let floor_reports = level::analyze_floors(&mut dungeon, floors);
+    let floor_reports = level::analyze_floors_with_profile(&mut dungeon, floors, profile.is_some());
 
     Ok(SeedReport {
         seed: info,
@@ -76,6 +87,7 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
         message: Some(
             "Analysis accuracy is partial; results may differ from the pinned game.".to_string(),
         ),
+        map_profile: profile,
     })
 }
 

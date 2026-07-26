@@ -39,6 +39,14 @@ export function SeedInfoPanel({ report }: { report: SeedReport }) {
             Numeric:{' '}
             <span className="text-foreground font-mono">{numeric}</span>
           </p>
+          {report.map_profile && (
+            <p>
+              Map assumptions:{' '}
+              <span className="text-foreground">
+                no Mossy Clump or Trap Mechanism
+              </span>
+            </p>
+          )}
         </CardDescription>
       </CardHeader>
     </Card>
