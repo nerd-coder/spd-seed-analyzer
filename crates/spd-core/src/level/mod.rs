@@ -408,7 +408,7 @@ fn create_level_internal(
                 feeling,
                 &mut doors,
             );
-            if dungeon.depth == 22 {
+            if matches!(dungeon.depth, 22 | 23) {
                 post_doors_rng_probe = Random::peek_ints(8);
             }
 

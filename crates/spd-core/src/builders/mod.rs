@@ -289,6 +289,55 @@ mod tests {
         );
     }
 
+    #[test]
+    fn aaa_floor_twenty_three_matches_java_builder_rng_boundary() {
+        use crate::level::create_level_partial;
+        use crate::run::{dungeon_from_run, init_run};
+
+        let seed = crate::parse_seed("AAA-AAA-AAA").expect("valid seed");
+        let mut dungeon = dungeon_from_run(init_run(seed.numeric));
+        for depth in 1..=23 {
+            dungeon.depth = depth;
+            let _ = create_level_partial(&mut dungeon);
+        }
+        let trace = LAST_FIGURE_EIGHT_TRACE.with(|trace| trace.borrow().clone());
+        assert_eq!(
+            trace.len(),
+            1,
+            "Java Halls builder succeeds on its first attempt"
+        );
+        let attempt = &trace[0];
+        assert!(attempt.success);
+        assert_eq!(attempt.failure_stage, None);
+        assert_eq!(
+            attempt.start_rng_probe,
+            [
+                1_056_369_444,
+                -318_600_815,
+                1_348_460_314,
+                -581_703_166,
+                1_775_149_563,
+                1_644_094_617,
+                799_933_314,
+                1_648_693_248,
+            ]
+        );
+        assert_eq!(
+            attempt.end_rng_probe,
+            [
+                1_639_274_564,
+                -124_977_570,
+                -1_082_696_954,
+                803_179_078,
+                -1_440_740_796,
+                -244_701_610,
+                457_680_370,
+                1_019_119_020,
+            ]
+        );
+        assert_eq!(attempt.rooms.len(), 21);
+    }
+
     fn room(id: usize, name: &str, kind: RoomKind, size: i32, connections: i32) -> Room {
         let (min_w, max_w, min_h, max_h) = dims_for_kind(kind, size, name);
         Room::new(

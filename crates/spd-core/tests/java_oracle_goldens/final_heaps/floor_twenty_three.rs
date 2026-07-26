@@ -26,7 +26,7 @@ struct PaintCheckpoint {
 }
 
 #[test]
-fn aaa_floor_twenty_three_halls_trace_exposes_preserved_run_gap() {
+fn aaa_floor_twenty_three_halls_trace_matches_preserved_run() {
     let trace_path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../tools/java-oracle/fixtures/traces/aaa-aaa-aaa-floor-23-halls-paint.json");
     let trace: PaintTrace = serde_json::from_str(
@@ -83,10 +83,16 @@ fn aaa_floor_twenty_three_halls_trace_exposes_preserved_run_gap() {
         21,
         "every Java room callback recorded"
     );
-    assert!(
-        actual_pre_shuffle != oracle_pre_shuffle
-            || actual_callbacks != oracle_callbacks
-            || actual.post_doors_rng_probe != doors.rng,
-        "once full depth-22 Halls population has parity, replace this diagnostic sentinel with exact depth-23 comparisons"
+    assert_eq!(
+        actual_pre_shuffle, oracle_pre_shuffle,
+        "pre-shuffle room bounds"
+    );
+    assert_eq!(
+        actual_callbacks, oracle_callbacks,
+        "room paint RNG callbacks"
+    );
+    assert_eq!(
+        actual.post_doors_rng_probe, doors.rng,
+        "post-door RNG boundary"
     );
 }
