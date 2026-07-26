@@ -68,8 +68,7 @@ export function SessionPane({
     return (
       <div className="relative">
         <SeedReportView
-          sessionId={session.id}
-          mapProfile={session.mapProfile}
+          refreshingLayout={session.refreshingLayout}
           report={session.report}
           identitySpoilers={identitySpoilers}
           mapSpoilers={mapSpoilers}

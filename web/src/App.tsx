@@ -1,4 +1,4 @@
-import { useStore } from '@nanostores/react'
+import { useStore } from '@tanstack/react-store'
 import { useEffect } from 'react'
 import { AnalyzerWorkspace } from '@/components/AnalyzerWorkspace'
 import { AppSidebar } from '@/components/AppSidebar'

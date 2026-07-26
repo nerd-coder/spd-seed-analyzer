@@ -39,13 +39,20 @@ markers/heaps, and UI copy.
 The first conservative profile slice is implemented across `spd-core`, WASM,
 and the web worker API. Public maps are painter-complete layout snapshots taken
 before NPC, mob, and item population, so Guide Page/meta, heap, and mob state do
-not gate layout rendering. The profile accepts an explicit per-floor held
-trinket timeline: no map-affecting trinket, Mossy Clump +0 through +3, or Trap
-Mechanism +0 through +3. Analysis replays it in depth order, preserving the
-pinned seeded feeling decks and short-circuit `Random.Float` call order. Trap
-Mechanism visibility accumulation is injected into regular traps,
-MinefieldRoom, BurnedRoom, and SecretSummoningRoom. Legacy/unspecified analysis
-remains map-free.
+not gate layout rendering. The web supplies one run-wide trinket profile,
+defaulting to no map-affecting trinket, with Mossy Clump +0 through +3 and Trap
+Mechanism +0 through +3 as alternatives. Changing it regenerates every open
+seed map. Analysis replays floors in depth order, preserving the pinned seeded
+feeling decks and short-circuit `Random.Float` call order. Trap Mechanism
+visibility accumulation is injected into regular traps, MinefieldRoom,
+BurnedRoom, and SecretSummoningRoom.
+
+Map projection uses a dedicated sequential layout pass that stops at the
+painter-complete snapshot. Post-layout NPC, mob, heap, and item uncertainty no
+longer taints later layouts; pre-layout item and room callbacks still run when
+their RNG or persistent Generator effects can change painting. The frontend
+state layer is TanStack Store, including persisted layout, spoiler, theme,
+session, finder, and mode state.
 
 Replace omission-oriented projection with a fact/provenance model. Each
 reportable source must produce:
@@ -234,9 +241,10 @@ Acceptance:
 
 ## Immediate next slice
 
-Checkpoint: runtime-sensitive regular-floor layouts now render by default as
-clearly labeled per-floor baseline-assumption previews, while exact maps retain
-their strict deterministic gate. Initial forced-queue reporting now describes the
+Checkpoint: regular-floor layouts now render under the explicit run-wide
+trinket profile and refresh together when it changes. A painter-boundary pass
+prevents post-layout population uncertainty from suppressing later maps while
+retaining pre-layout dependency gates. Initial forced-queue reporting describes the
 invariant food-category existence directly, and even-schedule Scrolls of
 Upgrade remain visible with a Forbidden Runes removal condition rendered as a
 chip. Boss and LastLevel floor rows are no longer hidden by the UI, and shop

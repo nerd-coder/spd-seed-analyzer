@@ -142,7 +142,6 @@ export type SeedReport = {
 export type MapProfile = {
   trinket: MapTrinketProfile
   meta: 'fresh'
-  floors: FloorMapProfile[]
 }
 
 export type MapTrinketProfile =
@@ -155,11 +154,6 @@ export type MapTrinketProfile =
   | 'trap_mechanism1'
   | 'trap_mechanism2'
   | 'trap_mechanism3'
-
-export type FloorMapProfile = {
-  depth: number
-  trinket: MapTrinketProfile
-}
 
 export type SeedSearchMatchMode = 'any' | 'all'
 

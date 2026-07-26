@@ -1,5 +1,5 @@
 /**
- * App-wide state via nanostores — public façade.
+ * App-wide state via TanStack Store — public façade.
  *
  * Implementation is split by concern:
  * - `sessions` — seed tabs, analyze, rehydrate
@@ -11,7 +11,7 @@
  * Consumers should keep importing from `@/stores/app`.
  */
 
-import { persistentAtom } from '@nanostores/persistent'
+import { persistentStore } from './store-utils'
 
 export {
   $activeFinderId,
@@ -25,11 +25,9 @@ export {
   startFinderSearch,
 } from './finder'
 export {
-  $assumeFreshMeta,
-  $assumeNoMapTrinkets,
+  $mapTrinket,
   mapProfile,
-  setAssumeFreshMeta,
-  setAssumeNoMapTrinkets,
+  setMapTrinket,
 } from './map-profile'
 export { $meta, loadSpdMeta, type SpdMeta } from './meta'
 export {
@@ -44,8 +42,8 @@ export {
   analyzeDraftSeed,
   analyzeSeedInput,
   cancelSeedAnalysis,
+  changeMapTrinket,
   closeSeedSession,
-  configureFloorMap,
   MAX_SAVED_SEEDS,
   normalizeSeedInput,
   type SeedSession,
@@ -73,7 +71,7 @@ export {
 } from './theme'
 
 /**
- * Mode: analyze or find-seed. Persisted to localStorage via nanostores/persistent.
+ * Mode: analyze or find-seed. Persisted to localStorage.
  */
 export type AppMode = 'analyze' | 'finder'
 
@@ -84,7 +82,7 @@ const modeCodec = {
     v === 'analyze' || v === 'finder' ? v : 'analyze',
 }
 
-export const $mode = persistentAtom<AppMode>(MODE_KEY, 'analyze', modeCodec)
+export const $mode = persistentStore<AppMode>(MODE_KEY, 'analyze', modeCodec)
 
 export function setMode(value: AppMode) {
   $mode.set(value)

@@ -1,5 +1,5 @@
-import { useStore } from '@nanostores/react'
 import { BinocularsIcon, SpinnerGapIcon, XIcon } from '@phosphor-icons/react'
+import { useStore } from '@tanstack/react-store'
 import { useRef, useState } from 'react'
 import { ScrollableSessionTabs } from '@/components/ScrollableSessionTabs'
 import { Button } from '@/components/ui/button'

@@ -1,36 +1,38 @@
-import { persistentAtom } from '@nanostores/persistent'
+import type { MapProfile, MapTrinketProfile } from '@/lib/spd-wasm'
+import { persistentStore } from './store-utils'
 
-import type { MapProfile } from '@/lib/spd-wasm'
+const MAP_TRINKET_KEY = 'spd-analyzer-map-trinket'
 
-const booleanCodec = {
-  encode: (value: boolean) => String(value),
-  decode: (value: string) => value === 'true',
+const trinkets: readonly MapTrinketProfile[] = [
+  'no_map_affecting_trinkets',
+  'mossy_clump0',
+  'mossy_clump1',
+  'mossy_clump2',
+  'mossy_clump3',
+  'trap_mechanism0',
+  'trap_mechanism1',
+  'trap_mechanism2',
+  'trap_mechanism3',
+]
+
+const trinketCodec = {
+  encode: (value: MapTrinketProfile) => value,
+  decode: (value: string): MapTrinketProfile =>
+    trinkets.includes(value as MapTrinketProfile)
+      ? (value as MapTrinketProfile)
+      : 'no_map_affecting_trinkets',
 }
 
-export const $assumeNoMapTrinkets = persistentAtom(
-  'spd-analyzer-map-no-trinkets-v2',
-  false,
-  booleanCodec
+export const $mapTrinket = persistentStore<MapTrinketProfile>(
+  MAP_TRINKET_KEY,
+  'no_map_affecting_trinkets',
+  trinketCodec
 )
-export const $assumeFreshMeta = persistentAtom(
-  'spd-analyzer-map-fresh-meta-v2',
-  false,
-  booleanCodec
-)
 
-export function mapProfile(): MapProfile | undefined {
-  if (!$assumeNoMapTrinkets.get() || !$assumeFreshMeta.get()) return undefined
-  return {
-    trinket: 'no_map_affecting_trinkets',
-    meta: 'fresh',
-    floors: [],
-  }
+export function mapProfile(): MapProfile {
+  return { trinket: $mapTrinket.get(), meta: 'fresh' }
 }
 
-export function setAssumeNoMapTrinkets(value: boolean) {
-  $assumeNoMapTrinkets.set(value)
-}
-
-export function setAssumeFreshMeta(value: boolean) {
-  $assumeFreshMeta.set(value)
+export function setMapTrinket(value: MapTrinketProfile) {
+  $mapTrinket.set(value)
 }

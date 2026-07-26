@@ -1,4 +1,3 @@
-import { atom, computed } from 'nanostores'
 import { finderItemLabel } from '@/components/finder/finder-items'
 import {
   type FinderConfig,
@@ -6,6 +5,7 @@ import {
   INITIAL_FINDER_RUN,
 } from '@/components/finder/finder-types'
 import { searchSeedsInWorker, type WorkerTask } from '@/lib/spd-worker-client'
+import { AppStore, derivedStore } from './store-utils'
 
 export const MAX_FINDER_SESSIONS = 10
 
@@ -16,12 +16,17 @@ export type FinderSession = {
   run: FinderRunState
 }
 
-export const $finderSessions = atom<FinderSession[]>([])
-export const $activeFinderId = atom<string | null>(null)
-export const $activeFinderSession = computed(
-  [$finderSessions, $activeFinderId],
-  (sessions, activeId) =>
-    sessions.find((session) => session.id === activeId) ?? sessions[0] ?? null
+export const $finderSessions = new AppStore<FinderSession[]>([])
+export const $activeFinderId = new AppStore<string | null>(null)
+export const $activeFinderSession = derivedStore(
+  [$finderSessions, $activeFinderId] as const,
+  () => {
+    const sessions = $finderSessions.get()
+    const activeId = $activeFinderId.get()
+    return (
+      sessions.find((session) => session.id === activeId) ?? sessions[0] ?? null
+    )
+  }
 )
 
 const cancelledIds = new Set<string>()

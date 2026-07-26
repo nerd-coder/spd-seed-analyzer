@@ -15,25 +15,17 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import type {
-  FloorReport,
-  IdentityMaps,
-  MapProfile,
-  MapTrinketProfile,
-} from '@/lib/spd-wasm'
-import { configureFloorMap } from '@/stores/app'
+import type { FloorReport, IdentityMaps } from '@/lib/spd-wasm'
 
 export function FloorDetail({
   floor,
-  sessionId,
-  mapProfile,
+  refreshingLayout,
   identities,
   identitySpoilers,
   mapSpoilers,
 }: {
   floor: FloorReport
-  sessionId: string
-  mapProfile: MapProfile | undefined
+  refreshingLayout: boolean
   identities: IdentityMaps
   identitySpoilers: boolean
   mapSpoilers: boolean
@@ -45,10 +37,6 @@ export function FloorDetail({
   const displayedMap = mapSpoilers
     ? (floor.map ?? floor.assumed_map ?? null)
     : null
-  const effectiveTrinket: MapTrinketProfile =
-    mapProfile?.floors.find((entry) => entry.depth === floor.depth)?.trinket ??
-    mapProfile?.trinket ??
-    'no_map_affecting_trinkets'
 
   const details = (
     <div className="min-w-0 flex-1 space-y-3">
@@ -130,16 +118,13 @@ export function FloorDetail({
 
       <div className="flex items-start gap-3">
         {details}
-        {mapSpoilers && (
+        {displayedMap && (
           <div className="w-32 shrink-0 space-y-1.5">
             <FloorMapPreview
               map={displayedMap}
               identities={identities}
               depth={floor.depth}
-              trinket={effectiveTrinket}
-              onConfigure={(trinket) =>
-                configureFloorMap(sessionId, floor.depth, trinket)
-              }
+              loading={refreshingLayout}
             />
             {showAssumedMap && (
               <Alert variant="warning" className="px-1.5 py-1">

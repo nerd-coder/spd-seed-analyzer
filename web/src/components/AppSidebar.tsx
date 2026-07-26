@@ -1,10 +1,10 @@
-import { useStore } from '@nanostores/react'
 import {
   BinocularsIcon,
   MagnifyingGlassIcon,
   PlantIcon,
   SpinnerGapIcon,
 } from '@phosphor-icons/react'
+import { useStore } from '@tanstack/react-store'
 import type { FormEvent } from 'react'
 import { AppFloatingAction } from '@/components/AppFloatingAction'
 import { FinderForm } from '@/components/finder/FinderForm'

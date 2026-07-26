@@ -62,6 +62,21 @@ pub(crate) fn create_level_partial_with_profile(
     dungeon: &mut DungeonState,
     configured_profile: bool,
 ) -> LevelState {
+    create_level_internal(dungeon, configured_profile, false)
+}
+
+fn create_level_layout_with_profile(
+    dungeon: &mut DungeonState,
+    configured_profile: bool,
+) -> LevelState {
+    create_level_internal(dungeon, configured_profile, true)
+}
+
+fn create_level_internal(
+    dungeon: &mut DungeonState,
+    configured_profile: bool,
+    layout_only: bool,
+) -> LevelState {
     let inherited_public_taint = dungeon.public_generation_tainted;
     let depth_seed = dungeon.seed_cur_depth();
     Random::push_generator_seeded(depth_seed);
@@ -377,86 +392,88 @@ pub(crate) fn create_level_partial_with_profile(
                     .into_layout_only(),
             );
 
-            // RegularPainter shuffles the actual Java `rooms` ArrayList in
-            // place. Later createMobs/createItems therefore observe painter
-            // order, not the builder's original room order.
-            let population_rooms: Vec<_> = paint_order
-                .iter()
-                .filter_map(|&index| floor.rooms.get(index).cloned())
-                .collect();
+            if !layout_only {
+                // RegularPainter shuffles the actual Java `rooms` ArrayList in
+                // place. Later createMobs/createItems therefore observe painter
+                // order, not the builder's original room order.
+                let population_rooms: Vec<_> = paint_order
+                    .iter()
+                    .filter_map(|&index| floor.rooms.get(index).cloned())
+                    .collect();
 
-            if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21) {
-                pre_mobs_rng_probe = Random::peek_ints(8);
-            }
-            let spawned = quest_rewards::spawn_npcs(dungeon, &floor.rooms, &mut map);
-            placed_items.extend(spawned.items);
-            quests.extend(spawned.summaries);
-            quest_public_labels.extend(spawned.public_labels);
-            if spawned.wand_rng_tail_sensitive {
-                // The room and quest type were selected during initRooms,
-                // before painter callbacks. Even if painting makes the sampled
-                // wand identities unsafe, the public Wandmaker summary and the
-                // invariant two-wand reward contract remain valid. Only a
-                // pre-build divergence can invalidate the selection itself.
-                if !runtime_sensitive_quest_prebuild {
-                    runtime_sensitive_quests_from = None;
+                if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21) {
+                    pre_mobs_rng_probe = Random::peek_ints(8);
                 }
-                runtime_sensitive_placed_items_from.get_or_insert(placed_items.len());
-                runtime_sensitive_map = true;
-                dungeon.public_generation_tainted = true;
-            }
+                let spawned = quest_rewards::spawn_npcs(dungeon, &floor.rooms, &mut map);
+                placed_items.extend(spawned.items);
+                quests.extend(spawned.summaries);
+                quest_public_labels.extend(spawned.public_labels);
+                if spawned.wand_rng_tail_sensitive {
+                    // The room and quest type were selected during initRooms,
+                    // before painter callbacks. Even if painting makes the sampled
+                    // wand identities unsafe, the public Wandmaker summary and the
+                    // invariant two-wand reward contract remain valid. Only a
+                    // pre-build divergence can invalidate the selection itself.
+                    if !runtime_sensitive_quest_prebuild {
+                        runtime_sensitive_quests_from = None;
+                    }
+                    runtime_sensitive_placed_items_from.get_or_insert(placed_items.len());
+                    runtime_sensitive_map = true;
+                    dungeon.public_generation_tainted = true;
+                }
 
-            let _ambient_mobs_consumed = if dungeon.regular_level() {
-                create_mobs::create_regular(
-                    dungeon.depth,
-                    feeling == Feeling::Large,
+                let _ambient_mobs_consumed = if dungeon.regular_level() {
+                    create_mobs::create_regular(
+                        dungeon.depth,
+                        feeling == Feeling::Large,
+                        &population_rooms,
+                        &mut map,
+                    )
+                } else {
+                    false
+                };
+
+                if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21) {
+                    pre_items_rng_probe = Random::peek_ints(8);
+                }
+                let loot = create_items::create_items_main(
+                    dungeon,
                     &population_rooms,
                     &mut map,
-                )
-            } else {
-                false
-            };
+                    feeling == Feeling::Large,
+                    items_to_spawn,
+                );
+                let mut map_facts = map_facts::MapFacts::from_room_paint(&map);
 
-            if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21) {
-                pre_items_rng_probe = Random::peek_ints(8);
-            }
-            let loot = create_items::create_items_main(
-                dungeon,
-                &population_rooms,
-                &mut map,
-                feeling == Feeling::Large,
-                items_to_spawn,
-            );
-            let mut map_facts = map_facts::MapFacts::from_room_paint(&map);
-
-            for created in loot {
-                map_facts.add_created_loot(&created, map.len());
-                let p = created.loot;
-                if matches!(
-                    p.item.source.as_deref(),
-                    Some("forced") | Some("items_to_spawn")
-                ) {
-                    // Room paint may add to itemsToSpawn (e.g. Storage → PotionOfLiquidFlame).
-                    // Keep those in the report if not already listed under forced.
-                    if !forced.iter().any(|f| f.class_name == p.item.class_name) {
-                        forced.push(p.item);
+                for created in loot {
+                    map_facts.add_created_loot(&created, map.len());
+                    let p = created.loot;
+                    if matches!(
+                        p.item.source.as_deref(),
+                        Some("forced") | Some("items_to_spawn")
+                    ) {
+                        // Room paint may add to itemsToSpawn (e.g. Storage → PotionOfLiquidFlame).
+                        // Keep those in the report if not already listed under forced.
+                        if !forced.iter().any(|f| f.class_name == p.item.class_name) {
+                            forced.push(p.item);
+                        }
+                        continue;
                     }
-                    continue;
+                    let mut item = p.item;
+                    if item.source.is_none() {
+                        item.source = Some(p.heap_type.into());
+                    } else if p.heap_type != "heap" {
+                        item.source = Some(format!(
+                            "{}:{}",
+                            p.heap_type,
+                            item.source.as_deref().unwrap_or("")
+                        ));
+                    }
+                    placed_items.push(item);
                 }
-                let mut item = p.item;
-                if item.source.is_none() {
-                    item.source = Some(p.heap_type.into());
-                } else if p.heap_type != "heap" {
-                    item.source = Some(format!(
-                        "{}:{}",
-                        p.heap_type,
-                        item.source.as_deref().unwrap_or("")
-                    ));
-                }
-                placed_items.push(item);
+                floor_map =
+                    Some(map_facts.into_floor_map(&map, dungeon.depth, dungeon.branch, depth_seed));
             }
-            floor_map =
-                Some(map_facts.into_floor_map(&map, dungeon.depth, dungeon.branch, depth_seed));
         }
 
         room_names = floor
@@ -509,6 +526,24 @@ pub(crate) fn create_level_partial_with_profile(
     }
 }
 
+pub fn analyze_layouts_with_profile(
+    dungeon: &mut DungeonState,
+    max_floors: u32,
+    profile: &MapProfile,
+) -> Vec<FloorReport> {
+    let mut floors = Vec::new();
+    trinkets::reset(dungeon.seed);
+    let max = max_floors.clamp(1, 26) as i32;
+    for depth in 1..=max {
+        dungeon.depth = depth;
+        dungeon.branch = 0;
+        trinkets::set_held(profile.trinket);
+        let level = create_level_layout_with_profile(dungeon, true);
+        floors.push(level.to_floor_report_with_map(true));
+    }
+    floors
+}
+
 pub fn analyze_floors(dungeon: &mut DungeonState, max_floors: u32) -> Vec<FloorReport> {
     analyze_floors_with_profile(dungeon, max_floors, None)
 }
@@ -525,14 +560,7 @@ pub fn analyze_floors_with_profile(
         dungeon.depth = depth;
         dungeon.branch = 0;
         let trinket = profile
-            .and_then(|profile| {
-                profile
-                    .floors
-                    .iter()
-                    .find(|floor| floor.depth == depth as u32)
-                    .map(|floor| floor.trinket)
-                    .or(Some(profile.trinket))
-            })
+            .map(|profile| profile.trinket)
             .unwrap_or(MapTrinketProfile::NoMapAffectingTrinkets);
         trinkets::set_held(trinket);
         let configured = profile.is_some();

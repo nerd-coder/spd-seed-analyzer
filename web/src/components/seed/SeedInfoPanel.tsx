@@ -41,9 +41,13 @@ export function SeedInfoPanel({ report }: { report: SeedReport }) {
           </p>
           {report.map_profile && (
             <p>
-              Default map input:{' '}
+              Map input:{' '}
               <span className="text-foreground">
-                no map-affecting trinket; floor overrides are shown in each map
+                {report.map_profile.trinket === 'no_map_affecting_trinkets'
+                  ? 'no map-affecting trinket'
+                  : report.map_profile.trinket
+                      .replace(/(\d)$/, ' +$1')
+                      .replaceAll('_', ' ')}
               </span>
             </p>
           )}

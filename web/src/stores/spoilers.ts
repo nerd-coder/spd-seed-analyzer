@@ -2,7 +2,7 @@
  * Map / identity spoiler flags (persisted).
  */
 
-import { persistentAtom } from '@nanostores/persistent'
+import { persistentStore } from './store-utils'
 
 const MAP_SPOILERS_KEY = 'spd-analyzer-map-spoilers'
 const IDENTITY_SPOILERS_KEY = 'spd-analyzer-identity-spoilers'
@@ -27,13 +27,13 @@ function migrateLegacyMapSpoilers() {
 
 migrateLegacyMapSpoilers()
 
-export const $mapSpoilers = persistentAtom<boolean>(
+export const $mapSpoilers = persistentStore<boolean>(
   MAP_SPOILERS_KEY,
   true,
   boolCodec
 )
 
-export const $identitySpoilers = persistentAtom<boolean>(
+export const $identitySpoilers = persistentStore<boolean>(
   IDENTITY_SPOILERS_KEY,
   true,
   boolCodec

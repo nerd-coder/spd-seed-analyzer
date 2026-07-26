@@ -2,7 +2,7 @@
  * Color theme preference (light / dark / system), persisted.
  */
 
-import { persistentAtom } from '@nanostores/persistent'
+import { persistentStore } from './store-utils'
 
 export type Theme = 'light' | 'dark' | 'system'
 
@@ -15,7 +15,7 @@ const themeCodec = {
     v === 'light' || v === 'dark' || v === 'system' ? v : 'system',
 }
 
-export const $theme = persistentAtom<Theme>(THEME_KEY, 'system', themeCodec)
+export const $theme = persistentStore<Theme>(THEME_KEY, 'system', themeCodec)
 
 export function setTheme(value: Theme) {
   $theme.set(value)
@@ -51,7 +51,7 @@ export function applyTheme(theme: Theme) {
 export function initTheme(): () => void {
   applyTheme($theme.get())
 
-  const unsub = $theme.subscribe((theme) => {
+  const subscription = $theme.subscribe((theme) => {
     applyTheme(theme)
   })
 
@@ -62,7 +62,7 @@ export function initTheme(): () => void {
   mql.addEventListener('change', onSystemChange)
 
   return () => {
-    unsub()
+    subscription.unsubscribe()
     mql.removeEventListener('change', onSystemChange)
   }
 }

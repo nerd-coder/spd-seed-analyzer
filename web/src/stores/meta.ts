@@ -2,15 +2,14 @@
  * SPD build metadata (version / commit) loaded from wasm.
  */
 
-import { atom } from 'nanostores'
-
 import { getSpdMeta } from '@/lib/spd-wasm'
 
 import { $formError } from './sessions'
+import { AppStore } from './store-utils'
 
 export type SpdMeta = { version: string; commit: string }
 
-export const $meta = atom<SpdMeta | null>(null)
+export const $meta = new AppStore<SpdMeta | null>(null)
 
 export function loadSpdMeta() {
   getSpdMeta()

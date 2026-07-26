@@ -22,8 +22,7 @@ pub use items::IdentityMaps;
 pub use java_random::JavaRandom;
 pub use random::Random;
 pub use report::{
-    AnalyzeError, FloorMapProfile, FloorReport, MapMetaProfile, MapProfile, MapTrinketProfile,
-    SeedInfo, SeedReport,
+    AnalyzeError, FloorReport, MapMetaProfile, MapProfile, MapTrinketProfile, SeedInfo, SeedReport,
 };
 pub use run::{dungeon_from_run, init_run, RunState};
 pub use search::{
@@ -74,8 +73,20 @@ pub fn analyze_seed_with_profile(
     let floors = floors.clamp(1, 26);
     let run = init_run(info.numeric);
     let mut dungeon = dungeon_from_run(run);
+    let mut layout_dungeon = dungeon.clone();
     let identities = dungeon.identities.clone();
-    let floor_reports = level::analyze_floors_with_profile(&mut dungeon, floors, profile.as_ref());
+    let mut floor_reports =
+        level::analyze_floors_with_profile(&mut dungeon, floors, profile.as_ref());
+    if let Some(profile) = profile.as_ref() {
+        let layouts = level::analyze_layouts_with_profile(&mut layout_dungeon, floors, profile);
+        for (report, layout) in floor_reports.iter_mut().zip(layouts) {
+            report.feeling = layout.feeling;
+            report.builder = layout.builder;
+            report.rooms = layout.rooms;
+            report.map = layout.map;
+            report.assumed_map = layout.assumed_map;
+        }
+    }
 
     Ok(SeedReport {
         seed: info,

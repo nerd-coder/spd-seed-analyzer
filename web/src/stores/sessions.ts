@@ -5,12 +5,10 @@
  * Ephemeral: draft input, session runtime (reports), analyzing, form error.
  */
 
-import { persistentAtom } from '@nanostores/persistent'
-import { atom, computed } from 'nanostores'
-
-import type { MapProfile, MapTrinketProfile, SeedReport } from '@/lib/spd-wasm'
+import type { MapTrinketProfile, SeedReport } from '@/lib/spd-wasm'
 import { analyzeSeedInWorker, type WorkerTask } from '@/lib/spd-worker-client'
-import { mapProfile } from './map-profile'
+import { mapProfile, setMapTrinket } from './map-profile'
+import { AppStore, derivedStore, persistentStore } from './store-utils'
 
 // —— keys / limits ————————————————————————————————————————————————
 
@@ -45,7 +43,7 @@ export type SeedSession = {
   error: string | null
   startedAt: number | null
   finishedAt: number | null
-  mapProfile: MapProfile | undefined
+  refreshingLayout: boolean
 }
 
 // —— helpers ——————————————————————————————————————————————————————
@@ -94,13 +92,13 @@ function sleep(ms: number) {
 // —— persistent stores ————————————————————————————————————————————
 
 /** Ordered list of seed inputs to keep open (max {@link MAX_SAVED_SEEDS}). */
-export const $savedSeedInputs = persistentAtom<string[]>(
+export const $savedSeedInputs = persistentStore<string[]>(
   SAVED_SEEDS_KEY,
   [],
   stringArrayCodec
 )
 
-export const $activeSeedId = persistentAtom<string | null>(
+export const $activeSeedId = persistentStore<string | null>(
   ACTIVE_SEED_KEY,
   null,
   nullableStringCodec
@@ -109,16 +107,19 @@ export const $activeSeedId = persistentAtom<string | null>(
 // —— ephemeral stores ——————————————————————————————————————————————
 
 /** Draft seed field in the left menu. */
-export const $seedInput = atom('')
+export const $seedInput = new AppStore('')
 
 /** Runtime sessions (reports not persisted — re-analyzed on load). */
-export const $sessions = atom<SeedSession[]>([])
+export const $sessions = new AppStore<SeedSession[]>([])
 
-export const $analyzing = atom(false)
+export const $analyzing = new AppStore(false)
 
-export const $formError = atom<string | null>(null)
+export const $formError = new AppStore<string | null>(null)
 
-export const $sessionCount = computed($sessions, (s) => s.length)
+export const $sessionCount = derivedStore(
+  [$sessions] as const,
+  () => $sessions.get().length
+)
 
 // —— internal rehydrate control ————————————————————————————————————
 
@@ -159,15 +160,26 @@ function patchSession(id: string, patch: Partial<SeedSession>) {
 async function runAnalyze(
   id: string,
   input: string,
-  profile = $sessions.get().find((session) => session.id === id)?.mapProfile
+  refreshLayout = false
 ): Promise<boolean> {
-  patchSession(id, {
-    status: 'loading',
-    error: null,
-    startedAt: Date.now(),
-    finishedAt: null,
-  })
-  const task = analyzeSeedInWorker(input, ANALYZE_FLOORS, profile)
+  patchSession(
+    id,
+    refreshLayout
+      ? {
+          refreshingLayout: true,
+          error: null,
+          startedAt: Date.now(),
+          finishedAt: null,
+        }
+      : {
+          status: 'loading',
+          refreshingLayout: false,
+          error: null,
+          startedAt: Date.now(),
+          finishedAt: null,
+        }
+  )
+  const task = analyzeSeedInWorker(input, ANALYZE_FLOORS, mapProfile())
   analyzeTasks.get(id)?.cancel()
   analyzeTasks.set(id, task)
   try {
@@ -177,6 +189,7 @@ async function runAnalyze(
       status: 'ready',
       report,
       error: null,
+      refreshingLayout: false,
       finishedAt: Date.now(),
     })
     return true
@@ -186,6 +199,7 @@ async function runAnalyze(
       status: 'error',
       report: null,
       error: err instanceof Error ? err.message : String(err),
+      refreshingLayout: false,
       finishedAt: Date.now(),
     })
     return false
@@ -274,7 +288,7 @@ async function analyzeSeedInputInternal(
     error: null,
     startedAt: Date.now(),
     finishedAt: null,
-    mapProfile: mapProfile(),
+    refreshingLayout: false,
   }
   nextSessions = [...nextSessions, session]
   $sessions.set(nextSessions)
@@ -285,7 +299,7 @@ async function analyzeSeedInputInternal(
   }
   $analyzing.set(true)
   try {
-    await runAnalyze(id, input, session.mapProfile)
+    await runAnalyze(id, input)
   } finally {
     $analyzing.set(false)
   }
@@ -299,29 +313,20 @@ export async function analyzeSeedInput(input: string): Promise<void> {
   await analyzeSeedInputInternal(input, false)
 }
 
-export async function configureFloorMap(
-  id: string,
-  depth: number,
+export async function changeMapTrinket(
   trinket: MapTrinketProfile
 ): Promise<void> {
-  const session = $sessions.get().find((item) => item.id === id)
-  if (!session) return
-  const base = session.mapProfile ?? {
-    trinket: 'no_map_affecting_trinkets' as const,
-    meta: 'fresh' as const,
-    floors: [],
-  }
-  const profile: MapProfile = {
-    ...base,
-    floors: [
-      ...base.floors.filter((floor) => floor.depth !== depth),
-      { depth, trinket },
-    ].sort((a, b) => a.depth - b.depth),
-  }
-  patchSession(id, { mapProfile: profile })
+  if (trinket === mapProfile().trinket) return
+  setMapTrinket(trinket)
+  const ready = $sessions
+    .get()
+    .filter((session) => session.report && session.status === 'ready')
+  if (ready.length === 0) return
   $analyzing.set(true)
   try {
-    await runAnalyze(id, session.input, profile)
+    await Promise.all(
+      ready.map((session) => runAnalyze(session.id, session.input, true))
+    )
   } finally {
     $analyzing.set(false)
   }
@@ -369,7 +374,7 @@ export function startSessionRehydrate(): () => void {
     error: null,
     startedAt: null,
     finishedAt: null,
-    mapProfile: mapProfile(),
+    refreshingLayout: false,
   }))
 
   closedIds.clear()
