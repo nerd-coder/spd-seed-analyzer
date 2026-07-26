@@ -37,6 +37,7 @@ pub enum ItemProvenance {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ForcedDropRole {
+    HallsTorch,
     BaseFood,
     LargeFeelingFood,
     StrengthPotion,

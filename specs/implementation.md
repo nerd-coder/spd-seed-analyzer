@@ -13,11 +13,10 @@ and UI.
 
 ## Next phase
 
-1. Port `SecretLibraryRoom`'s private scroll selection, proving that it does not
-   consume `itemsToSpawn`.
-2. Add the two Halls Torch queue entries on regular depths 21–24.
-3. Audit remaining lifecycle branches, including direct drops, Spyglass taint,
+1. Audit remaining lifecycle branches, including direct drops, Spyglass taint,
    and boss-floor Bones behavior.
+2. Audit Cached Rations, Dried Rose petals, Darkness torches, and guide/meta
+   items for runtime-sensitive existence and RNG effects.
 
 Add altered-history regressions for every retained field. Do not restore
 partial rendered maps from painter snapshots: later doors, decoration, mobs,
@@ -29,8 +28,12 @@ and items can rewrite earlier cells. Per-cell finality provenance is required.
   retain exact internal parity but use seed-safe public constraints.
 - Initial `itemsToSpawn` state remains exact internally. Public output reports
   only initial-queue contracts: constrained food categories, invariant limited
-  schedules, and Forbidden Runes conditionality; it never claims survival or a
-  final heap/cell.
+  schedules, Forbidden Runes conditionality, and one aggregate contract for the
+  two Halls Torches queued before food; it never claims survival or a final
+  heap/cell.
+- Secret Library uses its pinned private weighted scroll pool and exact
+  placement retries without touching `itemsToSpawn` or Generator; sampled base
+  identity remains internal and Exotic Crystals is public only as a condition.
 - Runtime-sensitive painter callbacks suppress the affected item/quest tail and
   sampled facts; every regular public map is now omitted pending per-cell
   finality proof. Exact internal maps remain available to oracle fixtures.

@@ -46,6 +46,12 @@ public final class JavaOracle {
 				args.length == 3 && "figure-eight-trace".equals(args[1]);
 		boolean sacrificeReward =
 				args.length == 2 && "sacrifice-reward".equals(args[1]);
+		boolean secretLibraryOrder =
+				args.length == 2 && "secret-library-order".equals(args[1]);
+		if (secretLibraryOrder) {
+			System.out.print(SecretLibraryOracle.generateJson());
+			return;
+		}
 		if (sacrificeReward) {
 			System.out.print(SacrificeRewardOracle.generateJson(inputSeed, numericSeed));
 			return;
@@ -63,6 +69,7 @@ public final class JavaOracle {
 				&& !generatorLifecycle
 				&& !shopBagSelection
 				&& !sacrificeReward
+				&& !secretLibraryOrder
 				&& !args[1].matches("\\d+")) {
 			System.err.println("Unknown oracle contract: " + args[1]);
 			System.exit(2);

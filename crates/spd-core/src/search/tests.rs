@@ -200,6 +200,7 @@ fn initial_forced_queue_contracts_never_match_exact_item_searches() {
         "Stylus",
         "StoneOfIntuition",
         "TrinketCatalyst",
+        "Torch",
     ] {
         let result = search_seeds(&SeedSearchRequest {
             start_seed: 0,

@@ -54,8 +54,8 @@
       "status": "partial",
       "implemented": [
         "Exact structured heap capture for Crypt, GrassyGrave, SecretChestChasm, SecretArtillery, Pool, Runestone, MagicalFire, Traps, Sentry, Storage, ToxicGas, CrystalPath, and CrystalVault fixture paths",
-        "Full SecretMaze layout plus covered Armory, Garden, Library, Pit, RotGarden, WeakFloor, DemonSpawner, Summoning, and ToxicGas paint behavior",
-        "Special and secret-room prize generation for supported room families, including exact floor-11 SecretHoardRoom gold heaps, trap RNG lifecycle, SecretRunestoneRoom terrain and three-drop sequence, SecretArtilleryRoom's terrain and fixed three-drop placement, and floor-19 SecretSummoning traps"
+        "Full SecretMaze layout plus covered Armory, Garden, Library, SecretLibrary, Pit, RotGarden, WeakFloor, DemonSpawner, Summoning, and ToxicGas paint behavior",
+        "Special and secret-room prize generation for supported room families, including SecretLibraryRoom's private weighted-without-replacement scroll pool and unconditional exotic roll, exact floor-11 SecretHoardRoom gold heaps, trap RNG lifecycle, SecretRunestoneRoom terrain and three-drop sequence, SecretArtilleryRoom's terrain and fixed three-drop placement, and floor-19 SecretSummoning traps"
       ],
       "remaining": [
         "Legacy Room loot families beyond the fixture-backed Pool and CrystalPath paths still need fixture-first geometry and lifecycle parity",
@@ -67,7 +67,8 @@
         "crates/spd-core/src/level/special_loot",
         "crates/spd-core/tests/java_oracle_goldens/crystal_path.rs",
         "crates/spd-core/tests/java_oracle_goldens/pool.rs",
-        "crates/spd-core/tests/java_oracle_goldens/toxic_gas.rs"
+        "crates/spd-core/tests/java_oracle_goldens/toxic_gas.rs",
+        "tools/java-oracle/fixtures/secret/secret-library-order.json"
       ]
     },
     {
@@ -95,7 +96,8 @@
         "Wandmaker choices persisted into later internal floor states for Java-oracle parity are explicitly internal-only and are not repeated publicly after the spawn floor, where the player may already have claimed one",
         "Explicit Parchment Scrap state and pinned HKT-JZN-XQQ floor-13 Java-oracle parity evidence, retained as internal evidence rather than a public concrete prediction",
         "Special-room rewards retain exact internal generation while public output comes from painter-emitted static room contracts rather than sampled items; this also covers Study, Ritual, Ring, SuspiciousChest, and GrassyGrave center callbacks; Crypt exposes only its floor-set armor distribution and forced curse, Statue exposes only its forced-uncursed positively enchanted weapon contract, and audited room families preserve invariant source counts/categories while omitting unsafe concrete fields and placements",
-        "Initial forced-queue reporting is separated from exact internal parity state: every regular floor exposes one constrained food-category enqueue, seeded Large feelings expose a second constrained food-category enqueue, and seed-stable limited-drop selections expose only explicitly initial-queue contracts; odd-count scheduled Scrolls of Upgrade are invariant enqueues while even-count schedules remain conditional because Forbidden Runes suppresses them; room consumption, surviving heap existence/type, and placement are never asserted",
+        "Initial forced-queue reporting is separated from exact internal parity state: every regular floor exposes one constrained food-category enqueue, Halls depths 21–24 expose one aggregate constraint for the two Torches queued before food, seeded Large feelings expose a second constrained food-category enqueue, and seed-stable limited-drop selections expose only explicitly initial-queue contracts; odd-count scheduled Scrolls of Upgrade are invariant enqueues while even-count schedules remain conditional because Forbidden Runes suppresses them; room consumption, surviving heap existence/type, and placement are never asserted",
+        "SecretLibraryRoom retains exact private-pool base scroll identities and placement internally, with its JVM HashMap order pinned by a targeted Java oracle; public output exposes only 2–3 distinct scroll-base rewards and labels Exotic Crystals conversion as conditional",
         "Runtime-sensitive generation taint persists across later floors: after a trinket-sensitive default feeling, artifact-history branch, divergent room callback, Wandmaker tail, or conservatively tainted even Scroll schedule, sampled feeling, layout, room facts, map, item tail, and quest tail remain internal while independent initial-queue contracts stay public"
       ],
       "remaining": [

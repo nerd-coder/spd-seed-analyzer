@@ -61,6 +61,39 @@ fn projection_ignores_sampled_food_identity_and_room_consumption() {
 }
 
 #[test]
+fn halls_torches_precede_food_and_survive_public_taint_as_one_constraint() {
+    let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(0));
+    dungeon.public_generation_tainted = true;
+    dungeon.depth = 21;
+    let state = crate::level::create_level_partial(&mut dungeon);
+    assert_eq!(state.initial_forced_items[0].class_name, "Torch");
+    assert_eq!(state.initial_forced_items[1].class_name, "Torch");
+    assert_eq!(
+        state.initial_forced_items[0].provenance,
+        ItemProvenance::Forced(ForcedDropRole::HallsTorch)
+    );
+    assert_eq!(
+        state.initial_forced_items[1].provenance,
+        ItemProvenance::Forced(ForcedDropRole::HallsTorch)
+    );
+    assert_eq!(
+        state.initial_forced_items[2].provenance,
+        ItemProvenance::Forced(ForcedDropRole::BaseFood)
+    );
+    let public = state.to_floor_report();
+    let torch_entries: Vec<_> = public
+        .items
+        .iter()
+        .filter(|item| item.name.contains("Torches"))
+        .collect();
+    assert_eq!(torch_entries.len(), 1);
+    assert_eq!(torch_entries[0].prediction, ItemPredictionKind::Constrained);
+    assert!(torch_entries[0].class_name.is_none());
+    assert!(torch_entries[0].conditional_notes[0].contains("before the base food"));
+    assert!(torch_entries[0].conditional_notes[0].contains("final cells are not asserted"));
+}
+
+#[test]
 fn upgrade_scroll_contract_distinguishes_odd_and_even_schedules() {
     let mut odd = GeneratedItem::new("ScrollOfUpgrade", ItemCategory::Scroll);
     odd.provenance = ItemProvenance::Forced(ForcedDropRole::UpgradeScroll {

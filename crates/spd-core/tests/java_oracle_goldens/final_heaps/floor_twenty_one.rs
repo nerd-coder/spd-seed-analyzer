@@ -19,6 +19,22 @@ fn aaa_floor_twenty_one_pins_first_generation_divergence_fix() {
         actual = Some(create_level_partial(&mut dungeon));
     }
     let actual = actual.expect("floor-21 replay");
+    assert_eq!(actual.initial_forced_items[0].class_name, "Torch");
+    assert_eq!(actual.initial_forced_items[1].class_name, "Torch");
+    assert_eq!(
+        actual.initial_forced_items[2].category,
+        spd_core::items::model::ItemCategory::Food
+    );
+    assert_eq!(
+        expected
+            .final_heaps
+            .iter()
+            .flat_map(|heap| &heap.items)
+            .filter(|item| item.class_name == "Torch")
+            .count(),
+        2,
+        "pinned Java final heaps retain both Halls torches"
+    );
     assert_eq!(actual.pre_paint_rng_probe, expected.pre_paint_rng);
     let mut rooms = actual.rooms.clone();
     rooms.sort();

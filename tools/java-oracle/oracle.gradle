@@ -20,6 +20,8 @@ gradle.beforeProject { project ->
                 gradle.startParameter.projectProperties['oracleShopBagSelection']
 		def sacrificeReward =
 				gradle.startParameter.projectProperties['oracleSacrificeReward']
+		def secretLibraryOrder =
+				gradle.startParameter.projectProperties['oracleSecretLibraryOrder']
 		def figureEightTrace =
 				gradle.startParameter.projectProperties['oracleFigureEightTrace']
         if (sourceDir == null || seed == null) {
@@ -66,6 +68,9 @@ gradle.beforeProject { project ->
             }
 			if (sacrificeReward != null) {
 				args('sacrifice-reward')
+			}
+			if (secretLibraryOrder != null) {
+				args('secret-library-order')
 			}
 			if (figureEightTrace != null) {
 				args('figure-eight-trace', figureEightTrace)

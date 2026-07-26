@@ -55,6 +55,7 @@ From the analyzer repository root:
 ./tools/java-oracle/run --generator-deck-rollover AAA-AAA-AAA
 ./tools/java-oracle/run --generator-lifecycle AAA-AAA-AAA
 ./tools/java-oracle/run --shop-bag-selection AAA-AAA-AAA
+./tools/java-oracle/run --secret-library-order AAA-AAA-AAA
 ```
 
 If an older Java is the machine default, select a JDK 17 installation for the
@@ -196,6 +197,10 @@ Java's `HashMap<Bag, Integer>` iterates identity-hashed bag instances, making
 its tie choice unsuitable as a portable deterministic oracle contract.
 
 ## JSON contracts
+
+The Secret Library contract records the pinned JVM `HashMap` iteration order
+used by its private weighted scroll pool. Rust consumes this committed oracle
+order because declaration order does not determine the weighted selection.
 
 ### Generator deck rollover
 

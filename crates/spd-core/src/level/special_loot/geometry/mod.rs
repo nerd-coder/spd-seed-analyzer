@@ -50,6 +50,10 @@ pub(super) fn paint(
             basic::paint_secret_runestone(map, room, room_index, doors);
             None
         }
+        "SecretLibraryRoom" => {
+            basic::paint_secret_library(map, room, room_index, doors);
+            None
+        }
         "WeakFloorRoom" => {
             basic::paint_weak_floor(map, room, room_index, doors);
             None

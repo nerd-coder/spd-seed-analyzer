@@ -66,6 +66,16 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
 
     // Forced drops + feelings only on RegularLevel (not boss / LastLevel).
     if dungeon.regular_level() {
+        // HallsLevel.create queues these before RegularLevel/Level.create.
+        if (21..=24).contains(&dungeon.depth) {
+            for _ in 0..2 {
+                let mut torch = GeneratedItem::new("Torch", ItemCategory::Other);
+                torch.source = Some("forced".into());
+                torch.provenance = ItemProvenance::Forced(ForcedDropRole::HallsTorch);
+                items_to_spawn.push(torch.clone());
+                forced.push(torch);
+            }
+        }
         let mut food = dungeon
             .generator
             .random_category(Category::Food, dungeon.depth);

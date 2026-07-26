@@ -115,6 +115,25 @@ pub(super) fn paint_library(map: &mut TerrainMap, room: &Room, room_index: usize
     draw_inside(map, room, door, 1, EMPTY_SP);
 }
 
+/// Pinned `SecretLibraryRoom.paint` canvas before its reward loop.
+pub(super) fn paint_secret_library(
+    map: &mut TerrainMap,
+    room: &Room,
+    room_index: usize,
+    doors: &DoorMap,
+) {
+    fill_room(map, room, WALL);
+    fill_margin(map, room, 1, BOOKSHELF);
+    fill_ellipse(map, room, 2, EMPTY_SP);
+    let door = entrance(room, room_index, doors).expect("placed SecretLibraryRoom has an entrance");
+    let distance = if door.x == room.left || door.x == room.right {
+        (room.width() - 3) / 2
+    } else {
+        (room.height() - 3) / 2
+    };
+    draw_inside(map, room, door, distance, EMPTY_SP);
+}
+
 pub(super) fn paint_runestone(
     map: &mut TerrainMap,
     room: &Room,
@@ -350,6 +369,32 @@ fn fill_margin(map: &mut TerrainMap, room: &Room, margin: i32, terrain: i32) {
     for y in (room.top + margin)..=(room.bottom - margin) {
         for x in (room.left + margin)..=(room.right - margin) {
             set(map, Point::new(x, y), terrain);
+        }
+    }
+}
+
+fn fill_ellipse(map: &mut TerrainMap, room: &Room, margin: i32, terrain: i32) {
+    let x = room.left + margin;
+    let y = room.top + margin;
+    let width = room.width() - margin * 2;
+    let height = room.height() - margin * 2;
+    let radius_h = height as f64 / 2.0;
+    let radius_w = width as f64 / 2.0;
+    for row in 0..height {
+        let row_y = -radius_h + 0.5 + row as f64;
+        let mut row_width = 2.0
+            * ((radius_w * radius_w) * (1.0 - row_y * row_y / (radius_h * radius_h)))
+                .max(0.0)
+                .sqrt();
+        row_width = if width % 2 == 0 {
+            (row_width / 2.0).round() * 2.0
+        } else {
+            (row_width / 2.0).floor() * 2.0 + 1.0
+        };
+        let row_width = row_width as i32;
+        let start = x + (width - row_width) / 2;
+        for column in start..(start + row_width) {
+            set(map, Point::new(column, y + row), terrain);
         }
     }
 }

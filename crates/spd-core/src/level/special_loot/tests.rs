@@ -20,6 +20,7 @@ mod depth_one_parity;
 mod forced_items;
 mod placement_masks;
 mod quest_npcs;
+mod secret_library;
 mod storage;
 
 fn test_room(name: &str, w: i32, h: i32) -> Room {

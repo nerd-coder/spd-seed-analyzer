@@ -18,6 +18,8 @@ mod final_heaps;
 mod pool;
 #[path = "java_oracle_goldens/sacrifice_reward.rs"]
 mod sacrifice_reward;
+#[path = "java_oracle_goldens/secret_library.rs"]
+mod secret_library;
 #[path = "java_oracle_goldens/toxic_gas.rs"]
 mod toxic_gas;
 

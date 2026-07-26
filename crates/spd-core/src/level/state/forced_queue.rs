@@ -28,6 +28,19 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
     )];
     if initial
         .iter()
+        .any(|item| item.provenance == ItemProvenance::Forced(ForcedDropRole::HallsTorch))
+    {
+        entries.insert(
+            0,
+            constrained_entry(
+                "two initially queued Torches",
+                "other",
+                "HallsLevel queues exactly two Torches before the base food source on regular depths 21–24; room consumption, survival, heap type, and final cells are not asserted.",
+            ),
+        );
+    }
+    if initial
+        .iter()
         .any(|item| item.provenance == ItemProvenance::Forced(ForcedDropRole::LargeFeelingFood))
     {
         entries.push(constrained_entry(
@@ -38,6 +51,7 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
     }
     for item in initial {
         let (name, condition) = match item.provenance {
+            ItemProvenance::Forced(ForcedDropRole::HallsTorch) => continue,
             ItemProvenance::Forced(ForcedDropRole::StrengthPotion) => (
                 "initially queued Potion of Strength",
                 "The seed-stable limited-drop schedule queues this identity; a room may consume it, so final heap and placement are not asserted.",

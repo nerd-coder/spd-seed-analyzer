@@ -1,6 +1,5 @@
 //! Secret room prize painters.
 
-use super::placement::{burn_drop_pos, find_prize_item};
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
@@ -10,24 +9,43 @@ use crate::level::terrain::{TerrainMap, ALCHEMY, EMPTY, EMPTY_SP, STATUE_SP, WAL
 use crate::random::Random;
 use crate::rooms::room::Room;
 
-pub(super) fn secret_library(
-    dungeon: &mut DungeonState,
-    room: &Room,
-    items_to_spawn: &mut Vec<GeneratedItem>,
-) -> Vec<PlacedLoot> {
-    // Approximate: 2-3 scrolls
+pub(super) fn secret_library(room: &Room, map: &mut TerrainMap) -> Vec<PlacedLoot> {
+    // Private weighted map in pinned JVM HashMap iteration order. This room
+    // does not access itemsToSpawn or Generator.
     let n = Random::int_range_inclusive(2, 3);
+    let classes = [
+        "ScrollOfTransmutation",
+        "ScrollOfRemoveCurse",
+        "ScrollOfRecharging",
+        "ScrollOfMagicMapping",
+        "ScrollOfIdentify",
+        "ScrollOfRetribution",
+        "ScrollOfLullaby",
+        "ScrollOfRage",
+        "ScrollOfMirrorImage",
+        "ScrollOfTeleportation",
+        "ScrollOfTerror",
+    ];
+    let mut weights = vec![6.0, 2.0, 3.0, 4.0, 1.0, 4.0, 4.0, 4.0, 3.0, 3.0, 4.0];
     let mut out = Vec::new();
-    let mut occupied = Vec::new();
     for _ in 0..n {
-        burn_drop_pos(room, &mut occupied);
-        let mut item =
-            find_prize_item(items_to_spawn, Some("TrinketCatalyst")).unwrap_or_else(|| {
-                dungeon
-                    .generator
-                    .random_category(Category::Scroll, dungeon.depth)
-            });
+        let cell = loop {
+            let point = room.random();
+            let Some(cell) = map.point_to_cell(point.x, point.y) else {
+                continue;
+            };
+            if map.map[cell] == EMPTY_SP && !map.heap_occupied[cell] {
+                break cell;
+            }
+        };
+        let choice = Random::chances(&weights) as usize;
+        weights[choice] = 0.0;
+        // Every listed regular scroll has an exotic mapping. Conversion is
+        // absent in the baseline model, but Java always consumes this roll.
+        let _ = Random::float();
+        let mut item = GeneratedItem::new(classes[choice], ItemCategory::Scroll);
         item.source = Some("SecretLibraryRoom".into());
+        map.record_heap(cell, "heap", item.clone());
         out.push(PlacedLoot {
             item,
             heap_type: "heap",

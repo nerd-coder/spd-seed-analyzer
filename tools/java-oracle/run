@@ -14,6 +14,7 @@ generator_deck_rollover=""
 generator_lifecycle=""
 shop_bag_selection=""
 sacrifice_reward=""
+secret_library_order=""
 figure_eight_trace=""
 
 usage() {
@@ -77,6 +78,10 @@ while (($# > 0)); do
 			sacrifice_reward="1"
 			shift
 			;;
+		--secret-library-order)
+			secret_library_order="1"
+			shift
+			;;
 		--figure-eight-trace)
 			[[ $# -ge 2 ]] || { usage; exit 2; }
 			figure_eight_trace="$2"
@@ -118,6 +123,7 @@ selected_contracts=0
 [[ -n "$generator_lifecycle" ]] && ((selected_contracts += 1))
 [[ -n "$shop_bag_selection" ]] && ((selected_contracts += 1))
 [[ -n "$sacrifice_reward" ]] && ((selected_contracts += 1))
+[[ -n "$secret_library_order" ]] && ((selected_contracts += 1))
 [[ -n "$figure_eight_trace" ]] && ((selected_contracts += 1))
 if ((selected_contracts > 1)); then
 	echo "Choose only one oracle contract" >&2
@@ -181,6 +187,9 @@ if [[ -n "$shop_bag_selection" ]]; then
 fi
 if [[ -n "$sacrifice_reward" ]]; then
 	gradle_args+=(-PoracleSacrificeReward=true)
+fi
+if [[ -n "$secret_library_order" ]]; then
+	gradle_args+=(-PoracleSecretLibraryOrder=true)
 fi
 if [[ -n "$figure_eight_trace" ]]; then
 	gradle_args+=(-PoracleFigureEightTrace="$figure_eight_trace")
