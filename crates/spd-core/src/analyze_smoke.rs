@@ -64,6 +64,7 @@ fn explicit_baseline_profile_can_publish_proven_safe_maps() {
     let profile = MapProfile {
         trinket: MapTrinketProfile::NoMapAffectingTrinkets,
         meta: MapMetaProfile::Fresh,
+        trinket_start_depth: 1,
     };
     let profiled = (0..100)
         .find_map(|seed| {
@@ -85,6 +86,34 @@ fn explicit_baseline_profile_can_publish_proven_safe_maps() {
     assert!(layout.markers.is_empty());
     assert!(layout.heaps.is_empty());
     assert!(layout.mobs.is_empty());
+}
+
+#[test]
+fn trinket_profile_starts_on_the_configured_floor() {
+    use crate::{analyze_seed_with_profile, MapMetaProfile, MapProfile, MapTrinketProfile};
+
+    let baseline = MapProfile {
+        trinket: MapTrinketProfile::NoMapAffectingTrinkets,
+        meta: MapMetaProfile::Fresh,
+        trinket_start_depth: 1,
+    };
+    let delayed = MapProfile {
+        trinket: MapTrinketProfile::MossyClump3,
+        meta: MapMetaProfile::Fresh,
+        trinket_start_depth: 3,
+    };
+    let baseline = analyze_seed_with_profile("31", 2, Some(baseline)).expect("baseline");
+    let delayed = analyze_seed_with_profile("31", 2, Some(delayed)).expect("delayed trinket");
+
+    for (baseline, delayed) in baseline.floors.iter().zip(&delayed.floors) {
+        assert_eq!(baseline.feeling, delayed.feeling);
+        assert_eq!(baseline.builder, delayed.builder);
+        assert_eq!(baseline.rooms, delayed.rooms);
+        assert_eq!(
+            serde_json::to_value(&baseline.map).expect("baseline map"),
+            serde_json::to_value(&delayed.map).expect("delayed map")
+        );
+    }
 }
 
 #[test]

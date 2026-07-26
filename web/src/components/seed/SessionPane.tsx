@@ -5,15 +5,7 @@ import { Button } from '@/components/ui/button'
 import { formatElapsed, useElapsedTime } from '@/hooks/useElapsedTime'
 import { cancelSeedAnalysis, type SeedSession } from '@/stores/app'
 
-export function SessionPane({
-  session,
-  identitySpoilers,
-  mapSpoilers,
-}: {
-  session: SeedSession
-  identitySpoilers: boolean
-  mapSpoilers: boolean
-}) {
+export function SessionPane({ session }: { session: SeedSession }) {
   const loading = session.status === 'pending' || session.status === 'loading'
   const elapsed = useElapsedTime(session.startedAt, loading)
   if (loading) {
@@ -69,9 +61,11 @@ export function SessionPane({
       <div className="relative">
         <SeedReportView
           refreshingLayout={session.refreshingLayout}
+          sessionId={session.id}
+          mapProfile={session.mapProfile}
           report={session.report}
-          identitySpoilers={identitySpoilers}
-          mapSpoilers={mapSpoilers}
+          identitySpoilers={session.identitySpoilers}
+          mapSpoilers={session.mapSpoilers}
         />
       </div>
     )

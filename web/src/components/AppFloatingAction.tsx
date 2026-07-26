@@ -1,5 +1,4 @@
 import { cn } from '@/lib/utils'
-import { SettingsButton } from './SettingsButton'
 import { ThemeToggle } from './ThemeToggle'
 
 type AppFloatingActionProps = {
@@ -14,11 +13,10 @@ export function AppFloatingAction({ className }: AppFloatingActionProps) {
     <div
       className={cn(
         'absolute top-2 left-2 right-2 z-30',
-        'flex items-center justify-between',
+        'flex items-center justify-end',
         className
       )}
     >
-      <SettingsButton className={buttonClasses} />
       <ThemeToggle className={buttonClasses} />
     </div>
   )

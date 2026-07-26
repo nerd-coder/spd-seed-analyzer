@@ -39,10 +39,10 @@ markers/heaps, and UI copy.
 The first conservative profile slice is implemented across `spd-core`, WASM,
 and the web worker API. Public maps are painter-complete layout snapshots taken
 before NPC, mob, and item population, so Guide Page/meta, heap, and mob state do
-not gate layout rendering. The web supplies one run-wide trinket profile,
-defaulting to no map-affecting trinket, with Mossy Clump +0 through +3 and Trap
-Mechanism +0 through +3 as alternatives. Changing it regenerates every open
-seed map. Analysis replays floors in depth order, preserving the pinned seeded
+not gate layout rendering. Each seed overview supplies its own trinket profile,
+defaulting to no map-affecting trinket, with separate trinket, upgrade, and
+first-held-floor inputs. Changing it regenerates every map for that seed.
+Analysis replays floors in depth order, preserving the pinned seeded
 feeling decks and short-circuit `Random.Float` call order. Trap Mechanism
 visibility accumulation is injected into regular traps, MinefieldRoom,
 BurnedRoom, and SecretSummoningRoom.
@@ -51,8 +51,8 @@ Map projection uses a dedicated sequential layout pass that stops at the
 painter-complete snapshot. Post-layout NPC, mob, heap, and item uncertainty no
 longer taints later layouts; pre-layout item and room callbacks still run when
 their RNG or persistent Generator effects can change painting. The frontend
-state layer is TanStack Store, including persisted layout, spoiler, theme,
-session, finder, and mode state.
+state layer is TanStack Store. Identity and floor-map visibility are scoped to
+each seed session; only theme and application mode remain global preferences.
 
 Replace omission-oriented projection with a fact/provenance model. Each
 reportable source must produce:
@@ -241,8 +241,8 @@ Acceptance:
 
 ## Immediate next slice
 
-Checkpoint: regular-floor layouts now render under the explicit run-wide
-trinket profile and refresh together when it changes. A painter-boundary pass
+Checkpoint: regular-floor layouts now render under each seed's explicit
+trinket profile and refresh together for that seed when it changes. A painter-boundary pass
 prevents post-layout population uncertainty from suppressing later maps while
 retaining pre-layout dependency gates. Initial forced-queue reporting describes the
 invariant food-category existence directly, and even-schedule Scrolls of

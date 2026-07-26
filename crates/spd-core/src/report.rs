@@ -251,6 +251,13 @@ pub struct SeedReport {
 pub struct MapProfile {
     pub trinket: MapTrinketProfile,
     pub meta: MapMetaProfile,
+    /// First main-path depth where the configured trinket is held.
+    #[serde(default = "default_trinket_start_depth")]
+    pub trinket_start_depth: u32,
+}
+
+const fn default_trinket_start_depth() -> u32 {
+    1
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]

@@ -154,7 +154,7 @@
       "status": "partial",
       "implemented": [
         "Water, grass, trap, door merge, and graph painting for supported regular-floor paths",
-        "Profiled analysis publishes painter-complete layout snapshots captured before NPC, mob, heap, forced-item placement, Guide Page, and other population. The web defaults to no map-affecting trinket and exposes one run-wide Mossy Clump or Trap Mechanism level; changing it regenerates every open seed map. Exact public maps contain no item or mob facts",
+        "Profiled analysis publishes painter-complete layout snapshots captured before NPC, mob, heap, forced-item placement, Guide Page, and other population. Each seed overview defaults to no map-affecting trinket and can configure a Mossy Clump or Trap Mechanism level plus the first floor where it is held; changing it regenerates every map for that seed. Exact public maps contain no item or mob facts",
         "A dedicated sequential layout projection stops each floor at the painter-complete snapshot, so uncertain post-layout NPC, mob, heap, and item population no longer taints later floor layouts. Pre-layout item and room callbacks still execute when their RNG or persistent Generator effects can change painting",
         "Real-seed CXG-FJT-BFQ and HKT-JZN-XQQ references document intentional public map omission. A Playwright-only synthetic FloorMap exercises dialog, zoom, focus, responsive layout, and liquid animation without exposing unsafe production cells",
         "Pinned gameplay references for HKT-JZN-XQQ floor 12 and its Troll Blacksmith MiningLevel branch, with the branch explicitly retained as source-only evidence",
@@ -164,7 +164,7 @@
         "Trap Mechanism visibility accumulation is modeled for regular painter traps, MinefieldRoom, BurnedRoom, and SecretSummoningRoom"
       ],
       "remaining": [
-        "The configured run-wide Mossy Clump or Trap Mechanism state resolves the seeded default-feeling branch while preserving SPD's short-circuit Random.Float call order and persistent seeded feeling decks",
+        "The configured seed-scoped Mossy Clump or Trap Mechanism state and acquisition floor resolve the seeded default-feeling branch while preserving SPD's short-circuit Random.Float call order and persistent seeded feeling decks from the first held floor onward",
         "Public layouts intentionally stop before population, so they do not predict createMobs, createItems grass flattening, forced-item placement, GuidePage/meta placement, heaps, or entity cells",
         "ToxicGas vent and gas blob facts are not yet exported as exact additive render facts",
         "Uncovered room painters and other floors can produce incomplete terrain or markers",

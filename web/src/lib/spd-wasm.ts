@@ -142,6 +142,7 @@ export type SeedReport = {
 export type MapProfile = {
   trinket: MapTrinketProfile
   meta: 'fresh'
+  trinket_start_depth: number
 }
 
 export type MapTrinketProfile =

@@ -1,5 +1,6 @@
 'use client'
 
+import { CaretDownIcon } from '@phosphor-icons/react'
 import { cva, type VariantProps } from 'class-variance-authority'
 import type * as React from 'react'
 import { Button } from '@/components/ui/button'
@@ -120,6 +121,28 @@ function InputGroupInput({
   )
 }
 
+function InputGroupSelect({
+  className,
+  ...props
+}: React.ComponentProps<'select'>) {
+  return (
+    <div className="relative flex min-w-0 flex-1 items-center border-r border-input last:border-r-0">
+      <select
+        data-slot="input-group-control"
+        className={cn(
+          'h-full w-full min-w-0 appearance-none bg-transparent py-1 pr-7 pl-2 text-xs outline-none disabled:cursor-not-allowed disabled:bg-transparent',
+          className
+        )}
+        {...props}
+      />
+      <CaretDownIcon
+        className="pointer-events-none absolute right-2 size-3.5 text-muted-foreground"
+        aria-hidden
+      />
+    </div>
+  )
+}
+
 function InputGroupTextarea({
   className,
   ...props
@@ -141,6 +164,7 @@ export {
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
+  InputGroupSelect,
   InputGroupText,
   InputGroupTextarea,
 }

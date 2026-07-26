@@ -7,8 +7,6 @@ import { Tabs, TabsContent, TabsTrigger } from '@/components/ui/tabs'
 import { useSeedTabsHeight } from '@/hooks/useSeedTabsHeight'
 import {
   $activeSeedId,
-  $identitySpoilers,
-  $mapSpoilers,
   $sessions,
   closeSeedSession,
   setActiveSeed,
@@ -19,8 +17,6 @@ import { EmptyAnalysisPlaceholder } from './seed/EmptyAnalysisPlaceholder'
 export function AnalyzerWorkspace() {
   const sessions = useStore($sessions)
   const activeId = useStore($activeSeedId)
-  const mapSpoilers = useStore($mapSpoilers)
-  const identitySpoilers = useStore($identitySpoilers)
   const seedTabsRef = useRef<HTMLDivElement>(null)
   useSeedTabsHeight(seedTabsRef, sessions.length > 0)
 
@@ -64,11 +60,7 @@ export function AnalyzerWorkspace() {
       <div className="flex flex-col gap-4 p-4 md:p-6">
         {sessions.map((session) => (
           <TabsContent key={session.id} value={session.id} className="mt-0">
-            <SessionPane
-              session={session}
-              identitySpoilers={identitySpoilers}
-              mapSpoilers={mapSpoilers}
-            />
+            <SessionPane session={session} />
           </TabsContent>
         ))}
       </div>

@@ -5,9 +5,9 @@
  * Ephemeral: draft input, session runtime (reports), analyzing, form error.
  */
 
-import type { MapTrinketProfile, SeedReport } from '@/lib/spd-wasm'
+import type { MapProfile, SeedReport } from '@/lib/spd-wasm'
 import { analyzeSeedInWorker, type WorkerTask } from '@/lib/spd-worker-client'
-import { mapProfile, setMapTrinket } from './map-profile'
+import { defaultMapProfile } from './map-profile'
 import { AppStore, derivedStore, persistentStore } from './store-utils'
 
 // —— keys / limits ————————————————————————————————————————————————
@@ -44,6 +44,9 @@ export type SeedSession = {
   startedAt: number | null
   finishedAt: number | null
   refreshingLayout: boolean
+  mapProfile: MapProfile
+  identitySpoilers: boolean
+  mapSpoilers: boolean
 }
 
 // —— helpers ——————————————————————————————————————————————————————
@@ -160,7 +163,9 @@ function patchSession(id: string, patch: Partial<SeedSession>) {
 async function runAnalyze(
   id: string,
   input: string,
-  refreshLayout = false
+  refreshLayout = false,
+  profile = $sessions.get().find((session) => session.id === id)?.mapProfile ??
+    defaultMapProfile()
 ): Promise<boolean> {
   patchSession(
     id,
@@ -179,7 +184,7 @@ async function runAnalyze(
           finishedAt: null,
         }
   )
-  const task = analyzeSeedInWorker(input, ANALYZE_FLOORS, mapProfile())
+  const task = analyzeSeedInWorker(input, ANALYZE_FLOORS, profile)
   analyzeTasks.get(id)?.cancel()
   analyzeTasks.set(id, task)
   try {
@@ -216,6 +221,14 @@ export function setSeedInput(value: string) {
 
 export function setActiveSeed(id: string | null) {
   $activeSeedId.set(id)
+}
+
+export function setSeedIdentitySpoilers(id: string, value: boolean) {
+  patchSession(id, { identitySpoilers: value })
+}
+
+export function setSeedMapSpoilers(id: string, value: boolean) {
+  patchSession(id, { mapSpoilers: value })
 }
 
 /**
@@ -289,6 +302,9 @@ async function analyzeSeedInputInternal(
     startedAt: Date.now(),
     finishedAt: null,
     refreshingLayout: false,
+    mapProfile: defaultMapProfile(),
+    identitySpoilers: true,
+    mapSpoilers: true,
   }
   nextSessions = [...nextSessions, session]
   $sessions.set(nextSessions)
@@ -313,20 +329,22 @@ export async function analyzeSeedInput(input: string): Promise<void> {
   await analyzeSeedInputInternal(input, false)
 }
 
-export async function changeMapTrinket(
-  trinket: MapTrinketProfile
+export async function changeSeedMapProfile(
+  id: string,
+  profile: MapProfile
 ): Promise<void> {
-  if (trinket === mapProfile().trinket) return
-  setMapTrinket(trinket)
-  const ready = $sessions
-    .get()
-    .filter((session) => session.report && session.status === 'ready')
-  if (ready.length === 0) return
+  const session = $sessions.get().find((item) => item.id === id)
+  if (
+    !session ||
+    JSON.stringify(profile) === JSON.stringify(session.mapProfile)
+  ) {
+    return
+  }
+  patchSession(id, { mapProfile: profile })
+  if (!session.report || session.status !== 'ready') return
   $analyzing.set(true)
   try {
-    await Promise.all(
-      ready.map((session) => runAnalyze(session.id, session.input, true))
-    )
+    await runAnalyze(id, session.input, true, profile)
   } finally {
     $analyzing.set(false)
   }
@@ -375,6 +393,9 @@ export function startSessionRehydrate(): () => void {
     startedAt: null,
     finishedAt: null,
     refreshingLayout: false,
+    mapProfile: defaultMapProfile(),
+    identitySpoilers: true,
+    mapSpoilers: true,
   }))
 
   closedIds.clear()

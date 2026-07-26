@@ -24,11 +24,7 @@ export {
   setActiveFinder,
   startFinderSearch,
 } from './finder'
-export {
-  $mapTrinket,
-  mapProfile,
-  setMapTrinket,
-} from './map-profile'
+export { defaultMapProfile } from './map-profile'
 export { $meta, loadSpdMeta, type SpdMeta } from './meta'
 export {
   $activeSeedId,
@@ -42,7 +38,7 @@ export {
   analyzeDraftSeed,
   analyzeSeedInput,
   cancelSeedAnalysis,
-  changeMapTrinket,
+  changeSeedMapProfile,
   closeSeedSession,
   MAX_SAVED_SEEDS,
   normalizeSeedInput,
@@ -50,16 +46,12 @@ export {
   type SessionStatus,
   sessionIdFor,
   setActiveSeed,
+  setSeedIdentitySpoilers,
   setSeedInput,
+  setSeedMapSpoilers,
   startSessionRehydrate,
   tabLabel,
 } from './sessions'
-export {
-  $identitySpoilers,
-  $mapSpoilers,
-  setIdentitySpoilers,
-  setMapSpoilers,
-} from './spoilers'
 export {
   $theme,
   applyTheme,

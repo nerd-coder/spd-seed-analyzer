@@ -537,7 +537,12 @@ pub fn analyze_layouts_with_profile(
     for depth in 1..=max {
         dungeon.depth = depth;
         dungeon.branch = 0;
-        trinkets::set_held(profile.trinket);
+        let trinket = if depth as u32 >= profile.trinket_start_depth {
+            profile.trinket
+        } else {
+            MapTrinketProfile::NoMapAffectingTrinkets
+        };
+        trinkets::set_held(trinket);
         let level = create_level_layout_with_profile(dungeon, true);
         floors.push(level.to_floor_report_with_map(true));
     }
@@ -560,6 +565,7 @@ pub fn analyze_floors_with_profile(
         dungeon.depth = depth;
         dungeon.branch = 0;
         let trinket = profile
+            .filter(|profile| depth as u32 >= profile.trinket_start_depth)
             .map(|profile| profile.trinket)
             .unwrap_or(MapTrinketProfile::NoMapAffectingTrinkets);
         trinkets::set_held(trinket);

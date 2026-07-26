@@ -72,9 +72,9 @@ export function FloorDetail({
     <section className="space-y-3 border-b py-6 first:pt-0 last:border-b-0 last:pb-0">
       <div className="flex flex-wrap items-center gap-2">
         <DepthIcon feeling={floor.feeling} size={20} />
-        <span className="font-mono text-sm font-medium tabular-nums">
+        <h3 className="font-mono text-sm font-medium tabular-nums">
           Floor {floor.depth}
-        </span>
+        </h3>
         {floor.rooms && floor.rooms.length > 0 && (
           <Popover>
             <PopoverTrigger asChild>
