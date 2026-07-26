@@ -144,9 +144,38 @@ fn abc_floor_twenty_three_halls_paint_trace_matches_preserved_run() {
         .into_iter()
         .map(|room| (room.class_name, room.bounds))
         .collect::<Vec<_>>();
+    let actual_callbacks = actual
+        .room_paint_rng_checkpoints
+        .iter()
+        .map(|checkpoint| (checkpoint.room.clone(), checkpoint.rng.clone()))
+        .collect::<Vec<_>>();
+    let oracle_callbacks = trace
+        .checkpoints
+        .iter()
+        .filter(|checkpoint| checkpoint.stage == "room")
+        .map(|checkpoint| (checkpoint.room.clone(), checkpoint.rng.clone()))
+        .collect::<Vec<_>>();
+    let doors = trace.checkpoints.last().expect("paintDoors checkpoint");
+    assert_eq!(
+        (doors.stage.as_str(), doors.room.as_str()),
+        ("doors", "paintDoors")
+    );
     assert_eq!(oracle_pre_shuffle.len(), 26, "all Java rooms recorded");
-    assert_ne!(
+    assert_eq!(
+        oracle_callbacks.len(),
+        26,
+        "every Java room callback recorded"
+    );
+    assert_eq!(
         actual_pre_shuffle, oracle_pre_shuffle,
-        "remove this diagnostic once ABC-DEF-GHI FigureEight builder parity is fixed"
+        "pre-shuffle room bounds"
+    );
+    assert_eq!(
+        actual_callbacks, oracle_callbacks,
+        "room paint RNG callbacks"
+    );
+    assert_eq!(
+        actual.post_doors_rng_probe, doors.rng,
+        "post-door RNG boundary"
     );
 }

@@ -148,6 +148,24 @@ pub fn place_room(rooms: &mut [Room], prev: usize, next: usize, angle: f32) -> f
     place_room_impl(rooms, None, prev, next, angle, &mut |_| {})
 }
 
+/// Place a transient branch connection. Java's `RegularBuilder` does not add
+/// that connection to its collision list until placement succeeds, although
+/// the same object is retried after a failed placement.
+pub(super) fn place_room_excluding_next(
+    rooms: &mut [Room],
+    prev: usize,
+    next: usize,
+    angle: f32,
+) -> f32 {
+    let collision: Vec<_> = rooms
+        .iter()
+        .enumerate()
+        .filter(|(id, _)| *id != next)
+        .map(|(_, room)| room.clone())
+        .collect();
+    place_room_impl(rooms, Some(&collision), prev, next, angle, &mut |_| {})
+}
+
 /// Place a room while matching a Java caller that passes a narrower collision list.
 pub(super) fn place_room_with_collision_ids(
     rooms: &mut [Room],

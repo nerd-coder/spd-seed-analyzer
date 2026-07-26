@@ -385,10 +385,7 @@ mod tests {
         assert_eq!(actual.attempt, expected.attempt);
         assert_eq!(actual.start_rng_probe, expected.start_rng);
         assert_eq!(actual.success, expected.success);
-        assert_ne!(
-            actual.end_rng_probe, expected.end_rng,
-            "remove this diagnostic once ABC-DEF-GHI FigureEight builder parity is fixed"
-        );
+        assert_eq!(actual.end_rng_probe, expected.end_rng);
     }
 
     fn room(id: usize, name: &str, kind: RoomKind, size: i32, connections: i32) -> Room {

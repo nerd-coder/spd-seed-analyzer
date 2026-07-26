@@ -267,9 +267,40 @@ impl Room {
             on_one_edge
                 && ((p.x > self.left + 1 && p.x < self.right - 1)
                     || (p.y > self.top + 1 && p.y < self.bottom - 1))
+        } else if self.name == "SentryRoom" {
+            if !on_one_edge {
+                return false;
+            }
+            // SentryRoom.java calls `center()` independently for each
+            // even raw-dimension check. `Room.center()` consumes Int(2) for
+            // every odd raw dimension, including the other axis.
+            if (self.right - self.left) % 2 == 0 && p.x == self.random_center().x {
+                return false;
+            }
+            if (self.bottom - self.top) % 2 == 0 && p.y == self.random_center().y {
+                return false;
+            }
+            true
         } else {
             on_one_edge
         }
+    }
+
+    fn random_center(&self) -> Point {
+        Point::new(
+            (self.left + self.right) / 2
+                + if (self.right - self.left) % 2 == 1 {
+                    Random::int_max(2)
+                } else {
+                    0
+                },
+            (self.top + self.bottom) / 2
+                + if (self.bottom - self.top) % 2 == 1 {
+                    Random::int_max(2)
+                } else {
+                    0
+                },
+        )
     }
 
     pub fn can_connect_dir(&self, direction: i32, rooms: &[Room]) -> bool {
@@ -438,6 +469,23 @@ mod tests {
         assert!(!room.can_connect_point(Point::new(10, 22)));
         assert!(room.can_connect_point(Point::new(14, 20)));
         assert!(!room.can_connect_point(Point::new(13, 20)));
+    }
+
+    #[test]
+    fn sentry_connection_checks_match_java_center_rng_dimensions() {
+        let mut sentry = Room::new(0, "SentryRoom", RoomKind::Special, 1, 1, 7, 10, 7, 10);
+        // Mirrors the depth-23 Halls placement: raw width is even and raw
+        // height is odd, so SentryRoom.canConnect invokes center() once.
+        sentry.left = -1;
+        sentry.top = 29;
+        sentry.right = 7;
+        sentry.bottom = 36;
+
+        Random::push_generator_seeded(23);
+        let before = Random::peek_ints(3);
+        let _ = sentry.can_connect_point(Point::new(-1, 32));
+        assert_eq!(Random::peek_ints(2), before[1..3]);
+        Random::pop_generator();
     }
 
     #[test]

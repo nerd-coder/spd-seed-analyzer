@@ -3,7 +3,7 @@
 use std::collections::HashSet;
 
 use crate::builders::connection;
-use crate::builders::place::{angle_between_points, place_room};
+use crate::builders::place::{angle_between_points, place_room, place_room_excluding_next};
 use crate::random::Random;
 use crate::rooms::room::{Room, DIR_ALL};
 use crate::rooms::types::RoomKind;
@@ -233,7 +233,7 @@ pub(super) fn create_branches(
             let mut placed = false;
             for _ in 0..3 {
                 let angle = angles.next(rooms, curr);
-                if place_room(rooms, curr, id, angle) != -1.0 {
+                if place_room_excluding_next(rooms, curr, id, angle) != -1.0 {
                     placed = true;
                     break;
                 }
