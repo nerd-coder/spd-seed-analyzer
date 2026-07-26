@@ -4,6 +4,8 @@ use crate::level::terrain::{TerrainMap, SECRET_TRAP, WALL};
 use crate::rooms::room::Room;
 
 pub(super) fn paint(map: &mut TerrainMap, room: &Room) -> usize {
+    let reveal_chance = crate::level::trinkets::trap_reveal_chance();
+    let mut reveal_inc = 0.0;
     for y in room.top..=room.bottom {
         for x in room.left..=room.right {
             let Some(cell) = map.point_to_cell(x, y) else {
@@ -12,8 +14,16 @@ pub(super) fn paint(map: &mut TerrainMap, room: &Room) -> usize {
             let interior = x > room.left && x < room.right && y > room.top && y < room.bottom;
             map.map[cell] = if interior { SECRET_TRAP } else { WALL };
             if interior {
-                // TrapMechanism is absent in a fresh run, so every summoning
-                // trap stays hidden and the reveal loop consumes no RNG.
+                reveal_inc += reveal_chance;
+                let visible = reveal_inc >= 1.0;
+                if visible {
+                    reveal_inc -= 1.0;
+                }
+                map.map[cell] = if visible {
+                    crate::level::terrain::TRAP
+                } else {
+                    SECRET_TRAP
+                };
                 map.trap_names[cell] = Some("SummoningTrap");
             }
         }

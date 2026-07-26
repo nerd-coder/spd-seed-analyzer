@@ -261,7 +261,7 @@ fn paint_traps(
 
     let (classes, chances) = params::trap_table(depth);
     // TrapMechanism absent → reveal chance 0
-    let revealed_chance = 0.0f32;
+    let revealed_chance = super::trinkets::trap_reveal_chance();
     let mut reveal_inc = 0.0f32;
 
     let total = if feeling == Feeling::Traps {

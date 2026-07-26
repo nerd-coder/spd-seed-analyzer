@@ -30,6 +30,8 @@ pub(super) fn paint_minefield(map: &mut TerrainMap, room: &Room) {
     };
 
     let mut trap_cells = Vec::with_capacity(mines.max(0) as usize);
+    let reveal_chance = crate::level::trinkets::trap_reveal_chance();
+    let mut reveal_inc = 0.0;
     for _ in 0..mines {
         let (x, y, pos) = loop {
             let x = Random::int_range_inclusive(room.left + 1, room.right - 1);
@@ -52,8 +54,16 @@ pub(super) fn paint_minefield(map: &mut TerrainMap, room: &Room) {
             }
         }
 
-        // TrapMechanism is absent in analyzer runs, so reveal chance is zero.
-        map.map[pos] = SECRET_TRAP;
+        reveal_inc += reveal_chance;
+        let visible = reveal_inc >= 1.0;
+        if visible {
+            reveal_inc -= 1.0;
+        }
+        map.map[pos] = if visible {
+            crate::level::terrain::TRAP
+        } else {
+            SECRET_TRAP
+        };
         map.trap_destroys_items[pos] = true;
         map.trap_names[pos] = Some("ExplosiveTrap");
         trap_cells.push(pos);

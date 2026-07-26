@@ -39,11 +39,13 @@ markers/heaps, and UI copy.
 The first conservative profile slice is implemented across `spd-core`, WASM,
 and the web worker API. Public maps are painter-complete layout snapshots taken
 before NPC, mob, and item population, so Guide Page/meta, heap, and mob state do
-not gate layout rendering. The baseline profile explicitly assumes no Mossy
-Clump or Trap Mechanism, resolving the default-feeling branch without changing
-its two `Random.Float` calls. Legacy/unspecified analysis remains map-free.
-Held trinket levels and other inputs that can change the painter/layout remain
-future profile fields.
+not gate layout rendering. The profile accepts an explicit per-floor held
+trinket timeline: no map-affecting trinket, Mossy Clump +0 through +3, or Trap
+Mechanism +0 through +3. Analysis replays it in depth order, preserving the
+pinned seeded feeling decks and short-circuit `Random.Float` call order. Trap
+Mechanism visibility accumulation is injected into regular traps,
+MinefieldRoom, BurnedRoom, and SecretSummoningRoom. Legacy/unspecified analysis
+remains map-free.
 
 Replace omission-oriented projection with a fact/provenance model. Each
 reportable source must produce:
@@ -116,6 +118,10 @@ Complete these sources in priority order:
    strongest proven identity set, quantity, property, heap, and placement facts
    for every supported room family. Start with Crystal Vault/Choice/Path,
    Secret Library, Crypt, Statue, Ring, Study, Ritual, Storage, and Armory.
+   Armory and the first legacy special-room slice now expose their proven
+   count/category alternatives and independent tier, upgrade, curse, queue,
+   trinket, and meta-state conditions; exact per-slot outcomes and placements
+   remain follow-up work for the richer guarantee/outcome report model.
 5. Forced queues and regular `createItems`: report whether each item is
    guaranteed to spawn. Model Forbidden Runes, Large feeling, limited-drop schedules,
    Halls torches, Cached Rations, Dried Rose petals, Darkness torches, and

@@ -8,7 +8,7 @@
 import { persistentAtom } from '@nanostores/persistent'
 import { atom, computed } from 'nanostores'
 
-import type { SeedReport } from '@/lib/spd-wasm'
+import type { MapProfile, MapTrinketProfile, SeedReport } from '@/lib/spd-wasm'
 import { analyzeSeedInWorker, type WorkerTask } from '@/lib/spd-worker-client'
 import { mapProfile } from './map-profile'
 
@@ -45,6 +45,7 @@ export type SeedSession = {
   error: string | null
   startedAt: number | null
   finishedAt: number | null
+  mapProfile: MapProfile | undefined
 }
 
 // —— helpers ——————————————————————————————————————————————————————
@@ -155,14 +156,18 @@ function patchSession(id: string, patch: Partial<SeedSession>) {
   $sessions.set(prev.map((s) => (s.id === id ? { ...s, ...patch } : s)))
 }
 
-async function runAnalyze(id: string, input: string): Promise<boolean> {
+async function runAnalyze(
+  id: string,
+  input: string,
+  profile = $sessions.get().find((session) => session.id === id)?.mapProfile
+): Promise<boolean> {
   patchSession(id, {
     status: 'loading',
     error: null,
     startedAt: Date.now(),
     finishedAt: null,
   })
-  const task = analyzeSeedInWorker(input, ANALYZE_FLOORS, mapProfile())
+  const task = analyzeSeedInWorker(input, ANALYZE_FLOORS, profile)
   analyzeTasks.get(id)?.cancel()
   analyzeTasks.set(id, task)
   try {
@@ -269,6 +274,7 @@ async function analyzeSeedInputInternal(
     error: null,
     startedAt: Date.now(),
     finishedAt: null,
+    mapProfile: mapProfile(),
   }
   nextSessions = [...nextSessions, session]
   $sessions.set(nextSessions)
@@ -279,7 +285,7 @@ async function analyzeSeedInputInternal(
   }
   $analyzing.set(true)
   try {
-    await runAnalyze(id, input)
+    await runAnalyze(id, input, session.mapProfile)
   } finally {
     $analyzing.set(false)
   }
@@ -291,6 +297,34 @@ async function analyzeSeedInputInternal(
  */
 export async function analyzeSeedInput(input: string): Promise<void> {
   await analyzeSeedInputInternal(input, false)
+}
+
+export async function configureFloorMap(
+  id: string,
+  depth: number,
+  trinket: MapTrinketProfile
+): Promise<void> {
+  const session = $sessions.get().find((item) => item.id === id)
+  if (!session) return
+  const base = session.mapProfile ?? {
+    trinket: 'no_map_affecting_trinkets' as const,
+    meta: 'fresh' as const,
+    floors: [],
+  }
+  const profile: MapProfile = {
+    ...base,
+    floors: [
+      ...base.floors.filter((floor) => floor.depth !== depth),
+      { depth, trinket },
+    ].sort((a, b) => a.depth - b.depth),
+  }
+  patchSession(id, { mapProfile: profile })
+  $analyzing.set(true)
+  try {
+    await runAnalyze(id, session.input, profile)
+  } finally {
+    $analyzing.set(false)
+  }
 }
 
 /**
@@ -335,6 +369,7 @@ export function startSessionRehydrate(): () => void {
     error: null,
     startedAt: null,
     finishedAt: null,
+    mapProfile: mapProfile(),
   }))
 
   closedIds.clear()

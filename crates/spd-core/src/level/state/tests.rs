@@ -290,16 +290,20 @@ fn room_reward_projection_hides_all_concrete_fields_and_deduplicates_counts() {
     }
 
     let report = floor.to_floor_report();
-    let entry = report
+    let entries: Vec<_> = report
         .items
         .iter()
-        .find(|item| item.source.as_deref() == Some("ArmoryRoom"))
-        .expect("Armory contract");
-    assert_eq!(entry.prediction, ItemPredictionKind::Constrained);
-    assert!(entry.class_name.is_none());
-    assert_eq!(entry.category, "other");
-    assert_eq!(entry.level, None);
-    assert_eq!(entry.cursed, None);
+        .filter(|item| item.source.as_deref() == Some("ArmoryRoom"))
+        .collect();
+    assert_eq!(entries.len(), 2);
+    assert_eq!(entries[0].prediction, ItemPredictionKind::Constrained);
+    assert!(entries[0].class_name.is_none());
+    assert_eq!(entries[0].category, "bomb / weapon / armor / missile");
+    assert_eq!(
+        entries[0].level_range,
+        Some(crate::report::NumericRange { min: 0, max: 2 })
+    );
+    assert_eq!(entries[0].cursed, None);
     let json = serde_json::to_string(&report).expect("serialize report");
     for secret in ["Sword", "MailArmor", "Kunai", "Corrupting"] {
         assert!(!json.contains(secret), "leaked {secret}: {json}");

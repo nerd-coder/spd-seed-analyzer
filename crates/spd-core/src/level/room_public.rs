@@ -44,10 +44,15 @@ impl RoomPublicFact {
                 entry.tier_range = Some(sacrifice_tier_range(self.depth));
                 entry.level_range = Some(NumericRange { min: 0, max: 3 });
             }
+            if entry.name == "2–3 distinct Armory base rewards" {
+                entry.tier_range = Some(regular_equipment_tier_range(self.depth));
+                entry.level_range = Some(NumericRange { min: 0, max: 2 });
+            }
             let exact_class = match entry.name.as_str() {
                 "Double Bomb" => Some("DoubleBomb"),
                 "Stone of Enchantment" => Some("StoneOfEnchantment"),
                 "two Energy Crystal stacks" => Some("EnergyCrystal"),
+                "5 Energy Crystals" => Some("EnergyCrystal"),
                 "Shattered Pot" => Some("ShatteredPot"),
                 "Honeypot" => Some("Honeypot"),
                 _ => None,
@@ -97,18 +102,34 @@ fn sacrifice_tier_range(depth: i32) -> NumericRange {
     }
 }
 
+fn regular_equipment_tier_range(depth: i32) -> NumericRange {
+    // ArmoryRoom calls the no-argument Generator equipment helpers, which use
+    // floor set `depth / 5`. Bounds are the non-zero entries in the pinned
+    // Generator.floorSetTierProbs table. Bomb is the only non-equipment base
+    // category and has no tier; the entry note makes that qualification clear.
+    match (depth / 5).clamp(0, 4) {
+        0 | 1 => NumericRange { min: 2, max: 5 },
+        2 | 3 => NumericRange { min: 3, max: 5 },
+        4 => NumericRange { min: 4, max: 5 },
+        _ => unreachable!(),
+    }
+}
+
 type Contract = (&'static str, &'static str, Option<bool>, &'static str);
 
 fn contracts(room: &str) -> Vec<Contract> {
     match room {
         "CryptRoom" => vec![("Crypt armor reward", "armor", Some(true), "Armor from this depth's Crypt floor-set distribution; Parchment Scrap may alter its glyph and conditional upgrade.")],
         "StudyRoom" | "RitualRoom" => vec![("single center-room reward source", "other", None, "An eligible guaranteed item, otherwise a potion or scroll.")],
-        "RingRoom" => vec![("conditional room reward", "other", None, "Spawns when an eligible guaranteed item is available.")],
+        "RingRoom" => vec![("conditional guaranteed item", "other", None, "Conditional: this standard room and its unchanged reward exist only when an eligible guaranteed floor item is available.")],
         "SuspiciousChestRoom" => vec![("suspicious chest reward source", "other", None, "An eligible guaranteed item or gold; a Mimic may add a general reward.")],
         "GrassyGraveRoom" => vec![("geometry-derived tomb set", "other", None, "One general Generator prize plus gold in every remaining tomb.")],
-        "ArmoryRoom" => vec![("2–3 distinct Armory rewards", "other", None, "Distinct base categories are bomb, weapon, armor, and missile weapon; an eligible queued Trinket Catalyst may add one reward.")],
-        "PoolRoom" | "SentryRoom" => vec![("single room reward source", "other", None, "May consume an eligible queued prize; fallback is weapon, missile weapon, or armor from the room's floor-set distribution, forced uncursed with curse-enchantment stripped and a possible +1 upgrade.")],
-        "TrapsRoom" => vec![("single room reward source", "other", None, "May consume an eligible queued prize; fallback is weapon, missile weapon, or armor from the room's floor-set distribution, forced uncursed with curse-enchantment stripped.")],
+        "ArmoryRoom" => vec![
+            ("2–3 distinct Armory base rewards", "bomb / weapon / armor / missile", None, "The seed chooses 2–3 categories without replacement. Equipment uses the displayed depth floor-set tier range and has a +0..+2 upgrade; Bomb/Double Bomb is tierless at +0 and uncursed. Equipment curse and enchantment depend on its isolated roll and Parchment Scrap state."),
+            ("Trinket Catalyst", "trinket", Some(false), "Conditional: added as a separate reward only when a guaranteed Trinket Catalyst is available on this floor."),
+        ],
+        "PoolRoom" | "SentryRoom" => vec![("single room reward source", "other", None, "May spawn an eligible guaranteed floor prize; fallback is weapon, missile weapon, or armor from the room's floor-set distribution, forced uncursed with curse-enchantment stripped and a possible +1 upgrade.")],
+        "TrapsRoom" => vec![("single room reward source", "other", None, "May spawn an eligible guaranteed floor prize; fallback is weapon, missile weapon, or armor from the room's floor-set distribution, forced uncursed with curse-enchantment stripped.")],
         "StatueRoom" => vec![("Statue weapon", "weapon", Some(false), "A positively enchanted melee weapon is carried; Rat Skull may change the statue encounter variant.")],
         "SacrificeRoom" => vec![("weapon reward", "weapon", Some(true), "A cursed weapon from the one-higher floor-set tier range. Its final upgrade is +0..+3; prior weapon-deck history can alter identity, and Parchment Scrap may alter enchantment chance.")],
         "CrystalVaultRoom" => vec![("two crystal-vault reward sources", "other", None, "Categories rotate among wand, ring, and artifact; an exhausted artifact pool falls back to a ring, and the second chest may conditionally be a Crystal Mimic.")],
@@ -126,7 +147,28 @@ fn contracts(room: &str) -> Vec<Contract> {
         "SecretSummoningRoom" => vec![("conditional summoning-room reward", "other", None, "Its presence depends on runtime state.")],
         "SecretChestChasmRoom" => vec![("four locked default-stock sources", "other", None, "Matching key support is also generated.")],
         "SecretHoneypotRoom" => vec![("Shattered Pot", "other", Some(false), ""), ("Honeypot", "other", Some(false), ""), ("Bomb variant", "other", Some(false), "Bomb or Double Bomb.")],
-        "MagicalFireRoom" | "ToxicGasRoom" | "LibraryRoom" | "TreasuryRoom" | "StorageRoom" | "RunestoneRoom" | "LaboratoryRoom" => vec![("conditional room reward set", "other", None, "Queued prizes, generator state, or trinkets can alter concrete reward facts and the later floor tail.")],
+        "LibraryRoom" => vec![
+            ("1–3 Library scroll rewards", "scroll", Some(false), "The first is Scroll of Identify or Scroll of Remove Curse. Later rewards are an available guaranteed Trinket Catalyst, an available guaranteed scroll, or a generated scroll; a Catalyst changes that individual reward's type."),
+        ],
+        "TreasuryRoom" => vec![
+            ("2–3 Treasury chest rewards", "gold / trinket", None, "Each reward is a guaranteed Trinket Catalyst when one is available, otherwise a generated gold pile. The seed chooses a common chest-or-open-pile presentation; chest rewards may be carried by Mimics."),
+            ("six small gold piles", "gold", Some(false), "Conditional: these additional 5–12 gold piles spawn only when the seed chooses open piles instead of chests."),
+        ],
+        "StorageRoom" | "MagicalFireRoom" => vec![
+            ("3–4 room rewards", "potion / scroll / food / gold / other", None, "The seed may include one Honeypot. Other rewards are either an eligible guaranteed floor prize or generated potion, scroll, food, or gold; concrete identities depend on prior limited-item and Generator state."),
+        ],
+        "RunestoneRoom" => vec![
+            ("2–3 runestone-room rewards", "stone / trinket", None, "Each reward is an available guaranteed Trinket Catalyst, an available guaranteed runestone, or otherwise a generated runestone."),
+        ],
+        "LaboratoryRoom" => vec![
+            ("5 Energy Crystals", "other", Some(false), "A guaranteed stack of five."),
+            ("1–2 laboratory rewards", "potion / stone / trinket", None, "Each reward is an available guaranteed Trinket Catalyst, an available Potion of Strength, or otherwise a generated potion or runestone."),
+            ("Alchemy Guide pages", "other", Some(false), "Conditional count depends on previously found guide pages and chapter depth."),
+        ],
+        "ToxicGasRoom" => vec![
+            ("double-sized gold pile", "gold", Some(false), "A guaranteed generated gold reward with doubled quantity, found with the skeleton."),
+            ("two Toxic Gas chest rewards", "gold / trinket", None, "Each chest contains a guaranteed Trinket Catalyst when one is available, otherwise a generated gold pile."),
+        ],
         _ => Vec::new(),
     }
 }
@@ -221,6 +263,57 @@ mod tests {
             assert_eq!(entry.level_range, Some(NumericRange { min: 0, max: 3 }));
             assert_eq!(entry.prediction, ItemPredictionKind::Constrained);
         }
+    }
+
+    #[test]
+    fn armory_contract_preserves_count_category_and_equipment_bounds() {
+        for (depth, minimum_tier) in [(1, 2), (8, 2), (12, 3), (18, 3), (22, 4)] {
+            let entries = RoomPublicFact::new("ArmoryRoom", depth)
+                .expect("Armory contract")
+                .entries();
+            assert_eq!(entries.len(), 2);
+            let base = &entries[0];
+            assert_eq!(base.name, "2–3 distinct Armory base rewards");
+            assert_eq!(base.category, "bomb / weapon / armor / missile");
+            assert_eq!(
+                base.tier_range,
+                Some(NumericRange {
+                    min: minimum_tier,
+                    max: 5,
+                })
+            );
+            assert_eq!(base.level_range, Some(NumericRange { min: 0, max: 2 }));
+            assert_eq!(base.cursed, None);
+
+            let catalyst = &entries[1];
+            assert_eq!(catalyst.class_name.as_deref(), None);
+            assert_eq!(catalyst.category, "trinket");
+            assert_eq!(catalyst.cursed, Some(false));
+            assert!(catalyst.conditional_notes[0].starts_with("Conditional:"));
+        }
+    }
+
+    #[test]
+    fn formerly_generic_room_sets_expose_their_fixed_reward_structure() {
+        let laboratory = RoomPublicFact::new("LaboratoryRoom", 12)
+            .expect("Laboratory contract")
+            .entries();
+        assert_eq!(laboratory.len(), 3);
+        assert_eq!(laboratory[0].class_name.as_deref(), Some("EnergyCrystal"));
+        assert_eq!(laboratory[0].level, Some(0));
+
+        let toxic = RoomPublicFact::new("ToxicGasRoom", 12)
+            .expect("Toxic Gas contract")
+            .entries();
+        assert_eq!(toxic.len(), 2);
+        assert_eq!(toxic[0].category, "gold");
+        assert_eq!(toxic[1].name, "two Toxic Gas chest rewards");
+
+        let ring = RoomPublicFact::new("RingRoom", 12)
+            .expect("Ring contract")
+            .entries();
+        assert_eq!(ring[0].name, "conditional guaranteed item");
+        assert!(ring[0].conditional_notes[0].starts_with("Conditional:"));
     }
 
     #[test]

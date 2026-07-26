@@ -8,19 +8,23 @@ const booleanCodec = {
 }
 
 export const $assumeNoMapTrinkets = persistentAtom(
-  'spd-analyzer-map-no-trinkets',
-  true,
+  'spd-analyzer-map-no-trinkets-v2',
+  false,
   booleanCodec
 )
 export const $assumeFreshMeta = persistentAtom(
-  'spd-analyzer-map-fresh-meta',
-  true,
+  'spd-analyzer-map-fresh-meta-v2',
+  false,
   booleanCodec
 )
 
 export function mapProfile(): MapProfile | undefined {
   if (!$assumeNoMapTrinkets.get() || !$assumeFreshMeta.get()) return undefined
-  return { trinket: 'no_map_affecting_trinkets', meta: 'fresh' }
+  return {
+    trinket: 'no_map_affecting_trinkets',
+    meta: 'fresh',
+    floors: [],
+  }
 }
 
 export function setAssumeNoMapTrinkets(value: boolean) {

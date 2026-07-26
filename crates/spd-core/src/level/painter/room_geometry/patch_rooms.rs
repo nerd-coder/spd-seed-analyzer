@@ -224,6 +224,8 @@ fn paint_ruins(map: &mut TerrainMap, room: &Room, mask: &[bool]) {
 
 fn paint_burned(map: &mut TerrainMap, room: &Room, mask: &[bool]) {
     let patch_width = room.width() - 2;
+    let reveal_chance = crate::level::trinkets::trap_reveal_chance();
+    let mut reveal_inc = 0.0;
     for y in (room.top + 1)..room.bottom {
         for x in (room.left + 1)..room.right {
             let pi = ((x - room.left - 1) + (y - room.top - 1) * patch_width) as usize;
@@ -233,7 +235,15 @@ fn paint_burned(map: &mut TerrainMap, room: &Room, mask: &[bool]) {
             let terrain = match Random::int_max(5) {
                 1 => EMBERS,
                 2 => TRAP,
-                3 => SECRET_TRAP,
+                3 => {
+                    reveal_inc += reveal_chance;
+                    if reveal_inc >= 1.0 {
+                        reveal_inc -= 1.0;
+                        TRAP
+                    } else {
+                        SECRET_TRAP
+                    }
+                }
                 4 => INACTIVE_TRAP,
                 _ => EMPTY,
             };

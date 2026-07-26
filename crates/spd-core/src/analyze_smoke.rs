@@ -64,6 +64,7 @@ fn explicit_baseline_profile_can_publish_proven_safe_maps() {
     let profile = MapProfile {
         trinket: MapTrinketProfile::NoMapAffectingTrinkets,
         meta: MapMetaProfile::Fresh,
+        floors: Vec::new(),
     };
     let profiled = (0..100)
         .find_map(|seed| {

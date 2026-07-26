@@ -68,6 +68,8 @@ export function SessionPane({
     return (
       <div className="relative">
         <SeedReportView
+          sessionId={session.id}
+          mapProfile={session.mapProfile}
           report={session.report}
           identitySpoilers={identitySpoilers}
           mapSpoilers={mapSpoilers}

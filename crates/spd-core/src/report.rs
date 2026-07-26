@@ -251,12 +251,30 @@ pub struct SeedReport {
 pub struct MapProfile {
     pub trinket: MapTrinketProfile,
     pub meta: MapMetaProfile,
+    /// Optional per-floor overrides. Overrides are replayed in depth order so
+    /// trinket feeling decks retain their SPD history.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub floors: Vec<FloorMapProfile>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FloorMapProfile {
+    pub depth: u32,
+    pub trinket: MapTrinketProfile,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum MapTrinketProfile {
     NoMapAffectingTrinkets,
+    MossyClump0,
+    MossyClump1,
+    MossyClump2,
+    MossyClump3,
+    TrapMechanism0,
+    TrapMechanism1,
+    TrapMechanism2,
+    TrapMechanism3,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]

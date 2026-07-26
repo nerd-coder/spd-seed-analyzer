@@ -45,6 +45,7 @@ export {
   analyzeSeedInput,
   cancelSeedAnalysis,
   closeSeedSession,
+  configureFloorMap,
   MAX_SAVED_SEEDS,
   normalizeSeedInput,
   type SeedSession,

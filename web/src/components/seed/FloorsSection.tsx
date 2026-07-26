@@ -3,7 +3,7 @@ import { useCallback, useRef } from 'react'
 import { FloorDetail } from '@/components/seed/FloorDetail'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { groupFloorsByRegion } from '@/lib/regions'
-import type { FloorReport, IdentityMaps } from '@/lib/spd-wasm'
+import type { FloorReport, IdentityMaps, MapProfile } from '@/lib/spd-wasm'
 import { cn } from '@/lib/utils'
 
 /** Small gap between sticky region tabs and the first floor after scroll. */
@@ -11,11 +11,15 @@ const SCROLL_GAP_PX = 8
 
 export function FloorsSection({
   floors,
+  sessionId,
+  mapProfile,
   identities,
   identitySpoilers,
   mapSpoilers,
 }: {
   floors: FloorReport[]
+  sessionId: string
+  mapProfile: MapProfile | undefined
   identities: IdentityMaps
   identitySpoilers: boolean
   mapSpoilers: boolean
@@ -111,6 +115,8 @@ export function FloorsSection({
               <FloorDetail
                 key={floor.depth}
                 floor={floor}
+                sessionId={sessionId}
+                mapProfile={mapProfile}
                 identities={identities}
                 identitySpoilers={identitySpoilers}
                 mapSpoilers={mapSpoilers}

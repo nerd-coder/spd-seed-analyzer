@@ -41,9 +41,9 @@ export function SeedInfoPanel({ report }: { report: SeedReport }) {
           </p>
           {report.map_profile && (
             <p>
-              Map assumptions:{' '}
+              Default map input:{' '}
               <span className="text-foreground">
-                no Mossy Clump or Trap Mechanism
+                no map-affecting trinket; floor overrides are shown in each map
               </span>
             </p>
           )}

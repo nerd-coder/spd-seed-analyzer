@@ -13,12 +13,13 @@ mod shop;
 mod special_loot;
 mod state;
 mod terrain;
+mod trinkets;
 
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::items::model::{ForcedDropRole, GeneratedItem, ItemCategory, ItemProvenance};
 use crate::random::Random;
-use crate::report::FloorReport;
+use crate::report::{FloorReport, MapProfile, MapTrinketProfile};
 
 pub use create_items::PlacedLoot;
 pub use state::LevelState;
@@ -59,7 +60,7 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
 
 pub(crate) fn create_level_partial_with_profile(
     dungeon: &mut DungeonState,
-    baseline_profile: bool,
+    configured_profile: bool,
 ) -> LevelState {
     let inherited_public_taint = dungeon.public_generation_tainted;
     let depth_seed = dungeon.seed_cur_depth();
@@ -166,11 +167,9 @@ pub(crate) fn create_level_partial_with_profile(
                 5 => feeling = Feeling::Traps,
                 6 => feeling = Feeling::Secrets,
                 _ => {
-                    runtime_sensitive_prebuild = !baseline_profile;
-                    dungeon.public_generation_tainted |= !baseline_profile;
-                    let _ = Random::float();
-                    let _ = Random::float();
-                    feeling = Feeling::None;
+                    runtime_sensitive_prebuild = !configured_profile;
+                    dungeon.public_generation_tainted |= !configured_profile;
+                    feeling = trinkets::override_default_feeling();
                 }
             }
         }
@@ -511,21 +510,34 @@ pub(crate) fn create_level_partial_with_profile(
 }
 
 pub fn analyze_floors(dungeon: &mut DungeonState, max_floors: u32) -> Vec<FloorReport> {
-    analyze_floors_with_profile(dungeon, max_floors, false)
+    analyze_floors_with_profile(dungeon, max_floors, None)
 }
 
 pub fn analyze_floors_with_profile(
     dungeon: &mut DungeonState,
     max_floors: u32,
-    allow_maps: bool,
+    profile: Option<&MapProfile>,
 ) -> Vec<FloorReport> {
     let mut floors = Vec::new();
+    trinkets::reset(dungeon.seed);
     let max = max_floors.clamp(1, 26) as i32;
     for depth in 1..=max {
         dungeon.depth = depth;
         dungeon.branch = 0;
-        let level = create_level_partial_with_profile(dungeon, allow_maps);
-        floors.push(level.to_floor_report_with_map(allow_maps));
+        let trinket = profile
+            .and_then(|profile| {
+                profile
+                    .floors
+                    .iter()
+                    .find(|floor| floor.depth == depth as u32)
+                    .map(|floor| floor.trinket)
+                    .or(Some(profile.trinket))
+            })
+            .unwrap_or(MapTrinketProfile::NoMapAffectingTrinkets);
+        trinkets::set_held(trinket);
+        let configured = profile.is_some();
+        let level = create_level_partial_with_profile(dungeon, configured);
+        floors.push(level.to_floor_report_with_map(configured));
     }
     floors
 }

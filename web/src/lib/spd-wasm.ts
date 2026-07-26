@@ -140,8 +140,25 @@ export type SeedReport = {
 }
 
 export type MapProfile = {
-  trinket: 'no_map_affecting_trinkets'
+  trinket: MapTrinketProfile
   meta: 'fresh'
+  floors: FloorMapProfile[]
+}
+
+export type MapTrinketProfile =
+  | 'no_map_affecting_trinkets'
+  | 'mossy_clump0'
+  | 'mossy_clump1'
+  | 'mossy_clump2'
+  | 'mossy_clump3'
+  | 'trap_mechanism0'
+  | 'trap_mechanism1'
+  | 'trap_mechanism2'
+  | 'trap_mechanism3'
+
+export type FloorMapProfile = {
+  depth: number
+  trinket: MapTrinketProfile
 }
 
 export type SeedSearchMatchMode = 'any' | 'all'
