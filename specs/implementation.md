@@ -51,23 +51,20 @@ inventory, artifact exhaustion, Hourglass state, or JVM iteration are product
 non-goals. Shop order and placement are also intentionally excluded. Preserve
 only independently provable spawn facts and constrained properties.
 
-Dedicated boss floors at depths 5, 10, 15, 20, and 25 and LastLevel at depth
-26 are listed but do not yet have generated structural layouts. Non-goal shop
-state can still suppress unrelated facts on artifact-fallback paths; that
-coupling should be removed without attempting to predict the shop state.
+Fixed-form structural layouts at depths 10, 20, and 26 are backed by pinned
+Java fixtures. RNG-built boss floors at depths 5, 15, and 25 remain missing.
 
 ## Next phase
 
-Complete the missing boss/final-floor layout projection and continue expanding
-only seed-determined spawn-presence paths.
+Complete the remaining RNG-built boss-floor layout projection.
 
-1. Port the pinned level builders and structural painters for depths 5, 10,
-   15, 20, 25, and 26 into `spd-core`, preserving exact RNG call order.
+1. Port SewerBossLevel (5), CavesBossLevel (15), and HallsBossLevel (25),
+   including build retries and exact RNG call order.
 2. Add a dedicated structural-layout projection containing only geometry,
    doors, and entrances/exits. Do not export grass, traps, decoration, mobs,
    items, heaps, or their cells.
-3. Add pinned Java-oracle fixtures and focused Rust tests for each boss/final
-   floor's dimensions, structural terrain, transitions, and RNG boundaries.
+3. Add multi-seed Java-oracle fixtures and focused Rust tests for randomized
+   variants, dimensions, structural terrain, transitions, and RNG boundaries.
 4. Retain every independently guaranteed shop spawn fact or constrained
    property, but do not pursue concrete identities, order, or placement when
    they depend on prior gameplay, inventory, Hourglass, bags, artifacts,

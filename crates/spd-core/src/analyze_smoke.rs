@@ -493,7 +493,8 @@ fn analyze_full_run_no_panic() {
     for s in ["GFX-PZH-DCH", "AAA-AAA-AAA", "hello", "42", "shattered"] {
         let r = analyze_seed(s, 26).unwrap_or_else(|e| panic!("seed {s}: {e:?}"));
         assert_eq!(r.floors.len(), 26, "seed {s}");
-        // Boss floors + last level have no regular map/items yet
+        // The legacy/default projection does not publish maps without an
+        // explicit map profile, including dedicated levels.
         for depth in [5u32, 10, 15, 20, 25, 26] {
             let f = r.floors.iter().find(|f| f.depth == depth).expect("depth");
             assert!(
@@ -506,6 +507,36 @@ fn analyze_full_run_no_panic() {
         assert!(f24.items.iter().any(|item| {
             item.name == "food" && item.prediction == report::ItemPredictionKind::Constrained
         }));
+    }
+
+    let profile = crate::MapProfile {
+        trinket: crate::MapTrinketProfile::NoMapAffectingTrinkets,
+        meta: crate::MapMetaProfile::Fresh,
+        trinket_start_depth: 1,
+    };
+    let report = crate::analyze_seed_with_profile("AAA-AAA-AAA", 26, Some(profile))
+        .expect("profiled full-run analysis");
+    for (depth, dimensions) in [(10, (32, 32)), (20, (15, 48)), (26, (16, 64))] {
+        let floor = &report.floors[depth - 1];
+        let map = floor.map.as_ref().expect("fixed dedicated layout");
+        assert_eq!((map.width, map.height), dimensions);
+        assert!(map.markers.is_empty());
+        assert!(map.heaps.is_empty());
+        assert!(map.mobs.is_empty());
+        assert!(map.traps.is_empty());
+        assert!(map.plants.is_empty());
+        assert!(map.blobs.is_empty());
+        // Pinned Terrain IDs: WALL_DECO, EMPTY_DECO, REGION_DECO, REGION_DECO_ALT.
+        assert!(map
+            .tiles
+            .iter()
+            .all(|tile| !matches!(tile, 12 | 20 | 33 | 34)));
+    }
+    for depth in [5, 15, 25] {
+        assert!(
+            report.floors[depth - 1].map.is_none(),
+            "RNG-built boss depth {depth} remains unsupported"
+        );
     }
 }
 

@@ -18,13 +18,14 @@
         "Generic and region-specific standard-room geometry",
         "Pinned standard, special, and secret room-count tables",
         "Pinned SecretLarderRoom minimum dimensions and food-placement viability",
-        "Depth-1 lifecycle fixtures across ten seeds; full HKT-JZN-XQQ floor 6\u20138 parity; preserved-state AAA-AAA-AAA floor 2\u20134, 6\u20139, and 11 oracle fixtures"
+        "Depth-1 lifecycle fixtures across ten seeds; full HKT-JZN-XQQ floor 6\u20138 parity; preserved-state AAA-AAA-AAA floor 2\u20134, 6\u20139, and 11 oracle fixtures",
+        "Oracle-backed fixed-form structural layouts for PrisonBossLevel, CityBossLevel, and LastLevel at depths 10, 20, and 26"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
         "Later regular floors still require phase-by-phase parity checks",
-        "Dedicated boss levels at depths 5, 10, 15, 20, and 25 and LastLevel at depth 26 do not yet have generated or verified structural layouts"
+        "RNG-built boss levels at depths 5, 15, and 25 do not yet have generated or verified structural layouts"
       ],
       "impact": "Structural room selection, bounds, connections, or downstream spawn facts can differ on uncovered generation paths.",
       "evidence": [
@@ -126,12 +127,16 @@
       "remaining": [
         "Uncovered room painters and later regular floors can produce incomplete structural geometry, doors, or transitions",
         "Layouts whose builder, room set, or structural painter output can change with player state are not exact predictions; entity-only Generator, quest, inventory, and meta dependencies must not suppress an otherwise exact structural layout",
-        "Dedicated boss levels at depths 5, 10, 15, 20, and 25 plus LastLevel at depth 26 are visible in the floor report, but their level-specific builders and structural maps are not yet generated, oracle-verified, or rendered",
+        "RNG-built boss levels at depths 5, 15, and 25 are visible in the floor report, but their level-specific builders and structural maps are not yet generated, oracle-verified, or rendered",
         "Quest-branch levels, including the Troll Blacksmith MiningLevel reference, are not generated or rendered by the analyzer"
       ],
       "impact": "Public previews show deterministic structural floor layout only; they intentionally make no claims about decoration, traps, vegetation, entities, loot placement, or the final populated gameplay map.",
       "evidence": [
         "crates/spd-core/src/level/painter",
+        "crates/spd-core/src/level/boss_layouts.rs",
+        "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-10.json",
+        "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-20.json",
+        "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-26.json",
         "crates/spd-core/tests/java_oracle_goldens/final_heaps/replay_aaa_sewers.rs",
         "tools/visual/tests/map-render.spec.ts",
         "tools/visual/tests/map-render-fixtures.ts"

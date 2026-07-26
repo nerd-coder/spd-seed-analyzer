@@ -70,9 +70,9 @@ final class FloorOracle {
 		// A committed seed fixture must not depend on the user's bones.dat. At
 		// this pin, Dungeon.daily is consulted during generation only by Bones.
 		Dungeon.daily = true;
-		RegularLevel level;
+		Level level;
 		try {
-			level = (RegularLevel) Dungeon.newLevel();
+			level = Dungeon.newLevel();
 		} finally {
 			Dungeon.daily = false;
 		}
@@ -100,9 +100,11 @@ final class FloorOracle {
 		}
 		List<String> rooms = new ArrayList<>();
 		List<RoomFact> roomBounds = new ArrayList<>();
-		for (Room room : level.rooms()) {
-			rooms.add(room.getClass().getSimpleName());
-			roomBounds.add(new RoomFact(room.getClass().getSimpleName(), room.left, room.top, room.right, room.bottom));
+		if (level instanceof RegularLevel) {
+			for (Room room : ((RegularLevel) level).rooms()) {
+				rooms.add(room.getClass().getSimpleName());
+				roomBounds.add(new RoomFact(room.getClass().getSimpleName(), room.left, room.top, room.right, room.bottom));
+			}
 		}
 		rooms.sort(String::compareTo);
 		roomBounds.sort(Comparator.comparing((RoomFact room) -> room.roomClass)
@@ -110,13 +112,14 @@ final class FloorOracle {
 		int width = level.width();
 		int height = level.height();
 		FloorVisualFacts visualFacts = FloorVisualFacts.capture(level);
-		List<Integer> prePaintRng = generatePrePaintRng(seed, depth);
+		boolean regular = level instanceof RegularLevel;
+		List<Integer> prePaintRng = regular ? generatePrePaintRng(seed, depth) : new ArrayList<>();
 		List<Integer> preDoorsRng = depth <= 4 || (depth >= 11 && depth <= 12)
 				? generateDoorRng(seed, depth, false) : new ArrayList<>();
 		List<Integer> postDoorsRng = depth <= 4 || (depth >= 11 && depth <= 12)
 				? generateDoorRng(seed, depth, true) : new ArrayList<>();
-		List<Integer> preMobsRng = generatePreMobsRng(seed, depth);
-		List<Integer> preItemsRng = generatePreItemsRng(seed, depth);
+		List<Integer> preMobsRng = regular ? generatePreMobsRng(seed, depth) : new ArrayList<>();
+		List<Integer> preItemsRng = regular ? generatePreItemsRng(seed, depth) : new ArrayList<>();
 		return new FinalFloorFacts(
 				depth,
 				width,

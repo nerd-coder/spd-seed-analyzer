@@ -1,5 +1,6 @@
 //! Headless level generation.
 
+mod boss_layouts;
 mod build;
 mod create_items;
 mod create_mobs;
@@ -216,6 +217,13 @@ fn create_level_internal(
     let mut pre_items_rng_probe = Vec::new();
     let mut pre_mobs_rng_probe = Vec::new();
     let mut pre_paint_rng_probe = Vec::new();
+
+    if !dungeon.regular_level() {
+        layout_map = boss_layouts::fixed_layout(dungeon.depth);
+        build_ok = layout_map.is_some();
+        runtime_sensitive_map = false;
+        runtime_sensitive_layout = false;
+    }
 
     // RegularLevel only — bosses + depth 26 LastLevel use dedicated layouts in SPD.
     if dungeon.regular_level() {

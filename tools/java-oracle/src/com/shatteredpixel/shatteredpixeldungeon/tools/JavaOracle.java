@@ -78,9 +78,9 @@ public final class JavaOracle {
 				? null
 				: Integer.valueOf(args[finalHeaps ? 2 : 1]);
 		if (depth != null
-				&& (!finalHeaps || !((depth >= 1 && depth <= 4) || (depth >= 6 && depth <= 9) || (depth >= 11 && depth <= 14) || (depth >= 16 && depth <= 19) || depth == 21))) {
+				&& (!finalHeaps || !((depth >= 1 && depth <= 4) || (depth >= 6 && depth <= 14) || (depth >= 16 && depth <= 21) || depth == 26))) {
 			System.err.println(
-					"The floor oracle supports depth 1, plus depths 1-4, 6-9, 11-14, 16-19, and 21 for final-heaps");
+					"The final-heaps oracle supports regular depths 1-4, 6-9, 11-14, 16-19, and 21, plus dedicated depths 10, 20, and 26");
 			System.exit(2);
 		}
 
