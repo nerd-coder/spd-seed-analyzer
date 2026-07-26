@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { DepthIcon } from '@/components/DepthIcon'
 import { FloorMapPreview } from '@/components/FloorMapPreview'
 import {
@@ -29,14 +28,11 @@ export function FloorDetail({
   identitySpoilers: boolean
   mapSpoilers: boolean
 }) {
-  const [showAssumedMap, setShowAssumedMap] = useState(true)
   const hasQuest = (floor.quests?.length ?? 0) > 0
   const questRewards = partitionFloorItems(floor.items).quest
   const showMap = mapSpoilers && !!floor.map
-  const canShowAssumedMap = mapSpoilers && !floor.map && !!floor.assumed_map
-  const displayedMap = mapSpoilers
-    ? (floor.map ?? (showAssumedMap ? floor.assumed_map : null))
-    : null
+  const showAssumedMap = mapSpoilers && !floor.map && !!floor.assumed_map
+  const displayedMap = mapSpoilers ? (floor.map ?? floor.assumed_map) : null
 
   const details = (
     <div className="min-w-0 flex-1 space-y-3">
@@ -114,16 +110,6 @@ export function FloorDetail({
             {floor.map.width}×{floor.map.height}
           </Badge>
         )}
-        {canShowAssumedMap && (
-          <Button
-            variant="outline"
-            size="xs"
-            aria-pressed={showAssumedMap}
-            onClick={() => setShowAssumedMap((visible) => !visible)}
-          >
-            {showAssumedMap ? 'Hide assumed map' : 'Render assumed map'}
-          </Button>
-        )}
       </div>
 
       <div className="flex items-start gap-3">
@@ -135,7 +121,7 @@ export function FloorDetail({
               identities={identities}
               depth={floor.depth}
             />
-            {canShowAssumedMap && showAssumedMap && (
+            {showAssumedMap && (
               <Alert variant="warning" className="px-1.5 py-1">
                 <AlertTitle className="text-[10px] leading-tight">
                   Assumed continuation
