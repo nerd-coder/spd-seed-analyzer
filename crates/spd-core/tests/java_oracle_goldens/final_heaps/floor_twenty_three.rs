@@ -35,25 +35,40 @@ struct PaintCheckpoint {
     rng: Vec<i32>,
 }
 
-#[test]
-fn aaa_floor_twenty_three_halls_trace_matches_preserved_run() {
+pub(super) fn assert_halls_paint_trace(
+    seed_text: &str,
+    fixture_name: &str,
+    depth: i32,
+    expected_attempts: usize,
+    expected_rooms: usize,
+) {
     let trace_path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../tools/java-oracle/fixtures/traces/aaa-aaa-aaa-floor-23-halls-paint.json");
+        .join("../../tools/java-oracle/fixtures/traces")
+        .join(fixture_name);
     let trace: PaintTrace = serde_json::from_str(
         &fs::read_to_string(&trace_path)
             .unwrap_or_else(|error| panic!("read {}: {error}", trace_path.display())),
     )
     .unwrap_or_else(|error| panic!("parse {}: {error}", trace_path.display()));
-    assert_eq!(trace.depth, 23);
+    assert_eq!(trace.depth, depth);
+    assert_eq!(
+        trace.build_attempts.len(),
+        expected_attempts,
+        "Java builder retry count"
+    );
+    assert!(
+        trace.build_attempts.iter().all(|attempt| attempt.success),
+        "Java builder success"
+    );
 
-    let seed = parse_seed("AAA-AAA-AAA").expect("valid oracle seed");
+    let seed = parse_seed(seed_text).expect("valid oracle seed");
     let mut dungeon = dungeon_from_run(init_run(seed.numeric));
     let mut actual = None;
     for depth in 1_i32..=trace.depth {
         dungeon.depth = depth;
         actual = Some(create_level_partial(&mut dungeon));
     }
-    let actual = actual.expect("floor-23 replay");
+    let actual = actual.expect("requested floor replay");
 
     let actual_pre_shuffle = actual
         .pre_shuffle_room_bounds
@@ -87,10 +102,14 @@ fn aaa_floor_twenty_three_halls_trace_matches_preserved_run() {
         ("doors", "paintDoors")
     );
     assert_eq!(doors.rng.len(), 8, "fixed-width Java RNG probe");
-    assert_eq!(oracle_pre_shuffle.len(), 21, "all Java rooms recorded");
+    assert_eq!(
+        oracle_pre_shuffle.len(),
+        expected_rooms,
+        "all Java rooms recorded"
+    );
     assert_eq!(
         oracle_callbacks.len(),
-        21,
+        expected_rooms,
         "every Java room callback recorded"
     );
     assert_eq!(
@@ -108,74 +127,23 @@ fn aaa_floor_twenty_three_halls_trace_matches_preserved_run() {
 }
 
 #[test]
+fn aaa_floor_twenty_three_halls_trace_matches_preserved_run() {
+    assert_halls_paint_trace(
+        "AAA-AAA-AAA",
+        "aaa-aaa-aaa-floor-23-halls-paint.json",
+        23,
+        1,
+        21,
+    );
+}
+
+#[test]
 fn abc_floor_twenty_three_halls_paint_trace_matches_preserved_run() {
-    let trace_path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../tools/java-oracle/fixtures/traces/abc-def-ghi-floor-23-halls-paint.json");
-    let trace: PaintTrace = serde_json::from_str(
-        &fs::read_to_string(&trace_path)
-            .unwrap_or_else(|error| panic!("read {}: {error}", trace_path.display())),
-    )
-    .unwrap_or_else(|error| panic!("parse {}: {error}", trace_path.display()));
-    assert_eq!(trace.depth, 23);
-    assert_eq!(trace.build_attempts.len(), 1, "Java builder retry count");
-    assert!(trace.build_attempts[0].success, "Java builder success");
-
-    let seed = parse_seed("ABC-DEF-GHI").expect("valid oracle seed");
-    let mut dungeon = dungeon_from_run(init_run(seed.numeric));
-    let mut actual = None;
-    for depth in 1_i32..=trace.depth {
-        dungeon.depth = depth;
-        actual = Some(create_level_partial(&mut dungeon));
-    }
-    let actual = actual.expect("floor-23 replay");
-
-    let actual_pre_shuffle = actual
-        .pre_shuffle_room_bounds
-        .iter()
-        .map(|room| {
-            (
-                room.class_name.clone(),
-                [room.left, room.top, room.right, room.bottom],
-            )
-        })
-        .collect::<Vec<_>>();
-    let oracle_pre_shuffle = trace
-        .pre_shuffle_rooms
-        .into_iter()
-        .map(|room| (room.class_name, room.bounds))
-        .collect::<Vec<_>>();
-    let actual_callbacks = actual
-        .room_paint_rng_checkpoints
-        .iter()
-        .map(|checkpoint| (checkpoint.room.clone(), checkpoint.rng.clone()))
-        .collect::<Vec<_>>();
-    let oracle_callbacks = trace
-        .checkpoints
-        .iter()
-        .filter(|checkpoint| checkpoint.stage == "room")
-        .map(|checkpoint| (checkpoint.room.clone(), checkpoint.rng.clone()))
-        .collect::<Vec<_>>();
-    let doors = trace.checkpoints.last().expect("paintDoors checkpoint");
-    assert_eq!(
-        (doors.stage.as_str(), doors.room.as_str()),
-        ("doors", "paintDoors")
-    );
-    assert_eq!(oracle_pre_shuffle.len(), 26, "all Java rooms recorded");
-    assert_eq!(
-        oracle_callbacks.len(),
+    assert_halls_paint_trace(
+        "ABC-DEF-GHI",
+        "abc-def-ghi-floor-23-halls-paint.json",
+        23,
+        1,
         26,
-        "every Java room callback recorded"
-    );
-    assert_eq!(
-        actual_pre_shuffle, oracle_pre_shuffle,
-        "pre-shuffle room bounds"
-    );
-    assert_eq!(
-        actual_callbacks, oracle_callbacks,
-        "room paint RNG callbacks"
-    );
-    assert_eq!(
-        actual.post_doors_rng_probe, doors.rng,
-        "post-door RNG boundary"
     );
 }

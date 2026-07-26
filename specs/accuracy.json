@@ -25,11 +25,12 @@
         "Pinned HallsBossLevel generation at depth 25: five variable chambers, statue/decor and water patches, center-piece terrain, pathfinding retry lifecycle, transitions, and normalized terrain/discoverability across four Java-oracle seeds",
         "Depth-22 Halls lifecycle fixtures: AAA-AAA-AAA matches the Java pre-paint checkpoint, FigureEight pre-shuffle room list, room selection/bounds, room-paint callbacks, post-door RNG, affected door terrain/discoverability, and transitions; contrasting ABC-DEF-GHI pins the post-door RNG boundary. HallsPainter includes REGION_DECO_ALT variance and unconnected-neighbour terrain merges",
         "AAA-AAA-AAA preserved-run depth-23 Halls: Java-matching FigureEight builder attempt, all 21 pre-shuffle room bounds, room-paint callbacks, and post-door RNG boundary",
-        "ABC-DEF-GHI preserved-run depth-23 Halls: Java-matching FigureEight builder, all 26 pre-shuffle room bounds, room-paint callbacks, and post-door RNG; branch retries exclude an uncommitted tunnel and SentryRoom connection checks preserve center RNG"
+        "ABC-DEF-GHI preserved-run depth-23 Halls: Java-matching FigureEight builder, all 26 pre-shuffle room bounds, room-paint callbacks, and post-door RNG; branch retries exclude an uncommitted tunnel and SentryRoom connection checks preserve center RNG",
+        "AAA-AAA-AAA and ABC-DEF-GHI preserved-run depth-24 Halls: Java-matching pre-shuffle room bounds, every room-paint callback, and post-door RNG boundary"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
-        "Halls coverage is proven through depth 23 for two preserved runs; replay both through depth 24 before promoting later Halls coverage",
+        "Halls coverage is proven through depth 24 for two preserved runs; replay HallsBoss depth 25 before promoting later-floor coverage",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
         "Later regular floors still require phase-by-phase parity checks"
       ],
