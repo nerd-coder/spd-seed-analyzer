@@ -26,7 +26,7 @@
         "AAA-AAA-AAA floors 13–14 and 16–17 exact room classes, normalized bounds and heaps, pre-paint/pre-mobs/pre-items RNG boundaries, and final mobs; floor 16 preserves the floor-15 DM-300 lifecycle",
         "AAA-AAA-AAA floor 18 exact room classes, normalized bounds, phase RNG boundaries, final mobs and heaps, terrain, discoverability, tile variance, transitions, traps, plants, and GardenRoom Foliage blob; SecretArtilleryRoom has exact placement, a fixed DoubleBomb, and two default-pool missiles",
         "AAA-AAA-AAA floor 19 exact room classes, normalized bounds, phase RNG boundaries, final mobs and heaps, terrain, discoverability, transitions, ordinary and SecretSummoning traps, PlantsRoom plants, and the LaboratoryRoom Alchemy blob; includes AmbitiousImpRoom painter eligibility and branch-transition metadata",
-        "AAA-AAA-AAA floor 21 exact FigureEightBuilder attempt boundaries, room classes, normalized bounds, six TunnelRooms, and pre-paint RNG parity; preserves ChasmExitRoom size probabilities and the floor-20 Dwarf King lifecycle"
+        "AAA-AAA-AAA floor 21 exact FigureEightBuilder attempt boundaries, room classes, normalized bounds, six TunnelRooms, pre-paint/pre-mobs/pre-items RNG boundaries, final mobs, and stable final heaps; preserves ChasmExitRoom size probabilities and the floor-20 Dwarf King lifecycle"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",

@@ -61,7 +61,11 @@ impl MapFacts {
             markers.push(MapMarker {
                 cell: cell as u32,
                 kind: MapMarkerKind::Mob,
-                label: class_name.to_string(),
+                label: if class_name == "DemonSpawner" {
+                    "Demon Spawner".to_string()
+                } else {
+                    class_name.to_string()
+                },
             });
             mobs.push(MapMob {
                 cell: cell as u32,

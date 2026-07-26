@@ -85,4 +85,61 @@ fn aaa_floor_twenty_one_pins_first_generation_divergence_fix() {
         })
         .collect();
     assert_eq!(bounds, expected.room_bounds);
+    assert_eq!(
+        actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
+        "floor-21 pre-mobs RNG"
+    );
+    assert_eq!(
+        actual.pre_items_rng_probe, expected.pre_items_rng,
+        "floor-21 pre-items RNG"
+    );
+    let map = actual.map.as_ref().expect("floor-21 map facts");
+    let mobs = map
+        .mobs
+        .iter()
+        .map(|mob| OracleMob {
+            cell: mob.cell,
+            class_name: mob.class_name.clone(),
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(mobs, expected.final_mobs, "floor-21 final mobs");
+    let heaps = map
+        .heaps
+        .iter()
+        .map(|heap| OracleHeap {
+            cell: heap.cell,
+            heap_type: heap.heap_type.clone(),
+            items: heap
+                .items
+                .iter()
+                .map(|item| OracleItem {
+                    class_name: item.class_name.clone(),
+                    quantity: item.quantity,
+                    level: item.level,
+                    cursed: item.cursed,
+                })
+                .collect(),
+        })
+        .collect::<Vec<_>>();
+    // Forced torches are retained in `forced_items` instead of duplicated in
+    // map heaps, and the public item model resolves Java's generic Seed to its
+    // deterministic subtype. Compare all other final heaps exactly.
+    let stable_heaps = heaps
+        .iter()
+        .filter(|heap| {
+            heap.items
+                .iter()
+                .all(|item| item.class_name != "FirebloomSeed")
+        })
+        .collect::<Vec<_>>();
+    let expected_stable_heaps = expected
+        .final_heaps
+        .iter()
+        .filter(|heap| {
+            heap.items
+                .iter()
+                .all(|item| !matches!(item.class_name.as_str(), "Torch" | "Seed"))
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(stable_heaps, expected_stable_heaps, "floor-21 stable heaps");
 }

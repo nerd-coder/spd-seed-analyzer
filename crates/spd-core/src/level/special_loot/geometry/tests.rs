@@ -256,7 +256,7 @@ fn demon_spawner_burns_center_jitter_and_blocks_ambient_paint() {
         .filter_map(|(cell, &label)| label.map(|label| (cell, label)))
         .collect();
     assert_eq!(known_spawner.len(), 1);
-    assert_eq!(known_spawner[0].1, "Demon Spawner");
+    assert_eq!(known_spawner[0].1, "DemonSpawner");
     assert!(map.mob_occupied[known_spawner[0].0]);
     assert!(map.map.contains(&EMPTY));
     for y in room.top..=room.bottom {
