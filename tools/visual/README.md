@@ -6,12 +6,11 @@ viewport clipping when a full-resolution map is taller than its dialog. The
 regular-floor cases come from `tools/visual/tests/map-render-fixtures.ts`;
 browser-rendered baselines are committed in `tools/visual/snapshots/`.
 
-The source screenshots under `tools/visual/fixtures/` remain unchanged. Quest
-branch references stay source-only until branch-level analysis is supported.
-The screenshots contain gameplay-only state (hero position, explored FOV, and
-animation phase), so they are visual references rather than direct Playwright
-expectations. The Playwright snapshots cover the deterministic terrain, trap,
-heap, and mob layers rendered by the web app.
+The snapshots cover only the public structural-layout projection: room
+geometry, walls, traversable floor, doors, and entrances/exits. Entity-rich
+gameplay captures, quest branches, decoration, traps, plants, blobs, heaps,
+mobs, item placement, explored FOV, and animation state are product non-goals
+and are not visual-regression inputs.
 
 ## First-time setup
 
@@ -29,11 +28,10 @@ bun run test:map-render
 bun run test:visual
 ```
 
-`test:map-render` checks that the registry and source gameplay PNGs are in
-lockstep. `test:visual` runs that registry check, builds the WASM and production
-web app, starts the Vite preview on `127.0.0.1:4173`, and compares every
-registered map against its baseline. When `web/dist` is already current, use
-`bun run test:visual:only`.
+`test:map-render` validates the structural snapshot registry. `test:visual`
+builds the WASM and production web app, starts the Vite preview on
+`127.0.0.1:4173`, and compares every registered map against its baseline. When
+`web/dist` is already current, use `bun run test:visual:only`.
 
 Failures write the actual image, expected image, pixel diff, and Playwright
 trace to `tools/visual/test-results/` (gitignored).

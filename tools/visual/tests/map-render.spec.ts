@@ -1,5 +1,5 @@
 import { expect, type Locator, type Page, test } from '@playwright/test'
-import { AUTOMATED_MAP_RENDER_FIXTURES } from './map-render-fixtures'
+import { MAP_RENDER_FIXTURES } from './map-render-fixtures'
 
 const APP_STORAGE = {
   mapSpoilers: 'spd-analyzer-map-spoilers',
@@ -19,9 +19,10 @@ async function installSyntheticMapReport(page: Page) {
   await page.addInitScript(() => {
     const width = 20
     const height = 30
-    const tiles = Array.from({ length: width * height }, (_, cell) =>
-      cell > width * 3 && cell < width * 7 ? 29 : 1
-    )
+    const tiles = Array(width * height).fill(1)
+    for (let y = 4; y < height - 4; y++) {
+      for (let x = 4; x < width - 4; x++) tiles[y * width + x] = 2
+    }
     const floors = Array.from({ length: 4 }, (_, index) => ({
       depth: index + 1,
       feeling: 'none',
@@ -36,28 +37,18 @@ async function installSyntheticMapReport(page: Page) {
               height,
               tileset: 'sewers',
               tiles,
-              tile_variance: Array(width * height).fill(0),
+              tile_variance: [],
               discoverable: Array(width * height).fill(true),
-              markers: [
-                { cell: 26, kind: 'item', label: 'Synthetic item' },
-                { cell: 93, kind: 'mob', label: 'Synthetic mob' },
-              ],
-              heaps: [
+              markers: [],
+              heaps: [],
+              mobs: [],
+              transitions: [
+                { cell: 5 * width + 5, type: 'REGULAR_ENTRANCE' },
                 {
-                  cell: 26,
-                  heap_type: 'HEAP',
-                  items: [
-                    {
-                      class: 'StoneOfIntuition',
-                      quantity: 1,
-                      level: 0,
-                      cursed: false,
-                    },
-                  ],
+                  cell: (height - 6) * width + (width - 6),
+                  type: 'REGULAR_EXIT',
                 },
               ],
-              mobs: [{ cell: 93, class: 'Rat' }],
-              transitions: [],
               traps: [],
               plants: [],
               blobs: [],
@@ -220,36 +211,16 @@ async function captureFloor(page: Page, floor: number, snapshot: string) {
   await snapshotCanvas(canvas, snapshot)
 }
 
-for (const fixture of AUTOMATED_MAP_RENDER_FIXTURES) {
-  test(`${fixture.seed} floor ${fixture.floor} ${fixture.expectation}`, async ({
+for (const fixture of MAP_RENDER_FIXTURES) {
+  test(`${fixture.seed} floor ${fixture.floor} structural layout`, async ({
     page,
   }) => {
     const browserErrors = await openAnalyzer(page, fixture.seed)
-    if (fixture.expectation === 'rendered') {
-      await captureFloor(
-        page,
-        fixture.floor,
-        `${fixture.seed}-F${fixture.floor}.png`
-      )
-    } else {
-      const region = floorRegions.find(
-        ({ first, last }) => fixture.floor >= first && fixture.floor <= last
-      )
-      if (!region)
-        throw new Error(`Floor ${fixture.floor} is not in a report region`)
-      await page.getByRole('tab', { name: region.name }).click()
-      const floorSection = page
-        .getByText(`Floor ${fixture.floor}`, { exact: true })
-        .locator('xpath=ancestor::section[1]')
-      await expect(
-        floorSection.getByRole('button', {
-          name: `Expand floor ${fixture.floor} map`,
-        })
-      ).toBeVisible()
-      await expect(
-        floorSection.getByText('Assumed continuation', { exact: true })
-      ).toBeVisible()
-    }
+    await captureFloor(
+      page,
+      fixture.floor,
+      `${fixture.seed}-F${fixture.floor}.png`
+    )
 
     expect(browserErrors.console, 'browser console errors').toEqual([])
     expect(browserErrors.page, 'uncaught page errors').toEqual([])
@@ -410,37 +381,6 @@ test('accuracy details use a responsive modal and restore trigger focus', async 
   await page.keyboard.press('Escape')
   await expect(dialog).toBeHidden()
   await expect(trigger).toBeFocused()
-
-  expect(browserErrors.console, 'browser console errors').toEqual([])
-  expect(browserErrors.page, 'uncaught page errors').toEqual([])
-})
-
-test('animated liquid advances on the pixel-aligned canvas path', async ({
-  page,
-}) => {
-  await installSyntheticMapReport(page)
-  const browserErrors = await openAnalyzer(
-    page,
-    GENERIC_MAP_SEED,
-    'no-preference'
-  )
-  await page
-    .getByRole('button', { name: `Expand floor ${GENERIC_MAP_FLOOR} map` })
-    .click()
-
-  const canvas = page.getByRole('dialog').getByRole('img', {
-    name: /Shattered Pixel Dungeon floor map/,
-  })
-  await waitForCanvasPaint(canvas)
-  await expect(canvas).toHaveAttribute('data-water-animation', 'running')
-  const firstFrame = await canvas.evaluate((node) =>
-    (node as HTMLCanvasElement).toDataURL('image/png')
-  )
-  await page.waitForTimeout(300)
-  const laterFrame = await canvas.evaluate((node) =>
-    (node as HTMLCanvasElement).toDataURL('image/png')
-  )
-  expect(laterFrame).not.toBe(firstFrame)
 
   expect(browserErrors.console, 'browser console errors').toEqual([])
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
