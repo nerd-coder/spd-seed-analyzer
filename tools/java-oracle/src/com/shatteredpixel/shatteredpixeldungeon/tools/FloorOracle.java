@@ -119,7 +119,7 @@ final class FloorOracle {
 		List<Integer> postDoorsRng = depth <= 5 || (depth >= 11 && depth <= 12)
 				? generateDoorRng(seed, depth, true) : new ArrayList<>();
 		List<Integer> preMobsRng = regular ? generatePreMobsRng(seed, depth) : new ArrayList<>();
-		List<Integer> preItemsRng = regular || depth == 5
+		List<Integer> preItemsRng = regular || depth == 5 || depth == 15
 				? generatePreItemsRng(seed, depth) : new ArrayList<>();
 		return new FinalFloorFacts(
 				depth,

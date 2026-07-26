@@ -204,8 +204,10 @@ fn fixture_paths() -> Vec<PathBuf> {
         })
         .map(|entry| entry.expect("read fixture directory entry").path())
         .filter(|path| {
-            path.extension()
-                .is_some_and(|extension| extension == "json")
+            path.file_name().is_some_and(|name| {
+                name.to_string_lossy().ends_with(".json")
+                    && name.to_string_lossy().contains("-final-heaps-floor-")
+            })
         })
         .collect();
     paths.sort();
@@ -215,6 +217,26 @@ fn fixture_paths() -> Vec<PathBuf> {
         fixture_dir.display()
     );
     paths
+}
+
+fn legacy_floor_fixture_paths() -> Vec<PathBuf> {
+    let fixture_dir =
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tools/java-oracle/fixtures");
+    fs::read_dir(&fixture_dir)
+        .unwrap_or_else(|error| {
+            panic!(
+                "failed to read Java oracle fixtures at {}: {error}",
+                fixture_dir.display()
+            )
+        })
+        .map(|entry| entry.expect("read fixture directory entry").path())
+        .filter(|path| {
+            path.file_name().is_some_and(|name| {
+                name.to_string_lossy().ends_with("-floor-1.json")
+                    && !name.to_string_lossy().contains("-final-heaps-")
+            })
+        })
+        .collect()
 }
 
 fn read_fixture(path: &Path) -> OracleFixture {
@@ -287,7 +309,7 @@ fn run_identities_match_pinned_java_oracle() {
 #[test]
 fn depth_one_forced_items_match_pinned_java_oracle() {
     let mut compared = 0;
-    for path in fixture_paths() {
+    for path in legacy_floor_fixture_paths() {
         let fixture = read_fixture(&path);
         if fixture.schema_version != FLOOR_SCHEMA_VERSION {
             continue;

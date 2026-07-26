@@ -30,6 +30,7 @@ pub const INACTIVE_TRAP: i32 = 19;
 pub const EMPTY_DECO: i32 = 20;
 pub const LOCKED_EXIT: i32 = 21;
 pub const UNLOCKED_EXIT: i32 = 22;
+pub const CUSTOM_DECO: i32 = 23;
 pub const WELL: i32 = 24;
 pub const STATUE: i32 = 25;
 pub const STATUE_SP: i32 = 26;

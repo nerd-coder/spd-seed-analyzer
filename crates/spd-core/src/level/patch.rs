@@ -139,6 +139,18 @@ pub fn generate(w: i32, h: i32, fill: f32, clustering: i32, force_fill_rate: boo
 mod tests {
     use super::*;
     use crate::random::Random;
+    use serde::Deserialize;
+
+    #[derive(Deserialize)]
+    struct CavesBossPatchFixture {
+        depth_seed: i64,
+        mask: Vec<bool>,
+        post_patch_rng: Vec<i32>,
+        trap_rolls: usize,
+        entrance_variant: i32,
+        corner_variant: i32,
+        post_entrance_rng: Vec<i32>,
+    }
 
     #[test]
     fn patch_generate_size_and_rng_stable() {
@@ -157,5 +169,49 @@ mod tests {
     fn patch_empty_dims() {
         assert!(generate(0, 5, 0.5, 0, true).is_empty());
         assert!(generate(5, 0, 0.5, 0, true).is_empty());
+    }
+
+    #[test]
+    fn caves_boss_patch_matches_java_oracle() {
+        let fixture: CavesBossPatchFixture = serde_json::from_str(include_str!(
+            "../../../../tools/java-oracle/fixtures/aaa-aaa-aaa-caves-boss-patch.json"
+        ))
+        .unwrap();
+        Random::push_generator_seeded(fixture.depth_seed);
+        let actual = generate(33, 28, 0.15, 2, true);
+        let post_patch_rng = Random::peek_ints(8);
+        Random::pop_generator();
+
+        assert_eq!(actual, fixture.mask);
+        assert_eq!(post_patch_rng, fixture.post_patch_rng);
+
+        Random::push_generator_seeded(fixture.depth_seed);
+        let mask = generate(33, 28, 0.15, 2, true);
+        let mut trap_rolls = 0;
+        for row in 0..23 {
+            let radius = 23.0 / 2.0;
+            let row_y = -radius + 0.5 + f64::from(row);
+            let row_width = (2.0
+                * ((radius * radius) * (1.0 - row_y * row_y / (radius * radius))).sqrt()
+                / 2.0)
+                .floor() as i32
+                * 2
+                + 1;
+            let left = 5 + (23 - row_width) / 2;
+            for x in left..left + row_width {
+                if !mask[(x + row * 33) as usize] {
+                    Random::int_max(8);
+                    trap_rolls += 1;
+                }
+            }
+        }
+        let entrance_variant = Random::int_max(4);
+        let corner_variant = Random::int_max(4);
+        let post_entrance_rng = Random::peek_ints(8);
+        Random::pop_generator();
+        assert_eq!(trap_rolls, fixture.trap_rolls);
+        assert_eq!(entrance_variant, fixture.entrance_variant);
+        assert_eq!(corner_variant, fixture.corner_variant);
+        assert_eq!(post_entrance_rng, fixture.post_entrance_rng);
     }
 }

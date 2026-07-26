@@ -48,6 +48,7 @@ public final class JavaOracle {
 				args.length == 2 && "sacrifice-reward".equals(args[1]);
 		boolean secretLibraryOrder =
 				args.length == 2 && "secret-library-order".equals(args[1]);
+		boolean cavesBossPatch = args.length == 2 && "caves-boss-patch".equals(args[1]);
 		if (secretLibraryOrder) {
 			System.out.print(SecretLibraryOracle.generateJson());
 			return;
@@ -60,6 +61,10 @@ public final class JavaOracle {
 			System.out.print(FigureEightTraceOracle.generate(numericSeed, Integer.parseInt(args[2])));
 			return;
 		}
+		if (cavesBossPatch) {
+			System.out.print(PatchOracle.cavesBossJson(inputSeed, numericSeed));
+			return;
+		}
 		if (args.length == 3 && !finalHeaps) {
 			System.err.println("Unknown floor oracle contract: " + args[1]);
 			System.exit(2);
@@ -70,6 +75,7 @@ public final class JavaOracle {
 				&& !shopBagSelection
 				&& !sacrificeReward
 				&& !secretLibraryOrder
+				&& !cavesBossPatch
 				&& !args[1].matches("\\d+")) {
 			System.err.println("Unknown oracle contract: " + args[1]);
 			System.exit(2);
@@ -78,9 +84,9 @@ public final class JavaOracle {
 				? null
 				: Integer.valueOf(args[finalHeaps ? 2 : 1]);
 		if (depth != null
-				&& (!finalHeaps || !((depth >= 1 && depth <= 14) || (depth >= 16 && depth <= 21) || depth == 26))) {
+				&& (!finalHeaps || !((depth >= 1 && depth <= 21) || depth == 26))) {
 			System.err.println(
-					"The final-heaps oracle supports regular depths 1-4, 6-9, 11-14, 16-19, and 21, plus dedicated depths 5, 10, 20, and 26");
+					"The final-heaps oracle supports regular depths 1-4, 6-9, 11-14, 16-19, and 21, plus dedicated depths 5, 10, 15, 20, and 26");
 			System.exit(2);
 		}
 

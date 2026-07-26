@@ -16,17 +16,19 @@ shop_bag_selection=""
 sacrifice_reward=""
 secret_library_order=""
 figure_eight_trace=""
+caves_boss_patch=""
 
 usage() {
 	cat >&2 <<'EOF'
 Usage: tools/java-oracle/run [--source PATH] [--output FILE]
-                             [--depth 1 | --final-heaps-depth 1|2|3|4|6|7|8|9|11|12|13|14|16|17|18|19 |
+                             [--depth 1 | --final-heaps-depth 1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|26 |
                              --figure-eight-trace DEPTH |
+                             --caves-boss-patch |
                              --generator-deck-rollover | --generator-lifecycle |
                              --shop-bag-selection | --sacrifice-reward] SEED
 
 Dumps SPD v3.3.8 run facts as stable JSON. With --depth 1, includes the pinned
-depth-one pre-build item slice. With --final-heaps-depth 1-4, 6-9, 11-14, or 16-19, records
+depth-one pre-build item slice. With --final-heaps-depth 1-4, 6-9, 11-15, or 16-21, records
 heaps after the real level generation lifecycle completes. Floors 6-9 are
 generated after all prior floors to retain run-persistent state. The source checkout
 must be pinned at 7b8b845a7. With --generator-deck-rollover, records the exact
@@ -87,6 +89,10 @@ while (($# > 0)); do
 			figure_eight_trace="$2"
 			shift 2
 			;;
+		--caves-boss-patch)
+			caves_boss_patch="1"
+			shift
+			;;
 		-h|--help)
 			usage
 			exit 0
@@ -108,8 +114,8 @@ if [[ -n "$depth" && "$depth" != "1" ]]; then
 	echo "The floor oracle currently supports only --depth 1" >&2
 	exit 2
 fi
-if [[ -n "$final_heaps_depth" && ! "$final_heaps_depth" =~ ^(1|2|3|4|5|6|7|8|9|10|11|12|13|14|16|17|18|19|20|21|26)$ ]]; then
-	echo "The final-heaps oracle supports regular depths 1-4, 6-9, 11-14, 16-19, and 21, plus dedicated depths 5, 10, 20, and 26" >&2
+if [[ -n "$final_heaps_depth" && ! "$final_heaps_depth" =~ ^(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|26)$ ]]; then
+	echo "The final-heaps oracle supports regular depths 1-4, 6-9, 11-14, 16-19, and 21, plus dedicated depths 5, 10, 15, 20, and 26" >&2
 	exit 2
 fi
 if [[ -n "$depth" && -n "$final_heaps_depth" ]]; then
@@ -125,6 +131,7 @@ selected_contracts=0
 [[ -n "$sacrifice_reward" ]] && ((selected_contracts += 1))
 [[ -n "$secret_library_order" ]] && ((selected_contracts += 1))
 [[ -n "$figure_eight_trace" ]] && ((selected_contracts += 1))
+[[ -n "$caves_boss_patch" ]] && ((selected_contracts += 1))
 if ((selected_contracts > 1)); then
 	echo "Choose only one oracle contract" >&2
 	exit 2
@@ -193,6 +200,9 @@ if [[ -n "$secret_library_order" ]]; then
 fi
 if [[ -n "$figure_eight_trace" ]]; then
 	gradle_args+=(-PoracleFigureEightTrace="$figure_eight_trace")
+fi
+if [[ -n "$caves_boss_patch" ]]; then
+	gradle_args+=(-PoracleCavesBossPatch=true)
 fi
 gradle_args+=(:core:javaOracleDump)
 

@@ -24,6 +24,8 @@ gradle.beforeProject { project ->
 				gradle.startParameter.projectProperties['oracleSecretLibraryOrder']
 		def figureEightTrace =
 				gradle.startParameter.projectProperties['oracleFigureEightTrace']
+		def cavesBossPatch =
+				gradle.startParameter.projectProperties['oracleCavesBossPatch']
         if (sourceDir == null || seed == null) {
             throw new GradleException('javaOracleDump requires oracleSourceDir and oracleSeed')
         }
@@ -74,6 +76,9 @@ gradle.beforeProject { project ->
 			}
 			if (figureEightTrace != null) {
 				args('figure-eight-trace', figureEightTrace)
+			}
+			if (cavesBossPatch != null) {
+				args('caves-boss-patch')
 			}
         }
     }

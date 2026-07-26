@@ -545,12 +545,23 @@ fn analyze_full_run_no_panic() {
         .iter()
         .all(|tile| !matches!(tile, 12 | 20 | 33 | 34)));
 
-    for depth in [15, 25] {
-        assert!(
-            report.floors[depth - 1].map.is_none(),
-            "RNG-built boss depth {depth} remains unsupported"
-        );
-    }
+    let caves_boss = report.floors[14]
+        .map
+        .as_ref()
+        .expect("generated CavesBossLevel layout");
+    assert_eq!((caves_boss.width, caves_boss.height), (33, 42));
+    assert!(caves_boss.markers.is_empty());
+    assert!(caves_boss.heaps.is_empty());
+    assert!(caves_boss.mobs.is_empty());
+    assert!(caves_boss
+        .tiles
+        .iter()
+        .all(|tile| !matches!(tile, 12 | 20 | 33 | 34)));
+
+    assert!(
+        report.floors[24].map.is_none(),
+        "RNG-built boss depth 25 remains unsupported"
+    );
 }
 
 #[test]

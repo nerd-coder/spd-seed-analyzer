@@ -8,6 +8,7 @@ package com.shatteredpixel.shatteredpixeldungeon.tools;
 
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.CavesLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.CavesBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.CityLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.HallsLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.PrisonLevel;
@@ -68,6 +69,7 @@ final class FloorProbeLevels {
 
 	static Probe preItems(int depth) {
 		if (depth == 5) return new PreItemsSewerBossLevel();
+		if (depth == 15) return new PreItemsCavesBossLevel();
 		if (depth >= 1 && depth <= 4) return new PreItemsSewerLevel();
 		if (depth >= 6 && depth <= 9) return new PreItemsPrisonLevel();
 		if (depth >= 11 && depth <= 14) return new PreItemsCavesLevel();
@@ -77,6 +79,19 @@ final class FloorProbeLevels {
 	}
 
 	private static final class PreItemsSewerBossLevel extends SewerBossLevel implements Probe {
+		private List<Integer> rngProbe;
+
+		@Override
+		protected void createItems() {
+			rngProbe = captureRng();
+			throw new FloorOracle.SnapshotComplete();
+		}
+
+		@Override public Level level() { return this; }
+		@Override public List<Integer> rngProbe() { return rngProbe; }
+	}
+
+	private static final class PreItemsCavesBossLevel extends CavesBossLevel implements Probe {
 		private List<Integer> rngProbe;
 
 		@Override
