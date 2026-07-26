@@ -8,7 +8,15 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize)]
 struct PaintTrace {
     depth: i32,
+    pre_shuffle_rooms: Vec<TraceRoom>,
     checkpoints: Vec<PaintCheckpoint>,
+}
+
+#[derive(Debug, Deserialize)]
+struct TraceRoom {
+    #[serde(rename = "class")]
+    class_name: String,
+    bounds: [i32; 4],
 }
 
 #[derive(Debug, Deserialize)]
@@ -61,17 +69,38 @@ fn aaa_floor_twenty_two_structural_lifecycle_matches_oracle() {
     )
     .unwrap_or_else(|error| panic!("parse {}: {error}", trace_path.display()));
     assert_eq!(trace.depth, 22);
-    let first_java_callback = trace.checkpoints.first().expect("first room callback");
-    let first_rust_callback = actual
-        .room_paint_rng_checkpoints
-        .first()
-        .expect("first Rust room callback");
-    assert_eq!(first_java_callback.stage, "room");
-    assert_eq!(first_java_callback.room, "StatueRoom");
-    assert_eq!(first_rust_callback.room, "RuinsRoom");
-    assert_ne!(
-        first_rust_callback.room, first_java_callback.room,
-        "the pinned trace isolates the remaining divergence before any room callback"
+    let pre_shuffle_rooms = trace
+        .pre_shuffle_rooms
+        .into_iter()
+        .map(|room| (room.class_name, room.bounds))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        actual
+            .pre_shuffle_room_bounds
+            .iter()
+            .map(|room| {
+                (
+                    room.class_name.clone(),
+                    [room.left, room.top, room.right, room.bottom],
+                )
+            })
+            .collect::<Vec<_>>(),
+        pre_shuffle_rooms,
+        "FigureEight returned room-list order before RegularPainter shuffle"
+    );
+    let expected_callbacks = trace
+        .checkpoints
+        .iter()
+        .filter(|checkpoint| checkpoint.stage == "room")
+        .map(|checkpoint| (checkpoint.room.clone(), checkpoint.rng.clone()))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        actual
+            .room_paint_rng_checkpoints
+            .iter()
+            .map(|checkpoint| (checkpoint.room.clone(), checkpoint.rng.clone()))
+            .collect::<Vec<_>>(),
+        expected_callbacks
     );
     let doors = trace.checkpoints.last().expect("paintDoors checkpoint");
     assert_eq!(doors.stage, "doors");

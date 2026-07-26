@@ -8,6 +8,7 @@ fn projection_emits_one_static_contract_and_never_the_sampled_weapon() {
         builder: None,
         rooms: vec!["SacrificeRoom".into()],
         room_bounds: vec![],
+        pre_shuffle_room_bounds: vec![],
         build_ok: true,
         forced_items: vec![],
         initial_forced_items: vec![],

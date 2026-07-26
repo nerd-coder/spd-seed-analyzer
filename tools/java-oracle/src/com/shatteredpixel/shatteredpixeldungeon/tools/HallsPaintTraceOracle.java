@@ -40,6 +40,7 @@ final class HallsPaintTraceOracle {
 		FloorOracle.generatePriorFloors(depth);
 		FloorOracle.markTargetFloorGenerated(depth);
 		TracePainter.checkpoints.clear();
+		TracePainter.preShuffleRooms = null;
 		Dungeon.daily = true;
 		try {
 			new TraceHallsLevel().create();
@@ -49,6 +50,7 @@ final class HallsPaintTraceOracle {
 			Dungeon.daily = false;
 		}
 		StringBuilder json = new StringBuilder("{\n  \"depth\": ").append(depth)
+				.append(",\n  \"pre_shuffle_rooms\": ").append(TracePainter.preShuffleRooms)
 				.append(",\n  \"checkpoints\": [");
 		for (int i = 0; i < TracePainter.checkpoints.size(); i++) {
 			if (i > 0) json.append(',');
@@ -59,13 +61,17 @@ final class HallsPaintTraceOracle {
 
 	private static final class TraceHallsLevel extends HallsLevel {
 		@Override protected com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter painter() {
-			return new TracePainter();
+			return new TracePainter()
+					.setWater(feeling == Level.Feeling.WATER ? 0.70f : 0.15f, 6)
+					.setGrass(feeling == Level.Feeling.GRASS ? 0.65f : 0.10f, 3)
+					.setTraps(nTraps(), trapClasses(), trapChances());
 		}
 	}
 
 	/** Exact pinned RegularPainter room/door lifecycle, with only checkpoints added. */
 	private static final class TracePainter extends HallsPainter {
 		static final List<String> checkpoints = new ArrayList<>();
+		static String preShuffleRooms;
 
 		@Override public boolean paint(Level level, ArrayList<Room> rooms) {
 			int padding = padding(level);
@@ -83,6 +89,7 @@ final class HallsPaintTraceOracle {
 				if (room.bottom > bottomMost) bottomMost = room.bottom;
 			}
 			level.setSize(rightMost + padding + 1, bottomMost + padding + 1);
+			preShuffleRooms = roomList(rooms);
 			Random.shuffle(rooms);
 			for (Room room : rooms.toArray(new Room[0])) {
 				if (room.connected.isEmpty()) {
@@ -120,6 +127,18 @@ final class HallsPaintTraceOracle {
 		private static void checkpoint(String stage, String room) {
 			checkpoints.add("{\"stage\":\"" + stage + "\",\"room\":\"" + room
 					+ "\",\"rng\":" + probe() + "}");
+		}
+
+		private static String roomList(List<Room> rooms) {
+			StringBuilder json = new StringBuilder("[");
+			for (int i = 0; i < rooms.size(); i++) {
+				if (i > 0) json.append(',');
+				Room room = rooms.get(i);
+				json.append("{\"class\":\"").append(room.getClass().getSimpleName())
+						.append("\",\"bounds\":[").append(room.left).append(',').append(room.top)
+						.append(',').append(room.right).append(',').append(room.bottom).append("]}");
+			}
+			return json.append(']').toString();
 		}
 	}
 

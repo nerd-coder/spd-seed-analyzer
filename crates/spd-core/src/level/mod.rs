@@ -194,6 +194,7 @@ fn create_level_internal(
     let mut builder = None;
     let mut room_names = Vec::new();
     let mut room_bounds = Vec::new();
+    let mut pre_shuffle_room_bounds = Vec::new();
     let mut build_ok = false;
     let mut placed_items = Vec::new();
     // A prior floor's divergent population can taint persistent Generator
@@ -238,6 +239,7 @@ fn create_level_internal(
                 builder,
                 rooms: room_names,
                 room_bounds,
+                pre_shuffle_room_bounds,
                 build_ok,
                 forced_items: forced,
                 initial_forced_items,
@@ -288,6 +290,18 @@ fn create_level_internal(
         if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=22) {
             pre_paint_rng_probe = Random::peek_ints(8);
         }
+        pre_shuffle_room_bounds = floor
+            .rooms
+            .iter()
+            .filter(|room| !room.is_empty())
+            .map(|room| state::LevelRoomFact {
+                class_name: room.name.clone(),
+                left: room.left,
+                top: room.top,
+                right: room.right,
+                bottom: room.bottom,
+            })
+            .collect();
 
         let painted_map = if feeling == Feeling::Chasm {
             terrain::paint_minimal_with_chasm(&floor.rooms, true)
@@ -528,6 +542,7 @@ fn create_level_internal(
         builder,
         rooms: room_names,
         room_bounds,
+        pre_shuffle_room_bounds,
         build_ok,
         forced_items: forced,
         initial_forced_items,

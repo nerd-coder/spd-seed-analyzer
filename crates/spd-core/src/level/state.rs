@@ -61,6 +61,9 @@ pub struct LevelState {
     pub rooms: Vec<String>,
     #[doc(hidden)]
     pub room_bounds: Vec<LevelRoomFact>,
+    /// Pinned builder list order at the `RegularPainter.shuffle` boundary.
+    #[doc(hidden)]
+    pub pre_shuffle_room_bounds: Vec<LevelRoomFact>,
     pub build_ok: bool,
     pub forced_items: Vec<GeneratedItem>,
     /// Exact initial queue snapshot before room callbacks consume/reposition it.
