@@ -296,6 +296,12 @@ pub fn can_connect_rooms(a: &Room, b: &Room, rooms: &[Room]) -> bool {
     {
         return false;
     }
+    // RatKingRoom never connects directly to SewerBossEntranceRoom.
+    if (a.name == "RatKingRoom" && b.name == "SewerBossEntranceRoom")
+        || (b.name == "RatKingRoom" && a.name == "SewerBossEntranceRoom")
+    {
+        return false;
+    }
     let i = intersect(a, b);
     let mut found_point = false;
     // points along intersection

@@ -17,6 +17,14 @@ pub(super) struct FigureEightState {
     landmark: Option<usize>,
 }
 
+impl FigureEightState {
+    pub(super) fn with_landmark(landmark: usize) -> Self {
+        Self {
+            landmark: Some(landmark),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum FailureStage {
     MissingLandmark,

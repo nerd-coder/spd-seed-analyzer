@@ -219,7 +219,7 @@ fn create_level_internal(
     let mut pre_paint_rng_probe = Vec::new();
 
     if !dungeon.regular_level() {
-        layout_map = boss_layouts::fixed_layout(dungeon.depth);
+        layout_map = boss_layouts::generated_layout(dungeon, depth_seed);
         build_ok = layout_map.is_some();
         runtime_sensitive_map = false;
         runtime_sensitive_layout = false;

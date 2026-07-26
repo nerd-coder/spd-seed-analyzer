@@ -9,6 +9,7 @@ mod decorate;
 mod doors;
 mod params;
 mod room_geometry;
+mod sewer_boss_rooms;
 
 use crate::level::patch;
 use crate::level::terrain::{self, TerrainMap, EMPTY, GRASS, HIGH_GRASS, SECRET_TRAP, TRAP, WATER};
@@ -21,6 +22,7 @@ pub use doors::{apply_room_door_types, paint_doors, place_doors_for_room, DoorMa
 pub use params::n_traps;
 pub(crate) use params::trap_metadata;
 pub(crate) use room_geometry::paint_standard_room;
+pub(crate) use sewer_boss_rooms::paint as paint_sewer_boss_room;
 
 /// Water + grass + traps + region decorate under a separate generator
 /// (`Random.pushGenerator(Random.Long())` … `pop`), matching RegularPainter.
@@ -33,11 +35,34 @@ pub fn paint_water_grass_traps(
     feeling: Feeling,
     n_traps: i32,
 ) {
+    let water = params::water_params(depth, feeling);
+    let grass = params::grass_params(depth, feeling);
+    paint_environment(map, rooms, paint_order, doors, depth, feeling, n_traps, water, grass);
+}
+
+pub(crate) fn paint_sewer_boss_environment(
+    map: &mut TerrainMap,
+    rooms: &[Room],
+    paint_order: &[usize],
+    doors: &DoorMap,
+) {
+    paint_environment(map, rooms, paint_order, doors, 5, Feeling::None, 0, (0.50, 5), (0.20, 4));
+}
+
+#[allow(clippy::too_many_arguments)]
+fn paint_environment(
+    map: &mut TerrainMap,
+    rooms: &[Room],
+    paint_order: &[usize],
+    doors: &DoorMap,
+    depth: i32,
+    feeling: Feeling,
+    n_traps: i32,
+    (water_fill, water_smooth): (f32, i32),
+    (grass_fill, grass_smooth): (f32, i32),
+) {
     let seed = Random::long();
     Random::push_generator_seeded(seed);
-
-    let (water_fill, water_smooth) = params::water_params(depth, feeling);
-    let (grass_fill, grass_smooth) = params::grass_params(depth, feeling);
 
     if water_fill > 0.0 {
         paint_water(map, rooms, paint_order, water_fill, water_smooth);

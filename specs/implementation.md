@@ -1,94 +1,48 @@
-# SPD Seed Analyzer — Implementation Goal
+# SPD Seed Analyzer — Next Implementation Phase
 
 Pinned target: SPD v3.3.8 @ `7b8b845a7`.
 
-Accuracy remains `partial`. `specs/accuracy.json` is the authoritative record
-of verified coverage, evidence, and known gaps. Never claim full seed-finder
-accuracy while that manifest remains partial.
-
-## Product goal
-
-The analyzer has two public outputs:
-
-1. Seed-determined item, loot, shop-stock, and quest-reward **spawn presence**.
-2. Seed-determined **structural floor layout** for regular, boss, and final
-   floors.
-
-Report an item or reward only when the pinned game is guaranteed to create it
-for the seed and stated conditions. Preserve independently proven properties
-when concrete identity depends on player state: for example, report a cursed
-`+2` weapon even if its class is not seed-determined. Represent bounded
-alternatives and their conditions. Exclude combat drops, player-triggered
-rewards, and other runtime-RNG results.
-
-Public maps are layout-only. They may show room geometry, walls, traversable
-floor, doors, and level entrances/exits needed to understand connectivity.
-They must not show or claim parity for mobs, NPCs, items, heaps, grass, water
-decoration, traps, plants, blobs, tile variance, or other painter decoration
-and population. Those facts may remain internal only when needed to preserve
-SPD RNG call order or provide parity evidence; they must not gate publication
-of an otherwise deterministic structural layout.
-
-Spawn presence and structural layout are separate projections. Uncertainty in
-entity placement must not suppress layout, and layout uncertainty must not
-erase independently proven item/reward presence.
-
-Keep Rust reports, WASM, search evidence, map projection, and UI consistent.
-Port pinned Java behavior and RNG call order; generation logic belongs in
-`spd-core`.
+Accuracy remains `partial`; `specs/accuracy.json` is authoritative. Public
+maps expose deterministic structural layout only. Keep generation in
+`spd-core`, preserve pinned Java RNG order, and do not publish entity,
+decoration, or placement claims.
 
 ## Current boundary
 
-Regular-level replay and painter coverage are fixture-backed on selected paths
-through floor 21, but coverage remains fixture-specific. Existing terrain,
-trap, plant, blob, mob, heap, and placement fixtures are internal parity
-evidence, not part of the public layout contract.
+Fixed structural layouts at depths 10, 20, and 26 are oracle-backed. Regular
+floor coverage remains fixture-specific. RNG-built boss floors at depths 5,
+15, and 25 are not yet implemented.
 
-Deterministic limited drops, supported special-room loot, quest rewards, and
-seed-determined shop stock have public projections. Concrete identities or
-properties that depend on prior gameplay, persistent Generator state,
-inventory, artifact exhaustion, Hourglass state, or JVM iteration are product
-non-goals. Shop order and placement are also intentionally excluded. Preserve
-only independently provable spawn facts and constrained properties.
+Depth 5 has an uncommitted diagnostic implementation. It currently provides:
 
-Fixed-form structural layouts at depths 10, 20, and 26 are backed by pinned
-Java fixtures. RNG-built boss floors at depths 5, 15, and 25 remain missing.
+- exact SewerBoss room initialization, figure-eight building, room bounds,
+  Rat King connection rules, and the pre-`paintDoors` RNG boundary for AAA;
+- boss entrance/exit, all four Goo room families, Rat King painters, and the
+  SewerBoss water/grass configuration;
+- Java-oracle fixtures covering Thin (AAA), Walled (ABC/GFX), Diamond (HKT),
+  and Thick Pillars (ZZZ), including RNG probes.
+
+Do not commit or expose this implementation yet. Its strict oracle test fails:
+Rust is one main-generator step behind Java immediately after `paintDoors`, so
+pre-item RNG, entrance/door cells, terrain, discoverability, and transitions
+are not verified.
 
 ## Next phase
 
-Complete the remaining RNG-built boss-floor layout projection.
+Finish and commit depth-5 `SewerBossLevel` parity.
 
-1. Port SewerBossLevel (5), CavesBossLevel (15), and HallsBossLevel (25),
-   including build retries and exact RNG call order.
-2. Add a dedicated structural-layout projection containing only geometry,
-   doors, and entrances/exits. Do not export grass, traps, decoration, mobs,
-   items, heaps, or their cells.
-3. Add multi-seed Java-oracle fixtures and focused Rust tests for randomized
-   variants, dimensions, structural terrain, transitions, and RNG boundaries.
-4. Retain every independently guaranteed shop spawn fact or constrained
-   property, but do not pursue concrete identities, order, or placement when
-   they depend on prior gameplay, inventory, Hourglass, bags, artifacts,
-   persistent decks, or JVM iteration.
-5. Keep non-goal shop state from suppressing structural layout or independently
-   selected spawn facts elsewhere on the floor.
-6. Keep exact seed-finder matching limited to exact spawn identities and
-   properties; constrained alternatives remain report evidence, not exact
-   matches.
-7. Update `specs/accuracy.json` with each newly verified behavior in the same
-   change. Do not mark boss layouts implemented until oracle-backed tests pass;
-   do not measure completeness against intentionally excluded shop state.
+1. Trace the shared `paint_doors` merge/regular-door path. Pre-`paintDoors`
+   RNG already matches Java; isolate the single missing Java RNG call and the
+   entrance/door callback discrepancy.
+2. Make all five depth-5 fixtures strictly match normalized structural
+   terrain, discoverability, transitions, dimensions, and post-build RNG.
+3. Confirm public maps remain layout-only and do not expose mobs, items,
+   heaps, grass, traps, plants, blobs, or decorative tile claims.
+4. Update `specs/accuracy.json` only after every strict fixture passes.
+5. Rebuild WASM and run CI parity: `bun run check`, `bun run check:rust`,
+   `bun run test:rust`, `bun run build`, and `bun run test:visual:only`.
+6. Commit the completed depth-5 phase with a Conventional Commit, then rewrite
+   this file toward depth 15 (`CavesBossLevel`) and stop.
 
-Quest-branch levels such as MiningLevel remain a later phase unless required
-to prove a deterministic reward spawn.
-
-## Phase completion checklist
-
-- Add or extend `spd-core` tests and pinned Java-oracle evidence.
-- Rebuild WASM after Rust changes.
-- Run CI parity: `bun run check`, `bun run check:rust`, `bun run test:rust`,
-  `bun run build`, and `bun run test:visual:only`.
-- Verify public maps contain no mob, item, heap, grass, trap, plant, blob, or
-  decorative tile claims.
-- Keep `specs/accuracy.json` aligned with the proven boundary.
-- Rewrite this file to the next concise handoff and use a Conventional Commit
-  message.
+Depth 25 (`HallsBossLevel`) follows depth 15. Quest-branch levels such as
+`MiningLevel` remain later work unless needed to prove a deterministic reward.

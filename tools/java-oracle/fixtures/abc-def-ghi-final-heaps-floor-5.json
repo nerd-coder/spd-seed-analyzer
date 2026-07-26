@@ -1,0 +1,141 @@
+{
+  "schema_version": 3,
+  "contract": "final_placed_heaps",
+  "spd": {
+    "version": "v3.3.8",
+    "commit": "7b8b845a7"
+  },
+  "input": {
+    "seed": "ABC-DEF-GHI",
+    "numeric": 8687205886,
+    "depths": [5]
+  },
+  "identities": {
+    "potions": [
+      { "item": "PotionOfStrength", "appearance": "silver" },
+      { "item": "PotionOfHealing", "appearance": "charcoal" },
+      { "item": "PotionOfMindVision", "appearance": "azure" },
+      { "item": "PotionOfFrost", "appearance": "crimson" },
+      { "item": "PotionOfLiquidFlame", "appearance": "turquoise" },
+      { "item": "PotionOfToxicGas", "appearance": "ivory" },
+      { "item": "PotionOfHaste", "appearance": "magenta" },
+      { "item": "PotionOfInvisibility", "appearance": "golden" },
+      { "item": "PotionOfLevitation", "appearance": "bistre" },
+      { "item": "PotionOfParalyticGas", "appearance": "jade" },
+      { "item": "PotionOfPurity", "appearance": "indigo" },
+      { "item": "PotionOfExperience", "appearance": "amber" }
+    ],
+    "scrolls": [
+      { "item": "ScrollOfUpgrade", "appearance": "TIWAZ" },
+      { "item": "ScrollOfIdentify", "appearance": "YNGVI" },
+      { "item": "ScrollOfRemoveCurse", "appearance": "MANNAZ" },
+      { "item": "ScrollOfMirrorImage", "appearance": "ODAL" },
+      { "item": "ScrollOfRecharging", "appearance": "BERKANAN" },
+      { "item": "ScrollOfTeleportation", "appearance": "ISAZ" },
+      { "item": "ScrollOfLullaby", "appearance": "RAIDO" },
+      { "item": "ScrollOfMagicMapping", "appearance": "KAUNAN" },
+      { "item": "ScrollOfRage", "appearance": "SOWILO" },
+      { "item": "ScrollOfRetribution", "appearance": "NAUDIZ" },
+      { "item": "ScrollOfTerror", "appearance": "LAGUZ" },
+      { "item": "ScrollOfTransmutation", "appearance": "GYFU" }
+    ],
+    "rings": [
+      { "item": "RingOfAccuracy", "appearance": "sapphire" },
+      { "item": "RingOfArcana", "appearance": "emerald" },
+      { "item": "RingOfElements", "appearance": "quartz" },
+      { "item": "RingOfEnergy", "appearance": "garnet" },
+      { "item": "RingOfEvasion", "appearance": "topaz" },
+      { "item": "RingOfForce", "appearance": "ruby" },
+      { "item": "RingOfFuror", "appearance": "opal" },
+      { "item": "RingOfHaste", "appearance": "onyx" },
+      { "item": "RingOfMight", "appearance": "amethyst" },
+      { "item": "RingOfSharpshooting", "appearance": "diamond" },
+      { "item": "RingOfTenacity", "appearance": "tourmaline" },
+      { "item": "RingOfWealth", "appearance": "agate" }
+    ]
+  },
+  "floors": [
+    {
+      "depth": 5,
+      "width": 31,
+      "height": 42,
+      "rooms": ["RatKingRoom", "RegionDecoPatchRoom", "RingRoom", "SewerBossEntranceRoom", "SewerBossExitRoom", "SewerPipeRoom", "TunnelRoom", "TunnelRoom", "TunnelRoom", "TunnelRoom", "WalledGooRoom"],
+      "room_bounds": [{"class": "RatKingRoom", "left": 21, "top": 23, "right": 25, "bottom": 27}, {"class": "RegionDecoPatchRoom", "left": 3, "top": 17, "right": 9, "bottom": 25}, {"class": "RingRoom", "left": 21, "top": 7, "right": 29, "bottom": 15}, {"class": "SewerBossEntranceRoom", "left": 5, "top": 32, "right": 13, "bottom": 40}, {"class": "SewerBossExitRoom", "left": 12, "top": 7, "right": 20, "bottom": 14}, {"class": "SewerPipeRoom", "left": 1, "top": 8, "right": 9, "bottom": 17}, {"class": "TunnelRoom", "left": 4, "top": 25, "right": 11, "bottom": 32}, {"class": "TunnelRoom", "left": 11, "top": 25, "right": 17, "bottom": 32}, {"class": "TunnelRoom", "left": 17, "top": 1, "right": 23, "bottom": 7}, {"class": "TunnelRoom", "left": 21, "top": 15, "right": 29, "bottom": 20}, {"class": "WalledGooRoom", "left": 9, "top": 14, "right": 21, "bottom": 25}],
+      "pre_paint_rng": [],
+      "pre_doors_rng": [],
+      "post_doors_rng": [],
+      "pre_mobs_rng": [],
+      "pre_items_rng": [-1303649401, 1579500443, 2036965662, 905094958, -2006979470, -724504838, -166506788, -36183002],
+      "terrain": [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 12, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 1, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 12, 12, 4, 12, 12, 5, 4, 4, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 29, 29, 29, 29, 29, 4, 4, 1, 20, 1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 29, 29, 29, 29, 29, 4, 4, 1, 1, 1, 1, 1, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 4, 4, 4, 29, 1, 4, 4, 20, 1, 4, 4, 4, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 29, 4, 21, 4, 1, 1, 4, 4, 1, 1, 4, 4, 4, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 29, 14, 14, 14, 1, 1, 4, 4, 1, 1, 4, 4, 4, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 29, 29, 29, 1, 1, 4, 4, 29, 1, 1, 20, 29, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 20, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 4, 4, 4, 29, 29, 29, 29, 29, 29, 1, 4, 4, 4, 4, 4, 4, 4, 4, 1, 29, 1, 5, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 4, 4, 4, 4, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 20, 4, 14, 4, 4, 4, 1, 1, 1, 4, 4, 4, 14, 4, 4, 29, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 4, 4, 14, 4, 1, 1, 1, 1, 1, 1, 1, 4, 14, 5, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 20, 1, 1, 1, 4, 14, 4, 1, 1, 29, 29, 29, 1, 1, 4, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 33, 4, 14, 1, 1, 29, 29, 29, 29, 29, 1, 1, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 33, 4, 14, 1, 1, 29, 29, 29, 29, 29, 1, 1, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 33, 4, 14, 4, 1, 1, 29, 29, 29, 1, 1, 4, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 29, 1, 1, 5, 14, 4, 1, 1, 1, 1, 1, 1, 20, 4, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 29, 33, 1, 4, 14, 4, 4, 4, 1, 1, 1, 4, 4, 4, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 29, 33, 1, 4, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 16, 14, 14, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 4, 5, 4, 4, 4, 5, 4, 4, 4, 4, 4, 4, 4, 14, 14, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 4, 1, 4, 4, 4, 1, 4, 4, 4, 4, 4, 4, 4, 14, 14, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 1, 1, 4, 4, 4, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 20, 4, 1, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 4, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 4, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 4, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 4, 16, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 12, 12, 12, 12, 29, 12, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 29, 29, 29, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 7, 1, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 29, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 1, 29, 29, 29, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 29, 29, 29, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 29, 29, 29, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+      "discoverable": [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, false, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, true, true, true, true, true, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, false, true, true, true, false, false, false, false, false, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, false, false, false, false, false, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true, true, true, true, true, true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+      "tile_variance": [41, 20, 73, 59, 71, 97, 91, 59, 80, 40, 9, 73, 24, 87, 67, 74, 8, 23, 31, 21, 95, 12, 24, 31, 92, 13, 99, 9, 39, 78, 14, 75, 59, 39, 38, 29, 42, 42, 21, 44, 5, 56, 23, 62, 40, 0, 65, 39, 98, 29, 19, 77, 46, 79, 16, 7, 25, 22, 49, 78, 96, 23, 43, 12, 61, 45, 18, 67, 98, 91, 34, 47, 11, 43, 82, 92, 46, 63, 84, 19, 6, 83, 28, 42, 24, 24, 61, 15, 9, 40, 90, 26, 44, 48, 98, 40, 32, 56, 78, 17, 27, 69, 52, 4, 95, 41, 61, 67, 34, 51, 97, 6, 77, 53, 87, 30, 57, 44, 1, 79, 69, 7, 73, 85, 56, 73, 37, 64, 16, 57, 1, 47, 49, 83, 47, 77, 88, 26, 61, 15, 48, 52, 43, 21, 98, 94, 68, 28, 9, 22, 47, 12, 28, 35, 79, 68, 85, 36, 0, 19, 8, 4, 61, 22, 49, 54, 45, 80, 47, 81, 42, 13, 20, 83, 51, 40, 90, 72, 59, 84, 72, 66, 75, 94, 3, 23, 60, 85, 21, 24, 73, 23, 28, 73, 56, 60, 33, 93, 12, 6, 75, 88, 56, 48, 10, 88, 67, 43, 32, 97, 0, 14, 34, 1, 30, 49, 86, 41, 83, 42, 98, 66, 50, 77, 85, 80, 95, 51, 30, 25, 88, 18, 97, 25, 15, 20, 66, 65, 77, 57, 89, 79, 6, 82, 23, 74, 75, 84, 72, 87, 26, 74, 98, 40, 50, 97, 3, 45, 65, 62, 60, 73, 51, 17, 48, 78, 18, 89, 48, 45, 20, 59, 20, 12, 2, 49, 60, 66, 46, 68, 62, 27, 79, 89, 7, 53, 57, 6, 85, 31, 48, 69, 47, 21, 31, 79, 13, 29, 54, 47, 68, 1, 65, 84, 2, 73, 52, 45, 91, 68, 19, 24, 19, 59, 15, 4, 31, 30, 60, 1, 68, 24, 54, 96, 59, 42, 63, 27, 51, 87, 19, 58, 78, 39, 11, 85, 10, 30, 84, 12, 81, 13, 19, 82, 71, 0, 6, 1, 48, 34, 6, 33, 35, 22, 60, 3, 41, 55, 79, 62, 51, 96, 48, 51, 62, 34, 6, 10, 25, 39, 25, 21, 42, 31, 33, 60, 28, 2, 91, 22, 85, 34, 7, 11, 34, 39, 34, 43, 11, 8, 92, 48, 73, 8, 27, 40, 84, 59, 50, 63, 15, 92, 32, 56, 23, 89, 33, 22, 11, 37, 20, 13, 69, 97, 71, 7, 95, 21, 88, 23, 62, 74, 21, 16, 80, 7, 70, 7, 61, 85, 55, 47, 7, 5, 21, 65, 10, 20, 48, 49, 30, 73, 23, 92, 10, 55, 75, 12, 11, 89, 81, 78, 31, 33, 50, 67, 12, 61, 54, 91, 47, 25, 38, 99, 65, 53, 44, 5, 72, 46, 44, 9, 61, 62, 25, 94, 51, 81, 6, 76, 21, 35, 43, 90, 64, 52, 99, 81, 74, 78, 39, 8, 27, 30, 23, 22, 98, 90, 77, 18, 58, 63, 99, 5, 16, 55, 81, 32, 56, 26, 12, 32, 91, 83, 8, 94, 42, 27, 53, 41, 90, 25, 52, 11, 41, 56, 88, 93, 66, 90, 47, 26, 14, 34, 89, 79, 69, 54, 93, 60, 69, 35, 18, 91, 9, 37, 64, 59, 74, 62, 11, 68, 11, 72, 31, 2, 94, 60, 59, 56, 24, 95, 63, 4, 82, 55, 69, 64, 71, 29, 11, 87, 97, 15, 83, 3, 84, 65, 9, 99, 82, 38, 65, 38, 46, 33, 98, 67, 4, 65, 91, 42, 17, 43, 1, 52, 16, 19, 22, 83, 28, 10, 24, 94, 34, 42, 87, 77, 91, 59, 77, 40, 64, 55, 64, 2, 38, 86, 46, 64, 60, 32, 12, 24, 4, 15, 81, 82, 10, 45, 91, 58, 8, 19, 60, 0, 83, 57, 18, 28, 31, 35, 65, 44, 90, 83, 23, 13, 63, 37, 55, 47, 87, 32, 11, 42, 42, 47, 7, 18, 2, 9, 85, 90, 24, 61, 90, 85, 44, 99, 73, 97, 44, 56, 97, 89, 86, 9, 30, 47, 91, 27, 56, 71, 79, 61, 6, 23, 46, 63, 34, 29, 10, 8, 22, 98, 32, 5, 60, 13, 37, 97, 3, 24, 69, 92, 61, 58, 95, 38, 89, 27, 47, 20, 34, 9, 2, 80, 31, 72, 97, 39, 71, 69, 13, 1, 85, 55, 55, 21, 32, 64, 90, 78, 44, 52, 70, 17, 56, 92, 24, 20, 45, 38, 94, 28, 93, 31, 98, 41, 10, 97, 98, 11, 94, 60, 30, 45, 26, 25, 93, 77, 91, 7, 23, 42, 93, 46, 60, 28, 60, 1, 79, 63, 61, 47, 22, 91, 85, 2, 65, 82, 78, 61, 14, 83, 42, 69, 51, 15, 34, 3, 39, 75, 5, 32, 80, 62, 29, 74, 31, 5, 87, 23, 63, 46, 85, 79, 99, 61, 22, 43, 50, 9, 43, 81, 12, 79, 93, 32, 87, 96, 28, 78, 29, 86, 37, 37, 77, 30, 76, 19, 38, 1, 45, 12, 39, 73, 54, 86, 86, 73, 79, 53, 48, 2, 69, 17, 85, 86, 53, 81, 65, 35, 96, 62, 14, 2, 68, 13, 30, 96, 50, 94, 46, 6, 68, 62, 49, 96, 35, 4, 6, 9, 57, 56, 77, 52, 72, 4, 24, 98, 83, 1, 59, 0, 3, 10, 51, 70, 22, 36, 56, 54, 24, 35, 14, 56, 38, 8, 28, 12, 68, 84, 84, 24, 76, 52, 55, 79, 93, 47, 34, 49, 35, 6, 72, 56, 63, 83, 75, 92, 7, 2, 9, 0, 9, 61, 7, 21, 44, 74, 92, 73, 41, 47, 88, 9, 8, 42, 52, 80, 39, 58, 39, 92, 36, 38, 16, 90, 66, 33, 43, 18, 95, 80, 78, 9, 73, 5, 88, 16, 94, 37, 33, 78, 11, 16, 37, 89, 24, 64, 3, 94, 63, 68, 26, 71, 76, 84, 23, 7, 16, 95, 42, 89, 81, 4, 91, 29, 57, 94, 94, 53, 88, 99, 6, 83, 57, 64, 23, 9, 66, 40, 76, 21, 87, 26, 39, 50, 33, 16, 33, 30, 47, 6, 37, 90, 82, 72, 5, 37, 99, 34, 84, 27, 2, 10, 97, 1, 87, 99, 87, 7, 20, 96, 18, 86, 25, 16, 64, 13, 64, 54, 33, 67, 77, 98, 75, 87, 90, 51, 2, 20, 81, 71, 75, 80, 91, 12, 77, 91, 74, 9, 57, 80, 82, 46, 63, 68, 56, 21, 94, 88, 88, 3, 93, 79, 85, 58, 81, 41, 5, 77, 7, 6, 71, 53, 98, 86, 56, 83, 82, 49, 93, 89, 4, 88, 22, 81, 42, 80, 41, 10, 63, 31, 75, 93, 40, 65, 8, 95, 62, 43, 38, 66, 29, 36, 71, 93, 94, 50, 13, 38, 88, 64, 36, 52, 5, 43, 79, 38, 23, 45, 91, 94, 91, 98, 19, 22, 86, 58, 89, 13, 95, 23, 7, 23, 70, 78, 7, 59, 91, 52, 81, 54, 99, 43, 31, 93, 59, 88, 76, 19, 54, 88, 18, 47, 93, 64, 37, 41, 4, 77, 72, 7, 76, 4, 66, 2, 35, 26, 23, 71, 92, 48, 90, 29, 99, 55, 95, 93, 83, 13, 46, 42, 27, 72, 58, 3, 74, 31, 93, 26, 24, 90, 57, 14, 64, 42, 44, 25, 41, 54, 49, 28, 21, 94, 82, 81, 1, 15, 79, 48, 0, 68, 24, 85, 2, 5, 16, 94, 13, 93, 90, 65, 27, 42, 12, 33, 19, 92, 56, 42, 18, 94, 71, 99, 23, 54, 54, 64, 59, 20, 3, 9, 47, 99, 80, 22, 47, 20, 79, 77, 43, 76, 10, 18, 17, 40, 66, 38, 3, 60, 40, 7, 44, 77, 52, 31, 14, 40, 34, 96, 42, 21, 83, 13, 99, 88, 92, 48, 98, 44, 3, 56, 31, 2, 35, 10, 50, 41],
+      "transitions": [
+        { "cell": 357, "type": "REGULAR_EXIT", "left": 15, "top": 10, "right": 17, "bottom": 11, "dest_depth": 6, "dest_branch": 0, "dest_type": "REGULAR_ENTRANCE" },
+        { "cell": 1094, "type": "REGULAR_ENTRANCE", "left": 9, "top": 35, "right": 9, "bottom": 35, "dest_depth": 4, "dest_branch": 0, "dest_type": "REGULAR_EXIT" }
+      ],
+      "traps": [
+      ],
+      "plants": [
+      ],
+      "blobs": [
+      ],
+      "final_heaps": [
+        {
+          "cell": 767,
+          "heap_type": "chest",
+          "items": [
+            { "class": "Gold", "quantity": 16, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 768,
+          "heap_type": "chest",
+          "items": [
+            { "class": "Gold", "quantity": 22, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 797,
+          "heap_type": "chest",
+          "items": [
+            { "class": "Gold", "quantity": 17, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 799,
+          "heap_type": "chest",
+          "items": [
+            { "class": "Gold", "quantity": 18, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 828,
+          "heap_type": "chest",
+          "items": [
+            { "class": "Gold", "quantity": 20, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 829,
+          "heap_type": "chest",
+          "items": [
+            { "class": "Gold", "quantity": 14, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 830,
+          "heap_type": "chest",
+          "items": [
+            { "class": "Gold", "quantity": 24, "level": 0, "cursed": false }
+          ]
+        }
+      ],
+      "final_mobs": [
+        { "cell": 604, "class": "Goo" },
+        { "cell": 798, "class": "RatKing" }
+      ],
+      "quest_rewards": [
+      ]
+    }
+  ]
+}

@@ -24,8 +24,8 @@ use crate::dungeon::DungeonState;
 use crate::items::model::{GeneratedItem, ItemProvenance, RoomLootRole};
 use crate::level::create_items::PlacedLoot;
 use crate::level::painter::{
-    apply_room_door_types, paint_connection_room, paint_standard_room, place_doors_for_room,
-    DoorMap,
+    apply_room_door_types, paint_connection_room, paint_sewer_boss_room, paint_standard_room,
+    place_doors_for_room, DoorMap,
 };
 use crate::level::terrain::TerrainMap;
 use crate::level::Feeling;
@@ -95,15 +95,19 @@ pub fn special_room_loot(
         if room.kind == RoomKind::Connection {
             paint_connection_room(map, rooms, ri, &doors, feeling == Feeling::Chasm);
         }
-        let standard_paint = paint_standard_room(
-            map,
-            rooms,
-            room,
-            ri,
-            &doors,
-            &mut dungeon.generator,
-            dungeon.depth,
-        );
+        let standard_paint = if paint_sewer_boss_room(map, room, ri, &doors) {
+            Default::default()
+        } else {
+            paint_standard_room(
+                map,
+                rooms,
+                room,
+                ri,
+                &doors,
+                &mut dungeon.generator,
+                dungeon.depth,
+            )
+        };
         let mut standard_loot = standard_rooms::paint_center_loot(
             dungeon,
             room,

@@ -12,6 +12,7 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.CityLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.HallsLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.PrisonLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.SewerBossLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter;
 import com.shatteredpixel.shatteredpixeldungeon.levels.painters.CavesPainter;
 import com.shatteredpixel.shatteredpixeldungeon.levels.painters.SewerPainter;
@@ -52,24 +53,40 @@ final class FloorProbeLevels {
 	}
 
 	static Probe preDoors(int depth) {
+		if (depth == 5) return new DoorBoundarySewerBossLevel(false);
 		if (depth >= 1 && depth <= 4) return new DoorBoundarySewerLevel(false);
 		if (depth >= 11 && depth <= 14) return new DoorBoundaryCavesLevel(false);
 		throw unsupported(depth);
 	}
 
 	static Probe postDoors(int depth) {
+		if (depth == 5) return new DoorBoundarySewerBossLevel(true);
 		if (depth >= 1 && depth <= 4) return new DoorBoundarySewerLevel(true);
 		if (depth >= 11 && depth <= 14) return new DoorBoundaryCavesLevel(true);
 		throw unsupported(depth);
 	}
 
 	static Probe preItems(int depth) {
+		if (depth == 5) return new PreItemsSewerBossLevel();
 		if (depth >= 1 && depth <= 4) return new PreItemsSewerLevel();
 		if (depth >= 6 && depth <= 9) return new PreItemsPrisonLevel();
 		if (depth >= 11 && depth <= 14) return new PreItemsCavesLevel();
 		if (depth >= 16 && depth <= 19) return new PreItemsCityLevel();
 		if (depth >= 21 && depth <= 24) return new PreItemsHallsLevel();
 		throw unsupported(depth);
+	}
+
+	private static final class PreItemsSewerBossLevel extends SewerBossLevel implements Probe {
+		private List<Integer> rngProbe;
+
+		@Override
+		protected void createItems() {
+			rngProbe = captureRng();
+			throw new FloorOracle.SnapshotComplete();
+		}
+
+		@Override public Level level() { return this; }
+		@Override public List<Integer> rngProbe() { return rngProbe; }
 	}
 
 	private static IllegalArgumentException unsupported(int depth) {
@@ -204,6 +221,29 @@ final class FloorProbeLevels {
 				}
 			}.setWater(feeling == Feeling.WATER ? 0.85f : 0.30f, 5)
 					.setGrass(feeling == Feeling.GRASS ? 0.80f : 0.20f, 4)
+					.setTraps(nTraps(), trapClasses(), trapChances());
+		}
+
+		@Override public Level level() { return this; }
+		@Override public List<Integer> rngProbe() { return rngProbe; }
+	}
+
+	private static final class DoorBoundarySewerBossLevel extends SewerBossLevel implements Probe {
+		private final boolean after;
+		private List<Integer> rngProbe;
+
+		private DoorBoundarySewerBossLevel(boolean after) { this.after = after; }
+
+		@Override
+		protected Painter painter() {
+			return new SewerPainter() {
+				@Override
+				protected void paintDoors(Level level, ArrayList<Room> rooms) {
+					if (after) super.paintDoors(level, rooms);
+					rngProbe = captureRng();
+					throw new FloorOracle.SnapshotComplete();
+				}
+			}.setWater(0.50f, 5).setGrass(0.20f, 4)
 					.setTraps(nTraps(), trapClasses(), trapChances());
 		}
 

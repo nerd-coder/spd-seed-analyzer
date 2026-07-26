@@ -101,6 +101,43 @@ pub fn build_rooms(
     false
 }
 
+/// Pinned `SewerBossLevel.builder()` retry loop.
+pub(crate) fn build_sewer_boss_rooms(
+    rooms: &mut Vec<Room>,
+    intensity: f32,
+    max_tries: u32,
+) -> bool {
+    let params = BuilderParams {
+        path_length: 1.0,
+        path_len_jitter: [1.0, 0.0, 0.0, 0.0],
+        path_tunnel_chances: [1.0, 2.0, 0.0],
+        branch_tunnel_chances: [1.0, 0.0, 0.0],
+        extra_connection_chance: 0.0,
+        curve_exponent: 2,
+        curve_intensity: intensity,
+        curve_offset: 0.0,
+    };
+    let landmark = rooms
+        .iter()
+        .position(|room| room.name.ends_with("GooRoom"))
+        .expect("SewerBossLevel has a Goo landmark room");
+    let mut state = figure_eight::FigureEightState::with_landmark(landmark);
+    for _ in 0..max_tries {
+        clear_all_connections(rooms);
+        for room in rooms.iter_mut() {
+            room.set_empty();
+        }
+        rooms.retain(|room| room.kind != crate::rooms::types::RoomKind::Connection);
+        for (id, room) in rooms.iter_mut().enumerate() {
+            room.id = id;
+        }
+        if figure_eight::build(rooms, &params, 5, &mut state, &mut |_| {}).is_ok() {
+            return true;
+        }
+    }
+    false
+}
+
 #[cfg(test)]
 fn build_figure_eight_traced(
     rooms: &mut Vec<Room>,
