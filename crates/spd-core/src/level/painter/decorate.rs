@@ -23,7 +23,7 @@ pub fn decorate(
         6..=10 => decorate_prison(map, rooms, paint_order),
         11..=15 => caves::decorate(map, rooms, paint_order, doors),
         16..=20 => decorate_city(map, depth),
-        _ => decorate_halls(map),
+        _ => decorate_halls(map, rooms, paint_order, depth),
     }
 }
 
@@ -173,7 +173,7 @@ fn decorate_city(map: &mut TerrainMap, depth: i32) {
 }
 
 /// `HallsPainter.decorate` visual-variance pass.
-fn decorate_halls(map: &mut TerrainMap) {
+fn decorate_halls(map: &mut TerrainMap, rooms: &[Room], paint_order: &[usize], depth: i32) {
     let w = map.width;
     let l = map.map.len() as i32;
     let neigh8: [i32; 8] = [-w - 1, -w, -w + 1, -1, 1, w - 1, w, w + 1];
@@ -199,5 +199,61 @@ fn decorate_halls(map: &mut TerrainMap) {
         } else if map.map[i] == crate::level::terrain::REGION_DECO && Random::int_max(2) == 0 {
             map.map[i] = REGION_DECO_ALT;
         }
+    }
+
+    // `HallsPainter.decorate` opens every unconnected neighbouring pair after
+    // the visual-variance scan. This is deliberately inside the painter's
+    // pushed generator, so its random terrain choice cannot affect mobs/items.
+    for &room_index in paint_order {
+        let Some(room) = rooms.get(room_index).filter(|room| !room.is_empty()) else {
+            continue;
+        };
+        for &neighbour_index in &room.neighbours {
+            let Some(neighbour) = rooms.get(neighbour_index).filter(|room| !room.is_empty()) else {
+                continue;
+            };
+            if room.connected.contains(&neighbour_index) {
+                continue;
+            }
+            let terrain = if Random::int_max(3) == 0 {
+                crate::level::terrain::REGION_DECO
+            } else {
+                CHASM
+            };
+            let _ =
+                super::doors::merge_rooms_with_terrain(map, room, neighbour, None, terrain, depth);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn halls_merges_unconnected_neighbours_after_decorating() {
+        let mut left = Room::new(0, "RuinsRoom", RoomKind::Standard, 1, 16, 7, 10, 7, 10);
+        left.left = 1;
+        left.top = 1;
+        left.right = 10;
+        left.bottom = 10;
+        left.neighbours.push(1);
+        let mut right = left.clone();
+        right.id = 1;
+        right.left = 10;
+        right.right = 19;
+        right.neighbours = vec![0];
+        let rooms = vec![left, right];
+        let mut map = crate::level::terrain::paint_minimal(&rooms).expect("map");
+
+        Random::push_generator_seeded(0xA11A);
+        decorate_halls(&mut map, &rooms, &[1, 0], 22);
+        Random::pop_generator();
+
+        assert!((2..10).any(|y| {
+            map.point_to_cell(10, y).is_some_and(|cell| {
+                matches!(map.map[cell], CHASM | crate::level::terrain::REGION_DECO)
+            })
+        }));
     }
 }
