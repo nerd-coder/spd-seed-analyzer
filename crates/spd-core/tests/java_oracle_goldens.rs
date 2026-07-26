@@ -9,6 +9,7 @@ use spd_core::{analyze_seed, dungeon_from_run, init_run, parse_seed, SPD_COMMIT,
 const IDENTITY_SCHEMA_VERSION: u32 = 1;
 const FLOOR_SCHEMA_VERSION: u32 = 2;
 const FINAL_HEAPS_SCHEMA_VERSION: u32 = 3;
+const EXTENDED_FINAL_HEAPS_SCHEMA_VERSION: u32 = 4;
 
 #[path = "java_oracle_goldens/crystal_path.rs"]
 mod crystal_path;
@@ -265,7 +266,10 @@ fn run_identities_match_pinned_java_oracle() {
         assert!(
             matches!(
                 fixture.schema_version,
-                IDENTITY_SCHEMA_VERSION | FLOOR_SCHEMA_VERSION | FINAL_HEAPS_SCHEMA_VERSION
+                IDENTITY_SCHEMA_VERSION
+                    | FLOOR_SCHEMA_VERSION
+                    | FINAL_HEAPS_SCHEMA_VERSION
+                    | EXTENDED_FINAL_HEAPS_SCHEMA_VERSION
             ),
             "supported schema version in {context}"
         );

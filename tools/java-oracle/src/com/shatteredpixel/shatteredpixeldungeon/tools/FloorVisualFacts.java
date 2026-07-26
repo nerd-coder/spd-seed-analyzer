@@ -13,7 +13,10 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
 import com.shatteredpixel.shatteredpixeldungeon.levels.traps.Trap;
 import com.shatteredpixel.shatteredpixeldungeon.plants.Plant;
 import com.shatteredpixel.shatteredpixeldungeon.tiles.DungeonTileSheet;
+import com.shatteredpixel.shatteredpixeldungeon.tiles.CustomTilemap;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -28,6 +31,8 @@ final class FloorVisualFacts {
 	final List<TrapFact> traps;
 	final List<PlantFact> plants;
 	final List<BlobFact> blobs;
+	final List<CustomTileFact> customTiles;
+	final List<CustomTileFact> customWalls;
 
 	private FloorVisualFacts(
 			List<Integer> terrain,
@@ -36,7 +41,9 @@ final class FloorVisualFacts {
 			List<TransitionFact> transitions,
 			List<TrapFact> traps,
 			List<PlantFact> plants,
-			List<BlobFact> blobs) {
+			List<BlobFact> blobs,
+			List<CustomTileFact> customTiles,
+			List<CustomTileFact> customWalls) {
 		this.terrain = terrain;
 		this.discoverable = discoverable;
 		this.tileVariance = tileVariance;
@@ -44,6 +51,8 @@ final class FloorVisualFacts {
 		this.traps = traps;
 		this.plants = plants;
 		this.blobs = blobs;
+		this.customTiles = customTiles;
+		this.customWalls = customWalls;
 	}
 
 	static FloorVisualFacts capture(Level level) {
@@ -115,8 +124,48 @@ final class FloorVisualFacts {
 		}
 		blobs.sort(Comparator.comparing(blob -> blob.blobClass));
 
+		List<CustomTileFact> customTiles = customTiles(level.customTiles);
+		List<CustomTileFact> customWalls = customTiles(level.customWalls);
+
 		return new FloorVisualFacts(
-				terrain, discoverable, tileVariance, transitions, traps, plants, blobs);
+				terrain, discoverable, tileVariance, transitions, traps, plants, blobs,
+				customTiles, customWalls);
+	}
+
+	private static List<CustomTileFact> customTiles(List<CustomTilemap> tiles) {
+		List<CustomTileFact> facts = new ArrayList<>();
+		for (CustomTilemap tile : tiles) {
+			facts.add(new CustomTileFact(
+					tile.getClass().getSimpleName(), tile.tileX, tile.tileY, tile.tileW, tile.tileH,
+					textureName(tile), staticMap(tile)));
+		}
+		facts.sort(Comparator.comparing((CustomTileFact tile) -> tile.tileClass)
+				.thenComparingInt(tile -> tile.x).thenComparingInt(tile -> tile.y));
+		return facts;
+	}
+
+	private static String textureName(CustomTilemap tile) {
+		String className = tile.getClass().getName();
+		if (className.startsWith("com.shatteredpixel.shatteredpixeldungeon.levels.HallsBossLevel$")) {
+			return "halls_special";
+		}
+		return null;
+	}
+
+	private static List<Integer> staticMap(CustomTilemap tile) {
+		for (Field field : tile.getClass().getDeclaredFields()) {
+			if (!Modifier.isStatic(field.getModifiers()) || field.getType() != int[].class) continue;
+			try {
+				field.setAccessible(true);
+				int[] values = (int[]) field.get(null);
+				List<Integer> result = new ArrayList<>();
+				for (int value : values) result.add(value);
+				return result;
+			} catch (IllegalAccessException ignored) {
+				// Some visual implementations do not expose static render data.
+			}
+		}
+		return null;
 	}
 
 	static final class TransitionFact {
@@ -210,6 +259,27 @@ final class FloorVisualFacts {
 		BlobCellFact(int cell, int value) {
 			this.cell = cell;
 			this.value = value;
+		}
+	}
+
+	static final class CustomTileFact {
+		final String tileClass;
+		final int x;
+		final int y;
+		final int width;
+		final int height;
+		final String texture;
+		final List<Integer> staticData;
+
+		CustomTileFact(
+				String tileClass, int x, int y, int width, int height, String texture, List<Integer> staticData) {
+			this.tileClass = tileClass;
+			this.x = x;
+			this.y = y;
+			this.width = width;
+			this.height = height;
+			this.texture = texture;
+			this.staticData = staticData;
 		}
 	}
 }

@@ -49,6 +49,12 @@ pub struct FloorMap {
     /// Active pinned Java blob concentrations, sorted by class then cell.
     #[serde(default)]
     pub blobs: Vec<MapBlob>,
+    /// Pinned custom terrain overlays, ordered by their visual layer.
+    #[serde(default)]
+    pub custom_tiles: Vec<MapCustomTile>,
+    /// Pinned custom wall overlays, ordered by their visual layer.
+    #[serde(default)]
+    pub custom_walls: Vec<MapCustomTile>,
     /// Internal provenance for cells whose main-loop loot facts depend on
     /// runtime-sensitive persistent Generator history. Never serialized.
     #[serde(skip)]
@@ -59,6 +65,19 @@ pub struct FloorMap {
     #[serde(skip)]
     #[doc(hidden)]
     pub constrained_equipment_cells: Vec<u32>,
+}
+
+/// A pinned Java `CustomTilemap` layer, including its resolved source tiles.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct MapCustomTile {
+    #[serde(rename = "class")]
+    pub class_name: String,
+    pub texture: String,
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
+    pub static_data: Vec<i16>,
 }
 
 impl FloorMap {

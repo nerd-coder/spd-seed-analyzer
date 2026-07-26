@@ -234,7 +234,7 @@ public final class JavaOracle {
 			FloorOracle.FinalFloorFacts floor) {
 		StringBuilder json = new StringBuilder();
 		json.append("{\n");
-		json.append("  \"schema_version\": 3,\n");
+		json.append("  \"schema_version\": 4,\n");
 		json.append("  \"contract\": \"final_placed_heaps\",\n");
 		json.append("  \"spd\": {\n");
 		json.append("    \"version\": \"").append(SPD_VERSION).append("\",\n");
@@ -330,6 +330,12 @@ public final class JavaOracle {
 		json.append("      \"blobs\": [\n");
 		appendBlobs(json, floor.blobs);
 		json.append("      ],\n");
+		json.append("      \"custom_tiles\": [\n");
+		appendCustomTiles(json, floor.customTiles);
+		json.append("      ],\n");
+		json.append("      \"custom_walls\": [\n");
+		appendCustomTiles(json, floor.customWalls);
+		json.append("      ],\n");
 		json.append("      \"final_heaps\": [\n");
 		appendHeaps(json, floor.heaps);
 		json.append("      ],\n");
@@ -411,6 +417,38 @@ public final class JavaOracle {
 			json.append("]\n");
 			json.append("        }");
 			if (blobIndex + 1 < blobs.size()) json.append(',');
+			json.append('\n');
+		}
+	}
+
+	private static void appendCustomTiles(
+			StringBuilder json, List<FloorVisualFacts.CustomTileFact> tiles) {
+		for (int index = 0; index < tiles.size(); index++) {
+			FloorVisualFacts.CustomTileFact tile = tiles.get(index);
+			json.append("        { \"class\": \"").append(escape(tile.tileClass))
+					.append("\", \"x\": ").append(tile.x)
+					.append(", \"y\": ").append(tile.y)
+					.append(", \"width\": ").append(tile.width)
+					.append(", \"height\": ").append(tile.height)
+					.append(", \"texture\": ");
+			if (tile.texture == null) {
+				json.append("null");
+			} else {
+				json.append('"').append(escape(tile.texture)).append('"');
+			}
+			json.append(", \"static_data\": ");
+			if (tile.staticData == null) {
+				json.append("null");
+			} else {
+				json.append('[');
+				for (int dataIndex = 0; dataIndex < tile.staticData.size(); dataIndex++) {
+					if (dataIndex > 0) json.append(", ");
+					json.append(tile.staticData.get(dataIndex));
+				}
+				json.append(']');
+			}
+			json.append(" }");
+			if (index + 1 < tiles.size()) json.append(',');
 			json.append('\n');
 		}
 	}

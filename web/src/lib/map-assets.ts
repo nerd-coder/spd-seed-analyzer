@@ -22,6 +22,9 @@ export type MapEntityAssets = MobAssets & {
 export type MapAssets = MapEntityAssets & {
   tiles: HTMLImageElement
   water: HTMLImageElement
+  customTiles: {
+    hallsSpecial: HTMLImageElement
+  }
 }
 
 const imageCache = new Map<string, Promise<HTMLImageElement>>()
@@ -58,12 +61,21 @@ async function loadMobAssets(): Promise<MobAssets> {
 export async function loadMapAssets(tileset: string): Promise<MapAssets> {
   const region = regionIndex(tileset)
   const key = ['sewers', 'prison', 'caves', 'city', 'halls'][region]
-  const [tiles, terrainFeatures, water, items, mobs] = await Promise.all([
-    loadImage(`/assets/environment/tiles_${key}.png`),
-    loadImage('/assets/environment/terrain_features.png'),
-    loadImage(`/assets/environment/water${region}.png`),
-    loadImage('/assets/sprites/items.png'),
-    loadMobAssets(),
-  ])
-  return { tiles, terrainFeatures, water, items, ...mobs }
+  const [tiles, terrainFeatures, water, items, mobs, hallsSpecial] =
+    await Promise.all([
+      loadImage(`/assets/environment/tiles_${key}.png`),
+      loadImage('/assets/environment/terrain_features.png'),
+      loadImage(`/assets/environment/water${region}.png`),
+      loadImage('/assets/sprites/items.png'),
+      loadMobAssets(),
+      loadImage('/assets/environment/custom_tiles/halls_special.png'),
+    ])
+  return {
+    tiles,
+    terrainFeatures,
+    water,
+    items,
+    ...mobs,
+    customTiles: { hallsSpecial },
+  }
 }

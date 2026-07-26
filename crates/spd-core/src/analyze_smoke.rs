@@ -531,11 +531,16 @@ fn analyze_full_run_no_panic() {
         assert!(map.traps.is_empty());
         assert!(map.plants.is_empty());
         assert!(map.blobs.is_empty());
-        // Pinned Terrain IDs: WALL_DECO, EMPTY_DECO, REGION_DECO, REGION_DECO_ALT.
-        assert!(map
-            .tiles
-            .iter()
-            .all(|tile| !matches!(tile, 12 | 20 | 33 | 34)));
+        if depth == 25 {
+            assert!(!map.custom_tiles.is_empty());
+            assert!(!map.custom_walls.is_empty());
+        } else {
+            // Pinned Terrain IDs: WALL_DECO, EMPTY_DECO, REGION_DECO, REGION_DECO_ALT.
+            assert!(map
+                .tiles
+                .iter()
+                .all(|tile| !matches!(tile, 12 | 20 | 33 | 34)));
+        }
     }
     let sewer_boss = report.floors[4]
         .map

@@ -112,6 +112,8 @@ final class FloorOracle {
 		int width = level.width();
 		int height = level.height();
 		FloorVisualFacts visualFacts = FloorVisualFacts.capture(level);
+		FloorVisualFacts preItemsVisualFacts =
+				depth == 25 ? generatePreItemsVisualFacts(seed, depth) : null;
 		boolean regular = level instanceof RegularLevel && depth != 5;
 		List<Integer> prePaintRng = regular ? generatePrePaintRng(seed, depth) : new ArrayList<>();
 		List<Integer> preDoorsRng = depth <= 5 || (depth >= 11 && depth <= 12)
@@ -135,7 +137,8 @@ final class FloorOracle {
 				postDoorsRng,
 				preMobsRng,
 				preItemsRng,
-				visualFacts);
+				visualFacts,
+				preItemsVisualFacts);
 	}
 
 	private static List<Integer> generateDoorRng(long seed, int depth, boolean after) {
@@ -176,6 +179,19 @@ final class FloorOracle {
 			// The override stops at the createMobs entry boundary.
 		}
 		return level.rngProbe();
+	}
+
+	private static FloorVisualFacts generatePreItemsVisualFacts(long seed, int depth) {
+		initializeFreshRun(seed);
+		generatePriorFloors(depth);
+		markTargetFloorGenerated(depth);
+		FloorProbeLevels.Probe level = FloorProbeLevels.preItems(depth);
+		try {
+			level.level().create();
+		} catch (SnapshotComplete expected) {
+			// Stops at createItems entry, after the deterministic layout is complete.
+		}
+		return FloorVisualFacts.capture(level.level());
 	}
 
 	private static List<Integer> generatePreItemsRng(long seed, int depth) {
@@ -307,6 +323,8 @@ final class FloorOracle {
 		final List<FloorVisualFacts.TrapFact> traps;
 		final List<FloorVisualFacts.PlantFact> plants;
 		final List<FloorVisualFacts.BlobFact> blobs;
+		final List<FloorVisualFacts.CustomTileFact> customTiles;
+		final List<FloorVisualFacts.CustomTileFact> customWalls;
 
 		FinalFloorFacts(
 				int depth,
@@ -322,7 +340,8 @@ final class FloorOracle {
 				List<Integer> postDoorsRng,
 				List<Integer> preMobsRng,
 				List<Integer> preItemsRng,
-				FloorVisualFacts visualFacts) {
+				FloorVisualFacts visualFacts,
+				FloorVisualFacts preItemsVisualFacts) {
 			this.depth = depth;
 			this.width = width;
 			this.height = height;
@@ -336,13 +355,17 @@ final class FloorOracle {
 			this.postDoorsRng = postDoorsRng;
 			this.preMobsRng = preMobsRng;
 			this.preItemsRng = preItemsRng;
-			this.terrain = visualFacts.terrain;
-			this.discoverable = visualFacts.discoverable;
-			this.tileVariance = visualFacts.tileVariance;
-			this.transitions = visualFacts.transitions;
-			this.traps = visualFacts.traps;
-			this.plants = visualFacts.plants;
-			this.blobs = visualFacts.blobs;
+			FloorVisualFacts layoutFacts =
+					preItemsVisualFacts == null ? visualFacts : preItemsVisualFacts;
+			this.terrain = layoutFacts.terrain;
+			this.discoverable = layoutFacts.discoverable;
+			this.tileVariance = layoutFacts.tileVariance;
+			this.transitions = layoutFacts.transitions;
+			this.traps = layoutFacts.traps;
+			this.plants = layoutFacts.plants;
+			this.blobs = layoutFacts.blobs;
+			this.customTiles = layoutFacts.customTiles;
+			this.customWalls = layoutFacts.customWalls;
 		}
 	}
 

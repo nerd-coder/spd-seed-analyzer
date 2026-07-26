@@ -35,6 +35,8 @@ pub(super) fn fixed_layout(depth: i32) -> Option<FloorMap> {
         traps: Vec::new(),
         plants: Vec::new(),
         blobs: Vec::new(),
+        custom_tiles: Vec::new(),
+        custom_walls: Vec::new(),
         runtime_sensitive_loot_cells: Vec::new(),
         constrained_equipment_cells: Vec::new(),
     })
@@ -113,6 +115,11 @@ mod tests {
         height: u32,
         terrain: Vec<u16>,
         discoverable: Vec<bool>,
+        tile_variance: Vec<u8>,
+        #[serde(default)]
+        custom_tiles: Vec<crate::report::MapCustomTile>,
+        #[serde(default)]
+        custom_walls: Vec<crate::report::MapCustomTile>,
         transitions: Vec<MapTransition>,
         #[serde(default)]
         pre_items_rng: Vec<i32>,
@@ -329,7 +336,7 @@ mod tests {
     }
 
     #[test]
-    fn halls_boss_structures_match_normalized_java_oracles() {
+    fn halls_boss_structures_match_exact_java_oracles() {
         let profile = crate::MapProfile {
             trinket: crate::MapTrinketProfile::NoMapAffectingTrinkets,
             meta: crate::MapMetaProfile::Fresh,
@@ -370,18 +377,11 @@ mod tests {
                 (oracle.width, oracle.height),
                 "{seed}"
             );
-            let normalized = oracle
-                .terrain
-                .iter()
-                .map(|&tile| match i32::from(tile) {
-                    terrain::EMPTY_DECO | terrain::REGION_DECO | terrain::REGION_DECO_ALT => {
-                        terrain::EMPTY as u16
-                    }
-                    terrain::WALL_DECO => terrain::WALL as u16,
-                    tile => tile as u16,
-                })
-                .collect::<Vec<_>>();
-            assert_eq!(actual.tiles, normalized, "{seed} terrain");
+            assert_eq!(actual.tiles, oracle.terrain, "{seed} raw terrain");
+            assert_eq!(
+                actual.tile_variance, oracle.tile_variance,
+                "{seed} tile variance"
+            );
             assert_eq!(
                 halls::last_pre_items_rng(),
                 oracle.pre_items_rng,
@@ -393,6 +393,42 @@ mod tests {
             );
             assert_eq!(actual.transitions, oracle.transitions, "{seed} transitions");
             assert!(actual.markers.is_empty() && actual.heaps.is_empty() && actual.mobs.is_empty());
+        }
+    }
+
+    #[test]
+    fn halls_boss_custom_layers_match_java_for_preserved_runs() {
+        let profile = crate::MapProfile {
+            trinket: crate::MapTrinketProfile::NoMapAffectingTrinkets,
+            meta: crate::MapMetaProfile::Fresh,
+            trinket_start_depth: 1,
+        };
+        for (seed, json) in [
+            (
+                "AAA-AAA-AAA",
+                include_str!(
+                    "../../../../tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-25.json"
+                ),
+            ),
+            (
+                "ABC-DEF-GHI",
+                include_str!(
+                    "../../../../tools/java-oracle/fixtures/abc-def-ghi-final-heaps-floor-25.json"
+                ),
+            ),
+        ] {
+            let fixture: Fixture = serde_json::from_str(json).unwrap();
+            let oracle = &fixture.floors[0];
+            let report = crate::analyze_seed_with_profile(seed, 25, Some(profile.clone())).unwrap();
+            let actual = report.floors[24].map.as_ref().expect("depth-25 layout");
+            assert_eq!(
+                actual.custom_tiles, oracle.custom_tiles,
+                "{seed} custom tiles"
+            );
+            assert_eq!(
+                actual.custom_walls, oracle.custom_walls,
+                "{seed} custom walls"
+            );
         }
     }
 }

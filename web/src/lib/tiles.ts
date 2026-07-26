@@ -12,7 +12,12 @@ import {
   drawVisibleTraps,
   exactEntityCells,
 } from '@/lib/map-entities'
-import type { FloorMap, IdentityMaps, MapMarkerKind } from '@/lib/spd-wasm'
+import type {
+  FloorMap,
+  IdentityMaps,
+  MapCustomTile,
+  MapMarkerKind,
+} from '@/lib/spd-wasm'
 
 export { TILE_PX } from '@/lib/dungeon-tile-visuals'
 export type { MapAssets } from '@/lib/map-assets'
@@ -80,6 +85,50 @@ function drawSheetTile(
     size,
     size
   )
+}
+
+const CUSTOM_TILE_SHEET_COLS = 8
+
+function customTileImage(assets: MapAssets, texture: string) {
+  return texture === 'halls_special' ? assets.customTiles.hallsSpecial : null
+}
+
+function drawCustomTiles(
+  ctx: CanvasRenderingContext2D,
+  assets: MapAssets,
+  map: FloorMap,
+  layers: MapCustomTile[] | undefined,
+  scale: number
+) {
+  for (const layer of layers ?? []) {
+    const image = customTileImage(assets, layer.texture)
+    if (!image || layer.width <= 0) continue
+    for (let index = 0; index < layer.static_data.length; index++) {
+      const visual = layer.static_data[index]
+      if (visual == null || visual < 0) continue
+      const x = layer.x + (index % layer.width)
+      const y = layer.y + Math.floor(index / layer.width)
+      if (x < 0 || y < 0 || x >= map.width || y >= map.height) continue
+      const cell = y * map.width + x
+      if (
+        map.discoverable.length === map.tiles.length &&
+        !map.discoverable[cell]
+      )
+        continue
+      const size = TILE_PX * scale
+      ctx.drawImage(
+        image,
+        (visual % CUSTOM_TILE_SHEET_COLS) * TILE_PX,
+        Math.floor(visual / CUSTOM_TILE_SHEET_COLS) * TILE_PX,
+        TILE_PX,
+        TILE_PX,
+        x * size,
+        y * size,
+        size,
+        size
+      )
+    }
+  }
 }
 
 function drawMarkers(
@@ -170,6 +219,7 @@ export function renderStaticMap(
       drawSheetTile(ctx, assets.terrainFeatures, visual, cell, map.width, scale)
     }
   }
+  drawCustomTiles(ctx, assets, map, map.custom_tiles, scale)
   drawVisibleTraps(ctx, assets, map, scale)
   drawKnownEntities(ctx, assets, map, identities, scale, visibility)
   for (let cell = 0; cell < map.tiles.length; cell++) {
@@ -181,6 +231,7 @@ export function renderStaticMap(
     if (wall != null)
       drawSheetTile(ctx, assets.tiles, wall, cell, map.width, scale)
   }
+  drawCustomTiles(ctx, assets, map, map.custom_walls, scale)
   drawMarkers(ctx, map, scale, visibility)
   return canvas
 }

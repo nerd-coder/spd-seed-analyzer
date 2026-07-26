@@ -5,7 +5,7 @@ use std::collections::VecDeque;
 use crate::dungeon::DungeonState;
 use crate::level::{map_facts, patch, terrain};
 use crate::random::Random;
-use crate::report::{FloorMap, MapTransition};
+use crate::report::{FloorMap, MapCustomTile, MapTransition};
 
 const WIDTH: i32 = 32;
 const HEIGHT: i32 = 32;
@@ -134,16 +134,10 @@ pub(super) fn build(dungeon: &mut DungeonState, depth_seed: i64) -> Option<Floor
     #[cfg(test)]
     LAST_PRE_ITEMS_RNG.with(|probe| *probe.borrow_mut() = Random::peek_ints(8));
 
-    for tile in &mut map.map {
-        *tile = match *tile {
-            terrain::EMPTY_DECO | terrain::REGION_DECO | terrain::REGION_DECO_ALT => terrain::EMPTY,
-            terrain::WALL_DECO => terrain::WALL,
-            tile => tile,
-        };
-    }
     let mut floor = map_facts::MapFacts::from_room_paint(&map)
         .into_floor_map(&map, 25, dungeon.branch, depth_seed)
         .into_layout_only();
+    (floor.custom_tiles, floor.custom_walls) = center_piece_layers();
     let entrance_xy = (entrance % WIDTH, entrance / WIDTH);
     let exit_xy = (exit % WIDTH, exit / WIDTH);
     floor.transitions = vec![
@@ -157,6 +151,40 @@ pub(super) fn build(dungeon: &mut DungeonState, depth_seed: i64) -> Option<Floor
     floor.transitions[1].right += 1;
     floor.transitions.sort_by_key(|transition| transition.cell);
     Some(floor)
+}
+
+fn center_piece_layers() -> (Vec<MapCustomTile>, Vec<MapCustomTile>) {
+    let visual = MapCustomTile {
+        class_name: "CenterPieceVisuals".into(),
+        texture: "halls_special".into(),
+        x: ROOM_LEFT as u32,
+        y: (ROOM_TOP + 1) as u32,
+        width: 9,
+        height: 8,
+        static_data: vec![
+            8, 9, 10, 11, 11, 11, 12, 13, 14, 16, 17, 18, 27, 19, 27, 20, 21, 22, 24, 25, 26, 19,
+            19, 19, 28, 29, 30, 24, 25, 26, 19, 19, 19, 28, 29, 30, 24, 25, 26, 19, 19, 19, 28, 29,
+            30, 24, 25, 34, 35, 35, 35, 34, 29, 30, 40, 41, 36, 36, 36, 36, 36, 40, 41, 48, 49, 36,
+            36, 36, 36, 36, 48, 49,
+        ],
+    };
+    // `CenterPieceWalls` deliberately declares a 9×9 rect but its source map
+    // has eight rows, exactly as in pinned Java.
+    let walls = MapCustomTile {
+        class_name: "CenterPieceWalls".into(),
+        texture: "halls_special".into(),
+        x: ROOM_LEFT as u32,
+        y: ROOM_TOP as u32,
+        width: 9,
+        height: 9,
+        static_data: vec![
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 32, 33, -1, -1, -1, -1, -1, 32, 33, 40, 41, -1,
+            -1, -1, -1, -1, 40, 41,
+        ],
+    };
+    (vec![visual], vec![walls])
 }
 
 fn blank_map() -> terrain::TerrainMap {

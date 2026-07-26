@@ -201,6 +201,8 @@ impl MapFacts {
             traps: traps(map),
             plants: plants(map),
             blobs: blobs(map),
+            custom_tiles: Vec::new(),
+            custom_walls: Vec::new(),
             runtime_sensitive_loot_cells: self.runtime_sensitive_loot_cells,
             constrained_equipment_cells: self.constrained_equipment_cells,
         }

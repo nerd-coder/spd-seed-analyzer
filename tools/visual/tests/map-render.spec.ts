@@ -52,6 +52,28 @@ async function installSyntheticMapReport(page: Page) {
               traps: [],
               plants: [],
               blobs: [],
+              custom_tiles: [
+                {
+                  class: 'CenterPieceVisuals',
+                  texture: 'halls_special',
+                  x: 8,
+                  y: 8,
+                  width: 1,
+                  height: 1,
+                  static_data: [8],
+                },
+              ],
+              custom_walls: [
+                {
+                  class: 'CenterPieceWalls',
+                  texture: 'halls_special',
+                  x: 8,
+                  y: 9,
+                  width: 1,
+                  height: 1,
+                  static_data: [-1],
+                },
+              ],
             }
           : null,
     }))
@@ -165,6 +187,44 @@ async function waitForCanvasPaint(canvas: Locator) {
     .toBe(true)
 }
 
+async function expectSyntheticCustomTile(canvas: Locator) {
+  const matchesSource = await canvas.evaluate(async (node) => {
+    const mapCanvas = node as HTMLCanvasElement
+    const source = new Image()
+    source.src = '/assets/environment/custom_tiles/halls_special.png'
+    await source.decode()
+
+    const sourceCanvas = document.createElement('canvas')
+    sourceCanvas.width = 16
+    sourceCanvas.height = 16
+    const sourceContext = sourceCanvas.getContext('2d')
+    const mapContext = mapCanvas.getContext('2d')
+    if (!sourceContext || !mapContext) return false
+    // Synthetic layer starts at atlas visual 8 and map cell (8, 8).
+    sourceContext.drawImage(source, 0, 16, 16, 16, 0, 0, 16, 16)
+    const sourcePixels = sourceContext.getImageData(0, 0, 16, 16).data
+    const sourcePixel = Array.from(
+      { length: 16 * 16 },
+      (_, pixel) => pixel
+    ).find((pixel) => sourcePixels[pixel * 4 + 3] === 255)
+    if (sourcePixel == null) return false
+
+    const scale = mapCanvas.width / (20 * 16)
+    const sourceX = sourcePixel % 16
+    const sourceY = Math.floor(sourcePixel / 16)
+    const mapPixel = mapContext.getImageData(
+      (8 * 16 + sourceX) * scale,
+      (8 * 16 + sourceY) * scale,
+      1,
+      1
+    ).data
+    return [0, 1, 2, 3].every(
+      (channel) => mapPixel[channel] === sourcePixels[sourcePixel * 4 + channel]
+    )
+  })
+  expect(matchesSource).toBe(true)
+}
+
 async function snapshotCanvas(canvas: Locator, snapshot: string) {
   const dataUrl = await canvas.evaluate(async (node) => {
     await new Promise<void>((resolve) => {
@@ -247,6 +307,7 @@ test('mobile map dialog fills the viewport and supports 1x and 2x zoom', async (
     name: /Shattered Pixel Dungeon floor map/,
   })
   await waitForCanvasPaint(canvas)
+  await expectSyntheticCustomTile(canvas)
   const oneXWidth = await canvas.evaluate(
     (node) => (node as HTMLCanvasElement).width
   )

@@ -49,6 +49,19 @@ export type FloorMap = {
   traps: MapTrap[]
   plants: MapPlant[]
   blobs: MapBlob[]
+  custom_tiles: MapCustomTile[]
+  custom_walls: MapCustomTile[]
+}
+
+/** A pinned static `CustomTilemap` layer from the game level. */
+export type MapCustomTile = {
+  class: string
+  texture: string
+  x: number
+  y: number
+  width: number
+  height: number
+  static_data: number[]
 }
 
 export type MapMarkerKind = 'item' | 'mob'
