@@ -64,7 +64,7 @@ pub struct LevelState {
     pub build_ok: bool,
     pub forced_items: Vec<GeneratedItem>,
     /// Exact initial queue snapshot before room callbacks consume/reposition it.
-    /// Internal parity evidence only; public output uses static queue contracts.
+    /// Internal parity evidence only; public output reports guaranteed spawns.
     #[doc(hidden)]
     pub initial_forced_items: Vec<GeneratedItem>,
     pub placed_items: Vec<GeneratedItem>,

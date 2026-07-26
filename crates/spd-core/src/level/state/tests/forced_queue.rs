@@ -31,7 +31,7 @@ fn otherwise_untainted_regular_floor_keeps_constraints_without_a_public_map() {
             let public = state.to_floor_report();
             assert!(public.map.is_none());
             assert!(public.items.iter().any(|item| {
-                item.source.as_deref() == Some("initial forced queue")
+                item.source.as_deref() == Some("guaranteed floor spawn")
                     && item.prediction == ItemPredictionKind::Constrained
             }));
             return;
@@ -87,14 +87,13 @@ fn halls_torches_precede_food_and_survive_public_taint_as_one_constraint() {
         .filter(|item| item.name.contains("Torches"))
         .collect();
     assert_eq!(torch_entries.len(), 1);
-    assert_eq!(torch_entries[0].prediction, ItemPredictionKind::Constrained);
-    assert!(torch_entries[0].class_name.is_none());
-    assert!(torch_entries[0].conditional_notes[0].contains("before the base food"));
-    assert!(torch_entries[0].conditional_notes[0].contains("final cells are not asserted"));
+    assert_eq!(torch_entries[0].prediction, ItemPredictionKind::Exact);
+    assert_eq!(torch_entries[0].class_name.as_deref(), Some("Torch"));
+    assert!(torch_entries[0].conditional_notes.is_empty());
 }
 
 #[test]
-fn upgrade_scroll_contract_distinguishes_odd_and_even_schedules() {
+fn upgrade_scroll_contract_distinguishes_guaranteed_and_conditional_spawns() {
     let mut odd = GeneratedItem::new("ScrollOfUpgrade", ItemCategory::Scroll);
     odd.provenance = ItemProvenance::Forced(ForcedDropRole::UpgradeScroll {
         forbidden_runes_sensitive: false,
@@ -104,8 +103,10 @@ fn upgrade_scroll_contract_distinguishes_odd_and_even_schedules() {
         .iter()
         .find(|entry| entry.name.contains("Scroll of Upgrade"))
         .expect("odd Scroll contract");
-    assert_eq!(odd_entry.name, "initially queued Scroll of Upgrade");
-    assert!(odd_entry.conditional_notes[0].contains("even with Forbidden Runes"));
+    assert_eq!(odd_entry.name, "Scroll of Upgrade");
+    assert_eq!(odd_entry.class_name.as_deref(), Some("ScrollOfUpgrade"));
+    assert_eq!(odd_entry.prediction, ItemPredictionKind::Exact);
+    assert!(odd_entry.conditional_notes.is_empty());
 
     let mut even = GeneratedItem::new("ScrollOfUpgrade", ItemCategory::Scroll);
     even.provenance = ItemProvenance::Forced(ForcedDropRole::UpgradeScroll {
@@ -118,7 +119,7 @@ fn upgrade_scroll_contract_distinguishes_odd_and_even_schedules() {
         .expect("even Scroll contract");
     assert_eq!(even_entry.name, "Scroll of Upgrade");
     assert!(even_entry.conditional_notes[0].contains("Forbidden Runes"));
-    assert!(odd_entry.class_name.is_none() && even_entry.class_name.is_none());
+    assert!(even_entry.class_name.is_none());
 }
 
 #[test]
@@ -170,10 +171,10 @@ fn held_trinket_sensitive_default_feeling_hides_the_prebuild_floor_tail() {
     assert!(public.builder.is_none());
     assert!(public.rooms.is_empty());
     assert!(public.map.is_none());
-    assert!(public.items.iter().all(|item| {
-        item.source.as_deref() == Some("initial forced queue")
-            && item.prediction == ItemPredictionKind::Constrained
-    }));
+    assert!(public
+        .items
+        .iter()
+        .all(|item| item.source.as_deref() == Some("guaranteed floor spawn")));
 }
 
 #[test]
@@ -199,10 +200,10 @@ fn public_generation_taint_suppresses_later_floor_samples() {
     assert!(public.builder.is_none());
     assert!(public.rooms.is_empty());
     assert!(public.map.is_none());
-    assert!(public.items.iter().all(|item| {
-        item.source.as_deref() == Some("initial forced queue")
-            && item.prediction == ItemPredictionKind::Constrained
-    }));
+    assert!(public
+        .items
+        .iter()
+        .all(|item| item.source.as_deref() == Some("guaranteed floor spawn")));
     assert!(
         !clean_floor.to_floor_report().rooms.is_empty(),
         "the control proves suppression comes from inherited taint"
@@ -230,8 +231,8 @@ fn public_generation_taint_survives_a_nonregular_boss_floor() {
     assert!(public.builder.is_none());
     assert!(public.rooms.is_empty());
     assert!(public.map.is_none());
-    assert!(public.items.iter().all(|item| {
-        item.source.as_deref() == Some("initial forced queue")
-            && item.prediction == ItemPredictionKind::Constrained
-    }));
+    assert!(public
+        .items
+        .iter()
+        .all(|item| item.source.as_deref() == Some("guaranteed floor spawn")));
 }

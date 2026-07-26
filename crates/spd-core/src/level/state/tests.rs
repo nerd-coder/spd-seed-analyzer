@@ -220,10 +220,10 @@ fn real_shop_stays_internal_after_inherited_generation_taint() {
     assert!(!internal_shop.is_empty());
 
     let report = state.to_floor_report();
-    assert!(report.items.iter().all(|entry| {
-        entry.source.as_deref() == Some("initial forced queue")
-            && entry.prediction == ItemPredictionKind::Constrained
-    }));
+    assert!(report
+        .items
+        .iter()
+        .all(|entry| entry.source.as_deref() == Some("guaranteed floor spawn")));
     assert!(report.map.is_none());
 
     let search = crate::search_seeds(&crate::SeedSearchRequest {
@@ -342,7 +342,7 @@ fn standard_center_room_sampled_classes_do_not_leak_to_report_or_searchable_entr
         assert!(report
             .items
             .iter()
-            .all(|item| { item.source.as_deref() == Some("initial forced queue") }));
+            .all(|item| { item.source.as_deref() == Some("guaranteed floor spawn") }));
     } else {
         assert!(json.contains("reward"));
     }

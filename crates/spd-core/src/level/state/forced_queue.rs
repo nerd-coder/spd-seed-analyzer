@@ -3,7 +3,7 @@
 use crate::items::model::{ForcedDropRole, GeneratedItem, ItemProvenance};
 use crate::report::{ItemEntry, ItemPredictionKind};
 
-fn constrained_entry(name: &str, category: &str, condition: impl Into<String>) -> ItemEntry {
+fn constrained_spawn_entry(name: &str, category: &str, condition: impl Into<String>) -> ItemEntry {
     ItemEntry {
         name: name.into(),
         class_name: None,
@@ -15,7 +15,23 @@ fn constrained_entry(name: &str, category: &str, condition: impl Into<String>) -
         cursed: None,
         prediction: ItemPredictionKind::Constrained,
         conditional_notes: vec![condition.into()],
-        source: Some("initial forced queue".into()),
+        source: Some("guaranteed floor spawn".into()),
+    }
+}
+
+fn guaranteed_spawn_entry(name: &str, class_name: &str, category: &str) -> ItemEntry {
+    ItemEntry {
+        name: name.into(),
+        class_name: Some(class_name.into()),
+        category: category.into(),
+        tier: None,
+        tier_range: None,
+        level: Some(0),
+        level_range: None,
+        cursed: None,
+        prediction: ItemPredictionKind::Exact,
+        conditional_notes: Vec::new(),
+        source: Some("guaranteed floor spawn".into()),
     }
 }
 
@@ -23,75 +39,62 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
     if !matches!(depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=24) {
         return Vec::new();
     }
-    let mut entries = vec![constrained_entry(
+    let mut entries = vec![constrained_spawn_entry(
         "guaranteed food-category item",
         "food",
-        "One food-category item is generated on every regular floor; persistent Generator history can change its identity, and a room can change how it appears or where it is found.",
+        "Its identity depends on persistent Generator history.",
     )];
     if initial
         .iter()
         .any(|item| item.provenance == ItemProvenance::Forced(ForcedDropRole::HallsTorch))
     {
-        entries.insert(
-            0,
-            constrained_entry(
-                "two initially queued Torches",
-                "other",
-                "HallsLevel queues exactly two Torches before the base food source on regular depths 21–24; room consumption, survival, heap type, and final cells are not asserted.",
-            ),
-        );
+        entries.insert(0, guaranteed_spawn_entry("two Torches", "Torch", "other"));
     }
     if initial
         .iter()
         .any(|item| item.provenance == ItemProvenance::Forced(ForcedDropRole::LargeFeelingFood))
     {
-        entries.push(constrained_entry(
+        entries.push(constrained_spawn_entry(
             "second guaranteed food-category item",
             "food",
-            "The seeded Large feeling generates a second food-category item; Generator history can change identity, appearance, and final placement.",
+            "Its identity depends on persistent Generator history.",
         ));
     }
     for item in initial {
-        let (name, condition) = match item.provenance {
+        let (name, class_name) = match item.provenance {
             ItemProvenance::Forced(ForcedDropRole::HallsTorch) => continue,
-            ItemProvenance::Forced(ForcedDropRole::StrengthPotion) => (
-                "initially queued Potion of Strength",
-                "The seed-stable limited-drop schedule queues this identity; a room may consume it, so final heap and placement are not asserted.",
-            ),
+            ItemProvenance::Forced(ForcedDropRole::StrengthPotion) => {
+                ("Potion of Strength", "PotionOfStrength")
+            }
             ItemProvenance::Forced(ForcedDropRole::UpgradeScroll {
                 forbidden_runes_sensitive: false,
-            }) => (
-                "initially queued Scroll of Upgrade",
-                "The odd-count seed-stable schedule queues this identity even with Forbidden Runes; a room may consume it, so final heap and placement are not asserted.",
-            ),
+            }) => ("Scroll of Upgrade", "ScrollOfUpgrade"),
             ItemProvenance::Forced(ForcedDropRole::UpgradeScroll {
                 forbidden_runes_sensitive: true,
-            }) => (
-                "Scroll of Upgrade",
-                "Removed when Forbidden Runes is active; otherwise generated, with its final source and placement not asserted.",
-            ),
-            ItemProvenance::Forced(ForcedDropRole::ArcaneStylus) => (
-                "initially queued Arcane Stylus",
-                "The seed-stable limited-drop schedule queues this identity; a room may consume it, so final heap and placement are not asserted.",
-            ),
-            ItemProvenance::Forced(ForcedDropRole::EnchantmentStone) => (
-                "initially queued Stone of Enchantment",
-                "The seed-stable limited-drop schedule queues this identity; a room may consume it, so final heap and placement are not asserted.",
-            ),
-            ItemProvenance::Forced(ForcedDropRole::IntuitionStone) => (
-                "initially queued Stone of Intuition",
-                "The seed-stable limited-drop schedule queues this identity; a room may consume it, so final heap and placement are not asserted.",
-            ),
-            ItemProvenance::Forced(ForcedDropRole::TrinketCatalyst) => (
-                "initially queued Trinket Catalyst",
-                "The seed-stable limited-drop schedule queues this identity; a room may consume it, otherwise its locked chest and key placement are not asserted.",
-            ),
+            }) => {
+                entries.push(constrained_spawn_entry(
+                    "Scroll of Upgrade",
+                    "scroll",
+                    "Does not spawn when Forbidden Runes is active.",
+                ));
+                continue;
+            }
+            ItemProvenance::Forced(ForcedDropRole::ArcaneStylus) => ("Arcane Stylus", "Stylus"),
+            ItemProvenance::Forced(ForcedDropRole::EnchantmentStone) => {
+                ("Stone of Enchantment", "StoneOfEnchantment")
+            }
+            ItemProvenance::Forced(ForcedDropRole::IntuitionStone) => {
+                ("Stone of Intuition", "StoneOfIntuition")
+            }
+            ItemProvenance::Forced(ForcedDropRole::TrinketCatalyst) => {
+                ("Trinket Catalyst", "TrinketCatalyst")
+            }
             _ => continue,
         };
-        entries.push(constrained_entry(
+        entries.push(guaranteed_spawn_entry(
             name,
+            class_name,
             &format!("{:?}", item.category).to_ascii_lowercase(),
-            condition,
         ));
     }
     entries

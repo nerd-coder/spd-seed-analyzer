@@ -197,17 +197,8 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
 }
 
 #[test]
-fn initial_forced_queue_contracts_never_match_exact_item_searches() {
-    for class_name in [
-        "Food",
-        "Pasty",
-        "PotionOfStrength",
-        "ScrollOfUpgrade",
-        "Stylus",
-        "StoneOfIntuition",
-        "TrinketCatalyst",
-        "Torch",
-    ] {
+fn identity_unknown_guaranteed_spawns_never_match_exact_item_searches() {
+    for class_name in ["Food", "Pasty"] {
         let result = search_seeds(&SeedSearchRequest {
             start_seed: 0,
             candidate_count: 4,
@@ -219,9 +210,45 @@ fn initial_forced_queue_contracts_never_match_exact_item_searches() {
         .expect("forced queue search");
         assert!(
             result.matches.is_empty(),
-            "{class_name} queue contract leaked into exact search"
+            "{class_name} identity constraint leaked into exact search"
         );
     }
+}
+
+#[test]
+fn guaranteed_limited_drop_spawns_match_exact_item_searches() {
+    for class_name in [
+        "PotionOfStrength",
+        "ScrollOfUpgrade",
+        "Stylus",
+        "StoneOfIntuition",
+        "TrinketCatalyst",
+    ] {
+        let result = search_seeds(&SeedSearchRequest {
+            start_seed: 0,
+            candidate_count: 64,
+            floors: 4,
+            constraints: vec![constraint(class_name, 1, 4)],
+            match_mode: MatchMode::Any,
+            max_matches: 1,
+        })
+        .expect("guaranteed limited drop search");
+        assert!(
+            !result.matches.is_empty(),
+            "missing {class_name} spawn match"
+        );
+    }
+
+    let torches = search_seeds(&SeedSearchRequest {
+        start_seed: 0,
+        candidate_count: 1,
+        floors: 24,
+        constraints: vec![constraint("Torch", 21, 24)],
+        match_mode: MatchMode::Any,
+        max_matches: 1,
+    })
+    .expect("guaranteed Torch search");
+    assert_eq!(torches.matches.len(), 1);
 }
 
 #[test]
