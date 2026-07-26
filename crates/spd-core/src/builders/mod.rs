@@ -112,7 +112,9 @@ pub(crate) fn build_sewer_boss_rooms(
         path_len_jitter: [1.0, 0.0, 0.0, 0.0],
         path_tunnel_chances: [1.0, 2.0, 0.0],
         branch_tunnel_chances: [1.0, 0.0, 0.0],
-        extra_connection_chance: 0.0,
+        // SewerBossLevel leaves RegularBuilder's default extra-connection
+        // chance untouched (setLoopShape only changes curve parameters).
+        extra_connection_chance: 0.30,
         curve_exponent: 2,
         curve_intensity: intensity,
         curve_offset: 0.0,

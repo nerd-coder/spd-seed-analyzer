@@ -532,7 +532,20 @@ fn analyze_full_run_no_panic() {
             .iter()
             .all(|tile| !matches!(tile, 12 | 20 | 33 | 34)));
     }
-    for depth in [5, 15, 25] {
+    let sewer_boss = report.floors[4]
+        .map
+        .as_ref()
+        .expect("generated SewerBossLevel layout");
+    assert_eq!((sewer_boss.width, sewer_boss.height), (32, 33));
+    assert!(sewer_boss.markers.is_empty());
+    assert!(sewer_boss.heaps.is_empty());
+    assert!(sewer_boss.mobs.is_empty());
+    assert!(sewer_boss
+        .tiles
+        .iter()
+        .all(|tile| !matches!(tile, 12 | 20 | 33 | 34)));
+
+    for depth in [15, 25] {
         assert!(
             report.floors[depth - 1].map.is_none(),
             "RNG-built boss depth {depth} remains unsupported"

@@ -79,7 +79,13 @@ pub(super) fn build(dungeon: &mut DungeonState, depth_seed: i64) -> Option<Floor
 fn init_rooms() -> Vec<Room> {
     let mut rooms = Vec::new();
     let _ = Random::chances(&[1.0, 0.0, 0.0]);
-    push(&mut rooms, "SewerBossEntranceRoom", RoomKind::Entrance, 1, 16);
+    push(
+        &mut rooms,
+        "SewerBossEntranceRoom",
+        RoomKind::Entrance,
+        1,
+        16,
+    );
     let _ = Random::chances(&[1.0, 0.0, 0.0]);
     push(&mut rooms, "SewerBossExitRoom", RoomKind::Exit, 1, 16);
     for _ in 0..3 {
@@ -102,7 +108,15 @@ fn init_rooms() -> Vec<Room> {
 fn push(rooms: &mut Vec<Room>, name: &str, kind: RoomKind, size: i32, max_connections: i32) {
     let (min_w, max_w, min_h, max_h) = dims_for_kind(kind, size, name);
     rooms.push(Room::new(
-        rooms.len(), name, kind, size, max_connections, min_w, max_w, min_h, max_h,
+        rooms.len(),
+        name,
+        kind,
+        size,
+        max_connections,
+        min_w,
+        max_w,
+        min_h,
+        max_h,
     ));
 }
 
@@ -114,7 +128,12 @@ fn sewer_transitions(map: &terrain::TerrainMap) -> Vec<MapTransition> {
         } else if tile == terrain::LOCKED_EXIT {
             let x = cell as u32 % map.width as u32;
             let y = cell as u32 / map.width as u32;
-            ("REGULAR_EXIT", 6, "REGULAR_ENTRANCE", Some((x - 1, y - 1, x + 1, y)))
+            (
+                "REGULAR_EXIT",
+                6,
+                "REGULAR_ENTRANCE",
+                Some((x - 1, y - 1, x + 1, y)),
+            )
         } else {
             continue;
         };

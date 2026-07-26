@@ -4,45 +4,32 @@ Pinned target: SPD v3.3.8 @ `7b8b845a7`.
 
 Accuracy remains `partial`; `specs/accuracy.json` is authoritative. Public
 maps expose deterministic structural layout only. Keep generation in
-`spd-core`, preserve pinned Java RNG order, and do not publish entity,
-decoration, or placement claims.
+`spd-core`, preserve pinned Java RNG order, and exclude NPC, mob, heap, and
+item-population claims while retaining painter-complete terrain and metadata.
 
 ## Current boundary
 
-Fixed structural layouts at depths 10, 20, and 26 are oracle-backed. Regular
-floor coverage remains fixture-specific. RNG-built boss floors at depths 5,
-15, and 25 are not yet implemented.
+Depth 5 `SewerBossLevel` is implemented and verified across five pinned Java
+fixtures covering Thin Pillars, Walled, Diamond, and Thick Pillars Goo arenas.
+Tests assert dimensions, normalized structural terrain, discoverability,
+transitions, and the pre-items RNG boundary. Fixed layouts at depths 10, 20,
+and 26 remain oracle-backed. Regular-floor coverage remains fixture-specific.
 
-Depth 5 has an uncommitted diagnostic implementation. It currently provides:
+RNG-built boss layouts at depths 15 and 25 remain missing.
 
-- exact SewerBoss room initialization, figure-eight building, room bounds,
-  Rat King connection rules, and the pre-`paintDoors` RNG boundary for AAA;
-- boss entrance/exit, all four Goo room families, Rat King painters, and the
-  SewerBoss water/grass configuration;
-- Java-oracle fixtures covering Thin (AAA), Walled (ABC/GFX), Diamond (HKT),
-  and Thick Pillars (ZZZ), including RNG probes.
+## Next phase: depth 15
 
-Do not commit or expose this implementation yet. Its strict oracle test fails:
-Rust is one main-generator step behind Java immediately after `paintDoors`, so
-pre-item RNG, entrance/door cells, terrain, discoverability, and transitions
-are not verified.
+Port pinned `CavesBossLevel` as a generated structural layout.
 
-## Next phase
+1. Trace its builder setup, landmark/room initialization, retries, and exact
+   RNG order against the pinned Java source.
+2. Port boss-specific room and painter geometry in `spd-core`; keep WASM thin.
+3. Add multi-seed Java fixtures covering randomized arena variants and strict
+   tests for dimensions, normalized terrain, discoverability, transitions,
+   connections, and post-build RNG.
+4. Publish painter-complete geometry, terrain, doors, transitions, traps,
+   plants, and blobs. Exclude NPCs, mobs, heaps, and item population.
+5. Update `specs/accuracy.json`, rebuild WASM, and run CI parity before commit.
 
-Finish and commit depth-5 `SewerBossLevel` parity.
-
-1. Trace the shared `paint_doors` merge/regular-door path. Pre-`paintDoors`
-   RNG already matches Java; isolate the single missing Java RNG call and the
-   entrance/door callback discrepancy.
-2. Make all five depth-5 fixtures strictly match normalized structural
-   terrain, discoverability, transitions, dimensions, and post-build RNG.
-3. Confirm public maps remain layout-only and do not expose mobs, items,
-   heaps, grass, traps, plants, blobs, or decorative tile claims.
-4. Update `specs/accuracy.json` only after every strict fixture passes.
-5. Rebuild WASM and run CI parity: `bun run check`, `bun run check:rust`,
-   `bun run test:rust`, `bun run build`, and `bun run test:visual:only`.
-6. Commit the completed depth-5 phase with a Conventional Commit, then rewrite
-   this file toward depth 15 (`CavesBossLevel`) and stop.
-
-Depth 25 (`HallsBossLevel`) follows depth 15. Quest-branch levels such as
-`MiningLevel` remain later work unless needed to prove a deterministic reward.
+Depth 25 `HallsBossLevel` follows depth 15. Quest-branch levels such as
+`MiningLevel` remain later work unless needed for a deterministic reward.

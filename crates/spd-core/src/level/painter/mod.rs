@@ -37,7 +37,17 @@ pub fn paint_water_grass_traps(
 ) {
     let water = params::water_params(depth, feeling);
     let grass = params::grass_params(depth, feeling);
-    paint_environment(map, rooms, paint_order, doors, depth, feeling, n_traps, water, grass);
+    paint_environment(
+        map,
+        rooms,
+        paint_order,
+        doors,
+        depth,
+        feeling,
+        n_traps,
+        water,
+        grass,
+    );
 }
 
 pub(crate) fn paint_sewer_boss_environment(
@@ -46,7 +56,17 @@ pub(crate) fn paint_sewer_boss_environment(
     paint_order: &[usize],
     doors: &DoorMap,
 ) {
-    paint_environment(map, rooms, paint_order, doors, 5, Feeling::None, 0, (0.50, 5), (0.20, 4));
+    paint_environment(
+        map,
+        rooms,
+        paint_order,
+        doors,
+        5,
+        Feeling::None,
+        0,
+        (0.50, 5),
+        (0.20, 4),
+    );
 }
 
 #[allow(clippy::too_many_arguments)]

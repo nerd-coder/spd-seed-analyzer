@@ -6,8 +6,8 @@
     "commit": "7b8b845a7"
   },
   "overallStatus": "partial",
-  "summary": "Seed analysis is partial. The product targets guaranteed seed-determined item, loot, shop-stock, and reward spawns plus structural floor layouts; covered paths are tested against the pinned game, while boss/final-floor layouts and some seed-determined spawn paths remain incomplete. Identities dependent on prior gameplay or Generator state, state-dependent shop details, and entity-rich maps are intentional non-goals.",
-  "lastReviewed": "2026-07-26",
+  "summary": "Seed analysis is partial. The product targets guaranteed seed-determined item, loot, shop-stock, and reward spawns plus structural floor layouts; covered paths are tested against the pinned game, while depths 15 and 25 boss layouts and some seed-determined spawn paths remain incomplete. Identities dependent on prior gameplay or Generator state, state-dependent shop details, and entity-rich maps are intentional non-goals.",
+  "lastReviewed": "2026-07-27",
   "areas": [
     {
       "id": "layout-and-room-selection",
@@ -19,13 +19,14 @@
         "Pinned standard, special, and secret room-count tables",
         "Pinned SecretLarderRoom minimum dimensions and food-placement viability",
         "Depth-1 lifecycle fixtures across ten seeds; full HKT-JZN-XQQ floor 6\u20138 parity; preserved-state AAA-AAA-AAA floor 2\u20134, 6\u20139, and 11 oracle fixtures",
-        "Oracle-backed fixed-form structural layouts for PrisonBossLevel, CityBossLevel, and LastLevel at depths 10, 20, and 26"
+        "Oracle-backed fixed-form structural layouts for PrisonBossLevel, CityBossLevel, and LastLevel at depths 10, 20, and 26",
+        "Pinned SewerBossLevel generation at depth 5: exact room initialization, Goo landmark FigureEight retries and extra connections, all four Goo room painters, Rat King cache RNG, SewerPainter environment, doors, transitions, and layout-only normalization across five Java-oracle seeds"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
         "Later regular floors still require phase-by-phase parity checks",
-        "RNG-built boss levels at depths 5, 15, and 25 do not yet have generated or verified structural layouts"
+        "RNG-built boss levels at depths 15 and 25 do not yet have generated or verified structural layouts"
       ],
       "impact": "Structural room selection, bounds, connections, or downstream spawn facts can differ on uncovered generation paths.",
       "evidence": [
@@ -39,7 +40,9 @@
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-18.json",
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-19.json",
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-21.json",
-        "tools/java-oracle/fixtures/traces/aaa-aaa-aaa-floor-21-figure-eight.json"
+        "tools/java-oracle/fixtures/traces/aaa-aaa-aaa-floor-21-figure-eight.json",
+        "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-5.json",
+        "tools/java-oracle/fixtures/zzz-zzz-zzz-final-heaps-floor-5.json"
       ]
     },
     {
@@ -127,16 +130,21 @@
       "remaining": [
         "Uncovered room painters and later regular floors can produce incomplete structural geometry, doors, or transitions",
         "Layouts whose builder, room set, or structural painter output can change with player state are not exact predictions; entity-only Generator, quest, inventory, and meta dependencies must not suppress an otherwise exact structural layout",
-        "RNG-built boss levels at depths 5, 15, and 25 are visible in the floor report, but their level-specific builders and structural maps are not yet generated, oracle-verified, or rendered",
+        "RNG-built boss levels at depths 15 and 25 are visible in the floor report, but their level-specific builders and structural maps are not yet generated, oracle-verified, or rendered",
         "Quest-branch levels, including the Troll Blacksmith MiningLevel reference, are not generated or rendered by the analyzer"
       ],
-      "impact": "Public previews show deterministic structural floor layout only; they intentionally make no claims about decoration, traps, vegetation, entities, loot placement, or the final populated gameplay map.",
+      "impact": "Public previews show deterministic painter-complete floor layout, including terrain, traps, plants, and blobs captured before population. They intentionally make no claims about NPCs, mobs, heaps, item placement, or the final populated gameplay map.",
       "evidence": [
         "crates/spd-core/src/level/painter",
         "crates/spd-core/src/level/boss_layouts.rs",
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-10.json",
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-20.json",
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-26.json",
+        "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-5.json",
+        "tools/java-oracle/fixtures/abc-def-ghi-final-heaps-floor-5.json",
+        "tools/java-oracle/fixtures/gfx-pzh-dch-final-heaps-floor-5.json",
+        "tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-5.json",
+        "tools/java-oracle/fixtures/zzz-zzz-zzz-final-heaps-floor-5.json",
         "crates/spd-core/tests/java_oracle_goldens/final_heaps/replay_aaa_sewers.rs",
         "tools/visual/tests/map-render.spec.ts",
         "tools/visual/tests/map-render-fixtures.ts"

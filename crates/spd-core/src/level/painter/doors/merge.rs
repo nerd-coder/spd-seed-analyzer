@@ -9,7 +9,11 @@ use crate::rooms::types::RoomKind;
 pub(super) fn is_mergeable_standard(room: &Room) -> bool {
     if matches!(
         room.name.as_str(),
-        "SewerPipeRoom" | "DiamondGooRoom" | "WalledGooRoom" | "ThinPillarsGooRoom" | "ThickPillarsGooRoom"
+        "SewerPipeRoom"
+            | "DiamondGooRoom"
+            | "WalledGooRoom"
+            | "ThinPillarsGooRoom"
+            | "ThickPillarsGooRoom"
     ) {
         return false;
     }

@@ -154,31 +154,86 @@ mod tests {
             trinket_start_depth: 1,
         };
         for (seed, json) in [
-            ("AAA-AAA-AAA", include_str!("../../../../tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-5.json")),
-            ("ABC-DEF-GHI", include_str!("../../../../tools/java-oracle/fixtures/abc-def-ghi-final-heaps-floor-5.json")),
-            ("GFX-PZH-DCH", include_str!("../../../../tools/java-oracle/fixtures/gfx-pzh-dch-final-heaps-floor-5.json")),
-            ("HKT-JZN-XQQ", include_str!("../../../../tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-5.json")),
-            ("ZZZ-ZZZ-ZZZ", include_str!("../../../../tools/java-oracle/fixtures/zzz-zzz-zzz-final-heaps-floor-5.json")),
+            (
+                "AAA-AAA-AAA",
+                include_str!(
+                    "../../../../tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-5.json"
+                ),
+            ),
+            (
+                "ABC-DEF-GHI",
+                include_str!(
+                    "../../../../tools/java-oracle/fixtures/abc-def-ghi-final-heaps-floor-5.json"
+                ),
+            ),
+            (
+                "GFX-PZH-DCH",
+                include_str!(
+                    "../../../../tools/java-oracle/fixtures/gfx-pzh-dch-final-heaps-floor-5.json"
+                ),
+            ),
+            (
+                "HKT-JZN-XQQ",
+                include_str!(
+                    "../../../../tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-5.json"
+                ),
+            ),
+            (
+                "ZZZ-ZZZ-ZZZ",
+                include_str!(
+                    "../../../../tools/java-oracle/fixtures/zzz-zzz-zzz-final-heaps-floor-5.json"
+                ),
+            ),
         ] {
             let fixture: Fixture = serde_json::from_str(json).unwrap();
             let oracle = &fixture.floors[0];
             let report = crate::analyze_seed_with_profile(seed, 5, Some(profile.clone())).unwrap();
             let actual = report.floors[4].map.as_ref().expect("depth-5 layout");
-            assert_eq!((actual.width, actual.height), (oracle.width, oracle.height), "{seed}");
-            let normalized = oracle.terrain.iter().map(|&tile| match i32::from(tile) {
-                terrain::EMPTY_DECO | terrain::REGION_DECO | terrain::REGION_DECO_ALT => terrain::EMPTY as u16,
-                terrain::WALL_DECO => terrain::WALL as u16,
-                tile => tile as u16,
-            }).collect::<Vec<_>>();
-            assert_eq!(sewer::last_pre_items_rng(), oracle.pre_items_rng, "{seed} pre-items RNG");
+            assert_eq!(
+                (actual.width, actual.height),
+                (oracle.width, oracle.height),
+                "{seed}"
+            );
+            let normalized = oracle
+                .terrain
+                .iter()
+                .map(|&tile| match i32::from(tile) {
+                    terrain::EMPTY_DECO | terrain::REGION_DECO | terrain::REGION_DECO_ALT => {
+                        terrain::EMPTY as u16
+                    }
+                    terrain::WALL_DECO => terrain::WALL as u16,
+                    tile => tile as u16,
+                })
+                .collect::<Vec<_>>();
+            assert_eq!(
+                sewer::last_pre_items_rng(),
+                oracle.pre_items_rng,
+                "{seed} pre-items RNG"
+            );
             if actual.tiles != normalized {
-                let diffs = actual.tiles.iter().zip(&normalized).enumerate()
-                    .filter(|(_, (a, b))| a != b).take(20)
-                    .map(|(cell, (a, b))| (cell, cell % actual.width as usize, cell / actual.width as usize, *a, *b))
+                let diffs = actual
+                    .tiles
+                    .iter()
+                    .zip(&normalized)
+                    .enumerate()
+                    .filter(|(_, (a, b))| a != b)
+                    .take(20)
+                    .map(|(cell, (a, b))| {
+                        (
+                            cell,
+                            cell % actual.width as usize,
+                            cell / actual.width as usize,
+                            *a,
+                            *b,
+                        )
+                    })
                     .collect::<Vec<_>>();
                 panic!("{seed} terrain first diffs: {diffs:?}");
             }
-            assert_eq!(actual.discoverable, oracle.discoverable, "{seed} discoverable");
+            assert_eq!(
+                actual.discoverable, oracle.discoverable,
+                "{seed} discoverable"
+            );
             assert_eq!(actual.transitions, oracle.transitions, "{seed} transitions");
             assert!(actual.markers.is_empty() && actual.heaps.is_empty() && actual.mobs.is_empty());
         }
