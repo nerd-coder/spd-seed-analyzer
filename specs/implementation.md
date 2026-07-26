@@ -4,15 +4,16 @@ Pinned target: SPD v3.3.8 @ `7b8b845a7`. Accuracy remains `partial`; see
 `specs/accuracy.json`. Public maps contain painter-complete deterministic
 structure only, never population or item placement.
 
-Depth 5 `SewerBossLevel`, depth 15 `CavesBossLevel`, and fixed boss layouts
-at depths 10, 20, and 26 are fixture-backed. Regular-floor coverage remains
-fixture-specific.
+Dedicated boss layouts at depths 5, 10, 15, 20, 25, and 26 are
+fixture-backed. Regular-floor coverage remains fixture-specific.
 
-## Next phase: depth 25 `HallsBossLevel`
+## Next phase: depth 22 `HallsLevel` structural parity
 
-1. Port its pinned Java builder, terrain, transitions, and retry/RNG lifecycle
-   into `spd-core`; preserve Java call order.
-2. Capture multi-seed Java-oracle fixtures and compare normalized structural
-   terrain, discoverability, transitions, and the post-build RNG boundary.
-3. Add focused Rust tests, update `specs/accuracy.json`, rebuild WASM, and run
-   CI parity before committing.
+1. Capture a pinned Java-oracle fixture for depth 22 through the full
+   preceding-floor lifecycle, including terrain, discoverability, transitions,
+   and RNG checkpoints.
+2. Compare its builder, room selection, Halls painters, doors, and structural
+   map projection with `spd-core`; port only the first divergence while
+   preserving Java RNG call order.
+3. Add focused Rust coverage, update `specs/accuracy.json`, rebuild WASM, and
+   pass CI parity before committing.

@@ -5,6 +5,7 @@ use crate::report::{FloorMap, MapTransition};
 
 mod caves;
 mod data;
+mod halls;
 mod sewer;
 
 use data::{D10, D20, D26, T10, T20, T26};
@@ -49,6 +50,7 @@ pub(super) fn generated_layout(
         // pylons are reachable. Each failed attempt intentionally advances the
         // same level RNG stream.
         15 => (0..10_000).find_map(|_| caves::build(dungeon, depth_seed)),
+        25 => (0..10_000).find_map(|_| halls::build(dungeon, depth_seed)),
         _ => fixed_layout(dungeon.depth),
     }
 }
@@ -314,6 +316,74 @@ mod tests {
             }
             assert_eq!(
                 caves::last_pre_items_rng(),
+                oracle.pre_items_rng,
+                "{seed} pre-items RNG"
+            );
+            assert_eq!(
+                actual.discoverable, oracle.discoverable,
+                "{seed} discoverable"
+            );
+            assert_eq!(actual.transitions, oracle.transitions, "{seed} transitions");
+            assert!(actual.markers.is_empty() && actual.heaps.is_empty() && actual.mobs.is_empty());
+        }
+    }
+
+    #[test]
+    fn halls_boss_structures_match_normalized_java_oracles() {
+        let profile = crate::MapProfile {
+            trinket: crate::MapTrinketProfile::NoMapAffectingTrinkets,
+            meta: crate::MapMetaProfile::Fresh,
+            trinket_start_depth: 1,
+        };
+        for (seed, json) in [
+            (
+                "AAA-AAA-AAA",
+                include_str!(
+                    "../../../../tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-25.json"
+                ),
+            ),
+            (
+                "ABC-DEF-GHI",
+                include_str!(
+                    "../../../../tools/java-oracle/fixtures/abc-def-ghi-final-heaps-floor-25.json"
+                ),
+            ),
+            (
+                "GFX-PZH-DCH",
+                include_str!(
+                    "../../../../tools/java-oracle/fixtures/gfx-pzh-dch-final-heaps-floor-25.json"
+                ),
+            ),
+            (
+                "ZZZ-ZZZ-ZZZ",
+                include_str!(
+                    "../../../../tools/java-oracle/fixtures/zzz-zzz-zzz-final-heaps-floor-25.json"
+                ),
+            ),
+        ] {
+            let fixture: Fixture = serde_json::from_str(json).unwrap();
+            let oracle = &fixture.floors[0];
+            let report = crate::analyze_seed_with_profile(seed, 25, Some(profile.clone())).unwrap();
+            let actual = report.floors[24].map.as_ref().expect("depth-25 layout");
+            assert_eq!(
+                (actual.width, actual.height),
+                (oracle.width, oracle.height),
+                "{seed}"
+            );
+            let normalized = oracle
+                .terrain
+                .iter()
+                .map(|&tile| match i32::from(tile) {
+                    terrain::EMPTY_DECO | terrain::REGION_DECO | terrain::REGION_DECO_ALT => {
+                        terrain::EMPTY as u16
+                    }
+                    terrain::WALL_DECO => terrain::WALL as u16,
+                    tile => tile as u16,
+                })
+                .collect::<Vec<_>>();
+            assert_eq!(actual.tiles, normalized, "{seed} terrain");
+            assert_eq!(
+                halls::last_pre_items_rng(),
                 oracle.pre_items_rng,
                 "{seed} pre-items RNG"
             );

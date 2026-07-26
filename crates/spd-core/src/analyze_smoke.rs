@@ -516,7 +516,12 @@ fn analyze_full_run_no_panic() {
     };
     let report = crate::analyze_seed_with_profile("AAA-AAA-AAA", 26, Some(profile))
         .expect("profiled full-run analysis");
-    for (depth, dimensions) in [(10, (32, 32)), (20, (15, 48)), (26, (16, 64))] {
+    for (depth, dimensions) in [
+        (10, (32, 32)),
+        (20, (15, 48)),
+        (25, (32, 32)),
+        (26, (16, 64)),
+    ] {
         let floor = &report.floors[depth - 1];
         let map = floor.map.as_ref().expect("fixed dedicated layout");
         assert_eq!((map.width, map.height), dimensions);
@@ -558,10 +563,14 @@ fn analyze_full_run_no_panic() {
         .iter()
         .all(|tile| !matches!(tile, 12 | 20 | 33 | 34)));
 
-    assert!(
-        report.floors[24].map.is_none(),
-        "RNG-built boss depth 25 remains unsupported"
-    );
+    let halls_boss = report.floors[24]
+        .map
+        .as_ref()
+        .expect("generated HallsBossLevel layout");
+    assert_eq!((halls_boss.width, halls_boss.height), (32, 32));
+    assert!(halls_boss.markers.is_empty());
+    assert!(halls_boss.heaps.is_empty());
+    assert!(halls_boss.mobs.is_empty());
 }
 
 #[test]
