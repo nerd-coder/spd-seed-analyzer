@@ -23,7 +23,7 @@ usage() {
 	cat >&2 <<'EOF'
 Usage: tools/java-oracle/run [--source PATH] [--output FILE]
                              [--depth 1 | --final-heaps-depth 1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|25|26 |
-                             --figure-eight-trace DEPTH |
+                             --figure-eight-trace DEPTH | --halls-paint-trace 21|22|23|24 |
                              --caves-boss-patch |
                              --generator-deck-rollover | --generator-lifecycle |
                              --shop-bag-selection | --sacrifice-reward] SEED
@@ -38,6 +38,8 @@ With --shop-bag-selection, calls the pinned ShopRoom.ChooseBag against two
 unique-winner floor-11 backpack profiles without generating a floor.
 With --figure-eight-trace, records non-advancing RNG probes and room bounds for
 every FigureEightBuilder attempt on the target floor.
+With --halls-paint-trace, records the regular Halls painter's pre-shuffle room
+list and non-advancing RNG probes after each room callback and paintDoors.
 With --sacrifice-reward, applies Parchment Scrap +3 at the floor-13 entry
 boundary and captures the reward stored in the SacrificialFire blob.
 EOF

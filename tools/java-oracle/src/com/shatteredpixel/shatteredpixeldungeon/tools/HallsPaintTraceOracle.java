@@ -35,7 +35,9 @@ final class HallsPaintTraceOracle {
 	}
 
 	static String generate(long seed, int depth) {
-		if (depth != 22) throw new IllegalArgumentException("Halls paint trace only supports depth 22");
+		if (depth < 21 || depth > 24) {
+			throw new IllegalArgumentException("Halls paint trace supports regular depths 21 through 24");
+		}
 		FloorOracle.initializeFreshRun(seed);
 		FloorOracle.generatePriorFloors(depth);
 		FloorOracle.markTargetFloorGenerated(depth);

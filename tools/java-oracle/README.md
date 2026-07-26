@@ -57,6 +57,7 @@ From the analyzer repository root:
 ./tools/java-oracle/run --final-heaps-depth 25 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 26 AAA-AAA-AAA
 ./tools/java-oracle/run --figure-eight-trace 21 AAA-AAA-AAA
+./tools/java-oracle/run --halls-paint-trace 23 AAA-AAA-AAA
 ./tools/java-oracle/run --generator-deck-rollover AAA-AAA-AAA
 ./tools/java-oracle/run --generator-lifecycle AAA-AAA-AAA
 ./tools/java-oracle/run --shop-bag-selection AAA-AAA-AAA
