@@ -21,13 +21,15 @@ import type { FloorReport, IdentityMaps } from '@/lib/spd-wasm'
 export function FloorDetail({
   floor,
   identities,
+  identitySpoilers,
   mapSpoilers,
 }: {
   floor: FloorReport
   identities: IdentityMaps
+  identitySpoilers: boolean
   mapSpoilers: boolean
 }) {
-  const [showAssumedMap, setShowAssumedMap] = useState(false)
+  const [showAssumedMap, setShowAssumedMap] = useState(true)
   const hasQuest = (floor.quests?.length ?? 0) > 0
   const questRewards = partitionFloorItems(floor.items).quest
   const showMap = mapSpoilers && !!floor.map
@@ -50,6 +52,7 @@ export function FloorDetail({
                 quest={q}
                 rewards={questRewards}
                 identities={identities}
+                identitySpoilers={identitySpoilers}
                 depth={floor.depth}
               />
             ))}
@@ -57,7 +60,11 @@ export function FloorDetail({
         </div>
       )}
 
-      <FloorItemSections floor={floor} identities={identities} />
+      <FloorItemSections
+        floor={floor}
+        identities={identities}
+        identitySpoilers={identitySpoilers}
+      />
     </div>
   )
 
@@ -119,25 +126,27 @@ export function FloorDetail({
         )}
       </div>
 
-      {canShowAssumedMap && showAssumedMap && (
-        <Alert variant="warning">
-          <AlertTitle>Assumed continuation</AlertTitle>
-          <AlertDescription>
-            This layout follows the analyzer’s baseline continuation through
-            unresolved player or meta-state branches. Your actual floor can
-            differ.
-          </AlertDescription>
-        </Alert>
-      )}
-
       <div className="flex items-start gap-3">
         {details}
         {displayedMap && (
-          <FloorMapPreview
-            map={displayedMap}
-            identities={identities}
-            depth={floor.depth}
-          />
+          <div className="w-32 shrink-0 space-y-1.5">
+            <FloorMapPreview
+              map={displayedMap}
+              identities={identities}
+              depth={floor.depth}
+            />
+            {canShowAssumedMap && showAssumedMap && (
+              <Alert variant="warning" className="px-1.5 py-1">
+                <AlertTitle className="text-[10px] leading-tight">
+                  Assumed continuation
+                </AlertTitle>
+                <AlertDescription className="text-[9px] leading-tight text-pretty">
+                  Baseline continuation through unresolved player or meta state.
+                  Your floor can differ.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
         )}
       </div>
     </section>

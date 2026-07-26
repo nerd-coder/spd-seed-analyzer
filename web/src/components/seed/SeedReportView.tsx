@@ -22,6 +22,7 @@ export function SeedReportView({
         <FloorsSection
           floors={report.floors}
           identities={report.identities}
+          identitySpoilers={identitySpoilers}
           mapSpoilers={mapSpoilers}
         />
       )}

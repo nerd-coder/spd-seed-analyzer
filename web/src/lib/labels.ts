@@ -103,6 +103,7 @@ export function formatItemSource(
   source: string | null | undefined
 ): string | null {
   if (!source) return null
+  if (source === 'guaranteed floor spawn') return null
   const parts = source.split(':').filter(Boolean)
   if (parts.length === 0) return null
 

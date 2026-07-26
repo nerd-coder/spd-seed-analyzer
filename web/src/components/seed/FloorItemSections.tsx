@@ -19,10 +19,12 @@ function itemGroup(item: ItemEntry): 'shop' | 'quest' | 'general' {
 export function FloorItemList({
   items,
   identities,
+  identitySpoilers,
   depth,
 }: {
   items: ItemEntry[]
   identities: IdentityMaps
+  identitySpoilers: boolean
   depth: number
 }) {
   return (
@@ -34,7 +36,9 @@ export function FloorItemList({
             <ItemIcon
               classNameItem={item.class_name}
               category={item.category}
-              appearance={itemAppearance(item, identities)}
+              appearance={
+                identitySpoilers ? itemAppearance(item, identities) : undefined
+              }
               size={16}
               title={item.name}
               className="mt-0.5"
@@ -87,9 +91,11 @@ export function FloorItemList({
 export function FloorItemSections({
   floor,
   identities,
+  identitySpoilers,
 }: {
   floor: FloorReport
   identities: IdentityMaps
+  identitySpoilers: boolean
 }) {
   const groups = partitionFloorItems(floor.items)
   const sections = [
@@ -111,6 +117,7 @@ export function FloorItemSections({
             <FloorItemList
               items={items}
               identities={identities}
+              identitySpoilers={identitySpoilers}
               depth={floor.depth}
             />
           ) : (

@@ -236,15 +236,14 @@ for (const fixture of AUTOMATED_MAP_RENDER_FIXTURES) {
       if (!region)
         throw new Error(`Floor ${fixture.floor} is not in a report region`)
       await page.getByRole('tab', { name: region.name }).click()
-      await expect(
-        page.getByRole('button', { name: `Expand floor ${fixture.floor} map` })
-      ).toHaveCount(0)
       const floorSection = page
         .getByText(`Floor ${fixture.floor}`, { exact: true })
         .locator('xpath=ancestor::section[1]')
-      await floorSection
-        .getByRole('button', { name: 'Render assumed map' })
-        .click()
+      await expect(
+        floorSection.getByRole('button', {
+          name: `Expand floor ${fixture.floor} map`,
+        })
+      ).toBeVisible()
       await expect(
         floorSection.getByText('Assumed continuation', { exact: true })
       ).toBeVisible()

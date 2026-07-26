@@ -37,11 +37,13 @@ export function QuestCard({
   quest,
   rewards,
   identities,
+  identitySpoilers,
   depth,
 }: {
   quest: string
   rewards: ItemEntry[]
   identities: IdentityMaps
+  identitySpoilers: boolean
   depth: number
 }) {
   const parsed = parseQuest(quest)
@@ -82,6 +84,7 @@ export function QuestCard({
           <FloorItemList
             items={rewards}
             identities={identities}
+            identitySpoilers={identitySpoilers}
             depth={depth}
           />
         </div>

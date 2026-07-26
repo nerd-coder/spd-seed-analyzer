@@ -12,10 +12,12 @@ const SCROLL_GAP_PX = 8
 export function FloorsSection({
   floors,
   identities,
+  identitySpoilers,
   mapSpoilers,
 }: {
   floors: FloorReport[]
   identities: IdentityMaps
+  identitySpoilers: boolean
   mapSpoilers: boolean
 }) {
   const groups = groupFloorsByRegion(floors)
@@ -110,6 +112,7 @@ export function FloorsSection({
                 key={floor.depth}
                 floor={floor}
                 identities={identities}
+                identitySpoilers={identitySpoilers}
                 mapSpoilers={mapSpoilers}
               />
             ))}

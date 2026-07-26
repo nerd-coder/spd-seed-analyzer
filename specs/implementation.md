@@ -205,9 +205,9 @@ Acceptance:
 
 ## Immediate next slice
 
-Checkpoint: runtime-sensitive regular-floor layouts now remain available as
-explicit per-floor baseline-assumption previews, while exact maps retain their
-strict deterministic gate. Initial forced-queue reporting now describes the
+Checkpoint: runtime-sensitive regular-floor layouts now render by default as
+clearly labeled per-floor baseline-assumption previews, while exact maps retain
+their strict deterministic gate. Initial forced-queue reporting now describes the
 invariant food-category existence directly, and even-schedule Scrolls of
 Upgrade remain visible with a Forbidden Runes removal condition rendered as a
 chip. Boss and LastLevel floor rows are no longer hidden by the UI, and shop
