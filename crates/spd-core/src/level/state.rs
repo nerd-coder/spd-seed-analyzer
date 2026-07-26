@@ -327,7 +327,7 @@ impl LevelState {
                 cursed: None,
                 prediction: ItemPredictionKind::Constrained,
                 conditional_notes: vec![
-                    "Sandbags may be offered depending on the hero's Timekeeper's Hourglass state; presence and quantity are not asserted.".into(),
+                    "Sandbag presence and quantity depend on the hero's Timekeeper's Hourglass state.".into(),
                 ],
                 source: Some("ShopRoom".into()),
             });

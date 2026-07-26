@@ -110,8 +110,7 @@ Complete these sources in priority order:
    for every supported room family. Start with Crystal Vault/Choice/Path,
    Secret Library, Crypt, Statue, Ring, Study, Ritual, Storage, and Armory.
 5. Forced queues and regular `createItems`: report whether each item is
-   guaranteed to spawn, without exposing queue, room-consumption, heap, or
-   placement lifecycle details that do not change presence. Model Forbidden Runes, Large feeling, limited-drop schedules,
+   guaranteed to spawn. Model Forbidden Runes, Large feeling, limited-drop schedules,
    Halls torches, Cached Rations, Dried Rose petals, Darkness torches, and
    guide/meta items individually.
 

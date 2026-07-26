@@ -32,7 +32,10 @@ impl RoomPublicFact {
                 level_range: None,
                 cursed,
                 prediction: ItemPredictionKind::Constrained,
-                conditional_notes: vec![note.into()],
+                conditional_notes: (!note.is_empty())
+                    .then(|| note.into())
+                    .into_iter()
+                    .collect(),
                 source: Some(self.room.clone()),
             })
             .collect();
@@ -75,7 +78,7 @@ fn larder_entries(depth: i32) -> Vec<ItemEntry> {
             cursed: Some(false),
             prediction: ItemPredictionKind::Exact,
             conditional_notes: vec![format!(
-                "Exact depth-derived larder count ({units} food units); cells are not asserted."
+                "Exact depth-derived larder count ({units} food units)."
             )],
             source: Some("SecretLarderRoom".into()),
         })
@@ -99,30 +102,30 @@ type Contract = (&'static str, &'static str, Option<bool>, &'static str);
 fn contracts(room: &str) -> Vec<Contract> {
     match room {
         "CryptRoom" => vec![("Crypt armor reward", "armor", Some(true), "Armor from this depth's Crypt floor-set distribution; Parchment Scrap may alter its glyph and conditional upgrade.")],
-        "StudyRoom" | "RitualRoom" => vec![("single center-room reward source", "other", None, "May consume an eligible queued prize; otherwise it is a potion or scroll source. Concrete identity and placement are not asserted.")],
-        "RingRoom" => vec![("conditional queued-prize source", "other", None, "A reward exists only when an eligible queued prize is available; concrete identity and placement are not asserted.")],
-        "SuspiciousChestRoom" => vec![("suspicious chest reward source", "other", None, "An eligible queued prize or gold fallback; the chest may become a Mimic with an additional general reward. Concrete identities and placement are not asserted.")],
-        "GrassyGraveRoom" => vec![("geometry-derived tomb set", "other", None, "Exactly one tomb holds a general Generator prize and all remaining tombs hold gold; identities, quantities, and cells are not asserted.")],
+        "StudyRoom" | "RitualRoom" => vec![("single center-room reward source", "other", None, "An eligible guaranteed item, otherwise a potion or scroll.")],
+        "RingRoom" => vec![("conditional room reward", "other", None, "Spawns when an eligible guaranteed item is available.")],
+        "SuspiciousChestRoom" => vec![("suspicious chest reward source", "other", None, "An eligible guaranteed item or gold; a Mimic may add a general reward.")],
+        "GrassyGraveRoom" => vec![("geometry-derived tomb set", "other", None, "One general Generator prize plus gold in every remaining tomb.")],
         "ArmoryRoom" => vec![("2–3 distinct Armory rewards", "other", None, "Distinct base categories are bomb, weapon, armor, and missile weapon; an eligible queued Trinket Catalyst may add one reward.")],
         "PoolRoom" | "SentryRoom" => vec![("single room reward source", "other", None, "May consume an eligible queued prize; fallback is weapon, missile weapon, or armor from the room's floor-set distribution, forced uncursed with curse-enchantment stripped and a possible +1 upgrade.")],
         "TrapsRoom" => vec![("single room reward source", "other", None, "May consume an eligible queued prize; fallback is weapon, missile weapon, or armor from the room's floor-set distribution, forced uncursed with curse-enchantment stripped.")],
         "StatueRoom" => vec![("Statue weapon", "weapon", Some(false), "A positively enchanted melee weapon is carried; Rat Skull may change the statue encounter variant.")],
         "SacrificeRoom" => vec![("weapon reward", "weapon", Some(true), "A cursed weapon from the one-higher floor-set tier range. Its final upgrade is +0..+3; prior weapon-deck history can alter identity, and Parchment Scrap may alter enchantment chance.")],
         "CrystalVaultRoom" => vec![("two crystal-vault reward sources", "other", None, "Categories rotate among wand, ring, and artifact; an exhausted artifact pool falls back to a ring, and the second chest may conditionally be a Crystal Mimic.")],
-        "CrystalChoiceRoom" => vec![("3–4 potion/scroll sources", "other", None, "Base potion/scroll identities are not asserted."), ("hidden crystal-choice reward", "other", None, "Wand, ring, or artifact; an exhausted artifact pool falls back to a ring.")],
-        "CrystalPathRoom" => vec![("three potion sources", "potion", None, "Concrete regular/exotic identities and cells are not asserted."), ("three scroll sources", "scroll", None, "Concrete regular/exotic identities and cells are not asserted.")],
-        "PitRoom" => vec![("Pit main reward", "other", None, "One ring, artifact, weapon, missile weapon, or armor family reward; artifact exhaustion may alter the path."), ("1–2 Pit supplements", "other", None, "Supplement identities and properties are not asserted.")],
+        "CrystalChoiceRoom" => vec![("3–4 potion/scroll sources", "other", None, ""), ("hidden crystal-choice reward", "other", None, "Wand, ring, or artifact; an exhausted artifact pool falls back to a ring.")],
+        "CrystalPathRoom" => vec![("three potion sources", "potion", None, ""), ("three scroll sources", "scroll", None, "")],
+        "PitRoom" => vec![("Pit main reward", "other", None, "One ring, artifact, weapon, missile weapon, or armor family reward; artifact exhaustion may alter the path."), ("1–2 Pit supplements", "other", None, "")],
         "SecretLibraryRoom" => vec![("2–3 distinct scroll-base rewards", "scroll", None, "Exotic Crystals may conditionally convert each base scroll.")],
-        "SecretLaboratoryRoom" => vec![("two Energy Crystal stacks", "other", Some(false), "Stack quantities and cells are not asserted."), ("2–3 distinct potion-base rewards", "potion", None, "Exotic Crystals may conditionally convert each base potion.")],
-        "SecretArtilleryRoom" => vec![("Double Bomb", "other", Some(false), "Fixed artillery reward identity; placement is not asserted."), ("two default missile sources", "missile", None, "Concrete default-pool missile identities, Parchment-sensitive curse state, and cells are not asserted.")],
-        "SecretRunestoneRoom" => vec![("two default stone sources", "stone", Some(false), "Concrete default-pool identities and cells are not asserted."), ("Stone of Enchantment", "stone", Some(false), "Fixed runestone reward identity; placement is not asserted.")],
-        "SecretLarderRoom" => vec![("depth-derived food cache", "food", Some(false), "Food identities and count follow the pinned depth-derived larder recipe; cells are not asserted here.")],
+        "SecretLaboratoryRoom" => vec![("two Energy Crystal stacks", "other", Some(false), ""), ("2–3 distinct potion-base rewards", "potion", None, "Exotic Crystals may conditionally convert each base potion.")],
+        "SecretArtilleryRoom" => vec![("Double Bomb", "other", Some(false), ""), ("two default missile sources", "missile", None, "Parchment Scrap may change their curse state.")],
+        "SecretRunestoneRoom" => vec![("two default stone sources", "stone", Some(false), ""), ("Stone of Enchantment", "stone", Some(false), "")],
+        "SecretLarderRoom" => vec![("depth-derived food cache", "food", Some(false), "Food identities and count follow the pinned depth-derived larder recipe.")],
         "SecretGardenRoom" => vec![("four secret-garden planting attempts", "seed", None, "The room attempts Starflower, Seedpod, Dewcatcher, then Seedpod or Dewcatcher; Barren Land prevents the plants from existing.")],
-        "SecretHoardRoom" => vec![("exactly 16 gold piles", "gold", Some(false), "Pile quantities and cells are not asserted.")],
-        "SecretMazeRoom" => vec![("Secret Maze equipment", "other", Some(false), "Weapon-or-armor distribution; forced uncursed, while concrete identity, level, and enchantment are not asserted.")],
-        "SecretSummoningRoom" => vec![("summoning-room reward", "other", None, "Concrete reward and haunted/trap visibility depend on runtime state and are not asserted.")],
-        "SecretChestChasmRoom" => vec![("four locked default-stock sources", "other", None, "Concrete default-stock identities and chest cells are not asserted; matching key support is generated.")],
-        "SecretHoneypotRoom" => vec![("Shattered Pot", "other", Some(false), "Fixed room reward identity; placement is not asserted."), ("Honeypot", "other", Some(false), "Fixed room reward identity; placement is not asserted."), ("Bomb variant", "other", Some(false), "Bomb or Double Bomb; concrete variant and placement are not asserted.")],
+        "SecretHoardRoom" => vec![("exactly 16 gold piles", "gold", Some(false), "")],
+        "SecretMazeRoom" => vec![("Secret Maze equipment", "other", Some(false), "Weapon or armor, always uncursed.")],
+        "SecretSummoningRoom" => vec![("conditional summoning-room reward", "other", None, "Its presence depends on runtime state.")],
+        "SecretChestChasmRoom" => vec![("four locked default-stock sources", "other", None, "Matching key support is also generated.")],
+        "SecretHoneypotRoom" => vec![("Shattered Pot", "other", Some(false), ""), ("Honeypot", "other", Some(false), ""), ("Bomb variant", "other", Some(false), "Bomb or Double Bomb.")],
         "MagicalFireRoom" | "ToxicGasRoom" | "LibraryRoom" | "TreasuryRoom" | "StorageRoom" | "RunestoneRoom" | "LaboratoryRoom" => vec![("conditional room reward set", "other", None, "Queued prizes, generator state, or trinkets can alter concrete reward facts and the later floor tail.")],
         _ => Vec::new(),
     }
@@ -234,6 +237,49 @@ mod tests {
             {
                 if entry.prediction == ItemPredictionKind::Exact {
                     assert_eq!(entry.level, Some(0), "{} in {room}", entry.name);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn public_item_notes_only_describe_spawn_facts_and_conditions() {
+        for room in [
+            "StudyRoom",
+            "RitualRoom",
+            "RingRoom",
+            "SuspiciousChestRoom",
+            "GrassyGraveRoom",
+            "CrystalChoiceRoom",
+            "CrystalPathRoom",
+            "PitRoom",
+            "SecretLaboratoryRoom",
+            "SecretArtilleryRoom",
+            "SecretRunestoneRoom",
+            "SecretLarderRoom",
+            "SecretHoardRoom",
+            "SecretMazeRoom",
+            "SecretSummoningRoom",
+            "SecretChestChasmRoom",
+            "SecretHoneypotRoom",
+        ] {
+            let entries = RoomPublicFact::new(room, 12)
+                .expect("room contract")
+                .entries();
+            for note in entries.iter().flat_map(|entry| &entry.conditional_notes) {
+                let note = note.to_ascii_lowercase();
+                for lifecycle_term in [
+                    concat!("not ", "asserted"),
+                    "placement",
+                    "heap",
+                    "cell",
+                    "queue",
+                    "consume",
+                ] {
+                    assert!(
+                        !note.contains(lifecycle_term),
+                        "{room} exposes lifecycle term {lifecycle_term}: {note}"
+                    );
                 }
             }
         }
