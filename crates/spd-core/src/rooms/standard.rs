@@ -90,9 +90,10 @@ pub fn size_cat_probs(room_name: &str) -> [f32; 3] {
         "StripedRoom" | "StudyRoom" => [2., 1., 0.],
         "SegmentedRoom" | "PillarsRoom" | "CavesFissureRoom" => [9., 3., 1.],
         "CellBlockRoom" | "SkullsRoom" | "SegmentedLibraryRoom" => [0., 3., 1.],
-        "CirclePitRoom" | "RuinsRoom" | "RuinsExitRoom" | "ChasmRoom" | "LibraryRingRoom" => {
-            [4., 2., 1.]
-        }
+        "CirclePitRoom" | "RuinsRoom" | "ChasmRoom" | "LibraryRingRoom" => [4., 2., 1.],
+        // RuinsExitRoom inherits RuinsRoom's terrain painter but overrides
+        // its size-category weights in pinned v3.3.8.
+        "RuinsExitRoom" => [2., 1., 0.],
         "LibraryHallRoom" | "LibraryHallEntranceRoom" | "LibraryHallExitRoom" => [2., 1., 0.],
         "StatuesRoom" => [9., 3., 1.],
         "CaveRoom" => [4., 2., 1.],
@@ -308,7 +309,7 @@ mod tests {
 
     #[test]
     fn halls_rooms_keep_pinned_size_weights() {
-        assert_eq!(size_cat_probs("RuinsExitRoom"), [4., 2., 1.]);
+        assert_eq!(size_cat_probs("RuinsExitRoom"), [2., 1., 0.]);
         assert_eq!(size_cat_probs("ChasmRoom"), [4., 2., 1.]);
         assert_eq!(size_cat_probs("SkullsRoom"), [0., 3., 1.]);
         assert_eq!(size_cat_probs("RitualRoom"), [6., 3., 1.]);
