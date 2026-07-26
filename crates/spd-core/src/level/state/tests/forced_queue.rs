@@ -116,12 +116,20 @@ fn upgrade_scroll_contract_distinguishes_odd_and_even_schedules() {
         .iter()
         .find(|entry| entry.name.contains("Scroll of Upgrade"))
         .expect("even Scroll contract");
-    assert_eq!(
-        even_entry.name,
-        "conditional Scroll of Upgrade queued source"
-    );
-    assert!(even_entry.conditional_notes[0].contains("suppresses its enqueue"));
+    assert_eq!(even_entry.name, "Scroll of Upgrade");
+    assert!(even_entry.conditional_notes[0].contains("Forbidden Runes"));
     assert!(odd_entry.class_name.is_none() && even_entry.class_name.is_none());
+}
+
+#[test]
+fn runtime_sensitive_layout_is_available_only_as_an_assumed_map() {
+    let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(0));
+    dungeon.public_generation_tainted = true;
+    dungeon.depth = 2;
+    let state = crate::level::create_level_partial(&mut dungeon);
+    let public = state.to_floor_report_with_map(true);
+    assert!(public.map.is_none());
+    assert!(public.assumed_map.is_some());
 }
 
 #[test]

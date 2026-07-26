@@ -24,9 +24,9 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
         return Vec::new();
     }
     let mut entries = vec![constrained_entry(
-        "food-category queued source",
+        "guaranteed food-category item",
         "food",
-        "One food-category item is queued on every regular floor; persistent Generator history can change its identity, and a room may consume it before loose placement.",
+        "One food-category item is generated on every regular floor; persistent Generator history can change its identity, and a room can change how it appears or where it is found.",
     )];
     if initial
         .iter()
@@ -46,9 +46,9 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
         .any(|item| item.provenance == ItemProvenance::Forced(ForcedDropRole::LargeFeelingFood))
     {
         entries.push(constrained_entry(
-            "second food-category queued source",
+            "second guaranteed food-category item",
             "food",
-            "The seeded Large feeling queues a second food-category item; Generator history can change identity, and room consumption or final placement is not asserted.",
+            "The seeded Large feeling generates a second food-category item; Generator history can change identity, appearance, and final placement.",
         ));
     }
     for item in initial {
@@ -67,8 +67,8 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
             ItemProvenance::Forced(ForcedDropRole::UpgradeScroll {
                 forbidden_runes_sensitive: true,
             }) => (
-                "conditional Scroll of Upgrade queued source",
-                "The even-count seed-stable schedule selects a Scroll of Upgrade, but Forbidden Runes suppresses its enqueue; existence and placement are not asserted.",
+                "Scroll of Upgrade",
+                "Removed when Forbidden Runes is active; otherwise generated, with its final source and placement not asserted.",
             ),
             ItemProvenance::Forced(ForcedDropRole::ArcaneStylus) => (
                 "initially queued Arcane Stylus",

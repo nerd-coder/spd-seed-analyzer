@@ -208,8 +208,12 @@ async function captureFloor(page: Page, floor: number, snapshot: string) {
   })
   await expect(canvas).toHaveAttribute('data-water-animation', 'paused')
   await waitForCanvasPaint(canvas)
-  await expect(dialog.getByRole('button', { name: /^Show items/ })).toHaveCount(0)
-  await expect(dialog.getByRole('button', { name: /^Show known mobs/ })).toHaveCount(0)
+  await expect(dialog.getByRole('button', { name: /^Show items/ })).toHaveCount(
+    0
+  )
+  await expect(
+    dialog.getByRole('button', { name: /^Show known mobs/ })
+  ).toHaveCount(0)
 
   await snapshotCanvas(canvas, snapshot)
 }
@@ -226,9 +230,24 @@ for (const fixture of AUTOMATED_MAP_RENDER_FIXTURES) {
         `${fixture.seed}-F${fixture.floor}.png`
       )
     } else {
+      const region = floorRegions.find(
+        ({ first, last }) => fixture.floor >= first && fixture.floor <= last
+      )
+      if (!region)
+        throw new Error(`Floor ${fixture.floor} is not in a report region`)
+      await page.getByRole('tab', { name: region.name }).click()
       await expect(
         page.getByRole('button', { name: `Expand floor ${fixture.floor} map` })
       ).toHaveCount(0)
+      const floorSection = page
+        .getByText(`Floor ${fixture.floor}`, { exact: true })
+        .locator('xpath=ancestor::section[1]')
+      await floorSection
+        .getByRole('button', { name: 'Render assumed map' })
+        .click()
+      await expect(
+        floorSection.getByText('Assumed continuation', { exact: true })
+      ).toBeVisible()
     }
 
     expect(browserErrors.console, 'browser console errors').toEqual([])

@@ -343,6 +343,14 @@ impl LevelState {
                 items.extend(fact.entries());
             }
         }
+        let exact_map = allow_map
+            .then(|| self.layout_map.clone())
+            .flatten()
+            .filter(|_| !self.runtime_sensitive_layout);
+        let assumed_map = (allow_map && self.runtime_sensitive_layout)
+            .then(|| self.layout_map.clone())
+            .flatten();
+
         FloorReport {
             depth: self.depth as u32,
             feeling: (!self.runtime_sensitive_feeling).then(|| self.feeling.as_str().to_string()),
@@ -375,10 +383,8 @@ impl LevelState {
                 .collect(),
             // Public maps are painter-complete floor layouts, captured before
             // NPC, mob, and item population. Final entity maps remain internal.
-            map: allow_map
-                .then(|| self.layout_map.clone())
-                .flatten()
-                .filter(|_| !self.runtime_sensitive_layout),
+            map: exact_map,
+            assumed_map,
         }
     }
 }

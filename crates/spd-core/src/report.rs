@@ -180,6 +180,11 @@ pub struct FloorReport {
     /// Present when geometry build succeeded.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub map: Option<FloorMap>,
+    /// Layout produced by the analyzer's baseline continuation after an
+    /// unresolved player/meta-state branch. This is never an exact public
+    /// prediction and must be presented with its assumption warning.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub assumed_map: Option<FloorMap>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

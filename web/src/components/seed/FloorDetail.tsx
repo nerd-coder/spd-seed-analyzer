@@ -1,8 +1,12 @@
+import { useState } from 'react'
 import { DepthIcon } from '@/components/DepthIcon'
 import { FloorMapPreview } from '@/components/FloorMapPreview'
-import { ItemIcon } from '@/components/ItemIcon'
-import { ItemName } from '@/components/ItemName'
+import {
+  FloorItemSections,
+  partitionFloorItems,
+} from '@/components/seed/FloorItemSections'
 import { QuestCard } from '@/components/seed/QuestCard'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,8 +16,6 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { itemAppearance } from '@/lib/identity'
-import { formatItemSource, isHighlightSource } from '@/lib/labels'
 import type { FloorReport, IdentityMaps } from '@/lib/spd-wasm'
 
 export function FloorDetail({
@@ -25,8 +27,14 @@ export function FloorDetail({
   identities: IdentityMaps
   mapSpoilers: boolean
 }) {
+  const [showAssumedMap, setShowAssumedMap] = useState(false)
   const hasQuest = (floor.quests?.length ?? 0) > 0
+  const questRewards = partitionFloorItems(floor.items).quest
   const showMap = mapSpoilers && !!floor.map
+  const canShowAssumedMap = mapSpoilers && !floor.map && !!floor.assumed_map
+  const displayedMap = mapSpoilers
+    ? (floor.map ?? (showAssumedMap ? floor.assumed_map : null))
+    : null
 
   const details = (
     <div className="min-w-0 flex-1 space-y-3">
@@ -37,86 +45,19 @@ export function FloorDetail({
           </p>
           <div className="space-y-2">
             {floor.quests.map((q, i) => (
-              <QuestCard key={`${floor.depth}-quest-${i}`} quest={q} />
+              <QuestCard
+                key={`${floor.depth}-quest-${i}`}
+                quest={q}
+                rewards={questRewards}
+                identities={identities}
+                depth={floor.depth}
+              />
             ))}
           </div>
         </div>
       )}
 
-      <div className="space-y-1">
-        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-          Items
-          <span className="ml-1.5 font-mono font-normal tabular-nums normal-case">
-            ({floor.items.length})
-          </span>
-        </p>
-        {floor.items.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No items listed.</p>
-        ) : (
-          <ul className="space-y-1.5 text-sm">
-            {floor.items.map((item, i) => {
-              const sourceLabel = formatItemSource(item.source)
-              const highlight = isHighlightSource(item.source)
-              return (
-                <li
-                  key={`${floor.depth}-${i}`}
-                  className="flex items-start gap-2"
-                >
-                  <ItemIcon
-                    classNameItem={item.class_name}
-                    category={item.category}
-                    appearance={itemAppearance(item, identities)}
-                    size={16}
-                    title={item.name}
-                    className="mt-0.5"
-                  />
-                  <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-                    <ItemName name={item.name} />
-                    {item.tier != null && (
-                      <Badge variant="outline">tier {item.tier}</Badge>
-                    )}
-                    {item.tier_range && (
-                      <Badge variant="outline">
-                        tier {item.tier_range.min}–{item.tier_range.max}
-                      </Badge>
-                    )}
-                    {item.level_range && (
-                      <Badge variant="outline">
-                        +{item.level_range.min}…+{item.level_range.max}
-                      </Badge>
-                    )}
-                    {item.cursed === true && (
-                      <Badge
-                        variant="destructive"
-                        className="h-5 px-1.5 py-0 text-[10px] font-normal"
-                      >
-                        cursed
-                      </Badge>
-                    )}
-                    {sourceLabel && (
-                      <Badge
-                        variant={highlight ? 'secondary' : 'outline'}
-                        className="h-5 px-1.5 py-0 text-[10px] font-normal"
-                        title={item.source ?? undefined}
-                      >
-                        {sourceLabel}
-                      </Badge>
-                    )}
-                    {item.conditional_notes?.map((note) => (
-                      <span
-                        key={note}
-                        className="basis-full text-xs text-muted-foreground"
-                      >
-                        Conditional: {note}
-                      </span>
-                    ))}
-                  </span>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </div>
+      <FloorItemSections floor={floor} identities={identities} />
     </div>
   )
 
@@ -166,13 +107,34 @@ export function FloorDetail({
             {floor.map.width}×{floor.map.height}
           </Badge>
         )}
+        {canShowAssumedMap && (
+          <Button
+            variant="outline"
+            size="xs"
+            aria-pressed={showAssumedMap}
+            onClick={() => setShowAssumedMap((visible) => !visible)}
+          >
+            {showAssumedMap ? 'Hide assumed map' : 'Render assumed map'}
+          </Button>
+        )}
       </div>
+
+      {canShowAssumedMap && showAssumedMap && (
+        <Alert variant="warning">
+          <AlertTitle>Assumed continuation</AlertTitle>
+          <AlertDescription>
+            This layout follows the analyzer’s baseline continuation through
+            unresolved player or meta-state branches. Your actual floor can
+            differ.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="flex items-start gap-3">
         {details}
-        {showMap && floor.map && (
+        {displayedMap && (
           <FloorMapPreview
-            map={floor.map}
+            map={displayedMap}
             identities={identities}
             depth={floor.depth}
           />

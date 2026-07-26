@@ -65,6 +65,7 @@ fn exact_floor(depth: u32, classes: &[(&str, i32)]) -> crate::FloorReport {
             .collect(),
         quests: vec![],
         map: None,
+        assumed_map: None,
     }
 }
 
@@ -184,6 +185,7 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
         }],
         quests: Vec::new(),
         map: None,
+        assumed_map: None,
     };
     let constraints = [ItemConstraint {
         class_name: "Sword".into(),
@@ -244,6 +246,7 @@ fn constrained_shop_stock_never_matches_its_internal_concrete_class() {
         }],
         quests: vec![],
         map: None,
+        assumed_map: None,
     };
     let constraints = [ItemConstraint {
         class_name: "Quarterstaff".into(),

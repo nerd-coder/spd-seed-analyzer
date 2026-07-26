@@ -1,6 +1,8 @@
 import { ItemName } from '@/components/ItemName'
+import { FloorItemList } from '@/components/seed/FloorItemSections'
 import { Badge } from '@/components/ui/badge'
 import { type ParsedQuest, parseQuest } from '@/lib/labels'
+import type { IdentityMaps, ItemEntry } from '@/lib/spd-wasm'
 import { cn } from '@/lib/utils'
 
 const QUEST_KIND_STYLES: Record<
@@ -31,7 +33,17 @@ const QUEST_KIND_STYLES: Record<
   },
 }
 
-export function QuestCard({ quest }: { quest: string }) {
+export function QuestCard({
+  quest,
+  rewards,
+  identities,
+  depth,
+}: {
+  quest: string
+  rewards: ItemEntry[]
+  identities: IdentityMaps
+  depth: number
+}) {
   const parsed = parseQuest(quest)
   const styles = QUEST_KIND_STYLES[parsed.kind]
   return (
@@ -62,6 +74,18 @@ export function QuestCard({ quest }: { quest: string }) {
           <ItemName name={parsed.raw} />
         </p>
       )}
+      {rewards.length > 0 ? (
+        <div className="flex flex-col gap-1 border-t pt-2">
+          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            Reward details ({rewards.length})
+          </p>
+          <FloorItemList
+            items={rewards}
+            identities={identities}
+            depth={depth}
+          />
+        </div>
+      ) : null}
     </div>
   )
 }

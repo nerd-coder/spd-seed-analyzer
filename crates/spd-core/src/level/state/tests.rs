@@ -138,7 +138,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
     let report = floor.to_floor_report();
     assert!(report.items.iter().all(|item| item.class_name.is_none()));
     assert!(report.items.iter().any(|item| {
-        item.name == "food-category queued source"
+        item.name == "guaranteed food-category item"
             && item.prediction == ItemPredictionKind::Constrained
     }));
     assert!(report.map.is_none());

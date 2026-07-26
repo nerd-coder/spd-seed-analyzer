@@ -93,10 +93,11 @@
         "BlacksmithRoom's two painted equipment rewards have separate provenance. Runtime-sensitive weapon/missile identities are constrained to category and tier; armor identity remains exact; Parchment-sensitive curse/enchantment/glyph properties are omitted. Cells, heap types, and markers remain internal with the regular-floor map",
         "Imp reports expose a forced-cursed ring with its stable post-two-upgrade level but not its concrete identity. Isolated ring-deck selection and class-independent Ring.random calls preserve public room order and the later floor tail; the regular-floor map remains internal",
         "Quest summaries preserve the seed-safe quest type/target prefix while replacing the concrete reward-title suffix with a generic reward label",
+        "The UI partitions ShopRoom stock and quest-provenance rewards into dedicated Shop and Quest rewards sections; those entries are not repeated under general floor items",
         "Wandmaker choices persisted into later internal floor states for Java-oracle parity are explicitly internal-only and are not repeated publicly after the spawn floor, where the player may already have claimed one",
         "Explicit Parchment Scrap state and pinned HKT-JZN-XQQ floor-13 Java-oracle parity evidence, retained as internal evidence rather than a public concrete prediction",
         "Special-room rewards retain exact internal generation; public output uses painter-emitted static contracts rather than sampled items. This covers Study, Ritual, Ring, SuspiciousChest, and GrassyGrave center callbacks. Crypt exposes its floor-set armor distribution and forced curse; Statue exposes its forced-uncursed, positively enchanted weapon contract; audited families retain invariant source counts/categories while omitting unsafe fields and placements",
-        "Initial forced queues are reported separately from exact internal parity state: every regular floor has one constrained food-category enqueue; Halls depths 21–24 have one aggregate constraint for two Torches queued before food; seeded Large feelings add a constrained food-category enqueue; seed-stable limited drops expose only explicit initial-queue contracts. Odd-count scheduled Scrolls of Upgrade are invariant enqueues; even-count schedules are conditional on Forbidden Runes. Reports do not assert room consumption, surviving heap existence/type, or placement",
+        "Initial forced queues are reported separately from exact internal parity state: every regular floor has one guaranteed food-category item, while its concrete identity, presentation source, and placement remain constrained; Halls depths 21–24 have one aggregate constraint for two Torches generated before food; seeded Large feelings add a second guaranteed food-category item. Odd-count scheduled Scrolls of Upgrade are invariant; even-count schedules report the Scroll with a Forbidden Runes removal condition. Reports do not assert heap type or placement",
         "SecretLibraryRoom retains exact private-pool base scroll identities and placement internally, with its JVM HashMap order pinned by a targeted Java oracle; public output exposes only 2–3 distinct scroll-base rewards and labels Exotic Crystals conversion as conditional",
         "Runtime-sensitive taint persists across later floors. After a trinket-sensitive default feeling, artifact-history branch, divergent room callback, Wandmaker tail, or conservatively tainted even Scroll schedule, sampled feeling, layout, room facts, map, item tail, and quest tail remain internal; independent initial-queue contracts stay public"
       ],
@@ -151,7 +152,7 @@
       "status": "partial",
       "implemented": [
         "Water, grass, trap, door merge, and graph painting for supported regular-floor paths",
-        "Legacy reports omit regular-floor maps. Profiled analysis publishes painter-complete layout snapshots captured before NPC, mob, heap, forced-item, Guide Page, and other item population; public maps contain no item or mob facts",
+        "Legacy reports omit regular-floor maps. Profiled analysis publishes painter-complete layout snapshots captured before NPC, mob, heap, forced-item, Guide Page, and other item population; exact public maps contain no item or mob facts. When prior unknown player/meta state taints a layout, the report retains a separately labeled baseline-assumption map that the UI reveals only on explicit per-floor request",
         "Real-seed CXG-FJT-BFQ and HKT-JZN-XQQ references document intentional public map omission. A Playwright-only synthetic FloorMap exercises dialog, zoom, focus, responsive layout, and liquid animation without exposing unsafe production cells",
         "Pinned gameplay references for HKT-JZN-XQQ floor 12 and its Troll Blacksmith MiningLevel branch, with the branch explicitly retained as source-only evidence",
         "Fixture-backed terrain and render facts for selected special rooms",
@@ -163,7 +164,8 @@
         "Public layouts intentionally stop before population, so they do not predict createMobs, createItems grass flattening, forced-item placement, GuidePage/meta placement, heaps, or entity cells",
         "ToxicGas vent and gas blob facts are not yet exported as exact additive render facts",
         "Uncovered room painters and other floors can produce incomplete terrain or markers",
-        "Layouts remain omitted when a player-state branch can change the builder, room set, feeling, or painter output itself; entity-only Generator, quest, inventory, and meta dependencies do not suppress layout",
+        "Layouts whose builder, room set, feeling, or painter output can change with player state are not exact predictions; their optional baseline-assumption previews can differ from gameplay. Entity-only Generator, quest, inventory, and meta dependencies do not suppress an otherwise exact layout",
+        "Dedicated boss levels at depths 5, 10, 15, 20, and 25 plus LastLevel at depth 26 are visible in the floor report, but their level-specific builders and maps are not yet generated or rendered",
         "Quest-branch levels, including the Troll Blacksmith MiningLevel reference, are not generated or rendered by the analyzer"
       ],
       "impact": "Public previews show deterministic floor layout only; they intentionally do not predict the final populated gameplay map.",

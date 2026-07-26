@@ -124,6 +124,7 @@ export type FloorReport = {
   items: ItemEntry[]
   quests: string[]
   map?: FloorMap | null
+  assumed_map?: FloorMap | null
 }
 
 export type SeedReport = {

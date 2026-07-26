@@ -9,19 +9,11 @@ export const REGIONS = [
   { id: 'halls', label: 'Halls', min: 21, max: 26 },
 ] as const
 
-/** Non-regular depths (bosses + LastLevel) — omitted from the Floors UI. */
-export const BOSS_DEPTHS = new Set([5, 10, 15, 20, 25, 26])
-
 export function groupFloorsByRegion(floors: FloorReport[]) {
   return REGIONS.map((region) => ({
     region,
     floors: floors
-      .filter(
-        (f) =>
-          f.depth >= region.min &&
-          f.depth <= region.max &&
-          !BOSS_DEPTHS.has(f.depth)
-      )
+      .filter((f) => f.depth >= region.min && f.depth <= region.max)
       .sort((a, b) => a.depth - b.depth),
   })).filter((g) => g.floors.length > 0)
 }

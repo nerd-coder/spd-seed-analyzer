@@ -206,6 +206,20 @@ Acceptance:
 
 ## Immediate next slice
 
+Checkpoint: runtime-sensitive regular-floor layouts now remain available as
+explicit per-floor baseline-assumption previews, while exact maps retain their
+strict deterministic gate. Initial forced-queue reporting now describes the
+invariant food-category existence directly, and even-schedule Scrolls of
+Upgrade remain visible with a Forbidden Runes removal condition rendered as a
+chip. Boss and LastLevel floor rows are no longer hidden by the UI, and shop
+stock plus quest rewards render in provenance-specific sections instead of the
+general item list.
+
+Next map coverage slice: port the pinned dedicated boss generators for depths
+5, 10, 15, 20, and 25 plus LastLevel depth 26. These cannot reuse the regular
+room builder: each has level-specific terrain, transitions, painter RNG, and
+boss lifecycle state that must be fixture-checked before its map is public.
+
 Checkpoint: Sacrifice Room now exposes its verified one-higher floor-set tier
 range and final `+0..+3` upgrade range through Rust, WASM, and the UI while
 keeping concrete identity and enchantment conditional. The remaining work below
