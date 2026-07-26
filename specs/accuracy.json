@@ -30,7 +30,7 @@
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
-        "Halls coverage is proven through depth 24 for two preserved runs; replay HallsBoss depth 25 before promoting later-floor coverage",
+        "HallsBoss depth 25 matches normalized terrain, discoverability, transitions, and pre-items RNG for AAA-AAA-AAA and ABC-DEF-GHI, but raw decoration terrain, tile variance, and center-piece custom visual/wall layers are not yet asserted",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
         "Later regular floors still require phase-by-phase parity checks"
       ],
