@@ -198,7 +198,7 @@ fn artifact_or_ring_shop_fallback_never_promises_a_level() {
 }
 
 #[test]
-fn real_shop_stays_internal_after_inherited_generation_taint() {
+fn real_shop_remains_constrained_after_inherited_generation_taint() {
     let mut dungeon = crate::run::dungeon_from_run(crate::run::init_run(0));
     let mut floor_six = None;
     for depth in 1..=6 {
@@ -223,7 +223,13 @@ fn real_shop_stays_internal_after_inherited_generation_taint() {
     assert!(report
         .items
         .iter()
-        .all(|entry| entry.source.as_deref() == Some("guaranteed floor spawn")));
+        .any(|entry| entry.source.as_deref() == Some("ShopRoom")));
+    assert!(report.items.iter().all(|entry| {
+        matches!(
+            entry.source.as_deref(),
+            Some("guaranteed floor spawn" | "ShopRoom")
+        )
+    }));
     assert!(report.map.is_none());
 
     let search = crate::search_seeds(&crate::SeedSearchRequest {
@@ -240,7 +246,7 @@ fn real_shop_stays_internal_after_inherited_generation_taint() {
         max_matches: 1,
     })
     .expect("search fixed shop armor");
-    assert!(search.matches.is_empty());
+    assert_eq!(search.matches.len(), 1, "fixed shop armor is searchable");
 }
 
 #[test]

@@ -265,5 +265,11 @@ fn public_generation_taint_survives_a_nonregular_boss_floor() {
     assert!(public
         .items
         .iter()
-        .all(|item| item.source.as_deref() == Some("guaranteed floor spawn")));
+        .any(|item| item.source.as_deref() == Some("ShopRoom")));
+    assert!(public.items.iter().all(|item| {
+        matches!(
+            item.source.as_deref(),
+            Some("guaranteed floor spawn" | "ShopRoom")
+        )
+    }));
 }

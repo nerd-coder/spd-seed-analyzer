@@ -177,16 +177,16 @@ fn artifact_rare_branch_redacts_layout_and_post_callback_floor_tail() {
                 dungeon.depth = depth;
                 floor = Some(crate::level::create_level_partial(&mut dungeon));
             }
-            floor.filter(|state| state.runtime_sensitive_layout)
+            floor.filter(|state| {
+                state.placed_items.iter().any(|item| {
+                    item.provenance == ItemProvenance::Shop(ShopStockRole::DeckRareArtifactOrRing)
+                })
+            })
         })
         .expect("an early seed selects the shop artifact-or-ring branch");
     let boundary = state
         .runtime_sensitive_placed_items_from
         .expect("artifact branch boundary");
-    assert_eq!(
-        boundary, 0,
-        "inherited taint must remain earlier than the artifact callback"
-    );
     assert!(
         boundary < state.placed_items.len(),
         "real floor has post-shop generated item facts"
@@ -207,18 +207,30 @@ fn artifact_rare_branch_redacts_layout_and_post_callback_floor_tail() {
         "only pre-callback quest selections remain safe"
     );
 
-    let mut safe_prefix = state.clone();
-    safe_prefix.placed_items.truncate(boundary);
-    safe_prefix.runtime_sensitive_placed_items_from = None;
-    safe_prefix.quests.truncate(quest_boundary);
-    safe_prefix.runtime_sensitive_quests_from = None;
-    safe_prefix.runtime_sensitive_layout = true;
-    safe_prefix.map = None;
-    let expected = safe_prefix.to_floor_report();
-    assert_eq!(
-        serde_json::to_value(&public.items).expect("serialize guarded public items"),
-        serde_json::to_value(&expected.items).expect("serialize pre-boundary item projection"),
-        "no post-shop item fact crosses the public boundary"
+    let public_shop: Vec<_> = public
+        .items
+        .iter()
+        .filter(|item| item.source.as_deref() == Some("ShopRoom"))
+        .collect();
+    assert!(!public_shop.is_empty(), "safe shop facts remain public");
+    assert!(public_shop.iter().any(|item| {
+        item.name == "artifact or ring"
+            && item.prediction == crate::report::ItemPredictionKind::Constrained
+            && item.class_name.is_none()
+    }));
+    assert!(
+        state
+            .placed_items
+            .iter()
+            .enumerate()
+            .filter(|(index, item)| {
+                *index >= boundary && !matches!(item.provenance, ItemProvenance::Shop(_))
+            })
+            .all(|(_, hidden)| !public.items.iter().any(|item| {
+                item.class_name.as_deref() == Some(hidden.class_name.as_str())
+                    && item.source == hidden.source
+            })),
+        "no post-shop non-shop item fact crosses the public boundary"
     );
     let json = serde_json::to_string(&public).expect("serialize guarded floor");
     assert!(!json.contains("for_sale"));

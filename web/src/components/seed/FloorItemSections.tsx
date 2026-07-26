@@ -1,3 +1,4 @@
+import { CircleQuestionMark } from 'lucide-react'
 import { ItemIcon } from '@/components/ItemIcon'
 import { ItemName } from '@/components/ItemName'
 import { Badge } from '@/components/ui/badge'
@@ -33,16 +34,25 @@ export function FloorItemList({
         const sourceLabel = formatItemSource(item.source)
         return (
           <li key={`${depth}-${index}`} className="flex items-start gap-2">
-            <ItemIcon
-              classNameItem={item.class_name}
-              category={item.category}
-              appearance={
-                identitySpoilers ? itemAppearance(item, identities) : undefined
-              }
-              size={16}
-              title={item.name}
-              className="mt-0.5"
-            />
+            {item.name === 'artifact or ring' ? (
+              <CircleQuestionMark
+                aria-label="Unknown artifact or ring"
+                className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+              />
+            ) : (
+              <ItemIcon
+                classNameItem={item.class_name}
+                category={item.category}
+                appearance={
+                  identitySpoilers
+                    ? itemAppearance(item, identities)
+                    : undefined
+                }
+                size={16}
+                title={item.name}
+                className="mt-0.5"
+              />
+            )}
             <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
               <ItemName name={item.name} />
               {item.tier != null ? (

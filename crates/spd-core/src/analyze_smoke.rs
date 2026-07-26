@@ -126,7 +126,7 @@ fn shop_stock_on_floor_6() {
     assert!(public
         .items
         .iter()
-        .all(|item| item.source.as_deref() != Some("ShopRoom")));
+        .any(|item| item.source.as_deref() == Some("ShopRoom")));
 }
 
 #[test]

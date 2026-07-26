@@ -126,9 +126,15 @@ impl LevelState {
         let mut shop_items = Vec::new();
         let mut has_shop = false;
         for (index, item) in self.placed_items.iter().enumerate() {
-            if self
+            let past_runtime_sensitive_boundary = self
                 .runtime_sensitive_placed_items_from
-                .is_some_and(|boundary| index >= boundary)
+                .is_some_and(|boundary| index >= boundary);
+            // Shop stock is generated before the rare artifact constructor can
+            // alter the remaining floor stream. Its fixed entries and public
+            // deck constraints therefore remain safe even when that callback
+            // suppresses the layout and later loot.
+            if past_runtime_sensitive_boundary
+                && !matches!(item.provenance, ItemProvenance::Shop(_))
             {
                 continue;
             }
@@ -220,7 +226,7 @@ impl LevelState {
                 (Some(ShopStockRole::DeckMissile { .. }), _) => "missile weapon stock",
                 (Some(ShopStockRole::DeckRareWand), _) => "wand stock",
                 (Some(ShopStockRole::DeckRareRing), _) => "ring stock",
-                (Some(ShopStockRole::DeckRareArtifactOrRing), _) => "artifact or ring stock",
+                (Some(ShopStockRole::DeckRareArtifactOrRing), _) => "artifact or ring",
                 (_, Some(QuestRewardRole::GhostWeapon { .. })) => "Ghost weapon reward",
                 (_, Some(QuestRewardRole::GhostArmor { .. })) => "Ghost armor reward",
                 (_, Some(QuestRewardRole::WandmakerWand)) => "Wandmaker wand reward",

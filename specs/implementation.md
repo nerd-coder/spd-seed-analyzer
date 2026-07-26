@@ -108,8 +108,10 @@ Complete these sources in priority order:
    and player-triggered regeneration. Clearly separate floor-generation rewards
    from rewards generated later by player interaction.
 3. Shops: report fixed stock, persistent-deck slot constraints, artifact/ring
-   fallback outcomes, bag choices, and Hourglass sand conditions. Preserve slot
-   facts even when shuffle-dependent cells cannot be fixed.
+   fallback outcomes as an `artifact or ring` entry, bag choices, and Hourglass
+   sand conditions. Preserve shop stock when the rare callback suppresses the
+   runtime-sensitive layout, and preserve slot facts when shuffle-dependent
+   cells cannot be fixed.
 4. Special and secret rooms: replace generic category/count summaries with the
    strongest proven identity set, quantity, property, heap, and placement facts
    for every supported room family. Start with Crystal Vault/Choice/Path,
