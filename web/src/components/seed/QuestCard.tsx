@@ -48,6 +48,7 @@ export function QuestCard({
 }) {
   const parsed = parseQuest(quest)
   const styles = QUEST_KIND_STYLES[parsed.kind]
+  const isWandmaker = parsed.kind === 'wandmaker'
   return (
     <div
       className={cn(
@@ -76,7 +77,7 @@ export function QuestCard({
           <ItemName name={parsed.raw} />
         </p>
       )}
-      {rewards.length > 0 ? (
+      {!isWandmaker && rewards.length > 0 ? (
         <div className="flex flex-col gap-1 border-t pt-2">
           <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
             Reward details ({rewards.length})

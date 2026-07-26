@@ -77,7 +77,7 @@ pub(super) fn spawn_npcs(
         if let Some(wandmaker) = quests::try_spawn_wandmaker(dungeon, entrance, map) {
             map.mob_occupied[wandmaker.cell] = true;
             map.known_mobs[wandmaker.cell] = Some("Wandmaker");
-            let public_summary = safe_summary(&wandmaker.summary, "reward options");
+            let public_summary = safe_summary(&wandmaker.summary, "one of two +1…+3 wands");
             result.summaries.push(wandmaker.summary);
             result.public_labels.push(Some(public_summary));
             result.items.extend([wandmaker.wand1, wandmaker.wand2]);

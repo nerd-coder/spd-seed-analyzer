@@ -217,6 +217,11 @@ fn wandmaker_quest_spawns_within_prison() {
                     assert!(map.heaps.is_empty());
                 }
                 assert!(f.quests.iter().all(|q| !q.contains(" / ")));
+                assert!(f
+                    .quests
+                    .iter()
+                    .filter(|q| q.contains("Old Wandmaker"))
+                    .all(|q| q.ends_with(" — one of two +1…+3 wands")));
                 saw = true;
                 break;
             }

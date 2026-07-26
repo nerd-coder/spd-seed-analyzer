@@ -32,7 +32,11 @@ export function FloorItemList({
     <ul className="flex flex-col gap-1.5 text-sm">
       {items.map((item, index) => {
         const sourceLabel =
-          itemGroup(item) === 'shop' ? null : formatItemSource(item.source)
+          itemGroup(item) === 'shop' ||
+          item.source === 'Blacksmith.Quest' ||
+          item.source === 'Imp.Quest'
+            ? null
+            : formatItemSource(item.source)
         return (
           <li key={`${depth}-${index}`} className="flex items-start gap-2">
             {item.name === 'artifact or ring' ? (
