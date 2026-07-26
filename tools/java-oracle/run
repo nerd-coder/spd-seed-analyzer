@@ -16,6 +16,7 @@ shop_bag_selection=""
 sacrifice_reward=""
 secret_library_order=""
 figure_eight_trace=""
+free_space_trace=""
 caves_boss_patch=""
 halls_paint_trace=""
 
@@ -23,7 +24,7 @@ usage() {
 	cat >&2 <<'EOF'
 Usage: tools/java-oracle/run [--source PATH] [--output FILE]
                              [--depth 1 | --final-heaps-depth 1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|25|26 |
-                             --figure-eight-trace DEPTH | --halls-paint-trace 21|22|23|24 |
+                             --figure-eight-trace DEPTH | --free-space-trace DEPTH | --halls-paint-trace 21|22|23|24 |
                              --caves-boss-patch |
                              --generator-deck-rollover | --generator-lifecycle |
                              --shop-bag-selection | --sacrifice-reward] SEED
@@ -38,6 +39,8 @@ With --shop-bag-selection, calls the pinned ShopRoom.ChooseBag against two
 unique-winner floor-11 backpack profiles without generating a floor.
 With --figure-eight-trace, records non-advancing RNG probes and room bounds for
 every FigureEightBuilder attempt on the target floor.
+With --free-space-trace, replays the FigureEight placement path and records the
+target depth-23 ABC-DEF-GHI Sentry placement's collision iteration and tie draws.
 With --halls-paint-trace, records the regular Halls painter's pre-shuffle room
 list and non-advancing RNG probes after each room callback and paintDoors.
 With --sacrifice-reward, applies Parchment Scrap +3 at the floor-13 entry
@@ -90,6 +93,11 @@ while (($# > 0)); do
 		--figure-eight-trace)
 			[[ $# -ge 2 ]] || { usage; exit 2; }
 			figure_eight_trace="$2"
+			shift 2
+			;;
+		--free-space-trace)
+			[[ $# -ge 2 ]] || { usage; exit 2; }
+			free_space_trace="$2"
 			shift 2
 			;;
 		--caves-boss-patch)
@@ -209,6 +217,9 @@ if [[ -n "$secret_library_order" ]]; then
 fi
 if [[ -n "$figure_eight_trace" ]]; then
 	gradle_args+=(-PoracleFigureEightTrace="$figure_eight_trace")
+fi
+if [[ -n "$free_space_trace" ]]; then
+	gradle_args+=(-PoracleFreeSpaceTrace="$free_space_trace")
 fi
 if [[ -n "$caves_boss_patch" ]]; then
 	gradle_args+=(-PoracleCavesBossPatch=true)

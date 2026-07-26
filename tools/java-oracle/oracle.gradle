@@ -24,6 +24,8 @@ gradle.beforeProject { project ->
 				gradle.startParameter.projectProperties['oracleSecretLibraryOrder']
 		def figureEightTrace =
 				gradle.startParameter.projectProperties['oracleFigureEightTrace']
+		def freeSpaceTrace =
+				gradle.startParameter.projectProperties['oracleFreeSpaceTrace']
 		def cavesBossPatch =
 				gradle.startParameter.projectProperties['oracleCavesBossPatch']
 		def hallsPaintTrace =
@@ -78,6 +80,9 @@ gradle.beforeProject { project ->
 			}
 			if (figureEightTrace != null) {
 				args('figure-eight-trace', figureEightTrace)
+			}
+			if (freeSpaceTrace != null) {
+				args('free-space-trace', freeSpaceTrace)
 			}
 			if (cavesBossPatch != null) {
 				args('caves-boss-patch')

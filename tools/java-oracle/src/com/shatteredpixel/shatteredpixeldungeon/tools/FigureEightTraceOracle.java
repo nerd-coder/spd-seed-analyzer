@@ -29,26 +29,41 @@ final class FigureEightTraceOracle {
 	}
 
 	static String generate(long seed, int depth) {
+		return generate(seed, depth, false);
+	}
+
+	static String generateFreeSpace(long seed, int depth) {
+		return generate(seed, depth, true);
+	}
+
+	private static String generate(long seed, int depth, boolean freeSpace) {
 		FloorOracle.initializeFreshRun(seed);
 		FloorOracle.generatePriorFloors(depth);
 		FloorOracle.markTargetFloorGenerated(depth);
-		TraceBuilder.attempts.clear();
+		if (freeSpace) FreeSpaceTraceBuilder.attempts.clear(); else TraceBuilder.attempts.clear();
 		Dungeon.daily = true;
 		try {
-			new TraceHallsLevel().create();
+			new TraceHallsLevel(freeSpace).create();
 		} finally {
 			Dungeon.daily = false;
 		}
 		StringBuilder json = new StringBuilder("{\n  \"depth\": ").append(depth)
 				.append(",\n  \"attempts\": [");
-		for (int i = 0; i < TraceBuilder.attempts.size(); i++) {
+		List<String> attempts = freeSpace ? FreeSpaceTraceBuilder.attempts : TraceBuilder.attempts;
+		for (int i = 0; i < attempts.size(); i++) {
 			if (i > 0) json.append(',');
-			json.append("\n    ").append(TraceBuilder.attempts.get(i));
+			json.append("\n    ").append(attempts.get(i));
 		}
 		return json.append("\n  ]\n}\n").toString();
 	}
 
 	private static final class TraceHallsLevel extends HallsLevel {
+		private final boolean freeSpace;
+
+		TraceHallsLevel(boolean freeSpace) {
+			this.freeSpace = freeSpace;
+		}
+
 		@Override
 		protected Builder builder() {
 			Builder selected = super.builder();
@@ -56,7 +71,8 @@ final class FigureEightTraceOracle {
 			try {
 				Field intensity = FigureEightBuilder.class.getDeclaredField("curveIntensity");
 				intensity.setAccessible(true);
-				return new TraceBuilder().setLoopShape(2, intensity.getFloat(selected), 0f);
+				return freeSpace ? new FreeSpaceTraceBuilder(intensity.getFloat(selected))
+						: new TraceBuilder().setLoopShape(2, intensity.getFloat(selected), 0f);
 			} catch (ReflectiveOperationException error) {
 				throw new AssertionError(error);
 			}
@@ -87,6 +103,7 @@ final class FigureEightTraceOracle {
 			return result;
 		}
 
+		@SuppressWarnings("unchecked")
 		private String failureStage(ArrayList<Room> result) {
 			if (result != null) return "null";
 			try {
@@ -103,7 +120,7 @@ final class FigureEightTraceOracle {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static List<Integer> probe() {
+	static List<Integer> probe() {
 		try {
 			Field generators = Random.class.getDeclaredField("generators");
 			generators.setAccessible(true);

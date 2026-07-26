@@ -44,6 +44,8 @@ public final class JavaOracle {
 				args.length == 2 && "shop-bag-selection".equals(args[1]);
 		boolean figureEightTrace =
 				args.length == 3 && "figure-eight-trace".equals(args[1]);
+		boolean freeSpaceTrace =
+				args.length == 3 && "free-space-trace".equals(args[1]);
 		boolean sacrificeReward =
 				args.length == 2 && "sacrifice-reward".equals(args[1]);
 		boolean secretLibraryOrder =
@@ -60,6 +62,10 @@ public final class JavaOracle {
 		}
 		if (figureEightTrace) {
 			System.out.print(FigureEightTraceOracle.generate(numericSeed, Integer.parseInt(args[2])));
+			return;
+		}
+		if (freeSpaceTrace) {
+			System.out.print(FigureEightTraceOracle.generateFreeSpace(numericSeed, Integer.parseInt(args[2])));
 			return;
 		}
 		if (cavesBossPatch) {
