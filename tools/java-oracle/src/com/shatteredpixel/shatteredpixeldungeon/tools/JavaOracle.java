@@ -49,6 +49,7 @@ public final class JavaOracle {
 		boolean secretLibraryOrder =
 				args.length == 2 && "secret-library-order".equals(args[1]);
 		boolean cavesBossPatch = args.length == 2 && "caves-boss-patch".equals(args[1]);
+		boolean hallsPaintTrace = args.length == 3 && "halls-paint-trace".equals(args[1]);
 		if (secretLibraryOrder) {
 			System.out.print(SecretLibraryOracle.generateJson());
 			return;
@@ -63,6 +64,10 @@ public final class JavaOracle {
 		}
 		if (cavesBossPatch) {
 			System.out.print(PatchOracle.cavesBossJson(inputSeed, numericSeed));
+			return;
+		}
+		if (hallsPaintTrace) {
+			System.out.print(HallsPaintTraceOracle.generate(numericSeed, Integer.parseInt(args[2])));
 			return;
 		}
 		if (args.length == 3 && !finalHeaps) {

@@ -133,6 +133,8 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
         pre_items_rng_probe: vec![],
         pre_mobs_rng_probe: vec![],
         pre_paint_rng_probe: vec![],
+        room_paint_rng_checkpoints: vec![],
+        post_doors_rng_probe: vec![],
     };
 
     let report = floor.to_floor_report();
@@ -278,6 +280,8 @@ fn room_reward_projection_hides_all_concrete_fields_and_deduplicates_counts() {
         pre_items_rng_probe: vec![],
         pre_mobs_rng_probe: vec![],
         pre_paint_rng_probe: vec![],
+        room_paint_rng_checkpoints: vec![],
+        post_doors_rng_probe: vec![],
     };
     for class_name in ["Sword", "MailArmor", "Kunai"] {
         let mut reward = GeneratedItem::new(class_name, ItemCategory::Weapon);

@@ -17,6 +17,7 @@ sacrifice_reward=""
 secret_library_order=""
 figure_eight_trace=""
 caves_boss_patch=""
+halls_paint_trace=""
 
 usage() {
 	cat >&2 <<'EOF'
@@ -93,6 +94,11 @@ while (($# > 0)); do
 			caves_boss_patch="1"
 			shift
 			;;
+		--halls-paint-trace)
+			[[ $# -ge 2 ]] || { usage; exit 2; }
+			halls_paint_trace="$2"
+			shift 2
+			;;
 		-h|--help)
 			usage
 			exit 0
@@ -132,6 +138,7 @@ selected_contracts=0
 [[ -n "$secret_library_order" ]] && ((selected_contracts += 1))
 [[ -n "$figure_eight_trace" ]] && ((selected_contracts += 1))
 [[ -n "$caves_boss_patch" ]] && ((selected_contracts += 1))
+[[ -n "$halls_paint_trace" ]] && ((selected_contracts += 1))
 if ((selected_contracts > 1)); then
 	echo "Choose only one oracle contract" >&2
 	exit 2
@@ -203,6 +210,9 @@ if [[ -n "$figure_eight_trace" ]]; then
 fi
 if [[ -n "$caves_boss_patch" ]]; then
 	gradle_args+=(-PoracleCavesBossPatch=true)
+fi
+if [[ -n "$halls_paint_trace" ]]; then
+	gradle_args+=(-PoracleHallsPaintTrace="$halls_paint_trace")
 fi
 gradle_args+=(:core:javaOracleDump)
 

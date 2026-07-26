@@ -105,6 +105,18 @@ pub struct LevelState {
     /// Non-consuming parity probe before `RegularPainter.paint`.
     #[doc(hidden)]
     pub pre_paint_rng_probe: Vec<i32>,
+    /// Non-consuming main-RNG checkpoints after each regular-room paint callback.
+    #[doc(hidden)]
+    pub room_paint_rng_checkpoints: Vec<RoomPaintRngCheckpoint>,
+    /// Non-consuming main-RNG checkpoint after `paintDoors`.
+    #[doc(hidden)]
+    pub post_doors_rng_probe: Vec<i32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RoomPaintRngCheckpoint {
+    pub room: String,
+    pub rng: Vec<i32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]

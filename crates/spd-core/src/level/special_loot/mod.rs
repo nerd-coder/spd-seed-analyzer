@@ -43,6 +43,15 @@ pub struct SpecialPaintResult {
     /// RNG path can differ with player state/history.
     pub first_sensitive_loot_index: Option<usize>,
     pub room_public_facts: Vec<super::room_public::RoomPublicFact>,
+    /// Non-consuming main-RNG checkpoints after each `Room.paint` callback.
+    #[doc(hidden)]
+    pub rng_checkpoints: Vec<RoomPaintRngCheckpoint>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RoomPaintRngCheckpoint {
+    pub room: String,
+    pub rng: Vec<i32>,
 }
 
 /// Generate special/secret room prizes; may consume items from `items_to_spawn`
@@ -64,6 +73,7 @@ pub fn special_room_loot(
             paint_order: Vec::new(),
             first_sensitive_loot_index: None,
             room_public_facts: Vec::new(),
+            rng_checkpoints: Vec::new(),
         };
     }
 
@@ -73,6 +83,7 @@ pub fn special_room_loot(
 
     let mut first_sensitive_loot_index = None;
     let mut room_public_facts = Vec::new();
+    let mut rng_checkpoints = Vec::new();
     for &ri in &order {
         place_doors_for_room(rooms, ri, &mut doors);
 
@@ -151,6 +162,10 @@ pub fn special_room_loot(
             }
             _ => {}
         }
+        rng_checkpoints.push(RoomPaintRngCheckpoint {
+            room: room.name.clone(),
+            rng: Random::peek_ints(8),
+        });
     }
 
     SpecialPaintResult {
@@ -159,6 +174,7 @@ pub fn special_room_loot(
         paint_order: order,
         first_sensitive_loot_index,
         room_public_facts,
+        rng_checkpoints,
     }
 }
 

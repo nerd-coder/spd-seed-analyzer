@@ -217,6 +217,8 @@ fn create_level_internal(
     let mut pre_items_rng_probe = Vec::new();
     let mut pre_mobs_rng_probe = Vec::new();
     let mut pre_paint_rng_probe = Vec::new();
+    let mut room_paint_rng_checkpoints = Vec::new();
+    let mut post_doors_rng_probe = Vec::new();
 
     if !dungeon.regular_level() {
         layout_map = boss_layouts::generated_layout(dungeon, depth_seed);
@@ -254,6 +256,8 @@ fn create_level_internal(
                 pre_items_rng_probe: Vec::new(),
                 pre_mobs_rng_probe: Vec::new(),
                 pre_paint_rng_probe: Vec::new(),
+                room_paint_rng_checkpoints: Vec::new(),
+                post_doors_rng_probe: Vec::new(),
             };
         };
         builder = Some(floor.builder_kind);
@@ -323,7 +327,15 @@ fn create_level_internal(
                 paint_order,
                 first_sensitive_loot_index,
                 room_public_facts: special_room_public_facts,
+                rng_checkpoints,
             } = special;
+            room_paint_rng_checkpoints = rng_checkpoints
+                .into_iter()
+                .map(|checkpoint| state::RoomPaintRngCheckpoint {
+                    room: checkpoint.room,
+                    rng: checkpoint.rng,
+                })
+                .collect();
             room_public_facts.extend(special_room_public_facts);
             if let Some(first_sensitive_loot_index) = first_sensitive_loot_index {
                 runtime_sensitive_placed_items_from
@@ -382,6 +394,9 @@ fn create_level_internal(
                 feeling,
                 &mut doors,
             );
+            if dungeon.depth == 22 {
+                post_doors_rng_probe = Random::peek_ints(8);
+            }
 
             // Water / grass / traps / decorate on a separate generator.
             painter::paint_water_grass_traps(
@@ -531,6 +546,8 @@ fn create_level_internal(
         pre_items_rng_probe,
         pre_mobs_rng_probe,
         pre_paint_rng_probe,
+        room_paint_rng_checkpoints,
+        post_doors_rng_probe,
     }
 }
 

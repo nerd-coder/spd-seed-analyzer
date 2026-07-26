@@ -30,6 +30,8 @@ fn projection_emits_one_static_contract_and_never_the_sampled_weapon() {
         pre_items_rng_probe: vec![],
         pre_mobs_rng_probe: vec![],
         pre_paint_rng_probe: vec![],
+        room_paint_rng_checkpoints: vec![],
+        post_doors_rng_probe: vec![],
     };
     let mut sampled = GeneratedItem::new("Sword", ItemCategory::Weapon);
     sampled.level = 2;
