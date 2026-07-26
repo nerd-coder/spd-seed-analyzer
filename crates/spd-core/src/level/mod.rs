@@ -281,7 +281,7 @@ fn create_level_internal(
         // before room shuffle / placeDoors / special paint.
         terrain::shift_rooms_for_painter(&mut floor.rooms, feeling == Feeling::Chasm);
         let n_traps = painter::n_traps(dungeon.depth);
-        if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21) {
+        if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=22) {
             pre_paint_rng_probe = Random::peek_ints(8);
         }
 
@@ -409,7 +409,7 @@ fn create_level_internal(
                     .filter_map(|&index| floor.rooms.get(index).cloned())
                     .collect();
 
-                if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21) {
+                if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=22) {
                     pre_mobs_rng_probe = Random::peek_ints(8);
                 }
                 let spawned = quest_rewards::spawn_npcs(dungeon, &floor.rooms, &mut map);
@@ -441,7 +441,7 @@ fn create_level_internal(
                     false
                 };
 
-                if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21) {
+                if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=22) {
                     pre_items_rng_probe = Random::peek_ints(8);
                 }
                 let loot = create_items::create_items_main(

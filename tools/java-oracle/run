@@ -21,7 +21,7 @@ caves_boss_patch=""
 usage() {
 	cat >&2 <<'EOF'
 Usage: tools/java-oracle/run [--source PATH] [--output FILE]
-                             [--depth 1 | --final-heaps-depth 1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|25|26 |
+                             [--depth 1 | --final-heaps-depth 1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|25|26 |
                              --figure-eight-trace DEPTH |
                              --caves-boss-patch |
                              --generator-deck-rollover | --generator-lifecycle |
@@ -114,8 +114,8 @@ if [[ -n "$depth" && "$depth" != "1" ]]; then
 	echo "The floor oracle currently supports only --depth 1" >&2
 	exit 2
 fi
-if [[ -n "$final_heaps_depth" && ! "$final_heaps_depth" =~ ^(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|25|26)$ ]]; then
-	echo "The final-heaps oracle supports regular depths 1-4, 6-9, 11-14, 16-19, and 21, plus dedicated depths 5, 10, 15, 20, 25, and 26" >&2
+if [[ -n "$final_heaps_depth" && ! "$final_heaps_depth" =~ ^(1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|25|26)$ ]]; then
+	echo "The final-heaps oracle supports regular depths 1-4, 6-9, 11-14, 16-19, and 21-22, plus dedicated depths 5, 10, 15, 20, 25, and 26" >&2
 	exit 2
 fi
 if [[ -n "$depth" && -n "$final_heaps_depth" ]]; then

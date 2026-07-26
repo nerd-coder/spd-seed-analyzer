@@ -172,7 +172,7 @@ fn decorate_city(map: &mut TerrainMap, depth: i32) {
     }
 }
 
-/// `HallsPainter.decorate` subset (neighbour merge skipped).
+/// `HallsPainter.decorate` visual-variance pass.
 fn decorate_halls(map: &mut TerrainMap) {
     let w = map.width;
     let l = map.map.len() as i32;
@@ -196,6 +196,8 @@ fn decorate_halls(map: &mut TerrainMap) {
             && Random::int_max(20) == 0
         {
             map.map[i] = WALL_DECO;
+        } else if map.map[i] == crate::level::terrain::REGION_DECO && Random::int_max(2) == 0 {
+            map.map[i] = REGION_DECO_ALT;
         }
     }
 }

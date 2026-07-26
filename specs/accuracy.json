@@ -22,7 +22,8 @@
         "Oracle-backed fixed-form structural layouts for PrisonBossLevel, CityBossLevel, and LastLevel at depths 10, 20, and 26",
         "Pinned SewerBossLevel generation at depth 5: exact room initialization, Goo landmark FigureEight retries and extra connections, all four Goo room painters, Rat King cache RNG, SewerPainter environment, doors, transitions, and layout-only normalization across five Java-oracle seeds",
         "Pinned CavesBossLevel generation at depth 15: Java 23×23 elliptical arena, pylon patch placement and pathfinding retry lifecycle, entrance and corner variants, transitions, and normalized terrain/discoverability across four Java-oracle seeds",
-        "Pinned HallsBossLevel generation at depth 25: five variable chambers, statue/decor and water patches, center-piece terrain, pathfinding retry lifecycle, transitions, and normalized terrain/discoverability across four Java-oracle seeds"
+        "Pinned HallsBossLevel generation at depth 25: five variable chambers, statue/decor and water patches, center-piece terrain, pathfinding retry lifecycle, transitions, and normalized terrain/discoverability across four Java-oracle seeds",
+        "Depth-22 Halls lifecycle fixture: full prior-floor replay matches the Java pre-paint RNG checkpoint, room selection, and room bounds; HallsPainter includes REGION_DECO_ALT variance"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
@@ -41,6 +42,7 @@
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-18.json",
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-19.json",
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-21.json",
+        "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-22.json",
         "tools/java-oracle/fixtures/traces/aaa-aaa-aaa-floor-21-figure-eight.json",
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-5.json",
         "tools/java-oracle/fixtures/zzz-zzz-zzz-final-heaps-floor-5.json",
