@@ -2,15 +2,16 @@
 
 Pinned target: SPD v3.3.8 @ `7b8b845a7`; accuracy remains `partial`.
 
-## Validate depth-22 Halls painter output
+## Broaden regular Halls painter coverage
 
-`AAA-AAA-AAA` now matches Java at the FigureEight pre-shuffle room-list
-boundary and through every room-paint callback. The remaining focused boundary
-is `RegularPainter.paintDoors`: Rust is two main-RNG draws ahead immediately
-after it.
+Depth 22 now has Java-backed `paintDoors` parity for AAA-AAA-AAA and the
+contrasting ABC-DEF-GHI replay. The pinned `RuinsRoom.canMerge` override keeps
+solid patch edges open, matching the post-door RNG boundary and affected door
+terrain/discoverability; AAA transitions remain pinned.
 
-1. Add a Java oracle checkpoint around the Halls door merge and identify the
-   exact connected-edge traversal or merge condition causing the two draws.
-2. Port the behavior and assert the post-door RNG boundary, terrain,
-   discoverability, and transitions for AAA.
-3. Add a contrasting depth-22 fixture before broadening Halls coverage.
+1. Record a fixture-first depth-23 or depth-24 Halls painter trace, replaying
+   all prior floors to preserve run state.
+2. Compare pre-paint, room callbacks, post-door RNG, and affected structural
+   cells before porting any newly exposed painter behavior.
+3. Keep public Halls layout coverage partial until multiple regular-floor
+   histories are verified.

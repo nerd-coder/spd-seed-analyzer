@@ -23,7 +23,7 @@
         "Pinned SewerBossLevel generation at depth 5: exact room initialization, Goo landmark FigureEight retries and extra connections, all four Goo room painters, Rat King cache RNG, SewerPainter environment, doors, transitions, and layout-only normalization across five Java-oracle seeds",
         "Pinned CavesBossLevel generation at depth 15: Java 23×23 elliptical arena, pylon patch placement and pathfinding retry lifecycle, entrance and corner variants, transitions, and normalized terrain/discoverability across four Java-oracle seeds",
         "Pinned HallsBossLevel generation at depth 25: five variable chambers, statue/decor and water patches, center-piece terrain, pathfinding retry lifecycle, transitions, and normalized terrain/discoverability across four Java-oracle seeds",
-        "Depth-22 Halls lifecycle fixture: full prior-floor replay matches the Java pre-paint RNG checkpoint, exact FigureEight pre-shuffle room list, room selection/bounds, and every room-paint callback RNG checkpoint; HallsPainter includes REGION_DECO_ALT variance and unconnected-neighbour terrain merges"
+        "Depth-22 Halls lifecycle fixtures: AAA-AAA-AAA matches the Java pre-paint checkpoint, FigureEight pre-shuffle room list, room selection/bounds, room-paint callbacks, post-door RNG, affected door terrain/discoverability, and transitions; contrasting ABC-DEF-GHI pins the post-door RNG boundary. HallsPainter includes REGION_DECO_ALT variance and unconnected-neighbour terrain merges"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",

@@ -26,6 +26,13 @@ struct PaintCheckpoint {
     rng: Vec<i32>,
 }
 
+#[derive(Debug, Deserialize)]
+struct DoorTrace {
+    depth: i32,
+    seed: String,
+    post_doors_rng: Vec<i32>,
+}
+
 #[test]
 fn aaa_floor_twenty_two_structural_lifecycle_matches_oracle() {
     let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-22.json");
@@ -106,4 +113,73 @@ fn aaa_floor_twenty_two_structural_lifecycle_matches_oracle() {
     assert_eq!(doors.stage, "doors");
     assert_eq!(doors.room, "paintDoors");
     assert_eq!(doors.rng.len(), 8);
+    assert_eq!(
+        actual.post_doors_rng_probe, doors.rng,
+        "paintDoors RNG boundary"
+    );
+
+    let map = actual.map.as_ref().expect("floor-22 internal map");
+    let expected_terrain = expected.terrain.as_ref().expect("oracle terrain");
+    let expected_discoverable = expected
+        .discoverable
+        .as_ref()
+        .expect("oracle discoverability");
+    // The two shared RuinsRoom edges that previously rolled doors must be
+    // painter-open EMPTY terrain and retain their pinned discoverability.
+    for (x, y) in [(7, 40), (25, 34)] {
+        let cell = (y * map.width + x) as usize;
+        assert_eq!(
+            map.tiles[cell], expected_terrain[cell],
+            "door terrain at {x},{y}"
+        );
+        assert_eq!(
+            map.discoverable[cell], expected_discoverable[cell],
+            "door discoverability at {x},{y}"
+        );
+    }
+    let transitions: Vec<_> = map
+        .transitions
+        .iter()
+        .map(|transition| OracleTransition {
+            cell: transition.cell,
+            transition_type: transition.transition_type.clone(),
+            left: transition.left,
+            top: transition.top,
+            right: transition.right,
+            bottom: transition.bottom,
+            dest_depth: transition.dest_depth,
+            dest_branch: transition.dest_branch,
+            dest_type: transition.dest_type.clone(),
+        })
+        .collect();
+    assert_eq!(
+        transitions,
+        *expected.transitions.as_ref().expect("oracle transitions")
+    );
+}
+
+#[test]
+fn abc_floor_twenty_two_paint_doors_matches_oracle() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tools/java-oracle/fixtures/traces/abc-def-ghi-floor-22-halls-doors.json");
+    let trace: DoorTrace = serde_json::from_str(
+        &fs::read_to_string(&path)
+            .unwrap_or_else(|error| panic!("read {}: {error}", path.display())),
+    )
+    .unwrap_or_else(|error| panic!("parse {}: {error}", path.display()));
+    assert_eq!(trace.depth, 22);
+
+    let seed = parse_seed(&trace.seed).expect("valid oracle seed");
+    let mut dungeon = dungeon_from_run(init_run(seed.numeric));
+    let mut actual = None;
+    for depth in 1_i32..=trace.depth {
+        dungeon.depth = depth;
+        actual = Some(create_level_partial(&mut dungeon));
+    }
+
+    assert_eq!(
+        actual.expect("floor-22 replay").post_doors_rng_probe,
+        trace.post_doors_rng,
+        "contrasting depth-22 paintDoors RNG boundary"
+    );
 }

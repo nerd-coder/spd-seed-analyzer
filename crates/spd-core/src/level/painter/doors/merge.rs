@@ -68,6 +68,10 @@ fn can_merge_at(
     let inside = point_inside(room, p, 1);
     match map.point_to_cell(inside.x, inside.y) {
         Some(_) if room.name == "SewerPipeRoom" => false,
+        // RuinsRoom intentionally opens its entire shared edge, including
+        // cells which its patch painter left solid. This overrides the
+        // StandardRoom solid-terrain check in the pinned source.
+        Some(_) if room.name == "RuinsRoom" => true,
         Some(_)
             if matches!(
                 room.name.as_str(),
