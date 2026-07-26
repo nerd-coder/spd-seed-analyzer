@@ -29,7 +29,7 @@
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
-        "ABC-DEF-GHI depth 23 matches Java through both FigureEight loops and 248 target branch-placement calls, but diverges immediately after the shared placeRoom call from tunnel [3,22,8,29] at 198.03421°; trace that placeRoom boundary before promoting its painter trace to parity",
+        "ABC-DEF-GHI depth 23 places the same SentryRoom bounds from tunnel [3,22,8,29] at 198.03421°, but Java is two RNG draws ahead afterward; trace collision-order-sensitive findFreeSpace tie breaks before promoting its painter trace to parity",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
         "Later regular floors still require phase-by-phase parity checks"
       ],
