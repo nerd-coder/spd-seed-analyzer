@@ -11,34 +11,12 @@ The reward class is currently dropped entirely (`ImpRing` is `Constrained`,
 reported as `+N ring`). On most seeds it is unconditionally seed-determined and
 can be reported exactly.
 
-Each `Generator.Category` carries its own `seed` long plus a `dropped` counter
-(`Generator.java:709+`), so the class of the *k*-th ring a run draws is a pure
-function of the dungeon seed and *k* — independent of floor RNG position. Level
-streams are pushed per depth (`seedCurDepth`), so deck counters are the only
-cross-floor channel: parity needs the ring-draw *sites* to fire in the same
-order and count, nothing more. The `+2…+4` level stays exact — it comes from
-the floor's own stream and no ring subclass overrides `random()`.
-
-Measured over 44 seeds, 0–6 ring draws precede the Imp's (mode 4), and the
-deck's 12 equal-weight classes mean an index off by one changes the class
-~11/12 of the time. Only two things can shift *k*, both checkable per seed:
-
-- **Mimic Tooth** adds levelgen mimic prizes (1/5 of which draw a ring).
-  Trinkets have zero weight in both general decks, so the sole source is the
-  one Trinket Catalyst on floors 1–4, whose four offers are TRINKET deck draws
-  0–3 — seed-determined. Mimic Tooth is offered in ~25% of seeds (101/400
-  sampled); otherwise it needs a Transmutation on the taken trinket (draw 4).
-- **Artifact exhaustion** turns `random(Category.ARTIFACT)` into a ring draw.
-  Sampled seeds keep 5–10 of the 11 artifact deck weight unspent at the Imp
-  spawn (median 8), so this needs that many extra runtime Ring of Wealth
-  artifact draws first. Compute the headroom rather than assuming it.
-
-Other run history is ruled out: runtime ring sources bypass the deck
-(`Mob.createLoot`, Ring of Wealth, Transmutation, Cursed Wand, runtime mimics
-all use `randomUsingDefaults`); `Challenges.isItemBlocked` only blocks Dewdrops
-under `NO_HERBALISM`, which no ring path can produce, so no challenge shifts
-*k*; and the ungenerated Mining/Vault side-levels use `randomUsingDefaults`
-only.
+Mechanism and evidence live in [generator-decks.md](generator-decks.md); the
+short version is that the class is a pure function of the seed and the ring
+deck draw index *k*, the `+2…+4` level is exact regardless, and only two things
+can move *k* — Mimic Tooth (absent from the Trinket Catalyst's four
+seed-determined offers in ~75% of seeds) and artifact-deck exhaustion (5–10 of
+11 deck weight still unspent at the spawn). Both are checkable per seed.
 
 1. Verify the draw count first — it is the whole claim. Have the java-oracle
    dump `Category.RING.dropped` at the Imp spawn for the reference seeds and
@@ -56,3 +34,20 @@ only.
    search may match the exact class, but only the set when the flag is unclear.
 4. Update `specs/accuracy.json`: the Imp ring identity moves from omitted to
    named, with the Mimic Tooth condition stated in player terms.
+
+## Then report the four Trinket Catalyst offers
+
+The catalyst's four options are TRINKET deck draws 0–3, so they are exact and
+knowable before the run starts — a stronger claim than anything we show for the
+catalyst today, which is only its guaranteed spawn on floors 1–4.
+
+1. Compute them where step 2 above already reads the TRINKET deck, on a cloned
+   generator: the real draws happen at runtime when the player opens the
+   window, and the analyzer must not advance the deck.
+2. Attach them to the catalyst's forced-drop entry (`ForcedDropRole::
+   TrinketCatalyst` in `level/state/forced_queue.rs`) as an exact, ordered
+   four-item option set — the offer list, not a prediction of the pick.
+3. Surface them in the UI on the floor that spawns the catalyst, rendered as a
+   choose-one set so it never reads as four items dropping.
+4. Update `specs/accuracy.json`: the catalyst's offered trinkets are named
+   exactly; which one a run takes is a player choice.
