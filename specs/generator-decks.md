@@ -14,6 +14,12 @@ ring draw index is additionally pinned for five reference seeds by the
 immediately around `Imp.Quest.spawn` and is compared to Rust in
 `quests/imp.rs` tests.
 
+Sections 9–10 were measured the same way: temporary probe fields on
+`WandmakerQuestState` / `GhostQuestState` recording the deck index and the
+branch outcomes at the reward call, driven by `create_level_partial` over
+floors 1–9 (Wandmaker) and 1–4 (Ghost) for 200 seeds
+(`init_run(seed * 7919 + 13)`), default `MapTrinketProfile`. Reverted after.
+
 ## 1. Category sub-decks make item identity index-keyed, not stream-keyed
 
 `Generator.random(Category)` (`items/Generator.java:709+`) draws the class from
@@ -136,3 +142,108 @@ class ~11/12 of the time.
 
 Only Mimic Tooth and artifact exhaustion can move *k*, and both are checkable
 from the seed — see the plan in [implementation.md](implementation.md).
+
+## 9. Old Wandmaker reward (floors 7–9)
+
+`Wandmaker.Quest.spawnWandmaker` (`Wandmaker.java:303`) runs at the **start** of
+`PrisonLevel.createMobs`, before `super.createMobs()`
+(`PrisonLevel.java:89-92`), i.e. after paint and after an NPC placement loop
+that burns two `Random.IntRange` calls per attempt against painted terrain.
+
+Reward code (`Wandmaker.java:334-346`):
+
+```java
+wand1 = Generator.random(WAND); wand1.cursed = false; wand1.upgrade();
+wand2 = Generator.random(WAND);
+while (wand2.getClass() == wand1.getClass()) { toUndo.add(wand2); wand2 = Generator.random(WAND); }
+for (Item i : toUndo) Generator.undoDrop(i);
+wand2.cursed = false; wand2.upgrade();
+```
+
+Verified properties:
+
+- **Level** is `1 + n` from `Wand.random()` (`Wand.java:546-566`): +1 66.7%,
+  +2 26.7%, +3 6.7%. **Never cursed** — `cursed = false` precedes `upgrade()`,
+  and `Wand.upgrade()`'s `Random.Int(3)` curse-clear (`Wand.java:358-364`) is
+  consumed but cannot re-curse.
+- **Floor-stream cost is class-independent.** No `Wand` subclass overrides
+  `random()` or `upgrade()`, and no wand instance initializer or constructor
+  touches `Random` (checked all 13).
+- **`undoDrop` is a no-op for concrete classes** (`Generator.java:662-673`:
+  `cls.isAssignableFrom(cat.superClass)` is false for e.g. `WandOfFireblast`),
+  so rejected duplicate draws permanently advance the deck. `undo_drop` at
+  `generator/state.rs:418` correctly does nothing.
+- **`wand2`'s level is coupled to identity** — unlike the Imp ring. The
+  duplicate-rejection loop burns an extra `Wand.random()` off the floor stream,
+  so resolving `wand2`'s level requires knowing the deck index. `wand1`'s level
+  is decoupled.
+- **No runtime path can move the wand deck.** Every `Category.WAND` reference
+  outside levelgen uses `randomUsingDefaults`: Shaman loot via
+  `Mob.createLoot` (`Mob.java:996`), Scroll of Transmutation
+  (`ScrollOfTransmutation.java:211`, `:339`), Cursed Wand
+  (`CursedWand.java:363`, `:371`). Consistent with §4.
+
+Measured (200 seeds, floors 1–9):
+
+| Quantity | Distribution |
+|----------|--------------|
+| Spawn depth | 7: 32%, 8: 34%, 9: 34% |
+| Quest type (1/2/3) | uniform ⅓ |
+| WAND deck index *k* at the reward | 0–4, mode 1 (0: 27, 1: 87, 2: 57, 3: 28, 4: 1) |
+| `wand2` duplicate rejections | 0 in 189, 1 in 11 (**5.5%**) |
+| `wand1` level | +1 65.5%, +2 28%, +3 6.5% |
+
+Collision rate matches theory: 13 classes × weight 3 (`Generator.java:240`), so
+a fresh deck gives 2/38 ≈ 5.3%.
+
+## 10. Sad Ghost reward (floors 2–4)
+
+`Ghost.Quest.spawn` (`Ghost.java:303-362`) runs at the **start** of
+`SewerLevel.createMobs`, before `super.createMobs()` (`SewerLevel.java:140-143`)
+— same placement-loop-then-reward shape as the Wandmaker.
+
+Verified properties:
+
+- **The armor uses no deck at all.** `Random.chances({0,0,10,6,3,1})` selects a
+  tier and the class is constructed directly (`Ghost.java:322-328`): 2 =
+  `LeatherArmor`, 3 = `MailArmor`, 4 = `ScaleArmor`, 5 = `PlateArmor`. Tier and
+  class are the same fact; no run history can shift it.
+- **Only the weapon is deck-drawn** — `Generator.random(wepTiers[tier-1])`
+  (`Ghost.java:331`), i.e. the per-tier `WEP_T2…WEP_T5` decks, each with its own
+  seed and `dropped` counter.
+- **The weapon draw's floor-stream cost is class-independent**:
+  `randomize_weapon` spends `Int(4)` [+ `Int(5)`] + one `Long`, with the
+  curse/enchant roll inside a pushed generator. So the deck index cannot move
+  anything that follows.
+- **The shared upgrade level** is one `Random.Float()` → +0 50%, +1 30%,
+  +2 15%, +3 5%, applied to **both** items (`Ghost.java:339-351`). Neither
+  `upgrade()` spends RNG on this path: `Weapon.upgrade(false)`
+  (`Weapon.java:375-389`) and `Armor.upgrade(false)` (`Armor.java:454-468`) only
+  roll when an enchantment/glyph is already present, and the Ghost clears both
+  first.
+- **Enchant and glyph are always generated**, deliberately, so the roll count is
+  constant (`Ghost.java:353-356`). `Enchantment.random()` (`Weapon.java:606-615`)
+  and `Glyph.random()` (`Armor.java:863-872`) each spend exactly
+  `Random.chances` + `Random.element` — no deck, no player state.
+- **Whether the reward keeps them is the only player-dependent bit**:
+  `enchantRoll > 0.2f * ParchmentScrap.enchantChanceMultiplier()` clears both
+  (`Ghost.java:358-362`). Multipliers are 1 / 2 / 4 / 7 / 10 for no scrap / +0 /
+  +1 / +2 / +3 (`ParchmentScrap.java:52-65`), so the thresholds are 0.2 / 0.4 /
+  0.8 / 1.4 / 2.0. **At Parchment Scrap +2 or better the reward is always
+  enchanted.** The roll count does not change, so this never desyncs the stream.
+
+Net: everything except the weapon's *class* is independent of the deck.
+
+Measured (200 seeds, floors 1–4):
+
+| Quantity | Distribution |
+|----------|--------------|
+| Spawn depth | 2: 37.5%, 3: 29.5%, 4: 33% |
+| Weapon tier | 2: 46.5%, 3: 32%, 4: 15%, 5: 6.5% |
+| Armor tier | 2: 46%, 3: 35.5%, 4: 13%, 5: 5.5% |
+| Tier-deck index *k* at the weapon draw | **0 in 64%, ≤1 in 85%**, max 6 |
+| Shared level | +0 50.5%, +1 34%, +2 12%, +3 3.5% |
+| Lowest Parchment Scrap that enchants | none 21.5%, +0 38.5%, +1 76.5%, +2 100% (cumulative) |
+
+*k* is far tighter than the Imp's or the Wandmaker's because only floors 1–3
+precede the draw and the five weapon tiers are separate decks.
