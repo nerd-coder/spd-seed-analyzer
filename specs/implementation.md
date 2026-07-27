@@ -30,6 +30,14 @@ Three Wandmaker cases remain:
   643; compare passability, occupancy, and distance-map inputs to
   `spawnWandmaker` without changing RNG.
 
+Focused lifecycle probes narrow both upstream cases further: AAC matches Java
+through floor 6's `createItems` entry and all final heap/mob placements, then
+diverges before floor 7 construction; AAU does the same across floor 8→9. The
+visible AAC floor-6 difference is only the inventory-sensitive shop bag
+(Potion Bandolier in the oracle, Magical Holster in the baseline analyzer), so
+locate the first post-`createItems` persistent-state mutation rather than
+changing room construction directly.
+
 Require all 18 NPC boundaries to match, remove both NPC tail guards, and only
 then update the accuracy manifest and expose Ghost rewards.
 
@@ -41,15 +49,6 @@ then update the accuracy manifest and expose Ghost rewards.
 is over-broad: the general category deck and every sub-deck except ARTIFACT are
 levelgen-only, so this is ~3.8 items per floor — an order of magnitude more than
 everything §3–§5 add combined.
-
-**0. Unblock.** `java_random.rs:73` panics in debug builds on Java's intentional
-   signed overflow (`bits - val + (bound - 1)`); seed `340530` crashes on floor 1
-   under `cargo test`. Use `bits.wrapping_sub(val).wrapping_add(bound - 1)` —
-   verified to make debug match release byte-for-byte. Separately,
-   `create_items.rs:217-219` calls the deck path where
-   `RegularLevel.java:688` calls `randomUsingDefaults()`; dead today because
-   `CrackedSpyglass.extraLootChance()` is 0, but it would corrupt every later
-   floor once a spyglass profile exists.
 
 **1. Prove it before claiming it.** The `final_placed_heaps` fixtures already
    carry every heap with class/quantity/level/cursed for ~45 seed×floor pairs

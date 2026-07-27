@@ -70,7 +70,7 @@ impl JavaRandom {
         loop {
             let bits = self.next(31);
             let val = bits % bound;
-            if bits - val + (bound - 1) >= 0 {
+            if bits.wrapping_sub(val).wrapping_add(bound - 1) >= 0 {
                 return val;
             }
         }
@@ -131,6 +131,15 @@ mod tests {
         for _ in 0..200 {
             let v = r.next_int_bound(10);
             assert!((0..10).contains(&v));
+        }
+    }
+
+    #[test]
+    fn next_int_bound_uses_java_signed_overflow() {
+        let mut r = JavaRandom::new(340_530);
+        for _ in 0..100 {
+            let v = r.next_int_bound(1_073_741_825);
+            assert!((0..1_073_741_825).contains(&v));
         }
     }
 

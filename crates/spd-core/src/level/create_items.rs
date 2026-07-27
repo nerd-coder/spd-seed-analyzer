@@ -216,7 +216,7 @@ pub fn create_items_main(
     Random::push_generator_seeded(Random::long());
     let items = (Random::float() + 0.0) as i32;
     for _ in 0..items {
-        let mut it = dungeon.generator.random(dungeon.depth);
+        let mut it = dungeon.generator.random_using_defaults_any(dungeon.depth);
         it.source = Some("hidden".into());
         out.push(CreatedLoot {
             loot: PlacedLoot {
