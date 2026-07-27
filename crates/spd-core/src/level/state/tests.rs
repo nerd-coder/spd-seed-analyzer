@@ -4,6 +4,8 @@ use crate::report::{MapHeap, MapHeapItem, MapMarker, MapMarkerKind, MapMob};
 
 #[path = "tests/forced_queue.rs"]
 mod forced_queue;
+#[path = "tests/quantities.rs"]
+mod quantities;
 #[path = "tests/sacrifice.rs"]
 mod sacrifice;
 

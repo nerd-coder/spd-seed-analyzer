@@ -75,6 +75,9 @@ in-cycle order shifts.
 
 ## 4. Runtime paths do **not** touch the ring deck
 
+> Scope note: this section is about the **ring** deck and holds. It does not
+> generalize to every category — the ARTIFACT deck is runtime-movable. See §11.
+
 All use `randomUsingDefaults`: mob loot including Thief's
 `oneOf(RING, ARTIFACT)` (`Mob.java:997`), Ring of Wealth
 (`RingOfWealth.java:288`), Scroll of Transmutation
@@ -247,3 +250,67 @@ Measured (200 seeds, floors 1–4):
 
 *k* is far tighter than the Imp's or the Wandmaker's because only floors 1–3
 precede the draw and the five weapon tiers are separate decks.
+
+## 11. Ordinary floor loot is seed-determined; ARTIFACT is the only leak
+
+`RegularLevel.createItems` drops `3 + chances{6,3,1}` (`+2` if `LARGE`) items
+from the no-arg `Generator.random()` (`RegularLevel.java:380-388`). Three
+mechanisms would have to leak for run history to move them; two are closed.
+
+- **Floor stream** — closed by the per-depth `pushGenerator` of §2.
+- **General category deck** (`categoryProbs`, picks *which* category) — only
+  no-arg `Generator.random()` decrements it (`Generator.java:676-683`), and its
+  four call sites are all levelgen: `RegularLevel.java:388`,
+  `GrassyGraveRoom.java:67`, `MassGraveRoom.java:86`,
+  `SecretSummoningRoom.java:53`. `randomUsingDefaults()` reads `defaultCatProbs`
+  and never decrements. **Closed.**
+- **Per-category sub-decks** (pick the class) — closed for RING (§4), WAND (§9),
+  and the WEP/MIS tiers: every runtime weapon site passes `useDefaults=true` or
+  `useDecks=false` (`Statue.random(false)` from `DistortionTrap.java:125`,
+  `WndBlacksmith.java:478 generateRewards(false)`). Armor uses no deck at all
+  (`randomArmor` picks a tier by `chances` and indexes `cat.classes` directly).
+  SEED is deliberately deck-free at levelgen — `Generator.java:684-688`
+  special-cases it to `randomUsingDefaults` precisely because grass, not
+  levelgen, is its dominant source.
+
+**Not closed: ARTIFACT.** `randomUsingDefaults(cat)` routes artifacts straight
+back into the deck (`Generator.java:745-750`, comment: *"except for artifacts,
+which must always use a deck"*), so these runtime sources all advance
+`ARTIFACT.dropped`:
+
+| Runtime source | Java |
+|----------------|------|
+| Ring of Wealth equipment drop | `RingOfWealth.java:291` |
+| Thief steal-loot | `Thief.java:52` → `Mob.java:997` |
+| Scroll of Transmutation | `ScrollOfTransmutation.java:298` |
+| Cursed Wand | `CursedWand.java:1170` |
+| Gnoll Exile / Ebony Mimic / tooth-mimic extras | `randomUsingDefaults()` no-arg landing on ARTIFACT |
+
+Note `RingOfWealth.java:288` (the RING case §4 cites) is a different branch from
+`:291`.
+
+The drift is not cosmetic. `randomArtifact` calls
+`Reflection.newInstance(cls).random()` **after** `popGenerator`
+(`Generator.java:866-878`), and `UnstableSpellbook`'s constructor burns a
+variable number of `Random.chances` rolls in `setupScrolls`
+(`UnstableSpellbook.java:90-103`). A shifted artifact index therefore changes
+floor-stream consumption and desyncs every later draw on that floor, which in
+turn shifts the deck counters every later floor reads. Deck exhaustion also
+falls through to a RING draw (`Generator.java:707`), the §8 Imp lever.
+
+**Consequence:** everything generated before the run's *first* levelgen ARTIFACT
+deck draw is unconditionally seed-determined. Everything after it is
+seed-determined under one condition — *no artifact acquired outside level
+generation earlier in the run*. `random_artifact` (`generator/state.rs:327`) is
+the single Rust site that moves the counter, so the gate is one monotone flag.
+
+Measured over 200 seeds (`init_run(seed * 7919 + 13)`, floors 1–24, default
+`MapTrinketProfile`), floor of the first levelgen artifact draw, cumulative:
+
+| Floor | 1 | 2 | 3 | 4 | 9 | 13 | 24 |
+|-------|---|---|---|---|---|----|----|
+| Seeds covered | 15% | 34% | 48% | 55.5% | 87% | 95% | 100% |
+
+Every seed draws an artifact somewhere in floors 1–24; mean main-loop drops per
+floor is 3.83. Method: a throwaway `examples/loot_probe.rs` walking
+`create_level_partial` and counting `ItemCategory::Artifact` in `placed_items`.

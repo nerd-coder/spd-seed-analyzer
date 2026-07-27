@@ -24,6 +24,7 @@ impl RoomPublicFact {
             .into_iter()
             .map(|(name, category, cursed, note)| ItemEntry {
                 name: name.into(),
+                quantity: 1,
                 class_name: None,
                 candidate_classes: Vec::new(),
                 category: category.into(),
@@ -63,6 +64,17 @@ impl RoomPublicFact {
                 entry.level = Some(0);
                 entry.prediction = ItemPredictionKind::Exact;
             }
+            match entry.name.as_str() {
+                "two Energy Crystal stacks" => {
+                    entry.name = "Energy Crystal".into();
+                    entry.quantity = 10;
+                }
+                "5 Energy Crystals" => {
+                    entry.name = "Energy Crystal".into();
+                    entry.quantity = 5;
+                }
+                _ => {}
+            }
         }
         entries
     }
@@ -74,7 +86,8 @@ fn larder_entries(depth: i32) -> Vec<ItemEntry> {
         .into_iter()
         .filter(|(_, count)| *count > 0)
         .map(|(class_name, count)| ItemEntry {
-            name: format!("{count} × {class_name}"),
+            name: class_name.into(),
+            quantity: count,
             class_name: Some(class_name.into()),
             candidate_classes: Vec::new(),
             category: "food".into(),

@@ -1,3 +1,4 @@
+import { ItemIcon } from '@/components/ItemIcon'
 import { ItemName } from '@/components/ItemName'
 import { FloorItemList } from '@/components/seed/FloorItemSections'
 import { Badge } from '@/components/ui/badge'
@@ -49,6 +50,12 @@ export function QuestCard({
   const parsed = parseQuest(quest)
   const styles = QUEST_KIND_STYLES[parsed.kind]
   const isWandmaker = parsed.kind === 'wandmaker'
+  const hasDetailedRewards = !isWandmaker && rewards.length > 0
+  const rewardSummary =
+    parsed.kind === 'imp' &&
+    rewards.every((reward) => !reward.candidate_classes?.length)
+      ? null
+      : parsed.rewards
   return (
     <div
       className={cn(
@@ -64,32 +71,54 @@ export function QuestCard({
           <span className="text-muted-foreground text-xs">{parsed.detail}</span>
         )}
       </div>
-      {parsed.rewards && (
-        <p className="text-sm leading-snug">
-          <span className="text-muted-foreground mr-1.5 text-xs font-medium tracking-wide uppercase">
+      {parsed.rewards || hasDetailedRewards ? (
+        <div className="flex flex-col gap-1 border-t pt-2">
+          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
             Rewards
-          </span>
-          <ItemName name={parsed.rewards} />
-        </p>
-      )}
-      {!parsed.rewards && (
+          </p>
+          {rewardSummary ? (
+            <p className="text-sm leading-snug">
+              {parsed.kind === 'blacksmith' &&
+              rewardSummary ===
+                'You will get access to those items if you select Smith' ? (
+                <span>
+                  You will get access to those items if you select{' '}
+                  <strong>Smith</strong>
+                </span>
+              ) : parsed.kind === 'imp' ? (
+                <span>
+                  You’ll get the first option by default. It may change if{' '}
+                  <span className="inline-flex items-center gap-1 align-middle">
+                    <ItemIcon
+                      classNameItem="MimicTooth"
+                      size={16}
+                      title="Mimic Tooth"
+                    />
+                    Mimic Tooth
+                  </span>{' '}
+                  is in your inventory or if every artifact has already
+                  appeared.
+                </span>
+              ) : (
+                <ItemName name={rewardSummary} />
+              )}
+            </p>
+          ) : null}
+          {hasDetailedRewards ? (
+            <FloorItemList
+              items={rewards}
+              identities={identities}
+              identitySpoilers={identitySpoilers}
+              depth={depth}
+            />
+          ) : null}
+        </div>
+      ) : null}
+      {!parsed.rewards && !hasDetailedRewards && (
         <p className="text-muted-foreground text-xs">
           <ItemName name={parsed.raw} />
         </p>
       )}
-      {!isWandmaker && rewards.length > 0 ? (
-        <div className="flex flex-col gap-1 border-t pt-2">
-          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            Reward details ({rewards.length})
-          </p>
-          <FloorItemList
-            items={rewards}
-            identities={identities}
-            identitySpoilers={identitySpoilers}
-            depth={depth}
-          />
-        </div>
-      ) : null}
     </div>
   )
 }

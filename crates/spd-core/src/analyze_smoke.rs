@@ -284,7 +284,7 @@ fn imp_quest_spawns_within_city() {
                             assert_eq!(ring.name, format!("+{} ring reward", ring.level.unwrap()));
                             assert!(ring.class_name.is_none());
                             assert_eq!(ring.candidate_classes.len(), 3);
-                            assert_eq!(ring.conditional_notes.len(), 1);
+                            assert!(ring.conditional_notes.is_empty());
                         }
                     }
                 }
@@ -372,7 +372,9 @@ fn blacksmith_quest_spawns_within_caves() {
                     .quests
                     .iter()
                     .filter(|q| q.contains("Blacksmith"))
-                    .all(|q| q.ends_with(" — reward options")));
+                    .all(|q| {
+                        q.ends_with(" — You will get access to those items if you select Smith")
+                    }));
                 break;
             }
         }

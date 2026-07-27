@@ -20,7 +20,10 @@ pub(super) fn take_pending(dungeon: &mut DungeonState) -> InitQuestRewards {
     };
 
     if let Some(bs) = quests::take_blacksmith_pending(&mut dungeon.blacksmith) {
-        let public_summary = safe_summary(&bs.summary, "reward options");
+        let public_summary = safe_summary(
+            &bs.summary,
+            "You will get access to those items if you select Smith",
+        );
         result.summaries.push(bs.summary);
         result.public_labels.push(Some(public_summary));
         for mut reward in bs.rewards {
@@ -41,7 +44,7 @@ pub(super) fn take_pending(dungeon: &mut DungeonState) -> InitQuestRewards {
                     ..
                 },
             ) => imp.reward.title(),
-            _ => "ring reward".into(),
+            _ => "You’ll get the first option by default. It may change if Mimic Tooth is in your inventory or if every artifact has already appeared.".into(),
         };
         let public_summary = safe_summary(&imp.summary, &reward_label);
         result.summaries.push(imp.summary);

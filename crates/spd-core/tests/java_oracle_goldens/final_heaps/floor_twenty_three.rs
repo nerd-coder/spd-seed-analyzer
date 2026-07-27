@@ -119,19 +119,21 @@ pub(super) fn assert_halls_paint_trace(
         }
     }
     let report = actual.to_floor_report();
-    let guaranteed_torches = report
+    let guaranteed_torches: Vec<_> = report
         .items
         .iter()
         .filter(|item| {
-            item.name == "two Torches"
+            item.name == "Torch"
                 && item.class_name.as_deref() == Some("Torch")
                 && item.source.as_deref() == Some("guaranteed floor spawn")
         })
-        .count();
+        .collect();
     assert_eq!(
-        guaranteed_torches, 1,
+        guaranteed_torches.len(),
+        1,
         "Halls replay preserves the guaranteed two-Torch spawn"
     );
+    assert_eq!(guaranteed_torches[0].quantity, 2);
     assert!(
         report.items.iter().any(|item| {
             item.category == "food" && item.source.as_deref() == Some("guaranteed floor spawn")

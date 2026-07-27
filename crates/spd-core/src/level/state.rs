@@ -43,6 +43,34 @@ fn prediction_kind(item: &GeneratedItem) -> ItemPredictionKind {
     }
 }
 
+fn merge_identical_items(items: Vec<ItemEntry>) -> Vec<ItemEntry> {
+    let mut merged: Vec<ItemEntry> = Vec::with_capacity(items.len());
+    for item in items {
+        let matching = item.class_name.is_some().then(|| {
+            merged.iter_mut().find(|existing| {
+                existing.name == item.name
+                    && existing.class_name == item.class_name
+                    && existing.candidate_classes == item.candidate_classes
+                    && existing.category == item.category
+                    && existing.tier == item.tier
+                    && existing.tier_range == item.tier_range
+                    && existing.level == item.level
+                    && existing.level_range == item.level_range
+                    && existing.cursed == item.cursed
+                    && existing.prediction == item.prediction
+                    && existing.conditional_notes == item.conditional_notes
+                    && existing.source == item.source
+            })
+        });
+        if let Some(Some(existing)) = matching {
+            existing.quantity = existing.quantity.saturating_add(item.quantity);
+        } else {
+            merged.push(item);
+        }
+    }
+    merged
+}
+
 pub(super) fn is_runtime_sensitive_main_loot(item: &GeneratedItem) -> bool {
     is_runtime_sensitive_loot_source(item.source.as_deref())
 }
@@ -205,7 +233,9 @@ impl LevelState {
             } else {
                 item.title()
             };
-            let exact_name = if item.cursed {
+            let exact_name = if item.category == crate::items::model::ItemCategory::Gold {
+                "gold".to_string()
+            } else if item.cursed {
                 full_title
                     .strip_prefix("cursed ")
                     .unwrap_or(&full_title)
@@ -295,6 +325,7 @@ impl LevelState {
                 } else {
                     exact_name
                 },
+                quantity: item.quantity.max(1),
                 class_name: (!constrained).then(|| item.class_name.clone()),
                 candidate_classes,
                 category: if shop_role == Some(ShopStockRole::DeckRareArtifactOrRing) {
@@ -324,10 +355,7 @@ impl LevelState {
                     Some(item.cursed)
                 },
                 prediction,
-                conditional_notes: imp_identity
-                    .filter(|(exact, _)| !exact)
-                    .map(|_| vec!["The classes are ordered: the first is exact unless the run takes Mimic Tooth or exhausts the artifact pool; later classes cover those ring-deck shifts.".into()])
-                    .unwrap_or_default(),
+                conditional_notes: Vec::new(),
                 source: item.source.clone(),
             };
             if shop_role.is_some() {
@@ -339,6 +367,7 @@ impl LevelState {
         if has_shop {
             shop_items.push(ItemEntry {
                 name: "inventory-dependent bag stock".into(),
+                quantity: 1,
                 class_name: None,
                 candidate_classes: Vec::new(),
                 category: "other".into(),
@@ -355,6 +384,7 @@ impl LevelState {
             });
             shop_items.push(ItemEntry {
                 name: "Hourglass sand stock".into(),
+                quantity: 1,
                 class_name: None,
                 candidate_classes: Vec::new(),
                 category: "other".into(),
@@ -381,6 +411,7 @@ impl LevelState {
                 items.extend(fact.entries());
             }
         }
+        let items = merge_identical_items(items);
         let exact_map = allow_map
             .then(|| self.layout_map.clone())
             .flatten()

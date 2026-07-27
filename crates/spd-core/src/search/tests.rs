@@ -51,6 +51,7 @@ fn exact_floor(depth: u32, classes: &[(&str, i32)]) -> crate::FloorReport {
             .iter()
             .map(|(class_name, level)| crate::report::ItemEntry {
                 name: (*class_name).into(),
+                quantity: 1,
                 class_name: Some((*class_name).into()),
                 candidate_classes: Vec::new(),
                 category: "other".into(),
@@ -173,6 +174,7 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
         rooms: vec!["SacrificeRoom".into()],
         items: vec![crate::report::ItemEntry {
             name: "weapon reward".into(),
+            quantity: 1,
             class_name: None,
             candidate_classes: Vec::new(),
             category: "weapon".into(),
@@ -203,6 +205,7 @@ fn ordered_imp_ring_candidates_are_searchable() {
     let mut floor = exact_floor(18, &[]);
     floor.items.push(crate::report::ItemEntry {
         name: "+3 ring reward".into(),
+        quantity: 1,
         class_name: None,
         candidate_classes: vec!["RingOfForce".into(), "RingOfHaste".into()],
         category: "ring".into(),
@@ -307,6 +310,7 @@ fn constrained_shop_stock_never_matches_its_internal_concrete_class() {
         rooms: vec!["ShopRoom".into()],
         items: vec![crate::report::ItemEntry {
             name: "weapon stock".into(),
+            quantity: 1,
             class_name: None,
             candidate_classes: Vec::new(),
             category: "weapon".into(),

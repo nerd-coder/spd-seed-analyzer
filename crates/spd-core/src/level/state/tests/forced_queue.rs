@@ -115,9 +115,11 @@ fn halls_torches_precede_food_and_survive_public_taint_as_one_constraint() {
     let torch_entries: Vec<_> = public
         .items
         .iter()
-        .filter(|item| item.name.contains("Torches"))
+        .filter(|item| item.class_name.as_deref() == Some("Torch"))
         .collect();
     assert_eq!(torch_entries.len(), 1);
+    assert_eq!(torch_entries[0].name, "Torch");
+    assert_eq!(torch_entries[0].quantity, 2);
     assert_eq!(torch_entries[0].prediction, ItemPredictionKind::Exact);
     assert_eq!(torch_entries[0].class_name.as_deref(), Some("Torch"));
     assert!(torch_entries[0].conditional_notes.is_empty());
@@ -149,8 +151,8 @@ fn upgrade_scroll_contract_distinguishes_guaranteed_and_conditional_spawns() {
         .find(|entry| entry.name.contains("Scroll of Upgrade"))
         .expect("even Scroll contract");
     assert_eq!(even_entry.name, "Scroll of Upgrade");
+    assert_eq!(even_entry.class_name.as_deref(), Some("ScrollOfUpgrade"));
     assert!(even_entry.conditional_notes[0].contains("Forbidden Runes"));
-    assert!(even_entry.class_name.is_none());
 }
 
 #[test]

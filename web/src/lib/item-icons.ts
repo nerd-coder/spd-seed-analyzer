@@ -137,6 +137,7 @@ export const CLASS_ICON: Record<string, number> = {
   SkeletonKey: 264,
   SmallRation: 435,
   Stylus: 49,
+  Torch: 51,
   TrinketCatalyst: 70,
   VelvetPouch: 482,
   Waterskin: 480,

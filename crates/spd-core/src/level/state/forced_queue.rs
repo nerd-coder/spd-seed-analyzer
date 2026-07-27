@@ -3,10 +3,16 @@
 use crate::items::model::{ForcedDropRole, GeneratedItem, ItemProvenance};
 use crate::report::{ItemEntry, ItemPredictionKind};
 
-fn constrained_spawn_entry(name: &str, category: &str, condition: impl Into<String>) -> ItemEntry {
+fn constrained_spawn_entry(
+    name: &str,
+    class_name: &str,
+    category: &str,
+    condition: impl Into<String>,
+) -> ItemEntry {
     ItemEntry {
         name: name.into(),
-        class_name: None,
+        quantity: 1,
+        class_name: Some(class_name.into()),
         candidate_classes: Vec::new(),
         category: category.into(),
         tier: None,
@@ -23,6 +29,7 @@ fn constrained_spawn_entry(name: &str, category: &str, condition: impl Into<Stri
 fn guaranteed_spawn_entry(name: &str, class_name: &str, category: &str) -> ItemEntry {
     ItemEntry {
         name: name.into(),
+        quantity: 1,
         class_name: Some(class_name.into()),
         candidate_classes: Vec::new(),
         category: category.into(),
@@ -65,6 +72,7 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
     } else {
         vec![ItemEntry {
             name: "food".into(),
+            quantity: 1,
             class_name: None,
             candidate_classes: Vec::new(),
             category: "food".into(),
@@ -82,7 +90,13 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
         .iter()
         .any(|item| item.provenance == ItemProvenance::Forced(ForcedDropRole::HallsTorch))
     {
-        entries.insert(0, guaranteed_spawn_entry("two Torches", "Torch", "other"));
+        let mut torches = guaranteed_spawn_entry("Torch", "Torch", "other");
+        torches.quantity = initial
+            .iter()
+            .filter(|item| item.provenance == ItemProvenance::Forced(ForcedDropRole::HallsTorch))
+            .map(|item| item.quantity)
+            .sum();
+        entries.insert(0, torches);
     }
     if initial
         .iter()
@@ -90,6 +104,7 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
     {
         entries.push(ItemEntry {
             name: "food".into(),
+            quantity: 1,
             class_name: None,
             candidate_classes: Vec::new(),
             category: "food".into(),
@@ -117,6 +132,7 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
             }) => {
                 entries.push(constrained_spawn_entry(
                     "Scroll of Upgrade",
+                    "ScrollOfUpgrade",
                     "scroll",
                     "Does not spawn when Forbidden Runes is active.",
                 ));

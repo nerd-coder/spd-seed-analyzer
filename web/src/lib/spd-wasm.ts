@@ -21,6 +21,8 @@ export type IdentityMaps = {
 
 export type ItemEntry = {
   name: string
+  /** Number of identical items represented by this entry. */
+  quantity: number
   /** Java simple class name for icon lookup. */
   class_name?: string | null
   /** Ordered seed-determined identities when run history can shift a deck index. */

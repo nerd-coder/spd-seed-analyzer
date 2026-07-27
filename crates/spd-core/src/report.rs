@@ -209,6 +209,9 @@ pub struct FloorReport {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ItemEntry {
     pub name: String,
+    /// Number of identical items represented by this entry.
+    #[serde(default = "default_item_quantity")]
+    pub quantity: i32,
     /// Java simple class name (e.g. `Sword`, `PotionOfHealing`) for icons/lookup.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub class_name: Option<String>,
@@ -235,6 +238,10 @@ pub struct ItemEntry {
     pub conditional_notes: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
+}
+
+const fn default_item_quantity() -> i32 {
+    1
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
