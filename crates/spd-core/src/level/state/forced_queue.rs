@@ -7,6 +7,7 @@ fn constrained_spawn_entry(name: &str, category: &str, condition: impl Into<Stri
     ItemEntry {
         name: name.into(),
         class_name: None,
+        candidate_classes: Vec::new(),
         category: category.into(),
         tier: None,
         tier_range: None,
@@ -23,6 +24,7 @@ fn guaranteed_spawn_entry(name: &str, class_name: &str, category: &str) -> ItemE
     ItemEntry {
         name: name.into(),
         class_name: Some(class_name.into()),
+        candidate_classes: Vec::new(),
         category: category.into(),
         tier: None,
         tier_range: None,
@@ -64,6 +66,7 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
         vec![ItemEntry {
             name: "food".into(),
             class_name: None,
+            candidate_classes: Vec::new(),
             category: "food".into(),
             tier: None,
             tier_range: None,
@@ -88,6 +91,7 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
         entries.push(ItemEntry {
             name: "food".into(),
             class_name: None,
+            candidate_classes: Vec::new(),
             category: "food".into(),
             tier: None,
             tier_range: None,

@@ -52,6 +52,7 @@ fn exact_floor(depth: u32, classes: &[(&str, i32)]) -> crate::FloorReport {
             .map(|(class_name, level)| crate::report::ItemEntry {
                 name: (*class_name).into(),
                 class_name: Some((*class_name).into()),
+                candidate_classes: Vec::new(),
                 category: "other".into(),
                 tier: None,
                 tier_range: None,
@@ -173,6 +174,7 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
         items: vec![crate::report::ItemEntry {
             name: "weapon reward".into(),
             class_name: None,
+            candidate_classes: Vec::new(),
             category: "weapon".into(),
             tier: Some(3),
             tier_range: None,
@@ -194,6 +196,30 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
         max_depth: 13,
     }];
     assert!(matching_evidence(&[floor], &constraints).is_empty());
+}
+
+#[test]
+fn ordered_imp_ring_candidates_are_searchable() {
+    let mut floor = exact_floor(18, &[]);
+    floor.items.push(crate::report::ItemEntry {
+        name: "+3 ring reward".into(),
+        class_name: None,
+        candidate_classes: vec!["RingOfForce".into(), "RingOfHaste".into()],
+        category: "ring".into(),
+        tier: None,
+        tier_range: None,
+        level: Some(3),
+        level_range: None,
+        cursed: Some(true),
+        prediction: ItemPredictionKind::Constrained,
+        conditional_notes: vec!["Mimic Tooth may shift the ring deck.".into()],
+        source: Some("Imp.Quest".into()),
+    });
+    assert_eq!(
+        matching_evidence(&[floor.clone()], &[constraint("RingOfHaste", 18, 18)]).len(),
+        1
+    );
+    assert!(matching_evidence(&[floor], &[constraint("RingOfWealth", 18, 18)]).is_empty());
 }
 
 #[test]
@@ -282,6 +308,7 @@ fn constrained_shop_stock_never_matches_its_internal_concrete_class() {
         items: vec![crate::report::ItemEntry {
             name: "weapon stock".into(),
             class_name: None,
+            candidate_classes: Vec::new(),
             category: "weapon".into(),
             tier: Some(2),
             tier_range: None,
@@ -321,7 +348,7 @@ fn real_constrained_quest_class_never_matches_exact_search() {
                         | QuestRewardRole::WandmakerWand
                         | QuestRewardRole::BlacksmithRoomWeapon { .. }
                         | QuestRewardRole::BlacksmithRoomMissile { .. }
-                        | QuestRewardRole::ImpRing
+                        | QuestRewardRole::ImpRing { .. }
                 )
             )
         }) else {

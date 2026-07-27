@@ -212,6 +212,9 @@ pub struct ItemEntry {
     /// Java simple class name (e.g. `Sword`, `PotionOfHealing`) for icons/lookup.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub class_name: Option<String>,
+    /// Ordered seed-determined identities when run history can shift a deck index.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub candidate_classes: Vec<String>,
     pub category: String,
     /// Equipment tier when it is stable even though the concrete class is not.
     #[serde(skip_serializing_if = "Option::is_none")]

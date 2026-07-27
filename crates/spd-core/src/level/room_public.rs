@@ -25,6 +25,7 @@ impl RoomPublicFact {
             .map(|(name, category, cursed, note)| ItemEntry {
                 name: name.into(),
                 class_name: None,
+                candidate_classes: Vec::new(),
                 category: category.into(),
                 tier: None,
                 tier_range: None,
@@ -75,6 +76,7 @@ fn larder_entries(depth: i32) -> Vec<ItemEntry> {
         .map(|(class_name, count)| ItemEntry {
             name: format!("{count} × {class_name}"),
             class_name: Some(class_name.into()),
+            candidate_classes: Vec::new(),
             category: "food".into(),
             tier: None,
             tier_range: None,

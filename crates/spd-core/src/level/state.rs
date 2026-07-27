@@ -27,7 +27,7 @@ fn prediction_kind(item: &GeneratedItem) -> ItemPredictionKind {
         ItemProvenance::Quest(
             QuestRewardRole::GhostWeapon { .. }
             | QuestRewardRole::WandmakerWand
-            | QuestRewardRole::ImpRing
+            | QuestRewardRole::ImpRing { .. }
             | QuestRewardRole::BlacksmithRoomWeapon { .. }
             | QuestRewardRole::BlacksmithRoomMissile { .. },
         ) => ItemPredictionKind::Constrained,
@@ -261,18 +261,42 @@ impl LevelState {
                     "Blacksmith room missile weapon"
                 }
                 (_, Some(QuestRewardRole::BlacksmithRoomArmor { .. })) => "Blacksmith room armor",
-                (_, Some(QuestRewardRole::ImpRing)) => "ring reward",
+                (_, Some(QuestRewardRole::ImpRing { .. })) => "ring reward",
                 _ => "weapon reward",
             };
+            let imp_identity = match quest_role {
+                Some(QuestRewardRole::ImpRing {
+                    identity_exact,
+                    candidate_indices,
+                }) => Some((identity_exact, candidate_indices)),
+                _ => None,
+            };
+            let prediction = if imp_identity.is_some_and(|(exact, _)| exact) {
+                ItemPredictionKind::Exact
+            } else {
+                prediction
+            };
+            let constrained = prediction == ItemPredictionKind::Constrained;
+            let candidate_classes = imp_identity
+                .filter(|(exact, _)| !exact)
+                .map(|(_, indices)| {
+                    let classes = crate::generator::Category::Ring.def().classes;
+                    indices
+                        .into_iter()
+                        .map(|index| classes[usize::from(index)].to_string())
+                        .collect()
+                })
+                .unwrap_or_default();
             let entry = ItemEntry {
-                name: if quest_role == Some(QuestRewardRole::ImpRing) {
-                    format!("+{} ring", item.level)
+                name: if imp_identity.is_some_and(|(exact, _)| !exact) {
+                    format!("+{} ring reward", item.level)
                 } else if constrained {
                     constrained_name.to_string()
                 } else {
                     exact_name
                 },
                 class_name: (!constrained).then(|| item.class_name.clone()),
+                candidate_classes,
                 category: if shop_role == Some(ShopStockRole::DeckRareArtifactOrRing) {
                     "other".into()
                 } else {
@@ -300,7 +324,10 @@ impl LevelState {
                     Some(item.cursed)
                 },
                 prediction,
-                conditional_notes: Vec::new(),
+                conditional_notes: imp_identity
+                    .filter(|(exact, _)| !exact)
+                    .map(|_| vec!["The classes are ordered: the first is exact unless the run takes Mimic Tooth or exhausts the artifact pool; later classes cover those ring-deck shifts.".into()])
+                    .unwrap_or_default(),
                 source: item.source.clone(),
             };
             if shop_role.is_some() {
@@ -313,6 +340,7 @@ impl LevelState {
             shop_items.push(ItemEntry {
                 name: "inventory-dependent bag stock".into(),
                 class_name: None,
+                candidate_classes: Vec::new(),
                 category: "other".into(),
                 tier: None,
                 tier_range: None,
@@ -328,6 +356,7 @@ impl LevelState {
             shop_items.push(ItemEntry {
                 name: "Hourglass sand stock".into(),
                 class_name: None,
+                candidate_classes: Vec::new(),
                 category: "other".into(),
                 tier: None,
                 tier_range: None,

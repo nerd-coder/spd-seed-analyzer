@@ -285,19 +285,29 @@ fn imp_quest_spawns_within_city() {
                     .any(|i| i.source.as_deref() == Some("Imp.Quest"))
             {
                 saw = true;
-                // Only the forced category/curse are public. Identity and
-                // level is stable; only identity depends on persistent ring history.
+                // Level and curse are exact. Identity is exact when the seed
+                // rules out both known deck-shift paths, otherwise all three
+                // reachable ring classes are reported in order.
                 let ring = f
                     .items
                     .iter()
                     .find(|i| i.source.as_deref() == Some("Imp.Quest"));
                 if let Some(ring) = ring {
-                    assert_eq!(ring.prediction, report::ItemPredictionKind::Constrained);
-                    assert_eq!(ring.name, format!("+{} ring", ring.level.unwrap()));
-                    assert!(ring.class_name.is_none());
                     assert!(ring.level.is_some());
                     assert_eq!(ring.cursed, Some(true));
-                    assert!(ring.conditional_notes.is_empty());
+                    match ring.prediction {
+                        report::ItemPredictionKind::Exact => {
+                            assert!(ring.class_name.is_some());
+                            assert!(ring.candidate_classes.is_empty());
+                            assert!(ring.conditional_notes.is_empty());
+                        }
+                        report::ItemPredictionKind::Constrained => {
+                            assert_eq!(ring.name, format!("+{} ring reward", ring.level.unwrap()));
+                            assert!(ring.class_name.is_none());
+                            assert_eq!(ring.candidate_classes.len(), 3);
+                            assert_eq!(ring.conditional_notes.len(), 1);
+                        }
+                    }
                 }
                 break;
             }

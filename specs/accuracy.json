@@ -47,7 +47,7 @@
       "status": "partial",
       "implemented": [
         "Guaranteed floor spawns — food on every regular floor, the Halls torches, Scrolls of Upgrade — reported as exact spawns that seed search can match on",
-        "Quest rewards from the Sad Ghost, Old Wandmaker, Troll Blacksmith, and Ambitious Imp; each property is exact when the seed fixes it and a range or category when run history can change it",
+        "Quest rewards from the Sad Ghost, Old Wandmaker, Troll Blacksmith, and Ambitious Imp; the Imp's cursed +2…+4 ring is named exactly when its class cannot shift, or shown as an ordered set when taking Mimic Tooth or exhausting the artifact pool can move the ring draw",
         "Special- and secret-room rewards: how many drop, their categories, tier and upgrade bounds, and whether they are cursed",
         "Shop stock presence, with fixed and common items named exactly and deck-driven slots reported as a category and tier",
         "Seed search can additionally match a minimum upgrade level on items predicted exactly"

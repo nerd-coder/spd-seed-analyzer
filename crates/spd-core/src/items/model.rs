@@ -59,17 +59,36 @@ pub enum RoomLootRole {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum QuestRewardRole {
-    GhostWeapon { tier: i32 },
-    GhostArmor { tier: i32 },
+    GhostWeapon {
+        tier: i32,
+    },
+    GhostArmor {
+        tier: i32,
+    },
     WandmakerWand,
     WandmakerPersisted,
-    BlacksmithWeapon { tier: i32 },
-    BlacksmithMissile { tier: i32 },
-    BlacksmithArmor { tier: i32 },
-    BlacksmithRoomWeapon { tier: i32 },
-    BlacksmithRoomMissile { tier: i32 },
-    BlacksmithRoomArmor { tier: i32 },
-    ImpRing,
+    BlacksmithWeapon {
+        tier: i32,
+    },
+    BlacksmithMissile {
+        tier: i32,
+    },
+    BlacksmithArmor {
+        tier: i32,
+    },
+    BlacksmithRoomWeapon {
+        tier: i32,
+    },
+    BlacksmithRoomMissile {
+        tier: i32,
+    },
+    BlacksmithRoomArmor {
+        tier: i32,
+    },
+    ImpRing {
+        identity_exact: bool,
+        candidate_indices: [u8; 3],
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

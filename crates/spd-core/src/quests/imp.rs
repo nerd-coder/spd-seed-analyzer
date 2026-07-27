@@ -94,6 +94,13 @@ pub fn take_pending(imp: &mut ImpQuestState) -> Option<ImpSpawnResult> {
 }
 
 fn generate_reward(generator: &mut GeneratorState, depth: i32) -> GeneratedItem {
+    let mimic_tooth_available = generator
+        .preview_category_classes(Category::Trinket, 4, depth)
+        .iter()
+        .any(|class_name| class_name == "MimicTooth");
+    let identity_exact =
+        !mimic_tooth_available && generator.deck_remaining_weight(Category::Artifact) > 0.0;
+
     // do { reward = random(RING) } while (reward.cursed);
     let mut reward = loop {
         let r = generator.random_category(Category::Ring, depth);
@@ -110,8 +117,25 @@ fn generate_reward(generator: &mut GeneratorState, depth: i32) -> GeneratedItem 
     }
     reward.cursed = true;
     reward.source = Some("Imp.Quest".into());
+    let ring_classes = Category::Ring.def().classes;
+    let mut candidate_classes = vec![reward.class_name.clone()];
+    candidate_classes.extend(generator.preview_category_classes(Category::Ring, 2, depth));
+    let candidate_indices = candidate_classes
+        .iter()
+        .map(|class_name| {
+            ring_classes
+                .iter()
+                .position(|candidate| candidate == class_name)
+                .expect("previewed ring class belongs to ring category") as u8
+        })
+        .collect::<Vec<_>>()
+        .try_into()
+        .expect("three Imp ring candidates");
     reward.provenance =
-        crate::items::model::ItemProvenance::Quest(crate::items::model::QuestRewardRole::ImpRing);
+        crate::items::model::ItemProvenance::Quest(crate::items::model::QuestRewardRole::ImpRing {
+            identity_exact,
+            candidate_indices,
+        });
     reward
 }
 
@@ -247,6 +271,45 @@ mod tests {
         assert_ne!(fresh_reward.class_name, altered_reward.class_name);
         assert_eq!(fresh_reward.level, altered_reward.level);
         assert_eq!(fresh_tail, altered_tail);
+    }
+
+    #[test]
+    fn reward_identity_reports_exact_or_ordered_candidates_from_seed() {
+        let mut saw_exact = false;
+        let mut saw_conditional = false;
+        for seed in 0..100 {
+            let mut generator = init_run(seed).generator;
+            Random::reset_generators();
+            Random::push_generator_seeded(777);
+            let reward = generate_reward(&mut generator, 18);
+            Random::pop_generator();
+
+            let crate::items::model::ItemProvenance::Quest(
+                crate::items::model::QuestRewardRole::ImpRing {
+                    identity_exact,
+                    candidate_indices,
+                },
+            ) = reward.provenance
+            else {
+                panic!("Imp reward provenance");
+            };
+            let ring_classes = Category::Ring.def().classes;
+            assert_eq!(
+                ring_classes[usize::from(candidate_indices[0])],
+                reward.class_name
+            );
+            assert_eq!(candidate_indices.len(), 3);
+            saw_exact |= identity_exact;
+            saw_conditional |= !identity_exact;
+            if saw_exact && saw_conditional {
+                break;
+            }
+        }
+        assert!(saw_exact, "seed scan should find a run without Mimic Tooth");
+        assert!(
+            saw_conditional,
+            "seed scan should find a run where Mimic Tooth is offered"
+        );
     }
 
     #[test]

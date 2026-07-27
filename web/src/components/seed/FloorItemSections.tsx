@@ -1,4 +1,5 @@
 import { CircleQuestionMark } from 'lucide-react'
+import { finderItemLabel } from '@/components/finder/finder-items'
 import { ItemIcon } from '@/components/ItemIcon'
 import { ItemName } from '@/components/ItemName'
 import { Badge } from '@/components/ui/badge'
@@ -60,6 +61,12 @@ export function FloorItemList({
             )}
             <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
               <ItemName name={item.name} />
+              {item.candidate_classes?.length ? (
+                <span className="text-muted-foreground basis-full text-xs">
+                  In order:{' '}
+                  {item.candidate_classes.map(finderItemLabel).join(' → ')}
+                </span>
+              ) : null}
               {item.tier != null ? (
                 <Badge variant="outline">tier {item.tier}</Badge>
               ) : null}

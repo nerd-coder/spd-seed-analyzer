@@ -383,6 +383,31 @@ impl GeneratorState {
         self.cats[cat.index()].dropped
     }
 
+    pub(crate) fn deck_remaining_weight(&self, cat: Category) -> f32 {
+        self.cats[cat.index()]
+            .probs
+            .iter()
+            .map(|probability| probability.max(0.0))
+            .sum()
+    }
+
+    /// Preview category classes without advancing this generator or the active
+    /// floor RNG. Item randomization runs under an isolated throwaway stream.
+    pub(crate) fn preview_category_classes(
+        &self,
+        cat: Category,
+        count: usize,
+        depth: i32,
+    ) -> Vec<String> {
+        let mut preview = self.clone();
+        Random::push_generator_seeded(0);
+        let classes = (0..count)
+            .map(|_| preview.random_category(cat, depth).class_name)
+            .collect();
+        Random::pop_generator();
+        classes
+    }
+
     #[cfg(test)]
     pub(crate) fn deck_snapshot(&self, cat: Category) -> DeckSnapshot {
         let runtime = &self.cats[cat.index()];

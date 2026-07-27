@@ -223,8 +223,12 @@ fn matching_evidence(
                 })
                 .find_map(|floor| {
                     floor.items.iter().find_map(|item| {
-                        (item.prediction == ItemPredictionKind::Exact
+                        ((item.prediction == ItemPredictionKind::Exact
                             && item.class_name.as_deref() == Some(constraint.class_name.as_str())
+                            || item
+                                .candidate_classes
+                                .iter()
+                                .any(|candidate| candidate == &constraint.class_name))
                             && constraint.min_level.is_none_or(|minimum| {
                                 item.level.is_some_and(|level| level >= minimum)
                             }))

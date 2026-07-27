@@ -23,6 +23,8 @@ export type ItemEntry = {
   name: string
   /** Java simple class name for icon lookup. */
   class_name?: string | null
+  /** Ordered seed-determined identities when run history can shift a deck index. */
+  candidate_classes?: string[]
   category: string
   tier?: number | null
   tier_range?: { min: number; max: number } | null

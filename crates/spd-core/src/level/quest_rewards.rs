@@ -34,7 +34,16 @@ pub(super) fn take_pending(dungeon: &mut DungeonState) -> InitQuestRewards {
     }
 
     if let Some(imp) = quests::take_imp_pending(&mut dungeon.imp) {
-        let public_summary = safe_summary(&imp.summary, "ring reward");
+        let reward_label = match imp.reward.provenance {
+            crate::items::model::ItemProvenance::Quest(
+                crate::items::model::QuestRewardRole::ImpRing {
+                    identity_exact: true,
+                    ..
+                },
+            ) => imp.reward.title(),
+            _ => "ring reward".into(),
+        };
+        let public_summary = safe_summary(&imp.summary, &reward_label);
         result.summaries.push(imp.summary);
         result.public_labels.push(Some(public_summary));
         result.items.push(imp.reward);
