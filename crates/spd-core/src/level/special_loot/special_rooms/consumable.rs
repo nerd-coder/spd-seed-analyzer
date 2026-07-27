@@ -88,6 +88,7 @@ pub fn treasury_prizes_on_map(
             });
         let cell = treasury_drop_cell(room, map, true);
         let heap_type = if heap_chest && dungeon.depth > 1 && Random::float() < mimic_chance {
+            burn_mimic_prize(dungeon);
             item.source = Some("TreasuryRoom:mimic".into());
             map.mob_occupied[cell] = true;
             map.known_mobs[cell] = Some("Mimic");
@@ -119,6 +120,38 @@ pub fn treasury_prizes_on_map(
     // TreasuryRoom.java:76 — IronKey pushed after the small gold piles
     items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
     out
+}
+
+/// `Mimic.spawnAt(...).generatePrize(true)`. The held extra reward is a
+/// combat drop, so it is not public seed-analysis output, but generation
+/// advances both the main stream and the relevant item deck here.
+fn burn_mimic_prize(dungeon: &mut DungeonState) {
+    match Random::int_max(5) {
+        0 => {
+            let mut gold = GeneratedItem::new("Gold", ItemCategory::Gold);
+            randomize_item(&mut gold, dungeon.depth);
+        }
+        1 => {
+            dungeon
+                .generator
+                .random_missile(dungeon.depth / 5, false, dungeon.depth);
+        }
+        2 => {
+            dungeon
+                .generator
+                .random_armor(dungeon.depth / 5, dungeon.depth);
+        }
+        3 => {
+            dungeon
+                .generator
+                .random_weapon(dungeon.depth / 5, false, dungeon.depth);
+        }
+        _ => {
+            dungeon
+                .generator
+                .random_category(Category::Ring, dungeon.depth);
+        }
+    }
 }
 
 fn treasury_drop_cell(room: &Room, map: &TerrainMap, reject_occupied: bool) -> usize {

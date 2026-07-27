@@ -2,31 +2,33 @@
 
 Pinned target: SPD v3.3.8 @ `7b8b845a7`; accuracy remains `partial`.
 
-The quest-NPC oracle now pins the Ghost and Wandmaker cell plus the eight-int
-RNG tail immediately after reward generation across all Wandmaker depth/type
-combinations and Ghost depths 2–4. Rust matches 12 of 18 boundaries. The six
-mismatches include Ghost spawn-floor drift, so Ghost rewards are omitted from
-the public report; the existing Wandmaker constraint remains. Accuracy is
-still `partial`.
+The quest-NPC oracle pins the Ghost and Wandmaker cell plus the eight-int RNG
+tail immediately after reward generation across all Wandmaker depth/type
+combinations and Ghost depths 2–4. Rust now matches 15 of 18 boundaries. Ghost
+placement and reward tails match the full matrix, but Ghost rewards remain
+omitted until the remaining prior-floor drift is resolved. The existing
+Wandmaker constraint remains. Accuracy is still `partial`.
 
 ## 1. Restore quest-NPC placement parity
 
-The Java oracle now supports non-consuming room-callback and `paintDoors`
-checkpoints on every regular Sewer and Prison depth. Comparing the six failing
-NPC boundaries localized four paths:
+`StatueRoom` now generates the armored variant's armor/glyph, `MassGraveRoom`
+re-rolls its skeleton loop condition like Java, and Treasury mimics generate
+their held prize. Focused room boundaries and the 18-case NPC matrix pin these
+paths. The AAC floor-4 and floor-6 painter callbacks and `paintDoors` boundary
+now match Java exactly.
 
-- AAD floor 4 first diverges in `StatueRoom` (Rust is six 32-bit draws behind).
-- AAD floor 8 first diverges in `MassGraveRoom`; ABR floor 8 stays aligned until
-  its later `StatueRoom`.
-- AAC floor 4 matches every room callback and first diverges in `paintDoors`.
-- AAC floor 7 and AAU floor 9 already have a different paint order; compare the
-  oracle's pre-shuffle room list with Rust before changing their painters.
+Three Wandmaker cases remain:
 
-Next, pin focused regression tests for `StatueRoom` and `MassGraveRoom`, port
-their missing RNG consumption from Java, and re-run all six traces. Then locate
-the door-pass and pre-shuffle faults, require all 18 NPC boundaries to match,
-and remove both NPC tail guards. Update the accuracy manifest only after the
-full matrix passes.
+- AAC floor 7 diverges before room construction even though floor 6 painting
+  ends aligned; locate the floor-6 population/item lifecycle drift.
+- AAU floor 9 likewise has a different pre-shuffle room list; find the first
+  prior-floor population boundary that differs.
+- AAD floor 8 has the exact reward RNG tail but chooses cell 586 instead of
+  643; compare passability, occupancy, and distance-map inputs to
+  `spawnWandmaker` without changing RNG.
+
+Require all 18 NPC boundaries to match, remove both NPC tail guards, and only
+then update the accuracy manifest and expose Ghost rewards.
 
 ## 2. Then sharpen the Sad Ghost reward
 

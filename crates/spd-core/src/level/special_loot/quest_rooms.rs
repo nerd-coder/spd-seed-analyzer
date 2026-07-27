@@ -41,9 +41,11 @@ pub(super) fn mass_grave_prizes(
 
     // 50% 1 skeleton, 50% 2. These room-painted mobs must occupy their cells
     // before the later ambient pass calls `findMob`.
-    let n_skel = Random::int_max(2); // 0 or 1 → loop i=0..=n_skel → 1 or 2
     let mut mob_positions = Vec::new();
-    for _ in 0..=n_skel {
+    // Java's `for (i = 0; i <= Random.Int(2); i++)` re-evaluates the random
+    // upper bound on every condition check, including the terminating check.
+    let mut i = 0;
+    while i <= Random::int_max(2) {
         burn_drop_pos(room, &mut mob_positions);
         if let Some(&(x, y)) = mob_positions.last() {
             if let Some(cell) = map.point_to_cell(x, y) {
@@ -51,6 +53,7 @@ pub(super) fn mass_grave_prizes(
                 map.known_mobs[cell] = Some("Skeleton");
             }
         }
+        i += 1;
     }
 
     let mut out = Vec::new();

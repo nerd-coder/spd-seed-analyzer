@@ -271,12 +271,22 @@ pub fn statue_weapon(
     map.mob_occupied[cell] = true;
     map.known_mobs[cell] = Some("Statue");
     // Statue.random: 10% armored (rat skull default)
-    let _armored = Random::float() < 0.1;
+    let armored = Random::float() < 0.1;
     let mut weapon = dungeon
         .generator
         .random_category(Category::Weapon, dungeon.depth);
     weapon.cursed = false;
     weapon.enchantment = Some(enchants::random_weapon_enchant(None).to_string());
+    // ArmoredStatue.createWeapon: after the shared weapon, create and glyph
+    // its armor. The armor is not a guaranteed drop, but these rolls remain
+    // on the level-generation stream and therefore affect later callbacks.
+    if armored {
+        let mut armor = dungeon
+            .generator
+            .random_armor(dungeon.depth / 5, dungeon.depth);
+        armor.cursed = false;
+        armor.enchantment = Some(enchants::random_armor_glyph(None).to_string());
+    }
     weapon.source = Some("StatueRoom".into());
     PlacedLoot {
         item: weapon,

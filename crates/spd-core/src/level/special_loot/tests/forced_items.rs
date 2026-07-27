@@ -1,5 +1,6 @@
 //! Focused coverage for room-paint additions to `itemsToSpawn`.
 
+use super::super::quest_rooms::mass_grave_prizes;
 use super::super::secret_rooms::{secret_laboratory, secret_larder, secret_runestone};
 use super::super::special_rooms::{
     armory_prizes_on_map, crypt_prize, library_prizes, paint_laboratory, pool_prize,
@@ -247,6 +248,29 @@ fn statue_room_consumes_center_jitter_before_weapon_and_pushes_iron_key() {
         .collect();
     assert_eq!(statues.len(), 1);
     assert!(map.mob_occupied[statues[0]]);
+}
+
+#[test]
+fn mass_grave_rerolls_the_skeleton_loop_bound() {
+    Random::reset_generators();
+    let run = init_run(38);
+    Random::push_generator_seeded(108);
+    let mut d = dungeon_from_run(run);
+    d.depth = 8;
+    let room = test_room("MassGraveRoom", 8, 8);
+    let mut spawn = Vec::new();
+    let mut map = paint_minimal(std::slice::from_ref(&room)).expect("map");
+
+    let loot = mass_grave_prizes(&mut d, &room, &mut map, &mut spawn);
+    assert_eq!(
+        Random::peek_ints(4),
+        [-1_774_819_476, -1_793_331_878, -454_523_015, -431_360_774],
+        "pinned MassGraveRoom skeleton-loop and loot boundary"
+    );
+    Random::pop_generator();
+
+    assert_eq!(spawn[0].class_name, "PotionOfLiquidFlame");
+    assert!(!loot.is_empty());
 }
 
 #[test]

@@ -94,12 +94,9 @@ mod placement_oracle_tests {
         assert_eq!(
             mismatches,
             [
-                "AAA-AAA-AAC Ghost",
                 "AAA-AAA-AAC Wandmaker",
-                "AAA-AAA-AAD Ghost",
                 "AAA-AAA-AAD Wandmaker",
                 "AAA-AAA-AAU Wandmaker",
-                "AAA-AAA-ABR Wandmaker",
             ],
             "update the public constraint when placement parity changes"
         );

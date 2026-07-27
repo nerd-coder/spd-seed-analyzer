@@ -415,7 +415,7 @@ fn create_level_internal(
                 feeling,
                 &mut doors,
             );
-            if matches!(dungeon.depth, 16..=19 | 21..=24) {
+            if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=24) {
                 post_doors_rng_probe = Random::peek_ints(8);
             }
 
