@@ -1,0 +1,365 @@
+{
+  "depth": 16,
+  "build_attempts": [
+    {
+      "attempt": 0,
+      "start_rng": [
+        -2049579297, 1729405465, 446188909, -1932059700, -850031576, 802379250,
+        886786750, 989987351
+      ],
+      "end_rng": [
+        1484481059, -948660702, 1255317898, -1054626172, 894296408, 208593392,
+        -1077313860, 990174
+      ],
+      "success": true,
+      "rooms": [
+        { "class": "ArmoryRoom", "bounds": [-15, 10, -7, 16] },
+        { "class": "HallwayRoom", "bounds": [12, 29, 17, 37] },
+        { "class": "CrystalPathRoom", "bounds": [5, 35, 12, 41] },
+        { "class": "LibraryRingRoom", "bounds": [12, 9, 23, 22] },
+        { "class": "SecretSummoningRoom", "bounds": [8, 16, 12, 22] },
+        { "class": "LibraryRingExitRoom", "bounds": [-1, 22, 11, 35] },
+        { "class": "ShopRoom", "bounds": [0, -9, 8, 0] },
+        { "class": "LibraryHallEntranceRoom", "bounds": [0, 0, 9, 7] },
+        { "class": "LibraryHallRoom", "bounds": [-5, 16, 1, 22] },
+        { "class": "StatuesRoom", "bounds": [-15, -6, 0, 10] },
+        { "class": "MagicWellRoom", "bounds": [4, 10, 12, 16] },
+        { "class": "PerimeterRoom", "bounds": [9, 5, 15, 9] },
+        { "class": "PerimeterRoom", "bounds": [16, 22, 22, 27] },
+        { "class": "WalkwayRoom", "bounds": [11, 24, 16, 27] },
+        { "class": "PerimeterRoom", "bounds": [-7, 10, -3, 16] },
+        { "class": "PerimeterRoom", "bounds": [12, 27, 14, 29] },
+        { "class": "MazeConnectionRoom", "bounds": [3, 16, 8, 22] },
+        { "class": "PerimeterRoom", "bounds": [0, 7, 4, 15] }
+      ]
+    }
+  ],
+  "builder_kind": "LoopBuilder",
+  "pre_shuffle_rooms": [
+    { "class": "ArmoryRoom", "bounds": [1, 20, 9, 26] },
+    { "class": "HallwayRoom", "bounds": [28, 39, 33, 47] },
+    { "class": "CrystalPathRoom", "bounds": [21, 45, 28, 51] },
+    { "class": "LibraryRingRoom", "bounds": [28, 19, 39, 32] },
+    { "class": "SecretSummoningRoom", "bounds": [24, 26, 28, 32] },
+    { "class": "LibraryRingExitRoom", "bounds": [15, 32, 27, 45] },
+    { "class": "ShopRoom", "bounds": [16, 1, 24, 10] },
+    { "class": "LibraryHallEntranceRoom", "bounds": [16, 10, 25, 17] },
+    { "class": "LibraryHallRoom", "bounds": [11, 26, 17, 32] },
+    { "class": "StatuesRoom", "bounds": [1, 4, 16, 20] },
+    { "class": "MagicWellRoom", "bounds": [20, 20, 28, 26] },
+    { "class": "PerimeterRoom", "bounds": [25, 15, 31, 19] },
+    { "class": "PerimeterRoom", "bounds": [32, 32, 38, 37] },
+    { "class": "WalkwayRoom", "bounds": [27, 34, 32, 37] },
+    { "class": "PerimeterRoom", "bounds": [9, 20, 13, 26] },
+    { "class": "PerimeterRoom", "bounds": [28, 37, 30, 39] },
+    { "class": "MazeConnectionRoom", "bounds": [19, 26, 24, 32] },
+    { "class": "PerimeterRoom", "bounds": [16, 17, 20, 25] }
+  ],
+  "pre_mobs_rng": null,
+  "pre_items_rng": null,
+  "crystal_vaults": [],
+  "drops": [],
+  "blacksmith_state": {
+    "rewards": [
+      { "class": "Sai", "level": 1, "quantity": 1 },
+      { "class": "Scimitar", "level": 1, "quantity": 1 },
+      { "class": "Tomahawk", "level": 1, "quantity": 3 },
+      { "class": "ScaleArmor", "level": 1, "quantity": 1 }
+    ],
+    "enchant": null,
+    "glyph": null
+  },
+  "generator_state": {
+    "using_first_deck": false,
+    "category_probs": [
+      0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+      0.0, 1.0, 0.0, 6.0, 1.0, 8.0, 1.0, 8.0
+    ],
+    "categories": [
+      {
+        "probs": [
+          1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+          1.0, 1.0, 1.0
+        ],
+        "using_2nd_probs": false,
+        "seed": -8482833881895180393,
+        "dropped": 0
+      },
+      { "probs": [], "using_2nd_probs": false, "seed": null, "dropped": 0 },
+      {
+        "probs": [2.0, 0.0, 2.0, 2.0, 2.0, 2.0],
+        "using_2nd_probs": false,
+        "seed": 4625605937427131792,
+        "dropped": 0
+      },
+      {
+        "probs": [2.0, 2.0, 2.0, 1.0, 2.0, 2.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": -7422640415022574921,
+        "dropped": 1
+      },
+      {
+        "probs": [2.0, 2.0, 0.0, 2.0, 2.0, 1.0],
+        "using_2nd_probs": false,
+        "seed": 7972496163390566129,
+        "dropped": 3
+      },
+      {
+        "probs": [2.0, 2.0, 1.0, 1.0, 2.0, 2.0, 1.0],
+        "using_2nd_probs": false,
+        "seed": -2953045181982629298,
+        "dropped": 3
+      },
+      {
+        "probs": [2.0, 2.0, 2.0, 2.0, 1.0, 2.0, 2.0],
+        "using_2nd_probs": false,
+        "seed": -200446424190442424,
+        "dropped": 1
+      },
+      {
+        "probs": [1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": null,
+        "dropped": 0
+      },
+      { "probs": [], "using_2nd_probs": false, "seed": null, "dropped": 0 },
+      {
+        "probs": [3.0, 3.0, 3.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": -6893196196460450742,
+        "dropped": 0
+      },
+      {
+        "probs": [3.0, 2.0, 1.0],
+        "using_2nd_probs": false,
+        "seed": -329749162957057241,
+        "dropped": 3
+      },
+      {
+        "probs": [3.0, 0.0, 3.0],
+        "using_2nd_probs": false,
+        "seed": 604694503495956844,
+        "dropped": 3
+      },
+      {
+        "probs": [3.0, 3.0, 3.0],
+        "using_2nd_probs": false,
+        "seed": -1994075237577644880,
+        "dropped": 0
+      },
+      {
+        "probs": [3.0, 3.0, 3.0],
+        "using_2nd_probs": false,
+        "seed": 2717838491180037711,
+        "dropped": 0
+      },
+      {
+        "probs": [
+          3.0, 2.0, 2.0, 3.0, 2.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 2.0, 3.0
+        ],
+        "using_2nd_probs": false,
+        "seed": -1246497660186318794,
+        "dropped": 4
+      },
+      {
+        "probs": [2.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 2.0, 3.0, 3.0, 2.0, 3.0],
+        "using_2nd_probs": false,
+        "seed": 6457456330554093736,
+        "dropped": 3
+      },
+      {
+        "probs": [
+          1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0
+        ],
+        "using_2nd_probs": false,
+        "seed": 2632793901004004387,
+        "dropped": 1
+      },
+      {
+        "probs": [2.0, 1.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": -2850615591936695090,
+        "dropped": 12
+      },
+      {
+        "probs": [0.0, 3.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+        "using_2nd_probs": false,
+        "seed": -8941297708669008988,
+        "dropped": 17
+      },
+      {
+        "probs": [0.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 1.0],
+        "using_2nd_probs": false,
+        "seed": 4213926130379444254,
+        "dropped": 0
+      },
+      {
+        "probs": [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "using_2nd_probs": true,
+        "seed": -1588026090766845994,
+        "dropped": 13
+      },
+      {
+        "probs": [0.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 0.0, 2.0, 1.0, 2.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": 1692003391394842234,
+        "dropped": 6
+      },
+      { "probs": [1.0], "using_2nd_probs": false, "seed": null, "dropped": 0 }
+    ]
+  },
+  "checkpoints": [
+    {
+      "stage": "room",
+      "room": "MagicWellRoom",
+      "rng": [
+        -628462422, 1137337909, -2132638537, 1037756065, 792547018, -444902388,
+        322160938, -1892144904
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "StatuesRoom",
+      "rng": [
+        792547018, -444902388, 322160938, -1892144904, -1205796749, -2125599830,
+        2009114437, -1507914319
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "PerimeterRoom",
+      "rng": [
+        322160938, -1892144904, -1205796749, -2125599830, 2009114437,
+        -1507914319, 998517131, 779346320
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "MazeConnectionRoom",
+      "rng": [
+        -178624770, -1411697737, 1246955448, -1367385271, 1117151710,
+        -1192796336, 2124296359, 27405157
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "LibraryRingExitRoom",
+      "rng": [
+        2124296359, 27405157, 501249964, -309408216, 1490314566, -1690932240,
+        1773577306, 698860623
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "PerimeterRoom",
+      "rng": [
+        27405157, 501249964, -309408216, 1490314566, -1690932240, 1773577306,
+        698860623, 1275918119
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "LibraryHallEntranceRoom",
+      "rng": [
+        -107734702, 1280877522, -630299237, -49374008, -470698298, -10505686,
+        -54508599, -124825886
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "ShopRoom",
+      "rng": [
+        1280877522, -630299237, -49374008, -470698298, -10505686, -54508599,
+        -124825886, 1172243226
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "SecretSummoningRoom",
+      "rng": [
+        -49374008, -470698298, -10505686, -54508599, -124825886, 1172243226,
+        504732437, -2030032153
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "PerimeterRoom",
+      "rng": [
+        -49374008, -470698298, -10505686, -54508599, -124825886, 1172243226,
+        504732437, -2030032153
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "ArmoryRoom",
+      "rng": [
+        646522454, -1542105142, -1445311132, 2081241248, 1863908720, 696974122,
+        -93561464, 663760030
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "WalkwayRoom",
+      "rng": [
+        -1542105142, -1445311132, 2081241248, 1863908720, 696974122, -93561464,
+        663760030, -1899302459
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "LibraryHallRoom",
+      "rng": [
+        -1542105142, -1445311132, 2081241248, 1863908720, 696974122, -93561464,
+        663760030, -1899302459
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "CrystalPathRoom",
+      "rng": [
+        -258373617, -1401793022, -917756161, 1359900462, 1779000027, 1619167650,
+        468182918, -847573338
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "HallwayRoom",
+      "rng": [
+        -917756161, 1359900462, 1779000027, 1619167650, 468182918, -847573338,
+        1208334978, -1102517195
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "LibraryRingRoom",
+      "rng": [
+        1779000027, 1619167650, 468182918, -847573338, 1208334978, -1102517195,
+        -1178838443, 1896349972
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "PerimeterRoom",
+      "rng": [
+        1779000027, 1619167650, 468182918, -847573338, 1208334978, -1102517195,
+        -1178838443, 1896349972
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "PerimeterRoom",
+      "rng": [
+        1779000027, 1619167650, 468182918, -847573338, 1208334978, -1102517195,
+        -1178838443, 1896349972
+      ]
+    },
+    {
+      "stage": "doors",
+      "room": "paintDoors",
+      "rng": [
+        -2005625558, 1105790490, -2114822328, -1489290967, -1945939944,
+        1387927472, -2073087741, -324324233
+      ]
+    }
+  ]
+}

@@ -143,6 +143,18 @@ fn adjacent(a: Point, b: Point) -> bool {
     (a.x - b.x).abs().max((a.y - b.y).abs()) == 1
 }
 
+/// `CrystalChoiceRoom.paint` — 3–4 potion/scroll piles + one chest (wand/ring/artifact).
+pub(super) fn crystal_choice(
+    dungeon: &mut DungeonState,
+    rooms: &[Room],
+    room_index: usize,
+    map: &mut crate::level::terrain::TerrainMap,
+    doors: &crate::level::painter::DoorMap,
+    items_to_spawn: &mut Vec<GeneratedItem>,
+) -> Vec<PlacedLoot> {
+    choice::paint(dungeon, rooms, room_index, map, doors, items_to_spawn)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -156,16 +168,4 @@ mod tests {
         assert!(!adjacent(Point::new(12, 10), door));
         assert!(!adjacent(door, door));
     }
-}
-
-/// `CrystalChoiceRoom.paint` — 3–4 potion/scroll piles + one chest (wand/ring/artifact).
-pub(super) fn crystal_choice(
-    dungeon: &mut DungeonState,
-    rooms: &[Room],
-    room_index: usize,
-    map: &mut crate::level::terrain::TerrainMap,
-    doors: &crate::level::painter::DoorMap,
-    items_to_spawn: &mut Vec<GeneratedItem>,
-) -> Vec<PlacedLoot> {
-    choice::paint(dungeon, rooms, room_index, map, doors, items_to_spawn)
 }

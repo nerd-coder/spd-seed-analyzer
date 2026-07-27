@@ -84,12 +84,14 @@ pub(super) fn secret_garden_prizes(room: &Room) -> Vec<PlacedLoot> {
         burn_drop_pos(room, &mut occupied);
         out.push(plant_loot(class, "SecretGardenRoom"));
     }
-    burn_drop_pos(room, &mut occupied);
+    // Java rolls the fourth seed's class before drawing its position, and a
+    // repeated position costs another `Room.random` pair.
     let extra = if Random::int_max(2) == 0 {
         "SeedpodSeed"
     } else {
         "DewcatcherSeed"
     };
+    burn_drop_pos(room, &mut occupied);
     out.push(plant_loot(extra, "SecretGardenRoom"));
     out
 }

@@ -281,6 +281,32 @@ final class HallsPaintTraceOracle {
 
 	/** City uses the same RegularPainter lifecycle; only `nTraps()` must run before tracing. */
 	private static final class TraceCityLevel extends CityLevel {
+		@Override protected Builder builder() {
+			Builder selected = super.builder();
+			if (selected instanceof LoopBuilder) {
+				TraceHallsLevel.builderKind = "LoopBuilder";
+				try {
+					Field intensity = LoopBuilder.class.getDeclaredField("curveIntensity");
+					Field offset = LoopBuilder.class.getDeclaredField("curveOffset");
+					intensity.setAccessible(true);
+					offset.setAccessible(true);
+					return new TraceLoopBuilder().setLoopShape(
+							2, intensity.getFloat(selected), offset.getFloat(selected));
+				} catch (ReflectiveOperationException error) {
+					throw new AssertionError(error);
+				}
+			}
+			if (!(selected instanceof FigureEightBuilder)) return selected;
+			TraceHallsLevel.builderKind = "FigureEightBuilder";
+			try {
+				Field intensity = FigureEightBuilder.class.getDeclaredField("curveIntensity");
+				intensity.setAccessible(true);
+				return new TraceBuilder().setLoopShape(2, intensity.getFloat(selected), 0f);
+			} catch (ReflectiveOperationException error) {
+				throw new AssertionError(error);
+			}
+		}
+
 		@Override protected com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter painter() {
 			return new TracePainter()
 					.setWater(feeling == Level.Feeling.WATER ? 0.90f : 0.30f, 4)

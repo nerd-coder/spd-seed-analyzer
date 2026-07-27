@@ -191,6 +191,19 @@ pub(super) fn place_room_with_prepare(
     place_room_impl(rooms, None, prev, next, angle, prepare)
 }
 
+/// `place_room_with_prepare` for a Java caller that narrows the collision list.
+pub(super) fn place_room_with_collision_ids_and_prepare(
+    rooms: &mut [Room],
+    collision_ids: &[usize],
+    prev: usize,
+    next: usize,
+    angle: f32,
+    prepare: &mut impl FnMut(&mut Room),
+) -> f32 {
+    let collision: Vec<_> = collision_ids.iter().map(|&id| rooms[id].clone()).collect();
+    place_room_impl(rooms, Some(&collision), prev, next, angle, prepare)
+}
+
 fn place_room_impl(
     rooms: &mut [Room],
     collision: Option<&[Room]>,

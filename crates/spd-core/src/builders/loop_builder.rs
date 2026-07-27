@@ -3,7 +3,7 @@
 use crate::builders::connection;
 use crate::builders::place::{
     angle_between_rooms, find_neighbours, place_room, place_room_with_collision_ids,
-    place_room_with_prepare,
+    place_room_with_collision_ids_and_prepare,
 };
 use crate::builders::regular::{
     create_branches, loop_center, setup_rooms, target_angle, weight_rooms, BranchAngles,
@@ -82,7 +82,19 @@ pub(super) fn build(
         // Java's do/while with `tries >= 0` makes eleven attempts.
         for _ in 0..11 {
             let angle = Random::float_max(360.0);
-            if place_room_with_prepare(rooms, entrance, shop, angle, prepare_shop) != -1.0 {
+            // LoopBuilder collides the shop against its loop only, not every
+            // room. The surviving rooms are the same, but `findFreeSpace`
+            // picks the closest collision by list order and can burn a
+            // tie-break draw, so the narrower list must be preserved.
+            if place_room_with_collision_ids_and_prepare(
+                rooms,
+                &loop_ids,
+                entrance,
+                shop,
+                angle,
+                prepare_shop,
+            ) != -1.0
+            {
                 placed = true;
                 break;
             }

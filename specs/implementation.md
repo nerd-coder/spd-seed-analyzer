@@ -2,16 +2,22 @@
 
 Pinned target: SPD v3.3.8 @ `7b8b845a7`; accuracy remains `partial`.
 
-## Finish the AFU retry-heavy Halls replay
+The `AAA-AAA-AFU` retry-heavy replay now passes on Halls 21–24 plus the
+floor-16 City shop trace that unblocked it.
 
-Uncommitted `AAA-AAA-AFU` fixtures cover inner `RegularLevel` builder retries,
-painter callbacks, post-door RNG, and pre-mob/pre-item boundaries on Halls
-21–24. Depths 21, 22, and 24 pass. Depth 23 exposes an upstream persistent
-artifact-deck mismatch: Rust consumes one extra artifact in the depth-16 shop;
-Java's rare stock is a Stylus.
+## Close the SecretGardenRoom map gap
 
-1. Trace the floor-16 ShopRoom RNG milestones in Java and Rust to locate the
-   first source-backed divergent operation.
-2. Fix the shop lifecycle, then make AFU depth 23 and its CrystalVault evidence
-   pass without weakening the replay assertions.
-3. Update `accuracy.json`, run CI parity, and commit the completed phase.
+`secret_garden_prizes` matches the pinned RNG stream but throws the `Patch`
+result away, so the room contributes no terrain and no plants to the map.
+
+1. Paint the room the way `SecretGardenRoom.paint` does — wall frame, grass
+   interior, high-grass patch — and record the four plant cells, applying
+   `Level.plant`'s high-grass-to-grass conversion.
+2. Pin it with a reference floor that actually contains the room, then extend
+   the accuracy manifest if the map claim moves.
+
+## Then broaden the LoopBuilder shop evidence
+
+Only one pinned floor currently exercises `LoopBuilder`'s narrower shop
+collision list. Capture a City or Prison shop trace for a second seed so the
+path has more than a single regression case.

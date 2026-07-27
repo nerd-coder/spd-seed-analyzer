@@ -82,3 +82,119 @@ fn aaa_floor_sixteen_matches_room_classes_and_normalized_bounds() {
         .collect();
     assert_eq!(heaps, expected.final_heaps, "floor-16 final heaps");
 }
+
+#[derive(Debug, serde::Deserialize)]
+struct CityShopTrace {
+    depth: i32,
+    builder_kind: String,
+    build_attempts: Vec<CityShopAttempt>,
+    pre_shuffle_rooms: Vec<CityShopRoom>,
+    checkpoints: Vec<CityShopCheckpoint>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct CityShopAttempt {
+    start_rng: Vec<i32>,
+    success: bool,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct CityShopRoom {
+    #[serde(rename = "class")]
+    class_name: String,
+    bounds: [i32; 4],
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct CityShopCheckpoint {
+    stage: String,
+    room: String,
+    rng: Vec<i32>,
+}
+
+/// `LoopBuilder` collides its shop against the loop only. This AFU floor is the
+/// pinned case where the wider room list burns an extra `findFreeSpace`
+/// tie-break, which would shift the whole shop stock and every later floor.
+#[test]
+fn afu_floor_sixteen_loop_builder_shop_matches_oracle() {
+    let trace_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tools/java-oracle/fixtures/traces/aaa-aaa-afu-floor-16-city-paint.json");
+    let trace: CityShopTrace = serde_json::from_str(
+        &std::fs::read_to_string(&trace_path)
+            .unwrap_or_else(|error| panic!("read {}: {error}", trace_path.display())),
+    )
+    .unwrap_or_else(|error| panic!("parse {}: {error}", trace_path.display()));
+    assert_eq!(trace.depth, 16);
+    assert_eq!(trace.builder_kind, "LoopBuilder");
+    assert_eq!(trace.build_attempts.len(), 1);
+    assert!(trace.build_attempts[0].success);
+    assert_eq!(
+        trace.build_attempts[0].start_rng.len(),
+        8,
+        "fixed-width Java RNG probe"
+    );
+
+    let seed = parse_seed("AAA-AAA-AFU").expect("valid oracle seed");
+    let mut dungeon = dungeon_from_run(init_run(seed.numeric));
+    let mut actual = None;
+    for depth in 1_i32..=16 {
+        dungeon.depth = depth;
+        actual = Some(create_level_partial(&mut dungeon));
+    }
+    let actual = actual.expect("AFU floor-16 replay");
+
+    let expected_rooms = trace
+        .pre_shuffle_rooms
+        .iter()
+        .map(|room| (room.class_name.clone(), room.bounds))
+        .collect::<Vec<_>>();
+    let actual_rooms = actual
+        .pre_shuffle_room_bounds
+        .iter()
+        .map(|room| {
+            (
+                room.class_name.clone(),
+                [room.left, room.top, room.right, room.bottom],
+            )
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(actual_rooms, expected_rooms, "pre-shuffle room bounds");
+
+    let expected_callbacks = trace
+        .checkpoints
+        .iter()
+        .filter(|checkpoint| checkpoint.stage == "room")
+        .map(|checkpoint| (checkpoint.room.clone(), checkpoint.rng.clone()))
+        .collect::<Vec<_>>();
+    let actual_callbacks = actual
+        .room_paint_rng_checkpoints
+        .iter()
+        .map(|checkpoint| (checkpoint.room.clone(), checkpoint.rng.clone()))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        actual_callbacks, expected_callbacks,
+        "room paint RNG callbacks"
+    );
+
+    let doors = trace.checkpoints.last().expect("paintDoors checkpoint");
+    assert_eq!((&doors.stage[..], &doors.room[..]), ("doors", "paintDoors"));
+    assert_eq!(
+        actual.post_doors_rng_probe, doors.rng,
+        "post-door RNG boundary"
+    );
+
+    let stock = actual
+        .placed_items
+        .iter()
+        .filter(|item| item.source.as_deref() == Some("ShopRoom"))
+        .map(|item| item.class_name.as_str())
+        .collect::<Vec<_>>();
+    assert!(
+        stock.contains(&"Stylus"),
+        "Java stocks the floor-16 rare slot with a Stylus, not an artifact: {stock:?}"
+    );
+    assert!(
+        stock.contains(&"HealingDart"),
+        "tipped dart stock: {stock:?}"
+    );
+}

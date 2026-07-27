@@ -80,7 +80,10 @@ pub(super) fn assert_halls_paint_trace(
         "Java builder retry count"
     );
     for (index, attempt) in trace.build_attempts.iter().enumerate() {
-        assert_eq!(attempt.attempt as usize, index, "Java builder attempt index");
+        assert_eq!(
+            attempt.attempt as usize, index,
+            "Java builder attempt index"
+        );
         assert_eq!(attempt.start_rng.len(), 8, "Java builder start RNG probe");
         assert_eq!(attempt.end_rng.len(), 8, "Java builder end RNG probe");
         assert_eq!(
@@ -89,9 +92,13 @@ pub(super) fn assert_halls_paint_trace(
             "RegularLevel builder do/while attempt outcome"
         );
     }
-    assert!(trace.build_attempts.windows(2).all(|attempts| {
-        attempts[0].end_rng == attempts[1].start_rng
-    }), "Java builder retry RNG boundary");
+    assert!(
+        trace
+            .build_attempts
+            .windows(2)
+            .all(|attempts| { attempts[0].end_rng == attempts[1].start_rng }),
+        "Java builder retry RNG boundary"
+    );
 
     let seed = parse_seed(seed_text).expect("valid oracle seed");
     let mut dungeon = dungeon_from_run(init_run(seed.numeric));
@@ -211,7 +218,10 @@ pub(super) fn assert_halls_paint_trace(
                 .expect("CrystalVault chest cell");
             assert_eq!(actual_chest.heap_type, "crystal_chest");
             assert_eq!(
-                actual_chest.items.first().map(|item| item.class_name.as_str()),
+                actual_chest
+                    .items
+                    .first()
+                    .map(|item| item.class_name.as_str()),
                 Some(chest.item.as_str()),
                 "CrystalVault chest item at {}",
                 chest.cell

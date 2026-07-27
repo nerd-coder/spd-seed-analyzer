@@ -30,6 +30,14 @@ pub fn generate_items(dungeon: &mut DungeonState) -> Vec<GeneratedItem> {
         GeneratedItem::new(armor_class, ItemCategory::Armor),
         ShopStockRole::Fixed,
     ));
+    // Java queues the deep-shop torches inside the depth switch, before the
+    // weapon and missile. Stock order feeds the closing shuffle.
+    for _ in 0..torches {
+        items.push(with_shop_source(GeneratedItem::new(
+            "Torch",
+            ItemCategory::Other,
+        )));
+    }
     w.enchantment = None;
     w.cursed = false;
     w.level = 0;
@@ -163,13 +171,6 @@ pub fn generate_items(dungeon: &mut DungeonState) -> Vec<GeneratedItem> {
     };
     rare.cursed = false;
     items.push(with_shop_role(rare, rare_role));
-
-    for _ in 0..torches {
-        items.push(with_shop_source(GeneratedItem::new(
-            "Torch",
-            ItemCategory::Other,
-        )));
-    }
 
     // Isolate shuffle from levelgen RNG (SPD: pushGenerator(Random.Long())).
     Random::push_generator_seeded(Random::long());
