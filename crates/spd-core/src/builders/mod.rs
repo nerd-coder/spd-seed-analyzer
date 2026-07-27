@@ -280,7 +280,8 @@ mod tests {
             pre_paint_rng: Vec<i32>,
         }
 
-        let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tools/java-oracle/fixtures");
+        let fixtures =
+            Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tools/java-oracle/fixtures");
         let oracle: BuilderTrace = serde_json::from_str(
             &fs::read_to_string(fixtures.join("traces/gfx-pzh-dch-floor-12-caves-builder.json"))
                 .expect("read Java floor-12 builder fixture"),
@@ -333,7 +334,9 @@ mod tests {
         assert!(!actual[0].success, "attempt zero fails");
         assert!(actual[1].success, "attempt one succeeds");
         let success_rooms = &actual[1].rooms;
-        assert!(success_rooms.iter().any(|room| room.0 == "MazeConnectionRoom"));
+        assert!(success_rooms
+            .iter()
+            .any(|room| room.0 == "MazeConnectionRoom"));
         assert_eq!(
             success_rooms
                 .iter()

@@ -8,6 +8,8 @@ mod floor_nineteen;
 mod floor_seventeen;
 #[path = "final_heaps/floor_sixteen.rs"]
 mod floor_sixteen;
+#[path = "final_heaps/floor_three.rs"]
+mod floor_three;
 #[path = "final_heaps/floor_twenty_four.rs"]
 mod floor_twenty_four;
 #[path = "final_heaps/floor_twenty_one.rs"]
@@ -18,8 +20,6 @@ mod floor_twenty_six;
 mod floor_twenty_three;
 #[path = "final_heaps/floor_twenty_two.rs"]
 mod floor_twenty_two;
-#[path = "final_heaps/floor_three.rs"]
-mod floor_three;
 #[path = "final_heaps/replay_aaa.rs"]
 mod replay_aaa;
 #[path = "final_heaps/replay_aaa_caves_visual.rs"]

@@ -130,7 +130,8 @@ pub fn special_room_loot(
 
         match room.kind {
             RoomKind::Special | RoomKind::Secret => {
-                let geometry_prize_cell = geometry::paint(map, room, ri, &doors);
+                let geometry_prize_cell =
+                    geometry::paint_at_depth(map, room, ri, &doors, dungeon.depth);
                 let mut loot = paint_special(
                     dungeon,
                     rooms,
@@ -145,7 +146,8 @@ pub fn special_room_loot(
             RoomKind::Standard
                 if room.name == "RitualSiteRoom" || room.name == "BlacksmithRoom" =>
             {
-                let geometry_prize_cell = geometry::paint(map, room, ri, &doors);
+                let geometry_prize_cell =
+                    geometry::paint_at_depth(map, room, ri, &doors, dungeon.depth);
                 let mut loot = paint_special(
                     dungeon,
                     rooms,
@@ -288,7 +290,7 @@ fn paint_special(
         "ToxicGasRoom" => {
             trap_rooms::toxic_gas_prizes(dungeon, rooms, ri, map, doors, items_to_spawn)
         }
-        "SecretHoneypotRoom" => trap_rooms::secret_honeypot(room),
+        "SecretHoneypotRoom" => trap_rooms::secret_honeypot(rooms, ri, map, doors),
         "CrystalVaultRoom" => {
             crystal::crystal_vault(dungeon, rooms, ri, map, doors, items_to_spawn)
         }

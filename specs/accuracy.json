@@ -26,11 +26,11 @@
         "Depth-22 Halls lifecycle fixtures: AAA-AAA-AAA matches the Java pre-paint checkpoint, FigureEight pre-shuffle room list, room selection/bounds, room-paint callbacks, post-door RNG, affected door terrain/discoverability, and transitions; contrasting ABC-DEF-GHI pins the post-door RNG boundary. HallsPainter includes REGION_DECO_ALT variance and unconnected-neighbour terrain merges",
         "AAA-AAA-AAA preserved-run depth-23 Halls: Java-matching FigureEight builder attempt, all 21 pre-shuffle room bounds, room-paint callbacks, and post-door RNG boundary",
         "ABC-DEF-GHI preserved-run depth-23 Halls: Java-matching FigureEight builder, all 26 pre-shuffle room bounds, room-paint callbacks, and post-door RNG; branch retries exclude an uncommitted tunnel and SentryRoom connection checks preserve center RNG",
-        "AAA-AAA-AAA and ABC-DEF-GHI preserved-run depth-24 Halls: Java-matching pre-shuffle room bounds, every room-paint callback, and post-door RNG boundary"
+        "AAA-AAA-AAA and ABC-DEF-GHI preserved-run depth-24 Halls: Java-matching pre-shuffle room bounds, every room-paint callback, and post-door RNG boundary",
+        "GFX-PZH-DCH Halls depths 21–24: Java-matching painter callbacks and post-door boundaries after CityBoss ImpShop, environment, trap, and ambient-mob lifecycle parity"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
-        "GFX-PZH-DCH regular Halls replay is incomplete: depths 22 through 24 match the painter traces, but an upstream depth-19 post-mob item-population divergence leaves the persistent Generator category deck wrong, so the first depth-21 mismatch appears in SecretSummoningRoom despite its matching local painter lifecycle",
         "HallsBoss and LastLevel remain proven through depth 26 for two preserved runs; add a retry-heavy Halls history before promoting complete floor-path coverage",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
         "Later regular floors still require phase-by-phase parity checks"
@@ -77,7 +77,8 @@
       "implemented": [
         "Exact structured heap capture for Crypt, GrassyGrave, SecretChestChasm, SecretArtillery, Pool, Runestone, MagicalFire, Traps, Sentry, Storage, ToxicGas, CrystalPath, and CrystalVault fixture paths",
         "Full SecretMaze layout plus covered Armory, Garden, Library, SecretLibrary, Pit, RotGarden, WeakFloor, DemonSpawner, Summoning, and ToxicGas paint behavior",
-        "Prize generation for supported special and secret rooms: SecretLibraryRoom's private weighted-without-replacement scroll pool and unconditional exotic roll; exact floor-11 SecretHoardRoom gold heaps; trap RNG lifecycle; SecretRunestoneRoom terrain and three-drop sequence; SecretArtilleryRoom terrain and fixed three-drop placement; floor-19 SecretSummoning traps"
+        "Prize generation for supported special and secret rooms: SecretLibraryRoom's private weighted-without-replacement scroll pool and unconditional exotic roll; exact floor-11 SecretHoardRoom gold heaps; trap RNG lifecycle; SecretRunestoneRoom terrain and three-drop sequence; SecretArtilleryRoom terrain and fixed three-drop placement; floor-19 SecretSummoning traps",
+        "AAA Caves visual parity through depth 14, including SecretHoard x-major trap traversal, SacrificeRoom terrain/SacrificialFire, MagicalFire EternalFire, and ToxicGas vents/blobs"
       ],
       "remaining": [
         "Legacy Room loot families beyond the fixture-backed Pool and CrystalPath paths still need fixture-first geometry and lifecycle parity",
@@ -99,6 +100,7 @@
       "status": "partial",
       "implemented": [
         "Forced drops, generator decks (including pinned concrete-class undoDrop no-op semantics), main RegularLevel createItems drops, and supported special-room prizes",
+        "Ambient mob selection preserves pinned StandardRoom inheritance, including EntranceRoom and ExitRoom weighting; the resulting population remains internal but preserves downstream Generator lifecycle evidence",
         "Item identities and exact heap capture on committed Java-oracle fixtures, including UnstableSpellbook constructor RNG",
         "AAA-AAA-AAA Generator and heap parity: floor 6 weapon lifecycle from floor-3 SacrificeRoom through shop and createItems; floor 7's five main Generator drops; exact normalized heaps on floors 8\u20139, 12\u201314, and 16\u201319; floor 11 deterministic heaps, Mimic reward lifecycle, forced drops, CrystalKeys, and fresh-meta GuidePage placement. These remain internal Java-parity evidence",
         "Supported quest rewards retain exact internal parity state, including both Wandmaker reward identities persisted through AAA-AAA-AAA floor 19; inherited population or Generator taint no longer hides a later independently selected quest, and public reports expose only reward-specific deterministic facts",

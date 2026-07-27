@@ -390,6 +390,11 @@ impl GeneratorState {
     }
 
     #[cfg(test)]
+    pub(crate) fn category_probabilities(&self) -> Vec<f32> {
+        self.category_probs.clone()
+    }
+
+    #[cfg(test)]
     pub(super) fn deck_state(&self, cat: Category) -> (i64, i32, f32) {
         let runtime = &self.cats[cat.index()];
         (

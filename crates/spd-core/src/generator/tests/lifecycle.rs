@@ -7,9 +7,8 @@ use crate::run::{dungeon_from_run, init_run};
 
 const ORACLE_JSON: &str =
     include_str!("../../../../../tools/java-oracle/fixtures/generator/aaa-aaa-aaa-lifecycle.json");
-const GFX_ORACLE_JSON: &str = include_str!(
-    "../../../../../tools/java-oracle/fixtures/generator/gfx-pzh-dch-lifecycle.json"
-);
+const GFX_ORACLE_JSON: &str =
+    include_str!("../../../../../tools/java-oracle/fixtures/generator/gfx-pzh-dch-lifecycle.json");
 
 #[derive(Debug, Deserialize)]
 struct Fixture {
@@ -120,6 +119,113 @@ fn aaa_weapon_decks_match_pinned_java_lifecycle() {
 }
 
 #[test]
+fn aaa_floor_one_scroll_deck_matches_pinned_java() {
+    let mut dungeon = dungeon_from_run(init_run(0));
+    dungeon.depth = 1;
+    create_level_partial(&mut dungeon);
+
+    assert_eq!(
+        dungeon.generator.deck_snapshot(Category::Scroll),
+        DeckSnapshot {
+            seed: 8_129_270_787_689_514_689,
+            dropped: 2,
+            probabilities: vec![0., 3., 2., 1., 1., 1., 1., 1., 0., 1., 1., 1.],
+        },
+        "Java generator-lifecycle floor_1_complete"
+    );
+}
+
+#[test]
+fn aaa_floor_two_scroll_deck_matches_pinned_java() {
+    let mut dungeon = dungeon_from_run(init_run(0));
+    for depth in 1..=2 {
+        dungeon.depth = depth;
+        create_level_partial(&mut dungeon);
+    }
+
+    assert_eq!(
+        dungeon.generator.deck_snapshot(Category::Scroll),
+        DeckSnapshot {
+            seed: 8_129_270_787_689_514_689,
+            dropped: 2,
+            probabilities: vec![0., 3., 2., 1., 1., 1., 1., 1., 0., 1., 1., 1.],
+        },
+        "Java generator-lifecycle floor_2_complete"
+    );
+}
+
+#[test]
+fn aaa_floor_two_first_room_paint_checkpoint_matches_pinned_java() {
+    let mut dungeon = dungeon_from_run(init_run(0));
+    dungeon.depth = 1;
+    create_level_partial(&mut dungeon);
+    dungeon.depth = 2;
+    let level = create_level_partial(&mut dungeon);
+
+    let checkpoint = level
+        .room_paint_rng_checkpoints
+        .first()
+        .expect("room paint checkpoint");
+    assert_eq!(checkpoint.room, "TunnelRoom");
+    assert_eq!(
+        checkpoint.rng,
+        [
+            -2_022_754_854,
+            -1_193_363_130,
+            358_873_738,
+            -359_658_178,
+            1_355_833_733,
+            -1_061_310_071,
+            324_958_254,
+            -1_556_605_399,
+        ],
+        "Java AAA floor-2 room-paint trace"
+    );
+}
+
+#[test]
+fn aaa_floor_two_general_category_deck_matches_pinned_java() {
+    let mut dungeon = dungeon_from_run(init_run(0));
+    dungeon.depth = 1;
+    create_level_partial(&mut dungeon);
+
+    assert_eq!(
+        dungeon.generator.category_probabilities(),
+        [
+            0., 2., 0., 0., 0., 0., 0., 2., 1., 0., 0., 0., 0., 0., 1., 1., 0., 0., 7., 1., 6., 1.,
+            8.,
+        ],
+        "Java AAA floor-2 room-paint trace generator_state"
+    );
+}
+
+#[test]
+fn aaa_floor_two_grassy_grave_checkpoint_matches_pinned_java() {
+    let mut dungeon = dungeon_from_run(init_run(0));
+    dungeon.depth = 1;
+    create_level_partial(&mut dungeon);
+    dungeon.depth = 2;
+    let level = create_level_partial(&mut dungeon);
+    let checkpoint = &level.room_paint_rng_checkpoints[2];
+
+    assert_eq!(checkpoint.room, "GrassyGraveRoom");
+    assert_eq!(
+        checkpoint.rng,
+        [
+            604_339_503,
+            -1_654_704_636,
+            -1_112_609_082,
+            -344_892_419,
+            -1_630_717_669,
+            547_809_567,
+            -1_366_229_536,
+            1_830_230_578,
+        ],
+        "Java AAA floor-2 room-paint trace"
+    );
+}
+
+#[test]
 fn gfx_floor_three_golden_mimic_advances_the_extra_weapon_deck() {
     let fixture: Fixture = serde_json::from_str(GFX_ORACLE_JSON).expect("lifecycle fixture JSON");
     assert_eq!(fixture.input.seed, "GFX-PZH-DCH");
@@ -143,4 +249,56 @@ fn gfx_floor_three_golden_mimic_advances_the_extra_weapon_deck() {
         dungeon.generator.deck_snapshot(Category::WepT4),
         expected.wep_t4.snapshot()
     );
+}
+
+#[test]
+fn gfx_floor_nineteen_create_items_preserves_java_weapon_decks() {
+    let fixture: Fixture = serde_json::from_str(GFX_ORACLE_JSON).expect("lifecycle fixture JSON");
+    let expected = fixture
+        .boundaries
+        .iter()
+        .find(|boundary| boundary.boundary == "floor_19_create_items_complete")
+        .expect("Java floor-nineteen boundary");
+
+    let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
+    for depth in 1..=19 {
+        dungeon.depth = depth;
+        create_level_partial(&mut dungeon);
+    }
+    assert_eq!(
+        dungeon.generator.deck_snapshot(Category::WepT2),
+        expected.wep_t2.snapshot(),
+        "floor-19 post-mob/createItems WEP_T2"
+    );
+    assert_eq!(
+        dungeon.generator.deck_snapshot(Category::WepT4),
+        expected.wep_t4.snapshot(),
+        "floor-19 post-mob/createItems WEP_T4"
+    );
+}
+
+#[test]
+fn gfx_city_boss_imp_shop_preserves_artifact_deck_for_halls() {
+    let seed = crate::parse_seed("GFX-PZH-DCH").expect("seed");
+    let mut dungeon = dungeon_from_run(init_run(seed.numeric));
+    for depth in 1..=20 {
+        dungeon.depth = depth;
+        create_level_partial(&mut dungeon);
+    }
+    assert_eq!(
+        dungeon.generator.deck_snapshot(Category::Artifact),
+        DeckSnapshot {
+            seed: 7_835_455_387_716_222_217,
+            dropped: 5,
+            probabilities: vec![0., 0., 0., 1., 0., 0., 0., 1., 1., 1., 1., 0., 1.],
+        },
+        "Java GFX floor-20 CityBoss ImpShop artifact deck"
+    );
+
+    dungeon.depth = 21;
+    let level = create_level_partial(&mut dungeon);
+    assert!(level.placed_items.iter().any(|item| {
+        item.source.as_deref() == Some("SecretSummoningRoom")
+            && item.class_name == "UnstableSpellbook"
+    }));
 }

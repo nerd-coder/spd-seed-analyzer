@@ -2,7 +2,7 @@ use super::gardens::{garden_prizes, magic_well, secret_garden_prizes};
 use super::pit_secrets::{
     pit_prizes, secret_chest_chasm, secret_maze_prize, secret_summoning_prize,
 };
-use super::secret_rooms::secret_artillery;
+use super::secret_rooms::{secret_artillery, secret_hoard};
 use super::trap_rooms::{
     burn_sacrifice_center_offset, magical_fire_prizes, sacrifice_prize, secret_honeypot,
     sentry_prize, toxic_gas_prizes, traps_prize,
@@ -10,7 +10,7 @@ use super::trap_rooms::{
 use crate::geom::Point;
 use crate::items::model::ItemCategory;
 use crate::level::painter::DoorMap;
-use crate::level::terrain::{paint_minimal, EMPTY_SP, STATUE_SP, WALL};
+use crate::level::terrain::{paint_minimal, EMPTY, EMPTY_SP, STATUE_SP, WALL};
 use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
@@ -123,6 +123,57 @@ fn secret_artillery_has_fixed_bomb_and_two_default_missiles() {
             }
         }
     }
+}
+
+#[test]
+fn secret_hoard_trap_rolls_follow_java_rect_column_order() {
+    Random::reset_generators();
+    let mut dungeon = dungeon_from_run(init_run(0));
+    dungeon.depth = 11;
+    let room = test_room("SecretHoardRoom", 6, 6);
+    let mut map = paint_minimal(std::slice::from_ref(&room)).expect("hoard map");
+    for x in room.left + 1..room.right {
+        for y in room.top + 1..room.bottom {
+            let cell = map.point_to_cell(x, y).expect("hoard interior cell");
+            map.map[cell] = EMPTY;
+        }
+    }
+
+    Random::push_generator_seeded(0x5EED_C0DE);
+    let _loot = secret_hoard(&mut dungeon, &room, &mut map);
+    Random::pop_generator();
+
+    let mut traps = Vec::new();
+    for x in room.left..=room.right {
+        for y in room.top..=room.bottom {
+            let cell = map.point_to_cell(x, y).expect("hoard cell");
+            if map.map[cell] == crate::level::terrain::TRAP {
+                traps.push((x, y));
+            }
+        }
+    }
+    assert_eq!(
+        traps,
+        vec![
+            (1, 3),
+            (2, 3),
+            (2, 4),
+            (2, 5),
+            (3, 1),
+            (3, 3),
+            (3, 4),
+            (3, 5),
+            (4, 1),
+            (4, 2),
+            (4, 3),
+            (4, 4),
+            (4, 5),
+            (5, 2),
+            (5, 3),
+            (5, 4),
+            (5, 5),
+        ]
+    );
 }
 
 #[test]
@@ -309,6 +360,17 @@ fn magical_fire_drops_and_frost() {
         .all(|(_, heap_type, _)| *heap_type == "heap"));
     assert!(map.grass_allowed.iter().any(|&allowed| !allowed));
     assert!(map.character_allowed.iter().any(|&allowed| !allowed));
+    let fire = map
+        .known_blobs
+        .iter()
+        .find(|blob| blob.class_name == "EternalFire")
+        .expect("MagicalFireRoom seeds EternalFire at each fire tile");
+    assert!(!fire.always_visible);
+    assert_eq!(fire.cells.len(), 8);
+    assert!(fire
+        .cells
+        .iter()
+        .all(|(_, concentration)| *concentration == 1));
     assert_eq!(tail, [-1240710046, 1594262110, -1344810206, 1548219350]);
 }
 
@@ -316,8 +378,15 @@ fn magical_fire_drops_and_frost() {
 fn secret_honeypot_has_pot_honey_bomb() {
     Random::reset_generators();
     Random::push_generator_seeded(1);
-    let room = test_room("SecretHoneypotRoom", 7, 7);
-    let loot = secret_honeypot(&room);
+    let mut room = test_room("SecretHoneypotRoom", 7, 7);
+    room.connected.push(1);
+    let mut neighbour = test_room("Neighbour", 7, 7);
+    neighbour.id = 1;
+    let rooms = vec![room, neighbour];
+    let mut map = paint_minimal(&rooms).expect("honeypot map");
+    let mut doors = DoorMap::new();
+    doors.insert_test_point(0, 1, Point::new(0, 3));
+    let loot = secret_honeypot(&rooms, 0, &mut map, &doors);
     Random::pop_generator();
 
     assert_eq!(loot.len(), 3);
@@ -328,6 +397,7 @@ fn secret_honeypot_has_pot_honey_bomb() {
         "got {}",
         loot[2].item.class_name
     );
+    assert!(map.heap_occupied.iter().any(|&occupied| occupied));
 }
 
 #[test]

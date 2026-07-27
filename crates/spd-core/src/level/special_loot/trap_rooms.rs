@@ -118,6 +118,13 @@ fn magical_fire_geometry(map: &mut TerrainMap, room: &Room, fire_pos: Point, doo
     let behind = if door.x == room.left || door.x == room.right {
         for y in (room.top + 1)..room.bottom {
             set_magical_tile(map, fire_pos.x, y, EMPTY_SP);
+            map.record_blob_cell(
+                "EternalFire",
+                false,
+                map.point_to_cell(fire_pos.x, y)
+                    .expect("MagicalFireRoom fire is inside the map"),
+                1,
+            );
             fire_cells.push(Point::new(fire_pos.x, y));
         }
         if door.x == room.left {
@@ -138,6 +145,13 @@ fn magical_fire_geometry(map: &mut TerrainMap, room: &Room, fire_pos: Point, doo
     } else {
         for x in (room.left + 1)..room.right {
             set_magical_tile(map, x, fire_pos.y, EMPTY_SP);
+            map.record_blob_cell(
+                "EternalFire",
+                false,
+                map.point_to_cell(x, fire_pos.y)
+                    .expect("MagicalFireRoom fire is inside the map"),
+                1,
+            );
             fire_cells.push(Point::new(x, fire_pos.y));
         }
         if door.y == room.top {
@@ -189,13 +203,10 @@ fn set_magical_tile(map: &mut TerrainMap, x: i32, y: i32, terrain: i32) {
 /// `SacrificeRoom.paint` — cursed upgraded weapon on sacrificial fire.
 pub(super) fn sacrifice_prize(
     dungeon: &mut DungeonState,
-    rooms: &[Room],
-    ri: usize,
-    doors: &DoorMap,
+    _rooms: &[Room],
+    _ri: usize,
+    _doors: &DoorMap,
 ) -> PlacedLoot {
-    // Center offset when door is mid-wall aligned with room center.
-    burn_sacrifice_center_offset(rooms, ri, doors);
-
     // 1 floor set higher than normal
     let mut prize = if let Some(level) = dungeon.sacrifice_parchment_scrap_level {
         dungeon
@@ -241,6 +252,7 @@ fn is_good_weapon_enchant(item: &GeneratedItem) -> bool {
 }
 
 /// Burn `Random.Int(2)` center nudge when entrance is mid-edge (SacrificeRoom).
+#[cfg(test)]
 pub(super) fn burn_sacrifice_center_offset(rooms: &[Room], ri: usize, doors: &DoorMap) {
     let room = &rooms[ri];
     if room.is_empty() {
@@ -276,18 +288,32 @@ pub(super) fn burn_sacrifice_center_offset(rooms: &[Room], ri: usize, doors: &Do
 }
 
 /// `SecretHoneypotRoom.paint` — shattered pot (geom) + honeypot + Bomb.random().
-pub(super) fn secret_honeypot(room: &Room) -> Vec<PlacedLoot> {
-    // `brokenPotPos` starts at Room.center().  Its discarded odd-axis nudges
-    // still advance the main stream before the two item placements.
-    if (room.right - room.left) % 2 == 1 {
-        let _ = Random::int_max(2);
-    }
-    if (room.bottom - room.top) % 2 == 1 {
-        let _ = Random::int_max(2);
-    }
+pub(super) fn secret_honeypot(
+    rooms: &[Room],
+    ri: usize,
+    map: &mut TerrainMap,
+    doors: &DoorMap,
+) -> Vec<PlacedLoot> {
+    let room = &rooms[ri];
+    // Java drops the shattered pot before `paintGrass`. It therefore blocks a
+    // grass-height roll at its cell, even though the pot itself is not a
+    // portable analyzer result with a stable public position.
+    let center = room.as_rect().center_room();
+    let entrance = room
+        .connected
+        .first()
+        .and_then(|&ni| doors.get(ri, ni))
+        .map(|door| Point::new(door.x, door.y))
+        .expect("SecretHoneypotRoom has one entrance");
+    let broken_pot = Point::new((center.x + entrance.x) / 2, (center.y + entrance.y) / 2);
+    let broken_pot_cell = map
+        .point_to_cell(broken_pot.x, broken_pot.y)
+        .expect("SecretHoneypotRoom shattered pot is on the map");
+    map.heap_occupied[broken_pot_cell] = true;
+
     // Bee spawn does not consume loot RNG.
     let mut out = Vec::new();
-    let mut occupied = Vec::new();
+    let mut occupied = vec![(broken_pot.x, broken_pot.y)];
 
     // Shattered pot reported as Honeypot.ShatteredPot for identity
     let mut shattered = GeneratedItem::new("ShatteredPot", ItemCategory::Other);

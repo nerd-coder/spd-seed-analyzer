@@ -609,6 +609,24 @@ fn aaa_floor_fourteen_matches_the_pinned_final_facts() {
         actual.pre_items_rng_probe, expected.pre_items_rng,
         "floor-14 pre-items RNG boundary"
     );
+    let map = actual.map.as_ref().expect("floor-14 map");
+    let toxic_vents: Vec<_> = map
+        .traps
+        .iter()
+        .filter(|trap| trap.class_name == "ToxicVent")
+        .map(|trap| (trap.cell, trap.visible, trap.active, trap.color, trap.shape))
+        .collect();
+    assert_eq!(
+        toxic_vents,
+        [
+            (1202, true, false, 8, 2),
+            (1203, true, false, 8, 2),
+            (1248, true, false, 8, 2),
+            (1249, true, false, 8, 2),
+            (1251, true, false, 8, 2),
+        ],
+        "floor-14 ToxicGasRoom visible inactive vents"
+    );
     let actual_mobs: Vec<_> = actual
         .map
         .as_ref()

@@ -43,11 +43,11 @@ pub(super) fn grassy_graves(
     room: &Room,
     map: &mut TerrainMap,
 ) -> Vec<PlacedLoot> {
-    // Java `GrassyGraveRoom` inherits half-open `Rect` dimensions directly.
-    // `Room::width` is inclusive in this port for terrain painting, so use the
-    // bounds here to preserve the source room's tomb count and RNG call order.
-    let width = room.right - room.left - 2;
-    let height = room.bottom - room.top - 2;
+    // SPD `Room` overrides the half-open `Rect` dimensions: its right and
+    // bottom bounds are inclusive. Match `GrassyGraveRoom.paint`'s
+    // `width() - 2` / `height() - 2` exactly.
+    let width = room.width() - 2;
+    let height = room.height() - 2;
     let grave_count = width.max(height) / 2;
     let prize_index = Random::int_max(grave_count);
     let shift = Random::int_max(2);
@@ -168,7 +168,7 @@ mod tests {
         let next = Random::long();
         Random::pop_generator();
 
-        assert_eq!(loot.len(), 3);
+        assert_eq!(loot.len(), 4);
         assert!(loot.iter().all(|grave| {
             grave.heap_type == "tomb" && grave.item.source.as_deref() == Some("GrassyGraveRoom")
         }));
@@ -180,8 +180,8 @@ mod tests {
         );
         assert_eq!(
             map.item_allowed.iter().filter(|&&allowed| !allowed).count(),
-            3
+            4
         );
-        assert_eq!(next, 5_790_118_806_642_574_212);
+        assert_eq!(next, 7_161_894_312_517_791_962);
     }
 }

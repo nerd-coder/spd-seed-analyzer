@@ -313,8 +313,10 @@ fn traps(map: &TerrainMap) -> Vec<MapTrap> {
                 MapTrap {
                     cell: cell as u32,
                     class_name: class_name.to_string(),
-                    visible: map.map[cell] == terrain::TRAP,
-                    active: true,
+                    // Toxic vents are revealed, permanently inactive traps
+                    // painted on `Terrain.INACTIVE_TRAP`.
+                    visible: map.map[cell] == terrain::TRAP || class_name == "ToxicVent",
+                    active: class_name != "ToxicVent",
                     color: metadata.map(|metadata| metadata.color).unwrap_or_default(),
                     shape: metadata.map(|metadata| metadata.shape).unwrap_or_default(),
                 }

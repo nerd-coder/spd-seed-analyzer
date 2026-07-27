@@ -48,6 +48,7 @@ pub fn trap_metadata(name: &str) -> Option<TrapMetadata> {
         "SummoningTrap" => (4, 1),
         "TeleportationTrap" => (4, 0),
         "ToxicTrap" => (3, 2),
+        "ToxicVent" => (8, 2),
         "WarpingTrap" => (4, 3),
         "WeakeningTrap" => (3, 1),
         "WornDartTrap" => (7, 5),
@@ -58,7 +59,12 @@ pub fn trap_metadata(name: &str) -> Option<TrapMetadata> {
         shape,
         can_be_hidden: !matches!(
             name,
-            "DisintegrationTrap" | "GrimTrap" | "PoisonDartTrap" | "RockfallTrap" | "WornDartTrap"
+            "DisintegrationTrap"
+                | "GrimTrap"
+                | "PoisonDartTrap"
+                | "RockfallTrap"
+                | "ToxicVent"
+                | "WornDartTrap"
         ),
     })
 }

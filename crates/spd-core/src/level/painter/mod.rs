@@ -116,14 +116,17 @@ fn paint_water(
             for x in room.left..=room.right {
                 for y in room.top..=room.bottom {
                     // Room.canPlaceWater defaults true for all points in room rect.
-                    if room.name == "AmbitiousImpRoom" && !imp_room_environment_allowed(room, x, y)
-                    {
+                    if !room_environment_allowed(room, x, y, Environment::Water) {
                         continue;
                     }
                     if let Some(i) = map.point_to_cell(x, y) {
                         if lake.get(i).copied().unwrap_or(false)
-                            && map.water_allowed[i]
                             && map.map[i] == EMPTY
+                            // `BurnedRoom.canPlaceWater` rejects its generated
+                            // patch, including patch cells left as EMPTY. The
+                            // mask is room-local: another overlapping room may
+                            // still contribute the same cell.
+                            && (room.name != "BurnedRoom" || map.water_allowed[i])
                         {
                             map.map[i] = WATER;
                         }
@@ -133,7 +136,7 @@ fn paint_water(
         }
     } else {
         for (i, cell) in map.map.iter_mut().enumerate() {
-            if lake.get(i).copied().unwrap_or(false) && map.water_allowed[i] && *cell == EMPTY {
+            if lake.get(i).copied().unwrap_or(false) && *cell == EMPTY {
                 *cell = WATER;
             }
         }
@@ -155,21 +158,16 @@ fn paint_grass(
             let Some(room) = rooms.get(room_index).filter(|r| !r.is_empty()) else {
                 continue;
             };
-            // PitRoom rejects grass at the room level. Overlapping rooms still
-            // contribute their own points, so this must not be a global mask.
-            if room.name == "PitRoom" {
-                continue;
-            }
             for x in room.left..=room.right {
                 for y in room.top..=room.bottom {
-                    if room.name == "AmbitiousImpRoom" && !imp_room_environment_allowed(room, x, y)
-                    {
+                    if !room_environment_allowed(room, x, y, Environment::Grass) {
                         continue;
                     }
                     if let Some(i) = map.point_to_cell(x, y) {
                         if grass.get(i).copied().unwrap_or(false)
-                            && map.grass_allowed[i]
                             && map.map[i] == EMPTY
+                            // See the matching `BurnedRoom.canPlaceGrass`.
+                            && (room.name != "BurnedRoom" || map.grass_allowed[i])
                         {
                             grass_cells.push(i);
                         }
@@ -179,7 +177,7 @@ fn paint_grass(
         }
     } else {
         for (i, cell) in map.map.iter().enumerate() {
-            if grass.get(i).copied().unwrap_or(false) && map.grass_allowed[i] && *cell == EMPTY {
+            if grass.get(i).copied().unwrap_or(false) && *cell == EMPTY {
                 grass_cells.push(i);
             }
         }
@@ -227,12 +225,64 @@ fn paint_grass(
     }
 }
 
+#[derive(Clone, Copy)]
+enum Environment {
+    Water,
+    Grass,
+}
+
+/// Pinned room-local `canPlaceWater` / `canPlaceGrass` predicates. These are
+/// evaluated on every room traversal; an earlier overlapping room must not
+/// globally suppress a point another room is allowed to contribute.
+fn room_environment_allowed(room: &Room, x: i32, y: i32, environment: Environment) -> bool {
+    match room.name.as_str() {
+        // `SecretRunestoneRoom`, `DemonSpawnerRoom`, and `CrystalPathRoom`
+        // reject both terrain passes everywhere.
+        "SecretRunestoneRoom" | "DemonSpawnerRoom" | "CrystalPathRoom" => false,
+        // `WaterBridgeRoom` subclasses and `SewerPipeRoom` inherit an
+        // everywhere-false `canPlaceWater` implementation.
+        "WaterBridgeRoom"
+        | "WaterBridgeEntranceRoom"
+        | "WaterBridgeExitRoom"
+        | "SewerPipeRoom"
+        | "WalledGooRoom"
+        | "DiamondGooRoom"
+            if matches!(environment, Environment::Water) =>
+        {
+            false
+        }
+        // These rooms only override the grass predicate.
+        "PitRoom" | "MagicalFireRoom" | "VaultSingleEnemyTreasureRoom"
+            if matches!(environment, Environment::Grass) =>
+        {
+            false
+        }
+        "AmbitiousImpRoom" => imp_room_environment_allowed(room, x, y),
+        _ => true,
+    }
+}
+
 fn imp_room_environment_allowed(room: &Room, x: i32, y: i32) -> bool {
     let center_x = (room.left + room.right) / 2;
     let center_y = (room.top + room.bottom) / 2;
     let dx = x - center_x;
     let dy = y - center_y;
     dx * dx + dy * dy >= 9
+}
+
+/// Pinned room-local `canPlaceTrap` overrides that reject every point.
+/// As with water and grass, this is evaluated per room so an overlapping room
+/// may still contribute the point to `trapPlaceablePoints`.
+fn room_trap_allowed(room: &Room) -> bool {
+    !matches!(
+        room.name.as_str(),
+        "AmbitiousImpRoom"
+            | "CrystalPathRoom"
+            | "DemonSpawnerRoom"
+            | "PitRoom"
+            | "SecretHoardRoom"
+            | "ToxicGasRoom"
+    )
 }
 
 fn paint_traps(
@@ -255,17 +305,18 @@ fn paint_traps(
             if depth == 1 && room.kind == crate::rooms::types::RoomKind::Entrance {
                 continue;
             }
-            if room.name == "PitRoom" {
-                continue;
-            }
-            // Pinned AmbitiousImpRoom.canPlaceTrap always returns false.
-            if room.name == "AmbitiousImpRoom" {
+            if !room_trap_allowed(room) {
                 continue;
             }
             for x in room.left..=room.right {
                 for y in room.top..=room.bottom {
                     if let Some(i) = map.point_to_cell(x, y) {
-                        if map.map[i] == EMPTY {
+                        if map.map[i] == EMPTY
+                            // `BurnedRoom.canPlaceTrap` uses its local patch
+                            // mask; do not let its EMPTY patch cells become
+                            // ambient-trap candidates.
+                            && (room.name != "BurnedRoom" || map.trap_allowed[i])
+                        {
                             valid.push(i);
                         }
                     }
@@ -398,6 +449,23 @@ mod tests {
         let mut cells = vec![11, 22, 11, 33];
         remove_first(&mut cells, 11);
         assert_eq!(cells, [22, 11, 33]);
+    }
+
+    #[test]
+    fn room_local_trap_predicates_match_pinned_overrides() {
+        for name in [
+            "AmbitiousImpRoom",
+            "CrystalPathRoom",
+            "DemonSpawnerRoom",
+            "PitRoom",
+            "SecretHoardRoom",
+            "ToxicGasRoom",
+        ] {
+            let mut room = box_room(0, 1, 1, 2, 2);
+            room.name = name.into();
+            assert!(!room_trap_allowed(&room), "{name}");
+        }
+        assert!(room_trap_allowed(&box_room(0, 1, 1, 2, 2)));
     }
 
     #[test]

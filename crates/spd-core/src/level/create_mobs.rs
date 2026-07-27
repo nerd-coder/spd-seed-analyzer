@@ -40,22 +40,7 @@ pub(crate) fn create_regular(
     // the weighted StandardRoom list.
     let mut remaining = mob_limit(depth, large_feeling);
 
-    let mut spawn_rooms = Vec::new();
-    for (index, room) in rooms.iter().enumerate() {
-        if matches!(
-            room.kind,
-            RoomKind::Entrance | RoomKind::Exit | RoomKind::Standard
-        ) {
-            let weight = if room.is_entrance() {
-                1
-            } else {
-                room.size_factor.max(0)
-            };
-            for _ in 0..weight {
-                spawn_rooms.push(index);
-            }
-        }
-    }
+    let mut spawn_rooms = spawn_room_indices(rooms);
     if spawn_rooms.is_empty() {
         return false;
     }
@@ -133,6 +118,33 @@ pub(crate) fn create_regular(
         }
     }
     true
+}
+
+/// Java `RegularLevel.createMobs` duplicates each `StandardRoom` according to
+/// `mobSpawnWeight()` before shuffling. The regular entrance/exit hierarchy
+/// extends `StandardRoom`: an entrance has weight one, while an exit retains
+/// its size-category weight.
+fn spawn_room_indices(rooms: &[Room]) -> Vec<usize> {
+    let mut spawn_rooms = Vec::new();
+    for (index, room) in rooms.iter().enumerate() {
+        // `EntranceRoom` / `ExitRoom` inherit `StandardRoom` in pinned SPD.
+        // The Rust model stores their role separately, so preserve their
+        // inherited Java spawn weights explicitly.
+        if matches!(
+            room.kind,
+            RoomKind::Entrance | RoomKind::Exit | RoomKind::Standard
+        ) {
+            let weight = if room.is_entrance() {
+                1
+            } else {
+                room.size_factor.max(0)
+            };
+            for _ in 0..weight {
+                spawn_rooms.push(index);
+            }
+        }
+    }
+    spawn_rooms
 }
 
 fn mob_limit(depth: i32, large_feeling: bool) -> i32 {

@@ -10,6 +10,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.ShatteredPixelDungeon;
 import com.shatteredpixel.shatteredpixeldungeon.levels.HallsLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
+import com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.PrisonLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.CavesLevel;
 import com.shatteredpixel.shatteredpixeldungeon.levels.CityLevel;
@@ -45,9 +46,9 @@ final class HallsPaintTraceOracle {
 	}
 
 	static String generate(long seed, int depth) {
-		if (depth != 6 && depth != 12 && (depth < 16 || depth > 19)
+		if (depth != 2 && depth != 6 && depth != 12 && (depth < 16 || depth > 19)
 				&& (depth < 21 || depth > 24)) {
-			throw new IllegalArgumentException("Paint trace supports depths 6, 12, regular City depths 16 through 19, or regular Halls depths 21 through 24");
+			throw new IllegalArgumentException("Paint trace supports depth 2, depths 6 and 12, regular City depths 16 through 19, or regular Halls depths 21 through 24");
 		}
 		FloorOracle.initializeFreshRun(seed);
 		FloorOracle.generatePriorFloors(depth);
@@ -60,7 +61,8 @@ final class HallsPaintTraceOracle {
 		TracePrisonLevel.drops.clear();
 		Dungeon.daily = true;
 		try {
-			if (depth == 6) new TracePrisonLevel().create();
+			if (depth == 2) new TraceSewerLevel().create();
+			else if (depth == 6) new TracePrisonLevel().create();
 			else if (depth == 12) new TraceCavesLevel().create();
 			else if (depth <= 19) new TraceCityLevel().create();
 			else new TraceHallsLevel().create();
@@ -188,8 +190,17 @@ final class HallsPaintTraceOracle {
 
 		@Override protected com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter painter() {
 			return new TracePainter()
-					.setWater(feeling == Level.Feeling.WATER ? 0.90f : 0.30f, 4)
-					.setGrass(feeling == Level.Feeling.GRASS ? 0.80f : 0.20f, 3)
+					.setWater(0f, 0)
+					.setGrass(0f, 0)
+					.setTraps(nTraps(), trapClasses(), trapChances());
+		}
+	}
+
+	private static final class TraceSewerLevel extends SewerLevel {
+		@Override protected com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter painter() {
+			return new TracePainter()
+					.setWater(feeling == Level.Feeling.WATER ? 0.85f : 0.30f, 5)
+					.setGrass(feeling == Level.Feeling.GRASS ? 0.80f : 0.20f, 4)
 					.setTraps(nTraps(), trapClasses(), trapChances());
 		}
 	}
@@ -215,8 +226,8 @@ final class HallsPaintTraceOracle {
 	private static final class TraceCityLevel extends CityLevel {
 		@Override protected com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter painter() {
 			return new TracePainter()
-					.setWater(0f, 0)
-					.setGrass(0f, 0)
+					.setWater(feeling == Level.Feeling.WATER ? 0.90f : 0.30f, 4)
+					.setGrass(feeling == Level.Feeling.GRASS ? 0.80f : 0.20f, 3)
 					.setTraps(nTraps(), trapClasses(), trapChances());
 		}
 	}

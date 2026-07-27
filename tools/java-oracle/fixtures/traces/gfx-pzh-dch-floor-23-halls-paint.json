@@ -1,31 +1,344 @@
 {
   "depth": 23,
-  "build_attempts": [
+  "build_attempts": [],
+  "pre_shuffle_rooms": [
+    { "class": "GrassyGraveRoom", "bounds": [18, 17, 23, 20] },
+    { "class": "ChasmRoom", "bounds": [14, 4, 21, 9] },
+    { "class": "RegionDecoPatchExitRoom", "bounds": [17, 31, 24, 38] },
+    { "class": "RegionDecoPatchEntranceRoom", "bounds": [26, 11, 34, 19] },
+    { "class": "PlatformRoom", "bounds": [2, 19, 14, 31] },
+    { "class": "GrassyGraveRoom", "bounds": [17, 23, 20, 29] },
+    { "class": "ChasmRoom", "bounds": [24, 26, 32, 33] },
+    { "class": "LibraryRoom", "bounds": [23, 1, 31, 9] },
+    { "class": "RegionDecoPatchRoom", "bounds": [11, 12, 18, 19] },
+    { "class": "DemonSpawnerRoom", "bounds": [25, 19, 30, 24] },
+    { "class": "LaboratoryRoom", "bounds": [32, 19, 38, 24] },
+    { "class": "RegionDecoPatchRoom", "bounds": [1, 31, 7, 38] },
+    { "class": "SecretLarderRoom", "bounds": [24, 33, 31, 42] },
+    { "class": "TunnelRoom", "bounds": [30, 19, 32, 26] },
+    { "class": "TunnelRoom", "bounds": [10, 31, 17, 37] },
+    { "class": "TunnelRoom", "bounds": [6, 12, 11, 19] },
+    { "class": "TunnelRoom", "bounds": [9, 5, 14, 12] },
+    { "class": "TunnelRoom", "bounds": [21, 7, 23, 11] },
+    { "class": "BridgeRoom", "bounds": [23, 9, 26, 13] },
+    { "class": "WalkwayRoom", "bounds": [16, 29, 24, 31] },
+    { "class": "RingTunnelRoom", "bounds": [19, 11, 23, 17] }
   ],
-  "pre_shuffle_rooms": [{"class":"GrassyGraveRoom","bounds":[18,17,23,20]},{"class":"ChasmRoom","bounds":[14,4,21,9]},{"class":"RegionDecoPatchExitRoom","bounds":[17,31,24,38]},{"class":"RegionDecoPatchEntranceRoom","bounds":[26,11,34,19]},{"class":"PlatformRoom","bounds":[2,19,14,31]},{"class":"GrassyGraveRoom","bounds":[17,23,20,29]},{"class":"ChasmRoom","bounds":[24,26,32,33]},{"class":"LibraryRoom","bounds":[23,1,31,9]},{"class":"RegionDecoPatchRoom","bounds":[11,12,18,19]},{"class":"DemonSpawnerRoom","bounds":[25,19,30,24]},{"class":"LaboratoryRoom","bounds":[32,19,38,24]},{"class":"RegionDecoPatchRoom","bounds":[1,31,7,38]},{"class":"SecretLarderRoom","bounds":[24,33,31,42]},{"class":"TunnelRoom","bounds":[30,19,32,26]},{"class":"TunnelRoom","bounds":[10,31,17,37]},{"class":"TunnelRoom","bounds":[6,12,11,19]},{"class":"TunnelRoom","bounds":[9,5,14,12]},{"class":"TunnelRoom","bounds":[21,7,23,11]},{"class":"BridgeRoom","bounds":[23,9,26,13]},{"class":"WalkwayRoom","bounds":[16,29,24,31]},{"class":"RingTunnelRoom","bounds":[19,11,23,17]}],
-  "generator_state": {"using_first_deck":false,"category_probs":[0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,1.0,0.0,0.0],"categories":[{"probs":[1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0],"using_2nd_probs":false,"seed":-8617948347581186338,"dropped":0},{"probs":[],"using_2nd_probs":false,"seed":null,"dropped":0},{"probs":[2.0,0.0,2.0,2.0,2.0,2.0],"using_2nd_probs":false,"seed":7383971405509845303,"dropped":0},{"probs":[2.0,1.0,1.0,2.0,1.0,2.0,0.0],"using_2nd_probs":false,"seed":-5771918163882724647,"dropped":3},{"probs":[1.0,1.0,0.0,1.0,0.0,2.0],"using_2nd_probs":false,"seed":-7243016205079533422,"dropped":7},{"probs":[1.0,2.0,2.0,1.0,2.0,2.0,1.0],"using_2nd_probs":false,"seed":-3713498913475024867,"dropped":3},{"probs":[2.0,1.0,1.0,1.0,1.0,0.0,2.0],"using_2nd_probs":false,"seed":-7024149857385468291,"dropped":6},{"probs":[1.0,1.0,1.0,1.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0],"using_2nd_probs":false,"seed":null,"dropped":0},{"probs":[],"using_2nd_probs":false,"seed":null,"dropped":0},{"probs":[3.0,3.0,3.0,0.0],"using_2nd_probs":false,"seed":8084338636882804882,"dropped":0},{"probs":[2.0,3.0,2.0],"using_2nd_probs":false,"seed":760040897669438048,"dropped":2},{"probs":[2.0,1.0,3.0],"using_2nd_probs":false,"seed":5479209157312539551,"dropped":3},{"probs":[3.0,3.0,2.0],"using_2nd_probs":false,"seed":4652085126614152333,"dropped":1},{"probs":[1.0,3.0,3.0],"using_2nd_probs":false,"seed":5523863500681974804,"dropped":2},{"probs":[3.0,0.0,3.0,3.0,3.0,2.0,3.0,3.0,3.0,3.0,2.0,3.0,2.0],"using_2nd_probs":false,"seed":-5135241931996733240,"dropped":6},{"probs":[2.0,2.0,3.0,3.0,3.0,2.0,2.0,3.0,3.0,3.0,2.0,2.0],"using_2nd_probs":false,"seed":3463647073178929225,"dropped":6},{"probs":[0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0,1.0,1.0,1.0,0.0,0.0],"using_2nd_probs":false,"seed":7835455387716222217,"dropped":6},{"probs":[1.0,0.0,0.0],"using_2nd_probs":false,"seed":1850988799846187143,"dropped":19},{"probs":[0.0,1.0,0.0,0.0,0.0,1.0,1.0,0.0,0.0,1.0,0.0,0.0],"using_2nd_probs":true,"seed":6274051388366741291,"dropped":26},{"probs":[0.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,1.0],"using_2nd_probs":false,"seed":-3290891464707486556,"dropped":0},{"probs":[0.0,1.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.0,0.0,0.0],"using_2nd_probs":true,"seed":-6198305397357196810,"dropped":28},{"probs":[0.0,1.0,1.0,1.0,2.0,1.0,1.0,0.0,2.0,1.0,1.0,0.0],"using_2nd_probs":false,"seed":-1320899939598838849,"dropped":9},{"probs":[1.0],"using_2nd_probs":false,"seed":null,"dropped":0}]},
+  "generator_state": {
+    "using_first_deck": false,
+    "category_probs": [
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0
+    ],
+    "categories": [
+      {
+        "probs": [
+          1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+          1.0, 1.0, 1.0
+        ],
+        "using_2nd_probs": false,
+        "seed": -8617948347581186338,
+        "dropped": 0
+      },
+      { "probs": [], "using_2nd_probs": false, "seed": null, "dropped": 0 },
+      {
+        "probs": [2.0, 0.0, 2.0, 2.0, 2.0, 2.0],
+        "using_2nd_probs": false,
+        "seed": 7383971405509845303,
+        "dropped": 0
+      },
+      {
+        "probs": [2.0, 1.0, 1.0, 2.0, 1.0, 2.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": -5771918163882724647,
+        "dropped": 3
+      },
+      {
+        "probs": [1.0, 1.0, 0.0, 1.0, 0.0, 2.0],
+        "using_2nd_probs": false,
+        "seed": -7243016205079533422,
+        "dropped": 7
+      },
+      {
+        "probs": [1.0, 2.0, 2.0, 1.0, 2.0, 2.0, 1.0],
+        "using_2nd_probs": false,
+        "seed": -3713498913475024867,
+        "dropped": 3
+      },
+      {
+        "probs": [2.0, 1.0, 1.0, 1.0, 1.0, 0.0, 2.0],
+        "using_2nd_probs": false,
+        "seed": -7024149857385468291,
+        "dropped": 6
+      },
+      {
+        "probs": [1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": null,
+        "dropped": 0
+      },
+      { "probs": [], "using_2nd_probs": false, "seed": null, "dropped": 0 },
+      {
+        "probs": [3.0, 3.0, 3.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": 8084338636882804882,
+        "dropped": 0
+      },
+      {
+        "probs": [2.0, 3.0, 2.0],
+        "using_2nd_probs": false,
+        "seed": 760040897669438048,
+        "dropped": 2
+      },
+      {
+        "probs": [2.0, 1.0, 3.0],
+        "using_2nd_probs": false,
+        "seed": 5479209157312539551,
+        "dropped": 3
+      },
+      {
+        "probs": [3.0, 3.0, 2.0],
+        "using_2nd_probs": false,
+        "seed": 4652085126614152333,
+        "dropped": 1
+      },
+      {
+        "probs": [1.0, 3.0, 3.0],
+        "using_2nd_probs": false,
+        "seed": 5523863500681974804,
+        "dropped": 2
+      },
+      {
+        "probs": [
+          3.0, 0.0, 3.0, 3.0, 3.0, 2.0, 3.0, 3.0, 3.0, 3.0, 2.0, 3.0, 2.0
+        ],
+        "using_2nd_probs": false,
+        "seed": -5135241931996733240,
+        "dropped": 6
+      },
+      {
+        "probs": [2.0, 2.0, 3.0, 3.0, 3.0, 2.0, 2.0, 3.0, 3.0, 3.0, 2.0, 2.0],
+        "using_2nd_probs": false,
+        "seed": 3463647073178929225,
+        "dropped": 6
+      },
+      {
+        "probs": [
+          0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0
+        ],
+        "using_2nd_probs": false,
+        "seed": 7835455387716222217,
+        "dropped": 6
+      },
+      {
+        "probs": [1.0, 0.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": 1850988799846187143,
+        "dropped": 19
+      },
+      {
+        "probs": [0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+        "using_2nd_probs": true,
+        "seed": 6274051388366741291,
+        "dropped": 26
+      },
+      {
+        "probs": [0.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 1.0],
+        "using_2nd_probs": false,
+        "seed": -3290891464707486556,
+        "dropped": 0
+      },
+      {
+        "probs": [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+        "using_2nd_probs": true,
+        "seed": -6198305397357196810,
+        "dropped": 28
+      },
+      {
+        "probs": [0.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 0.0, 2.0, 1.0, 1.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": -1320899939598838849,
+        "dropped": 9
+      },
+      { "probs": [1.0], "using_2nd_probs": false, "seed": null, "dropped": 0 }
+    ]
+  },
   "checkpoints": [
-    {"stage":"room","room":"PlatformRoom","rng":[-379069264, 2022781528, -229940740, 713889848, 1018501195, -710043221, -262730672, 31023176]},
-    {"stage":"room","room":"LibraryRoom","rng":[-683089784, 928342094, -1153528713, -1517434025, -1676972358, 1380187378, -149842156, -97231264]},
-    {"stage":"room","room":"ChasmRoom","rng":[-1658811971, -569159115, 1344952119, 508818705, -1071309489, 790704984, 616520661, 321653775]},
-    {"stage":"room","room":"TunnelRoom","rng":[508818705, -1071309489, 790704984, 616520661, 321653775, 247500262, -1224253542, 2008138588]},
-    {"stage":"room","room":"RegionDecoPatchRoom","rng":[-1166059883, 1689823224, -998241929, -702139234, 666684043, 815496507, 855351108, -1322007797]},
-    {"stage":"room","room":"RingTunnelRoom","rng":[666684043, 815496507, 855351108, -1322007797, 1176958769, -780992725, 1549620009, -563543549]},
-    {"stage":"room","room":"GrassyGraveRoom","rng":[-780992725, 1549620009, -563543549, 1756406903, 657405790, -586677045, -1553779607, -1636857609]},
-    {"stage":"room","room":"DemonSpawnerRoom","rng":[1756406903, 657405790, -586677045, -1553779607, -1636857609, -1735205639, 1501369278, 1342730182]},
-    {"stage":"room","room":"TunnelRoom","rng":[-1636857609, -1735205639, 1501369278, 1342730182, -583859385, 1364309366, 1760275183, 38073524]},
-    {"stage":"room","room":"BridgeRoom","rng":[-583859385, 1364309366, 1760275183, 38073524, -1430481778, 1705885095, 967102309, -1768216193]},
-    {"stage":"room","room":"TunnelRoom","rng":[38073524, -1430481778, 1705885095, 967102309, -1768216193, 745336921, 1791975161, -1053481432]},
-    {"stage":"room","room":"RegionDecoPatchRoom","rng":[-2093829453, 1363060441, 1412839844, 1421541397, -1218198573, 555824051, 1265925710, -344479877]},
-    {"stage":"room","room":"ChasmRoom","rng":[-238320376, -1319285345, 1547224683, -763555903, -1436263442, -300629488, -2020411157, 1879253474]},
-    {"stage":"room","room":"TunnelRoom","rng":[1547224683, -763555903, -1436263442, -300629488, -2020411157, 1879253474, -215952889, 1936104016]},
-    {"stage":"room","room":"TunnelRoom","rng":[-300629488, -2020411157, 1879253474, -215952889, 1936104016, 324444361, -442822060, -1676147750]},
-    {"stage":"room","room":"GrassyGraveRoom","rng":[-442822060, -1676147750, 1679584030, 423055596, 2105004823, 1391839382, -1157567431, 711690675]},
-    {"stage":"room","room":"LaboratoryRoom","rng":[-2111395386, -1734456168, -1483010876, 271188208, 2104707305, -708407559, -1526354768, -165688446]},
-    {"stage":"room","room":"SecretLarderRoom","rng":[1100931295, 1008468306, 1808601812, -1276048522, 1697067561, 472857644, 1050263940, -671405941]},
-    {"stage":"room","room":"RegionDecoPatchEntranceRoom","rng":[1121581433, 949558327, -51588374, 760306936, 1946627861, 634005577, 1230719183, 2132380746]},
-    {"stage":"room","room":"WalkwayRoom","rng":[949558327, -51588374, 760306936, 1946627861, 634005577, 1230719183, 2132380746, -1356170304]},
-    {"stage":"room","room":"RegionDecoPatchExitRoom","rng":[-832909770, -624266792, 749043098, 829636189, 1756944962, 521013899, -2084108099, 450643578]},
-    {"stage":"doors","room":"paintDoors","rng":[-579514327, 604110607, -104716669, -820098185, 302595226, 155250369, 525459610, -1658284679]}
+    {
+      "stage": "room",
+      "room": "PlatformRoom",
+      "rng": [
+        -379069264, 2022781528, -229940740, 713889848, 1018501195, -710043221,
+        -262730672, 31023176
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "LibraryRoom",
+      "rng": [
+        -683089784, 928342094, -1153528713, -1517434025, -1676972358,
+        1380187378, -149842156, -97231264
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "ChasmRoom",
+      "rng": [
+        -1658811971, -569159115, 1344952119, 508818705, -1071309489, 790704984,
+        616520661, 321653775
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "TunnelRoom",
+      "rng": [
+        508818705, -1071309489, 790704984, 616520661, 321653775, 247500262,
+        -1224253542, 2008138588
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "RegionDecoPatchRoom",
+      "rng": [
+        -1166059883, 1689823224, -998241929, -702139234, 666684043, 815496507,
+        855351108, -1322007797
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "RingTunnelRoom",
+      "rng": [
+        666684043, 815496507, 855351108, -1322007797, 1176958769, -780992725,
+        1549620009, -563543549
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "GrassyGraveRoom",
+      "rng": [
+        -780992725, 1549620009, -563543549, 1756406903, 657405790, -586677045,
+        -1553779607, -1636857609
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "DemonSpawnerRoom",
+      "rng": [
+        1756406903, 657405790, -586677045, -1553779607, -1636857609,
+        -1735205639, 1501369278, 1342730182
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "TunnelRoom",
+      "rng": [
+        -1636857609, -1735205639, 1501369278, 1342730182, -583859385,
+        1364309366, 1760275183, 38073524
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "BridgeRoom",
+      "rng": [
+        -583859385, 1364309366, 1760275183, 38073524, -1430481778, 1705885095,
+        967102309, -1768216193
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "TunnelRoom",
+      "rng": [
+        38073524, -1430481778, 1705885095, 967102309, -1768216193, 745336921,
+        1791975161, -1053481432
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "RegionDecoPatchRoom",
+      "rng": [
+        -2093829453, 1363060441, 1412839844, 1421541397, -1218198573, 555824051,
+        1265925710, -344479877
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "ChasmRoom",
+      "rng": [
+        -238320376, -1319285345, 1547224683, -763555903, -1436263442,
+        -300629488, -2020411157, 1879253474
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "TunnelRoom",
+      "rng": [
+        1547224683, -763555903, -1436263442, -300629488, -2020411157,
+        1879253474, -215952889, 1936104016
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "TunnelRoom",
+      "rng": [
+        -300629488, -2020411157, 1879253474, -215952889, 1936104016, 324444361,
+        -442822060, -1676147750
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "GrassyGraveRoom",
+      "rng": [
+        -442822060, -1676147750, 1679584030, 423055596, 2105004823, 1391839382,
+        -1157567431, 711690675
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "LaboratoryRoom",
+      "rng": [
+        -2111395386, -1734456168, -1483010876, 271188208, 2104707305,
+        -708407559, -1526354768, -165688446
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "SecretLarderRoom",
+      "rng": [
+        1100931295, 1008468306, 1808601812, -1276048522, 1697067561, 472857644,
+        1050263940, -671405941
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "RegionDecoPatchEntranceRoom",
+      "rng": [
+        1121581433, 949558327, -51588374, 760306936, 1946627861, 634005577,
+        1230719183, 2132380746
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "WalkwayRoom",
+      "rng": [
+        949558327, -51588374, 760306936, 1946627861, 634005577, 1230719183,
+        2132380746, -1356170304
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "RegionDecoPatchExitRoom",
+      "rng": [
+        -832909770, -624266792, 749043098, 829636189, 1756944962, 521013899,
+        -2084108099, 450643578
+      ]
+    },
+    {
+      "stage": "doors",
+      "room": "paintDoors",
+      "rng": [
+        -579514327, 604110607, -104716669, -820098185, 302595226, 155250369,
+        525459610, -1658284679
+      ]
+    }
   ]
 }

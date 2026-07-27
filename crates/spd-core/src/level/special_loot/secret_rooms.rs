@@ -333,8 +333,11 @@ pub(super) fn secret_hoard(
             heap_type: "heap",
         });
     }
-    for y in room.top..=room.bottom {
-        for x in room.left..=room.right {
+    // Java `Rect.getPoints()` iterates columns first (`x`, then `y`). The
+    // random roll is performed for every point, including walls, so this
+    // ordering fixes the individual tiles that receive a trap.
+    for x in room.left..=room.right {
+        for y in room.top..=room.bottom {
             if Random::int_max(2) != 0 {
                 continue;
             }

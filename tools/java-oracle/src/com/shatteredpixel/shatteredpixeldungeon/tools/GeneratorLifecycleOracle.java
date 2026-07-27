@@ -27,6 +27,7 @@ final class GeneratorLifecycleOracle {
 		boundaries.add(completedFloor(numericSeed, 4, "floor_4_create_items_complete"));
 		boundaries.add(completedFloor(numericSeed, 5, "floor_5_complete"));
 		boundaries.add(completedFloor(numericSeed, 6, "floor_6_create_items_complete"));
+		boundaries.add(completedFloor(numericSeed, 19, "floor_19_create_items_complete"));
 		return toJson(inputSeed, numericSeed, boundaries);
 	}
 

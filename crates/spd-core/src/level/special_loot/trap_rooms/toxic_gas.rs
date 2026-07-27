@@ -24,13 +24,29 @@ pub(crate) fn paint(
     let center = room.as_rect().center_room();
     set(map, center, STATUE);
 
+    // `ToxicGasRoom.paint` seeds the initial gas before it replaces selected
+    // cells with vents, so every initially empty interior cell retains a
+    // concentration of 30 (including the eventual vent positions).
+    for x in room.left..=room.right {
+        for y in room.top..=room.bottom {
+            let point = Point::new(x, y);
+            let cell = cell(map, point);
+            if map.map[cell] == EMPTY {
+                map.record_blob_cell("ToxicGas", false, cell, 30);
+            }
+        }
+    }
+
     // Java accepts vents only on EMPTY, and changes each accepted cell to an
     // inactive trap before choosing the next one.
     let traps = (room.width() - 2).min(room.height() - 2).max(0);
     for _ in 0..traps {
         let point = random_point(room, 2);
         let point = retry_until(room, 2, point, |cell| map.map[cell] == EMPTY, map);
-        set(map, point, INACTIVE_TRAP);
+        let cell = cell(map, point);
+        map.trap_names[cell] = Some("ToxicVent");
+        map.record_blob_cell("ToxicGasSeed", false, cell, 12);
+        map.map[cell] = INACTIVE_TRAP;
     }
 
     // Gold positions may overlap vents. They exclude only the statue and

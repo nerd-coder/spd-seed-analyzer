@@ -1,12 +1,31 @@
 use crate::level::create_level_partial;
+use crate::rooms::room::Room;
+use crate::rooms::types::RoomKind;
 use crate::run::{dungeon_from_run, init_run};
 
 use super::rotation::{standard_rotation, MobKind};
-use super::{mob_limit, next_mob, Random};
+use super::{mob_limit, next_mob, spawn_room_indices, Random};
 
 const LCG_MULTIPLIER: u64 = 0x5DEECE66D;
 const LCG_ADDEND: u64 = 0xB;
 const LCG_MASK: u64 = (1 << 48) - 1;
+
+fn spawn_room(id: usize, kind: RoomKind, size_factor: i32) -> Room {
+    Room::new(id, "test", kind, size_factor, 16, 7, 10, 7, 10)
+}
+
+#[test]
+fn ambient_mob_rotation_includes_standard_room_subclass_roles() {
+    let rooms = [
+        spawn_room(0, RoomKind::Entrance, 1),
+        spawn_room(1, RoomKind::Standard, 2),
+        spawn_room(2, RoomKind::Exit, 1),
+        spawn_room(3, RoomKind::Standard, 1),
+        spawn_room(4, RoomKind::Special, 4),
+    ];
+
+    assert_eq!(spawn_room_indices(&rooms), [0, 1, 1, 2, 3]);
+}
 
 fn recover_state_after_first_int(probe: &[i32]) -> u64 {
     let high = probe[0] as u32 as u64;
