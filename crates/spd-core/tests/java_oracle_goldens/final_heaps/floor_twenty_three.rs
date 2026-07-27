@@ -74,6 +74,26 @@ pub(super) fn assert_halls_paint_trace(
     if let Some(expected_builder) = expected_builder {
         assert_eq!(actual.builder, Some(expected_builder), "selected builder");
     }
+    let report = actual.to_floor_report();
+    let guaranteed_torches = report
+        .items
+        .iter()
+        .filter(|item| {
+            item.name == "two Torches"
+                && item.class_name.as_deref() == Some("Torch")
+                && item.source.as_deref() == Some("guaranteed floor spawn")
+        })
+        .count();
+    assert_eq!(
+        guaranteed_torches, 1,
+        "Halls replay preserves the guaranteed two-Torch spawn"
+    );
+    assert!(
+        report.items.iter().any(|item| {
+            item.category == "food" && item.source.as_deref() == Some("guaranteed floor spawn")
+        }),
+        "Halls replay preserves a guaranteed food spawn"
+    );
 
     let actual_pre_shuffle = actual
         .pre_shuffle_room_bounds

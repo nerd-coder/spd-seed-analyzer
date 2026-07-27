@@ -1,6 +1,22 @@
 use super::*;
 
 use std::ffi::OsStr;
+use std::fs;
+
+use serde::Deserialize;
+
+#[derive(Debug, Deserialize)]
+struct CityPaintTrace {
+    depth: i32,
+    checkpoints: Vec<CityPaintCheckpoint>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CityPaintCheckpoint {
+    stage: String,
+    room: String,
+    rng: Vec<i32>,
+}
 
 #[test]
 fn aaa_floor_nineteen_matches_through_tile_variance() {
@@ -235,5 +251,73 @@ fn aaa_floor_nineteen_matches_through_tile_variance() {
             }],
         }],
         "floor-19 LaboratoryRoom retains the exact Alchemy seed"
+    );
+}
+
+#[test]
+fn gfx_floor_nineteen_matches_java_pre_mob_boundary() {
+    let name = OsStr::new("gfx-pzh-dch-final-heaps-floor-19.json");
+    let path = fixture_paths()
+        .into_iter()
+        .find(|path| path.file_name().is_some_and(|file| file == name))
+        .expect("missing GFX floor-19 fixture");
+    let fixture = read_fixture(&path);
+    let expected = fixture.floors.first().expect("GFX floor-19 oracle facts");
+    let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
+    let mut actual = None;
+    for depth in 1_i32..=19 {
+        dungeon.depth = depth;
+        actual = Some(create_level_partial(&mut dungeon));
+    }
+    let actual = actual.expect("GFX floor-19 replay");
+    assert_eq!(
+        actual.pre_paint_rng_probe, expected.pre_paint_rng,
+        "pre-paint RNG"
+    );
+    assert_eq!(
+        actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
+        "pre-mobs RNG"
+    );
+}
+
+#[test]
+fn gfx_floor_nineteen_city_room_paint_trace_matches_oracle() {
+    let trace_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tools/java-oracle/fixtures/traces/gfx-pzh-dch-floor-19-city-paint.json");
+    let trace: CityPaintTrace = serde_json::from_str(
+        &fs::read_to_string(&trace_path)
+            .unwrap_or_else(|error| panic!("read {}: {error}", trace_path.display())),
+    )
+    .unwrap_or_else(|error| panic!("parse {}: {error}", trace_path.display()));
+    assert_eq!(trace.depth, 19);
+
+    let seed = parse_seed("GFX-PZH-DCH").expect("valid fixture seed");
+    let mut dungeon = dungeon_from_run(init_run(seed.numeric));
+    let mut actual = None;
+    for depth in 1_i32..=19 {
+        dungeon.depth = depth;
+        actual = Some(create_level_partial(&mut dungeon));
+    }
+    let actual = actual.expect("floor-19 replay");
+    let expected_callbacks = trace
+        .checkpoints
+        .iter()
+        .filter(|checkpoint| checkpoint.stage == "room")
+        .map(|checkpoint| (checkpoint.room.clone(), checkpoint.rng.clone()))
+        .collect::<Vec<_>>();
+    let actual_callbacks = actual
+        .room_paint_rng_checkpoints
+        .iter()
+        .map(|checkpoint| (checkpoint.room.clone(), checkpoint.rng.clone()))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        actual_callbacks, expected_callbacks,
+        "room callback RNG boundaries"
+    );
+    let doors = trace.checkpoints.last().expect("paintDoors checkpoint");
+    assert_eq!((&doors.stage[..], &doors.room[..]), ("doors", "paintDoors"));
+    assert_eq!(
+        actual.post_doors_rng_probe, doors.rng,
+        "paintDoors RNG boundary"
     );
 }

@@ -12,6 +12,86 @@ fn fixture() -> OracleFixture {
 }
 
 #[test]
+fn gfx_floor_six_secret_library_restores_preserved_run_lifecycle() {
+    let path = fixture_paths()
+        .into_iter()
+        .find(|path| {
+            path.file_name()
+                .is_some_and(|name| name == "gfx-pzh-dch-final-heaps-floor-6.json")
+        })
+        .expect("GFX floor-6 fixture");
+    let fixture = read_fixture(&path);
+    let expected = fixture.floors.first().expect("floor-6 oracle facts");
+
+    let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
+    let mut actual = None;
+    for depth in 1..=6 {
+        dungeon.depth = depth;
+        actual = Some(create_level_partial(&mut dungeon));
+    }
+    let actual = actual.expect("floor-6 replay");
+    let actual_bounds = actual
+        .room_bounds
+        .iter()
+        .map(|room| OracleRoomFact {
+            class_name: room.class_name.clone(),
+            left: room.left,
+            top: room.top,
+            right: room.right,
+            bottom: room.bottom,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(actual_bounds, expected.room_bounds, "GFX floor-6 bounds");
+    assert_eq!(actual.pre_paint_rng_probe, expected.pre_paint_rng);
+    assert_eq!(actual.pre_mobs_rng_probe, expected.pre_mobs_rng);
+    assert_eq!(actual.pre_items_rng_probe, expected.pre_items_rng);
+
+    let map = actual.map.as_ref().expect("GFX floor-6 map");
+    let actual_mobs = map
+        .mobs
+        .iter()
+        .map(|mob| OracleMob {
+            cell: mob.cell,
+            class_name: mob.class_name.clone(),
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(actual_mobs, expected.final_mobs, "GFX floor-6 mobs");
+
+    let main_drop_cells = [512, 560, 1786];
+    let main_drops = map
+        .heaps
+        .iter()
+        .filter(|heap| main_drop_cells.contains(&heap.cell))
+        .map(|heap| (heap.cell, heap.items[0].class_name.as_str()))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        main_drops,
+        [
+            (512, "PotionOfLevitation"),
+            (560, "PotionOfInvisibility"),
+            (1786, "ScrollOfIdentify"),
+        ],
+        "GFX floor-6 three general Generator draws"
+    );
+    let secret_library_cells = [1380, 1428, 1527];
+    let secret_library_drops = map
+        .heaps
+        .iter()
+        .filter(|heap| secret_library_cells.contains(&heap.cell))
+        .map(|heap| (heap.cell, heap.items[0].class_name.as_str()))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        secret_library_drops,
+        [
+            (1380, "ScrollOfTransmutation"),
+            (1428, "ScrollOfMagicMapping"),
+            (1527, "ScrollOfLullaby"),
+        ],
+        "GFX floor-6 SecretLibrary private weighted draws"
+    );
+}
+
+#[test]
 fn hkt_floor_six_lifecycle_matches_oracle() {
     let fixture = fixture();
     let expected = fixture.floors.first().expect("floor-6 oracle facts");

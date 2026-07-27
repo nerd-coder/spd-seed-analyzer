@@ -277,7 +277,14 @@ pub(super) fn burn_sacrifice_center_offset(rooms: &[Room], ri: usize, doors: &Do
 
 /// `SecretHoneypotRoom.paint` — shattered pot (geom) + honeypot + Bomb.random().
 pub(super) fn secret_honeypot(room: &Room) -> Vec<PlacedLoot> {
-    // brokenPotPos is geometric midpoint of center and entrance — no RNG.
+    // `brokenPotPos` starts at Room.center().  Its discarded odd-axis nudges
+    // still advance the main stream before the two item placements.
+    if (room.right - room.left) % 2 == 1 {
+        let _ = Random::int_max(2);
+    }
+    if (room.bottom - room.top) % 2 == 1 {
+        let _ = Random::int_max(2);
+    }
     // Bee spawn does not consume loot RNG.
     let mut out = Vec::new();
     let mut occupied = Vec::new();

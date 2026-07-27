@@ -1,6 +1,21 @@
+use super::floor_twenty_three::assert_halls_paint_trace;
 use super::*;
 
 use std::ffi::OsStr;
+
+use spd_core::rooms::init_rooms::BuilderKind;
+
+#[test]
+fn gfx_floor_twenty_one_halls_paint_trace_matches_loop_builder_history() {
+    assert_halls_paint_trace(
+        "GFX-PZH-DCH",
+        "gfx-pzh-dch-floor-21-halls-paint.json",
+        21,
+        0,
+        20,
+        Some(BuilderKind::Loop),
+    );
+}
 
 #[test]
 fn aaa_floor_twenty_one_pins_first_generation_divergence_fix() {

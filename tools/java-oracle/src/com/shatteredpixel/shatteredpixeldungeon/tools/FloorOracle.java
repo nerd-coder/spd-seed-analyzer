@@ -41,9 +41,12 @@ import com.watabou.utils.SparseArray;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.lang.reflect.Field;
 
 /** Runs the pinned depth-one SewerLevel and records stable item facts. */
 final class FloorOracle {
@@ -139,6 +142,34 @@ final class FloorOracle {
 				preItemsRng,
 				visualFacts,
 				preItemsVisualFacts);
+	}
+
+	/** Captures the copied private map only after the canonical floor-6 lifecycle loaded it. */
+	@SuppressWarnings("unchecked")
+	static String generateSecretLibraryOrderJson(String inputSeed, long numericSeed) {
+		generateFinalHeaps(numericSeed, 6);
+		try {
+			Class<?> secretLibrary = Class.forName(
+					"com.shatteredpixel.shatteredpixeldungeon.levels.rooms.secret.SecretLibraryRoom");
+			Field field = secretLibrary.getDeclaredField("scrollChances");
+			field.setAccessible(true);
+			Map<Class<?>, Float> template = (Map<Class<?>, Float>) field.get(null);
+			Map<Class<?>, Float> chances = new HashMap<>(template);
+			StringBuilder out = new StringBuilder("{\n  \"schema_version\": 1,\n"
+					+ "  \"contract\": \"secret-library-order\",\n"
+					+ "  \"spd\": { \"version\": \"v3.3.8\", \"commit\": \"7b8b845a7\" },\n"
+					+ "  \"input\": { \"seed\": \"" + JavaOracle.escape(inputSeed)
+					+ "\", \"numeric\": " + numericSeed + " },\n  \"entries\": [\n");
+			int index = 0;
+			for (Map.Entry<Class<?>, Float> entry : chances.entrySet()) {
+				if (index++ > 0) out.append(",\n");
+				out.append("    { \"class\": \"").append(entry.getKey().getSimpleName())
+						.append("\", \"weight\": ").append(entry.getValue()).append(" }");
+			}
+			return out.append("\n  ]\n}\n").toString();
+		} catch (ReflectiveOperationException error) {
+			throw new AssertionError(error);
+		}
 	}
 
 	private static List<Integer> generateDoorRng(long seed, int depth, boolean after) {

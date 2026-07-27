@@ -20,10 +20,12 @@ final class GeneratorLifecycleOracle {
 
 	static String generateJson(String inputSeed, long numericSeed) {
 		List<BoundaryFact> boundaries = new ArrayList<>();
+		boundaries.add(completedFloor(numericSeed, 1, "floor_1_complete"));
 		boundaries.add(completedFloor(numericSeed, 2, "floor_2_complete"));
 		boundaries.add(floorThreeAfterPaint(numericSeed));
 		boundaries.add(completedFloor(numericSeed, 3, "floor_3_create_items_complete"));
 		boundaries.add(completedFloor(numericSeed, 4, "floor_4_create_items_complete"));
+		boundaries.add(completedFloor(numericSeed, 5, "floor_5_complete"));
 		boundaries.add(completedFloor(numericSeed, 6, "floor_6_create_items_complete"));
 		return toJson(inputSeed, numericSeed, boundaries);
 	}
@@ -56,6 +58,7 @@ final class GeneratorLifecycleOracle {
 	private static BoundaryFact snapshot(String boundary) {
 		return new BoundaryFact(
 				boundary,
+				deck(Generator.Category.SCROLL),
 				deck(Generator.Category.WEP_T2),
 				deck(Generator.Category.WEP_T4));
 	}
@@ -78,6 +81,7 @@ final class GeneratorLifecycleOracle {
 		for (int index = 0; index < facts.size(); index++) {
 			BoundaryFact fact = facts.get(index);
 			json.append("    { \"boundary\": \"").append(fact.boundary).append("\", ")
+					.append("\"scroll\": ").append(deckJson(fact.scroll)).append(", ")
 					.append("\"wep_t2\": ").append(deckJson(fact.wepT2)).append(", ")
 					.append("\"wep_t4\": ").append(deckJson(fact.wepT4)).append(" }");
 			if (index + 1 < facts.size()) json.append(',');
@@ -94,11 +98,13 @@ final class GeneratorLifecycleOracle {
 
 	private static final class BoundaryFact {
 		final String boundary;
+		final DeckFact scroll;
 		final DeckFact wepT2;
 		final DeckFact wepT4;
 
-		BoundaryFact(String boundary, DeckFact wepT2, DeckFact wepT4) {
+		BoundaryFact(String boundary, DeckFact scroll, DeckFact wepT2, DeckFact wepT4) {
 			this.boundary = boundary;
+			this.scroll = scroll;
 			this.wepT2 = wepT2;
 			this.wepT4 = wepT4;
 		}

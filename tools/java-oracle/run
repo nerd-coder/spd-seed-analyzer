@@ -24,7 +24,7 @@ usage() {
 	cat >&2 <<'EOF'
 Usage: tools/java-oracle/run [--source PATH] [--output FILE]
                              [--depth 1 | --final-heaps-depth 1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|25|26 |
-                             --figure-eight-trace DEPTH | --free-space-trace DEPTH | --halls-paint-trace 21|22|23|24 |
+                             --figure-eight-trace DEPTH | --free-space-trace DEPTH | --halls-paint-trace 6|12|16|17|18|19|21|22|23|24 |
                              --caves-boss-patch |
                              --generator-deck-rollover | --generator-lifecycle |
                              --shop-bag-selection | --sacrifice-reward] SEED
@@ -41,8 +41,9 @@ With --figure-eight-trace, records non-advancing RNG probes and room bounds for
 every FigureEightBuilder attempt on the target floor.
 With --free-space-trace, replays the FigureEight placement path and records the
 target depth-23 ABC-DEF-GHI Sentry placement's collision iteration and tie draws.
-With --halls-paint-trace, records the regular Halls painter's pre-shuffle room
-list and non-advancing RNG probes after each room callback and paintDoors.
+With --halls-paint-trace, records the regular painter's pre-shuffle room list
+and non-advancing RNG probes after each room callback and paintDoors for the
+supported Prison, Caves, City, and Halls depths.
 With --sacrifice-reward, applies Parchment Scrap +3 at the floor-13 entry
 boundary and captures the reward stored in the SacrificialFire blob.
 EOF

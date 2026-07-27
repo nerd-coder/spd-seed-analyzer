@@ -26,12 +26,12 @@
         "Depth-22 Halls lifecycle fixtures: AAA-AAA-AAA matches the Java pre-paint checkpoint, FigureEight pre-shuffle room list, room selection/bounds, room-paint callbacks, post-door RNG, affected door terrain/discoverability, and transitions; contrasting ABC-DEF-GHI pins the post-door RNG boundary. HallsPainter includes REGION_DECO_ALT variance and unconnected-neighbour terrain merges",
         "AAA-AAA-AAA preserved-run depth-23 Halls: Java-matching FigureEight builder attempt, all 21 pre-shuffle room bounds, room-paint callbacks, and post-door RNG boundary",
         "ABC-DEF-GHI preserved-run depth-23 Halls: Java-matching FigureEight builder, all 26 pre-shuffle room bounds, room-paint callbacks, and post-door RNG; branch retries exclude an uncommitted tunnel and SentryRoom connection checks preserve center RNG",
-        "GFX-PZH-DCH preserved-run depth-23 Halls: Java-matching Loop builder history, all 21 distinct pre-shuffle room bounds, every room-paint callback, and post-door RNG boundary",
         "AAA-AAA-AAA and ABC-DEF-GHI preserved-run depth-24 Halls: Java-matching pre-shuffle room bounds, every room-paint callback, and post-door RNG boundary"
       ],
       "remaining": [
         "Coverage is fixture-specific; unrecorded builder histories can still diverge",
-        "Halls regular floors, HallsBoss, and LastLevel visible layouts are proven through depth 26 for two preserved runs; expand fixture coverage beyond these replay histories before promoting complete floor-path coverage",
+        "GFX-PZH-DCH regular Halls replay is incomplete: depths 22 through 24 match the painter traces, but an upstream depth-19 post-mob item-population divergence leaves the persistent Generator category deck wrong, so the first depth-21 mismatch appears in SecretSummoningRoom despite its matching local painter lifecycle",
+        "HallsBoss and LastLevel remain proven through depth 26 for two preserved runs; add a retry-heavy Halls history before promoting complete floor-path coverage",
         "VaultLevel-only branches are not part of the regular-floor analyzer",
         "Later regular floors still require phase-by-phase parity checks"
       ],
@@ -51,7 +51,10 @@
         "tools/java-oracle/fixtures/traces/aaa-aaa-aaa-floor-21-figure-eight.json",
         "tools/java-oracle/fixtures/traces/aaa-aaa-aaa-floor-23-halls-paint.json",
         "tools/java-oracle/fixtures/traces/abc-def-ghi-floor-23-halls-paint.json",
+        "tools/java-oracle/fixtures/traces/gfx-pzh-dch-floor-21-halls-paint.json",
+        "tools/java-oracle/fixtures/traces/gfx-pzh-dch-floor-22-halls-paint.json",
         "tools/java-oracle/fixtures/traces/gfx-pzh-dch-floor-23-halls-paint.json",
+        "tools/java-oracle/fixtures/traces/gfx-pzh-dch-floor-24-halls-paint.json",
         "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-5.json",
         "tools/java-oracle/fixtures/zzz-zzz-zzz-final-heaps-floor-5.json",
         "crates/spd-core/src/level/boss_layouts.rs",

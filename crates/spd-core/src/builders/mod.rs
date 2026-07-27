@@ -24,8 +24,21 @@ struct FigureEightAttemptTrace {
 }
 
 #[cfg(test)]
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct LoopAttemptTrace {
+    attempt: u32,
+    start_rng_probe: Vec<i32>,
+    end_rng_probe: Vec<i32>,
+    rooms: Vec<(String, i32, i32, i32, i32)>,
+    success: bool,
+}
+
+#[cfg(test)]
 thread_local! {
     static LAST_FIGURE_EIGHT_TRACE: std::cell::RefCell<Vec<FigureEightAttemptTrace>> = const {
+        std::cell::RefCell::new(Vec::new())
+    };
+    static LAST_LOOP_TRACE: std::cell::RefCell<Vec<LoopAttemptTrace>> = const {
         std::cell::RefCell::new(Vec::new())
     };
 }
@@ -51,6 +64,8 @@ pub fn build_rooms(
     let mut figure_state = figure_eight::FigureEightState::default();
     #[cfg(test)]
     LAST_FIGURE_EIGHT_TRACE.with(|trace| trace.borrow_mut().clear());
+    #[cfg(test)]
+    LAST_LOOP_TRACE.with(|trace| trace.borrow_mut().clear());
     for _attempt in 0..max_tries {
         clear_all_connections(rooms);
         for r in rooms.iter_mut() {
@@ -63,7 +78,33 @@ pub fn build_rooms(
         }
 
         let ok = match kind {
-            BuilderKind::Loop => loop_builder::build(rooms, &params, depth, prepare_shop).is_some(),
+            BuilderKind::Loop => {
+                #[cfg(test)]
+                let start_rng_probe = crate::random::Random::peek_ints(8);
+                let result = loop_builder::build(rooms, &params, depth, prepare_shop);
+                #[cfg(test)]
+                LAST_LOOP_TRACE.with(|trace| {
+                    trace.borrow_mut().push(LoopAttemptTrace {
+                        attempt: _attempt,
+                        start_rng_probe,
+                        end_rng_probe: crate::random::Random::peek_ints(8),
+                        rooms: rooms
+                            .iter()
+                            .map(|room| {
+                                (
+                                    room.name.clone(),
+                                    room.left,
+                                    room.top,
+                                    room.right,
+                                    room.bottom,
+                                )
+                            })
+                            .collect(),
+                        success: result.is_some(),
+                    });
+                });
+                result.is_some()
+            }
             BuilderKind::FigureEight => {
                 #[cfg(test)]
                 let start_rng_probe = crate::random::Random::peek_ints(8);
@@ -199,6 +240,118 @@ mod tests {
     use crate::random::Random;
     use crate::rooms::room::dims_for_kind;
     use crate::rooms::types::RoomKind;
+    use serde::Deserialize;
+    use std::fs;
+    use std::path::Path;
+
+    #[test]
+    fn gfx_floor_twelve_blacksmith_constructor_roll_matches_java_loop_history() {
+        use crate::level::create_level_partial;
+        use crate::run::{dungeon_from_run, init_run};
+
+        #[derive(Deserialize)]
+        struct BuilderTrace {
+            build_attempts: Vec<OracleAttempt>,
+        }
+
+        #[derive(Deserialize)]
+        struct OracleAttempt {
+            attempt: u32,
+            start_rng: Vec<i32>,
+            end_rng: Vec<i32>,
+            success: bool,
+            rooms: Vec<OracleRoom>,
+        }
+
+        #[derive(Deserialize)]
+        struct OracleRoom {
+            #[serde(rename = "class")]
+            class_name: String,
+            bounds: [i32; 4],
+        }
+
+        #[derive(Deserialize)]
+        struct FinalFloorFixture {
+            floors: Vec<FinalFloor>,
+        }
+
+        #[derive(Deserialize)]
+        struct FinalFloor {
+            pre_paint_rng: Vec<i32>,
+        }
+
+        let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tools/java-oracle/fixtures");
+        let oracle: BuilderTrace = serde_json::from_str(
+            &fs::read_to_string(fixtures.join("traces/gfx-pzh-dch-floor-12-caves-builder.json"))
+                .expect("read Java floor-12 builder fixture"),
+        )
+        .expect("parse Java floor-12 builder fixture");
+        let final_floor: FinalFloorFixture = serde_json::from_str(
+            &fs::read_to_string(fixtures.join("gfx-pzh-dch-final-heaps-floor-12.json"))
+                .expect("read Java floor-12 pre-paint fixture"),
+        )
+        .expect("parse Java floor-12 pre-paint fixture");
+
+        let seed = crate::parse_seed("GFX-PZH-DCH").expect("valid seed");
+        let mut dungeon = dungeon_from_run(init_run(seed.numeric));
+        let mut floor = None;
+        for depth in 1..=12 {
+            dungeon.depth = depth;
+            floor = Some(create_level_partial(&mut dungeon));
+        }
+        let floor = floor.expect("floor 12");
+        let actual = LAST_LOOP_TRACE.with(|trace| trace.borrow().clone());
+
+        assert_eq!(oracle.build_attempts.len(), 2, "Java retries once");
+        assert_eq!(actual.len(), oracle.build_attempts.len());
+        for (actual, expected) in actual.iter().zip(&oracle.build_attempts) {
+            assert_eq!(actual.attempt, expected.attempt);
+            assert_eq!(actual.start_rng_probe, expected.start_rng);
+            assert_eq!(actual.end_rng_probe, expected.end_rng);
+            assert_eq!(actual.success, expected.success);
+            if expected.success {
+                assert_eq!(
+                    actual.rooms,
+                    expected
+                        .rooms
+                        .iter()
+                        .map(|room| {
+                            (
+                                room.class_name.clone(),
+                                room.bounds[0],
+                                room.bounds[1],
+                                room.bounds[2],
+                                room.bounds[3],
+                            )
+                        })
+                        .collect::<Vec<_>>(),
+                    "successful attempt {} room bounds",
+                    expected.attempt
+                );
+            }
+        }
+        assert!(!actual[0].success, "attempt zero fails");
+        assert!(actual[1].success, "attempt one succeeds");
+        let success_rooms = &actual[1].rooms;
+        assert!(success_rooms.iter().any(|room| room.0 == "MazeConnectionRoom"));
+        assert_eq!(
+            success_rooms
+                .iter()
+                .filter(|room| room.0 == "WalkwayRoom")
+                .count(),
+            3,
+            "successful Java layout has three Walkway rooms"
+        );
+        assert_eq!(
+            floor.pre_paint_rng_probe,
+            final_floor
+                .floors
+                .first()
+                .expect("Java floor-12 result")
+                .pre_paint_rng,
+            "pre-paint RNG boundary"
+        );
+    }
 
     #[test]
     fn aaa_floor_twenty_one_matches_java_attempt_boundaries() {

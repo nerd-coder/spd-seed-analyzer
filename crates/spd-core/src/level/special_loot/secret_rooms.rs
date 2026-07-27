@@ -10,23 +10,24 @@ use crate::random::Random;
 use crate::rooms::room::Room;
 
 pub(super) fn secret_library(room: &Room, map: &mut TerrainMap) -> Vec<PlacedLoot> {
-    // Private weighted map in pinned JVM HashMap iteration order. This room
-    // does not access itemsToSpawn or Generator.
+    // Private weighted map in pinned JVM HashMap iteration order after the
+    // complete run-init class-loading sequence. This room does not access
+    // itemsToSpawn or Generator.
     let n = Random::int_range_inclusive(2, 3);
     let classes = [
-        "ScrollOfTransmutation",
+        "ScrollOfTerror",
+        "ScrollOfMirrorImage",
         "ScrollOfRemoveCurse",
-        "ScrollOfRecharging",
-        "ScrollOfMagicMapping",
         "ScrollOfIdentify",
         "ScrollOfRetribution",
-        "ScrollOfLullaby",
-        "ScrollOfRage",
-        "ScrollOfMirrorImage",
         "ScrollOfTeleportation",
-        "ScrollOfTerror",
+        "ScrollOfTransmutation",
+        "ScrollOfLullaby",
+        "ScrollOfRecharging",
+        "ScrollOfMagicMapping",
+        "ScrollOfRage",
     ];
-    let mut weights = vec![6.0, 2.0, 3.0, 4.0, 1.0, 4.0, 4.0, 4.0, 3.0, 3.0, 4.0];
+    let mut weights = vec![4.0, 3.0, 2.0, 1.0, 4.0, 3.0, 6.0, 4.0, 3.0, 4.0, 4.0];
     let mut out = Vec::new();
     for _ in 0..n {
         let cell = loop {

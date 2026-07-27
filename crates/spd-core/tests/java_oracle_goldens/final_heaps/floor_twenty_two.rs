@@ -1,9 +1,11 @@
+use super::floor_twenty_three::assert_halls_paint_trace;
 use super::*;
 
 use std::ffi::OsStr;
 use std::fs;
 
 use serde::Deserialize;
+use spd_core::rooms::init_rooms::BuilderKind;
 
 #[derive(Debug, Deserialize)]
 struct PaintTrace {
@@ -31,6 +33,18 @@ struct DoorTrace {
     depth: i32,
     seed: String,
     post_doors_rng: Vec<i32>,
+}
+
+#[test]
+fn gfx_floor_twenty_two_halls_paint_trace_matches_loop_builder_history() {
+    assert_halls_paint_trace(
+        "GFX-PZH-DCH",
+        "gfx-pzh-dch-floor-22-halls-paint.json",
+        22,
+        0,
+        21,
+        Some(BuilderKind::Loop),
+    );
 }
 
 #[test]

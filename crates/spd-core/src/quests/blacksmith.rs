@@ -81,11 +81,17 @@ pub fn try_spawn(
         return false;
     }
 
+    // `new BlacksmithRoom()` first executes StandardRoom's instance
+    // initializer, including the unconstrained `setSizeCat()` roll.  Its
+    // configured size is later constrained by BlacksmithRoom's fixed bounds,
+    // but this constructor draw remains part of the level RNG sequence.
+    let size_factor = crate::rooms::standard::set_size_cat_default("BlacksmithRoom");
+
     // BlacksmithRoom extends StandardRoom (not SpecialRoom).
     specs.push(RoomSpec {
         name: "BlacksmithRoom".into(),
         kind: RoomKind::Standard,
-        size_factor: 1,
+        size_factor,
         max_connections: 16,
     });
 

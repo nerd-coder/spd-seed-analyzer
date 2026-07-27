@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "contract": "generator_lifecycle",
+  "spd": { "version": "v3.3.8", "commit": "7b8b845a7" },
+  "input": { "seed": "GFX-PZH-DCH", "numeric": 1300416271343 },
+  "boundaries": [
+    { "boundary": "floor_1_complete", "scroll": { "seed": -6198305397357196810, "dropped": 5, "probabilities": [0, 1, 2, 0, 1, 1, 1, 1, 1, 0, 1, 1] }, "wep_t2": { "seed": -5771918163882724647, "dropped": 0, "probabilities": [2, 2, 2, 2, 2, 2, 0] }, "wep_t4": { "seed": -3713498913475024867, "dropped": 0, "probabilities": [2, 2, 2, 2, 2, 2, 2] } },
+    { "boundary": "floor_2_complete", "scroll": { "seed": -6198305397357196810, "dropped": 7, "probabilities": [0, 1, 2, 0, 1, 1, 1, 1, 0, 0, 0, 1] }, "wep_t2": { "seed": -5771918163882724647, "dropped": 1, "probabilities": [2, 2, 2, 2, 1, 2, 0] }, "wep_t4": { "seed": -3713498913475024867, "dropped": 0, "probabilities": [2, 2, 2, 2, 2, 2, 2] } },
+    { "boundary": "floor_3_after_sacrifice_room", "scroll": { "seed": -6198305397357196810, "dropped": 7, "probabilities": [0, 1, 2, 0, 1, 1, 1, 1, 0, 0, 0, 1] }, "wep_t2": { "seed": -5771918163882724647, "dropped": 1, "probabilities": [2, 2, 2, 2, 1, 2, 0] }, "wep_t4": { "seed": -3713498913475024867, "dropped": 0, "probabilities": [2, 2, 2, 2, 2, 2, 2] } },
+    { "boundary": "floor_3_create_items_complete", "scroll": { "seed": -6198305397357196810, "dropped": 7, "probabilities": [0, 1, 2, 0, 1, 1, 1, 1, 0, 0, 0, 1] }, "wep_t2": { "seed": -5771918163882724647, "dropped": 2, "probabilities": [2, 1, 2, 2, 1, 2, 0] }, "wep_t4": { "seed": -3713498913475024867, "dropped": 0, "probabilities": [2, 2, 2, 2, 2, 2, 2] } },
+    { "boundary": "floor_4_create_items_complete", "scroll": { "seed": -6198305397357196810, "dropped": 7, "probabilities": [0, 1, 2, 0, 1, 1, 1, 1, 0, 0, 0, 1] }, "wep_t2": { "seed": -5771918163882724647, "dropped": 2, "probabilities": [2, 1, 2, 2, 1, 2, 0] }, "wep_t4": { "seed": -3713498913475024867, "dropped": 0, "probabilities": [2, 2, 2, 2, 2, 2, 2] } },
+    { "boundary": "floor_5_complete", "scroll": { "seed": -6198305397357196810, "dropped": 7, "probabilities": [0, 1, 2, 0, 1, 1, 1, 1, 0, 0, 0, 1] }, "wep_t2": { "seed": -5771918163882724647, "dropped": 2, "probabilities": [2, 1, 2, 2, 1, 2, 0] }, "wep_t4": { "seed": -3713498913475024867, "dropped": 0, "probabilities": [2, 2, 2, 2, 2, 2, 2] } },
+    { "boundary": "floor_6_create_items_complete", "scroll": { "seed": -6198305397357196810, "dropped": 8, "probabilities": [0, 0, 2, 0, 1, 1, 1, 1, 0, 0, 0, 1] }, "wep_t2": { "seed": -5771918163882724647, "dropped": 3, "probabilities": [2, 1, 1, 2, 1, 2, 0] }, "wep_t4": { "seed": -3713498913475024867, "dropped": 0, "probabilities": [2, 2, 2, 2, 2, 2, 2] } }
+  ]
+}

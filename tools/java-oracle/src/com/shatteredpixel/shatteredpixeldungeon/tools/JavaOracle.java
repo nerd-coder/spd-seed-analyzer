@@ -53,7 +53,7 @@ public final class JavaOracle {
 		boolean cavesBossPatch = args.length == 2 && "caves-boss-patch".equals(args[1]);
 		boolean hallsPaintTrace = args.length == 3 && "halls-paint-trace".equals(args[1]);
 		if (secretLibraryOrder) {
-			System.out.print(SecretLibraryOracle.generateJson());
+			System.out.print(FloorOracle.generateSecretLibraryOrderJson(inputSeed, numericSeed));
 			return;
 		}
 		if (sacrificeReward) {
@@ -438,7 +438,7 @@ public final class JavaOracle {
 			}
 			json.append(", \"static_data\": ");
 			if (tile.staticData == null) {
-				json.append("null");
+				json.append("[]");
 			} else {
 				json.append('[');
 				for (int dataIndex = 0; dataIndex < tile.staticData.size(); dataIndex++) {

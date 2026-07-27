@@ -70,7 +70,7 @@ pub fn create_items_main(
             }
             5 => {
                 if dungeon.depth > 1 {
-                    generate_mimic_prize(dungeon);
+                    let _ = generate_mimic_prize(dungeon);
                     to_drop.source = Some("mimic".into());
                     out.push(CreatedLoot {
                         loot: PlacedLoot {
@@ -104,6 +104,9 @@ pub fn create_items_main(
         {
             let mimic_chance = 0.1f32;
             if dungeon.depth > 1 && Random::float() < mimic_chance {
+                let mut reward = generate_mimic_prize(dungeon);
+                golden_mimic_postprocess(&mut to_drop);
+                golden_mimic_postprocess(&mut reward);
                 to_drop.source = Some("golden_mimic".into());
                 heap_type = "golden_mimic";
             } else {
@@ -231,32 +234,51 @@ pub fn create_items_main(
 /// `Mimic.spawnAt(...).generatePrize(true)` for an ordinary main-loop mimic.
 /// The carried reward is not a floor heap, but its Generator/deck mutations
 /// affect every later `randomDropCell` shuffle and must remain in lifecycle.
-fn generate_mimic_prize(dungeon: &mut DungeonState) {
+fn generate_mimic_prize(dungeon: &mut DungeonState) -> GeneratedItem {
     match Random::int_max(5) {
         0 => {
-            let _ = Random::int_range_inclusive(30 + dungeon.depth * 10, 60 + dungeon.depth * 20);
+            let mut gold = GeneratedItem::new("Gold", ItemCategory::Gold);
+            gold.quantity =
+                Random::int_range_inclusive(30 + dungeon.depth * 10, 60 + dungeon.depth * 20);
+            gold
         }
-        1 => {
-            let _ = dungeon
-                .generator
-                .random_missile(dungeon.depth / 5, false, dungeon.depth);
-        }
-        2 => {
-            let _ = dungeon
-                .generator
-                .random_armor(dungeon.depth / 5, dungeon.depth);
-        }
-        3 => {
-            let _ = dungeon
-                .generator
-                .random_weapon(dungeon.depth / 5, false, dungeon.depth);
-        }
-        4 => {
-            let _ = dungeon
-                .generator
-                .random_category(crate::generator::Category::Ring, dungeon.depth);
-        }
+        1 => dungeon
+            .generator
+            .random_missile(dungeon.depth / 5, false, dungeon.depth),
+        2 => dungeon
+            .generator
+            .random_armor(dungeon.depth / 5, dungeon.depth),
+        3 => dungeon
+            .generator
+            .random_weapon(dungeon.depth / 5, false, dungeon.depth),
+        4 => dungeon
+            .generator
+            .random_category(crate::generator::Category::Ring, dungeon.depth),
         _ => unreachable!("Random.Int(5) stays in range"),
+    }
+}
+
+/// `GoldenMimic.generatePrize`: normalize both carried items after adding the
+/// mandatory base-Mimic reward. Each eligible +0 item rolls independently for
+/// a +1 upgrade on the active floor generator.
+fn golden_mimic_postprocess(item: &mut GeneratedItem) {
+    if !matches!(
+        item.category,
+        ItemCategory::Weapon
+            | ItemCategory::Armor
+            | ItemCategory::Missile
+            | ItemCategory::Wand
+            | ItemCategory::Ring
+            | ItemCategory::Artifact
+    ) {
+        return;
+    }
+    if item.cursed && matches!(item.category, ItemCategory::Weapon | ItemCategory::Armor) {
+        item.enchantment = None;
+    }
+    item.cursed = false;
+    if item.category != ItemCategory::Artifact && item.level == 0 && Random::int_max(2) == 0 {
+        item.level += 1;
     }
 }
 
