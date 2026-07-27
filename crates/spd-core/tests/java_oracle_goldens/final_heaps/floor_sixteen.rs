@@ -117,8 +117,39 @@ struct CityShopCheckpoint {
 /// tie-break, which would shift the whole shop stock and every later floor.
 #[test]
 fn afu_floor_sixteen_loop_builder_shop_matches_oracle() {
+    let actual =
+        assert_loop_builder_shop_trace("AAA-AAA-AFU", "aaa-aaa-afu-floor-16-city-paint.json");
+
+    let stock = actual
+        .placed_items
+        .iter()
+        .filter(|item| item.source.as_deref() == Some("ShopRoom"))
+        .map(|item| item.class_name.as_str())
+        .collect::<Vec<_>>();
+    assert!(
+        stock.contains(&"Stylus"),
+        "Java stocks the floor-16 rare slot with a Stylus, not an artifact: {stock:?}"
+    );
+    assert!(
+        stock.contains(&"HealingDart"),
+        "tipped dart stock: {stock:?}"
+    );
+}
+
+/// A second seed guards the narrower LoopBuilder shop collision list against
+/// accidentally fitting only the original AFU placement.
+#[test]
+fn gfx_floor_sixteen_loop_builder_shop_matches_oracle() {
+    assert_loop_builder_shop_trace("GFX-PZH-DCH", "gfx-pzh-dch-floor-16-city-paint.json");
+}
+
+fn assert_loop_builder_shop_trace(
+    seed_text: &str,
+    fixture_name: &str,
+) -> spd_core::level::LevelState {
     let trace_path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../tools/java-oracle/fixtures/traces/aaa-aaa-afu-floor-16-city-paint.json");
+        .join("../../tools/java-oracle/fixtures/traces")
+        .join(fixture_name);
     let trace: CityShopTrace = serde_json::from_str(
         &std::fs::read_to_string(&trace_path)
             .unwrap_or_else(|error| panic!("read {}: {error}", trace_path.display())),
@@ -134,14 +165,14 @@ fn afu_floor_sixteen_loop_builder_shop_matches_oracle() {
         "fixed-width Java RNG probe"
     );
 
-    let seed = parse_seed("AAA-AAA-AFU").expect("valid oracle seed");
+    let seed = parse_seed(seed_text).expect("valid oracle seed");
     let mut dungeon = dungeon_from_run(init_run(seed.numeric));
     let mut actual = None;
     for depth in 1_i32..=16 {
         dungeon.depth = depth;
         actual = Some(create_level_partial(&mut dungeon));
     }
-    let actual = actual.expect("AFU floor-16 replay");
+    let actual = actual.expect("floor-16 replay");
 
     let expected_rooms = trace
         .pre_shuffle_rooms
@@ -183,18 +214,5 @@ fn afu_floor_sixteen_loop_builder_shop_matches_oracle() {
         "post-door RNG boundary"
     );
 
-    let stock = actual
-        .placed_items
-        .iter()
-        .filter(|item| item.source.as_deref() == Some("ShopRoom"))
-        .map(|item| item.class_name.as_str())
-        .collect::<Vec<_>>();
-    assert!(
-        stock.contains(&"Stylus"),
-        "Java stocks the floor-16 rare slot with a Stylus, not an artifact: {stock:?}"
-    );
-    assert!(
-        stock.contains(&"HealingDart"),
-        "tipped dart stock: {stock:?}"
-    );
+    actual
 }

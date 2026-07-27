@@ -58,6 +58,7 @@ From the analyzer repository root:
 ./tools/java-oracle/run --final-heaps-depth 26 AAA-AAA-AAA
 ./tools/java-oracle/run --figure-eight-trace 21 AAA-AAA-AAA
 ./tools/java-oracle/run --halls-paint-trace 23 AAA-AAA-AAA
+./tools/java-oracle/run --halls-paint-trace 16 GFX-PZH-DCH
 ./tools/java-oracle/run --generator-deck-rollover AAA-AAA-AAA
 ./tools/java-oracle/run --generator-lifecycle AAA-AAA-AAA
 ./tools/java-oracle/run --shop-bag-selection AAA-AAA-AAA
@@ -144,6 +145,9 @@ these commands (stdout is the default when `--output` is omitted):
 ./tools/java-oracle/run --shop-bag-selection \
   --output tools/java-oracle/fixtures/shop/aaa-aaa-aaa-shop-bags.json \
   AAA-AAA-AAA
+./tools/java-oracle/run --halls-paint-trace 16 \
+  --output tools/java-oracle/fixtures/traces/gfx-pzh-dch-floor-16-city-paint.json \
+  GFX-PZH-DCH
 ```
 
 `--final-heaps-depth` always emits the additive render fields. The AAA-AAA-AAA,
