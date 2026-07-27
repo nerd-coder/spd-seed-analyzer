@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "contract": "imp_ring_deck",
+  "spd": { "version": "v3.3.8", "commit": "7b8b845a7" },
+  "input": { "seed": "HKT-JZN-XQQ", "numeric": 1548095554788 },
+  "spawn": { "depth": 19, "ring_dropped_before": 3, "ring_dropped_after": 4 }
+}

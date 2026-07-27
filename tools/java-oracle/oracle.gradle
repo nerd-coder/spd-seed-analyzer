@@ -16,6 +16,8 @@ gradle.beforeProject { project ->
                 gradle.startParameter.projectProperties['oracleGeneratorDeckRollover']
         def generatorLifecycle =
                 gradle.startParameter.projectProperties['oracleGeneratorLifecycle']
+		def impRingDeck =
+				gradle.startParameter.projectProperties['oracleImpRingDeck']
         def shopBagSelection =
                 gradle.startParameter.projectProperties['oracleShopBagSelection']
 		def sacrificeReward =
@@ -69,6 +71,9 @@ gradle.beforeProject { project ->
             if (generatorLifecycle != null) {
                 args('generator-lifecycle')
             }
+			if (impRingDeck != null) {
+				args('imp-ring-deck')
+			}
             if (shopBagSelection != null) {
                 args('shop-bag-selection')
             }

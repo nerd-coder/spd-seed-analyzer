@@ -18,21 +18,15 @@ can move *k* — Mimic Tooth (absent from the Trinket Catalyst's four
 seed-determined offers in ~75% of seeds) and artifact-deck exhaustion (5–10 of
 11 deck weight still unspent at the spawn). Both are checkable per seed.
 
-1. Verify the draw count first — it is the whole claim. Have the java-oracle
-   dump `Category.RING.dropped` at the Imp spawn for the reference seeds and
-   diff against ours. Sites to keep aligned: `createItems` general-deck picks,
-   ordinary and golden mimic prizes, shop rare (1/10), `PitRoom` main loot,
-   `CrystalChoiceRoom` hidden prize, `CrystalVaultRoom` prize cycle,
-   GrassyGrave/MassGrave/SecretSummoning, artifact fallback.
-2. In `quests/imp.rs`, emit the reward class plus a seed-only certainty flag:
+1. In `quests/imp.rs`, emit the reward class plus a seed-only certainty flag:
    clear when Mimic Tooth is absent from the four catalyst offers *and* the
    artifact deck has headroom. Also capture the classes at draw *k+1* and *k+2*
    (clone the generator; the sub-deck draw does not touch the floor stream).
-3. In `ItemEntry`, report the class as `Exact` when the flag is clear, and as
+2. In `ItemEntry`, report the class as `Exact` when the flag is clear, and as
    an ordered candidate set otherwise, labelled as exact unless the run took
    Mimic Tooth. Level, curse, and spawn-presence stay exact either way. Seed
    search may match the exact class, but only the set when the flag is unclear.
-4. Update `specs/accuracy.json`: the Imp ring identity moves from omitted to
+3. Update `specs/accuracy.json`: the Imp ring identity moves from omitted to
    named, with the Mimic Tooth condition stated in player terms.
 
 ## Then report the four Trinket Catalyst offers

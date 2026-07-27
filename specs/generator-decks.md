@@ -8,7 +8,11 @@ version-sensitive.
 Method: reading the pinned clone, plus temporary `eprintln!` instrumentation in
 `generator/state.rs` (`random_deck_item`, `random_artifact`) and
 `quests/imp.rs` run over `analyze_seed(.., 19)`. Instrumentation was reverted;
-the measurements are reproducible by re-adding it.
+the measurements are reproducible by re-adding it. The Imp's exact pre-reward
+ring draw index is additionally pinned for five reference seeds by the
+`imp-ring-deck` Java-oracle contract, which records `Category.RING.dropped`
+immediately around `Imp.Quest.spawn` and is compared to Rust in
+`quests/imp.rs` tests.
 
 ## 1. Category sub-decks make item identity index-keyed, not stream-keyed
 

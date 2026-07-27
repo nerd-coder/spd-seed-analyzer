@@ -12,6 +12,7 @@ depth=""
 final_heaps_depth=""
 generator_deck_rollover=""
 generator_lifecycle=""
+imp_ring_deck=""
 shop_bag_selection=""
 sacrifice_reward=""
 secret_library_order=""
@@ -26,7 +27,7 @@ Usage: tools/java-oracle/run [--source PATH] [--output FILE]
                              [--depth 1 | --final-heaps-depth 1|2|3|4|5|6|7|8|9|10|11|12|13|14|15|16|17|18|19|20|21|22|25|26 |
                              --figure-eight-trace DEPTH | --free-space-trace DEPTH | --halls-paint-trace 2|6|12|16|17|18|19|21|22|23|24 |
                              --caves-boss-patch |
-                             --generator-deck-rollover | --generator-lifecycle |
+                             --generator-deck-rollover | --generator-lifecycle | --imp-ring-deck |
                              --shop-bag-selection | --sacrifice-reward] SEED
 
 Dumps SPD v3.3.8 run facts as stable JSON. With --depth 1, includes the pinned
@@ -77,6 +78,10 @@ while (($# > 0)); do
 			;;
 		--generator-lifecycle)
 			generator_lifecycle="1"
+			shift
+			;;
+		--imp-ring-deck)
+			imp_ring_deck="1"
 			shift
 			;;
 		--shop-bag-selection)
@@ -144,6 +149,7 @@ selected_contracts=0
 [[ -n "$final_heaps_depth" ]] && ((selected_contracts += 1))
 [[ -n "$generator_deck_rollover" ]] && ((selected_contracts += 1))
 [[ -n "$generator_lifecycle" ]] && ((selected_contracts += 1))
+[[ -n "$imp_ring_deck" ]] && ((selected_contracts += 1))
 [[ -n "$shop_bag_selection" ]] && ((selected_contracts += 1))
 [[ -n "$sacrifice_reward" ]] && ((selected_contracts += 1))
 [[ -n "$secret_library_order" ]] && ((selected_contracts += 1))
@@ -206,6 +212,9 @@ if [[ -n "$generator_deck_rollover" ]]; then
 fi
 if [[ -n "$generator_lifecycle" ]]; then
 	gradle_args+=(-PoracleGeneratorLifecycle=true)
+fi
+if [[ -n "$imp_ring_deck" ]]; then
+	gradle_args+=(-PoracleImpRingDeck=true)
 fi
 if [[ -n "$shop_bag_selection" ]]; then
 	gradle_args+=(-PoracleShopBagSelection=true)

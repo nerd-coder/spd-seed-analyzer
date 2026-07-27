@@ -15,6 +15,10 @@ pub struct ImpQuestState {
     /// `true` = monks (alternative), `false` = golems.
     pub alternative: bool,
     pub depth: i32,
+    /// Ring category draw index immediately before reward generation.
+    pub reward_ring_draw_index: Option<i32>,
+    /// Ring category draw index immediately after the curse-reroll loop.
+    pub reward_ring_draw_end: Option<i32>,
     /// Ring generated at spawn; drained once into the floor report.
     pub pending_reward: Option<GeneratedItem>,
     pub pending_summary: Option<String>,
@@ -64,7 +68,9 @@ pub fn try_spawn(
         _ => Random::int_max(2) == 0,
     };
 
+    imp.reward_ring_draw_index = Some(generator.deck_dropped(Category::Ring));
     let reward = generate_reward(generator, depth);
+    imp.reward_ring_draw_end = Some(generator.deck_dropped(Category::Ring));
     let target = if imp.alternative { "Monks" } else { "Golems" };
     let summary = format!("Ambitious Imp ({target}) — {}", reward.title());
 
@@ -112,7 +118,89 @@ fn generate_reward(generator: &mut GeneratorState, depth: i32) -> GeneratedItem 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::run::init_run;
+    use crate::level::create_level_partial;
+    use crate::run::{dungeon_from_run, init_run};
+    use serde::Deserialize;
+
+    const RING_DECK_FIXTURES: [&str; 5] = [
+        include_str!(
+            "../../../../tools/java-oracle/fixtures/generator/aaa-aaa-aaa-imp-ring-deck.json"
+        ),
+        include_str!(
+            "../../../../tools/java-oracle/fixtures/generator/abc-def-ghi-imp-ring-deck.json"
+        ),
+        include_str!(
+            "../../../../tools/java-oracle/fixtures/generator/gfx-pzh-dch-imp-ring-deck.json"
+        ),
+        include_str!(
+            "../../../../tools/java-oracle/fixtures/generator/hkt-jzn-xqq-imp-ring-deck.json"
+        ),
+        include_str!(
+            "../../../../tools/java-oracle/fixtures/generator/zzz-zzz-zzz-imp-ring-deck.json"
+        ),
+    ];
+
+    #[derive(Deserialize)]
+    struct RingDeckFixture {
+        contract: String,
+        spd: FixturePin,
+        input: FixtureInput,
+        spawn: FixtureSpawn,
+    }
+
+    #[derive(Deserialize)]
+    struct FixturePin {
+        version: String,
+        commit: String,
+    }
+
+    #[derive(Deserialize)]
+    struct FixtureInput {
+        seed: String,
+        numeric: i64,
+    }
+
+    #[derive(Deserialize)]
+    struct FixtureSpawn {
+        depth: i32,
+        ring_dropped_before: i32,
+        ring_dropped_after: i32,
+    }
+
+    #[test]
+    fn ring_draw_index_matches_pinned_java_at_imp_spawn() {
+        for fixture_json in RING_DECK_FIXTURES {
+            let fixture: RingDeckFixture =
+                serde_json::from_str(fixture_json).expect("Imp ring deck fixture");
+            assert_eq!(fixture.contract, "imp_ring_deck");
+            assert_eq!(fixture.spd.version, crate::SPD_VERSION);
+            assert_eq!(fixture.spd.commit, crate::SPD_COMMIT);
+
+            let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
+            for depth in 1..=fixture.spawn.depth {
+                dungeon.depth = depth;
+                create_level_partial(&mut dungeon);
+            }
+
+            assert_eq!(
+                dungeon.imp.depth, fixture.spawn.depth,
+                "{} depth",
+                fixture.input.seed
+            );
+            assert_eq!(
+                dungeon.imp.reward_ring_draw_index,
+                Some(fixture.spawn.ring_dropped_before),
+                "{} pre-reward ring draw index",
+                fixture.input.seed
+            );
+            assert_eq!(
+                dungeon.imp.reward_ring_draw_end,
+                Some(fixture.spawn.ring_dropped_after),
+                "{} post-reward ring draw index",
+                fixture.input.seed
+            );
+        }
+    }
 
     #[test]
     fn reward_deterministic_and_cursed_plus_two() {

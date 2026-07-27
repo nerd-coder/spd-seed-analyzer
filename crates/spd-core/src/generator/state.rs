@@ -379,6 +379,10 @@ impl GeneratorState {
         self.using_first_deck
     }
 
+    pub(crate) fn deck_dropped(&self, cat: Category) -> i32 {
+        self.cats[cat.index()].dropped
+    }
+
     #[cfg(test)]
     pub(crate) fn deck_snapshot(&self, cat: Category) -> DeckSnapshot {
         let runtime = &self.cats[cat.index()];

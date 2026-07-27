@@ -61,6 +61,7 @@ From the analyzer repository root:
 ./tools/java-oracle/run --halls-paint-trace 16 GFX-PZH-DCH
 ./tools/java-oracle/run --generator-deck-rollover AAA-AAA-AAA
 ./tools/java-oracle/run --generator-lifecycle AAA-AAA-AAA
+./tools/java-oracle/run --imp-ring-deck AAA-AAA-AAA
 ./tools/java-oracle/run --shop-bag-selection AAA-AAA-AAA
 ./tools/java-oracle/run --secret-library-order AAA-AAA-AAA
 ```
@@ -141,6 +142,9 @@ these commands (stdout is the default when `--output` is omitted):
   AAA-AAA-AAA
 ./tools/java-oracle/run --generator-lifecycle \
   --output tools/java-oracle/fixtures/generator/aaa-aaa-aaa-lifecycle.json \
+  AAA-AAA-AAA
+./tools/java-oracle/run --imp-ring-deck \
+  --output tools/java-oracle/fixtures/generator/aaa-aaa-aaa-imp-ring-deck.json \
   AAA-AAA-AAA
 ./tools/java-oracle/run --shop-bag-selection \
   --output tools/java-oracle/fixtures/shop/aaa-aaa-aaa-shop-bags.json \
