@@ -146,6 +146,9 @@ these commands (stdout is the default when `--output` is omitted):
 ./tools/java-oracle/run --imp-ring-deck \
   --output tools/java-oracle/fixtures/generator/aaa-aaa-aaa-imp-ring-deck.json \
   AAA-AAA-AAA
+./tools/java-oracle/run --quest-npc-placement \
+  --output tools/java-oracle/fixtures/generator/aaa-aaa-aac-quest-npc-placement.json \
+  AAA-AAA-AAC
 ./tools/java-oracle/run --shop-bag-selection \
   --output tools/java-oracle/fixtures/shop/aaa-aaa-aaa-shop-bags.json \
   AAA-AAA-AAA
@@ -211,6 +214,13 @@ choice for that state and for a synthetic scroll-heavy state. Both profiles
 have a unique maximum bag score. Equal scores are deliberately excluded:
 Java's `HashMap<Bag, Integer>` iterates identity-hashed bag instances, making
 its tie choice unsuitable as a portable deterministic oracle contract.
+
+The quest-NPC placement fixtures replace the Sewer and Prison `createMobs`
+passes with probes that call the pinned Ghost or Wandmaker spawn method after
+the real painter. Each record contains the NPC cell and eight main-stream RNG
+integers immediately after reward generation, before ambient mobs consume the
+stream. The nine fixtures cover Ghost depths 2–4 and every Wandmaker depth 7–9
+and quest-type combination.
 
 ## JSON contracts
 

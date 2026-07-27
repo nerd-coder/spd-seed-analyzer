@@ -148,6 +148,11 @@ pub fn try_spawn_wandmaker(
     let quest_type = WandmakerQuestType::from_int(dungeon.wandmaker.quest_type);
 
     let (wand1, wand2) = generate_wands(dungeon);
+
+    #[cfg(test)]
+    LAST_PLACEMENT_TRACE.with(|trace| {
+        *trace.borrow_mut() = Some((dungeon.depth, quest_type as i32, cell, Random::peek_ints(8)));
+    });
     dungeon.wandmaker.wand1 = Some(wand1.clone());
     dungeon.wandmaker.wand2 = Some(wand2.clone());
 
@@ -342,4 +347,18 @@ mod tests {
         assert!(!try_spawn_room(&mut wm, 6, &mut specs));
         assert!(specs.is_empty());
     }
+}
+
+#[cfg(test)]
+type PlacementTrace = (i32, i32, usize, Vec<i32>);
+
+#[cfg(test)]
+thread_local! {
+    static LAST_PLACEMENT_TRACE: std::cell::RefCell<Option<PlacementTrace>> =
+        const { std::cell::RefCell::new(None) };
+}
+
+#[cfg(test)]
+pub(super) fn take_placement_trace() -> Option<PlacementTrace> {
+    LAST_PLACEMENT_TRACE.with(|trace| trace.borrow_mut().take())
 }

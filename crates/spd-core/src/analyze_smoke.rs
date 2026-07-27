@@ -136,7 +136,7 @@ fn ghost_quest_spawns_within_sewers_sometime() {
 }
 
 #[test]
-fn inherited_population_taint_preserves_later_quest_constraints() {
+fn ghost_placement_gap_suppresses_sampled_public_rewards() {
     let mut saw_quest = false;
     for seed in 0..100 {
         let mut dungeon = dungeon_from_run(init_run(seed));
@@ -144,38 +144,17 @@ fn inherited_population_taint_preserves_later_quest_constraints() {
         for depth in 2..=4 {
             dungeon.depth = depth;
             let state = level::create_level_partial_with_profile(&mut dungeon, true);
-            if state.quests.is_empty() || state.runtime_sensitive_quests_from.is_some() {
+            if state.quests.is_empty() {
                 continue;
             }
             let report = state.to_floor_report();
             saw_quest = true;
-            assert_eq!(report.quests.len(), state.quests.len());
-            let rewards: Vec<_> = report
+            assert_eq!(state.runtime_sensitive_quests_from, Some(0));
+            assert!(report.quests.is_empty());
+            assert!(report
                 .items
                 .iter()
-                .filter(|item| item.source.as_deref() == Some("Ghost.Quest"))
-                .collect();
-            assert_eq!(rewards.len(), 2);
-
-            let weapon = rewards
-                .iter()
-                .find(|item| item.category == "weapon")
-                .expect("Ghost weapon constraint");
-            assert_eq!(weapon.prediction, report::ItemPredictionKind::Constrained);
-            assert!(weapon.class_name.is_none());
-            assert!(weapon.tier.is_some());
-            assert!(weapon.level.is_some());
-            assert_eq!(weapon.cursed, Some(false));
-
-            let armor = rewards
-                .iter()
-                .find(|item| item.category == "armor")
-                .expect("Ghost armor identity");
-            assert_eq!(armor.prediction, report::ItemPredictionKind::Exact);
-            assert!(armor.class_name.is_some());
-            assert!(armor.tier.is_some());
-            assert!(armor.level.is_some());
-            assert_eq!(armor.cursed, Some(false));
+                .all(|item| item.source.as_deref() != Some("Ghost.Quest")));
             break;
         }
         if saw_quest {

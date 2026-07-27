@@ -42,6 +42,8 @@ public final class JavaOracle {
 				args.length == 2 && "generator-lifecycle".equals(args[1]);
 		boolean impRingDeck =
 				args.length == 2 && "imp-ring-deck".equals(args[1]);
+		boolean questNpcPlacement =
+				args.length == 2 && "quest-npc-placement".equals(args[1]);
 		boolean shopBagSelection =
 				args.length == 2 && "shop-bag-selection".equals(args[1]);
 		boolean figureEightTrace =
@@ -82,6 +84,10 @@ public final class JavaOracle {
 			System.out.print(ImpRingDeckOracle.generateJson(inputSeed, numericSeed));
 			return;
 		}
+		if (questNpcPlacement) {
+			System.out.print(QuestNpcPlacementOracle.generateJson(inputSeed, numericSeed));
+			return;
+		}
 		if (args.length == 3 && !finalHeaps) {
 			System.err.println("Unknown floor oracle contract: " + args[1]);
 			System.exit(2);
@@ -90,6 +96,7 @@ public final class JavaOracle {
 				&& !generatorDeckRollover
 				&& !generatorLifecycle
 				&& !impRingDeck
+				&& !questNpcPlacement
 				&& !shopBagSelection
 				&& !sacrificeReward
 				&& !secretLibraryOrder
@@ -98,7 +105,7 @@ public final class JavaOracle {
 			System.err.println("Unknown oracle contract: " + args[1]);
 			System.exit(2);
 		}
-		Integer depth = args.length == 1 || generatorDeckRollover || generatorLifecycle || impRingDeck || shopBagSelection
+		Integer depth = args.length == 1 || generatorDeckRollover || generatorLifecycle || impRingDeck || questNpcPlacement || shopBagSelection
 				? null
 				: Integer.valueOf(args[finalHeaps ? 2 : 1]);
 		if (depth != null

@@ -55,6 +55,7 @@ pub(super) struct SpawnedQuestRewards {
     pub items: Vec<GeneratedItem>,
     pub summaries: Vec<String>,
     pub public_labels: Vec<Option<String>>,
+    pub ghost_rng_tail_sensitive: bool,
     pub wand_rng_tail_sensitive: bool,
 }
 
@@ -67,6 +68,7 @@ pub(super) fn spawn_npcs(
         items: Vec::new(),
         summaries: Vec::new(),
         public_labels: Vec::new(),
+        ghost_rng_tail_sensitive: false,
         wand_rng_tail_sensitive: false,
     };
     if let Some(exit) = rooms.iter().find(|room| room.is_exit() && !room.is_empty()) {
@@ -77,6 +79,7 @@ pub(super) fn spawn_npcs(
             result.summaries.push(ghost.summary);
             result.public_labels.push(Some(public_summary));
             result.items.extend([ghost.weapon, ghost.armor]);
+            result.ghost_rng_tail_sensitive = true;
         }
     }
     if let Some(entrance) = rooms

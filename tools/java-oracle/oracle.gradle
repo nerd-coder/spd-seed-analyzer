@@ -18,6 +18,8 @@ gradle.beforeProject { project ->
                 gradle.startParameter.projectProperties['oracleGeneratorLifecycle']
 		def impRingDeck =
 				gradle.startParameter.projectProperties['oracleImpRingDeck']
+		def questNpcPlacement =
+				gradle.startParameter.projectProperties['oracleQuestNpcPlacement']
         def shopBagSelection =
                 gradle.startParameter.projectProperties['oracleShopBagSelection']
 		def sacrificeReward =
@@ -73,6 +75,9 @@ gradle.beforeProject { project ->
             }
 			if (impRingDeck != null) {
 				args('imp-ring-deck')
+			}
+			if (questNpcPlacement != null) {
+				args('quest-npc-placement')
 			}
             if (shopBagSelection != null) {
                 args('shop-bag-selection')

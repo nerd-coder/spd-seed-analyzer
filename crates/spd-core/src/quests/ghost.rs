@@ -113,6 +113,11 @@ pub fn try_spawn_ghost(
 
     let (weapon, armor) = generate_rewards(dungeon);
 
+    #[cfg(test)]
+    LAST_PLACEMENT_TRACE.with(|trace| {
+        *trace.borrow_mut() = Some((dungeon.depth, quest_type as i32, cell, Random::peek_ints(8)));
+    });
+
     let summary = format!(
         "Sad Ghost ({}) — {} / {}",
         quest_type.as_str(),
@@ -246,4 +251,18 @@ mod tests {
             assert_eq!(Random::int_max(1), 0);
         }
     }
+}
+
+#[cfg(test)]
+type PlacementTrace = (i32, i32, usize, Vec<i32>);
+
+#[cfg(test)]
+thread_local! {
+    static LAST_PLACEMENT_TRACE: std::cell::RefCell<Option<PlacementTrace>> =
+        const { std::cell::RefCell::new(None) };
+}
+
+#[cfg(test)]
+pub(super) fn take_placement_trace() -> Option<PlacementTrace> {
+    LAST_PLACEMENT_TRACE.with(|trace| trace.borrow_mut().take())
 }

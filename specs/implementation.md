@@ -2,38 +2,21 @@
 
 Pinned target: SPD v3.3.8 @ `7b8b845a7`; accuracy remains `partial`.
 
-The Ambitious Imp's ring now reports its exact class when neither known deck
-shift is available, or an ordered three-class set otherwise. Its level, curse,
-and guaranteed presence remain exact; seed search matches exact classes or the
-reported set.
+The quest-NPC oracle now pins the Ghost and Wandmaker cell plus the eight-int
+RNG tail immediately after reward generation across all Wandmaker depth/type
+combinations and Ghost depths 2–4. Rust matches 12 of 18 boundaries. The six
+mismatches include Ghost spawn-floor drift, so Ghost rewards are omitted from
+the public report; the existing Wandmaker constraint remains. Accuracy is
+still `partial`.
 
-The next wins are the other two NPC quests. Both are held back by one shared
-fidelity gap rather than by anything the seed leaves open. Mechanism and
-evidence live in [generator-decks.md](generator-decks.md) §8–§10.
+## 1. Restore quest-NPC placement parity
 
-## 1. Pin the quest NPC placement loop (unblocks 2 and 3)
+Compare the failing fixture boundaries in `quests::placement_oracle_tests`
+against painter output. Fix entrance/exit room terrain and flags before reward
+logic. When all 18 boundaries match, remove both NPC tail guards and update the
+accuracy manifest.
 
-Both `Ghost.Quest.spawn` and `Wandmaker.Quest.spawnWandmaker` run at the *start*
-of their level's `createMobs`, after paint, and burn two `Random.IntRange` calls
-per placement attempt against painted terrain that our port only approximates
-(`quests/ghost.rs:84`, `quests/wandmaker.rs:143`). A wrong try count puts every
-subsequent reward roll at the wrong stream offset.
-
-We are currently inconsistent about this: the Wandmaker sets
-`wand_rng_tail_sensitive` and taints the floor (`level/quest_rewards.rs:93`),
-while the Ghost trusts the same post-placement stream enough to publish reward
-tiers. Resolve it, do not paper over it.
-
-1. Add a Java-oracle contract (shape: `imp-ring-deck`) recording the NPC's cell
-   and the RNG tail immediately after reward generation, for reference seeds
-   covering Ghost depths 2/3/4 and Wandmaker depths 7/8/9 × quest types 1/2/3.
-2. Compare cell and tail in `quests/ghost.rs` / `quests/wandmaker.rs` tests. A
-   matching cell means the try count matched, which is the whole claim.
-3. If they match, drop `wand_rng_tail_sensitive`. If they do not, fix the
-   entrance/exit-room flags first — and the Ghost's published tiers are wrong
-   today and must be constrained until they do.
-
-## 2. Sharpen the Sad Ghost reward
+## 2. Then sharpen the Sad Ghost reward
 
 Everything except the weapon's class is independent of any deck (§10).
 

@@ -448,10 +448,18 @@ fn create_level_internal(
                 if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=24) {
                     pre_mobs_rng_probe = Random::peek_ints(8);
                 }
+                let spawned_items_start = placed_items.len();
+                let spawned_quests_start = quests.len();
                 let spawned = quest_rewards::spawn_npcs(dungeon, &floor.rooms, &mut map);
                 placed_items.extend(spawned.items);
                 quests.extend(spawned.summaries);
                 quest_public_labels.extend(spawned.public_labels);
+                if spawned.ghost_rng_tail_sensitive {
+                    runtime_sensitive_placed_items_from.get_or_insert(spawned_items_start);
+                    runtime_sensitive_quests_from.get_or_insert(spawned_quests_start);
+                    runtime_sensitive_map = true;
+                    dungeon.public_generation_tainted = true;
+                }
                 if spawned.wand_rng_tail_sensitive {
                     // The room and quest type were selected during initRooms,
                     // before painter callbacks. Even if painting makes the sampled
