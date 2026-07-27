@@ -20,6 +20,8 @@ mod floor_twenty_three;
 mod floor_twenty_two;
 #[path = "final_heaps/replay_aaa.rs"]
 mod replay_aaa;
+#[path = "final_heaps/replay_aaa_caves_visual.rs"]
+mod replay_aaa_caves_visual;
 #[path = "final_heaps/replay_aaa_sewers.rs"]
 mod replay_aaa_sewers;
 
