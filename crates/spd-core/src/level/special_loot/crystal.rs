@@ -41,7 +41,9 @@ pub(super) fn crystal_vault(
     i1.source = Some("CrystalVaultRoom".into());
     i2.source = Some("CrystalVaultRoom".into());
 
-    // Pedestal placement: CIRCLE8 opposite pair, reject if adjacent to entrance door.
+    // Pedestal placement: CIRCLE8 opposite pair, reject if Chebyshev-adjacent
+    // to the entrance door. `Level.adjacent` treats all eight neighbours as
+    // adjacent, not only cardinal neighbours.
     let entrance = room
         .connected
         .iter()
@@ -112,7 +114,7 @@ fn crystal_vault_positions(room: &Room, door: Point) -> (Point, Point) {
         let (dx2, dy2) = CIRCLE8[(idx + 4) % 8];
         let i1 = Point::new(cx + dx1, cy + dy1);
         let i2 = Point::new(cx + dx2, cy + dy2);
-        if !adjacent_4(i1, door) && !adjacent_4(i2, door) {
+        if !adjacent(i1, door) && !adjacent(i2, door) {
             return (i1, i2);
         }
     }
@@ -136,8 +138,24 @@ fn set(map: &mut TerrainMap, point: Point, terrain: i32) {
     }
 }
 
-fn adjacent_4(a: Point, b: Point) -> bool {
-    (a.x - b.x).abs() + (a.y - b.y).abs() == 1
+/// `Level.adjacent`: Chebyshev distance exactly one.
+fn adjacent(a: Point, b: Point) -> bool {
+    (a.x - b.x).abs().max((a.y - b.y).abs()) == 1
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn vault_rejects_diagonal_pedestals_beside_the_entrance() {
+        let door = Point::new(10, 10);
+
+        assert!(adjacent(Point::new(11, 10), door));
+        assert!(adjacent(Point::new(11, 11), door));
+        assert!(!adjacent(Point::new(12, 10), door));
+        assert!(!adjacent(door, door));
+    }
 }
 
 /// `CrystalChoiceRoom.paint` — 3–4 potion/scroll piles + one chest (wand/ring/artifact).

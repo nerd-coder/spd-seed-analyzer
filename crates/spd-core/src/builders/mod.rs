@@ -684,3 +684,7 @@ mod tests {
         assert!(saw_ring);
     }
 }
+
+#[cfg(test)]
+#[path = "halls_trace_tests.rs"]
+mod halls_trace_tests;

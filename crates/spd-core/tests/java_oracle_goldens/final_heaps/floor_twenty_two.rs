@@ -48,6 +48,18 @@ fn gfx_floor_twenty_two_halls_paint_trace_matches_loop_builder_history() {
 }
 
 #[test]
+fn afu_floor_twenty_two_halls_paint_trace_matches_retry_history() {
+    assert_halls_paint_trace(
+        "AAA-AAA-AFU",
+        "aaa-aaa-afu-floor-22-halls-paint.json",
+        22,
+        3,
+        25,
+        Some(BuilderKind::FigureEight),
+    );
+}
+
+#[test]
 fn aaa_floor_twenty_two_structural_lifecycle_matches_oracle() {
     let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-22.json");
     let path = fixture_paths()

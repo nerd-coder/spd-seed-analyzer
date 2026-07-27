@@ -36,3 +36,15 @@ fn gfx_floor_twenty_four_halls_paint_trace_matches_loop_builder_history() {
         Some(BuilderKind::Loop),
     );
 }
+
+#[test]
+fn afu_floor_twenty_four_halls_paint_trace_matches_retry_history() {
+    assert_halls_paint_trace(
+        "AAA-AAA-AFU",
+        "aaa-aaa-afu-floor-24-halls-paint.json",
+        24,
+        8,
+        18,
+        Some(BuilderKind::FigureEight),
+    );
+}

@@ -21,6 +21,8 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.Terrain;
 import com.shatteredpixel.shatteredpixeldungeon.levels.painters.HallsPainter;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
 import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.SpecialRoom;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.CrystalVaultRoom;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.CrystalMimic;
 import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
@@ -56,8 +58,12 @@ final class HallsPaintTraceOracle {
 		FloorOracle.markTargetFloorGenerated(depth);
 		TracePainter.checkpoints.clear();
 		TracePainter.preShuffleRooms = null;
+		TracePainter.crystalVaults.clear();
+		TracePopulationHallsLevel.preMobsRng = null;
+		TracePopulationHallsLevel.preItemsRng = null;
 		TraceBuilder.attempts.clear();
 		TraceLoopBuilder.attempts.clear();
+		TraceHallsLevel.builderKind = null;
 		TracePrisonLevel.drops.clear();
 		Dungeon.daily = true;
 		try {
@@ -71,15 +77,33 @@ final class HallsPaintTraceOracle {
 		} finally {
 			Dungeon.daily = false;
 		}
+		if (depth >= 21 && depth <= 24) {
+			FloorOracle.initializeFreshRun(seed);
+			FloorOracle.generatePriorFloors(depth);
+			FloorOracle.markTargetFloorGenerated(depth);
+			Dungeon.daily = true;
+			try {
+				new TracePopulationHallsLevel().create();
+			} catch (FloorOracle.SnapshotComplete expected) {
+				// The population trace ends at the createItems entry boundary.
+			} finally {
+				Dungeon.daily = false;
+			}
+		}
 		StringBuilder json = new StringBuilder("{\n  \"depth\": ").append(depth)
 				.append(",\n  \"build_attempts\": [");
-		List<String> builderAttempts = depth == 12
-				? TraceLoopBuilder.attempts : TraceBuilder.attempts;
+		List<String> builderAttempts = ("LoopBuilder".equals(TraceHallsLevel.builderKind)
+				|| depth == 12) ? TraceLoopBuilder.attempts : TraceBuilder.attempts;
 		for (int i = 0; i < builderAttempts.size(); i++) {
 			if (i > 0) json.append(',');
 			json.append("\n    ").append(builderAttempts.get(i));
 		}
-		json.append("\n  ],\n  \"pre_shuffle_rooms\": ").append(TracePainter.preShuffleRooms)
+		json.append("\n  ],\n  \"builder_kind\": ")
+				.append(TraceHallsLevel.builderKind == null ? "null" : "\"" + TraceHallsLevel.builderKind + "\"")
+				.append(",\n  \"pre_shuffle_rooms\": ").append(TracePainter.preShuffleRooms)
+				.append(",\n  \"pre_mobs_rng\": ").append(TracePopulationHallsLevel.preMobsRng)
+				.append(",\n  \"pre_items_rng\": ").append(TracePopulationHallsLevel.preItemsRng)
+				.append(",\n  \"crystal_vaults\": ").append(TracePainter.crystalVaults)
 				.append(",\n  \"drops\": ").append(TracePrisonLevel.drops)
 				.append(",\n  \"blacksmith_state\": ").append(blacksmithState())
 				.append(",\n  \"generator_state\": ").append(generatorState)
@@ -159,9 +183,25 @@ final class HallsPaintTraceOracle {
 	}
 
 	private static final class TraceHallsLevel extends HallsLevel {
+		static String builderKind;
+
 		@Override protected Builder builder() {
 			Builder selected = super.builder();
+			if (selected instanceof LoopBuilder) {
+				builderKind = "LoopBuilder";
+				try {
+					Field intensity = LoopBuilder.class.getDeclaredField("curveIntensity");
+					Field offset = LoopBuilder.class.getDeclaredField("curveOffset");
+					intensity.setAccessible(true);
+					offset.setAccessible(true);
+					return new TraceLoopBuilder().setLoopShape(
+							2, intensity.getFloat(selected), offset.getFloat(selected));
+				} catch (ReflectiveOperationException error) {
+					throw new AssertionError(error);
+				}
+			}
 			if (!(selected instanceof FigureEightBuilder)) return selected;
+			builderKind = "FigureEightBuilder";
 			try {
 				Field intensity = FigureEightBuilder.class.getDeclaredField("curveIntensity");
 				intensity.setAccessible(true);
@@ -176,6 +216,23 @@ final class HallsPaintTraceOracle {
 					.setWater(feeling == Level.Feeling.WATER ? 0.70f : 0.15f, 6)
 					.setGrass(feeling == Level.Feeling.GRASS ? 0.65f : 0.10f, 3)
 					.setTraps(nTraps(), trapClasses(), trapChances());
+		}
+
+	}
+
+	/** Runs the unmodified Halls painter before stopping at population checkpoints. */
+	private static final class TracePopulationHallsLevel extends HallsLevel {
+		static String preMobsRng;
+		static String preItemsRng;
+
+		@Override protected void createMobs() {
+			preMobsRng = probe().toString();
+			super.createMobs();
+		}
+
+		@Override protected void createItems() {
+			preItemsRng = probe().toString();
+			throw new FloorOracle.SnapshotComplete();
 		}
 	}
 
@@ -272,6 +329,7 @@ final class HallsPaintTraceOracle {
 	private static final class TracePainter extends HallsPainter {
 		static final List<String> checkpoints = new ArrayList<>();
 		static String preShuffleRooms;
+		static final List<String> crystalVaults = new ArrayList<>();
 
 		@Override public boolean paint(Level level, ArrayList<Room> rooms) {
 			int padding = padding(level);
@@ -298,6 +356,7 @@ final class HallsPaintTraceOracle {
 				}
 				placeDoors(room);
 				room.paint(level);
+				if (room instanceof CrystalVaultRoom) crystalVaults.add(crystalVault(level, (CrystalVaultRoom) room));
 				checkpoint("room", room.getClass().getSimpleName());
 			}
 			paintDoors(level, rooms);
@@ -339,6 +398,42 @@ final class HallsPaintTraceOracle {
 						.append(',').append(room.right).append(',').append(room.bottom).append("]}");
 			}
 			return json.append(']').toString();
+		}
+
+		@SuppressWarnings("unchecked")
+		private static String crystalVault(Level level, CrystalVaultRoom room) {
+			try {
+				Field prizeClasses = CrystalVaultRoom.class.getDeclaredField("prizeClasses");
+				prizeClasses.setAccessible(true);
+				List<Generator.Category> categories = (List<Generator.Category>) prizeClasses.get(room);
+				StringBuilder json = new StringBuilder("{\"post_prize_classes\":[");
+				for (int i = 0; i < categories.size(); i++) {
+					if (i > 0) json.append(',');
+					json.append('\"').append(categories.get(i).name()).append('\"');
+				}
+				json.append("],\"crystal_chests\":[");
+				boolean first = true;
+				for (Heap heap : level.heaps.valueList()) {
+					Point point = level.cellToPoint(heap.pos);
+					if (heap.type != Heap.Type.CRYSTAL_CHEST || !room.inside(point)) continue;
+					if (!first) json.append(',');
+					first = false;
+					json.append("{\"cell\":").append(heap.pos).append(",\"item\":\"")
+							.append(heap.items.getFirst().getClass().getSimpleName()).append("\"}");
+				}
+				json.append("],\"crystal_mimics\":[");
+				first = true;
+				for (com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob mob : level.mobs) {
+					Point point = level.cellToPoint(mob.pos);
+					if (!(mob instanceof CrystalMimic) || !room.inside(point)) continue;
+					if (!first) json.append(',');
+					first = false;
+					json.append(mob.pos);
+				}
+				return json.append("]}").toString();
+			} catch (ReflectiveOperationException error) {
+				throw new AssertionError(error);
+			}
 		}
 	}
 

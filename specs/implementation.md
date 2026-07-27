@@ -2,13 +2,16 @@
 
 Pinned target: SPD v3.3.8 @ `7b8b845a7`; accuracy remains `partial`.
 
-## Expand contrasting Halls replay coverage
+## Finish the AFU retry-heavy Halls replay
 
-GFX-PZH-DCH now replays Java Halls depths 21–24 through every room-paint
-callback and post-door boundary. AAA Caves visual replay also matches through
-depth 14. Coverage remains fixture-specific.
+Uncommitted `AAA-AAA-AFU` fixtures cover inner `RegularLevel` builder retries,
+painter callbacks, post-door RNG, and pre-mob/pre-item boundaries on Halls
+21–24. Depths 21, 22, and 24 pass. Depth 23 exposes an upstream persistent
+artifact-deck mismatch: Rust consumes one extra artifact in the depth-16 shop;
+Java's rare stock is a Stylus.
 
-1. Capture a retry-heavy regular Halls history with Java builder, painter, and
-   population checkpoints.
-2. Replay it through depths 21–24 and retain only source-backed parity fixes.
-3. Promote coverage only after the new history and all CI checks pass.
+1. Trace the floor-16 ShopRoom RNG milestones in Java and Rust to locate the
+   first source-backed divergent operation.
+2. Fix the shop lifecycle, then make AFU depth 23 and its CrystalVault evidence
+   pass without weakening the replay assertions.
+3. Update `accuracy.json`, run CI parity, and commit the completed phase.

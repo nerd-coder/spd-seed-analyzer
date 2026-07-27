@@ -9,8 +9,16 @@ use spd_core::rooms::init_rooms::BuilderKind;
 struct PaintTrace {
     depth: i32,
     #[serde(default)]
+    builder_kind: Option<String>,
+    #[serde(default)]
     build_attempts: Vec<BuildAttempt>,
     pre_shuffle_rooms: Vec<TraceRoom>,
+    #[serde(default)]
+    pre_mobs_rng: Vec<i32>,
+    #[serde(default)]
+    pre_items_rng: Vec<i32>,
+    #[serde(default)]
+    crystal_vaults: Vec<CrystalVaultTrace>,
     checkpoints: Vec<PaintCheckpoint>,
 }
 
@@ -36,6 +44,19 @@ struct PaintCheckpoint {
     rng: Vec<i32>,
 }
 
+#[derive(Debug, Deserialize)]
+struct CrystalVaultTrace {
+    post_prize_classes: Vec<String>,
+    crystal_chests: Vec<CrystalVaultChest>,
+    crystal_mimics: Vec<u32>,
+}
+
+#[derive(Debug, Deserialize)]
+struct CrystalVaultChest {
+    cell: u32,
+    item: String,
+}
+
 pub(super) fn assert_halls_paint_trace(
     seed_text: &str,
     fixture_name: &str,
@@ -58,10 +79,19 @@ pub(super) fn assert_halls_paint_trace(
         expected_attempts,
         "Java builder retry count"
     );
-    assert!(
-        trace.build_attempts.iter().all(|attempt| attempt.success),
-        "Java builder success"
-    );
+    for (index, attempt) in trace.build_attempts.iter().enumerate() {
+        assert_eq!(attempt.attempt as usize, index, "Java builder attempt index");
+        assert_eq!(attempt.start_rng.len(), 8, "Java builder start RNG probe");
+        assert_eq!(attempt.end_rng.len(), 8, "Java builder end RNG probe");
+        assert_eq!(
+            attempt.success,
+            index + 1 == trace.build_attempts.len(),
+            "RegularLevel builder do/while attempt outcome"
+        );
+    }
+    assert!(trace.build_attempts.windows(2).all(|attempts| {
+        attempts[0].end_rng == attempts[1].start_rng
+    }), "Java builder retry RNG boundary");
 
     let seed = parse_seed(seed_text).expect("valid oracle seed");
     let mut dungeon = dungeon_from_run(init_run(seed.numeric));
@@ -73,6 +103,13 @@ pub(super) fn assert_halls_paint_trace(
     let actual = actual.expect("requested floor replay");
     if let Some(expected_builder) = expected_builder {
         assert_eq!(actual.builder, Some(expected_builder), "selected builder");
+        if let Some(builder_kind) = trace.builder_kind.as_deref() {
+            let expected_kind = match expected_builder {
+                BuilderKind::FigureEight => "FigureEightBuilder",
+                BuilderKind::Loop => "LoopBuilder",
+            };
+            assert_eq!(builder_kind, expected_kind, "Java selected builder");
+        }
     }
     let report = actual.to_floor_report();
     let guaranteed_torches = report
@@ -149,6 +186,45 @@ pub(super) fn assert_halls_paint_trace(
         actual.post_doors_rng_probe, doors.rng,
         "post-door RNG boundary"
     );
+    if !trace.pre_mobs_rng.is_empty() {
+        assert_eq!(trace.pre_mobs_rng.len(), 8, "Java pre-mobs RNG probe");
+        assert_eq!(
+            actual.pre_mobs_rng_probe, trace.pre_mobs_rng,
+            "post-painter population pre-mobs RNG boundary"
+        );
+    }
+    if !trace.pre_items_rng.is_empty() {
+        assert_eq!(trace.pre_items_rng.len(), 8, "Java pre-items RNG probe");
+        assert_eq!(
+            actual.pre_items_rng_probe, trace.pre_items_rng,
+            "post-mobs population pre-items RNG boundary"
+        );
+    }
+    for vault in &trace.crystal_vaults {
+        assert_eq!(vault.post_prize_classes.len(), 3, "vault category rotation");
+        let map = actual.map.as_ref().expect("CrystalVault map facts");
+        for chest in &vault.crystal_chests {
+            let actual_chest = map
+                .heaps
+                .iter()
+                .find(|heap| heap.cell == chest.cell)
+                .expect("CrystalVault chest cell");
+            assert_eq!(actual_chest.heap_type, "crystal_chest");
+            assert_eq!(
+                actual_chest.items.first().map(|item| item.class_name.as_str()),
+                Some(chest.item.as_str()),
+                "CrystalVault chest item at {}",
+                chest.cell
+            );
+        }
+        let actual_mimics = map
+            .mobs
+            .iter()
+            .filter(|mob| mob.class_name == "CrystalMimic")
+            .map(|mob| mob.cell)
+            .collect::<Vec<_>>();
+        assert_eq!(actual_mimics, vault.crystal_mimics, "CrystalVault mimics");
+    }
 }
 
 #[test]
@@ -184,5 +260,17 @@ fn gfx_floor_twenty_three_halls_paint_trace_matches_loop_builder_history() {
         0,
         21,
         Some(BuilderKind::Loop),
+    );
+}
+
+#[test]
+fn afu_floor_twenty_three_halls_paint_trace_matches_retry_history() {
+    assert_halls_paint_trace(
+        "AAA-AAA-AFU",
+        "aaa-aaa-afu-floor-23-halls-paint.json",
+        23,
+        3,
+        24,
+        Some(BuilderKind::FigureEight),
     );
 }

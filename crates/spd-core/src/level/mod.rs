@@ -445,7 +445,7 @@ fn create_level_internal(
                     .filter_map(|&index| floor.rooms.get(index).cloned())
                     .collect();
 
-                if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=22) {
+                if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=24) {
                     pre_mobs_rng_probe = Random::peek_ints(8);
                 }
                 let spawned = quest_rewards::spawn_npcs(dungeon, &floor.rooms, &mut map);
@@ -477,7 +477,7 @@ fn create_level_internal(
                     false
                 };
 
-                if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=22) {
+                if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=24) {
                     pre_items_rng_probe = Random::peek_ints(8);
                 }
                 let loot = create_items::create_items_main(

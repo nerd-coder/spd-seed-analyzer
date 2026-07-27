@@ -18,6 +18,18 @@ fn gfx_floor_twenty_one_halls_paint_trace_matches_loop_builder_history() {
 }
 
 #[test]
+fn afu_floor_twenty_one_halls_paint_trace_matches_retry_history() {
+    assert_halls_paint_trace(
+        "AAA-AAA-AFU",
+        "aaa-aaa-afu-floor-21-halls-paint.json",
+        21,
+        5,
+        19,
+        Some(BuilderKind::Loop),
+    );
+}
+
+#[test]
 fn aaa_floor_twenty_one_pins_first_generation_divergence_fix() {
     let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-21.json");
     let path = fixture_paths()
