@@ -166,6 +166,47 @@ fn aaa_replay_pins_floors_two_through_four() {
                 seeded_heaps(&expected.final_heaps),
                 "{context} exact seeded heaps"
             );
+            assert_eq!(
+                map.tiles,
+                *expected.terrain.as_ref().expect("AAA floor-4 terrain"),
+                "{context} exact terrain"
+            );
+            let actual_plants: Vec<_> = map
+                .plants
+                .iter()
+                .map(|plant| OraclePlant {
+                    cell: plant.cell,
+                    class_name: plant.class_name.clone(),
+                    image: plant.image,
+                })
+                .collect();
+            assert_eq!(
+                actual_plants,
+                *expected.plants.as_ref().expect("AAA floor-4 plants"),
+                "{context} exact plants"
+            );
+            let actual_blobs: Vec<_> = map
+                .blobs
+                .iter()
+                .map(|blob| OracleBlob {
+                    class_name: blob.class_name.clone(),
+                    volume: blob.volume,
+                    always_visible: blob.always_visible,
+                    cells: blob
+                        .cells
+                        .iter()
+                        .map(|cell| OracleBlobCell {
+                            cell: cell.cell,
+                            value: cell.value,
+                        })
+                        .collect(),
+                })
+                .collect();
+            assert_eq!(
+                actual_blobs,
+                *expected.blobs.as_ref().expect("AAA floor-4 blobs"),
+                "{context} exact blobs"
+            );
         }
     }
 }

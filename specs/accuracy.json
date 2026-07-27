@@ -32,7 +32,7 @@
       "status": "partial",
       "implemented": [
         "Layout and contents for covered special rooms, including Armory, Garden, Library, Pool, Crypt, Sacrifice, Toxic Gas, Traps, Sentry, Storage, Runestone, and Magical Fire",
-        "Secret rooms including the Maze, Hoard, Library, Artillery, Larder, and Chest Chasm",
+        "Secret rooms including the Garden, Maze, Hoard, Library, Artillery, Larder, and Chest Chasm",
         "Prize generation for those rooms, including the private scroll pool behind the Secret Library"
       ],
       "remaining": [

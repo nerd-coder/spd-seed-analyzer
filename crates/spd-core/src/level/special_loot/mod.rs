@@ -245,7 +245,7 @@ fn paint_special(
         "SecretHoardRoom" => secret_rooms::secret_hoard(dungeon, room, map),
         // Garden / well / pit / remaining secrets with portable prizes
         "GardenRoom" => gardens::garden_prizes(room, map, items_to_spawn),
-        "SecretGardenRoom" => gardens::secret_garden_prizes(room),
+        "SecretGardenRoom" => gardens::secret_garden_prizes(room, map),
         "MagicWellRoom" => gardens::magic_well(room, map, items_to_spawn),
         "SecretWellRoom" => gardens::secret_well(),
         "PitRoom" => pit_secrets::pit_prizes(dungeon, room, map),

@@ -3,7 +3,7 @@
 use super::placement::burn_drop_pos;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::level::create_items::PlacedLoot;
-use crate::level::terrain::{TerrainMap, EMPTY, WALL, WELL};
+use crate::level::terrain::{TerrainMap, EMPTY, GRASS, HIGH_GRASS, WALL, WELL};
 use crate::random::Random;
 use crate::rooms::room::Room;
 
@@ -70,30 +70,85 @@ fn plant_pos(
     }
 }
 
-/// `SecretGardenRoom.paint` — Starflower + Seedpod + Dewcatcher + 50% extra.
-/// `Patch.generate` grass layout is burned for RNG stream parity (approx plant cells).
-pub(super) fn secret_garden_prizes(room: &Room) -> Vec<PlacedLoot> {
+/// `SecretGardenRoom.paint` — grass patch plus Starflower, Seedpod, Dewcatcher,
+/// and a 50% extra Seedpod or Dewcatcher.
+pub(super) fn secret_garden_prizes(room: &Room, map: &mut TerrainMap) -> Vec<PlacedLoot> {
+    for y in room.top..=room.bottom {
+        for x in room.left..=room.right {
+            if let Some(cell) = map.point_to_cell(x, y) {
+                map.map[cell] =
+                    if x > room.left && x < room.right && y > room.top && y < room.bottom {
+                        GRASS
+                    } else {
+                        WALL
+                    };
+            }
+        }
+    }
+
     // Patch.generate(w-2, h-2, 0.5, clustering=0, forceFillRate=true)
     let pw = (room.width() - 2).max(0);
     let ph = (room.height() - 2).max(0);
-    let _ = crate::level::patch::generate(pw, ph, 0.5, 0, true);
+    let grass = crate::level::patch::generate(pw, ph, 0.5, 0, true);
+    for y in (room.top + 1)..room.bottom {
+        for x in (room.left + 1)..room.right {
+            let patch_cell = ((x - room.left - 1) + (y - room.top - 1) * pw) as usize;
+            if grass.get(patch_cell).copied().unwrap_or(false) {
+                let cell = map.point_to_cell(x, y).expect("secret garden lies on map");
+                map.map[cell] = HIGH_GRASS;
+            }
+        }
+    }
 
     let mut out = Vec::new();
     let mut occupied = Vec::new();
-    for class in ["StarflowerSeed", "SeedpodSeed", "DewcatcherSeed"] {
-        burn_drop_pos(room, &mut occupied);
-        out.push(plant_loot(class, "SecretGardenRoom"));
+    for (seed, plant, image) in [
+        ("StarflowerSeed", "Starflower", 9),
+        ("SeedpodSeed", "Seedpod", 14),
+        ("DewcatcherSeed", "Dewcatcher", 13),
+    ] {
+        secret_garden_plant(room, map, &mut occupied, plant, image);
+        out.push(plant_loot(seed, "SecretGardenRoom"));
     }
     // Java rolls the fourth seed's class before drawing its position, and a
     // repeated position costs another `Room.random` pair.
-    let extra = if Random::int_max(2) == 0 {
-        "SeedpodSeed"
+    let (extra_seed, extra_plant, extra_image) = if Random::int_max(2) == 0 {
+        ("SeedpodSeed", "Seedpod", 14)
     } else {
-        "DewcatcherSeed"
+        ("DewcatcherSeed", "Dewcatcher", 13)
     };
-    burn_drop_pos(room, &mut occupied);
-    out.push(plant_loot(extra, "SecretGardenRoom"));
+    secret_garden_plant(room, map, &mut occupied, extra_plant, extra_image);
+    out.push(plant_loot(extra_seed, "SecretGardenRoom"));
+
+    for y in (room.top + 1)..room.bottom {
+        for x in (room.left + 1)..room.right {
+            let cell = map.point_to_cell(x, y).expect("secret garden lies on map");
+            map.record_blob_cell("Foliage", false, cell, 1);
+        }
+    }
     out
+}
+
+fn secret_garden_plant(
+    room: &Room,
+    map: &mut TerrainMap,
+    occupied: &mut Vec<(i32, i32)>,
+    class_name: &'static str,
+    image: u8,
+) {
+    let before = occupied.len();
+    burn_drop_pos(room, occupied);
+    let &(x, y) = occupied.get(before).expect("plantPos adds an unused cell");
+    let cell = map
+        .point_to_cell(x, y)
+        .expect("secret garden plant lies on map");
+    // `Level.plant` converts high grass before couching the plant.
+    if map.map[cell] == HIGH_GRASS {
+        map.map[cell] = GRASS;
+    }
+    map.item_allowed[cell] = false;
+    map.character_allowed[cell] = false;
+    map.record_plant(cell, class_name, image);
 }
 
 fn plant_loot(class_name: &str, source: &str) -> PlacedLoot {

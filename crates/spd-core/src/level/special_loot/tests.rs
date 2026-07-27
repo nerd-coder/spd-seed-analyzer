@@ -10,7 +10,7 @@ use super::trap_rooms::{
 use crate::geom::Point;
 use crate::items::model::ItemCategory;
 use crate::level::painter::DoorMap;
-use crate::level::terrain::{paint_minimal, EMPTY, EMPTY_SP, STATUE_SP, WALL};
+use crate::level::terrain::{paint_minimal, EMPTY, EMPTY_SP, HIGH_GRASS, STATUE_SP, WALL};
 use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
@@ -588,11 +588,20 @@ fn garden_and_well_prizes() {
     Random::reset_generators();
     Random::push_generator_seeded(4);
     let room = test_room("SecretGardenRoom", 8, 8);
-    let secret = secret_garden_prizes(&room);
+    let mut map = paint_minimal(std::slice::from_ref(&room)).expect("secret garden map");
+    let secret = secret_garden_prizes(&room, &mut map);
     Random::pop_generator();
     assert_eq!(secret.len(), 4);
     assert_eq!(secret[0].item.class_name, "StarflowerSeed");
     assert!(secret
         .iter()
         .all(|p| p.item.source.as_deref() == Some("SecretGardenRoom")));
+    assert_eq!(map.known_plants.iter().flatten().count(), 4);
+    assert_eq!(
+        map.map.iter().filter(|&&tile| tile == HIGH_GRASS).count(),
+        23
+    );
+    assert_eq!(map.known_blobs.len(), 1);
+    assert_eq!(map.known_blobs[0].class_name, "Foliage");
+    assert_eq!(map.known_blobs[0].cells.len(), 49);
 }
