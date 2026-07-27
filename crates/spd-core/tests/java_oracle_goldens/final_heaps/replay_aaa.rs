@@ -113,49 +113,6 @@ fn aaa_replay_pins_floors_six_through_eleven_across_the_tengu_lifecycle() {
         }
 
         if depth == 7 {
-            let main_drop_cells = [281, 662, 812, 997, 2131];
-            let actual_main_drops: Vec<_> = map
-                .heaps
-                .iter()
-                .filter(|heap| main_drop_cells.contains(&heap.cell))
-                .map(|heap| OracleHeap {
-                    cell: heap.cell,
-                    heap_type: heap.heap_type.clone(),
-                    items: heap
-                        .items
-                        .iter()
-                        .map(|item| OracleItem {
-                            class_name: item.class_name.clone(),
-                            quantity: item.quantity,
-                            level: item.level,
-                            cursed: item.cursed,
-                        })
-                        .collect(),
-                })
-                .collect();
-            let expected_main_drops: Vec<_> = expected
-                .final_heaps
-                .iter()
-                .filter(|heap| main_drop_cells.contains(&heap.cell))
-                .map(|heap| OracleHeap {
-                    cell: heap.cell,
-                    heap_type: heap.heap_type.clone(),
-                    items: heap
-                        .items
-                        .iter()
-                        .map(|item| OracleItem {
-                            class_name: item.class_name.clone(),
-                            quantity: item.quantity,
-                            level: item.level,
-                            cursed: item.cursed,
-                        })
-                        .collect(),
-                })
-                .collect();
-            assert_eq!(
-                actual_main_drops, expected_main_drops,
-                "{context} exact five main Generator drops"
-            );
             let oracle = expected.terrain.as_ref().unwrap();
             let garden = expected
                 .room_bounds

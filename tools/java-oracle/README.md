@@ -157,7 +157,8 @@ these commands (stdout is the default when `--output` is omitted):
   GFX-PZH-DCH
 ```
 
-`--final-heaps-depth` always emits the additive render fields. The AAA-AAA-AAA,
+`--final-heaps-depth` accepts every depth from 1 through 26 and always emits
+the additive render fields. The AAA-AAA-AAA,
 AAA-AAA-AAD, ABC-DEF-GHI, GFX-PZH-DCH, and `hello` depth-one fixtures
 intentionally scope their assertions to lifecycle facts, so their `terrain`,
 `discoverable`, `tile_variance`, `transitions`, `traps`, `plants`, and `blobs`

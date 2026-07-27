@@ -255,6 +255,7 @@ fn heap_item(item: &GeneratedItem) -> MapHeapItem {
         quantity: item.quantity,
         level: item.level,
         cursed: item.cursed,
+        source: item.source.clone(),
     }
 }
 

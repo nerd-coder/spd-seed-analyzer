@@ -57,22 +57,6 @@ fn gfx_floor_six_secret_library_restores_preserved_run_lifecycle() {
         .collect::<Vec<_>>();
     assert_eq!(actual_mobs, expected.final_mobs, "GFX floor-6 mobs");
 
-    let main_drop_cells = [512, 560, 1786];
-    let main_drops = map
-        .heaps
-        .iter()
-        .filter(|heap| main_drop_cells.contains(&heap.cell))
-        .map(|heap| (heap.cell, heap.items[0].class_name.as_str()))
-        .collect::<Vec<_>>();
-    assert_eq!(
-        main_drops,
-        [
-            (512, "PotionOfLevitation"),
-            (560, "PotionOfInvisibility"),
-            (1786, "ScrollOfIdentify"),
-        ],
-        "GFX floor-6 three general Generator draws"
-    );
     let secret_library_cells = [1380, 1428, 1527];
     let secret_library_drops = map
         .heaps

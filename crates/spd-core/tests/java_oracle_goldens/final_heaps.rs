@@ -56,6 +56,99 @@ fn signatures(items: &[ComparableItem]) -> Vec<String> {
         .collect()
 }
 
+fn normalize_oracle_class(class_name: &str) -> &str {
+    if class_name.ends_with("Seed") {
+        "Seed"
+    } else {
+        class_name
+    }
+}
+
+fn assert_main_loop_heaps_match(
+    actual: &spd_core::level::LevelState,
+    expected: &OracleFloor,
+    context: &impl std::fmt::Display,
+) -> usize {
+    let map = actual.map.as_ref().expect("regular floor map");
+    let mut compared = 0;
+    let mut expected_items: Vec<_> = expected
+        .final_heaps
+        .iter()
+        .flat_map(|heap| heap.items.iter())
+        .collect();
+
+    for heap in &map.heaps {
+        for item in &heap.items {
+            if item.source.as_deref() != Some("heap") {
+                continue;
+            }
+            compared += 1;
+            let expected_index = expected_items
+                .iter()
+                .position(|expected_item| {
+                    expected_item.class_name == normalize_oracle_class(&item.class_name)
+                        && expected_item.quantity == item.quantity
+                        && expected_item.level == item.level
+                        && expected_item.cursed == item.cursed
+                })
+                .unwrap_or_else(|| {
+                    panic!(
+                        "main-loop item has no Java final-heap match in {context}: item={item:?}"
+                    )
+                });
+            expected_items.remove(expected_index);
+        }
+    }
+
+    compared
+}
+
+#[test]
+fn every_covered_main_loop_spawn_matches_java_final_heaps() {
+    let mut compared_floors = 0;
+    let mut compared_items = 0;
+
+    for path in fixture_paths() {
+        let fixture = read_fixture(&path);
+        if !matches!(
+            fixture.schema_version,
+            FINAL_HEAPS_SCHEMA_VERSION | EXTENDED_FINAL_HEAPS_SCHEMA_VERSION
+        ) || fixture.contract.as_deref() != Some("final_placed_heaps")
+            || fixture.input.depths.len() != 1
+        {
+            continue;
+        }
+        let depth = fixture.input.depths[0];
+        if matches!(depth, 5 | 10 | 15 | 20 | 25 | 26) {
+            continue;
+        }
+
+        let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
+        let mut actual = None;
+        for replay_depth in 1..=depth {
+            dungeon.depth = replay_depth as i32;
+            actual = Some(create_level_partial(&mut dungeon));
+        }
+        let actual = actual.expect("positive fixture depth");
+        let expected = fixture.floors.first().expect("single oracle floor");
+        let context = path.display();
+        assert_eq!(expected.depth, depth, "fixture floor in {context}");
+        let item_count = assert_main_loop_heaps_match(&actual, expected, &context);
+        assert!(item_count > 0, "plain main-loop heap count in {context}");
+        compared_floors += 1;
+        compared_items += item_count;
+    }
+
+    assert!(
+        compared_floors >= 51,
+        "covered regular floors: {compared_floors}"
+    );
+    assert!(
+        compared_items >= 160,
+        "covered main-loop items: {compared_items}"
+    );
+}
+
 fn assert_aaa_regression_facts(
     fixture: &OracleFixture,
     floor: &OracleFloor,

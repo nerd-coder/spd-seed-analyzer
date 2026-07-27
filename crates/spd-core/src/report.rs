@@ -106,6 +106,10 @@ pub struct MapHeapItem {
     pub quantity: i32,
     pub level: i32,
     pub cursed: bool,
+    /// Internal generation provenance for parity checks; never serialized.
+    #[doc(hidden)]
+    #[serde(skip)]
+    pub source: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

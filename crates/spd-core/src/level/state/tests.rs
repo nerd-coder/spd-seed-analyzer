@@ -88,6 +88,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
                         quantity: 1,
                         level: 0,
                         cursed: false,
+                        source: None,
                     }],
                 },
                 MapHeap {
@@ -98,6 +99,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
                         quantity: 1,
                         level: 0,
                         cursed: false,
+                        source: None,
                     }],
                 },
                 MapHeap {
@@ -108,6 +110,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
                         quantity: 1,
                         level: 0,
                         cursed: false,
+                        source: None,
                     }],
                 },
                 MapHeap {
@@ -118,6 +121,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
                         quantity: 1,
                         level: 0,
                         cursed: false,
+                        source: None,
                     }],
                 },
             ],
