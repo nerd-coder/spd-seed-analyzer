@@ -11,10 +11,17 @@ still `partial`.
 
 ## 1. Restore quest-NPC placement parity
 
-Compare the failing fixture boundaries in `quests::placement_oracle_tests`
-against painter output. Fix entrance/exit room terrain and flags before reward
-logic. When all 18 boundaries match, remove both NPC tail guards and update the
-accuracy manifest.
+The failing AAD boundaries have the same transition-room class, bounds, and map
+width as Java (`WaterBridgeExitRoom` on floor 4 and `PillarsEntranceRoom` on
+floor 8), so the remaining drift starts in painter RNG consumption rather than
+room selection or builder geometry. The test now prints both full boundaries
+when a pinned mismatch changes.
+
+Next, add non-consuming Java painter checkpoints for the six failing
+seed/depth pairs and compare them with `room_paint_rng_checkpoints` to locate the
+first divergent callback. Fix that painter or door pass, then require all 18
+NPC boundaries to match. Remove both NPC tail guards and update the accuracy
+manifest only after the full matrix passes.
 
 ## 2. Then sharpen the Sad Ghost reward
 

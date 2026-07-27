@@ -106,8 +106,8 @@ mod placement_oracle_tests {
     }
 
     fn trace_matches(
-        _seed: &str,
-        _npc: &str,
+        seed: &str,
+        npc: &str,
         actual: (i32, i32, usize, Vec<i32>),
         expected: &SpawnFact,
     ) -> bool {
@@ -117,6 +117,9 @@ mod placement_oracle_tests {
             expected.cell,
             expected.rng_tail.clone(),
         );
+        if actual != expected {
+            eprintln!("{seed} {npc}: actual={actual:?} expected={expected:?}");
+        }
         actual == expected
     }
 }
