@@ -11,17 +11,22 @@ still `partial`.
 
 ## 1. Restore quest-NPC placement parity
 
-The failing AAD boundaries have the same transition-room class, bounds, and map
-width as Java (`WaterBridgeExitRoom` on floor 4 and `PillarsEntranceRoom` on
-floor 8), so the remaining drift starts in painter RNG consumption rather than
-room selection or builder geometry. The test now prints both full boundaries
-when a pinned mismatch changes.
+The Java oracle now supports non-consuming room-callback and `paintDoors`
+checkpoints on every regular Sewer and Prison depth. Comparing the six failing
+NPC boundaries localized four paths:
 
-Next, add non-consuming Java painter checkpoints for the six failing
-seed/depth pairs and compare them with `room_paint_rng_checkpoints` to locate the
-first divergent callback. Fix that painter or door pass, then require all 18
-NPC boundaries to match. Remove both NPC tail guards and update the accuracy
-manifest only after the full matrix passes.
+- AAD floor 4 first diverges in `StatueRoom` (Rust is six 32-bit draws behind).
+- AAD floor 8 first diverges in `MassGraveRoom`; ABR floor 8 stays aligned until
+  its later `StatueRoom`.
+- AAC floor 4 matches every room callback and first diverges in `paintDoors`.
+- AAC floor 7 and AAU floor 9 already have a different paint order; compare the
+  oracle's pre-shuffle room list with Rust before changing their painters.
+
+Next, pin focused regression tests for `StatueRoom` and `MassGraveRoom`, port
+their missing RNG consumption from Java, and re-run all six traces. Then locate
+the door-pass and pre-shuffle faults, require all 18 NPC boundaries to match,
+and remove both NPC tail guards. Update the accuracy manifest only after the
+full matrix passes.
 
 ## 2. Then sharpen the Sad Ghost reward
 

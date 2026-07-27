@@ -48,9 +48,9 @@ final class HallsPaintTraceOracle {
 	}
 
 	static String generate(long seed, int depth) {
-		if (depth != 2 && depth != 6 && depth != 12 && (depth < 16 || depth > 19)
+		if ((depth < 2 || depth > 4) && (depth < 6 || depth > 9) && depth != 12 && (depth < 16 || depth > 19)
 				&& (depth < 21 || depth > 24)) {
-			throw new IllegalArgumentException("Paint trace supports depth 2, depths 6 and 12, regular City depths 16 through 19, or regular Halls depths 21 through 24");
+			throw new IllegalArgumentException("Paint trace supports regular Sewer depths 2 through 4, Prison depths 6 through 9, depth 12, regular City depths 16 through 19, or regular Halls depths 21 through 24");
 		}
 		FloorOracle.initializeFreshRun(seed);
 		FloorOracle.generatePriorFloors(depth);
@@ -67,8 +67,8 @@ final class HallsPaintTraceOracle {
 		TracePrisonLevel.drops.clear();
 		Dungeon.daily = true;
 		try {
-			if (depth == 2) new TraceSewerLevel().create();
-			else if (depth == 6) new TracePrisonLevel().create();
+			if (depth <= 4) new TraceSewerLevel().create();
+			else if (depth <= 9) new TracePrisonLevel().create();
 			else if (depth == 12) new TraceCavesLevel().create();
 			else if (depth <= 19) new TraceCityLevel().create();
 			else new TraceHallsLevel().create();
