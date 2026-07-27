@@ -128,7 +128,7 @@ export function FloorItemList({
             ? null
             : formatItemSource(item.source)
         return (
-          <li key={`${depth}-${index}`} className="flex items-start gap-2">
+          <li key={`${depth}-${index}`} className="flex items-center gap-2">
             {item.source === 'Imp.Quest' && item.candidate_classes?.length ? (
               <ImpRingOptions
                 item={item}
@@ -156,7 +156,7 @@ export function FloorItemList({
                     className="mt-0.5"
                   />
                 )}
-                <span className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+                <span className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
                   <ItemName name={item.name} />
                   {item.quantity > 1 ? (
                     <span className="font-mono text-muted-foreground tabular-nums">
