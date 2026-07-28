@@ -122,6 +122,58 @@ function CandidateOptions({
   )
 }
 
+function CatalystOffers({
+  item,
+  identities,
+  identitySpoilers,
+}: {
+  item: ItemEntry
+  identities: IdentityMaps
+  identitySpoilers: boolean
+}) {
+  return (
+    <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+      <div className="flex items-center gap-2">
+        <ItemIcon
+          classNameItem={item.class_name}
+          category={item.category}
+          appearance={
+            identitySpoilers ? itemAppearance(item, identities) : undefined
+          }
+          size={16}
+          title={item.name}
+          className="mt-0.5"
+        />
+        <ItemName name={item.name} />
+      </div>
+      <div className="flex flex-col gap-1 pl-6">
+        <span className="font-medium text-muted-foreground">
+          Trinket offers
+        </span>
+        {item.candidate_classes?.map((className) => {
+          const candidate = { category: item.category, class_name: className }
+          return (
+            <div key={className} className="flex items-center gap-2">
+              <ItemIcon
+                classNameItem={className}
+                category={item.category}
+                appearance={
+                  identitySpoilers
+                    ? itemAppearance(candidate, identities)
+                    : undefined
+                }
+                size={16}
+                title={finderItemLabel(className)}
+              />
+              <ItemName name={finderItemLabel(className)} />
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 export function FloorItemList({
   items,
   identities,
@@ -147,11 +199,19 @@ export function FloorItemList({
         return (
           <li key={`${depth}-${index}`} className="flex items-center gap-2">
             {item.candidate_classes?.length ? (
-              <CandidateOptions
-                item={item}
-                identities={identities}
-                identitySpoilers={identitySpoilers}
-              />
+              item.name === 'Trinket Catalyst' ? (
+                <CatalystOffers
+                  item={item}
+                  identities={identities}
+                  identitySpoilers={identitySpoilers}
+                />
+              ) : (
+                <CandidateOptions
+                  item={item}
+                  identities={identities}
+                  identitySpoilers={identitySpoilers}
+                />
+              )
             ) : (
               <>
                 {item.name === 'artifact or ring' ? (
