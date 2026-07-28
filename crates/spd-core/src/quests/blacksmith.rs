@@ -179,8 +179,9 @@ fn generate_rewards(
     }
 
     // Always generate first so outcome doesn't affect RNG roll count. The
-    // effect identity is seed-determined; applying it depends on Parchment
-    // Scrap state when the reward is claimed.
+    // effect identity is fixed for the replayed generation profile; retention
+    // depends on Parchment Scrap held now, when the floor and reward pool are
+    // generated. Claiming later only applies the already stored enchant/glyph.
     let enchant = enchants::random_weapon_enchant(None).to_string();
     let glyph = enchants::random_armor_glyph(None).to_string();
     let enchant_roll = Random::float();
@@ -202,7 +203,8 @@ fn generate_rewards(
         let tier = crate::generator::equipment_tier_for_class(&item.class_name)
             .expect("blacksmith equipment has a tier");
         item.potential_enchantment = match item.category {
-            crate::items::model::ItemCategory::Weapon => {
+            crate::items::model::ItemCategory::Weapon
+            | crate::items::model::ItemCategory::Missile => {
                 smith_enchant.clone().or_else(|| Some(enchant.clone()))
             }
             crate::items::model::ItemCategory::Armor => {
@@ -239,65 +241,5 @@ fn generate_rewards(
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::run::init_run;
-
-    #[test]
-    fn rewards_deterministic() {
-        let gen_template = init_run(42).generator;
-
-        Random::reset_generators();
-        Random::push_generator_seeded(999);
-        let mut a = BlacksmithQuestState::default();
-        generate_rewards(&mut a, &mut gen_template.clone(), 13, true);
-        Random::pop_generator();
-
-        Random::reset_generators();
-        Random::push_generator_seeded(999);
-        let mut b = BlacksmithQuestState::default();
-        generate_rewards(&mut b, &mut gen_template.clone(), 13, true);
-        Random::pop_generator();
-
-        assert_eq!(a.smith_rewards.len(), 4);
-        assert_eq!(a.smith_rewards.len(), b.smith_rewards.len());
-        for (x, y) in a.smith_rewards.iter().zip(b.smith_rewards.iter()) {
-            assert_eq!(x.class_name, y.class_name);
-            assert_eq!(x.level, y.level);
-            assert!(!x.cursed);
-            assert!(x.enchantment.is_none());
-        }
-        assert_eq!(a.smith_enchant, b.smith_enchant);
-        assert_eq!(a.smith_glyph, b.smith_glyph);
-        // Two weapons must differ in class
-        assert_ne!(a.smith_rewards[0].class_name, a.smith_rewards[1].class_name);
-        assert!(a.smith_rewards[0].potential_enchantment.is_some());
-        assert!(a.smith_rewards[1].potential_enchantment.is_some());
-        assert!(a.smith_rewards[3].potential_enchantment.is_some());
-    }
-
-    #[test]
-    fn depth14_always_spawns_when_not_spawned() {
-        Random::reset_generators();
-        let mut bs = BlacksmithQuestState::default();
-        let mut gen = init_run(1).generator;
-        Random::push_generator_seeded(1);
-        let mut specs = Vec::new();
-        assert!(try_spawn(&mut bs, &mut gen, 14, &mut specs));
-        assert_eq!(specs[0].name, "BlacksmithRoom");
-        assert!(matches!(bs.quest_type, 1 | 2));
-        assert_eq!(bs.smith_rewards.len(), 4);
-        assert!(bs.pending_summary.is_some());
-        Random::pop_generator();
-    }
-
-    #[test]
-    fn depth11_never_spawns() {
-        Random::reset_generators();
-        let mut bs = BlacksmithQuestState::default();
-        let mut gen = init_run(1).generator;
-        let mut specs = Vec::new();
-        assert!(!try_spawn(&mut bs, &mut gen, 11, &mut specs));
-        assert!(specs.is_empty());
-    }
-}
+#[path = "blacksmith/tests.rs"]
+mod tests;

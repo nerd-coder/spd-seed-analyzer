@@ -314,6 +314,15 @@ mechanisms would have to leak for run history to move them; two are closed.
   special-cases it to `randomUsingDefaults` precisely because grass, not
   levelgen, is its dominant source.
 
+  Troll Blacksmith's normal spawn-time `generateRewards(true)` also avoids the
+  decks: its misleading `useDecks` parameter is passed directly into
+  `randomWeapon` / `randomMissile` as `useDefaults=true`
+  (`Blacksmith.java:364-384`, `Generator.java:808-818`, `:841-851`). The
+  defensive `WndBlacksmith.generateRewards(false)` fallback is deck-backed,
+  but the stored pool is already present in an ordinary fresh quest and one
+  Smith purchase cannot reach that fallback. Full lifecycle details are in
+  `specs/quest-rewards/blacksmith.md`.
+
 **Not closed: ARTIFACT.** `randomUsingDefaults(cat)` routes artifacts straight
 back into the deck (`Generator.java:745-750`, comment: *"except for artifacts,
 which must always use a deck"*), so these runtime sources all advance

@@ -20,14 +20,14 @@ pub(super) fn take_pending(dungeon: &mut DungeonState) -> InitQuestRewards {
     };
 
     if let Some(bs) = quests::take_blacksmith_pending(&mut dungeon.blacksmith) {
-        let public_summary = safe_summary(
-            &bs.summary,
-            "You will get access to those items if you select Smith",
-        );
+        let public_summary = "Troll Blacksmith (floors 12–14; Crystal or Gnoll) — spend 2,000 favor on Smith to choose one of four options".into();
         result.summaries.push(bs.summary);
         result.public_labels.push(Some(public_summary));
         for mut reward in bs.rewards {
-            if reward.category == ItemCategory::Weapon {
+            if matches!(
+                reward.category,
+                ItemCategory::Weapon | ItemCategory::Missile
+            ) {
                 reward.enchantment = bs.smith_enchant.clone();
             } else if reward.category == ItemCategory::Armor {
                 reward.enchantment = bs.smith_glyph.clone();

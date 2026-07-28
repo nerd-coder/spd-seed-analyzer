@@ -36,7 +36,8 @@
         "Which of the four Trinket Catalyst offers a player takes is not a seed fact",
         "The Sad Ghost's concrete spawn depth, tiers, levels, and option identities can change with player state before the Ghost appears. The analyzer can recalculate the no-Tooth and held Mimic Tooth +0 to +3 cases from the chosen floor; other trinkets, challenges, and earlier artifact history are not yet enumerated",
         "The Old Wandmaker's concrete spawn floor, quest type, wand classes, and wand levels can change with earlier run choices. Reports keep only the route-independent contract: two distinct uncursed +1 to +3 wand options, with at most one claimable",
-        "The Troll Blacksmith and Ambitious Imp still need the same end-to-end player-state audit"
+        "The Troll Blacksmith's concrete spawn floor, quest type, Smith classes, shared level, and effect identities can change if Mossy Clump shifts generation. Reports keep four mutually exclusive tier 3 to 5, +0 to +3, uncursed options; Parchment Scrap +1 held before the floor guarantees the paired effects. Reset-floor routes are not enumerated",
+        "The Ambitious Imp still needs the same end-to-end player-state audit"
       ],
       "impact": "Reports understate ordinary loot, and a listed quest option can be the analyzer's baseline route rather than the only possible option in a played run."
     },

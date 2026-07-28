@@ -28,15 +28,14 @@ fn prediction_kind(item: &GeneratedItem) -> ItemPredictionKind {
             QuestRewardRole::GhostWeapon { .. }
             | QuestRewardRole::WandmakerWand
             | QuestRewardRole::ImpRing { .. }
+            | QuestRewardRole::BlacksmithWeapon { .. }
+            | QuestRewardRole::BlacksmithMissile { .. }
+            | QuestRewardRole::BlacksmithArmor { .. }
             | QuestRewardRole::BlacksmithRoomWeapon { .. }
             | QuestRewardRole::BlacksmithRoomMissile { .. },
         ) => ItemPredictionKind::Constrained,
         ItemProvenance::Quest(
-            QuestRewardRole::GhostArmor { .. }
-            | QuestRewardRole::BlacksmithWeapon { .. }
-            | QuestRewardRole::BlacksmithMissile { .. }
-            | QuestRewardRole::BlacksmithArmor { .. }
-            | QuestRewardRole::BlacksmithRoomArmor { .. },
+            QuestRewardRole::GhostArmor { .. } | QuestRewardRole::BlacksmithRoomArmor { .. },
         ) => ItemPredictionKind::Exact,
         ItemProvenance::Room(_) | ItemProvenance::Forced(_) => ItemPredictionKind::Constrained,
         _ => ItemPredictionKind::Exact,
@@ -276,11 +275,11 @@ impl LevelState {
                 (
                     _,
                     Some(
-                        QuestRewardRole::BlacksmithWeapon { tier, .. }
-                        | QuestRewardRole::BlacksmithMissile { tier, .. }
-                        | QuestRewardRole::BlacksmithArmor { tier, .. },
+                        QuestRewardRole::BlacksmithWeapon { .. }
+                        | QuestRewardRole::BlacksmithMissile { .. }
+                        | QuestRewardRole::BlacksmithArmor { .. },
                     ),
-                ) => Some(tier),
+                ) => None,
                 (
                     _,
                     Some(
@@ -339,19 +338,14 @@ impl LevelState {
                 ) => Some(minimum_parchment_level),
                 _ => None,
             };
-            let blacksmith_enchantment_condition = match quest_role {
+            let blacksmith_smith_option = matches!(
+                quest_role,
                 Some(
-                    QuestRewardRole::BlacksmithWeapon {
-                        minimum_parchment_level,
-                        ..
-                    }
-                    | QuestRewardRole::BlacksmithArmor {
-                        minimum_parchment_level,
-                        ..
-                    },
-                ) => Some(minimum_parchment_level),
-                _ => None,
-            };
+                    QuestRewardRole::BlacksmithWeapon { .. }
+                        | QuestRewardRole::BlacksmithMissile { .. }
+                        | QuestRewardRole::BlacksmithArmor { .. }
+                )
+            );
             let prediction = if imp_identity.is_some_and(|(exact, _)| exact)
                 || ghost_weapon.is_some_and(|_| item.candidate_classes.len() == 1)
             {
@@ -398,15 +392,23 @@ impl LevelState {
                     format!("{:?}", item.category).to_ascii_lowercase()
                 },
                 tier,
-                tier_range: None,
+                tier_range: blacksmith_smith_option.then_some(NumericRange { min: 3, max: 5 }),
                 level: match quest_role {
                     Some(QuestRewardRole::WandmakerWand) => None,
+                    Some(
+                        QuestRewardRole::BlacksmithWeapon { .. }
+                        | QuestRewardRole::BlacksmithMissile { .. }
+                        | QuestRewardRole::BlacksmithArmor { .. },
+                    ) => None,
                     Some(_) => Some(item.level),
                     None if artifact_conditional => Some(item.level),
                     None => reported_level(item, constrained, shop_role),
                 },
-                level_range: (quest_role == Some(QuestRewardRole::WandmakerWand))
-                    .then_some(NumericRange { min: 1, max: 3 }),
+                level_range: if quest_role == Some(QuestRewardRole::WandmakerWand) {
+                    Some(NumericRange { min: 1, max: 3 })
+                } else {
+                    blacksmith_smith_option.then_some(NumericRange { min: 0, max: 3 })
+                },
                 cursed: if matches!(
                     quest_role,
                     Some(
@@ -419,7 +421,9 @@ impl LevelState {
                 } else {
                     Some(item.cursed)
                 },
-                enchantment: item.potential_enchantment.clone(),
+                enchantment: (!blacksmith_smith_option)
+                    .then(|| item.potential_enchantment.clone())
+                    .flatten(),
                 prediction,
                 conditional_notes: ghost_enchantment_condition
                     .flatten()
@@ -430,24 +434,21 @@ impl LevelState {
                             level
                         )]
                     })
-                    .or_else(|| {
-                        blacksmith_enchantment_condition
-                            .flatten()
-                            .map(|level| {
-                                vec![format!(
-                                    "{} — applied only with Parchment Scrap +{} or better",
-                                    item.potential_enchantment
-                                        .as_deref()
-                                        .unwrap_or("Enchantment"),
-                                    level
-                                )]
-                            })
-                    })
                     .unwrap_or_else(|| {
                         let mut notes = Vec::new();
                         if quest_role == Some(QuestRewardRole::WandmakerWand) {
                             notes.push(
                                 "One of two distinct wand options; completing the quest lets you choose one."
+                                .into(),
+                            );
+                        }
+                        if blacksmith_smith_option {
+                            notes.push(
+                                "One of four mutually exclusive options, available only if you spend 2,000 favor on Smith."
+                                    .into(),
+                            );
+                            notes.push(
+                                "All four options share one +0…+3 level roll. A weapon enchantment and armor glyph are retained together; Parchment Scrap +1 guarantees both when held before this floor is generated."
                                     .into(),
                             );
                         }

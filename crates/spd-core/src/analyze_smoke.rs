@@ -439,11 +439,24 @@ fn blacksmith_quest_spawns_within_caves() {
                     rewards
                 );
                 assert!(rewards.iter().all(|item| {
-                    item.prediction == report::ItemPredictionKind::Exact
-                        && item.class_name.is_some()
-                        && item.tier.is_some()
-                        && item.level.is_some()
+                    item.prediction == report::ItemPredictionKind::Constrained
+                        && item.class_name.is_none()
+                        && item.candidate_classes.is_empty()
+                        && item.tier.is_none()
+                        && item.tier_range == Some(report::NumericRange { min: 3, max: 5 })
+                        && item.level.is_none()
+                        && item.level_range == Some(report::NumericRange { min: 0, max: 3 })
                         && item.cursed == Some(false)
+                        && item.enchantment.is_none()
+                        && item.conditional_notes.iter().any(|note| {
+                            note.contains("four mutually exclusive options")
+                                && note.contains("2,000 favor")
+                        })
+                        && item.conditional_notes.iter().any(|note| {
+                            note.contains("share one +0…+3 level roll")
+                                && note.contains("Parchment Scrap +1")
+                                && note.contains("before this floor is generated")
+                        })
                 }));
                 let room_rewards: Vec<_> = f
                     .items
@@ -481,7 +494,10 @@ fn blacksmith_quest_spawns_within_caves() {
                     .iter()
                     .filter(|q| q.contains("Blacksmith"))
                     .all(|q| {
-                        q.ends_with(" — You will get access to those items if you select Smith")
+                        q.contains("floors 12–14; Crystal or Gnoll")
+                            && q.ends_with(
+                                " — spend 2,000 favor on Smith to choose one of four options",
+                            )
                     }));
                 break;
             }
