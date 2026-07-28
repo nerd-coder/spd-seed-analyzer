@@ -3,6 +3,8 @@ import { MAP_RENDER_FIXTURES } from './map-render-fixtures'
 
 const APP_STORAGE = {
   mode: 'spd-analyzer-mode',
+  runSettings: 'spd-analyzer-run-settings:v1',
+  testInitialized: 'spd-analyzer-visual-test-initialized',
   theme: 'spd-analyzer-theme',
 } as const
 
@@ -129,11 +131,17 @@ async function installSyntheticMapReport(page: Page) {
       onerror: ((event: ErrorEvent) => void) | null = null
       postMessage(message: {
         type?: string
-        mapProfile?: { forbidden_runes?: boolean }
+        mapProfile?: {
+          forbidden_runes?: boolean
+          held_trinkets?: unknown[]
+        }
       }) {
         if (message.type !== 'analyze') return
         document.documentElement.dataset.testForbiddenRunes = String(
           message.mapProfile?.forbidden_runes ?? false
+        )
+        document.documentElement.dataset.testHeldTrinkets = JSON.stringify(
+          message.mapProfile?.held_trinkets ?? []
         )
         setTimeout(() => {
           this.onmessage?.(
@@ -175,9 +183,12 @@ async function openAnalyzer(
 
   await page.emulateMedia({ colorScheme: 'light', reducedMotion })
   await page.addInitScript((storage) => {
-    localStorage.clear()
-    localStorage.setItem(storage.mode, 'analyze')
-    localStorage.setItem(storage.theme, 'light')
+    if (sessionStorage.getItem(storage.testInitialized) !== 'true') {
+      localStorage.clear()
+      localStorage.setItem(storage.mode, 'analyze')
+      localStorage.setItem(storage.theme, 'light')
+      sessionStorage.setItem(storage.testInitialized, 'true')
+    }
   }, APP_STORAGE)
 
   await page.goto('/')
@@ -516,7 +527,7 @@ test('Sad Ghost rewards identify the baseline as non-exhaustive', async ({
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
-test('Forbidden Runes is configurable while identities and maps stay visible', async ({
+test('Run settings persist while identities and maps stay visible', async ({
   page,
 }) => {
   await installSyntheticMapReport(page)
@@ -532,11 +543,57 @@ test('Forbidden Runes is configurable while identities and maps stay visible', a
     page.getByRole('button', { name: `Expand floor ${GENERIC_MAP_FLOOR} map` })
   ).toBeVisible()
 
+  await page.getByRole('button', { name: 'Add trinket change' }).click()
+  await expect(
+    page.getByRole('combobox', {
+      name: 'Trinket history entry 1',
+      exact: true,
+    })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Add trinket change' })
+  ).toBeEnabled()
   await challenge.click()
   await expect(challenge).toBeChecked()
   await expect(page.locator('html')).toHaveAttribute(
     'data-test-forbidden-runes',
     'true'
+  )
+  await expect(page.locator('html')).toHaveAttribute(
+    'data-test-held-trinkets',
+    JSON.stringify([{ trinket: 'mossy_clump', level: 0, start_depth: 4 }])
+  )
+
+  const savedSettings = await page.evaluate((key) => {
+    const value = localStorage.getItem(key)
+    return value ? JSON.parse(value) : null
+  }, APP_STORAGE.runSettings)
+  expect(savedSettings).toEqual([
+    {
+      sessionId: GENERIC_MAP_SEED,
+      profile: {
+        held_trinkets: [{ trinket: 'mossy_clump', level: 0, start_depth: 4 }],
+        meta: 'fresh',
+        forbidden_runes: true,
+      },
+    },
+  ])
+
+  await page.reload()
+  await expect(challenge).toBeChecked()
+  await expect(
+    page.getByRole('combobox', {
+      name: 'Trinket history entry 1',
+      exact: true,
+    })
+  ).toBeVisible()
+  await expect(page.locator('html')).toHaveAttribute(
+    'data-test-forbidden-runes',
+    'true'
+  )
+  await expect(page.locator('html')).toHaveAttribute(
+    'data-test-held-trinkets',
+    JSON.stringify([{ trinket: 'mossy_clump', level: 0, start_depth: 4 }])
   )
 
   expect(browserErrors.console, 'browser console errors').toEqual([])

@@ -7,7 +7,12 @@
 
 import type { MapProfile, SeedReport } from '@/lib/spd-wasm'
 import { analyzeSeedInWorker, type WorkerTask } from '@/lib/spd-worker-client'
-import { defaultMapProfile } from './map-profile'
+import {
+  defaultMapProfile,
+  pruneSavedMapProfiles,
+  savedMapProfile,
+  saveMapProfile,
+} from './map-profile'
 import { AppStore, derivedStore, persistentStore } from './store-utils'
 
 // —— keys / limits ————————————————————————————————————————————————
@@ -233,6 +238,7 @@ export function closeSeedSession(id: string) {
   if (idx < 0) return
   const next = prev.filter((s) => s.id !== id)
   $sessions.set(next)
+  pruneSavedMapProfiles(next.map((session) => session.id))
   setSavedInputs(next.map((s) => s.input))
   if ($activeSeedId.get() === id) {
     const fallback = next[idx] ?? next[idx - 1] ?? next[0] ?? null
@@ -296,6 +302,7 @@ async function analyzeSeedInputInternal(
   }
   nextSessions = [...nextSessions, session]
   $sessions.set(nextSessions)
+  pruneSavedMapProfiles(nextSessions.map((item) => item.id))
   setSavedInputs(nextSessions.map((s) => s.input))
   $activeSeedId.set(id)
   if (clearDraftOnCreate) {
@@ -329,6 +336,7 @@ export async function changeSeedMapProfile(
     return
   }
   patchSession(id, { mapProfile: profile })
+  saveMapProfile(id, profile)
   if (!session.report || session.status !== 'ready') return
   $analyzing.set(true)
   try {
@@ -369,20 +377,25 @@ export function startSessionRehydrate(): () => void {
 
   if (saved.length === 0) {
     $sessions.set([])
+    pruneSavedMapProfiles([])
     return () => {}
   }
 
-  const restored: SeedSession[] = saved.map((input) => ({
-    id: sessionIdFor(input),
-    input,
-    status: 'pending' as const,
-    report: null,
-    error: null,
-    startedAt: null,
-    finishedAt: null,
-    refreshingLayout: false,
-    mapProfile: defaultMapProfile(),
-  }))
+  const restored: SeedSession[] = saved.map((input) => {
+    const id = sessionIdFor(input)
+    return {
+      id,
+      input,
+      status: 'pending' as const,
+      report: null,
+      error: null,
+      startedAt: null,
+      finishedAt: null,
+      refreshingLayout: false,
+      mapProfile: savedMapProfile(id) ?? defaultMapProfile(),
+    }
+  })
+  pruneSavedMapProfiles(restored.map((session) => session.id))
 
   closedIds.clear()
   $sessions.set(restored)
