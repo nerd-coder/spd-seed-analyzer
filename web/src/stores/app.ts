@@ -3,7 +3,6 @@
  *
  * Implementation is split by concern:
  * - `sessions` — seed tabs, analyze, rehydrate
- * - `spoilers` — map / identity spoiler flags
  * - `meta` — SPD version/commit from wasm
  * - `theme` — light / dark / system preference
  * - `mode` — current mode (analyze / finder), persisted
@@ -46,9 +45,7 @@ export {
   type SessionStatus,
   sessionIdFor,
   setActiveSeed,
-  setSeedIdentitySpoilers,
   setSeedInput,
-  setSeedMapSpoilers,
   startSessionRehydrate,
   tabLabel,
 } from './sessions'

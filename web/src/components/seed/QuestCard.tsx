@@ -40,13 +40,11 @@ export function QuestCard({
   quest,
   rewards,
   identities,
-  identitySpoilers,
   depth,
 }: {
   quest: string
   rewards: ItemEntry[]
   identities: IdentityMaps
-  identitySpoilers: boolean
   depth: number
 }) {
   const parsed = parseQuest(quest)
@@ -110,7 +108,6 @@ export function QuestCard({
             <FloorItemList
               items={rewards}
               identities={identities}
-              identitySpoilers={identitySpoilers}
               depth={depth}
             />
           ) : null}
@@ -120,8 +117,8 @@ export function QuestCard({
               <AlertTitle>Other Ghost options may be possible</AlertTitle>
               <AlertDescription>
                 The listed pair is the analyzer’s baseline. Earlier trinket
-                choices, artifact history, or challenge settings can change
-                generation before the Ghost reward is rolled.
+                choices or artifact history can change generation before the
+                Ghost reward is rolled.
               </AlertDescription>
             </Alert>
           ) : null}

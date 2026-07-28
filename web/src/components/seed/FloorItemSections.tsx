@@ -69,11 +69,9 @@ function ConditionalNotes({ notes }: { notes?: string[] }) {
 function CandidateOptions({
   item,
   identities,
-  identitySpoilers,
 }: {
   item: ItemEntry
   identities: IdentityMaps
-  identitySpoilers: boolean
 }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -94,11 +92,7 @@ function CandidateOptions({
               <ItemIcon
                 classNameItem={className}
                 category={item.category}
-                appearance={
-                  identitySpoilers
-                    ? itemAppearance(candidate, identities)
-                    : undefined
-                }
+                appearance={itemAppearance(candidate, identities)}
                 size={16}
                 title={label}
                 className="mt-0.5"
@@ -128,11 +122,9 @@ function CandidateOptions({
 function CatalystOffers({
   item,
   identities,
-  identitySpoilers,
 }: {
   item: ItemEntry
   identities: IdentityMaps
-  identitySpoilers: boolean
 }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -140,9 +132,7 @@ function CatalystOffers({
         <ItemIcon
           classNameItem={item.class_name}
           category={item.category}
-          appearance={
-            identitySpoilers ? itemAppearance(item, identities) : undefined
-          }
+          appearance={itemAppearance(item, identities)}
           size={16}
           title={item.name}
           className="mt-0.5"
@@ -160,11 +150,7 @@ function CatalystOffers({
               <ItemIcon
                 classNameItem={className}
                 category={item.category}
-                appearance={
-                  identitySpoilers
-                    ? itemAppearance(candidate, identities)
-                    : undefined
-                }
+                appearance={itemAppearance(candidate, identities)}
                 size={16}
                 title={finderItemLabel(className)}
               />
@@ -180,13 +166,11 @@ function CatalystOffers({
 export function FloorItemList({
   items,
   identities,
-  identitySpoilers,
   depth,
   showConditionalNotes = true,
 }: {
   items: ItemEntry[]
   identities: IdentityMaps
-  identitySpoilers: boolean
   depth: number
   showConditionalNotes?: boolean
 }) {
@@ -205,17 +189,9 @@ export function FloorItemList({
           <li key={`${depth}-${index}`} className="flex items-center gap-2">
             {item.candidate_classes?.length ? (
               item.name === 'Trinket Catalyst' ? (
-                <CatalystOffers
-                  item={item}
-                  identities={identities}
-                  identitySpoilers={identitySpoilers}
-                />
+                <CatalystOffers item={item} identities={identities} />
               ) : (
-                <CandidateOptions
-                  item={item}
-                  identities={identities}
-                  identitySpoilers={identitySpoilers}
-                />
+                <CandidateOptions item={item} identities={identities} />
               )
             ) : (
               <>
@@ -228,11 +204,7 @@ export function FloorItemList({
                   <ItemIcon
                     classNameItem={item.class_name}
                     category={item.category}
-                    appearance={
-                      identitySpoilers
-                        ? itemAppearance(item, identities)
-                        : undefined
-                    }
+                    appearance={itemAppearance(item, identities)}
                     size={16}
                     title={item.name}
                     className="mt-0.5"
@@ -292,11 +264,9 @@ export function FloorItemList({
 export function FloorItemSections({
   floor,
   identities,
-  identitySpoilers,
 }: {
   floor: FloorReport
   identities: IdentityMaps
-  identitySpoilers: boolean
 }) {
   const groups = partitionFloorItems(floor.items)
   const impShop =
@@ -347,7 +317,6 @@ export function FloorItemSections({
           <FloorItemList
             items={items}
             identities={identities}
-            identitySpoilers={identitySpoilers}
             depth={floor.depth}
             showConditionalNotes={key !== 'loot'}
           />

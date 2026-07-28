@@ -8,15 +8,11 @@ export function SeedReportView({
   sessionId,
   mapProfile,
   refreshingLayout,
-  identitySpoilers,
-  mapSpoilers,
 }: {
   report: SeedReport
   sessionId: string
   mapProfile: MapProfile
   refreshingLayout: boolean
-  identitySpoilers: boolean
-  mapSpoilers: boolean
 }) {
   const hasFloors = report.floors.length > 0
 
@@ -27,17 +23,13 @@ export function SeedReportView({
         sessionId={sessionId}
         mapProfile={mapProfile}
         refreshingLayout={refreshingLayout}
-        identitySpoilers={identitySpoilers}
-        mapSpoilers={mapSpoilers}
       />
-      {identitySpoilers && <IdentitiesPanel identities={report.identities} />}
+      <IdentitiesPanel identities={report.identities} />
       {hasFloors && (
         <FloorsSection
           floors={report.floors}
           refreshingLayout={refreshingLayout}
           identities={report.identities}
-          identitySpoilers={identitySpoilers}
-          mapSpoilers={mapSpoilers}
         />
       )}
     </div>

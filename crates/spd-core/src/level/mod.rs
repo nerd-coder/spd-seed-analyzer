@@ -4,6 +4,7 @@ mod boss_layouts;
 mod build;
 mod create_items;
 mod create_mobs;
+mod forced_drops;
 mod map_facts;
 mod maze;
 mod painter;
@@ -117,19 +118,14 @@ fn create_level_internal(
             items_to_spawn.push(pot.clone());
             forced.push(pot);
         }
-        if dungeon.sou_needed() {
-            dungeon.limited.upgrade_scrolls += 1;
-            challenge_sensitive_upgrade_queue = dungeon.limited.upgrade_scrolls % 2 == 0;
-            if challenge_sensitive_upgrade_queue {
-                dungeon.public_generation_tainted = true;
-            }
-            let mut sou = GeneratedItem::new("ScrollOfUpgrade", ItemCategory::Scroll);
-            sou.source = Some("forced".into());
-            sou.provenance = ItemProvenance::Forced(ForcedDropRole::UpgradeScroll {
-                forbidden_runes_sensitive: challenge_sensitive_upgrade_queue,
-            });
-            items_to_spawn.push(sou.clone());
-            forced.push(sou);
+        challenge_sensitive_upgrade_queue = forced_drops::queue_upgrade_scroll(
+            dungeon,
+            configured_profile,
+            &mut items_to_spawn,
+            &mut forced,
+        );
+        if challenge_sensitive_upgrade_queue {
+            dungeon.public_generation_tainted = true;
         }
         if dungeon.as_needed() {
             dungeon.limited.arcane_styli += 1;
@@ -580,6 +576,11 @@ pub fn analyze_layouts_with_profile(
     max_floors: u32,
     profile: &MapProfile,
 ) -> Vec<FloorReport> {
+    dungeon.challenges = if profile.forbidden_runes {
+        crate::dungeon::FORBIDDEN_RUNES_CHALLENGE
+    } else {
+        0
+    };
     let mut floors = Vec::new();
     trinkets::reset(dungeon.seed);
     let max = max_floors.clamp(1, 26) as i32;
@@ -607,6 +608,9 @@ pub fn analyze_floors_with_profile(
     max_floors: u32,
     profile: Option<&MapProfile>,
 ) -> Vec<FloorReport> {
+    dungeon.challenges = profile
+        .filter(|profile| profile.forbidden_runes)
+        .map_or(0, |_| crate::dungeon::FORBIDDEN_RUNES_CHALLENGE);
     let mut floors = Vec::new();
     dungeon.ghost_rewards_profiled = profile.is_some_and(|profile| {
         matches!(

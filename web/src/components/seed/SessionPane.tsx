@@ -64,8 +64,6 @@ export function SessionPane({ session }: { session: SeedSession }) {
           sessionId={session.id}
           mapProfile={session.mapProfile}
           report={session.report}
-          identitySpoilers={session.identitySpoilers}
-          mapSpoilers={session.mapSpoilers}
         />
       </div>
     )

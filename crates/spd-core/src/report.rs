@@ -278,7 +278,7 @@ pub struct SeedReport {
     pub status: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,
-    /// Player-state assumptions used when producing deterministic maps.
+    /// Run assumptions used when producing generation results and maps.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub map_profile: Option<MapProfile>,
 }
@@ -287,6 +287,9 @@ pub struct SeedReport {
 pub struct MapProfile {
     pub trinket: MapTrinketProfile,
     pub meta: MapMetaProfile,
+    /// Whether the run enables SPD's `NO_SCROLLS` challenge (Forbidden Runes).
+    #[serde(default)]
+    pub forbidden_runes: bool,
     /// First main-path depth where the configured trinket is held.
     #[serde(default = "default_trinket_start_depth")]
     pub trinket_start_depth: u32,

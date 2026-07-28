@@ -54,6 +54,7 @@ fn profiled_imp_outcome(seed: i64, trinket: MapTrinketProfile) -> (i32, bool, Op
     let profile = MapProfile {
         trinket,
         meta: MapMetaProfile::Fresh,
+        forbidden_runes: false,
         trinket_start_depth: 17,
     };
     crate::level::analyze_floors_with_profile(&mut dungeon, 19, Some(&profile));

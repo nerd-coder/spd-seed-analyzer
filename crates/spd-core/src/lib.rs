@@ -63,7 +63,7 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
     analyze_seed_with_profile(input, floors, None)
 }
 
-/// Analyze with explicit player-state assumptions for map projection.
+/// Analyze with explicit run assumptions for generation and map projection.
 pub fn analyze_seed_with_profile(
     input: &str,
     floors: u32,

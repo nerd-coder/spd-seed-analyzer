@@ -2,7 +2,6 @@ import { expect, type Locator, type Page, test } from '@playwright/test'
 import { MAP_RENDER_FIXTURES } from './map-render-fixtures'
 
 const APP_STORAGE = {
-  mapSpoilers: 'spd-analyzer-map-spoilers',
   mode: 'spd-analyzer-mode',
   theme: 'spd-analyzer-theme',
 } as const
@@ -95,8 +94,14 @@ async function installSyntheticMapReport(page: Page) {
     class VisualFixtureWorker {
       onmessage: ((event: MessageEvent) => void) | null = null
       onerror: ((event: ErrorEvent) => void) | null = null
-      postMessage(message: { type?: string }) {
+      postMessage(message: {
+        type?: string
+        mapProfile?: { forbidden_runes?: boolean }
+      }) {
         if (message.type !== 'analyze') return
+        document.documentElement.dataset.testForbiddenRunes = String(
+          message.mapProfile?.forbidden_runes ?? false
+        )
         setTimeout(() => {
           this.onmessage?.(
             new MessageEvent('message', {
@@ -138,7 +143,6 @@ async function openAnalyzer(
   await page.emulateMedia({ colorScheme: 'light', reducedMotion })
   await page.addInitScript((storage) => {
     localStorage.clear()
-    localStorage.setItem(storage.mapSpoilers, '1')
     localStorage.setItem(storage.mode, 'analyze')
     localStorage.setItem(storage.theme, 'light')
   }, APP_STORAGE)
@@ -457,7 +461,34 @@ test('Sad Ghost rewards identify the baseline as non-exhaustive', async ({
     .filter({ hasText: 'Other Ghost options may be possible' })
   await expect(warning).toBeVisible()
   await expect(warning).toContainText('analyzer’s baseline')
-  await expect(warning).toContainText('challenge settings')
+  await expect(warning).toContainText('artifact history')
+
+  expect(browserErrors.console, 'browser console errors').toEqual([])
+  expect(browserErrors.page, 'uncaught page errors').toEqual([])
+})
+
+test('Forbidden Runes is configurable while identities and maps stay visible', async ({
+  page,
+}) => {
+  await installSyntheticMapReport(page)
+  const browserErrors = await openAnalyzer(page, GENERIC_MAP_SEED)
+
+  const challenge = page.getByRole('switch', { name: 'Forbidden Runes' })
+  await expect(challenge).toBeVisible()
+  await expect(challenge).not.toBeChecked()
+  await expect(page.getByRole('switch', { name: 'Identities' })).toHaveCount(0)
+  await expect(page.getByRole('switch', { name: 'Floor maps' })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Identities' })).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: `Expand floor ${GENERIC_MAP_FLOOR} map` })
+  ).toBeVisible()
+
+  await challenge.click()
+  await expect(challenge).toBeChecked()
+  await expect(page.locator('html')).toHaveAttribute(
+    'data-test-forbidden-runes',
+    'true'
+  )
 
   expect(browserErrors.console, 'browser console errors').toEqual([])
   expect(browserErrors.page, 'uncaught page errors').toEqual([])

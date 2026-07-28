@@ -64,6 +64,7 @@ fn explicit_baseline_profile_can_publish_proven_safe_maps() {
     let profile = MapProfile {
         trinket: MapTrinketProfile::NoMapAffectingTrinkets,
         meta: MapMetaProfile::Fresh,
+        forbidden_runes: false,
         trinket_start_depth: 1,
     };
     let profiled = (0..100)
@@ -89,17 +90,63 @@ fn explicit_baseline_profile_can_publish_proven_safe_maps() {
 }
 
 #[test]
+fn forbidden_runes_profile_removes_every_second_upgrade_scroll() {
+    use crate::{analyze_seed_with_profile, MapMetaProfile, MapProfile, MapTrinketProfile};
+
+    let profile = |forbidden_runes| MapProfile {
+        trinket: MapTrinketProfile::NoMapAffectingTrinkets,
+        meta: MapMetaProfile::Fresh,
+        forbidden_runes,
+        trinket_start_depth: 1,
+    };
+    let baseline = analyze_seed_with_profile("42", 4, Some(profile(false))).expect("baseline");
+    let challenged =
+        analyze_seed_with_profile("42", 4, Some(profile(true))).expect("Forbidden Runes");
+    let scroll_depths = |report: &SeedReport| {
+        report
+            .floors
+            .iter()
+            .filter(|floor| {
+                floor.items.iter().any(|item| {
+                    item.class_name.as_deref() == Some("ScrollOfUpgrade")
+                        && item.source.as_deref() == Some("guaranteed floor spawn")
+                })
+            })
+            .map(|floor| floor.depth)
+            .collect::<Vec<_>>()
+    };
+
+    let baseline_depths = scroll_depths(&baseline);
+    let challenged_depths = scroll_depths(&challenged);
+    assert_eq!(baseline_depths.len(), 3, "three Upgrade Scrolls per region");
+    assert_eq!(
+        challenged_depths,
+        baseline_depths
+            .iter()
+            .step_by(2)
+            .copied()
+            .collect::<Vec<_>>()
+    );
+    assert!(challenged
+        .map_profile
+        .as_ref()
+        .is_some_and(|profile| profile.forbidden_runes));
+}
+
+#[test]
 fn trinket_profile_starts_on_the_configured_floor() {
     use crate::{analyze_seed_with_profile, MapMetaProfile, MapProfile, MapTrinketProfile};
 
     let baseline = MapProfile {
         trinket: MapTrinketProfile::NoMapAffectingTrinkets,
         meta: MapMetaProfile::Fresh,
+        forbidden_runes: false,
         trinket_start_depth: 1,
     };
     let delayed = MapProfile {
         trinket: MapTrinketProfile::MossyClump3,
         meta: MapMetaProfile::Fresh,
+        forbidden_runes: false,
         trinket_start_depth: 3,
     };
     let baseline = analyze_seed_with_profile("31", 2, Some(baseline)).expect("baseline");
@@ -123,11 +170,13 @@ fn mimic_tooth_profile_recomputes_the_ghost_pair() {
     let baseline = MapProfile {
         trinket: MapTrinketProfile::NoMapAffectingTrinkets,
         meta: MapMetaProfile::Fresh,
+        forbidden_runes: false,
         trinket_start_depth: 1,
     };
     let tooth = MapProfile {
         trinket: MapTrinketProfile::MimicTooth3,
         meta: MapMetaProfile::Fresh,
+        forbidden_runes: false,
         trinket_start_depth: 1,
     };
 
@@ -630,6 +679,7 @@ fn analyze_full_run_no_panic() {
     let profile = crate::MapProfile {
         trinket: crate::MapTrinketProfile::NoMapAffectingTrinkets,
         meta: crate::MapMetaProfile::Fresh,
+        forbidden_runes: false,
         trinket_start_depth: 1,
     };
     let report = crate::analyze_seed_with_profile("AAA-AAA-AAA", 26, Some(profile))

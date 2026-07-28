@@ -161,6 +161,7 @@ export type SeedReport = {
 export type MapProfile = {
   trinket: MapTrinketProfile
   meta: 'fresh'
+  forbidden_runes: boolean
   trinket_start_depth: number
 }
 
@@ -257,7 +258,9 @@ export async function analyzeSeed(
       }
     ).analyze_seed_with_profile
     if (!analyzeWithProfile) {
-      throw new Error('Map profiles are unavailable. Rebuild the WASM package.')
+      throw new Error(
+        'Generation profiles are unavailable. Rebuild the WASM package.'
+      )
     }
     return analyzeWithProfile(input, floors, mapProfile)
   }

@@ -14,14 +14,10 @@ export function FloorsSection({
   floors,
   refreshingLayout,
   identities,
-  identitySpoilers,
-  mapSpoilers,
 }: {
   floors: FloorReport[]
   refreshingLayout: boolean
   identities: IdentityMaps
-  identitySpoilers: boolean
-  mapSpoilers: boolean
 }) {
   const selectedRegion = useStore(
     $reportNavigation,
@@ -127,8 +123,6 @@ export function FloorsSection({
                 floor={floor}
                 refreshingLayout={refreshingLayout}
                 identities={identities}
-                identitySpoilers={identitySpoilers}
-                mapSpoilers={mapSpoilers}
               />
             ))}
           </TabsContent>

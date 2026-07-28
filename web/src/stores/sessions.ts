@@ -45,8 +45,6 @@ export type SeedSession = {
   finishedAt: number | null
   refreshingLayout: boolean
   mapProfile: MapProfile
-  identitySpoilers: boolean
-  mapSpoilers: boolean
 }
 
 // —— helpers ——————————————————————————————————————————————————————
@@ -223,14 +221,6 @@ export function setActiveSeed(id: string | null) {
   $activeSeedId.set(id)
 }
 
-export function setSeedIdentitySpoilers(id: string, value: boolean) {
-  patchSession(id, { identitySpoilers: value })
-}
-
-export function setSeedMapSpoilers(id: string, value: boolean) {
-  patchSession(id, { mapSpoilers: value })
-}
-
 /**
  * Close a seed tab. Removes from runtime sessions + persisted list.
  */
@@ -303,8 +293,6 @@ async function analyzeSeedInputInternal(
     finishedAt: null,
     refreshingLayout: false,
     mapProfile: defaultMapProfile(),
-    identitySpoilers: true,
-    mapSpoilers: true,
   }
   nextSessions = [...nextSessions, session]
   $sessions.set(nextSessions)
@@ -394,8 +382,6 @@ export function startSessionRehydrate(): () => void {
     finishedAt: null,
     refreshingLayout: false,
     mapProfile: defaultMapProfile(),
-    identitySpoilers: true,
-    mapSpoilers: true,
   }))
 
   closedIds.clear()

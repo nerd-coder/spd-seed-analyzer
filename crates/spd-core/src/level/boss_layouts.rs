@@ -208,6 +208,7 @@ mod tests {
         let profile = crate::MapProfile {
             trinket: crate::MapTrinketProfile::NoMapAffectingTrinkets,
             meta: crate::MapMetaProfile::Fresh,
+            forbidden_runes: false,
             trinket_start_depth: 1,
         };
         for (seed, json) in [
@@ -301,6 +302,7 @@ mod tests {
         let profile = crate::MapProfile {
             trinket: crate::MapTrinketProfile::NoMapAffectingTrinkets,
             meta: crate::MapMetaProfile::Fresh,
+            forbidden_runes: false,
             trinket_start_depth: 1,
         };
         for (seed, json) in [
@@ -383,6 +385,7 @@ mod tests {
         let profile = crate::MapProfile {
             trinket: crate::MapTrinketProfile::NoMapAffectingTrinkets,
             meta: crate::MapMetaProfile::Fresh,
+            forbidden_runes: false,
             trinket_start_depth: 1,
         };
         for (seed, json) in [
@@ -444,6 +447,7 @@ mod tests {
         let profile = crate::MapProfile {
             trinket: crate::MapTrinketProfile::NoMapAffectingTrinkets,
             meta: crate::MapMetaProfile::Fresh,
+            forbidden_runes: false,
             trinket_start_depth: 1,
         };
         for (seed, json) in [

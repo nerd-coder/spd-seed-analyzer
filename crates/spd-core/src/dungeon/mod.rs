@@ -13,6 +13,10 @@ use crate::quests::{BlacksmithQuestState, GhostQuestState, ImpQuestState, Wandma
 use crate::random::Random;
 use crate::rooms::RoomRunState;
 
+/// SPD's internal `Challenges.NO_SCROLLS` bit, presented to players as
+/// Forbidden Runes. It suppresses every second guaranteed Upgrade Scroll.
+pub const FORBIDDEN_RUNES_CHALLENGE: i32 = 64;
+
 #[derive(Debug, Clone)]
 pub struct DungeonState {
     pub seed: i64,
@@ -40,6 +44,10 @@ pub struct DungeonState {
 }
 
 impl DungeonState {
+    pub fn forbidden_runes(&self) -> bool {
+        self.challenges & FORBIDDEN_RUNES_CHALLENGE != 0
+    }
+
     pub fn seed_cur_depth(&self) -> i64 {
         seed_for_depth(self.seed, self.depth, self.branch)
     }

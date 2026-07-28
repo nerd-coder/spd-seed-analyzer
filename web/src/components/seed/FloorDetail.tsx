@@ -21,22 +21,16 @@ export function FloorDetail({
   floor,
   refreshingLayout,
   identities,
-  identitySpoilers,
-  mapSpoilers,
 }: {
   floor: FloorReport
   refreshingLayout: boolean
   identities: IdentityMaps
-  identitySpoilers: boolean
-  mapSpoilers: boolean
 }) {
   const hasQuest = (floor.quests?.length ?? 0) > 0
   const questRewards = partitionFloorItems(floor.items).quest
-  const showMap = mapSpoilers && !!floor.map
-  const showAssumedMap = mapSpoilers && !floor.map && !!floor.assumed_map
-  const displayedMap = mapSpoilers
-    ? (floor.map ?? floor.assumed_map ?? null)
-    : null
+  const showMap = !!floor.map
+  const showAssumedMap = !floor.map && !!floor.assumed_map
+  const displayedMap = floor.map ?? floor.assumed_map ?? null
 
   const details = (
     <div className="min-w-0 flex-1 space-y-3">
@@ -52,7 +46,6 @@ export function FloorDetail({
                 quest={q}
                 rewards={questRewards}
                 identities={identities}
-                identitySpoilers={identitySpoilers}
                 depth={floor.depth}
               />
             ))}
@@ -60,11 +53,7 @@ export function FloorDetail({
         </div>
       )}
 
-      <FloorItemSections
-        floor={floor}
-        identities={identities}
-        identitySpoilers={identitySpoilers}
-      />
+      <FloorItemSections floor={floor} identities={identities} />
     </div>
   )
 
