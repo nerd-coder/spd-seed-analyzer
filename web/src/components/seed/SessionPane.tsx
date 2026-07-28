@@ -3,11 +3,7 @@ import { SeedReportView } from '@/components/seed/SeedReportView'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { formatElapsed, useElapsedTime } from '@/hooks/useElapsedTime'
-import {
-  cancelSeedAnalysis,
-  type SeedSession,
-  setSeedSelectedRegion,
-} from '@/stores/app'
+import { cancelSeedAnalysis, type SeedSession } from '@/stores/app'
 
 export function SessionPane({ session }: { session: SeedSession }) {
   const loading = session.status === 'pending' || session.status === 'loading'
@@ -70,10 +66,6 @@ export function SessionPane({ session }: { session: SeedSession }) {
           report={session.report}
           identitySpoilers={session.identitySpoilers}
           mapSpoilers={session.mapSpoilers}
-          selectedRegion={session.selectedRegion}
-          onSelectedRegionChange={(regionId) =>
-            setSeedSelectedRegion(session.id, regionId)
-          }
         />
       </div>
     )

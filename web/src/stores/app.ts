@@ -49,7 +49,6 @@ export {
   setSeedIdentitySpoilers,
   setSeedInput,
   setSeedMapSpoilers,
-  setSeedSelectedRegion,
   startSessionRehydrate,
   tabLabel,
 } from './sessions'
@@ -62,6 +61,12 @@ export {
   setTheme,
   type Theme,
 } from './theme'
+export {
+  $reportNavigation,
+  type ReportNavigationState,
+  setIdentitiesTab,
+  setSelectedRegion,
+} from './ui'
 
 /**
  * Mode: analyze or find-seed. Persisted to localStorage.

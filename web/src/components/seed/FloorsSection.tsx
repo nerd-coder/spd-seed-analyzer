@@ -1,10 +1,11 @@
+import { useStore } from '@tanstack/react-store'
 import { useCallback, useRef } from 'react'
-
 import { FloorDetail } from '@/components/seed/FloorDetail'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { groupFloorsByRegion } from '@/lib/regions'
 import type { FloorReport, IdentityMaps } from '@/lib/spd-wasm'
 import { cn } from '@/lib/utils'
+import { $reportNavigation, setSelectedRegion } from '@/stores/app'
 
 /** Small gap between sticky region tabs and the first floor after scroll. */
 const SCROLL_GAP_PX = 8
@@ -15,17 +16,17 @@ export function FloorsSection({
   identities,
   identitySpoilers,
   mapSpoilers,
-  selectedRegion,
-  onSelectedRegionChange,
 }: {
   floors: FloorReport[]
   refreshingLayout: boolean
   identities: IdentityMaps
   identitySpoilers: boolean
   mapSpoilers: boolean
-  selectedRegion: string | null
-  onSelectedRegionChange: (regionId: string) => void
 }) {
+  const selectedRegion = useStore(
+    $reportNavigation,
+    (state) => state.selectedRegion
+  )
   const groups = groupFloorsByRegion(floors)
   const stickyBarRef = useRef<HTMLDivElement>(null)
   const regionContentRefs = useRef(new Map<string, HTMLElement>())
@@ -81,7 +82,7 @@ export function FloorsSection({
         value={activeRegion}
         className="block gap-0 overflow-visible"
         onValueChange={(regionId) => {
-          onSelectedRegionChange(regionId)
+          setSelectedRegion(regionId)
           scrollRegionIntoView(regionId)
         }}
       >

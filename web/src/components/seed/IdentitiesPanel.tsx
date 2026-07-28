@@ -1,7 +1,9 @@
+import { useStore } from '@tanstack/react-store'
 import { ItemIcon } from '@/components/ItemIcon'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { appearanceDescription, shortIdentityName } from '@/lib/identity'
 import type { IdentityEntry, IdentityMaps } from '@/lib/spd-wasm'
+import { $reportNavigation, setIdentitiesTab } from '@/stores/app'
 
 function IdentityGrid({
   entries,
@@ -40,6 +42,11 @@ function IdentityGrid({
 }
 
 export function IdentitiesPanel({ identities }: { identities: IdentityMaps }) {
+  const identitiesTab = useStore(
+    $reportNavigation,
+    (state) => state.identitiesTab
+  )
+
   return (
     <section className="bg-card text-card-foreground ring-1 ring-foreground/10">
       <div className="space-y-1 px-4 pt-4">
@@ -49,7 +56,18 @@ export function IdentitiesPanel({ identities }: { identities: IdentityMaps }) {
         </p>
       </div>
       <div className="px-4 pt-3 pb-4">
-        <Tabs defaultValue="potions">
+        <Tabs
+          value={identitiesTab}
+          onValueChange={(value) => {
+            if (
+              value === 'potions' ||
+              value === 'scrolls' ||
+              value === 'rings'
+            ) {
+              setIdentitiesTab(value)
+            }
+          }}
+        >
           <TabsList className="h-auto w-full flex-wrap">
             <TabsTrigger value="potions">Potions</TabsTrigger>
             <TabsTrigger value="scrolls">Scrolls</TabsTrigger>

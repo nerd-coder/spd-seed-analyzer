@@ -46,4 +46,28 @@ export function createMapCanvasStore(reducedMotion: boolean) {
   return new AppStore<MapCanvasState>({ error: null, reducedMotion })
 }
 
+export type ReportNavigationState = {
+  selectedRegion: string | null
+  identitiesTab: 'potions' | 'scrolls' | 'rings'
+}
+
+export const $reportNavigation = new AppStore<ReportNavigationState>({
+  selectedRegion: null,
+  identitiesTab: 'potions',
+})
+
+export function setSelectedRegion(region: string) {
+  $reportNavigation.set({
+    ...$reportNavigation.get(),
+    selectedRegion: region,
+  })
+}
+
+export function setIdentitiesTab(tab: ReportNavigationState['identitiesTab']) {
+  $reportNavigation.set({
+    ...$reportNavigation.get(),
+    identitiesTab: tab,
+  })
+}
+
 export const $elapsedNow = new AppStore(Date.now())
