@@ -232,12 +232,20 @@ fn wandmaker_quest_spawns_within_prison() {
                     .collect();
                 assert_eq!(rewards.len(), 2);
                 assert!(rewards.iter().all(|item| {
-                    item.prediction == report::ItemPredictionKind::Constrained
-                        && item.class_name.is_none()
-                        && item.level.is_none()
-                        && item.level_range == Some(report::NumericRange { min: 1, max: 3 })
+                    matches!(
+                        item.prediction,
+                        report::ItemPredictionKind::Exact | report::ItemPredictionKind::Constrained
+                    ) && item.level.is_some_and(|level| (1..=3).contains(&level))
                         && item.cursed == Some(false)
                         && item.conditional_notes.is_empty()
+                }));
+                assert!(rewards.iter().all(|item| {
+                    (item.prediction == report::ItemPredictionKind::Exact
+                        && item.class_name.is_some()
+                        && item.candidate_classes.is_empty())
+                        || (item.prediction == report::ItemPredictionKind::Constrained
+                            && item.class_name.is_none()
+                            && !item.candidate_classes.is_empty())
                 }));
                 if let Some(map) = &f.map {
                     assert!(map.mobs.is_empty());

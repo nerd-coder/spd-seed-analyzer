@@ -233,6 +233,22 @@ fn has_adjacent_door(map: &TerrainMap, cell: usize) -> bool {
 }
 
 fn generate_wands(dungeon: &mut DungeonState) -> (GeneratedItem, GeneratedItem) {
+    // Mimic Tooth is the only player-state-dependent lever that can shift the
+    // wand deck before this reward is claimed. Keep the deck preview isolated;
+    // it must not consume either the deck or the floor RNG.
+    let identity_exact = !dungeon
+        .generator
+        .preview_category_classes(Category::Trinket, 4, dungeon.depth)
+        .iter()
+        .any(|class_name| class_name == "MimicTooth");
+    let candidates = if !identity_exact {
+        dungeon
+            .generator
+            .preview_category_classes(Category::Wand, 5, dungeon.depth)
+    } else {
+        Vec::new()
+    };
+
     let mut wand1 = dungeon
         .generator
         .random_category(Category::Wand, dungeon.depth);
@@ -263,6 +279,11 @@ fn generate_wands(dungeon: &mut DungeonState) -> (GeneratedItem, GeneratedItem) 
     wand2.provenance = crate::items::model::ItemProvenance::Quest(
         crate::items::model::QuestRewardRole::WandmakerWand,
     );
+
+    if !identity_exact {
+        wand1.candidate_classes = candidates.clone();
+        wand2.candidate_classes = candidates;
+    }
 
     (wand1, wand2)
 }

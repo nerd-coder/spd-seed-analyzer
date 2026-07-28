@@ -49,8 +49,7 @@ export function QuestCard({
 }) {
   const parsed = parseQuest(quest)
   const styles = QUEST_KIND_STYLES[parsed.kind]
-  const isWandmaker = parsed.kind === 'wandmaker'
-  const hasDetailedRewards = !isWandmaker && rewards.length > 0
+  const hasDetailedRewards = rewards.length > 0
   const rewardSummary =
     parsed.kind === 'imp' &&
     rewards.every((reward) => !reward.candidate_classes?.length)
