@@ -60,6 +60,7 @@ fn exact_floor(depth: u32, classes: &[(&str, i32)]) -> crate::FloorReport {
                 level: Some(*level),
                 level_range: None,
                 cursed: Some(false),
+                enchantment: None,
                 prediction: ItemPredictionKind::Exact,
                 conditional_notes: vec![],
                 source: Some("test".into()),
@@ -183,6 +184,7 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
             level: None,
             level_range: None,
             cursed: Some(true),
+            enchantment: None,
             prediction: crate::report::ItemPredictionKind::Constrained,
             conditional_notes: vec!["Parchment Scrap may alter enchantment chance.".into()],
             source: Some("SacrificeRoom".into()),
@@ -214,6 +216,7 @@ fn ordered_imp_ring_candidates_are_searchable() {
         level: Some(3),
         level_range: None,
         cursed: Some(true),
+        enchantment: None,
         prediction: ItemPredictionKind::Constrained,
         conditional_notes: vec!["Mimic Tooth may shift the ring deck.".into()],
         source: Some("Imp.Quest".into()),
@@ -239,6 +242,7 @@ fn conditional_floor_loot_candidates_keep_levels_for_search() {
         level: Some(2),
         level_range: None,
         cursed: Some(false),
+        enchantment: None,
         prediction: ItemPredictionKind::Constrained,
         conditional_notes: vec!["Assumes no external artifact acquisition".into()],
         source: Some("heap".into()),
@@ -345,6 +349,7 @@ fn constrained_shop_stock_never_matches_its_internal_concrete_class() {
             level: Some(0),
             level_range: None,
             cursed: Some(false),
+            enchantment: None,
             prediction: crate::report::ItemPredictionKind::Constrained,
             conditional_notes: vec![],
             source: Some("ShopRoom".into()),
@@ -374,11 +379,9 @@ fn real_constrained_quest_class_never_matches_exact_search() {
             matches!(
                 item.provenance,
                 ItemProvenance::Quest(
-                    QuestRewardRole::GhostWeapon { .. }
-                        | QuestRewardRole::WandmakerWand
+                    QuestRewardRole::WandmakerWand
                         | QuestRewardRole::BlacksmithRoomWeapon { .. }
                         | QuestRewardRole::BlacksmithRoomMissile { .. }
-                        | QuestRewardRole::ImpRing { .. }
                 )
             )
         }) else {

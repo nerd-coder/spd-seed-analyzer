@@ -428,6 +428,27 @@ impl GeneratorState {
         classes
     }
 
+    /// Replays a category deck from its initial state through the current draw.
+    /// Used for ordered candidate sets when runtime history can only advance the
+    /// deck counter, not alter its seed or weights.
+    pub(crate) fn category_class_history(&self, cat: Category, depth: i32) -> Vec<String> {
+        let count = self.cats[cat.index()].dropped.max(0) as usize + 1;
+        let mut preview = self.clone();
+        let runtime = &mut preview.cats[cat.index()];
+        runtime.dropped = 0;
+        runtime.probs = if runtime.using_2nd_probs {
+            runtime.def.default_probs2.unwrap_or_default().to_vec()
+        } else {
+            runtime.def.default_probs.unwrap_or_default().to_vec()
+        };
+        Random::push_generator_seeded(0);
+        let classes = (0..count)
+            .map(|_| preview.random_category(cat, depth).class_name)
+            .collect();
+        Random::pop_generator();
+        classes
+    }
+
     #[cfg(test)]
     pub(crate) fn deck_snapshot(&self, cat: Category) -> DeckSnapshot {
         let runtime = &self.cats[cat.index()];

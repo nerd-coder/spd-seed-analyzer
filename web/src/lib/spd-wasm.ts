@@ -34,6 +34,8 @@ export type ItemEntry = {
   level_range?: { min: number; max: number } | null
   /** Present when the item is cursed (chip in item list). */
   cursed?: boolean | null
+  /** Seed-determined enchantment or glyph, possibly subject to a condition. */
+  enchantment?: string | null
   prediction: 'exact' | 'constrained'
   conditional_notes?: string[]
   source?: string | null

@@ -237,6 +237,9 @@ pub struct ItemEntry {
     pub level_range: Option<NumericRange>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cursed: Option<bool>,
+    /// Seed-determined enchantment or glyph, whether unconditional or conditional.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enchantment: Option<String>,
     pub prediction: ItemPredictionKind,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub conditional_notes: Vec<String>,

@@ -13,6 +13,7 @@ fn exact_item(name: &str, class_name: &str, quantity: i32, level: i32) -> ItemEn
         level: Some(level),
         level_range: None,
         cursed: Some(false),
+        enchantment: None,
         prediction: ItemPredictionKind::Exact,
         conditional_notes: Vec::new(),
         source: Some("ShopRoom".into()),

@@ -57,6 +57,7 @@ fn merge_identical_items(items: Vec<ItemEntry>) -> Vec<ItemEntry> {
                     && existing.level == item.level
                     && existing.level_range == item.level_range
                     && existing.cursed == item.cursed
+                    && existing.enchantment == item.enchantment
                     && existing.prediction == item.prediction
                     && existing.conditional_notes == item.conditional_notes
                     && existing.source == item.source
@@ -267,8 +268,8 @@ impl LevelState {
                 (
                     _,
                     Some(
-                        QuestRewardRole::GhostWeapon { tier }
-                        | QuestRewardRole::GhostArmor { tier },
+                        QuestRewardRole::GhostWeapon { tier, .. }
+                        | QuestRewardRole::GhostArmor { tier, .. },
                     ),
                 ) => Some(tier),
                 (
@@ -317,20 +318,47 @@ impl LevelState {
                 }) => Some((identity_exact, candidate_indices)),
                 _ => None,
             };
-            let prediction = if imp_identity.is_some_and(|(exact, _)| exact) {
+            let ghost_weapon = match quest_role {
+                Some(QuestRewardRole::GhostWeapon {
+                    minimum_parchment_level,
+                    ..
+                }) => Some(minimum_parchment_level),
+                _ => None,
+            };
+            let ghost_enchantment_condition = match quest_role {
+                Some(
+                    QuestRewardRole::GhostWeapon {
+                        minimum_parchment_level,
+                        ..
+                    }
+                    | QuestRewardRole::GhostArmor {
+                        minimum_parchment_level,
+                        ..
+                    },
+                ) => Some(minimum_parchment_level),
+                _ => None,
+            };
+            let prediction = if imp_identity.is_some_and(|(exact, _)| exact)
+                || ghost_weapon.is_some_and(|_| item.candidate_classes.len() == 1)
+            {
                 ItemPredictionKind::Exact
             } else {
                 prediction
             };
             let constrained = prediction == ItemPredictionKind::Constrained;
-            let candidate_classes = imp_identity
-                .filter(|(exact, _)| !exact)
-                .map(|(_, indices)| {
-                    let classes = crate::generator::Category::Ring.def().classes;
-                    indices
-                        .into_iter()
-                        .map(|index| classes[usize::from(index)].to_string())
-                        .collect()
+            let candidate_classes = ghost_weapon
+                .filter(|_| item.candidate_classes.len() > 1)
+                .map(|_| item.candidate_classes.clone())
+                .or_else(|| {
+                    imp_identity
+                        .filter(|(exact, _)| !exact)
+                        .map(|(_, indices)| {
+                            let classes = crate::generator::Category::Ring.def().classes;
+                            indices
+                                .into_iter()
+                                .map(|index| classes[usize::from(index)].to_string())
+                                .collect()
+                        })
                 })
                 .unwrap_or_else(|| {
                     if artifact_conditional {
@@ -377,12 +405,22 @@ impl LevelState {
                 } else {
                     Some(item.cursed)
                 },
+                enchantment: item.potential_enchantment.clone(),
                 prediction,
-                conditional_notes: if artifact_conditional {
-                    vec!["Assumes no artifact was obtained outside level generation earlier in this run".into()]
-                } else {
-                    Vec::new()
-                },
+                conditional_notes: ghost_enchantment_condition
+                    .flatten()
+                    .map(|level| {
+                        vec![format!(
+                            "{} — kept only with Parchment Scrap +{} or better",
+                            item.potential_enchantment.as_deref().unwrap_or("Enchantment"),
+                            level
+                        )]
+                    })
+                    .unwrap_or_else(|| if artifact_conditional {
+                        vec!["Assumes no artifact was obtained outside level generation earlier in this run".into()]
+                    } else {
+                        Vec::new()
+                    }),
                 source: item.source.clone(),
             };
             if shop_role.is_some() {
@@ -403,6 +441,7 @@ impl LevelState {
                 level: None,
                 level_range: None,
                 cursed: None,
+                enchantment: None,
                 prediction: ItemPredictionKind::Constrained,
                 conditional_notes: vec![
                     "A bag may be offered; its presence and identity depend on inventory and prior limited drops.".into(),
@@ -420,6 +459,7 @@ impl LevelState {
                 level: None,
                 level_range: None,
                 cursed: None,
+                enchantment: None,
                 prediction: ItemPredictionKind::Constrained,
                 conditional_notes: vec![
                     "Sandbag presence and quantity depend on the hero's Timekeeper's Hourglass state.".into(),

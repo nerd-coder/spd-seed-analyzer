@@ -61,9 +61,11 @@ pub enum RoomLootRole {
 pub enum QuestRewardRole {
     GhostWeapon {
         tier: i32,
+        minimum_parchment_level: Option<i8>,
     },
     GhostArmor {
         tier: i32,
+        minimum_parchment_level: Option<i8>,
     },
     WandmakerWand,
     WandmakerPersisted,
@@ -112,6 +114,12 @@ pub struct GeneratedItem {
     pub cursed: bool,
     /// Enchantment or glyph simple name, if any.
     pub enchantment: Option<String>,
+    /// A seed-rolled enchantment whose retention depends on player state.
+    #[serde(skip)]
+    pub potential_enchantment: Option<String>,
+    /// Ordered seed candidates for a runtime-shiftable deck identity.
+    #[serde(skip)]
+    pub candidate_classes: Vec<String>,
     pub source: Option<String>,
     /// A prior (or this item's own) level-generation artifact draw means that
     /// run-history artifact acquisitions can shift this result's deck stream.
@@ -132,6 +140,8 @@ impl GeneratedItem {
             quantity: 1,
             cursed: false,
             enchantment: None,
+            potential_enchantment: None,
+            candidate_classes: Vec::new(),
             source: None,
             artifact_conditional: false,
             provenance: ItemProvenance::None,

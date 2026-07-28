@@ -2,11 +2,11 @@
 
 Pinned target: SPD v3.3.8 @ `7b8b845a7`; accuracy remains `partial`.
 
-The quest-NPC oracle pins the Ghost and Wandmaker cell plus the eight-int RNG
-tail immediately after reward generation across all Wandmaker depth/type
-combinations and Ghost depths 2–4. Rust matches all 18 boundaries, and Sad
-Ghost rewards are included in public reports. The existing Wandmaker constraint
-remains. Accuracy is still `partial`.
+Sad Ghost armor is named exactly, while its weapon is named exactly or shown as
+an ordered candidate set from the tier deck. Both rewards expose their
+seed-rolled enchantment/glyph and the minimum Parchment Scrap level needed to
+keep it. The existing Wandmaker constraint remains. Accuracy is still
+`partial`.
 
 Public item entries carry exact stack quantities when known and consolidate
 identical exact spawn/shop rows; differing properties remain separate.
@@ -18,27 +18,7 @@ reported as constrained on no earlier out-of-level artifact acquisition. Plain
 heap/chest/locked-chest/skeleton spawns are included, while Mimic-carried loot
 and all placement details remain excluded.
 
-## 1. Sharpen the Sad Ghost reward
-
-Everything except the weapon's class is independent of any deck (§10).
-
-1. **Name the armor.** The tier *is* the class (2 Leather, 3 Mail, 4 Scale,
-   5 Plate), chosen by a direct `Random.chances` with no deck involved. Report
-   `GhostArmor` as `Exact` with its class name instead of "Ghost armor reward";
-   the level is already exact and shared with the weapon.
-2. **Report the enchant and glyph.** Both are always generated and fully
-   seed-determined; only *whether they are kept* depends on Parchment Scrap.
-   `ItemEntry` has no enchantment field — add one, and state the condition from
-   the known roll, e.g. "Grim — kept only with Parchment Scrap +1 or better".
-   At +2 or better it is always enchanted.
-3. **Weapon class as an ordered candidate set** over the tier deck, reusing the
-   `ImpRing { identity_exact, candidate_indices }` machinery. The index is 0 in
-   64% of seeds and ≤1 in 85%, so a two-element set nearly always covers it.
-4. Update `specs/accuracy.json`: the Ghost's armor and upgrade level are exact,
-   the weapon is named or offered as a short ordered set, and enchantment is
-   stated with its Parchment Scrap condition.
-
-## 2. Lift the Old Wandmaker constraint
+## 1. Lift the Old Wandmaker constraint
 
 Today both wands are reported as `+1…+3 wand` with no class
 (`level/state.rs:255`, `:308-313`). After step 1:
@@ -55,7 +35,7 @@ Today both wands are reported as `+1…+3 wand` with no class
    when the class stays a set. Fall back to `+1…+3` only on disagreement.
 4. Update `specs/accuracy.json` accordingly.
 
-## 3. Report the four Trinket Catalyst offers
+## 2. Report the four Trinket Catalyst offers
 
 The catalyst's four options are TRINKET deck draws 0–3, so they are exact and
 knowable before the run starts — a stronger claim than anything we show for the

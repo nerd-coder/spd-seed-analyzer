@@ -63,7 +63,7 @@ function ConditionalNotes({ notes }: { notes?: string[] }) {
   )
 }
 
-function ImpRingOptions({
+function CandidateOptions({
   item,
   identities,
   identitySpoilers,
@@ -75,10 +75,10 @@ function ImpRingOptions({
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1">
       {item.candidate_classes?.map((className, index) => {
-        const candidate = { category: 'ring', class_name: className }
+        const candidate = { category: item.category, class_name: className }
         const label = finderItemLabel(className)
         return (
-          <div key={className} className="flex flex-col gap-1">
+          <div key={`${index}-${className}`} className="flex flex-col gap-1">
             {index > 0 ? (
               <span className="pl-6 text-xs font-medium text-muted-foreground">
                 OR
@@ -87,7 +87,7 @@ function ImpRingOptions({
             <div className="flex items-start gap-2">
               <ItemIcon
                 classNameItem={className}
-                category="ring"
+                category={item.category}
                 appearance={
                   identitySpoilers
                     ? itemAppearance(candidate, identities)
@@ -104,6 +104,12 @@ function ImpRingOptions({
                 {item.cursed === true ? (
                   <Badge variant="destructive">cursed</Badge>
                 ) : null}
+                {item.enchantment ? (
+                  <Badge variant="secondary">
+                    {finderItemLabel(item.enchantment)}
+                  </Badge>
+                ) : null}
+                <ConditionalNotes notes={item.conditional_notes} />
               </span>
             </div>
           </div>
@@ -137,8 +143,8 @@ export function FloorItemList({
             : formatItemSource(item.source)
         return (
           <li key={`${depth}-${index}`} className="flex items-center gap-2">
-            {item.source === 'Imp.Quest' && item.candidate_classes?.length ? (
-              <ImpRingOptions
+            {item.candidate_classes?.length ? (
+              <CandidateOptions
                 item={item}
                 identities={identities}
                 identitySpoilers={identitySpoilers}
@@ -186,6 +192,11 @@ export function FloorItemList({
                   ) : null}
                   {item.cursed === true ? (
                     <Badge variant="destructive">cursed</Badge>
+                  ) : null}
+                  {item.enchantment ? (
+                    <Badge variant="secondary">
+                      {finderItemLabel(item.enchantment)}
+                    </Badge>
                   ) : null}
                   {sourceLabel ? (
                     <Badge

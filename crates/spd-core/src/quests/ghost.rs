@@ -152,6 +152,9 @@ fn generate_rewards(dungeon: &mut DungeonState) -> (GeneratedItem, GeneratedItem
         4 => Category::WepT4,
         _ => Category::WepT5,
     };
+    let candidate_classes = dungeon
+        .generator
+        .category_class_history(wep_cat, dungeon.depth);
     let mut weapon = dungeon.generator.random_category(wep_cat, dungeon.depth);
 
     // Clear weapon's starting properties from Item.random()
@@ -176,6 +179,8 @@ fn generate_rewards(dungeon: &mut DungeonState) -> (GeneratedItem, GeneratedItem
     // Always generate enchant+glyph first so the roll count is constant.
     let enchant = enchants::random_weapon_enchant(None).to_string();
     let glyph = enchants::random_armor_glyph(None).to_string();
+    weapon.potential_enchantment = Some(enchant.clone());
+    armor.potential_enchantment = Some(glyph.clone());
     // 20% base chance (no ParchmentScrap trinket)
     let enchant_roll = Random::float();
     if enchant_roll <= 0.2 {
@@ -183,13 +188,26 @@ fn generate_rewards(dungeon: &mut DungeonState) -> (GeneratedItem, GeneratedItem
         armor.enchantment = Some(glyph);
     }
 
+    let minimum_parchment_level = if enchant_roll <= 0.2 {
+        None
+    } else if enchant_roll <= 0.4 {
+        Some(0)
+    } else if enchant_roll <= 0.8 {
+        Some(1)
+    } else {
+        Some(2)
+    };
+
     weapon.source = Some("Ghost.Quest".into());
     armor.source = Some("Ghost.Quest".into());
+    weapon.candidate_classes = candidate_classes;
     weapon.provenance = ItemProvenance::Quest(QuestRewardRole::GhostWeapon {
         tier: wep_tier as i32,
+        minimum_parchment_level,
     });
     armor.provenance = ItemProvenance::Quest(QuestRewardRole::GhostArmor {
         tier: armor_tier as i32,
+        minimum_parchment_level,
     });
 
     (weapon, armor)
@@ -241,6 +259,15 @@ mod tests {
         assert_eq!(w1.level, w2.level);
         assert_eq!(a1.class_name, a2.class_name);
         assert_eq!(a1.level, a2.level);
+        assert!(w1.potential_enchantment.is_some());
+        assert!(a1.potential_enchantment.is_some());
+        let ItemProvenance::Quest(QuestRewardRole::GhostWeapon { .. }) = w1.provenance else {
+            panic!("Ghost weapon provenance");
+        };
+        assert_eq!(
+            w1.candidate_classes.last().map(String::as_str),
+            Some(w1.class_name.as_str())
+        );
     }
 
     #[test]
