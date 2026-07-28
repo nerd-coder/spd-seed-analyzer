@@ -269,6 +269,16 @@ export const CATEGORY_HOLDER: Record<string, number> = {
   other: 0,
 }
 
+const GENERIC_ITEM_ICON_INDICES = new Set(
+  Object.entries(CATEGORY_HOLDER)
+    .filter(([category]) => category !== 'gold')
+    .map(([, index]) => index)
+)
+
+export function isGenericItemIconIndex(index: number): boolean {
+  return GENERIC_ITEM_ICON_INDICES.has(index)
+}
+
 /** Potion class order matches Generator / Potion.colors insertion. */
 const POTION_CLASSES = [
   'PotionOfStrength',

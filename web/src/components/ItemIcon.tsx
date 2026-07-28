@@ -1,5 +1,6 @@
 import {
   type IconResolveOpts,
+  isGenericItemIconIndex,
   itemIconStyle,
   resolveItemIconIndex,
 } from '@/lib/item-icons'
@@ -49,6 +50,7 @@ export function ItemIcon({
     >
       <span
         aria-hidden="true"
+        className={cn(isGenericItemIconIndex(index) && 'dark:invert')}
         style={itemIconStyle(
           index,
           size,
