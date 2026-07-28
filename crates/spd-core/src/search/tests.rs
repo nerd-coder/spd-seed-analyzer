@@ -226,6 +226,32 @@ fn ordered_imp_ring_candidates_are_searchable() {
 }
 
 #[test]
+fn conditional_floor_loot_candidates_keep_levels_for_search() {
+    let mut floor = exact_floor(8, &[]);
+    floor.items.push(crate::report::ItemEntry {
+        name: "long sword +2".into(),
+        quantity: 1,
+        class_name: None,
+        candidate_classes: vec!["Longsword".into()],
+        category: "weapon".into(),
+        tier: None,
+        tier_range: None,
+        level: Some(2),
+        level_range: None,
+        cursed: Some(false),
+        prediction: ItemPredictionKind::Constrained,
+        conditional_notes: vec!["Assumes no external artifact acquisition".into()],
+        source: Some("heap".into()),
+    });
+    let mut wanted = constraint("Longsword", 8, 8);
+    wanted.min_level = Some(2);
+
+    let evidence = matching_evidence(&[floor], &[wanted]);
+    assert_eq!(evidence.len(), 1);
+    assert_eq!(evidence[0].level, 2);
+}
+
+#[test]
 fn later_identity_unknown_food_spawns_never_match_exact_item_searches() {
     for class_name in ["Food", "Pasty"] {
         let result = search_seeds(&SeedSearchRequest {

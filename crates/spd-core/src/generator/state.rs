@@ -24,6 +24,8 @@ pub struct GeneratorState {
     category_probs: Vec<f32>,
     default_cat_probs: Vec<f32>,
     cats: Vec<CatRuntime>,
+    /// Monotone count of calls that advance `ARTIFACT.dropped`.
+    artifact_draws: u32,
 }
 
 #[cfg(test)]
@@ -99,7 +101,13 @@ impl GeneratorState {
             category_probs,
             default_cat_probs,
             cats,
+            artifact_draws: 0,
         }
+    }
+
+    fn stamp_artifact_condition(&self, mut item: GeneratedItem) -> GeneratedItem {
+        item.artifact_conditional = self.artifact_draws > 0;
+        item
     }
 
     fn general_reset(&mut self) {
@@ -139,15 +147,16 @@ impl GeneratorState {
         let cat = Category::ALL[idx as usize];
         self.category_probs[idx as usize] -= 1.0;
 
-        if cat == Category::Seed {
+        let item = if cat == Category::Seed {
             self.random_using_defaults(cat, depth)
         } else {
             self.random_category(cat, depth)
-        }
+        };
+        self.stamp_artifact_condition(item)
     }
 
     pub fn random_category(&mut self, cat: Category, depth: i32) -> GeneratedItem {
-        match cat {
+        let item = match cat {
             Category::Armor => self.random_armor(depth / 5, depth),
             Category::Weapon => self.random_weapon(depth / 5, false, depth),
             Category::Missile => self.random_missile(depth / 5, false, depth),
@@ -159,7 +168,8 @@ impl GeneratorState {
                 }
             }
             _ => self.random_deck_item(cat, depth),
-        }
+        };
+        self.stamp_artifact_condition(item)
     }
 
     /// `Generator.randomUsingDefaults()` — pick category via `defaultCatProbs`, then item.
@@ -171,7 +181,8 @@ impl GeneratorState {
         } else {
             Category::ALL[idx as usize]
         };
-        self.random_using_defaults(cat, depth)
+        let item = self.random_using_defaults(cat, depth);
+        self.stamp_artifact_condition(item)
     }
 
     /// `Generator.randomUsingDefaults(cat)`.
@@ -182,7 +193,8 @@ impl GeneratorState {
             _ => {
                 let rt = &self.cats[cat.index()];
                 if rt.def.default_probs.is_none() || cat == Category::Artifact {
-                    return self.random_category(cat, depth);
+                    let item = self.random_category(cat, depth);
+                    return self.stamp_artifact_condition(item);
                 }
                 let (class_name, consume_exotic_roll) =
                     if let Some(ref total) = rt.default_probs_total {
@@ -202,7 +214,7 @@ impl GeneratorState {
                 }
                 let mut item = GeneratedItem::new(class_name, rt.def.item_category);
                 randomize_item(&mut item, depth);
-                item
+                self.stamp_artifact_condition(item)
             }
         }
     }
@@ -267,7 +279,7 @@ impl GeneratorState {
             GeneratedItem::new(class_name, item_cat)
         };
         randomize_item_with_parchment(&mut item, depth, parchment_scrap_level);
-        item
+        self.stamp_artifact_condition(item)
     }
 
     pub fn random_armor(&mut self, floor_set: i32, depth: i32) -> GeneratedItem {
@@ -276,7 +288,7 @@ impl GeneratorState {
         let class_name = self.cats[Category::Armor.index()].def.classes[tier];
         let mut item = GeneratedItem::new(class_name, ItemCategory::Armor);
         randomize_item(&mut item, depth);
-        item
+        self.stamp_artifact_condition(item)
     }
 
     pub fn random_weapon(
@@ -288,11 +300,12 @@ impl GeneratorState {
         let floor_set = floor_set.clamp(0, FLOOR_SET_TIER_PROBS.len() as i32 - 1) as usize;
         let tier = Random::chances(&FLOOR_SET_TIER_PROBS[floor_set]) as usize;
         let tier_cat = WEP_TIERS[tier];
-        if use_defaults {
+        let item = if use_defaults {
             self.random_using_defaults(tier_cat, depth)
         } else {
             self.random_deck_item(tier_cat, depth)
-        }
+        };
+        self.stamp_artifact_condition(item)
     }
 
     /// SacrificeRoom's `Generator.randomWeapon` call with its explicit
@@ -305,7 +318,12 @@ impl GeneratorState {
     ) -> GeneratedItem {
         let floor_set = floor_set.clamp(0, FLOOR_SET_TIER_PROBS.len() as i32 - 1) as usize;
         let tier = Random::chances(&FLOOR_SET_TIER_PROBS[floor_set]) as usize;
-        self.random_deck_item_with_parchment(WEP_TIERS[tier], depth, Some(parchment_scrap_level))
+        let item = self.random_deck_item_with_parchment(
+            WEP_TIERS[tier],
+            depth,
+            Some(parchment_scrap_level),
+        );
+        self.stamp_artifact_condition(item)
     }
 
     pub fn random_missile(
@@ -317,11 +335,12 @@ impl GeneratorState {
         let floor_set = floor_set.clamp(0, FLOOR_SET_TIER_PROBS.len() as i32 - 1) as usize;
         let tier = Random::chances(&FLOOR_SET_TIER_PROBS[floor_set]) as usize;
         let tier_cat = MIS_TIERS[tier];
-        if use_defaults {
+        let item = if use_defaults {
             self.random_using_defaults(tier_cat, depth)
         } else {
             self.random_deck_item(tier_cat, depth)
-        }
+        };
+        self.stamp_artifact_condition(item)
     }
 
     pub fn random_artifact(&mut self, depth: i32) -> Option<GeneratedItem> {
@@ -343,6 +362,7 @@ impl GeneratorState {
         if seed.is_some() {
             Random::pop_generator();
             self.cats[idx].dropped += 1;
+            self.artifact_draws += 1;
         }
 
         if i < 0 {
@@ -356,7 +376,7 @@ impl GeneratorState {
         }
         let mut item = GeneratedItem::new(class_name, ItemCategory::Artifact);
         randomize_item(&mut item, depth);
-        Some(item)
+        Some(self.stamp_artifact_condition(item))
     }
 
     /// `UnstableSpellbook` constructor drains the positive weights from

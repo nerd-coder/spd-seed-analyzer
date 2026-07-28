@@ -12,11 +12,12 @@ Wandmaker constraint remains. Accuracy is still `partial`.
 Public item entries carry exact stack quantities when known and consolidate
 identical exact spawn/shop rows; differing properties remain separate.
 
-Ordinary `createItems` loot now has systematic spawn-presence parity evidence:
-every plain main-loop item is matched by class, quantity, level, and curse
-against Java's final heaps across 51 regular seed/floor pairs. AAA now covers
-all depths 1–26 and GFX-PZH-DCH is a second complete 1–26 run. Cell and heap
-form are deliberately excluded from the claim under SPAWN-PRESENCE.
+Ordinary `createItems` loot is now published with class, quantity, level, and
+curse after systematic spawn-presence parity checks against Java. Loot stays
+exact until the first artifact-deck draw; that item and the remaining run are
+reported as constrained on no earlier out-of-level artifact acquisition. Plain
+heap/chest/locked-chest/skeleton spawns are included, while Mimic-carried loot
+and all placement details remain excluded.
 
 ## 1. Restore quest-NPC placement parity
 
@@ -47,53 +48,7 @@ changing room construction directly.
 Require all 18 NPC boundaries to match, remove both NPC tail guards, and only
 then update the accuracy manifest and expose Ghost rewards.
 
-## 2. Publish ordinary floor loot (independent of §1)
-
-`RegularLevel.createItems` main-loop drops are already generated exactly
-(`level/create_items.rs`) and already suppressed wholesale
-(`level/state.rs:50-54`, `:164`). `generator-decks.md` §11 shows the suppression
-is over-broad: the general category deck and every sub-deck except ARTIFACT are
-levelgen-only, so this is ~3.8 items per floor — an order of magnitude more than
-everything §3–§5 add combined.
-
-**1. Gate on the artifact deck.** `random_artifact` (`generator/state.rs:327`)
-   is the only Rust site that moves `ARTIFACT.dropped`. Add a monotone
-   `artifact_draws` counter there and stamp each generated item with
-   `artifact_conditional = generator.artifact_draws > 0` evaluated *after* its
-   own draw, so the item that triggers the first draw is itself conditional.
-   The flag is sticky for the rest of the run: once the stream can desync (§11),
-   nothing downstream recovers.
-
-**2. Project it.** Replace the blanket skip at `level/state.rs:164`:
-   - unconditional → `Exact`, with class, level and cursed exposed;
-   - conditional → `Constrained` with the computed class as a single-element
-     `candidate_classes`, so `search.rs:228-231` still matches it, plus a
-     `conditional_notes` line naming the assumption ("no artifact obtained
-     outside level generation earlier in this run").
-
-   Landmine: `reported_level` (`level/state_map.rs:17`) returns `None` when
-   constrained, and `search.rs:240` does `.expect("exact predictions expose
-   level")` — conditional loot must keep its level or search panics.
-
-   Honour **SPAWN-PRESENCE**: cell, heap type and mimic lifecycle stay internal.
-   Start with plain heaps (`heap`/`chest`/`locked_chest`/`skeleton`); add
-   mimic and golden-mimic carried items as a follow-up. **MAP-LAYOUT-GOAL** is
-   untouched — maps stay layout-only and `runtime_sensitive_loot_cells` keeps
-   suppressing markers.
-
-**3. Manifest and UI.** In `specs/accuracy.json`, drop "Ordinary floor loot and
-   Mimic contents are excluded because they shift with run history" from
-   `intentional-scope-limits` and state the narrower artifact condition under
-   `items-and-loot`. Floor lists grow from ~2 entries to ~6, so group guaranteed
-   spawns separately from floor loot and render the conditional note once per
-   floor, not once per item.
-
-**4. Optional recovery.** On conditional floors, re-run generation with
-   `ARTIFACT.dropped + 1` and `+2` and promote back to `Exact` any item whose
-   class and level agree across all variants — the same "check agreement across
-   candidates" trick as §4.3 below. Measure the recovery rate before building it.
-
-## 3. Then sharpen the Sad Ghost reward
+## 2. Sharpen the Sad Ghost reward
 
 Everything except the weapon's class is independent of any deck (§10).
 
@@ -113,7 +68,7 @@ Everything except the weapon's class is independent of any deck (§10).
    the weapon is named or offered as a short ordered set, and enchantment is
    stated with its Parchment Scrap condition.
 
-## 4. Lift the Old Wandmaker constraint
+## 3. Lift the Old Wandmaker constraint
 
 Today both wands are reported as `+1…+3 wand` with no class
 (`level/state.rs:255`, `:308-313`). After step 1:
@@ -130,7 +85,7 @@ Today both wands are reported as `+1…+3 wand` with no class
    when the class stays a set. Fall back to `+1…+3` only on disagreement.
 4. Update `specs/accuracy.json` accordingly.
 
-## 5. Then report the four Trinket Catalyst offers
+## 4. Report the four Trinket Catalyst offers
 
 The catalyst's four options are TRINKET deck draws 0–3, so they are exact and
 knowable before the run starts — a stronger claim than anything we show for the

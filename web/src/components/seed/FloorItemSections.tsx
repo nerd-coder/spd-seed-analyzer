@@ -17,7 +17,9 @@ import { itemAppearance } from '@/lib/identity'
 import { formatItemSource, isHighlightSource } from '@/lib/labels'
 import type { FloorReport, IdentityMaps, ItemEntry } from '@/lib/spd-wasm'
 
-function itemGroup(item: ItemEntry): 'shop' | 'quest' | 'general' {
+function itemGroup(
+  item: ItemEntry
+): 'shop' | 'quest' | 'guaranteed' | 'loot' | 'general' {
   const source = item.source ?? ''
   if (source.includes('ShopRoom')) return 'shop'
   if (
@@ -25,6 +27,10 @@ function itemGroup(item: ItemEntry): 'shop' | 'quest' | 'general' {
   ) {
     return 'quest'
   }
+  if (source === 'guaranteed floor spawn' || source === 'forced') {
+    return 'guaranteed'
+  }
+  if (source === 'heap') return 'loot'
   return 'general'
 }
 
@@ -112,11 +118,13 @@ export function FloorItemList({
   identities,
   identitySpoilers,
   depth,
+  showConditionalNotes = true,
 }: {
   items: ItemEntry[]
   identities: IdentityMaps
   identitySpoilers: boolean
   depth: number
+  showConditionalNotes?: boolean
 }) {
   return (
     <ul className="flex flex-col gap-1.5 text-sm">
@@ -189,7 +197,9 @@ export function FloorItemList({
                       {sourceLabel}
                     </Badge>
                   ) : null}
-                  <ConditionalNotes notes={item.conditional_notes} />
+                  {showConditionalNotes ? (
+                    <ConditionalNotes notes={item.conditional_notes} />
+                  ) : null}
                 </span>
               </>
             )}
@@ -211,32 +221,40 @@ export function FloorItemSections({
 }) {
   const groups = partitionFloorItems(floor.items)
   const sections = [
-    { key: 'general', label: 'Items', items: groups.general },
+    { key: 'guaranteed', label: 'Guaranteed spawns', items: groups.guaranteed },
+    { key: 'loot', label: 'Floor loot', items: groups.loot },
+    { key: 'general', label: 'Other items', items: groups.general },
     { key: 'shop', label: 'Shop', items: groups.shop },
-  ].filter(({ key, items }) => key === 'general' || items.length > 0)
+  ].filter(({ items }) => items.length > 0)
 
   return (
     <>
       {sections.map(({ key, label, items }) => (
         <div key={key} className="flex flex-col gap-1">
-          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            {label}
-            <span className="ml-1.5 font-mono font-normal tabular-nums normal-case">
-              ({items.length})
-            </span>
-          </p>
-          {items.length > 0 ? (
-            <FloorItemList
-              items={items}
-              identities={identities}
-              identitySpoilers={identitySpoilers}
-              depth={floor.depth}
-            />
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              No general items listed.
+          <div className="flex items-center gap-1">
+            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+              {label}
+              <span className="ml-1.5 font-mono font-normal tabular-nums normal-case">
+                ({items.length})
+              </span>
             </p>
-          )}
+            {key === 'loot' ? (
+              <ConditionalNotes
+                notes={[
+                  ...new Set(
+                    items.flatMap((item) => item.conditional_notes ?? [])
+                  ),
+                ]}
+              />
+            ) : null}
+          </div>
+          <FloorItemList
+            items={items}
+            identities={identities}
+            identitySpoilers={identitySpoilers}
+            depth={floor.depth}
+            showConditionalNotes={key !== 'loot'}
+          />
         </div>
       ))}
     </>
@@ -246,6 +264,8 @@ export function FloorItemSections({
 export function partitionFloorItems(items: ItemEntry[]) {
   return {
     general: items.filter((item) => itemGroup(item) === 'general'),
+    guaranteed: items.filter((item) => itemGroup(item) === 'guaranteed'),
+    loot: items.filter((item) => itemGroup(item) === 'loot'),
     shop: items.filter((item) => itemGroup(item) === 'shop'),
     quest: items.filter((item) => itemGroup(item) === 'quest'),
   }

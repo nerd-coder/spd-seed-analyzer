@@ -22,6 +22,21 @@ fn full_reset_and_random_deterministic() {
 }
 
 #[test]
+fn artifact_draw_marks_itself_and_later_generated_items_conditional() {
+    Random::reset_generators();
+    Random::push_generator_seeded(1_234);
+    let mut generator = GeneratorState::full_reset_ordered();
+
+    let artifact = generator
+        .random_artifact(6)
+        .expect("fresh artifact deck has an item");
+    assert!(artifact.artifact_conditional);
+    assert!(generator.random(6).artifact_conditional);
+
+    Random::pop_generator();
+}
+
+#[test]
 fn potion_deck_never_strength_from_random() {
     // Strength has weight 0 in deck
     Random::reset_generators();

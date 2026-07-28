@@ -81,6 +81,13 @@ pub(super) fn is_runtime_sensitive_loot_source(source: Option<&str>) -> bool {
         .is_some_and(|origin| matches!(origin, "heap" | "mimic" | "golden_mimic"))
 }
 
+fn is_unpublished_main_loot(item: &GeneratedItem) -> bool {
+    item.source
+        .as_deref()
+        .and_then(|source| source.rsplit(':').next())
+        .is_some_and(|origin| matches!(origin, "mimic" | "golden_mimic"))
+}
+
 #[derive(Debug, Clone)]
 pub struct LevelState {
     pub depth: i32,
@@ -189,7 +196,7 @@ impl LevelState {
                     _ => continue,
                 }
             }
-            if is_blacklisted(item) || is_runtime_sensitive_main_loot(item) {
+            if is_blacklisted(item) || is_unpublished_main_loot(item) {
                 continue;
             }
             // Sacrifice is represented only by its static room contract. The
@@ -205,7 +212,16 @@ impl LevelState {
             if matches!(item.provenance, ItemProvenance::Room(_)) {
                 continue;
             }
-            let prediction = prediction_kind(item);
+            let artifact_conditional = item.artifact_conditional
+                && item
+                    .source
+                    .as_deref()
+                    .is_some_and(|source| source.rsplit(':').next() == Some("heap"));
+            let prediction = if artifact_conditional {
+                ItemPredictionKind::Constrained
+            } else {
+                prediction_kind(item)
+            };
             let shop_role = match item.provenance {
                 ItemProvenance::Shop(role) => {
                     has_shop = true;
@@ -316,7 +332,13 @@ impl LevelState {
                         .map(|index| classes[usize::from(index)].to_string())
                         .collect()
                 })
-                .unwrap_or_default();
+                .unwrap_or_else(|| {
+                    if artifact_conditional {
+                        vec![item.class_name.clone()]
+                    } else {
+                        Vec::new()
+                    }
+                });
             let entry = ItemEntry {
                 name: if imp_identity.is_some_and(|(exact, _)| !exact) {
                     format!("+{} ring reward", item.level)
@@ -338,6 +360,7 @@ impl LevelState {
                 level: match quest_role {
                     Some(QuestRewardRole::WandmakerWand) => None,
                     Some(_) => Some(item.level),
+                    None if artifact_conditional => Some(item.level),
                     None => reported_level(item, constrained, shop_role),
                 },
                 level_range: (quest_role == Some(QuestRewardRole::WandmakerWand))
@@ -355,7 +378,11 @@ impl LevelState {
                     Some(item.cursed)
                 },
                 prediction,
-                conditional_notes: Vec::new(),
+                conditional_notes: if artifact_conditional {
+                    vec!["Assumes no artifact was obtained outside level generation earlier in this run".into()]
+                } else {
+                    Vec::new()
+                },
                 source: item.source.clone(),
             };
             if shop_role.is_some() {

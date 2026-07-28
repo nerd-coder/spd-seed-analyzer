@@ -113,6 +113,10 @@ pub struct GeneratedItem {
     /// Enchantment or glyph simple name, if any.
     pub enchantment: Option<String>,
     pub source: Option<String>,
+    /// A prior (or this item's own) level-generation artifact draw means that
+    /// run-history artifact acquisitions can shift this result's deck stream.
+    #[serde(skip)]
+    pub artifact_conditional: bool,
     /// Never serialized: public reports derive safety from generation roles,
     /// not from user-visible source strings.
     #[serde(skip)]
@@ -129,6 +133,7 @@ impl GeneratedItem {
             cursed: false,
             enchantment: None,
             source: None,
+            artifact_conditional: false,
             provenance: ItemProvenance::None,
         }
     }

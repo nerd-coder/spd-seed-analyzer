@@ -147,7 +147,11 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
     };
 
     let report = floor.to_floor_report();
-    assert!(report.items.iter().all(|item| item.class_name.is_none()));
+    assert!(report.items.iter().any(|item| {
+        item.class_name.as_deref() == Some("PotionOfHealing")
+            && item.prediction == ItemPredictionKind::Exact
+            && item.source.as_deref() == Some("chest:heap")
+    }));
     assert!(report
         .items
         .iter()
@@ -161,7 +165,6 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
     for unsafe_map_fact in [
         "GuidePage",
         "Guide Page",
-        "PotionOfHealing",
         "Mimic",
         "LeatherArmor",
         "for_sale",
@@ -177,6 +180,61 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
         serde_json::to_value(report.items).expect("original forced contracts"),
         serde_json::to_value(guarded.items).expect("consumed forced contracts")
     );
+}
+
+#[test]
+fn artifact_shifted_floor_loot_keeps_searchable_properties_and_one_candidate() {
+    let mut conditional = item("PotionOfHealing", "heap");
+    conditional.level = 2;
+    conditional.cursed = true;
+    conditional.artifact_conditional = true;
+
+    let mut floor = empty_level_state(8);
+    floor.placed_items.push(conditional);
+    let report = floor.to_floor_report();
+    let loot = report
+        .items
+        .iter()
+        .find(|entry| entry.source.as_deref() == Some("heap"))
+        .expect("conditional floor loot");
+
+    assert_eq!(loot.prediction, ItemPredictionKind::Constrained);
+    assert_eq!(loot.class_name, None);
+    assert_eq!(loot.candidate_classes, ["PotionOfHealing"]);
+    assert_eq!(loot.level, Some(2));
+    assert_eq!(loot.cursed, Some(true));
+    assert_eq!(loot.conditional_notes.len(), 1);
+}
+
+fn empty_level_state(depth: i32) -> LevelState {
+    LevelState {
+        depth,
+        feeling: Feeling::None,
+        builder: None,
+        rooms: vec![],
+        room_bounds: vec![],
+        pre_shuffle_room_bounds: vec![],
+        build_ok: true,
+        forced_items: vec![],
+        initial_forced_items: vec![],
+        placed_items: vec![],
+        runtime_sensitive_placed_items_from: None,
+        runtime_sensitive_quests_from: None,
+        quests: vec![],
+        quest_public_labels: vec![],
+        runtime_sensitive_map: false,
+        runtime_sensitive_layout: false,
+        runtime_sensitive_feeling: false,
+        room_public_facts: vec![],
+        complete: true,
+        map: None,
+        layout_map: None,
+        pre_items_rng_probe: vec![],
+        pre_mobs_rng_probe: vec![],
+        pre_paint_rng_probe: vec![],
+        room_paint_rng_checkpoints: vec![],
+        post_doors_rng_probe: vec![],
+    }
 }
 
 #[test]
