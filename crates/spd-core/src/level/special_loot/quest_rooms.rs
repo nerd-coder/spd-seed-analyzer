@@ -105,12 +105,15 @@ pub(super) fn mass_grave_prizes(
     out
 }
 
-/// `RitualSiteRoom.paint` — select its jittered ritual center and enqueue four candles.
+/// `RitualSiteRoom.paint` — paint its ritual marker and enqueue four candles.
 pub(super) fn ritual_site_setup(
     room: &Room,
     map: &mut TerrainMap,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
+    fill_room(map, room, 0, WALL);
+    fill_room(map, room, 1, EMPTY);
+
     let center = room.as_rect().center_room();
     for y in (center.y - 1)..=(center.y + 1) {
         for x in (center.x - 1)..=(center.x + 1) {

@@ -2,7 +2,7 @@
 
 use super::super::quest_rooms::ritual_site_setup;
 use super::test_room;
-use crate::level::terrain::{paint_minimal, CUSTOM_DECO_EMPTY};
+use crate::level::terrain::{paint_minimal, CUSTOM_DECO_EMPTY, EMPTY, WALL};
 use crate::random::Random;
 
 #[test]
@@ -31,9 +31,19 @@ fn ritual_site_blocks_exact_chebyshev_radius_without_extra_rng() {
         for x in room.left..=room.right {
             let cell = map.point_to_cell(x, y).expect("room cell");
             let blocked = (x - center.x).abs().max((y - center.y).abs()) < 2;
+            let border = x == room.left || x == room.right || y == room.top || y == room.bottom;
             assert_eq!(map.item_allowed[cell], !blocked);
             assert_eq!(map.character_allowed[cell], !blocked);
-            assert_eq!(map.map[cell] == CUSTOM_DECO_EMPTY, blocked);
+            assert_eq!(
+                map.map[cell],
+                if border {
+                    WALL
+                } else if blocked {
+                    CUSTOM_DECO_EMPTY
+                } else {
+                    EMPTY
+                }
+            );
         }
     }
 }

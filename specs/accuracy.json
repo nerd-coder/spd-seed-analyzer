@@ -58,7 +58,7 @@
       "area": "Special & secret rooms",
       "status": "partial",
       "implemented": [
-        "Layout, terrain, and prize generation for every special and secret room type in the pinned game",
+        "Layout, terrain, and prize generation for every special and secret room type in the pinned game, plus the Old Wandmaker's Mass Grave, Ritual Site, and Rot Garden quest rooms",
         "Reward contracts for those rooms: how many drop, their categories, tier and upgrade bounds, and whether they are cursed"
       ],
       "remaining": [
@@ -80,6 +80,7 @@
         "Cell-for-cell terrain is confirmed against the game on the first floor, Sewers floor 4, and Caves floors 11–14; other floors are checked at room, door, and generation-boundary level",
         "Maps for floors without an exact layout are drawn as assumed continuations and can differ from your run",
         "The Sewers, Prison, Caves, and City boss floors draw plain terrain without the game's decorative tile variants",
+        "Decorated overlays are not drawn on regular floors, so the ritual site, mass grave, blacksmith, imp, weak floor, and demon spawner rooms render as plain terrain",
         "Quest side-levels, such as the Troll Blacksmith's mine, are not rendered"
       ],
       "impact": "Previews show the deterministic floor layout — terrain, traps, plants, and water — captured before anything is placed in the level. They make no claims about NPCs, monsters, or where items end up."

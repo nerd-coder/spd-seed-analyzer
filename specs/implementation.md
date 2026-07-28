@@ -36,6 +36,14 @@ spawns. Seed-determined fixed stock, quantities, and safe deck constraints are
 shown; inventory-, limited-drop-, and Hourglass-dependent stock stays
 constrained.
 
+The Old Wandmaker's three quest rooms now have their pinned terrain painters:
+Mass Grave, Ritual Site, and Rot Garden. The Ritual Site fills its wall border
+and empty interior, then blocks the 3×3 ritual marker; the fills consume no RNG,
+but `Room.center()` still jitters as in Java. Its four guaranteed Ceremonial
+Candles remain queued for floor placement. The room's `RitualMarker` overlay is
+not emitted — regular floors publish no custom tilemaps at all, which is now
+recorded as a rendering gap in the accuracy manifest.
+
 ## Next steps
 
 1. Narrow the public-taint blast radius. `callback_tail_sensitive` room paint
