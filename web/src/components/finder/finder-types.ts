@@ -11,6 +11,13 @@ export const MAX_CONSTRAINTS = 32
 export const MAX_FLOORS = 26
 export const MAX_RESULTS = 100
 
+export function randomStartSeed(): number {
+  const values = new Uint32Array(2)
+  crypto.getRandomValues(values)
+  const random53 = (BigInt(values[0] & 0x1fffff) << 32n) | BigInt(values[1])
+  return Number(random53 % BigInt(TOTAL_SEEDS))
+}
+
 export type FinderNumericInput = number | ''
 
 export function isIntegerInRange(

@@ -6,8 +6,10 @@ import {
 } from '@phosphor-icons/react'
 import { useStore } from '@tanstack/react-store'
 import type { FormEvent } from 'react'
+import { useState } from 'react'
 import { AppFloatingAction } from '@/components/AppFloatingAction'
 import { FinderForm } from '@/components/finder/FinderForm'
+import { randomStartSeed } from '@/components/finder/finder-types'
 import { AccuracyWarning } from '@/components/seed/AccuracyWarning'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -38,6 +40,7 @@ import {
 } from '@/stores/app'
 
 export function AppSidebar({ mode }: { mode: AppMode }) {
+  const [finderStartSeed] = useState(randomStartSeed)
   const seedInput = useStore($seedInput)
   const analyzing = useStore($analyzing)
   const formError = useStore($formError)
@@ -131,6 +134,7 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
           </form>
         ) : (
           <FinderForm
+            initialStartSeed={finderStartSeed}
             running={activeFinder?.run.status === 'running'}
             cancelRequested={activeFinder?.run.cancelRequested ?? false}
             onSearch={(config) => void startFinderSearch(config)}

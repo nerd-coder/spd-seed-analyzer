@@ -22,6 +22,7 @@ import {
   MAX_FLOORS,
   MAX_RESULTS,
   MIN_CANDIDATES,
+  randomStartSeed,
   TOTAL_SEEDS,
 } from './finder-types'
 
@@ -40,13 +41,6 @@ type SearchScopeFieldsProps = {
 
 function inputNumber(value: string, valueAsNumber: number): FinderNumericInput {
   return value === '' ? '' : valueAsNumber
-}
-
-function randomSeed(): number {
-  const values = new Uint32Array(2)
-  crypto.getRandomValues(values)
-  const random53 = (BigInt(values[0] & 0x1fffff) << 32n) | BigInt(values[1])
-  return Number(random53 % BigInt(TOTAL_SEEDS))
 }
 
 export function SearchScopeFields({
@@ -126,8 +120,9 @@ export function SearchScopeFields({
           </Popover>
           <InputGroupButton
             size="icon-sm"
+            variant="default"
             disabled={running}
-            onClick={() => onStartSeedChange(randomSeed())}
+            onClick={() => onStartSeedChange(randomStartSeed())}
             aria-label="Choose a random start seed"
             title="Random start seed"
           >

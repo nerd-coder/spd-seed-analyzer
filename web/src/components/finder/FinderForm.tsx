@@ -28,10 +28,11 @@ import {
 } from './finder-types'
 import { SearchScopeFields } from './SearchScopeFields'
 
-const INITIAL_FLOORS = 10
+const INITIAL_FLOORS = 20
 const CANCEL_COOLDOWN_MS = 1_000
 
 type FinderFormProps = {
+  initialStartSeed: number
   running: boolean
   cancelRequested: boolean
   onSearch: (config: FinderConfig) => void
@@ -39,6 +40,7 @@ type FinderFormProps = {
 }
 
 export function FinderForm({
+  initialStartSeed,
   running,
   cancelRequested,
   onSearch,
@@ -48,7 +50,8 @@ export function FinderForm({
   const suppressNextSubmit = useRef(false)
   const [attempted, setAttempted] = useState(false)
   const [cancelCooldown, setCancelCooldown] = useState(false)
-  const [startSeed, setStartSeed] = useState<FinderNumericInput>(0)
+  const [startSeed, setStartSeed] =
+    useState<FinderNumericInput>(initialStartSeed)
   const [candidateCount, setCandidateCount] = useState<FinderNumericInput>(100)
   const [floors, setFloors] = useState(INITIAL_FLOORS)
   const [maxMatches, setMaxMatches] = useState<FinderNumericInput>(10)

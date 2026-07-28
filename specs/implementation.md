@@ -11,6 +11,11 @@ Catalyst item/icon row and renders a separate “Trinket offers” group with th
 offer item/icons, without OR labels or upgrade levels. The preview uses a
 cloned generator and does not advance the real deck.
 
+Find defaults are also settled: the sidebar generates one random numeric start
+seed when the page mounts and preserves it across Analyze/Find tab switches;
+new searches default to depth 20, and the random-seed control uses the primary
+button style.
+
 ## Next steps
 
 1. Select the next user-reliability gap from `specs/accuracy.json`, verify its
