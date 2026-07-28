@@ -201,12 +201,52 @@ impl MapFacts {
             traps: traps(map),
             plants: plants(map),
             blobs: blobs(map),
-            custom_tiles: Vec::new(),
-            custom_walls: Vec::new(),
+            custom_tiles: custom_tiles(map, depth),
+            custom_walls: map.custom_walls.clone(),
             runtime_sensitive_loot_cells: self.runtime_sensitive_loot_cells,
             constrained_equipment_cells: self.constrained_equipment_cells,
         }
     }
+}
+
+fn custom_tiles(map: &TerrainMap, depth: i32) -> Vec<crate::report::MapCustomTile> {
+    let mut layers = map.custom_tiles.clone();
+    for layer in &mut layers {
+        if layer.class_name == "HiddenWell" {
+            layer.static_data = vec![(depth / 5) as i16];
+        } else if layer.class_name == "CustomFloor" {
+            let width = layer.width as usize;
+            for (index, visual) in layer.static_data.iter_mut().enumerate() {
+                let x = layer.x as usize + index % width;
+                let y = layer.y as usize + index / width;
+                let cell = x + y * map.width as usize;
+                *visual = if map.map[cell] == terrain::EMPTY_DECO {
+                    27
+                } else {
+                    19
+                };
+            }
+            if let Some(cell) = map
+                .known_mobs
+                .iter()
+                .position(|mob| *mob == Some("DemonSpawner"))
+            {
+                let x = cell % map.width as usize;
+                let y = cell / map.width as usize;
+                if x >= layer.x as usize
+                    && y >= layer.y as usize
+                    && x < layer.x as usize + width
+                    && y < layer.y as usize + layer.height as usize
+                {
+                    let index = x - layer.x as usize + (y - layer.y as usize) * width;
+                    if index > 0 && index + 1 < layer.static_data.len() {
+                        layer.static_data[index - 1..=index + 1].copy_from_slice(&[37, 38, 39]);
+                    }
+                }
+            }
+        }
+    }
+    layers
 }
 
 fn plants(map: &TerrainMap) -> Vec<MapPlant> {

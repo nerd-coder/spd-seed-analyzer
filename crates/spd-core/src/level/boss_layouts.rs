@@ -4,6 +4,7 @@ use crate::level::terrain;
 use crate::report::{FloorMap, MapTransition};
 
 mod caves;
+mod city_overlays;
 mod data;
 mod halls;
 mod last_level;
@@ -22,7 +23,7 @@ pub(super) fn fixed_layout(depth: i32) -> Option<FloorMap> {
     let discoverable = expand(discoverable);
     debug_assert_eq!(tiles.len(), width * height);
     debug_assert_eq!(discoverable.len(), width * height);
-    Some(FloorMap {
+    let mut floor = FloorMap {
         width: width as u32,
         height: height as u32,
         tileset: terrain::tileset_for_depth(depth).to_string(),
@@ -40,7 +41,11 @@ pub(super) fn fixed_layout(depth: i32) -> Option<FloorMap> {
         custom_walls: Vec::new(),
         runtime_sensitive_loot_cells: Vec::new(),
         constrained_equipment_cells: Vec::new(),
-    })
+    };
+    if depth == 20 {
+        (floor.custom_tiles, floor.custom_walls) = city_overlays::layers(&floor.tiles);
+    }
+    Some(floor)
 }
 
 pub(super) fn generated_layout(

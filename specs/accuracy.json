@@ -74,13 +74,14 @@
       "status": "partial",
       "implemented": [
         "Floor maps show room shapes, walls, doors, stairs, water, grass, traps, and plants as painted during generation",
-        "Maps are drawn for a player-state assumption you choose: which map-affecting trinket the hero carries, and from which floor"
+        "Maps are drawn for a player-state assumption you choose: which map-affecting trinket the hero carries, and from which floor",
+        "Decorative overlays for the ritual site, blacksmith, imp, weak floor, demon spawner, City boss, Halls boss, and final floor"
       ],
       "remaining": [
         "Cell-for-cell terrain is confirmed against the game on the first floor, Sewers floor 4, and Caves floors 11–14; other floors are checked at room, door, and generation-boundary level",
         "Maps for floors without an exact layout are drawn as assumed continuations and can differ from your run",
-        "The Sewers, Prison, Caves, and City boss floors draw plain terrain without the game's decorative tile variants",
-        "Decorated overlays are not drawn on regular floors, so the ritual site, mass grave, blacksmith, imp, weak floor, and demon spawner rooms render as plain terrain",
+        "The Sewers, Prison, and Caves boss floors draw plain terrain without the game's decorative tile variants",
+        "Mass Grave and other uncovered room overlays remain plain",
         "Quest side-levels, such as the Troll Blacksmith's mine, are not rendered"
       ],
       "impact": "Previews show the deterministic floor layout — terrain, traps, plants, and water — captured before anything is placed in the level. They make no claims about NPCs, monsters, or where items end up."

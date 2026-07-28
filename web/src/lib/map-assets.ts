@@ -23,6 +23,11 @@ export type MapAssets = MapEntityAssets & {
   tiles: HTMLImageElement
   water: HTMLImageElement
   customTiles: {
+    prisonQuest: HTMLImageElement
+    cavesQuest: HTMLImageElement
+    cityQuest: HTMLImageElement
+    cityBoss: HTMLImageElement
+    weakFloor: HTMLImageElement
     hallsSpecial: HTMLImageElement
   }
 }
@@ -61,21 +66,44 @@ async function loadMobAssets(): Promise<MobAssets> {
 export async function loadMapAssets(tileset: string): Promise<MapAssets> {
   const region = regionIndex(tileset)
   const key = ['sewers', 'prison', 'caves', 'city', 'halls'][region]
-  const [tiles, terrainFeatures, water, items, mobs, hallsSpecial] =
-    await Promise.all([
-      loadImage(`/assets/environment/tiles_${key}.png`),
-      loadImage('/assets/environment/terrain_features.png'),
-      loadImage(`/assets/environment/water${region}.png`),
-      loadImage('/assets/sprites/items.png'),
-      loadMobAssets(),
-      loadImage('/assets/environment/custom_tiles/halls_special.png'),
-    ])
+  const [
+    tiles,
+    terrainFeatures,
+    water,
+    items,
+    mobs,
+    prisonQuest,
+    cavesQuest,
+    cityQuest,
+    cityBoss,
+    weakFloor,
+    hallsSpecial,
+  ] = await Promise.all([
+    loadImage(`/assets/environment/tiles_${key}.png`),
+    loadImage('/assets/environment/terrain_features.png'),
+    loadImage(`/assets/environment/water${region}.png`),
+    loadImage('/assets/sprites/items.png'),
+    loadMobAssets(),
+    loadImage('/assets/environment/custom_tiles/prison_quest.png'),
+    loadImage('/assets/environment/custom_tiles/caves_quest.png'),
+    loadImage('/assets/environment/custom_tiles/city_quest.png'),
+    loadImage('/assets/environment/custom_tiles/city_boss.png'),
+    loadImage('/assets/environment/custom_tiles/weak_floor.png'),
+    loadImage('/assets/environment/custom_tiles/halls_special.png'),
+  ])
   return {
     tiles,
     terrainFeatures,
     water,
     items,
     ...mobs,
-    customTiles: { hallsSpecial },
+    customTiles: {
+      prisonQuest,
+      cavesQuest,
+      cityQuest,
+      cityBoss,
+      weakFloor,
+      hallsSpecial,
+    },
   }
 }

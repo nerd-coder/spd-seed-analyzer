@@ -41,3 +41,50 @@ fn blob_projection_merges_seeded_cells_and_sorts_the_contract() {
         ]
     );
 }
+
+#[test]
+fn regular_floor_overlays_match_java_fixture_geometry() {
+    for (seed, depth, expected) in [
+        ("GFX-PZH-DCH", 12, vec![("QuestEntrance", 39, 28, 1, 1)]),
+        (
+            "GFX-PZH-DCH",
+            17,
+            vec![
+                ("QuestEntrance", 20, 35, 5, 5),
+                ("EntranceBarrier", 21, 36, 3, 3),
+            ],
+        ),
+        (
+            "GFX-PZH-DCH",
+            21,
+            vec![("CustomFloor", 20, 34, 5, 4), ("HiddenWell", 18, 35, 1, 1)],
+        ),
+    ] {
+        let numeric = crate::parse_seed(seed).unwrap().numeric;
+        let mut dungeon = crate::dungeon_from_run(crate::init_run(numeric));
+        let mut level = None;
+        for replay_depth in 1..=depth {
+            dungeon.depth = replay_depth;
+            level = Some(crate::level::create_level_partial(&mut dungeon));
+        }
+        let map = level.unwrap().map.expect("regular floor map");
+        let actual: Vec<_> = map
+            .custom_tiles
+            .iter()
+            .map(|layer| {
+                (
+                    layer.class_name.as_str(),
+                    layer.x,
+                    layer.y,
+                    layer.width,
+                    layer.height,
+                )
+            })
+            .collect();
+        assert_eq!(actual, expected, "{seed} depth {depth}");
+        assert!(map
+            .custom_tiles
+            .iter()
+            .all(|layer| layer.static_data.len() == (layer.width * layer.height) as usize));
+    }
+}

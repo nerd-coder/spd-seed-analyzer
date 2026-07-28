@@ -82,7 +82,14 @@ fn aaa_caves_replay_matches_complete_pre_items_visual_facts() {
             expected.custom_walls.is_empty(),
             "{context} oracle custom walls"
         );
-        assert!(map.custom_tiles.is_empty(), "{context} custom tiles");
+        if depth == 13 {
+            assert_eq!(map.custom_tiles.len(), 1, "{context} custom tiles");
+            assert_eq!(map.custom_tiles[0].class_name, "QuestEntrance");
+            assert_eq!(map.custom_tiles[0].texture, "caves_quest");
+            assert_eq!(map.custom_tiles[0].static_data, [0]);
+        } else {
+            assert!(map.custom_tiles.is_empty(), "{context} custom tiles");
+        }
         assert!(map.custom_walls.is_empty(), "{context} custom walls");
     }
 }

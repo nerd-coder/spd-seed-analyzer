@@ -277,6 +277,7 @@ pub(super) fn paint_weak_floor(
         )
     };
     set(map, well, CHASM);
+    map.record_custom_tile("HiddenWell", "weak_floor", (well.x, well.y, 1, 1), vec![4]);
 }
 
 pub(super) fn paint_demon_spawner(map: &mut TerrainMap, room: &Room) {
@@ -290,6 +291,21 @@ pub(super) fn paint_demon_spawner(map: &mut TerrainMap, room: &Room) {
         map.mob_occupied[cell] = true;
         map.known_mobs[cell] = Some("DemonSpawner");
     }
+    let width = room.width() - 2;
+    let height = room.height() - 2;
+    let mut data = vec![19; (width * height) as usize];
+    let center_index = (center.y - room.top - 1) * width + center.x - room.left - 1;
+    if center_index > 0 && center_index + 1 < width * height {
+        data[(center_index - 1) as usize] = 37;
+        data[center_index as usize] = 38;
+        data[(center_index + 1) as usize] = 39;
+    }
+    map.record_custom_tile(
+        "CustomFloor",
+        "halls_special",
+        (room.left + 1, room.top + 1, width, height),
+        data,
+    );
 
     // DemonSpawnerRoom refuses all three ambient painter types everywhere.
     for y in room.top..=room.bottom {
@@ -313,6 +329,22 @@ pub(super) fn paint_ambitious_imp(
     fill_room(map, room, crate::level::terrain::WALL_DECO);
     fill_margin(map, room, 1, crate::level::terrain::EMPTY);
     let center = room.as_rect().center_room();
+    map.record_custom_tile(
+        "QuestEntrance",
+        "city_quest",
+        (center.x - 2, center.y - 2, 5, 5),
+        (0..25)
+            .map(|index| (index % 5 + (index / 5) * 8) as i16)
+            .collect(),
+    );
+    map.record_custom_tile(
+        "EntranceBarrier",
+        "city_quest",
+        (center.x - 1, center.y - 1, 3, 3),
+        (0..9)
+            .map(|index| (5 + index % 3 + (1 + index / 3) * 8) as i16)
+            .collect(),
+    );
     for (dx, dy) in [(-2, -2), (2, -2), (-2, 2), (2, 2)] {
         set(
             map,

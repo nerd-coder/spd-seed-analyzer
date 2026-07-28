@@ -1,6 +1,7 @@
 //! Terrain map using SPD `Terrain` IDs for asset-aligned rendering.
 
 use crate::items::model::GeneratedItem;
+use crate::report::MapCustomTile;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
 
@@ -112,6 +113,10 @@ pub struct TerrainMap {
     pub trap_names: Vec<Option<&'static str>>,
     /// `EXIT` cells backed by an explicit quest-branch transition.
     pub branch_exits: Vec<usize>,
+    /// Painter-complete custom ground overlays, in Java insertion order.
+    pub custom_tiles: Vec<MapCustomTile>,
+    /// Painter-complete custom wall overlays, in Java insertion order.
+    pub custom_walls: Vec<MapCustomTile>,
 }
 
 impl TerrainMap {
@@ -138,6 +143,26 @@ impl TerrainMap {
                 items: vec![item],
             });
         }
+    }
+
+    pub(crate) fn record_custom_tile(
+        &mut self,
+        class_name: &str,
+        texture: &str,
+        rect: (i32, i32, i32, i32),
+        static_data: Vec<i16>,
+    ) {
+        let (x, y, width, height) = rect;
+        debug_assert_eq!(static_data.len(), (width * height) as usize);
+        self.custom_tiles.push(MapCustomTile {
+            class_name: class_name.into(),
+            texture: texture.into(),
+            x: x as u32,
+            y: y as u32,
+            width: width as u32,
+            height: height as u32,
+            static_data,
+        });
     }
 
     pub(crate) fn record_blob_cell(
@@ -430,6 +455,8 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
         trap_destroys_items,
         trap_names,
         branch_exits,
+        custom_tiles: Vec::new(),
+        custom_walls: Vec::new(),
     })
 }
 

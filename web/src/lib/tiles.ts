@@ -87,10 +87,16 @@ function drawSheetTile(
   )
 }
 
-const CUSTOM_TILE_SHEET_COLS = 8
-
 function customTileImage(assets: MapAssets, texture: string) {
-  return texture === 'halls_special' ? assets.customTiles.hallsSpecial : null
+  const images: Record<string, HTMLImageElement> = {
+    prison_quest: assets.customTiles.prisonQuest,
+    caves_quest: assets.customTiles.cavesQuest,
+    city_quest: assets.customTiles.cityQuest,
+    city_boss: assets.customTiles.cityBoss,
+    weak_floor: assets.customTiles.weakFloor,
+    halls_special: assets.customTiles.hallsSpecial,
+  }
+  return images[texture] ?? null
 }
 
 function drawCustomTiles(
@@ -116,10 +122,11 @@ function drawCustomTiles(
       )
         continue
       const size = TILE_PX * scale
+      const sheetColumns = image.naturalWidth / TILE_PX
       ctx.drawImage(
         image,
-        (visual % CUSTOM_TILE_SHEET_COLS) * TILE_PX,
-        Math.floor(visual / CUSTOM_TILE_SHEET_COLS) * TILE_PX,
+        (visual % sheetColumns) * TILE_PX,
+        Math.floor(visual / sheetColumns) * TILE_PX,
         TILE_PX,
         TILE_PX,
         x * size,

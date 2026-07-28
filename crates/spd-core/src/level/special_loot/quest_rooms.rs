@@ -115,6 +115,12 @@ pub(super) fn ritual_site_setup(
     fill_room(map, room, 1, EMPTY);
 
     let center = room.as_rect().center_room();
+    map.record_custom_tile(
+        "RitualMarker",
+        "prison_quest",
+        (center.x - 1, center.y - 1, 3, 3),
+        (0..9).collect(),
+    );
     for y in (center.y - 1)..=(center.y + 1) {
         for x in (center.x - 1)..=(center.x + 1) {
             if let Some(cell) = map.point_to_cell(x, y) {
@@ -226,6 +232,12 @@ pub(super) fn blacksmith_room_prizes(
     let entrance_cell = map
         .point_to_cell(entrance.x, entrance.y)
         .expect("Blacksmith branch exit is on map");
+    map.record_custom_tile(
+        "QuestEntrance",
+        "caves_quest",
+        (entrance.x, entrance.y, 1, 1),
+        vec![0],
+    );
     map.map[entrance_cell] = EXIT;
     map.branch_exits.push(entrance_cell);
     map.character_allowed[entrance_cell] = false;
