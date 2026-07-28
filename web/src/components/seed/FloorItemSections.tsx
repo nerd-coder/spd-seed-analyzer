@@ -17,6 +17,9 @@ import { itemAppearance } from '@/lib/identity'
 import { formatItemSource, isHighlightSource } from '@/lib/labels'
 import type { FloorReport, IdentityMaps, ItemEntry } from '@/lib/spd-wasm'
 
+const IMP_SHOP_CONDITION =
+  'Appears only if the Ambitious Imp quest was completed before this shop is spawned.'
+
 function itemGroup(
   item: ItemEntry
 ): 'shop' | 'quest' | 'guaranteed' | 'loot' | 'general' {
@@ -296,11 +299,25 @@ export function FloorItemSections({
   identitySpoilers: boolean
 }) {
   const groups = partitionFloorItems(floor.items)
+  const impShop =
+    groups.shop.length > 0 &&
+    groups.shop.every((item) => item.source === 'ImpShopRoom')
   const sections = [
     { key: 'guaranteed', label: 'Guaranteed spawns', items: groups.guaranteed },
     { key: 'loot', label: 'Floor loot', items: groups.loot },
     { key: 'general', label: 'Other items', items: groups.general },
-    { key: 'shop', label: 'Shop', items: groups.shop },
+    {
+      key: 'shop',
+      label: 'Shop',
+      items: impShop
+        ? groups.shop.map((item) => ({
+            ...item,
+            conditional_notes: item.conditional_notes?.filter(
+              (note) => note !== IMP_SHOP_CONDITION
+            ),
+          }))
+        : groups.shop,
+    },
   ].filter(({ items }) => items.length > 0)
 
   return (
@@ -322,6 +339,9 @@ export function FloorItemSections({
                   ),
                 ]}
               />
+            ) : null}
+            {key === 'shop' && impShop ? (
+              <ConditionalNotes notes={[IMP_SHOP_CONDITION]} />
             ) : null}
           </div>
           <FloorItemList

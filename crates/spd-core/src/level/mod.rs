@@ -232,7 +232,11 @@ fn create_level_internal(
         // placed until the Imp quest completes, but `generateItems` mutates
         // the persistent Generator decks during level creation.
         if dungeon.depth == 20 {
-            let _imp_shop_stock = shop::generate_items(dungeon);
+            let mut imp_shop_stock = shop::generate_items(dungeon);
+            for item in &mut imp_shop_stock {
+                item.source = Some("ImpShopRoom".into());
+            }
+            placed_items.extend(imp_shop_stock);
         }
         build_ok = layout_map.is_some();
         runtime_sensitive_map = false;

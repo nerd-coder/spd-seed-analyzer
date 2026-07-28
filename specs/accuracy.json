@@ -51,7 +51,7 @@
         "Ordinary floor loot from heaps, chests, locked chests, and skeletons, including class, stack quantity, upgrade level, and curse; results after an artifact draw carry the assumption that no artifact was obtained outside level generation earlier in the run",
         "Quest rewards from the Sad Ghost, Old Wandmaker, Troll Blacksmith, and Ambitious Imp; the Ghost's armor class and shared upgrade level are exact, its weapon is named exactly or shown as a short ordered set, and its enchantment and glyph are named with the Parchment Scrap level needed to keep them; the Blacksmith's four equipment choices, shared upgrade level, and seed-rolled enchantment or glyph are shown, with the Scrap level needed when the effect is not active by default; the Wandmaker's two distinct, non-cursed wand classes are exact unless Mimic Tooth can shift the deck, in which case they are shown as ordered candidates, with exact upgrade levels when known; the Imp's cursed +2…+4 ring is likewise named exactly or shown as an ordered set",
         "Special- and secret-room rewards: how many drop, their categories, tier and upgrade bounds, and whether they are cursed",
-        "Shop stock presence and stack quantities, with identical fixed items combined, common items named exactly, and deck-driven slots reported as a category and tier",
+        "Shop stock presence and stack quantities, with identical fixed items combined, common items named exactly, and deck-driven slots reported as a category and tier; the depth-20 Imp shop is shown with its quest-completion condition",
         "Seed search can additionally match a minimum upgrade level on items predicted exactly"
       ],
       "remaining": [

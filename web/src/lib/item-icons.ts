@@ -133,6 +133,7 @@ export const CLASS_ICON: Record<string, number> = {
   MysteryMeat: 432,
   Pasty: 438,
   PotionBandolier: 484,
+  SandBag: 23,
   ScrollHolder: 483,
   SkeletonKey: 264,
   SmallRation: 435,

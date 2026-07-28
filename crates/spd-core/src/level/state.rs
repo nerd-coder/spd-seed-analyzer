@@ -218,6 +218,7 @@ impl LevelState {
                     .source
                     .as_deref()
                     .is_some_and(|source| source.rsplit(':').next() == Some("heap"));
+            let imp_shop_conditional = item.source.as_deref() == Some("ImpShopRoom");
             let prediction = if artifact_conditional {
                 ItemPredictionKind::Constrained
             } else {
@@ -443,10 +444,21 @@ impl LevelState {
                                 )]
                             })
                     })
-                    .unwrap_or_else(|| if artifact_conditional {
-                        vec!["Assumes no artifact was obtained outside level generation earlier in this run".into()]
-                    } else {
-                        Vec::new()
+                    .unwrap_or_else(|| {
+                        let mut notes = Vec::new();
+                        if imp_shop_conditional {
+                            notes.push(
+                                "Appears only if the Ambitious Imp quest was completed before this shop is spawned."
+                                    .into(),
+                            );
+                        }
+                        if artifact_conditional {
+                            notes.push(
+                                "Assumes no artifact was obtained outside level generation earlier in this run"
+                                    .into(),
+                            );
+                        }
+                        notes
                     }),
                 source: item.source.clone(),
             };
@@ -457,6 +469,15 @@ impl LevelState {
             }
         }
         if has_shop {
+            let shop_source = if self.depth == 20 {
+                "ImpShopRoom"
+            } else {
+                "ShopRoom"
+            };
+            let shop_spawn_condition = (self.depth == 20).then(|| {
+                "Appears only if the Ambitious Imp quest was completed before this shop is spawned."
+                    .into()
+            });
             shop_items.push(ItemEntry {
                 name: "inventory-dependent bag stock".into(),
                 quantity: 1,
@@ -470,15 +491,18 @@ impl LevelState {
                 cursed: None,
                 enchantment: None,
                 prediction: ItemPredictionKind::Constrained,
-                conditional_notes: vec![
-                    "A bag may be offered; its presence and identity depend on inventory and prior limited drops.".into(),
-                ],
-                source: Some("ShopRoom".into()),
+                conditional_notes: std::iter::once(
+                    "A bag may be offered; its presence and identity depend on inventory and prior limited drops."
+                        .into(),
+                )
+                .chain(shop_spawn_condition.clone())
+                .collect(),
+                source: Some(shop_source.into()),
             });
             shop_items.push(ItemEntry {
                 name: "Hourglass sand stock".into(),
                 quantity: 1,
-                class_name: None,
+                class_name: Some("SandBag".into()),
                 candidate_classes: Vec::new(),
                 category: "other".into(),
                 tier: None,
@@ -488,10 +512,13 @@ impl LevelState {
                 cursed: None,
                 enchantment: None,
                 prediction: ItemPredictionKind::Constrained,
-                conditional_notes: vec![
-                    "Sandbag presence and quantity depend on the hero's Timekeeper's Hourglass state.".into(),
-                ],
-                source: Some("ShopRoom".into()),
+                conditional_notes: std::iter::once(
+                    "Sandbag presence and quantity depend on the hero's Timekeeper's Hourglass state."
+                        .into(),
+                )
+                .chain(shop_spawn_condition)
+                .collect(),
+                source: Some(shop_source.into()),
             });
         }
         // The pinned isolated shuffle order is not public: bag/sand list size

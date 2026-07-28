@@ -204,6 +204,41 @@ fn shop_stock_on_floor_6() {
         .items
         .iter()
         .any(|item| item.source.as_deref() == Some("ShopRoom")));
+    assert!(public.items.iter().any(|item| {
+        item.name == "Hourglass sand stock" && item.class_name.as_deref() == Some("SandBag")
+    }));
+}
+
+#[test]
+fn imp_shop_stock_on_floor_20_is_reported_conditionally() {
+    let mut dungeon = dungeon_from_run(init_run(0));
+    let mut state = None;
+    for depth in 1..=20 {
+        dungeon.depth = depth;
+        state = Some(level::create_level_partial(&mut dungeon));
+    }
+
+    let public = state.expect("floor twenty").to_floor_report();
+    let shop: Vec<_> = public
+        .items
+        .iter()
+        .filter(|item| item.source.as_deref() == Some("ImpShopRoom"))
+        .collect();
+
+    assert!(!shop.is_empty());
+    assert!(shop.iter().all(|item| item
+        .conditional_notes
+        .iter()
+        .any(|note| note.contains("Ambitious Imp quest"))));
+    assert!(shop.iter().any(|item| {
+        item.class_name.as_deref() == Some("PlateArmor")
+            && item.prediction == crate::report::ItemPredictionKind::Exact
+    }));
+    assert!(shop.iter().any(|item| {
+        item.name == "weapon stock"
+            && item.tier == Some(5)
+            && item.prediction == crate::report::ItemPredictionKind::Constrained
+    }));
 }
 
 #[test]

@@ -30,6 +30,12 @@ Secret Honeypot room rewards are verified against pinned SPD: every such room
 reports the guaranteed Shattered Pot and Honeypot as exact searchable items,
 while the Bomb/Double Bomb result remains a constrained seed-rolled variant.
 
+The depth-20 Imp shop stock is retained in the public report with the explicit
+condition that the Ambitious Imp quest must have been completed before the shop
+spawns. Seed-determined fixed stock, quantities, and safe deck constraints are
+shown; inventory-, limited-drop-, and Hourglass-dependent stock stays
+constrained.
+
 ## Next steps
 
 1. Select the next user-reliability gap from `specs/accuracy.json`, verify its
