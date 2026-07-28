@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useStore } from '@tanstack/react-store'
+import { useEffect } from 'react'
+import { $elapsedNow } from '@/stores/ui'
 
 export function useElapsedTime(startedAt: number | null, running: boolean) {
-  const [now, setNow] = useState(Date.now())
+  const now = useStore($elapsedNow)
 
   useEffect(() => {
     if (!running) return
-    setNow(Date.now())
-    const timer = window.setInterval(() => setNow(Date.now()), 1_000)
+    $elapsedNow.set(Date.now())
+    const timer = window.setInterval(() => $elapsedNow.set(Date.now()), 1_000)
     return () => window.clearInterval(timer)
   }, [running])
 

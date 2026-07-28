@@ -1,5 +1,6 @@
 import { ArrowsOut, SpinnerGapIcon } from '@phosphor-icons/react'
-import { useMemo, useRef, useState } from 'react'
+import { useStore } from '@tanstack/react-store'
+import { useMemo, useRef } from 'react'
 
 import { FloorMapCanvas } from '@/components/FloorMapCanvas'
 import { MapSettingsPanel } from '@/components/MapSettingsPanel'
@@ -14,6 +15,7 @@ import {
 import type { FloorMap, IdentityMaps } from '@/lib/spd-wasm'
 import { mapViewport, TILE_PX } from '@/lib/tiles'
 import { cn } from '@/lib/utils'
+import { AppStore } from '@/stores/store-utils'
 
 const PREVIEW_BOX = 128
 
@@ -47,7 +49,8 @@ export function FloorMapPreview({
 }: Props) {
   const viewport = useMemo(() => mapViewport(map), [map])
   const dialogContentRef = useRef<HTMLDivElement>(null)
-  const [zoom, setZoom] = useState(() => initialZoom(map))
+  const zoomStore = useMemo(() => new AppStore(initialZoom(map)), [map])
+  const zoom = useStore(zoomStore)
 
   return (
     <Dialog>
@@ -103,7 +106,10 @@ export function FloorMapPreview({
           </DialogDescription>
         </DialogHeader>
         <div className="relative min-h-0 flex-1 overflow-hidden bg-black/80">
-          <MapSettingsPanel zoom={zoom} onZoomChange={setZoom} />
+          <MapSettingsPanel
+            zoom={zoom}
+            onZoomChange={(value) => zoomStore.set(value)}
+          />
           <div
             className="flex size-full items-start justify-start overflow-auto p-2"
             data-testid="map-scroll-container"

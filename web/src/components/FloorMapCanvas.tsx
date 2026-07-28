@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useStore } from '@tanstack/react-store'
+import { useEffect, useMemo, useRef } from 'react'
 import { Terrain } from '@/lib/dungeon-tile-visuals'
 import type { FloorMap, IdentityMaps } from '@/lib/spd-wasm'
 import {
@@ -9,6 +10,7 @@ import {
   TILE_PX,
 } from '@/lib/tiles'
 import { cn } from '@/lib/utils'
+import { createMapCanvasStore } from '@/stores/ui'
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
 
@@ -49,8 +51,11 @@ export function FloorMapCanvas({
   showMobs = false,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [reducedMotion, setReducedMotion] = useState(prefersReducedMotion)
+  const canvasStore = useMemo(
+    () => createMapCanvasStore(prefersReducedMotion()),
+    []
+  )
+  const { error, reducedMotion } = useStore(canvasStore)
   const viewport = useMemo(() => mapViewport(map), [map])
 
   const naturalW = viewport.width * TILE_PX * scale
@@ -77,16 +82,17 @@ export function FloorMapCanvas({
   useEffect(() => {
     if (!animateWater) return
     const media = window.matchMedia(REDUCED_MOTION_QUERY)
-    const update = () => setReducedMotion(media.matches)
+    const update = () =>
+      canvasStore.set({ ...canvasStore.get(), reducedMotion: media.matches })
     update()
     media.addEventListener?.('change', update)
     return () => media.removeEventListener?.('change', update)
-  }, [animateWater])
+  }, [animateWater, canvasStore])
 
   useEffect(() => {
     let cancelled = false
     let requestId = 0
-    setError(null)
+    canvasStore.set({ ...canvasStore.get(), error: null })
     const canvas = canvasRef.current
     if (!canvas) return
 
@@ -121,7 +127,10 @@ export function FloorMapCanvas({
       })
       .catch((e: unknown) => {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : String(e))
+          canvasStore.set({
+            ...canvasStore.get(),
+            error: e instanceof Error ? e.message : String(e),
+          })
         }
       })
 
@@ -140,6 +149,7 @@ export function FloorMapCanvas({
     showItems,
     showMobs,
     viewport,
+    canvasStore,
   ])
 
   return (

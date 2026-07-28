@@ -6,7 +6,6 @@ import {
 } from '@phosphor-icons/react'
 import { useStore } from '@tanstack/react-store'
 import type { FormEvent } from 'react'
-import { useState } from 'react'
 import { AppFloatingAction } from '@/components/AppFloatingAction'
 import { FinderForm } from '@/components/finder/FinderForm'
 import { randomStartSeed } from '@/components/finder/finder-types'
@@ -39,8 +38,9 @@ import {
   startFinderSearch,
 } from '@/stores/app'
 
+const finderStartSeed = randomStartSeed()
+
 export function AppSidebar({ mode }: { mode: AppMode }) {
-  const [finderStartSeed] = useState(randomStartSeed)
   const seedInput = useStore($seedInput)
   const analyzing = useStore($analyzing)
   const formError = useStore($formError)

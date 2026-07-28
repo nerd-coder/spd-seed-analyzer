@@ -1,6 +1,6 @@
 import { BinocularsIcon, SpinnerGapIcon, XIcon } from '@phosphor-icons/react'
 import { useStore } from '@tanstack/react-store'
-import { useRef, useState } from 'react'
+import { useMemo, useRef } from 'react'
 import { ScrollableSessionTabs } from '@/components/ScrollableSessionTabs'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,14 +23,17 @@ import {
   closeFinderSession,
   setActiveFinder,
 } from '@/stores/app'
+import { AppStore } from '@/stores/store-utils'
 import { FinderResults } from './FinderResults'
 
 export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
   const sessions = useStore($finderSessions)
   const activeId = useStore($activeFinderId)
-  const [closeConfirmationId, setCloseConfirmationId] = useState<string | null>(
-    null
+  const closeConfirmationStore = useMemo(
+    () => new AppStore<string | null>(null),
+    []
   )
+  const closeConfirmationId = useStore(closeConfirmationStore)
   const tabsRef = useRef<HTMLDivElement>(null)
   useSeedTabsHeight(tabsRef, sessions.length > 0)
 
@@ -42,7 +45,7 @@ export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
 
   function requestClose(id: string, running: boolean) {
     if (running) {
-      setCloseConfirmationId(id)
+      closeConfirmationStore.set(id)
       return
     }
     closeFinderSession(id)
@@ -51,7 +54,7 @@ export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
   function confirmClose() {
     if (!closeConfirmationId) return
     closeFinderSession(closeConfirmationId)
-    setCloseConfirmationId(null)
+    closeConfirmationStore.set(null)
   }
 
   if (sessions.length === 0) {
@@ -111,7 +114,7 @@ export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
       <Dialog
         open={closeConfirmationId !== null}
         onOpenChange={(open) => {
-          if (!open) setCloseConfirmationId(null)
+          if (!open) closeConfirmationStore.set(null)
         }}
       >
         <DialogContent showCloseButton={false}>

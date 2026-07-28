@@ -16,6 +16,10 @@ seed when the page mounts and preserves it across Analyze/Find tab switches;
 new searches default to depth 20, and the random-seed control uses the primary
 button style.
 
+All web application and component UI state now uses TanStack Store, including
+finder form state, map controls/render status, close confirmation, and elapsed
+time. DOM refs and derived memoized values remain React implementation details.
+
 ## Next steps
 
 1. Select the next user-reliability gap from `specs/accuracy.json`, verify its
