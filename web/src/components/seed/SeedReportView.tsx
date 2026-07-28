@@ -10,6 +10,8 @@ export function SeedReportView({
   refreshingLayout,
   identitySpoilers,
   mapSpoilers,
+  selectedRegion,
+  onSelectedRegionChange,
 }: {
   report: SeedReport
   sessionId: string
@@ -17,6 +19,8 @@ export function SeedReportView({
   refreshingLayout: boolean
   identitySpoilers: boolean
   mapSpoilers: boolean
+  selectedRegion: string | null
+  onSelectedRegionChange: (regionId: string) => void
 }) {
   const hasFloors = report.floors.length > 0
 
@@ -38,6 +42,8 @@ export function SeedReportView({
           identities={report.identities}
           identitySpoilers={identitySpoilers}
           mapSpoilers={mapSpoilers}
+          selectedRegion={selectedRegion}
+          onSelectedRegionChange={onSelectedRegionChange}
         />
       )}
     </div>

@@ -49,6 +49,7 @@ export {
   setSeedIdentitySpoilers,
   setSeedInput,
   setSeedMapSpoilers,
+  setSeedSelectedRegion,
   startSessionRehydrate,
   tabLabel,
 } from './sessions'

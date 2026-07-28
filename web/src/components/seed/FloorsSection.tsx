@@ -15,12 +15,16 @@ export function FloorsSection({
   identities,
   identitySpoilers,
   mapSpoilers,
+  selectedRegion,
+  onSelectedRegionChange,
 }: {
   floors: FloorReport[]
   refreshingLayout: boolean
   identities: IdentityMaps
   identitySpoilers: boolean
   mapSpoilers: boolean
+  selectedRegion: string | null
+  onSelectedRegionChange: (regionId: string) => void
 }) {
   const groups = groupFloorsByRegion(floors)
   const stickyBarRef = useRef<HTMLDivElement>(null)
@@ -57,6 +61,10 @@ export function FloorsSection({
   if (groups.length === 0) return null
 
   const defaultRegion = groups[0].region.id
+  const activeRegion =
+    selectedRegion && groups.some(({ region }) => region.id === selectedRegion)
+      ? selectedRegion
+      : defaultRegion
 
   // Not using Card: its default overflow-hidden kills position:sticky.
   // Region tabs stick under the seed session bar (--seed-tabs-height from App).
@@ -70,9 +78,12 @@ export function FloorsSection({
       </div>
 
       <Tabs
-        defaultValue={defaultRegion}
+        value={activeRegion}
         className="block gap-0 overflow-visible"
-        onValueChange={scrollRegionIntoView}
+        onValueChange={(regionId) => {
+          onSelectedRegionChange(regionId)
+          scrollRegionIntoView(regionId)
+        }}
       >
         <div
           ref={stickyBarRef}

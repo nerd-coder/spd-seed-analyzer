@@ -47,6 +47,7 @@ export type SeedSession = {
   mapProfile: MapProfile
   identitySpoilers: boolean
   mapSpoilers: boolean
+  selectedRegion: string | null
 }
 
 // —— helpers ——————————————————————————————————————————————————————
@@ -231,6 +232,10 @@ export function setSeedMapSpoilers(id: string, value: boolean) {
   patchSession(id, { mapSpoilers: value })
 }
 
+export function setSeedSelectedRegion(id: string, value: string) {
+  patchSession(id, { selectedRegion: value })
+}
+
 /**
  * Close a seed tab. Removes from runtime sessions + persisted list.
  */
@@ -305,6 +310,7 @@ async function analyzeSeedInputInternal(
     mapProfile: defaultMapProfile(),
     identitySpoilers: true,
     mapSpoilers: true,
+    selectedRegion: null,
   }
   nextSessions = [...nextSessions, session]
   $sessions.set(nextSessions)
@@ -396,6 +402,7 @@ export function startSessionRehydrate(): () => void {
     mapProfile: defaultMapProfile(),
     identitySpoilers: true,
     mapSpoilers: true,
+    selectedRegion: null,
   }))
 
   closedIds.clear()
