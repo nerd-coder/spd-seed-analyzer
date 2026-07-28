@@ -21,7 +21,8 @@ use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::items::model::{ForcedDropRole, GeneratedItem, ItemCategory, ItemProvenance};
 use crate::random::Random;
-use crate::report::{FloorReport, MapProfile, MapTrinketProfile};
+use crate::report::FloorReport;
+use crate::{MapProfile, MapTrinketProfile};
 
 pub use create_items::PlacedLoot;
 pub use state::LevelState;
@@ -587,16 +588,42 @@ pub fn analyze_layouts_with_profile(
     for depth in 1..=max {
         dungeon.depth = depth;
         dungeon.branch = 0;
-        let trinket = if depth as u32 >= profile.trinket_start_depth {
-            profile.trinket
-        } else {
-            MapTrinketProfile::NoMapAffectingTrinkets
-        };
-        trinkets::set_held(trinket);
+        trinkets::set_held(profile.held_at(depth as u32));
         let level = create_level_layout_with_profile(dungeon, true);
         floors.push(level.to_floor_report_with_map(true));
     }
     floors
+}
+
+pub(crate) fn first_trinket_availability(dungeon: &mut DungeonState) -> (u32, u32, bool) {
+    dungeon.challenges = 0;
+    trinkets::reset(dungeon.seed);
+    let mut catalyst_depth = None;
+    let mut first_pot = None;
+    for depth in 1..=4 {
+        dungeon.depth = depth;
+        dungeon.branch = 0;
+        trinkets::set_held(None);
+        let level = create_level_layout_with_profile(dungeon, true);
+        if catalyst_depth.is_none()
+            && level
+                .initial_forced_items
+                .iter()
+                .any(|item| item.class_name == "TrinketCatalyst")
+        {
+            catalyst_depth = Some(depth as u32);
+        }
+        if first_pot.is_none() {
+            first_pot = level
+                .rooms
+                .iter()
+                .find(|room| matches!(room.as_str(), "LaboratoryRoom" | "SecretLaboratoryRoom"))
+                .map(|room| (depth as u32, room == "SecretLaboratoryRoom"));
+        }
+    }
+    let catalyst_depth = catalyst_depth.expect("one Trinket Catalyst is guaranteed by depth 4");
+    let (pot_depth, pot_is_secret) = first_pot.expect("a LaboratoryRoom is guaranteed by depth 4");
+    (catalyst_depth, pot_depth, pot_is_secret)
 }
 
 pub fn analyze_floors(dungeon: &mut DungeonState, max_floors: u32) -> Vec<FloorReport> {
@@ -613,25 +640,17 @@ pub fn analyze_floors_with_profile(
         .map_or(0, |_| crate::dungeon::FORBIDDEN_RUNES_CHALLENGE);
     let mut floors = Vec::new();
     dungeon.ghost_rewards_profiled = profile.is_some_and(|profile| {
-        matches!(
-            profile.trinket,
-            MapTrinketProfile::NoMapAffectingTrinkets
-                | MapTrinketProfile::MimicTooth0
-                | MapTrinketProfile::MimicTooth1
-                | MapTrinketProfile::MimicTooth2
-                | MapTrinketProfile::MimicTooth3
-        )
+        profile
+            .held_trinkets
+            .iter()
+            .all(|state| matches!(state.trinket, MapTrinketProfile::MimicTooth))
     });
     trinkets::reset(dungeon.seed);
     let max = max_floors.clamp(1, 26) as i32;
     for depth in 1..=max {
         dungeon.depth = depth;
         dungeon.branch = 0;
-        let trinket = profile
-            .filter(|profile| depth as u32 >= profile.trinket_start_depth)
-            .map(|profile| profile.trinket)
-            .unwrap_or(MapTrinketProfile::NoMapAffectingTrinkets);
-        trinkets::set_held(trinket);
+        trinkets::set_held(profile.and_then(|profile| profile.held_at(depth as u32)));
         let configured = profile.is_some();
         let level = create_level_partial_with_profile(dungeon, configured);
         floors.push(level.to_floor_report_with_map(configured));

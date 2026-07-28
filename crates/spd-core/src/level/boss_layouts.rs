@@ -206,10 +206,9 @@ mod tests {
     #[test]
     fn sewer_boss_structures_match_normalized_java_oracles() {
         let profile = crate::MapProfile {
-            trinket: crate::MapTrinketProfile::NoMapAffectingTrinkets,
+            held_trinkets: Vec::new(),
             meta: crate::MapMetaProfile::Fresh,
             forbidden_runes: false,
-            trinket_start_depth: 1,
         };
         for (seed, json) in [
             (
@@ -300,10 +299,9 @@ mod tests {
     #[test]
     fn caves_boss_structures_match_normalized_java_oracles() {
         let profile = crate::MapProfile {
-            trinket: crate::MapTrinketProfile::NoMapAffectingTrinkets,
+            held_trinkets: Vec::new(),
             meta: crate::MapMetaProfile::Fresh,
             forbidden_runes: false,
-            trinket_start_depth: 1,
         };
         for (seed, json) in [
             (
@@ -383,10 +381,9 @@ mod tests {
     #[test]
     fn halls_boss_structures_match_exact_java_oracles() {
         let profile = crate::MapProfile {
-            trinket: crate::MapTrinketProfile::NoMapAffectingTrinkets,
+            held_trinkets: Vec::new(),
             meta: crate::MapMetaProfile::Fresh,
             forbidden_runes: false,
-            trinket_start_depth: 1,
         };
         for (seed, json) in [
             (
@@ -445,10 +442,9 @@ mod tests {
     #[test]
     fn halls_boss_custom_layers_match_java_for_preserved_runs() {
         let profile = crate::MapProfile {
-            trinket: crate::MapTrinketProfile::NoMapAffectingTrinkets,
+            held_trinkets: Vec::new(),
             meta: crate::MapMetaProfile::Fresh,
             forbidden_runes: false,
-            trinket_start_depth: 1,
         };
         for (seed, json) in [
             (

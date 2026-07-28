@@ -1,7 +1,7 @@
 use super::*;
 use crate::level::create_level_partial;
-use crate::report::{MapMetaProfile, MapProfile, MapTrinketProfile};
 use crate::run::{dungeon_from_run, init_run};
+use crate::{HeldTrinketProfile, MapMetaProfile, MapProfile, MapTrinketProfile};
 use serde::Deserialize;
 
 const RING_DECK_FIXTURES: [&str; 5] = [
@@ -52,10 +52,16 @@ struct FixtureSpawn {
 fn profiled_imp_outcome(seed: i64, trinket: MapTrinketProfile) -> (i32, bool, Option<i32>) {
     let mut dungeon = dungeon_from_run(init_run(seed));
     let profile = MapProfile {
-        trinket,
+        held_trinkets: (trinket != MapTrinketProfile::NoMapAffectingTrinkets)
+            .then_some(HeldTrinketProfile {
+                trinket,
+                level: 3,
+                start_depth: 17,
+            })
+            .into_iter()
+            .collect(),
         meta: MapMetaProfile::Fresh,
         forbidden_runes: false,
-        trinket_start_depth: 17,
     };
     crate::level::analyze_floors_with_profile(&mut dungeon, 19, Some(&profile));
     (
@@ -210,7 +216,7 @@ fn held_mossy_clump_can_change_reward_level_on_the_spawn_floor() {
         (19, false, Some(3))
     );
     assert_eq!(
-        profiled_imp_outcome(0, MapTrinketProfile::MossyClump3),
+        profiled_imp_outcome(0, MapTrinketProfile::MossyClump),
         (19, false, Some(4))
     );
 }
@@ -221,13 +227,10 @@ fn held_mossy_clump_can_change_spawn_depth_and_depth18_target() {
         profiled_imp_outcome(5, MapTrinketProfile::NoMapAffectingTrinkets).0,
         17
     );
-    assert_eq!(
-        profiled_imp_outcome(5, MapTrinketProfile::MossyClump3).0,
-        18
-    );
+    assert_eq!(profiled_imp_outcome(5, MapTrinketProfile::MossyClump).0, 18);
 
     let baseline = profiled_imp_outcome(26, MapTrinketProfile::NoMapAffectingTrinkets);
-    let mossy = profiled_imp_outcome(26, MapTrinketProfile::MossyClump3);
+    let mossy = profiled_imp_outcome(26, MapTrinketProfile::MossyClump);
     assert_eq!(baseline.0, 18);
     assert_eq!(mossy.0, 18);
     assert!(!baseline.1, "baseline target is Golems");

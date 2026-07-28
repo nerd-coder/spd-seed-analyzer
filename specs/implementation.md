@@ -5,8 +5,10 @@ rewards are audited against SPD v3.3.8 in `specs/quest-rewards/`. Public
 reports keep route-independent option counts, categories, ranges, curse and
 claim conditions. Concrete Wandmaker, Blacksmith, and Imp samples are hidden;
 Ghost retains its explicit no-Tooth and Mimic Tooth +0…+3 replay profiles.
-The run profile also resolves Forbidden Runes, including its every-second
-Upgrade Scroll suppression and downstream generation effects.
+The run profile resolves Forbidden Runes and a chronological held-trinket
+history. Trinket entries support progressive +0…+3 upgrades and transmutation
+without level reduction; the report exposes Catalyst offers, first-pot timing,
+the earliest effective floor, and the first-deck transmutation order.
 
 Next steps:
 

@@ -56,17 +56,12 @@ fn analyze_seed_smoke() {
 
 #[test]
 fn explicit_baseline_profile_can_publish_proven_safe_maps() {
-    use crate::{analyze_seed_with_profile, MapMetaProfile, MapProfile, MapTrinketProfile};
+    use crate::{analyze_seed_with_profile, MapProfile};
 
     let legacy = analyze_seed("GFX-PZH-DCH", 4).expect("legacy analysis");
     assert!(legacy.floors.iter().all(|floor| floor.map.is_none()));
 
-    let profile = MapProfile {
-        trinket: MapTrinketProfile::NoMapAffectingTrinkets,
-        meta: MapMetaProfile::Fresh,
-        forbidden_runes: false,
-        trinket_start_depth: 1,
-    };
+    let profile = MapProfile::default();
     let profiled = (0..100)
         .find_map(|seed| {
             let report =
@@ -91,13 +86,11 @@ fn explicit_baseline_profile_can_publish_proven_safe_maps() {
 
 #[test]
 fn forbidden_runes_profile_removes_every_second_upgrade_scroll() {
-    use crate::{analyze_seed_with_profile, MapMetaProfile, MapProfile, MapTrinketProfile};
+    use crate::{analyze_seed_with_profile, MapProfile};
 
     let profile = |forbidden_runes| MapProfile {
-        trinket: MapTrinketProfile::NoMapAffectingTrinkets,
-        meta: MapMetaProfile::Fresh,
         forbidden_runes,
-        trinket_start_depth: 1,
+        ..MapProfile::default()
     };
     let baseline = analyze_seed_with_profile("42", 4, Some(profile(false))).expect("baseline");
     let challenged =
@@ -135,22 +128,19 @@ fn forbidden_runes_profile_removes_every_second_upgrade_scroll() {
 
 #[test]
 fn trinket_profile_starts_on_the_configured_floor() {
-    use crate::{analyze_seed_with_profile, MapMetaProfile, MapProfile, MapTrinketProfile};
+    use crate::{analyze_seed_with_profile, HeldTrinketProfile, MapProfile, MapTrinketProfile};
 
-    let baseline = MapProfile {
-        trinket: MapTrinketProfile::NoMapAffectingTrinkets,
-        meta: MapMetaProfile::Fresh,
-        forbidden_runes: false,
-        trinket_start_depth: 1,
-    };
+    let baseline = MapProfile::default();
     let delayed = MapProfile {
-        trinket: MapTrinketProfile::MossyClump3,
-        meta: MapMetaProfile::Fresh,
-        forbidden_runes: false,
-        trinket_start_depth: 3,
+        held_trinkets: vec![HeldTrinketProfile {
+            trinket: MapTrinketProfile::MossyClump,
+            level: 3,
+            start_depth: 5,
+        }],
+        ..MapProfile::default()
     };
-    let baseline = analyze_seed_with_profile("31", 2, Some(baseline)).expect("baseline");
-    let delayed = analyze_seed_with_profile("31", 2, Some(delayed)).expect("delayed trinket");
+    let baseline = analyze_seed_with_profile("31", 4, Some(baseline)).expect("baseline");
+    let delayed = analyze_seed_with_profile("31", 4, Some(delayed)).expect("delayed trinket");
 
     for (baseline, delayed) in baseline.floors.iter().zip(&delayed.floors) {
         assert_eq!(baseline.feeling, delayed.feeling);
@@ -165,25 +155,21 @@ fn trinket_profile_starts_on_the_configured_floor() {
 
 #[test]
 fn mimic_tooth_profile_recomputes_the_ghost_pair() {
-    use crate::{analyze_seed_with_profile, MapMetaProfile, MapProfile, MapTrinketProfile};
+    use crate::{analyze_seed_with_profile, HeldTrinketProfile, MapProfile, MapTrinketProfile};
 
-    let baseline = MapProfile {
-        trinket: MapTrinketProfile::NoMapAffectingTrinkets,
-        meta: MapMetaProfile::Fresh,
-        forbidden_runes: false,
-        trinket_start_depth: 1,
-    };
-    let tooth = MapProfile {
-        trinket: MapTrinketProfile::MimicTooth3,
-        meta: MapMetaProfile::Fresh,
-        forbidden_runes: false,
-        trinket_start_depth: 1,
-    };
-
-    let changed = (0..200).any(|seed| {
-        let baseline = analyze_seed_with_profile(&seed.to_string(), 4, Some(baseline.clone()))
+    let changed = (0..500).any(|seed| {
+        let baseline = analyze_seed_with_profile(&seed.to_string(), 4, Some(MapProfile::default()))
             .expect("baseline profile");
-        let tooth = analyze_seed_with_profile(&seed.to_string(), 4, Some(tooth.clone()))
+        let first_effective_depth = baseline.trinket_selection.first_effective_depth;
+        let tooth = MapProfile {
+            held_trinkets: vec![HeldTrinketProfile {
+                trinket: MapTrinketProfile::MimicTooth,
+                level: 3,
+                start_depth: first_effective_depth,
+            }],
+            ..MapProfile::default()
+        };
+        let tooth = analyze_seed_with_profile(&seed.to_string(), 4, Some(tooth))
             .expect("Mimic Tooth profile");
         let rewards = |report: &SeedReport| {
             report
@@ -676,12 +662,7 @@ fn analyze_full_run_no_panic() {
         }));
     }
 
-    let profile = crate::MapProfile {
-        trinket: crate::MapTrinketProfile::NoMapAffectingTrinkets,
-        meta: crate::MapMetaProfile::Fresh,
-        forbidden_runes: false,
-        trinket_start_depth: 1,
-    };
+    let profile = crate::MapProfile::default();
     let report = crate::analyze_seed_with_profile("AAA-AAA-AAA", 26, Some(profile))
         .expect("profiled full-run analysis");
     for (depth, dimensions) in [

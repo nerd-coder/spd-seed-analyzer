@@ -16,19 +16,22 @@ pub mod report;
 pub mod rooms;
 pub mod run;
 pub mod search;
+pub mod trinkets;
 
 pub use dungeon_seed::{DungeonSeed, SeedError, TOTAL_SEEDS};
 pub use items::IdentityMaps;
 pub use java_random::JavaRandom;
 pub use random::Random;
-pub use report::{
-    AnalyzeError, FloorReport, MapMetaProfile, MapProfile, MapTrinketProfile, SeedInfo, SeedReport,
-};
+pub use report::{AnalyzeError, FloorReport, SeedInfo, SeedReport};
 pub use run::{dungeon_from_run, init_run, RunState};
 pub use search::{
     search_seeds, ItemConstraint, ItemMatchEvidence, MatchMode, SearchError, SeedMatch,
     SeedSearchRequest, SeedSearchResult, MAX_SEARCH_CANDIDATES, MAX_SEARCH_CONSTRAINTS,
     MAX_SEARCH_MATCHES,
+};
+pub use trinkets::{
+    HeldTrinketProfile, MapMetaProfile, MapProfile, MapTrinketProfile, ProfileError,
+    TrinketSelectionReport,
 };
 
 /// Pinned SPD version this port targets (from local clone at scaffold time).
@@ -72,6 +75,10 @@ pub fn analyze_seed_with_profile(
     let info = parse_seed(input)?;
     let floors = floors.clamp(1, 26);
     let run = init_run(info.numeric);
+    let trinket_selection = TrinketSelectionReport::for_run(&run);
+    if let Some(profile) = profile.as_ref() {
+        profile.validate(trinket_selection.first_effective_depth)?;
+    }
     let mut dungeon = dungeon_from_run(run);
     let mut layout_dungeon = dungeon.clone();
     let identities = dungeon.identities.clone();
@@ -94,6 +101,7 @@ pub fn analyze_seed_with_profile(
         spd_commit: SPD_COMMIT.to_string(),
         floors_requested: floors,
         identities,
+        trinket_selection,
         floors: floor_reports,
         status: "partial".to_string(),
         message: Some(

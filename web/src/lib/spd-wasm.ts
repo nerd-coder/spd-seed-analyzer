@@ -152,6 +152,7 @@ export type SeedReport = {
   spd_commit: string
   floors_requested: number
   identities: IdentityMaps
+  trinket_selection: TrinketSelectionReport
   floors: FloorReport[]
   status: string
   message?: string | null
@@ -159,26 +160,32 @@ export type SeedReport = {
 }
 
 export type MapProfile = {
-  trinket: MapTrinketProfile
+  held_trinkets: HeldTrinketProfile[]
   meta: 'fresh'
   forbidden_runes: boolean
-  trinket_start_depth: number
 }
 
 export type MapTrinketProfile =
   | 'no_map_affecting_trinkets'
-  | 'mossy_clump0'
-  | 'mossy_clump1'
-  | 'mossy_clump2'
-  | 'mossy_clump3'
-  | 'trap_mechanism0'
-  | 'trap_mechanism1'
-  | 'trap_mechanism2'
-  | 'trap_mechanism3'
-  | 'mimic_tooth0'
-  | 'mimic_tooth1'
-  | 'mimic_tooth2'
-  | 'mimic_tooth3'
+  | 'mossy_clump'
+  | 'trap_mechanism'
+  | 'mimic_tooth'
+
+export type HeldTrinketProfile = {
+  trinket: MapTrinketProfile
+  level: number
+  start_depth: number
+}
+
+export type TrinketSelectionReport = {
+  catalyst_depth: number
+  first_alchemy_pot_depth: number
+  first_alchemy_pot_is_secret: boolean
+  selection_depth: number
+  first_effective_depth: number
+  catalyst_options: string[]
+  transmutation_sequence: string[]
+}
 
 export type SeedSearchMatchMode = 'any' | 'all'
 

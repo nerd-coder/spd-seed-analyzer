@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::dungeon_seed::SeedError;
 use crate::items::IdentityMaps;
+use crate::trinkets::{MapProfile, ProfileError, TrinketSelectionReport};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SeedInfo {
@@ -273,6 +274,7 @@ pub struct SeedReport {
     pub spd_commit: String,
     pub floors_requested: u32,
     pub identities: IdentityMaps,
+    pub trinket_selection: TrinketSelectionReport,
     pub floors: Vec<FloorReport>,
     /// `"partial"` while only forced drops exist; `"ok"` when full levelgen lands.
     pub status: String,
@@ -283,48 +285,10 @@ pub struct SeedReport {
     pub map_profile: Option<MapProfile>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct MapProfile {
-    pub trinket: MapTrinketProfile,
-    pub meta: MapMetaProfile,
-    /// Whether the run enables SPD's `NO_SCROLLS` challenge (Forbidden Runes).
-    #[serde(default)]
-    pub forbidden_runes: bool,
-    /// First main-path depth where the configured trinket is held.
-    #[serde(default = "default_trinket_start_depth")]
-    pub trinket_start_depth: u32,
-}
-
-const fn default_trinket_start_depth() -> u32 {
-    1
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum MapTrinketProfile {
-    NoMapAffectingTrinkets,
-    MossyClump0,
-    MossyClump1,
-    MossyClump2,
-    MossyClump3,
-    TrapMechanism0,
-    TrapMechanism1,
-    TrapMechanism2,
-    TrapMechanism3,
-    MimicTooth0,
-    MimicTooth1,
-    MimicTooth2,
-    MimicTooth3,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum MapMetaProfile {
-    Fresh,
-}
-
 #[derive(Debug, thiserror::Error)]
 pub enum AnalyzeError {
     #[error(transparent)]
     Seed(#[from] SeedError),
+    #[error(transparent)]
+    Profile(#[from] ProfileError),
 }
