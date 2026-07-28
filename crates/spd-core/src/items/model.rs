@@ -71,12 +71,15 @@ pub enum QuestRewardRole {
     WandmakerPersisted,
     BlacksmithWeapon {
         tier: i32,
+        minimum_parchment_level: Option<i8>,
     },
     BlacksmithMissile {
         tier: i32,
+        minimum_parchment_level: Option<i8>,
     },
     BlacksmithArmor {
         tier: i32,
+        minimum_parchment_level: Option<i8>,
     },
     BlacksmithRoomWeapon {
         tier: i32,

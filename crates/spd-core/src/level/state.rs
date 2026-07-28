@@ -275,9 +275,9 @@ impl LevelState {
                 (
                     _,
                     Some(
-                        QuestRewardRole::BlacksmithWeapon { tier }
-                        | QuestRewardRole::BlacksmithMissile { tier }
-                        | QuestRewardRole::BlacksmithArmor { tier },
+                        QuestRewardRole::BlacksmithWeapon { tier, .. }
+                        | QuestRewardRole::BlacksmithMissile { tier, .. }
+                        | QuestRewardRole::BlacksmithArmor { tier, .. },
                     ),
                 ) => Some(tier),
                 (
@@ -332,6 +332,19 @@ impl LevelState {
                         ..
                     }
                     | QuestRewardRole::GhostArmor {
+                        minimum_parchment_level,
+                        ..
+                    },
+                ) => Some(minimum_parchment_level),
+                _ => None,
+            };
+            let blacksmith_enchantment_condition = match quest_role {
+                Some(
+                    QuestRewardRole::BlacksmithWeapon {
+                        minimum_parchment_level,
+                        ..
+                    }
+                    | QuestRewardRole::BlacksmithArmor {
                         minimum_parchment_level,
                         ..
                     },
@@ -416,6 +429,19 @@ impl LevelState {
                             item.potential_enchantment.as_deref().unwrap_or("Enchantment"),
                             level
                         )]
+                    })
+                    .or_else(|| {
+                        blacksmith_enchantment_condition
+                            .flatten()
+                            .map(|level| {
+                                vec![format!(
+                                    "{} — applied only with Parchment Scrap +{} or better",
+                                    item.potential_enchantment
+                                        .as_deref()
+                                        .unwrap_or("Enchantment"),
+                                    level
+                                )]
+                            })
                     })
                     .unwrap_or_else(|| if artifact_conditional {
                         vec!["Assumes no artifact was obtained outside level generation earlier in this run".into()]

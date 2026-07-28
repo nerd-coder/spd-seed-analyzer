@@ -2,7 +2,11 @@
 
 Pinned target: SPD v3.3.8 @ `7b8b845a7`; accuracy remains `partial`.
 
-The Old Wandmaker and Trinket Catalyst phases are complete. Wandmaker rewards
+The Old Wandmaker, Troll Blacksmith, and Trinket Catalyst phases are complete.
+Blacksmith rewards expose all four exact equipment choices, their shared exact
+upgrade level, and the seed-rolled enchantment/glyph. When the effect needs
+Parchment Scrap, the report keeps its identity and states the minimum Scrap
+level instead of treating it as guaranteed by the seed alone. Wandmaker rewards
 expose exact non-cursed upgrade levels and exact classes when Mimic Tooth
 cannot shift the wand deck, otherwise ordered candidates. Guaranteed Trinket
 Catalysts now carry the four ordered TRINKET-deck offers as a choose-one list;

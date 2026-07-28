@@ -176,29 +176,61 @@ fn generate_rewards(
         item.enchantment = None;
         item.cursed = false;
         item.source = Some("Blacksmith.Quest".into());
+    }
+
+    // Always generate first so outcome doesn't affect RNG roll count. The
+    // effect identity is seed-determined; applying it depends on Parchment
+    // Scrap state when the reward is claimed.
+    let enchant = enchants::random_weapon_enchant(None).to_string();
+    let glyph = enchants::random_armor_glyph(None).to_string();
+    let enchant_roll = Random::float();
+    let minimum_parchment_level = if enchant_roll <= 0.3 {
+        None
+    } else if enchant_roll <= 0.6 {
+        Some(0)
+    } else {
+        Some(1)
+    };
+    let mut smith_enchant = Some(enchant.clone());
+    let mut smith_glyph = Some(glyph.clone());
+    if minimum_parchment_level.is_some() {
+        smith_enchant = None;
+        smith_glyph = None;
+    }
+
+    for item in &mut rewards {
         let tier = crate::generator::equipment_tier_for_class(&item.class_name)
             .expect("blacksmith equipment has a tier");
-        item.provenance = crate::items::model::ItemProvenance::Quest(match item.category {
+        item.potential_enchantment = match item.category {
             crate::items::model::ItemCategory::Weapon => {
-                crate::items::model::QuestRewardRole::BlacksmithWeapon { tier }
-            }
-            crate::items::model::ItemCategory::Missile => {
-                crate::items::model::QuestRewardRole::BlacksmithMissile { tier }
+                smith_enchant.clone().or_else(|| Some(enchant.clone()))
             }
             crate::items::model::ItemCategory::Armor => {
-                crate::items::model::QuestRewardRole::BlacksmithArmor { tier }
+                smith_glyph.clone().or_else(|| Some(glyph.clone()))
+            }
+            _ => None,
+        };
+        item.provenance = crate::items::model::ItemProvenance::Quest(match item.category {
+            crate::items::model::ItemCategory::Weapon => {
+                crate::items::model::QuestRewardRole::BlacksmithWeapon {
+                    tier,
+                    minimum_parchment_level,
+                }
+            }
+            crate::items::model::ItemCategory::Missile => {
+                crate::items::model::QuestRewardRole::BlacksmithMissile {
+                    tier,
+                    minimum_parchment_level,
+                }
+            }
+            crate::items::model::ItemCategory::Armor => {
+                crate::items::model::QuestRewardRole::BlacksmithArmor {
+                    tier,
+                    minimum_parchment_level,
+                }
             }
             _ => unreachable!("blacksmith reward category"),
         });
-    }
-
-    // Always generate first so outcome doesn't affect RNG roll count.
-    let mut smith_enchant = Some(enchants::random_weapon_enchant(None).to_string());
-    let mut smith_glyph = Some(enchants::random_armor_glyph(None).to_string());
-    // 30% base chance (ParchmentScrap multiplier = 1 without trinket).
-    if Random::float() > 0.3 {
-        smith_enchant = None;
-        smith_glyph = None;
     }
 
     blacksmith.smith_rewards = rewards;
@@ -239,6 +271,9 @@ mod tests {
         assert_eq!(a.smith_glyph, b.smith_glyph);
         // Two weapons must differ in class
         assert_ne!(a.smith_rewards[0].class_name, a.smith_rewards[1].class_name);
+        assert!(a.smith_rewards[0].potential_enchantment.is_some());
+        assert!(a.smith_rewards[1].potential_enchantment.is_some());
+        assert!(a.smith_rewards[3].potential_enchantment.is_some());
     }
 
     #[test]
