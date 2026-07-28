@@ -75,6 +75,17 @@ fn level(profile: MapTrinketProfile, mossy: bool) -> Option<u8> {
     }
 }
 
+fn mimic_tooth_level(profile: MapTrinketProfile) -> Option<u8> {
+    use MapTrinketProfile::*;
+    match profile {
+        MimicTooth0 => Some(0),
+        MimicTooth1 => Some(1),
+        MimicTooth2 => Some(2),
+        MimicTooth3 => Some(3),
+        _ => None,
+    }
+}
+
 fn override_chance(level: Option<u8>) -> f32 {
     level.map_or(0.0, |level| 0.25 + 0.25 * f32::from(level))
 }
@@ -116,6 +127,17 @@ pub fn trap_reveal_chance() -> f32 {
     STATE.with(|state| {
         level(state.borrow().held, false).map_or(0.0, |level| 0.1 + 0.1 * f32::from(level))
     })
+}
+
+/// `MimicTooth.mimicChanceMultiplier()` for the currently held profile.
+pub fn mimic_chance_multiplier() -> f32 {
+    STATE.with(|state| {
+        mimic_tooth_level(state.borrow().held).map_or(1.0, |level| 1.5 + 0.5 * f32::from(level))
+    })
+}
+
+pub fn has_mimic_tooth() -> bool {
+    STATE.with(|state| mimic_tooth_level(state.borrow().held).is_some())
 }
 
 #[cfg(test)]
@@ -170,5 +192,17 @@ mod tests {
         assert!((trap_reveal_chance() - 0.1).abs() < f32::EPSILON);
         set_held(MapTrinketProfile::TrapMechanism3);
         assert!((trap_reveal_chance() - 0.4).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn mimic_tooth_level_controls_its_multiplier() {
+        reset(1);
+        set_held(MapTrinketProfile::NoMapAffectingTrinkets);
+        assert_eq!(mimic_chance_multiplier(), 1.0);
+        set_held(MapTrinketProfile::MimicTooth0);
+        assert_eq!(mimic_chance_multiplier(), 1.5);
+        set_held(MapTrinketProfile::MimicTooth3);
+        assert_eq!(mimic_chance_multiplier(), 3.0);
+        assert!(has_mimic_tooth());
     }
 }

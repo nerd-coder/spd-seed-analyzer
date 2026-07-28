@@ -64,13 +64,28 @@ pub fn create_items_main(
                 heap_type = "skeleton";
             }
             1..=4 => {
-                // Java always evaluates Float for mimic check
-                let _roll = Random::float();
+                // Regular chests gain 25 percentage points for each +1x
+                // Mimic Tooth multiplier beyond the normal rate.
+                let mimic_chance = (crate::level::trinkets::mimic_chance_multiplier() - 1.0) / 4.0;
+                if Random::float() < mimic_chance {
+                    let _ = generate_mimic_prize(dungeon);
+                    burn_mimic_tooth_extra_reward(dungeon);
+                    to_drop.source = Some("mimic".into());
+                    out.push(CreatedLoot {
+                        loot: PlacedLoot {
+                            item: to_drop,
+                            heap_type: "mimic",
+                        },
+                        cell: Some(cell as usize),
+                    });
+                    continue;
+                }
                 heap_type = "chest";
             }
             5 => {
                 if dungeon.depth > 1 {
                     let _ = generate_mimic_prize(dungeon);
+                    burn_mimic_tooth_extra_reward(dungeon);
                     to_drop.source = Some("mimic".into());
                     out.push(CreatedLoot {
                         loot: PlacedLoot {
@@ -102,9 +117,10 @@ pub fn create_items_main(
         if (is_artifact && Random::int_max(2) == 0)
             || (upgradable && Random::int_max((4 - level).max(1)) == 0)
         {
-            let mimic_chance = 0.1f32;
+            let mimic_chance = 0.1 * crate::level::trinkets::mimic_chance_multiplier();
             if dungeon.depth > 1 && Random::float() < mimic_chance {
                 let mut reward = generate_mimic_prize(dungeon);
+                burn_mimic_tooth_extra_reward(dungeon);
                 golden_mimic_postprocess(&mut to_drop);
                 golden_mimic_postprocess(&mut reward);
                 to_drop.source = Some("golden_mimic".into());
@@ -255,6 +271,15 @@ fn generate_mimic_prize(dungeon: &mut DungeonState) -> GeneratedItem {
             .generator
             .random_category(crate::generator::Category::Ring, dungeon.depth),
         _ => unreachable!("Random.Int(5) stays in range"),
+    }
+}
+
+/// A Mimic Tooth makes every spawned mimic generate one additional default
+/// reward. It does not touch seeded Generator decks, but it advances the
+/// active floor RNG and must happen before quest NPC generation.
+pub(crate) fn burn_mimic_tooth_extra_reward(dungeon: &mut DungeonState) {
+    if crate::level::trinkets::has_mimic_tooth() {
+        let _ = dungeon.generator.random_using_defaults_any(dungeon.depth);
     }
 }
 

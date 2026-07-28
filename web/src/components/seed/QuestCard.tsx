@@ -1,6 +1,8 @@
+import { WarningIcon } from '@phosphor-icons/react'
 import { ItemIcon } from '@/components/ItemIcon'
 import { ItemName } from '@/components/ItemName'
 import { FloorItemList } from '@/components/seed/FloorItemSections'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { type ParsedQuest, parseQuest } from '@/lib/labels'
 import type { IdentityMaps, ItemEntry } from '@/lib/spd-wasm'
@@ -50,6 +52,7 @@ export function QuestCard({
   const parsed = parseQuest(quest)
   const styles = QUEST_KIND_STYLES[parsed.kind]
   const hasDetailedRewards = rewards.length > 0
+  const hasUnruledOutGhostOptions = parsed.kind === 'ghost'
   const rewardSummary =
     parsed.kind === 'imp' &&
     rewards.every((reward) => !reward.candidate_classes?.length)
@@ -110,6 +113,17 @@ export function QuestCard({
               identitySpoilers={identitySpoilers}
               depth={depth}
             />
+          ) : null}
+          {hasUnruledOutGhostOptions ? (
+            <Alert variant="warning">
+              <WarningIcon weight="fill" />
+              <AlertTitle>Other Ghost options may be possible</AlertTitle>
+              <AlertDescription>
+                The listed pair is the analyzer’s baseline. Earlier trinket
+                choices, artifact history, or challenge settings can change
+                generation before the Ghost reward is rolled.
+              </AlertDescription>
+            </Alert>
           ) : null}
         </div>
       ) : null}

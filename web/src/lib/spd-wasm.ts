@@ -174,6 +174,10 @@ export type MapTrinketProfile =
   | 'trap_mechanism1'
   | 'trap_mechanism2'
   | 'trap_mechanism3'
+  | 'mimic_tooth0'
+  | 'mimic_tooth1'
+  | 'mimic_tooth2'
+  | 'mimic_tooth3'
 
 export type SeedSearchMatchMode = 'any' | 'all'
 

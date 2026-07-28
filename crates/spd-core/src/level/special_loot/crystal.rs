@@ -52,8 +52,15 @@ pub(super) fn crystal_vault(
         .expect("placed CrystalVaultRoom has an entrance");
     let (p1, p2) = crystal_vault_positions(room, entrance);
 
-    // 10% crystal mimic on second chest (no RatSkull / MimicTooth trinkets).
-    let second_heap = if Random::float() < 0.1 {
+    // Rat Skull is not modeled in this profile; Mimic Tooth has full effect.
+    let mimic_chance = 0.1 * crate::level::trinkets::mimic_chance_multiplier();
+    let second_heap = if Random::float() < mimic_chance {
+        // Keep the established tooth-free baseline lifecycle unchanged. A
+        // held Tooth makes this branch profile-relevant, so replay the mimic's
+        // hidden rewards before the Ghost callback.
+        if crate::level::trinkets::has_mimic_tooth() {
+            super::special_rooms::burn_mimic_prize(dungeon);
+        }
         "crystal_mimic"
     } else {
         "crystal_chest"

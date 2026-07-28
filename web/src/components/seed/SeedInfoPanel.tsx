@@ -34,14 +34,16 @@ function customDiffersFromCanonical(
   return input !== code
 }
 
-type TrinketKind = 'none' | 'mossy_clump' | 'trap_mechanism'
+type TrinketKind = 'none' | 'mossy_clump' | 'trap_mechanism' | 'mimic_tooth'
 
 function trinketParts(profile: MapTrinketProfile): {
   kind: TrinketKind
   level: number
 } {
   if (profile === 'no_map_affecting_trinkets') return { kind: 'none', level: 0 }
-  const match = profile.match(/^(mossy_clump|trap_mechanism)([0-3])$/)
+  const match = profile.match(
+    /^(mossy_clump|trap_mechanism|mimic_tooth)([0-3])$/
+  )
   return {
     kind: (match?.[1] as TrinketKind | undefined) ?? 'none',
     level: Number(match?.[2] ?? 0),
@@ -112,7 +114,7 @@ export function SeedInfoPanel({
             onCheckedChange={(value) => setSeedMapSpoilers(sessionId, value)}
           />
           <FieldLabel className="sr-only" htmlFor={`${sessionId}-trinket`}>
-            Floor layout trinket
+            Held trinket
           </FieldLabel>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <InputGroup className="sm:w-52 sm:flex-none">
@@ -125,13 +127,19 @@ export function SeedInfoPanel({
                   kind !== 'none' ? (
                     <ItemIcon
                       classNameItem={
-                        kind === 'mossy_clump' ? 'MossyClump' : 'TrapMechanism'
+                        kind === 'mossy_clump'
+                          ? 'MossyClump'
+                          : kind === 'trap_mechanism'
+                            ? 'TrapMechanism'
+                            : 'MimicTooth'
                       }
                       size={20}
                       title={
                         kind === 'mossy_clump'
                           ? 'Mossy Clump'
-                          : 'Trap Mechanism'
+                          : kind === 'trap_mechanism'
+                            ? 'Trap Mechanism'
+                            : 'Mimic Tooth'
                       }
                     />
                   ) : undefined
@@ -146,6 +154,7 @@ export function SeedInfoPanel({
                 <option value="none">None</option>
                 <option value="mossy_clump">Mossy Clump</option>
                 <option value="trap_mechanism">Trap Mechanism</option>
+                <option value="mimic_tooth">Mimic Tooth</option>
               </InputGroupSelect>
               {refreshingLayout ? (
                 <InputGroupAddon align="inline-end" role="status">
@@ -199,7 +208,8 @@ export function SeedInfoPanel({
           </div>
           <FieldDescription>
             The trinket is held starting when the selected floor is generated.
-            Changing any value regenerates every map for this seed.
+            Mimic Tooth also recalculates Sad Ghost rewards; changing any value
+            regenerates this seed’s analysis.
           </FieldDescription>
         </Field>
       </CardContent>

@@ -45,13 +45,16 @@ generates.
 
 `randomUsingDefaults` bypasses both `probs` and `dropped` entirely.
 
-## 2. Cross-floor coupling is deck counters only
+## 2. Cross-floor RNG coupling is deck counters only for a fixed profile
 
 Level generation is wrapped in `Random.pushGenerator(Dungeon.seedCurDepth())`,
-so a stream difference on floor *N* cannot reach floor *N+1*. The only
-cross-floor state is the deck counters. Parity for any deck-drawn identity
+so a stream difference on floor *N* cannot directly reach floor *N+1*. For a
+fixed challenge/trinket/meta profile, the cross-floor RNG state relevant to
+item identities is the deck counters. Parity for any deck-drawn identity
 therefore reduces to: **the same draw sites fire the same number of times in
-the same order**.
+the same order**. Player choices can change which draw sites fire on later
+floors; the Sad Ghost examples are catalogued in
+`specs/quest-rewards/sad-ghost.md`.
 
 ## 3. Ring-deck draw sites (complete)
 
@@ -88,7 +91,7 @@ All use `randomUsingDefaults`: mob loot including Thief's
 The ungenerated side-levels are likewise irrelevant: `MiningLevel` only calls
 `randomUsingDefaults(FOOD)`, `VaultLevel` only `randomUsingDefaults(...)`.
 
-## 5. Challenges cannot shift any deck index
+## 5. Challenge item-block rerolls cannot shift a deck index
 
 `Challenges.isItemBlocked` (`Challenges.java:71`) returns true **only** for a
 `Dewdrop` under `NO_HERBALISM`. No ring/wand/artifact/weapon/armor generator
@@ -97,10 +100,14 @@ and `CrystalVaultRoom` never iterate from challenges.
 
 Of the nine challenges, only `NO_SCROLLS` touches generation at all
 (`Level.java:234`, skips a Scroll of Upgrade `addItemToSpawn` — no RNG, no
-deck). `DARKNESS` and `STRONGER_BOSSES` affect view distance and boss setup.
-Nothing changes deck draw counts.
+deck at that call site). `DARKNESS` and `STRONGER_BOSSES` affect view distance
+and boss setup. `NO_SCROLLS` is nevertheless not reward-neutral: omitting the
+queued Scroll can empty `itemsToSpawn`, after which a room painter can take a
+generated fallback that consumes the main floor stream before an NPC callback.
+Sad Ghost has a reachable `RitualRoom` counterexample; see
+`specs/quest-rewards/sad-ghost.md`.
 
-## 6. Trinket availability is seed-determined
+## 6. Trinket offers are seed-determined; the held trinket is not
 
 `TRINKET (0, 0, Trinket.class)` (`Generator.java:222`) has zero weight in both
 general decks, so no trinket comes from floor loot. The only levelgen source is
@@ -116,7 +123,16 @@ lands on draw 4.
 
 Measured over 400 seeds: Mimic Tooth is among the four offers in **101 (25.3%,
 = 4/17)**, its first-appearance index uniform across the 17-class deck. So
-~75% of seeds can rule Mimic Tooth out of a run entirely.
+~75% of seeds rule out taking Mimic Tooth **directly from the Catalyst**. They
+do not rule it out for the whole run: a Scroll of Transmutation advances to
+draw 4 (and later transmutations advance farther), so that route must be checked
+separately.
+
+The player chooses one offer, may transmute it, and chooses when/how far to
+upgrade it. Those choices are not encoded by the seed. In particular Mossy
+Clump, Mimic Tooth, and Rat Skull can change generation work before an NPC
+reward callback; see the Sad Ghost audit in
+`specs/quest-rewards/sad-ghost.md`.
 
 Not having the trinket costs no RNG: `RegularLevel.java:406` evaluates
 `Random.Float()` before applying `MimicTooth.mimicChanceMultiplier()`, so the
@@ -201,6 +217,15 @@ a fresh deck gives 2/38 ≈ 5.3%.
 
 ## 10. Sad Ghost reward (floors 2–4)
 
+**Scope correction (2026-07-29):** the measurements and fixed-call-shape facts
+below use the default no-map-affecting-trinket, no-challenge, no-external-
+artifact profile. They do not establish that the concrete pair is a pure
+function of the seed across every playable route. Mossy Clump can change the
+paint stream before `Ghost.Quest.spawn`; Mimic Tooth and Rat Skull can change
+pre-Ghost mimic/statue generation; and external artifact history can change a
+later artifact constructor tail. The complete state audit is in
+`specs/quest-rewards/sad-ghost.md`.
+
 `Ghost.Quest.spawn` (`Ghost.java:303-362`) runs at the **start** of
 `SewerLevel.createMobs`, before `super.createMobs()` (`SewerLevel.java:140-143`)
 — same placement-loop-then-reward shape as the Wandmaker.
@@ -210,7 +235,7 @@ Verified properties:
 - **The armor uses no deck at all.** `Random.chances({0,0,10,6,3,1})` selects a
   tier and the class is constructed directly (`Ghost.java:322-328`): 2 =
   `LeatherArmor`, 3 = `MailArmor`, 4 = `ScaleArmor`, 5 = `PlateArmor`. Tier and
-  class are the same fact; no run history can shift it.
+  class are the same fact once the tier roll is fixed.
 - **Only the weapon is deck-drawn** — `Generator.random(wepTiers[tier-1])`
   (`Ghost.java:331`), i.e. the per-tier `WEP_T2…WEP_T5` decks, each with its own
   seed and `dropped` counter.
@@ -228,14 +253,18 @@ Verified properties:
   constant (`Ghost.java:353-356`). `Enchantment.random()` (`Weapon.java:606-615`)
   and `Glyph.random()` (`Armor.java:863-872`) each spend exactly
   `Random.chances` + `Random.element` — no deck, no player state.
-- **Whether the reward keeps them is the only player-dependent bit**:
+- **Within that fixed profile, Parchment Scrap is the direct reward-local
+  player-dependent bit**:
   `enchantRoll > 0.2f * ParchmentScrap.enchantChanceMultiplier()` clears both
   (`Ghost.java:358-362`). Multipliers are 1 / 2 / 4 / 7 / 10 for no scrap / +0 /
   +1 / +2 / +3 (`ParchmentScrap.java:52-65`), so the thresholds are 0.2 / 0.4 /
   0.8 / 1.4 / 2.0. **At Parchment Scrap +2 or better the reward is always
   enchanted.** The roll count does not change, so this never desyncs the stream.
 
-Net: everything except the weapon's *class* is independent of the deck.
+Net for the fixed profile: everything except the weapon's *class* is
+independent of the WEP sub-deck. This is not a seed-only claim across different
+held-trinket, challenge, or artifact-history profiles; those can move the main
+floor stream before the Ghost rolls tiers, level, and effects.
 
 Measured (200 seeds, floors 1–4):
 
@@ -251,7 +280,7 @@ Measured (200 seeds, floors 1–4):
 *k* is far tighter than the Imp's or the Wandmaker's because only floors 1–3
 precede the draw and the five weapon tiers are separate decks.
 
-## 11. Ordinary floor loot is seed-determined; ARTIFACT is the only leak
+## 11. Fixed-profile ordinary floor loot: ARTIFACT is the runtime deck leak
 
 `RegularLevel.createItems` drops `3 + chances{6,3,1}` (`+2` if `LARGE`) items
 from the no-arg `Generator.random()` (`RegularLevel.java:380-388`). Three
@@ -298,11 +327,14 @@ floor-stream consumption and desyncs every later draw on that floor, which in
 turn shifts the deck counters every later floor reads. Deck exhaustion also
 falls through to a RING draw (`Generator.java:707`), the §8 Imp lever.
 
-**Consequence:** everything generated before the run's *first* levelgen ARTIFACT
-deck draw is unconditionally seed-determined. Everything after it is
-seed-determined under one condition — *no artifact acquired outside level
-generation earlier in the run*. `random_artifact` (`generator/state.rs:327`) is
-the single Rust site that moves the counter, so the gate is one monotone flag.
+**Consequence for a fixed challenge/trinket/meta profile:** everything generated
+before the run's *first* levelgen ARTIFACT deck draw is free of artifact-history
+drift. Everything after it is seed-determined under one additional condition —
+*no artifact acquired outside level generation earlier in the run*.
+`random_artifact` (`generator/state.rs:327`) is the single Rust site that moves
+the counter, so the artifact gate is one monotone flag. Other player-state
+hooks can still change which generation path reaches that draw; the quest
+audits track those separately.
 
 Measured over 200 seeds (`init_run(seed * 7919 + 13)`, floors 1–24, default
 `MapTrinketProfile`), floor of the first levelgen artifact draw, cumulative:

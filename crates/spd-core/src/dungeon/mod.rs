@@ -29,6 +29,8 @@ pub struct DungeonState {
     pub sacrifice_parchment_scrap_level: Option<i32>,
     /// Once player state can alter generation, later sampled public facts are tainted.
     pub public_generation_tainted: bool,
+    /// The active profile fixes every currently modeled pre-Ghost route.
+    pub ghost_rewards_profiled: bool,
     /// Items forced onto the next level (`Level.itemsToSpawn`).
     pub items_to_spawn: Vec<GeneratedItem>,
     pub ghost: GhostQuestState,

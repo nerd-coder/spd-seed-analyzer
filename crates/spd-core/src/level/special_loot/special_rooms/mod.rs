@@ -7,7 +7,8 @@ mod laboratory;
 #[cfg(test)]
 pub(super) use consumable::runestone_prizes;
 pub(super) use consumable::{
-    library_prizes, runestone_prizes_on_map, storage_prize, storage_prizes, treasury_prizes_on_map,
+    burn_mimic_prize, library_prizes, runestone_prizes_on_map, storage_prize, storage_prizes,
+    treasury_prizes_on_map,
 };
 #[cfg(test)]
 pub(super) use equip::pool_prize;

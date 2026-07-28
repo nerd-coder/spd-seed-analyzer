@@ -608,6 +608,16 @@ pub fn analyze_floors_with_profile(
     profile: Option<&MapProfile>,
 ) -> Vec<FloorReport> {
     let mut floors = Vec::new();
+    dungeon.ghost_rewards_profiled = profile.is_some_and(|profile| {
+        matches!(
+            profile.trinket,
+            MapTrinketProfile::NoMapAffectingTrinkets
+                | MapTrinketProfile::MimicTooth0
+                | MapTrinketProfile::MimicTooth1
+                | MapTrinketProfile::MimicTooth2
+                | MapTrinketProfile::MimicTooth3
+        )
+    });
     trinkets::reset(dungeon.seed);
     let max = max_floors.clamp(1, 26) as i32;
     for depth in 1..=max {

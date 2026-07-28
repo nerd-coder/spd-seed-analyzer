@@ -152,10 +152,17 @@ fn generate_rewards(dungeon: &mut DungeonState) -> (GeneratedItem, GeneratedItem
         4 => Category::WepT4,
         _ => Category::WepT5,
     };
-    let candidate_classes = dungeon
-        .generator
-        .category_class_history(wep_cat, dungeon.depth);
+    let mut candidate_classes = if dungeon.ghost_rewards_profiled {
+        Vec::new()
+    } else {
+        dungeon
+            .generator
+            .category_class_history(wep_cat, dungeon.depth)
+    };
     let mut weapon = dungeon.generator.random_category(wep_cat, dungeon.depth);
+    if dungeon.ghost_rewards_profiled {
+        candidate_classes.push(weapon.class_name.clone());
+    }
 
     // Clear weapon's starting properties from Item.random()
     weapon.level = 0;

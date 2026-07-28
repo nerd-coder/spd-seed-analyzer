@@ -446,3 +446,19 @@ test('accuracy details use a responsive modal and restore trigger focus', async 
   expect(browserErrors.console, 'browser console errors').toEqual([])
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
+
+test('Sad Ghost rewards identify the baseline as non-exhaustive', async ({
+  page,
+}) => {
+  const browserErrors = await openAnalyzer(page, '0')
+
+  const warning = page
+    .getByRole('alert')
+    .filter({ hasText: 'Other Ghost options may be possible' })
+  await expect(warning).toBeVisible()
+  await expect(warning).toContainText('analyzer’s baseline')
+  await expect(warning).toContainText('challenge settings')
+
+  expect(browserErrors.console, 'browser console errors').toEqual([])
+  expect(browserErrors.page, 'uncaught page errors').toEqual([])
+})

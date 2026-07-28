@@ -78,7 +78,7 @@ pub fn treasury_prizes_on_map(
 
     let heap_chest = Random::int_max(2) == 0;
     let n = Random::int_range_inclusive(2, 3);
-    let mimic_chance = 0.2f32; // 1/5 without MimicTooth
+    let mimic_chance = 0.2 * crate::level::trinkets::mimic_chance_multiplier();
     for _ in 0..n {
         let mut item =
             find_prize_item(items_to_spawn, Some("TrinketCatalyst")).unwrap_or_else(|| {
@@ -125,7 +125,7 @@ pub fn treasury_prizes_on_map(
 /// `Mimic.spawnAt(...).generatePrize(true)`. The held extra reward is a
 /// combat drop, so it is not public seed-analysis output, but generation
 /// advances both the main stream and the relevant item deck here.
-fn burn_mimic_prize(dungeon: &mut DungeonState) {
+pub(crate) fn burn_mimic_prize(dungeon: &mut DungeonState) {
     match Random::int_max(5) {
         0 => {
             let mut gold = GeneratedItem::new("Gold", ItemCategory::Gold);
@@ -152,6 +152,7 @@ fn burn_mimic_prize(dungeon: &mut DungeonState) {
                 .random_category(Category::Ring, dungeon.depth);
         }
     }
+    crate::level::create_items::burn_mimic_tooth_extra_reward(dungeon);
 }
 
 fn treasury_drop_cell(room: &Room, map: &TerrainMap, reject_occupied: bool) -> usize {

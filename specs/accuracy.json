@@ -6,8 +6,8 @@
     "commit": "7b8b845a7"
   },
   "overallStatus": "partial",
-  "summary": "Seed analysis is partial. Item identities, guaranteed floor spawns, quest rewards, and shop stock are reported on every floor. Ordinary room loot and exact floor layouts are only published while the generation stream is provably free of player-state influence, which in most seeds means the first floor and the boss floors. Anything that depends on how a run was played is reported as a constraint or left out rather than guessed.",
-  "lastReviewed": "2026-07-28",
+  "summary": "Seed analysis is partial. Item identities, guaranteed floor spawns, baseline quest reward contracts, and shop stock are reported on every floor. Ordinary room loot and exact floor layouts are only published while generation is provably free of player-state influence, which in most seeds means the first floor and the boss floors. Quest option details are still being audited one quest at a time where earlier run choices can change generation.",
+  "lastReviewed": "2026-07-29",
   "areas": [
     {
       "id": "item-identities",
@@ -25,7 +25,7 @@
       "status": "partial",
       "implemented": [
         "Guaranteed floor spawns on every floor — food, the Halls torches, Potions of Strength, Scrolls of Upgrade, Arcane Styli, Stones of Enchantment and Intuition, and the Trinket Catalyst with its four offers — with exact stack quantities, and searchable",
-        "Quest rewards from the Sad Ghost, Old Wandmaker, Troll Blacksmith, and Ambitious Imp: named exactly or as a short ordered set, with upgrade level, curse, and any enchantment or glyph plus the Parchment Scrap level needed to keep it",
+        "Baseline reward options and reward rules for the Sad Ghost, Old Wandmaker, Troll Blacksmith, and Ambitious Imp, including upgrade level, curse, and conditional enchantments or glyphs",
         "Shop stock and quantities on every shop floor, common items named exactly and deck-driven slots given as a category and tier; the depth-20 Imp shop carries its quest-completion condition",
         "Ordinary floor loot from heaps, chests, locked chests, and skeletons, with class, stack quantity, upgrade level, and curse",
         "Seed search matches item class, a minimum upgrade level, and a floor range"
@@ -33,9 +33,11 @@
       "remaining": [
         "Ordinary floor loot is published only on floors that also have an exact layout — in most seeds that is the first floor alone, so later floors list guaranteed spawns, quest rewards, and shop stock only",
         "Loot drawn after an artifact assumes no artifact was obtained outside level generation earlier in the run",
-        "Which of the four Trinket Catalyst offers a player takes is not a seed fact"
+        "Which of the four Trinket Catalyst offers a player takes is not a seed fact",
+        "The Sad Ghost's concrete spawn depth, tiers, levels, and option identities can change with player state before the Ghost appears. The analyzer can recalculate the no-Tooth and held Mimic Tooth +0 to +3 cases from the chosen floor; other trinkets, challenges, and earlier artifact history are not yet enumerated",
+        "The Old Wandmaker, Troll Blacksmith, and Ambitious Imp still need the same end-to-end player-state audit"
       ],
-      "impact": "Reports understate what a floor holds rather than guessing: a real drop can be missing from the list even though the analyzer generated it."
+      "impact": "Reports understate ordinary loot, and a listed quest option can be the analyzer's baseline route rather than the only possible option in a played run."
     },
     {
       "id": "layout-and-room-selection",

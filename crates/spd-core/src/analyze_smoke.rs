@@ -117,6 +117,51 @@ fn trinket_profile_starts_on_the_configured_floor() {
 }
 
 #[test]
+fn mimic_tooth_profile_recomputes_the_ghost_pair() {
+    use crate::{analyze_seed_with_profile, MapMetaProfile, MapProfile, MapTrinketProfile};
+
+    let baseline = MapProfile {
+        trinket: MapTrinketProfile::NoMapAffectingTrinkets,
+        meta: MapMetaProfile::Fresh,
+        trinket_start_depth: 1,
+    };
+    let tooth = MapProfile {
+        trinket: MapTrinketProfile::MimicTooth3,
+        meta: MapMetaProfile::Fresh,
+        trinket_start_depth: 1,
+    };
+
+    let changed = (0..200).any(|seed| {
+        let baseline = analyze_seed_with_profile(&seed.to_string(), 4, Some(baseline.clone()))
+            .expect("baseline profile");
+        let tooth = analyze_seed_with_profile(&seed.to_string(), 4, Some(tooth.clone()))
+            .expect("Mimic Tooth profile");
+        let rewards = |report: &SeedReport| {
+            report
+                .floors
+                .iter()
+                .flat_map(|floor| &floor.items)
+                .filter(|item| item.source.as_deref() == Some("Ghost.Quest"))
+                .map(|item| (item.class_name.clone(), item.tier, item.level))
+                .collect::<Vec<_>>()
+        };
+        let baseline_rewards = rewards(&baseline);
+        let tooth_rewards = rewards(&tooth);
+        !baseline_rewards.is_empty()
+            && !tooth_rewards.is_empty()
+            && baseline_rewards != tooth_rewards
+            && tooth_rewards
+                .iter()
+                .all(|(class_name, _, _)| class_name.is_some())
+    });
+
+    assert!(
+        changed,
+        "a held Mimic Tooth must reach a distinct Ghost pair"
+    );
+}
+
+#[test]
 fn ghost_quest_spawns_within_sewers_sometime() {
     let mut dungeon = dungeon_from_run(init_run(0));
     let mut saw = false;

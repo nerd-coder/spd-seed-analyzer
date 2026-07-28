@@ -108,7 +108,8 @@ fn suspicious_chest(
         map.item_allowed[cell] = false;
     }
 
-    if Random::float() < 1.0 / 3.0 {
+    let mimic_chance = (1.0 / 3.0) * crate::level::trinkets::mimic_chance_multiplier();
+    if Random::float() < mimic_chance {
         if let Some(cell) = map.point_to_cell(center.x, center.y) {
             map.mob_occupied[cell] = true;
             map.known_mobs[cell] = Some("Mimic");
@@ -140,7 +141,7 @@ fn suspicious_chest(
 
 /// `Mimic.generatePrize(true)`; analyzer runs have no item-blocking challenges.
 fn mimic_reward(dungeon: &mut DungeonState) -> GeneratedItem {
-    match Random::int_max(5) {
+    let reward = match Random::int_max(5) {
         0 => {
             let mut gold = GeneratedItem::new("Gold", ItemCategory::Gold);
             randomize_item(&mut gold, dungeon.depth);
@@ -158,7 +159,9 @@ fn mimic_reward(dungeon: &mut DungeonState) -> GeneratedItem {
         _ => dungeon
             .generator
             .random_category(Category::Ring, dungeon.depth),
-    }
+    };
+    crate::level::create_items::burn_mimic_tooth_extra_reward(dungeon);
+    reward
 }
 
 #[cfg(test)]

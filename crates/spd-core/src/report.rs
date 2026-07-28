@@ -308,6 +308,10 @@ pub enum MapTrinketProfile {
     TrapMechanism1,
     TrapMechanism2,
     TrapMechanism3,
+    MimicTooth0,
+    MimicTooth1,
+    MimicTooth2,
+    MimicTooth3,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
