@@ -2,7 +2,7 @@
 
 Shattered Pixel Dungeon seed analyzer: **Bun + Vite + React + shadcn** UI, **Rust → WASM** engine.
 
-Progress / resume: `specs/implementation.md`  
+Progress / resume: `specs/implementation.md` (create one if missing and saving progress is requested)
 Pinned game: SPD **v3.3.8** @ `7b8b845a7` — local clone often at `/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`
 
 ## Layout
@@ -73,6 +73,6 @@ GitHub Actions `check` job (`.github/workflows/ci.yaml`) runs, in order:
 - **CI-BEFORE-DONE** — Before marking a task complete, committing work as finished, or claiming “done”, run the same checks as CI’s `check` job (see **CI parity** above). Minimum for any Rust-touching change: `bun run check:rust` and `bun run test:rust`. If TS/web or wasm exports changed, also `bun run check` and `bun run build`. If browser rendering or the visual harness changed, also run `bun run test:visual:only` after the build. Fix fmt/clippy/test/build/visual failures before hand-off; do not skip with “clippy later”.
 - **ASSETS-FLAT** — Assets live at `web/public/assets/{environment,sprites,…}`. No nested `assets/assets/`.
 - **PIN-SPD** — Target the pinned SPD version/commit; note version impact when porting from a newer tree.
-- **HAND-OFF** — `specs/implementation.md` is the resume point: current state plus the plan for what comes next. Update it after multi-step work when behavior or next steps change. Keep it **lean and concise** — a short state summary and the ordered next steps, nothing more. It is not a changelog: do not accumulate completed-work history, session logs, or narrative of what was already tried. Rewrite stale sections in place and delete finished ones rather than appending; git history is the record of the past.
+- **HAND-OFF** — Optional `specs/implementation.md` is the resume point: current state plus the plan for what comes next. Update it after multi-step work when behavior or next steps change. Keep it **lean and concise** — a short state summary and the ordered next steps, nothing more. It is not a changelog: do not accumulate completed-work history, session logs, or narrative of what was already tried. Rewrite stale sections in place and delete finished ones rather than appending; git history is the record of the past.
 - **SMALL-FILES** — Keep source files focused and reviewable. Soft target **≤ ~300 lines**; treat **~500 lines** as a hard ceiling for *new* growth (not an excuse to bloate existing files further). When a change would push a file past ~500, **extract a module first** (same package/`mod`, sibling component, or `lib/` helper) rather than appending. Split by **cohesive responsibility** (room family, UI panel, prize helpers), not arbitrary line cuts. Prefer many small modules + a thin orchestrator over god-files. Does **not** apply to generated output (`web/src/wasm/`), vendored assets, lockfiles, or third-party UI primitives under `web/src/components/ui/` unless we own substantial custom logic there. When expanding an already-oversized file, budget extraction into the same task when practical.
 - **CONVENTIONAL-COMMITS** — Commit messages must follow the Conventional Commits format (e.g. `feat: add feature`, `fix: bug fix`, `docs: update docs`). Use types, scopes, bodies, and footers as per the specification for clarity and machine-readability.

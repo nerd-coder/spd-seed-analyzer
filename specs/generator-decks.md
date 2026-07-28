@@ -144,7 +144,7 @@ RNG consumption. With 12 equal-weight ring classes, *k* off by one changes the
 class ~11/12 of the time.
 
 Only Mimic Tooth and artifact exhaustion can move *k*, and both are checkable
-from the seed — see the plan in [implementation.md](implementation.md).
+from the seed.
 
 ## 9. Old Wandmaker reward (floors 7–9)
 
