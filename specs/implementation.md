@@ -41,12 +41,34 @@ Mass Grave, Ritual Site, and Rot Garden. The Ritual Site fills its wall border
 and empty interior, then blocks the 3×3 ritual marker; the fills consume no RNG,
 but `Room.center()` still jitters as in Java. Its four guaranteed Ceremonial
 Candles remain queued for floor placement. The room's `RitualMarker` overlay is
-not emitted — regular floors publish no custom tilemaps at all, which is now
-recorded as a rendering gap in the accuracy manifest.
+not emitted; see next step 1.
 
 ## Next steps
 
-1. Narrow the public-taint blast radius. `callback_tail_sensitive` room paint
+1. Emit custom tilemap overlays on regular floors. `map_facts.rs` hardcodes
+   `custom_tiles`/`custom_walls` empty, so only the Halls boss and last level
+   publish overlays; every regular floor renders as plain terrain. Give
+   `TerrainMap` a record channel like `record_heap`, populate it from the room
+   painters, and build `MapCustomTile` values the way `last_level::custom_tiles`
+   and `halls::center_piece_layers` already do. Pinned producers, with the
+   oracle fixtures that already carry their expected output:
+
+   | Overlay | Source | Fixture evidence |
+   |---|---|---|
+   | `RitualMarker` | Ritual Site | needs a floor-7..9 capture |
+   | `QuestEntrance` | Blacksmith, Ambitious Imp | floors 12, 17 |
+   | `EntranceBarrier` | Ambitious Imp | floor 17 |
+   | `HiddenWell` | Magic Well, Secret Well | floors 7, 21 |
+   | `CustomFloor` | Halls floors | floors 21–24 |
+   | `CustomGroundVisuals`/`CustomWallVisuals` | City boss | floor 20 |
+
+   Mass Grave, Weak Floor, and Demon Spawner also add overlays in Java but have
+   no fixture coverage yet. The web renderer already draws these
+   (`tiles.ts:222`) and the textures are all present under
+   `web/public/assets/environment/custom_tiles/`; `map-assets.ts` currently
+   loads only `halls_special.png`, so extend it per region. Finish by dropping
+   the matching gap line from the accuracy manifest's terrain area.
+2. Narrow the public-taint blast radius. `callback_tail_sensitive` room paint
    sets `public_generation_tainted`, and `inherited_public_taint` turns that
    into `runtime_sensitive_layout` on *every* later floor. Measured over the
    reference seeds, only floor 1 and the boss floors keep an exact layout,
@@ -56,9 +78,9 @@ recorded as a rendering gap in the accuracy manifest.
    callbacks are per-depth isolated, so audit them one room family at a time
    and demote the taint to `runtime_sensitive_placed_items_from` (the specific
    prize) where the level RNG stream provably cannot shift.
-2. Then take the next user-reliability gap from `specs/accuracy.json`, verify
+3. Then take the next user-reliability gap from `specs/accuracy.json`, verify
    its pinned Java generation path, and update the public projection only when
    the seed-determined guarantee is established.
-3. Add focused parity/report/search tests, update this state file and the
+4. Add focused parity/report/search tests, update this state file and the
    accuracy manifest, then run the CI-equivalent Rust, Biome, WASM/Vite, and
    visual checks before committing that phase.
