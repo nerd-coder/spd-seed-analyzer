@@ -34,8 +34,12 @@ Three Wandmaker cases remain:
 - AAU floor 9 likewise has a different pre-shuffle room list; find the first
   prior-floor population boundary that differs.
 - AAD floor 8 has the exact reward RNG tail but chooses cell 586 instead of
-  643; compare passability, occupancy, and distance-map inputs to
-  `spawnWandmaker` without changing RNG.
+  643. Its room bounds, 54×33 map dimensions, and entrance cell 641 match
+  Java. The first mismatch is the post-decoration `createMobs` boundary: Java
+  still has `-79766741` before Rust's shared `148768364, 1701898953, ...`
+  tail, and cell 586 is empty in Java but grass in Rust. Trace the prison
+  water/grass/trap/decorate pass and restore that missing call/terrain choice;
+  do not special-case Wandmaker placement.
 
 Focused lifecycle probes narrow both upstream cases further: AAC matches Java
 through floor 6's `createItems` entry and all final heap/mob placements, then
