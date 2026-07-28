@@ -150,7 +150,11 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
                 ("Stone of Intuition", "StoneOfIntuition")
             }
             ItemProvenance::Forced(ForcedDropRole::TrinketCatalyst) => {
-                ("Trinket Catalyst", "TrinketCatalyst")
+                let mut catalyst =
+                    guaranteed_spawn_entry("Trinket Catalyst", "TrinketCatalyst", "other");
+                catalyst.candidate_classes = item.candidate_classes.clone();
+                entries.push(catalyst);
+                continue;
             }
             _ => continue,
         };

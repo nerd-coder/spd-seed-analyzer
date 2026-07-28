@@ -46,7 +46,7 @@
       "area": "Items & loot",
       "status": "partial",
       "implemented": [
-        "Guaranteed floor spawns — food on every regular floor, the Halls torches, Scrolls of Upgrade — reported with exact stack quantities when known and available to seed search",
+        "Guaranteed floor spawns — food on every regular floor, the Halls torches, Scrolls of Upgrade, and the four named Trinket Catalyst offers — reported with exact stack quantities when known and available to seed search",
         "Ordinary floor loot from heaps, chests, locked chests, and skeletons, including class, stack quantity, upgrade level, and curse; results after an artifact draw carry the assumption that no artifact was obtained outside level generation earlier in the run",
         "Quest rewards from the Sad Ghost, Old Wandmaker, Troll Blacksmith, and Ambitious Imp; the Ghost's armor class and shared upgrade level are exact, its weapon is named exactly or shown as a short ordered set, and its enchantment and glyph are named with the Parchment Scrap level needed to keep them; the Wandmaker's two distinct, non-cursed wand classes are exact unless Mimic Tooth can shift the deck, in which case they are shown as ordered candidates, with exact upgrade levels when known; the Imp's cursed +2…+4 ring is likewise named exactly or shown as an ordered set",
         "Special- and secret-room rewards: how many drop, their categories, tier and upgrade bounds, and whether they are cursed",
@@ -55,7 +55,8 @@
       ],
       "remaining": [
         "Loot tied to an unverified room or generation path can be missing or misplaced",
-        "Some guaranteed spawn families still need verification against the game"
+        "Some guaranteed spawn families still need verification against the game",
+        "The Catalyst offer list is seed-determined; which one the player chooses is not"
       ],
       "impact": "A guaranteed spawn or one of its properties can still be missing from the report on an unverified generation path."
     },

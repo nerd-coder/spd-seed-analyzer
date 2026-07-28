@@ -74,6 +74,9 @@ function CandidateOptions({
 }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1">
+      {item.name === 'Trinket Catalyst' ? (
+        <span className="font-medium">Trinket Catalyst — choose one</span>
+      ) : null}
       {item.candidate_classes?.map((className, index) => {
         const candidate = { category: item.category, class_name: className }
         const label = finderItemLabel(className)

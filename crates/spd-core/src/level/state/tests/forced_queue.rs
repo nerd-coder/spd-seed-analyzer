@@ -1,5 +1,5 @@
 use super::*;
-use crate::items::model::ForcedDropRole;
+use crate::items::model::{ForcedDropRole, GeneratedItem, ItemCategory, ItemProvenance};
 
 #[test]
 fn public_projection_omits_every_regular_map_while_retaining_internal_maps() {
@@ -69,6 +69,29 @@ fn floor_one_projection_publishes_exact_food_identity() {
         _ => "food",
     };
     assert_eq!(food.name, expected_name);
+}
+
+#[test]
+fn catalyst_projection_publishes_ordered_choose_one_offers() {
+    let mut catalyst = GeneratedItem::new("TrinketCatalyst", ItemCategory::Other);
+    catalyst.candidate_classes = vec![
+        "AlchemistsSmock".into(),
+        "DriedRose".into(),
+        "MimicTooth".into(),
+        "PiranhaPlant".into(),
+    ];
+    catalyst.provenance = ItemProvenance::Forced(ForcedDropRole::TrinketCatalyst);
+
+    let expected_candidates = catalyst.candidate_classes.clone();
+    let entries = super::super::forced_queue::public_entries(1, &[catalyst]);
+    let entry = entries
+        .iter()
+        .find(|entry| entry.name == "Trinket Catalyst")
+        .expect("public Catalyst entry");
+    assert_eq!(entry.prediction, ItemPredictionKind::Exact);
+    assert_eq!(entry.class_name.as_deref(), Some("TrinketCatalyst"));
+    assert_eq!(entry.candidate_classes, expected_candidates);
+    assert_eq!(entry.level, Some(0));
 }
 
 #[test]

@@ -158,6 +158,10 @@ fn create_level_internal(
         if dungeon.trinket_cata_needed() {
             dungeon.limited.trinket_cata = true;
             let mut st = GeneratedItem::new("TrinketCatalyst", ItemCategory::Other);
+            st.candidate_classes =
+                dungeon
+                    .generator
+                    .preview_category_classes(Category::Trinket, 4, dungeon.depth);
             st.source = Some("forced".into());
             st.provenance = ItemProvenance::Forced(ForcedDropRole::TrinketCatalyst);
             items_to_spawn.push(st.clone());
