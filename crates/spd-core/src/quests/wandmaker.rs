@@ -233,21 +233,17 @@ fn has_adjacent_door(map: &TerrainMap, cell: usize) -> bool {
 }
 
 fn generate_wands(dungeon: &mut DungeonState) -> (GeneratedItem, GeneratedItem) {
-    // Mimic Tooth is the only player-state-dependent lever that can shift the
-    // wand deck before this reward is claimed. Keep the deck preview isolated;
-    // it must not consume either the deck or the floor RNG.
-    let identity_exact = !dungeon
-        .generator
-        .preview_category_classes(Category::Trinket, 4, dungeon.depth)
+    // The concrete pair below is the exact result for the generation profile
+    // being replayed. It is not a universal seed-only pair: held trinkets,
+    // challenge-dependent prize queues, and prior artifact history can change
+    // painter work before this callback, including levelgen WAND draw sites.
+    // Keep the full category as the conservative cross-profile candidate set.
+    let candidates = Category::Wand
+        .def()
+        .classes
         .iter()
-        .any(|class_name| class_name == "MimicTooth");
-    let candidates = if !identity_exact {
-        dungeon
-            .generator
-            .preview_category_classes(Category::Wand, 5, dungeon.depth)
-    } else {
-        Vec::new()
-    };
+        .map(|class_name| (*class_name).to_string())
+        .collect::<Vec<_>>();
 
     let mut wand1 = dungeon
         .generator
@@ -280,10 +276,8 @@ fn generate_wands(dungeon: &mut DungeonState) -> (GeneratedItem, GeneratedItem) 
         crate::items::model::QuestRewardRole::WandmakerWand,
     );
 
-    if !identity_exact {
-        wand1.candidate_classes = candidates.clone();
-        wand2.candidate_classes = candidates;
-    }
+    wand1.candidate_classes = candidates.clone();
+    wand2.candidate_classes = candidates;
 
     (wand1, wand2)
 }
@@ -345,6 +339,79 @@ mod tests {
         assert_eq!(w1a.level, w2a.level);
         assert_eq!(w1b.class_name, w2b.class_name);
         assert_ne!(w1a.class_name, w1b.class_name);
+    }
+
+    #[test]
+    fn wand_reward_candidates_cover_the_full_category() {
+        Random::reset_generators();
+        let run = init_run(42);
+        Random::push_generator_seeded(12345);
+        let (wand1, wand2) = {
+            let mut dungeon = dungeon_from_run(run);
+            dungeon.depth = 9;
+            generate_wands(&mut dungeon)
+        };
+        Random::pop_generator();
+
+        let expected = Category::Wand
+            .def()
+            .classes
+            .iter()
+            .map(|class_name| (*class_name).to_string())
+            .collect::<Vec<_>>();
+        assert_eq!(wand1.candidate_classes, expected);
+        assert_eq!(wand2.candidate_classes, expected);
+        assert_eq!(expected.len(), 13);
+    }
+
+    #[test]
+    fn fixed_profile_rewards_match_committed_java_fixtures() {
+        let cases = [
+            (
+                "AAA-AAA-AAA",
+                9,
+                ("WandOfTransfusion", 1),
+                ("WandOfFrost", 2),
+            ),
+            (
+                "GFX-PZH-DCH",
+                7,
+                ("WandOfLightning", 3),
+                ("WandOfBlastWave", 1),
+            ),
+            (
+                "HKT-JZN-XQQ",
+                7,
+                ("WandOfPrismaticLight", 1),
+                ("WandOfCorrosion", 1),
+            ),
+        ];
+
+        for (seed, spawn_depth, expected1, expected2) in cases {
+            Random::reset_generators();
+            let numeric = crate::parse_seed(seed).expect("valid fixture seed").numeric;
+            let run = init_run(numeric);
+            let mut dungeon = dungeon_from_run(run);
+            for depth in 1..=spawn_depth {
+                dungeon.depth = depth;
+                let _ = crate::level::create_level_partial(&mut dungeon);
+            }
+
+            let wand1 = dungeon.wandmaker.wand1.as_ref().expect("first reward");
+            let wand2 = dungeon.wandmaker.wand2.as_ref().expect("second reward");
+            assert_eq!(
+                (wand1.class_name.as_str(), wand1.level),
+                expected1,
+                "{seed}"
+            );
+            assert_eq!(
+                (wand2.class_name.as_str(), wand2.level),
+                expected2,
+                "{seed}"
+            );
+            assert!(!wand1.cursed && !wand2.cursed, "{seed}");
+            assert_ne!(wand1.class_name, wand2.class_name, "{seed}");
+        }
     }
 
     #[test]

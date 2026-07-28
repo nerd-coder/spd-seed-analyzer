@@ -87,7 +87,7 @@ pub(super) fn spawn_npcs(
         if let Some(wandmaker) = quests::try_spawn_wandmaker(dungeon, entrance, map) {
             map.mob_occupied[wandmaker.cell] = true;
             map.known_mobs[wandmaker.cell] = Some("Wandmaker");
-            let public_summary = summary_prefix(&wandmaker.summary);
+            let public_summary = "Old Wandmaker (floors 7–9; route-dependent type) — two distinct uncursed +1…+3 wand options; choose one after completion".into();
             result.summaries.push(wandmaker.summary);
             result.public_labels.push(Some(public_summary));
             result.items.extend([wandmaker.wand1, wandmaker.wand2]);

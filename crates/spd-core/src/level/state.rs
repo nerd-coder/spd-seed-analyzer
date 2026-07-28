@@ -1,7 +1,7 @@
 //! Internal per-floor state and its public report projection.
 
 use crate::items::model::{GeneratedItem, ItemProvenance, QuestRewardRole, ShopStockRole};
-use crate::report::{FloorMap, FloorReport, ItemEntry, ItemPredictionKind};
+use crate::report::{FloorMap, FloorReport, ItemEntry, ItemPredictionKind, NumericRange};
 use crate::rooms::init_rooms::BuilderKind;
 
 use super::Feeling;
@@ -354,8 +354,6 @@ impl LevelState {
             };
             let prediction = if imp_identity.is_some_and(|(exact, _)| exact)
                 || ghost_weapon.is_some_and(|_| item.candidate_classes.len() == 1)
-                || (quest_role == Some(QuestRewardRole::WandmakerWand)
-                    && item.candidate_classes.is_empty())
             {
                 ItemPredictionKind::Exact
             } else {
@@ -402,12 +400,13 @@ impl LevelState {
                 tier,
                 tier_range: None,
                 level: match quest_role {
-                    Some(QuestRewardRole::WandmakerWand) => Some(item.level),
+                    Some(QuestRewardRole::WandmakerWand) => None,
                     Some(_) => Some(item.level),
                     None if artifact_conditional => Some(item.level),
                     None => reported_level(item, constrained, shop_role),
                 },
-                level_range: None,
+                level_range: (quest_role == Some(QuestRewardRole::WandmakerWand))
+                    .then_some(NumericRange { min: 1, max: 3 }),
                 cursed: if matches!(
                     quest_role,
                     Some(
@@ -446,6 +445,12 @@ impl LevelState {
                     })
                     .unwrap_or_else(|| {
                         let mut notes = Vec::new();
+                        if quest_role == Some(QuestRewardRole::WandmakerWand) {
+                            notes.push(
+                                "One of two distinct wand options; completing the quest lets you choose one."
+                                    .into(),
+                            );
+                        }
                         if imp_shop_conditional {
                             notes.push(
                                 "Appears only if the Ambitious Imp quest was completed before this shop is spawned."

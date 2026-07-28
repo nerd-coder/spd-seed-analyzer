@@ -312,20 +312,16 @@ fn wandmaker_quest_spawns_within_prison() {
                     .collect();
                 assert_eq!(rewards.len(), 2);
                 assert!(rewards.iter().all(|item| {
-                    matches!(
-                        item.prediction,
-                        report::ItemPredictionKind::Exact | report::ItemPredictionKind::Constrained
-                    ) && item.level.is_some_and(|level| (1..=3).contains(&level))
+                    item.prediction == report::ItemPredictionKind::Constrained
+                        && item.level.is_none()
+                        && item.level_range == Some(report::NumericRange { min: 1, max: 3 })
                         && item.cursed == Some(false)
-                        && item.conditional_notes.is_empty()
-                }));
-                assert!(rewards.iter().all(|item| {
-                    (item.prediction == report::ItemPredictionKind::Exact
-                        && item.class_name.is_some()
-                        && item.candidate_classes.is_empty())
-                        || (item.prediction == report::ItemPredictionKind::Constrained
-                            && item.class_name.is_none()
-                            && !item.candidate_classes.is_empty())
+                        && item.class_name.is_none()
+                        && item.candidate_classes.is_empty()
+                        && item.conditional_notes.iter().any(|note| {
+                            note.contains("two distinct wand options")
+                                && note.contains("choose one")
+                        })
                 }));
                 if let Some(map) = &f.map {
                     assert!(map.mobs.is_empty());
@@ -336,7 +332,12 @@ fn wandmaker_quest_spawns_within_prison() {
                     .quests
                     .iter()
                     .filter(|q| q.contains("Old Wandmaker"))
-                    .all(|q| !q.contains("one of two +1…+3 wands") && !q.contains(" / ")));
+                    .all(|q| {
+                        q.contains("floors 7–9; route-dependent type")
+                            && q.contains("two distinct uncursed +1…+3 wand options")
+                            && q.contains("choose one after completion")
+                            && !q.contains(" / ")
+                    }));
                 saw = true;
                 break;
             }

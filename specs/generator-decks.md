@@ -164,6 +164,16 @@ from the seed.
 
 ## 9. Old Wandmaker reward (floors 7–9)
 
+**Scope correction (2026-07-29):** the measurements and concrete-pair facts in
+this section use the fresh no-map-affecting-trinket, no-challenge,
+no-external-artifact profile. They verify the fixed call shape, not a universal
+pair for every playable route. A successful Mossy Clump check short-circuits a
+main-stream feeling roll and can shift room work before the quest room is
+selected; Trap Mechanism can alter painting after selection. Mimic Tooth, Rat
+Skull, artifact constructor history, and challenge-dependent prize queues can
+also add or remove painter and levelgen item draws before the NPC callback. The
+full state audit is in `specs/quest-rewards/wandmaker.md`.
+
 `Wandmaker.Quest.spawnWandmaker` (`Wandmaker.java:303`) runs at the **start** of
 `PrisonLevel.createMobs`, before `super.createMobs()`
 (`PrisonLevel.java:89-92`), i.e. after paint and after an NPC placement loop
@@ -196,13 +206,15 @@ Verified properties:
   duplicate-rejection loop burns an extra `Wand.random()` off the floor stream,
   so resolving `wand2`'s level requires knowing the deck index. `wand1`'s level
   is decoupled.
-- **No runtime path can move the wand deck.** Every `Category.WAND` reference
-  outside levelgen uses `randomUsingDefaults`: Shaman loot via
+- **No runtime path directly moves the wand deck.** Every `Category.WAND`
+  reference outside levelgen uses `randomUsingDefaults`: Shaman loot via
   `Mob.createLoot` (`Mob.java:996`), Scroll of Transmutation
   (`ScrollOfTransmutation.java:211`, `:339`), Cursed Wand
-  (`CursedWand.java:363`, `:371`). Consistent with §4.
+  (`CursedWand.java:363`, `:371`). Consistent with §4. Player state can still
+  change which levelgen WAND draw sites run before the reward, so the concrete
+  deck index and both floor-stream levels require a fixed profile.
 
-Measured (200 seeds, floors 1–9):
+Measured for that fixed profile (200 seeds, floors 1–9):
 
 | Quantity | Distribution |
 |----------|--------------|
