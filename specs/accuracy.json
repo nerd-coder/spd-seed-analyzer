@@ -31,7 +31,7 @@
       "area": "Special & secret rooms",
       "status": "partial",
       "implemented": [
-        "Layout and contents for covered special rooms, including Armory, Garden, Library, Pool, Crypt, Sacrifice, Toxic Gas, Traps, Sentry, Storage, Runestone, and Magical Fire",
+        "Layout and contents for covered special rooms, including Armory, Garden, Library, Pool, Crypt, Sacrifice, Toxic Gas, Traps, Sentry, Storage, Runestone, Magical Fire, and the Old Wandmaker quest rooms",
         "Secret Honeypot rewards, including its guaranteed Shattered Pot and Honeypot plus the seed-rolled Bomb variant",
         "Secret rooms including the Garden, Maze, Hoard, Library, Artillery, Larder, and Chest Chasm",
         "Prize generation for those rooms, including the private scroll pool behind the Secret Library"

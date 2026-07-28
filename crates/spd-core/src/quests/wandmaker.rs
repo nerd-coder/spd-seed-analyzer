@@ -3,8 +3,8 @@
 //! - `spawnRoom` runs at the end of `PrisonLevel.initRooms` (before shuffle)
 //! - `spawnWandmaker` runs at the start of `PrisonLevel.createMobs`
 //!
-//! Quest-room paint is approximate (see `special_loot` for MassGrave loot).
-//! Placement uses simplified entrance-room flags (same caveats as Ghost).
+//! Quest-room terrain and contents are painted in `special_loot`.
+//! NPC placement uses simplified entrance-room flags (same caveats as Ghost).
 
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
