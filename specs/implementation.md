@@ -8,7 +8,9 @@ upgrade level, and the seed-rolled enchantment/glyph. When the effect needs
 Parchment Scrap, the report keeps its identity and states the minimum Scrap
 level instead of treating it as guaranteed by the seed alone. Wandmaker rewards
 expose exact non-cursed upgrade levels and exact classes when Mimic Tooth
-cannot shift the wand deck, otherwise ordered candidates. Guaranteed Trinket
+cannot shift the wand deck, otherwise ordered candidates. The Wandmaker quest
+label shows only the quest name/type; its two guaranteed reward items remain
+listed separately. Guaranteed Trinket
 Catalysts now carry the four ordered TRINKET-deck offers as a choose-one list;
 the Catalyst itself remains one searchable guaranteed spawn. The UI keeps the
 Catalyst item/icon row and renders a separate “Trinket offers” group with the

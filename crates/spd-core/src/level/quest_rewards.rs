@@ -87,7 +87,7 @@ pub(super) fn spawn_npcs(
         if let Some(wandmaker) = quests::try_spawn_wandmaker(dungeon, entrance, map) {
             map.mob_occupied[wandmaker.cell] = true;
             map.known_mobs[wandmaker.cell] = Some("Wandmaker");
-            let public_summary = safe_summary(&wandmaker.summary, "one of two +1…+3 wands");
+            let public_summary = summary_prefix(&wandmaker.summary);
             result.summaries.push(wandmaker.summary);
             result.public_labels.push(Some(public_summary));
             result.items.extend([wandmaker.wand1, wandmaker.wand2]);
@@ -97,8 +97,12 @@ pub(super) fn spawn_npcs(
 }
 
 fn safe_summary(summary: &str, reward_label: &str) -> String {
-    let prefix = summary
-        .split_once(" — ")
-        .map_or(summary, |(prefix, _)| prefix);
+    let prefix = summary_prefix(summary);
     format!("{prefix} — {reward_label}")
+}
+
+fn summary_prefix(summary: &str) -> String {
+    summary
+        .split_once(" — ")
+        .map_or_else(|| summary.to_string(), |(prefix, _)| prefix.to_string())
 }

@@ -192,6 +192,7 @@ export function FloorItemList({
       {items.map((item, index) => {
         const sourceLabel =
           itemGroup(item) === 'shop' ||
+          item.source === 'Wandmaker.Quest' ||
           item.source === 'Blacksmith.Quest' ||
           item.source === 'Imp.Quest'
             ? null

@@ -256,7 +256,7 @@ fn wandmaker_quest_spawns_within_prison() {
                     .quests
                     .iter()
                     .filter(|q| q.contains("Old Wandmaker"))
-                    .all(|q| q.ends_with(" — one of two +1…+3 wands")));
+                    .all(|q| !q.contains("one of two +1…+3 wands") && !q.contains(" / ")));
                 saw = true;
                 break;
             }
