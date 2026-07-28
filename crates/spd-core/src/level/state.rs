@@ -12,7 +12,7 @@ use forced_queue::public_entries as forced_public_entries;
 
 #[path = "state_map.rs"]
 mod state_map;
-use state_map::reported_level;
+use state_map::{guaranteed_appearances, reported_level};
 
 fn prediction_kind(item: &GeneratedItem) -> ItemPredictionKind {
     match item.provenance {
@@ -533,6 +533,8 @@ impl LevelState {
         let assumed_map = (allow_map && self.runtime_sensitive_layout)
             .then(|| self.layout_map.clone())
             .flatten();
+        let guaranteed_appearances =
+            guaranteed_appearances(&self.rooms, !self.runtime_sensitive_layout);
 
         FloorReport {
             depth: self.depth as u32,
@@ -550,6 +552,7 @@ impl LevelState {
             } else {
                 self.rooms.clone()
             },
+            guaranteed_appearances,
             items,
             quests: self.quests[..self
                 .runtime_sensitive_quests_from

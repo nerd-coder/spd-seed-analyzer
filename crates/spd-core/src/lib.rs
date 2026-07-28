@@ -22,7 +22,9 @@ pub use dungeon_seed::{DungeonSeed, SeedError, TOTAL_SEEDS};
 pub use items::IdentityMaps;
 pub use java_random::JavaRandom;
 pub use random::Random;
-pub use report::{AnalyzeError, FloorReport, SeedInfo, SeedReport};
+pub use report::{
+    AnalyzeError, FloorReport, GuaranteedAppearance, GuaranteedAppearanceKind, SeedInfo, SeedReport,
+};
 pub use run::{dungeon_from_run, init_run, RunState};
 pub use search::{
     search_seeds, ItemConstraint, ItemMatchEvidence, MatchMode, SearchError, SeedMatch,
@@ -90,8 +92,30 @@ pub fn analyze_seed_with_profile(
             report.feeling = layout.feeling;
             report.builder = layout.builder;
             report.rooms = layout.rooms;
+            report.guaranteed_appearances = layout.guaranteed_appearances;
             report.map = layout.map;
             report.assumed_map = layout.assumed_map;
+        }
+    }
+    if let Some(floor) = floor_reports
+        .iter_mut()
+        .find(|floor| floor.depth == trinket_selection.first_alchemy_pot_depth)
+    {
+        let source = if trinket_selection.first_alchemy_pot_is_secret {
+            "SecretLaboratoryRoom"
+        } else {
+            "LaboratoryRoom"
+        };
+        if !floor
+            .guaranteed_appearances
+            .iter()
+            .any(|appearance| appearance.source.as_deref() == Some(source))
+        {
+            floor.guaranteed_appearances.push(GuaranteedAppearance {
+                name: "Alchemy pot".into(),
+                kind: GuaranteedAppearanceKind::AlchemyPot,
+                source: Some(source.into()),
+            });
         }
     }
 

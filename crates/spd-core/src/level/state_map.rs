@@ -1,6 +1,26 @@
-//! Public projection helpers for item facts.
+//! Public projection helpers for floor and item facts.
 
 use crate::items::model::{GeneratedItem, ShopStockRole};
+use crate::report::{GuaranteedAppearance, GuaranteedAppearanceKind};
+
+pub(super) fn guaranteed_appearances(
+    rooms: &[String],
+    exact_layout: bool,
+) -> Vec<GuaranteedAppearance> {
+    if !exact_layout {
+        return Vec::new();
+    }
+
+    rooms
+        .iter()
+        .filter(|room| matches!(room.as_str(), "LaboratoryRoom" | "SecretLaboratoryRoom"))
+        .map(|room| GuaranteedAppearance {
+            name: "Alchemy pot".into(),
+            kind: GuaranteedAppearanceKind::AlchemyPot,
+            source: Some(room.clone()),
+        })
+        .collect()
+}
 
 pub(super) fn reported_level(
     item: &GeneratedItem,

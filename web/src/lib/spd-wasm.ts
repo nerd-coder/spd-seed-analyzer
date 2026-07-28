@@ -140,10 +140,17 @@ export type FloorReport = {
   feeling?: string | null
   builder?: string | null
   rooms?: string[]
+  guaranteed_appearances?: GuaranteedAppearance[]
   items: ItemEntry[]
   quests: string[]
   map?: FloorMap | null
   assumed_map?: FloorMap | null
+}
+
+export type GuaranteedAppearance = {
+  name: string
+  kind: 'alchemy_pot'
+  source?: string | null
 }
 
 export type SeedReport = {

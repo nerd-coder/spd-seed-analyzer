@@ -6,7 +6,7 @@
     "commit": "7b8b845a7"
   },
   "overallStatus": "partial",
-  "summary": "Seed analysis is partial. Item identities, guaranteed floor spawns, route-independent quest reward contracts, and shop stock are reported on every floor. Ordinary room loot and exact floor layouts are only published while generation is provably free of player-state influence, which in most seeds means the first floor and the boss floors. Concrete quest details are hidden when earlier run choices can change them.",
+  "summary": "Seed analysis is partial. Item identities, guaranteed floor spawns, route-independent quest reward contracts, and shop stock are reported on every floor. Ordinary floor loot is exact on the first floor; later ordinary loot and exact floor layouts are published only while generation remains provably free of player-state influence. Boss-floor layouts are also exact. Concrete quest details are hidden when earlier run choices can change them.",
   "lastReviewed": "2026-07-29",
   "areas": [
     {
@@ -24,14 +24,14 @@
       "area": "Items & loot",
       "status": "partial",
       "implemented": [
-        "Guaranteed floor spawns on every floor — food, the Halls torches, Potions of Strength, Scrolls of Upgrade, Arcane Styli, Stones of Enchantment and Intuition, and the Trinket Catalyst with its four offers — with exact stack quantities, and searchable. The Catalyst floor, first generated alchemy pot, earliest effective trinket floor, and first-deck transmutation order are also reported. Forbidden Runes removes every second guaranteed Scroll of Upgrade when selected",
+        "Guaranteed floor spawns on every floor — food, the Halls torches, Potions of Strength, Scrolls of Upgrade, Arcane Styli, Stones of Enchantment and Intuition, and the Trinket Catalyst with its four offers — with exact stack quantities, and searchable. Alchemy pots are shown as guaranteed floor appearances, including the first generated pot used for trinket timing. The Catalyst floor, earliest effective trinket floor, and first-deck transmutation order are also reported. Forbidden Runes removes every second guaranteed Scroll of Upgrade when selected",
         "Route-independent reward contracts for the Sad Ghost, Old Wandmaker, Troll Blacksmith, and Ambitious Imp — option counts and categories, tier and upgrade ranges, curse status, conditional enchantments or glyphs, and the choices required to claim them",
         "Shop stock and quantities on every shop floor, common items named exactly and deck-driven slots given as a category and tier; the depth-20 Imp shop carries its quest-completion condition",
         "Ordinary floor loot from heaps, chests, locked chests, and skeletons, with class, stack quantity, upgrade level, and curse",
         "Seed search matches item class, a minimum upgrade level, and a floor range"
       ],
       "remaining": [
-        "Ordinary floor loot is published only on floors that also have an exact layout — in most seeds that is the first floor alone, so later floors list guaranteed spawns, quest rewards, and shop stock only",
+        "Ordinary floor loot is exact on the first floor. Later ordinary loot is published only while the floor also has an exact layout, so most later floors list guaranteed spawns, quest rewards, and shop stock only",
         "Loot drawn after an artifact assumes no artifact was obtained outside level generation earlier in the run",
         "Which of the four Trinket Catalyst offers a player takes, when it is upgraded, and when a Scroll of Transmutation is used are player choices. The analyzer applies the chronological held-trinket history you enter and never allows its upgrade level to decrease",
         "The Sad Ghost's concrete spawn depth, tiers, levels, and option identities can change with player state before the Ghost appears. The analyzer can recalculate the no-Tooth and held Mimic Tooth +0 to +3 cases from the chosen floor, with or without Forbidden Runes; other trinkets and earlier artifact history are not yet enumerated",

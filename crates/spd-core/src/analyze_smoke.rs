@@ -85,6 +85,76 @@ fn explicit_baseline_profile_can_publish_proven_safe_maps() {
 }
 
 #[test]
+fn fresh_profile_publishes_floor_one_ordinary_loot() {
+    let mut floors_with_ordinary_loot = 0;
+    for seed in 0..50 {
+        let report = analyze_seed_with_profile(&seed.to_string(), 1, Some(MapProfile::default()))
+            .expect("profiled analysis");
+        let floor = &report.floors[0];
+        assert!(floor.map.is_some(), "seed {seed} floor-one layout");
+        let mut has_ordinary_loot = false;
+        for item in floor.items.iter().filter(|item| {
+            item.source
+                .as_deref()
+                .and_then(|source| source.rsplit(':').next())
+                == Some("heap")
+        }) {
+            has_ordinary_loot = true;
+            assert_eq!(
+                item.prediction,
+                crate::report::ItemPredictionKind::Exact,
+                "seed {seed} floor-one ordinary loot"
+            );
+            assert!(item.conditional_notes.is_empty());
+        }
+        floors_with_ordinary_loot += usize::from(has_ordinary_loot);
+    }
+    assert!(
+        floors_with_ordinary_loot >= 40,
+        "fresh floor-one ordinary loot should not be hidden by later-run uncertainty"
+    );
+}
+
+#[test]
+fn first_alchemy_pot_is_a_guaranteed_floor_appearance() {
+    for seed in 0..50 {
+        let report = analyze_seed_with_profile(&seed.to_string(), 5, Some(MapProfile::default()))
+            .expect("profiled analysis");
+        let selection = &report.trinket_selection;
+        let expected_source = if selection.first_alchemy_pot_is_secret {
+            "SecretLaboratoryRoom"
+        } else {
+            "LaboratoryRoom"
+        };
+        let floor = report
+            .floors
+            .iter()
+            .find(|floor| floor.depth == selection.first_alchemy_pot_depth)
+            .expect("first pot floor is included");
+
+        assert!(floor.guaranteed_appearances.iter().any(|appearance| {
+            appearance.kind == GuaranteedAppearanceKind::AlchemyPot
+                && appearance.name == "Alchemy pot"
+                && appearance.source.as_deref() == Some(expected_source)
+        }));
+
+        for exact_floor in report.floors.iter().filter(|floor| !floor.rooms.is_empty()) {
+            let room_pots = exact_floor
+                .rooms
+                .iter()
+                .filter(|room| matches!(room.as_str(), "LaboratoryRoom" | "SecretLaboratoryRoom"))
+                .count();
+            assert_eq!(
+                exact_floor.guaranteed_appearances.len(),
+                room_pots,
+                "seed {seed} floor {} exact pot appearances",
+                exact_floor.depth
+            );
+        }
+    }
+}
+
+#[test]
 fn forbidden_runes_profile_removes_every_second_upgrade_scroll() {
     use crate::{analyze_seed_with_profile, MapProfile};
 

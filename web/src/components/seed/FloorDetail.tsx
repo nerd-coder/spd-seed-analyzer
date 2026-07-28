@@ -1,5 +1,6 @@
 import { DepthIcon } from '@/components/DepthIcon'
 import { FloorMapPreview } from '@/components/FloorMapPreview'
+import { FloorAppearanceSection } from '@/components/seed/FloorAppearanceSection'
 import {
   FloorItemSections,
   partitionFloorItems,
@@ -53,6 +54,7 @@ export function FloorDetail({
         </div>
       )}
 
+      <FloorAppearanceSection appearances={floor.guaranteed_appearances} />
       <FloorItemSections floor={floor} identities={identities} />
     </div>
   )

@@ -199,6 +199,9 @@ pub struct FloorReport {
     /// Room types selected by `initRooms` (order after shuffle).
     #[serde(default)]
     pub rooms: Vec<String>,
+    /// Seed-determined non-loot features that are guaranteed to exist on this floor.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub guaranteed_appearances: Vec<GuaranteedAppearance>,
     pub items: Vec<ItemEntry>,
     pub quests: Vec<String>,
     /// Present when geometry build succeeded.
@@ -209,6 +212,20 @@ pub struct FloorReport {
     /// prediction and must be presented with its assumption warning.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub assumed_map: Option<FloorMap>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct GuaranteedAppearance {
+    pub name: String,
+    pub kind: GuaranteedAppearanceKind,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum GuaranteedAppearanceKind {
+    AlchemyPot,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

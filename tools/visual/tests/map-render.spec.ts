@@ -27,6 +27,16 @@ async function installSyntheticMapReport(page: Page) {
       feeling: 'none',
       builder: 'loop',
       rooms: ['SyntheticRoom'],
+      guaranteed_appearances:
+        index === 2
+          ? [
+              {
+                name: 'Alchemy pot',
+                kind: 'alchemy_pot',
+                source: 'LaboratoryRoom',
+              },
+            ]
+          : [],
       items: [],
       quests: [],
       map:
@@ -405,6 +415,22 @@ test('floor rooms open from a title chip and desktop maps use a large dialog', a
   await expect(
     dialog.getByRole('button', { name: /Switch map to [12]x zoom/ })
   ).toBeVisible()
+
+  expect(browserErrors.console, 'browser console errors').toEqual([])
+  expect(browserErrors.page, 'uncaught page errors').toEqual([])
+})
+
+test('alchemy pots render as guaranteed non-loot appearances', async ({
+  page,
+}) => {
+  await installSyntheticMapReport(page)
+  const browserErrors = await openAnalyzer(page, GENERIC_MAP_SEED)
+
+  await expect(
+    page.getByText('Guaranteed appearances', { exact: false })
+  ).toBeVisible()
+  await expect(page.getByText('Alchemy pot', { exact: true })).toBeVisible()
+  await expect(page.getByText('Laboratory', { exact: true })).toBeVisible()
 
   expect(browserErrors.console, 'browser console errors').toEqual([])
   expect(browserErrors.page, 'uncaught page errors').toEqual([])

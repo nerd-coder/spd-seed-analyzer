@@ -81,6 +81,11 @@ fn create_level_internal(
     layout_only: bool,
 ) -> LevelState {
     let inherited_public_taint = dungeon.public_generation_tainted;
+    // An explicit fresh profile closes every input before the first floor is
+    // generated. A sensitive levelgen draw can taint later floors, but it
+    // cannot retroactively make floor-one loot depend on prior play.
+    let fresh_profile_floor_one =
+        configured_profile && dungeon.depth == 1 && !inherited_public_taint;
     let depth_seed = dungeon.seed_cur_depth();
     Random::push_generator_seeded(depth_seed);
 
@@ -364,9 +369,11 @@ fn create_level_internal(
                 .collect();
             room_public_facts.extend(special_room_public_facts);
             if let Some(first_sensitive_loot_index) = first_sensitive_loot_index {
-                runtime_sensitive_placed_items_from
-                    .get_or_insert(placed_items.len() + first_sensitive_loot_index);
-                runtime_sensitive_quests_from.get_or_insert(quests.len());
+                if !fresh_profile_floor_one {
+                    runtime_sensitive_placed_items_from
+                        .get_or_insert(placed_items.len() + first_sensitive_loot_index);
+                    runtime_sensitive_quests_from.get_or_insert(quests.len());
+                }
                 runtime_sensitive_map = true;
                 dungeon.public_generation_tainted = true;
             }
@@ -503,6 +510,9 @@ fn create_level_internal(
                         continue;
                     }
                     let mut item = p.item;
+                    if fresh_profile_floor_one {
+                        item.artifact_conditional = false;
+                    }
                     if item.source.is_none() {
                         item.source = Some(p.heap_type.into());
                     } else if p.heap_type != "heap" {
