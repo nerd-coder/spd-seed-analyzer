@@ -42,7 +42,7 @@ mod placement_oracle_tests {
     }
 
     #[test]
-    fn quest_npc_cells_and_reward_tails_pin_known_parity_gap() {
+    fn quest_npc_cells_and_reward_tails_match_oracle_matrix() {
         let fixture_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../tools/java-oracle/fixtures/generator");
         let mut paths: Vec<_> = std::fs::read_dir(&fixture_dir)
@@ -91,10 +91,9 @@ mod placement_oracle_tests {
             .into_iter()
             .flatten()
             .all(|covered| covered));
-        assert_eq!(
-            mismatches,
-            ["AAA-AAA-AAC Wandmaker", "AAA-AAA-AAU Wandmaker",],
-            "update the public constraint when placement parity changes"
+        assert!(
+            mismatches.is_empty(),
+            "quest placement mismatches: {mismatches:?}"
         );
     }
 

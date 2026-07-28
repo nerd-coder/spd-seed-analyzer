@@ -448,30 +448,16 @@ fn create_level_internal(
                 if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=24) {
                     pre_mobs_rng_probe = Random::peek_ints(8);
                 }
-                let spawned_items_start = placed_items.len();
-                let spawned_quests_start = quests.len();
                 let spawned = quest_rewards::spawn_npcs(dungeon, &floor.rooms, &mut map);
+                let spawned_quest = !spawned.summaries.is_empty();
                 placed_items.extend(spawned.items);
                 quests.extend(spawned.summaries);
                 quest_public_labels.extend(spawned.public_labels);
-                if spawned.ghost_rng_tail_sensitive {
-                    runtime_sensitive_placed_items_from.get_or_insert(spawned_items_start);
-                    runtime_sensitive_quests_from.get_or_insert(spawned_quests_start);
-                    runtime_sensitive_map = true;
-                    dungeon.public_generation_tainted = true;
-                }
-                if spawned.wand_rng_tail_sensitive {
-                    // The room and quest type were selected during initRooms,
-                    // before painter callbacks. Even if painting makes the sampled
-                    // wand identities unsafe, the public Wandmaker summary and the
-                    // invariant two-wand reward contract remain valid. Only a
-                    // pre-build divergence can invalidate the selection itself.
-                    if !runtime_sensitive_quest_prebuild {
-                        runtime_sensitive_quests_from = None;
-                    }
-                    runtime_sensitive_placed_items_from.get_or_insert(placed_items.len());
-                    runtime_sensitive_map = true;
-                    dungeon.public_generation_tainted = true;
+                // The quest-NPC oracle verifies placement and reward RNG after
+                // every covered painter path. A current-floor paint boundary
+                // therefore does not suppress these independently pinned facts.
+                if spawned_quest && !runtime_sensitive_quest_prebuild {
+                    runtime_sensitive_quests_from = None;
                 }
 
                 let _ambient_mobs_consumed = if dungeon.regular_level() {

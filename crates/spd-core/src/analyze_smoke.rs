@@ -128,7 +128,19 @@ fn ghost_quest_spawns_within_sewers_sometime() {
                 .placed_items
                 .iter()
                 .any(|item| item.source.as_deref() == Some("Ghost.Quest")));
-            assert!(state.to_floor_report().quests.is_empty());
+            let report = state.to_floor_report();
+            assert_eq!(
+                report
+                    .items
+                    .iter()
+                    .filter(|item| item.source.as_deref() == Some("Ghost.Quest"))
+                    .count(),
+                2
+            );
+            assert!(report
+                .quests
+                .iter()
+                .any(|quest| quest.contains("Sad Ghost")));
             saw = true;
         }
     }
@@ -136,7 +148,7 @@ fn ghost_quest_spawns_within_sewers_sometime() {
 }
 
 #[test]
-fn ghost_placement_gap_suppresses_sampled_public_rewards() {
+fn prior_runtime_divergence_preserves_pinned_ghost_rewards() {
     let mut saw_quest = false;
     for seed in 0..100 {
         let mut dungeon = dungeon_from_run(init_run(seed));
@@ -149,12 +161,19 @@ fn ghost_placement_gap_suppresses_sampled_public_rewards() {
             }
             let report = state.to_floor_report();
             saw_quest = true;
-            assert_eq!(state.runtime_sensitive_quests_from, Some(0));
-            assert!(report.quests.is_empty());
+            assert_eq!(state.runtime_sensitive_quests_from, None);
             assert!(report
-                .items
+                .quests
                 .iter()
-                .all(|item| item.source.as_deref() != Some("Ghost.Quest")));
+                .any(|quest| quest.contains("Sad Ghost")));
+            assert_eq!(
+                report
+                    .items
+                    .iter()
+                    .filter(|item| item.source.as_deref() == Some("Ghost.Quest"))
+                    .count(),
+                2
+            );
             break;
         }
         if saw_quest {

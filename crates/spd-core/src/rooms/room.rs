@@ -219,7 +219,12 @@ impl Room {
     }
 
     pub fn max_connections(&self, direction: i32) -> i32 {
-        if direction == DIR_ALL {
+        if direction == DIR_ALL
+            || matches!(
+                self.kind,
+                RoomKind::Special | RoomKind::Secret | RoomKind::Shop
+            )
+        {
             self.max_connections_all
         } else {
             4
@@ -332,6 +337,26 @@ pub fn can_connect_rooms(a: &Room, b: &Room, rooms: &[Room]) -> bool {
         || (b.name == "RatKingRoom" && a.name == "SewerBossEntranceRoom")
     {
         return false;
+    }
+    if a.name == "MassGraveRoom" {
+        if b.is_entrance() {
+            return false;
+        }
+        for &r1 in &b.connected {
+            if rooms[r1].is_entrance() {
+                return false;
+            }
+            for &r2 in &rooms[r1].connected {
+                if rooms[r2].is_entrance() {
+                    return false;
+                }
+                for &r3 in &rooms[r2].connected {
+                    if rooms[r3].is_entrance() {
+                        return false;
+                    }
+                }
+            }
+        }
     }
     let i = intersect(a, b);
     let mut found_point = false;
@@ -504,6 +529,47 @@ mod tests {
             &spawner,
             &exit,
             &[spawner.clone(), exit.clone()]
+        ));
+    }
+
+    #[test]
+    fn mass_grave_stays_more_than_three_connections_from_entrance() {
+        fn room(id: usize, name: &'static str, kind: RoomKind) -> Room {
+            let mut room = Room::new(id, name, kind, 1, 16, 5, 5, 5, 5);
+            room.left = if id == 1 { 5 } else { 1 };
+            room.top = 1;
+            room.right = if id == 0 { 5 } else { 9 };
+            room.bottom = 6;
+            room
+        }
+
+        let grave = room(0, "MassGraveRoom", RoomKind::Special);
+        let mut candidate = room(1, "StandardRoom", RoomKind::Standard);
+        let mut first = room(2, "StandardRoom", RoomKind::Standard);
+        let mut second = room(3, "StandardRoom", RoomKind::Standard);
+        let mut third = room(4, "StandardRoom", RoomKind::Standard);
+        let entrance = room(5, "EntranceRoom", RoomKind::Entrance);
+
+        candidate.connected = vec![2];
+        first.connected = vec![1, 3];
+        second.connected = vec![2, 5];
+        let too_close = vec![
+            grave.clone(),
+            candidate.clone(),
+            first.clone(),
+            second.clone(),
+            third.clone(),
+            entrance.clone(),
+        ];
+        assert!(!can_connect_rooms(&too_close[0], &too_close[1], &too_close));
+
+        second.connected = vec![2, 4];
+        third.connected = vec![3, 5];
+        let far_enough = vec![grave, candidate, first, second, third, entrance];
+        assert!(can_connect_rooms(
+            &far_enough[0],
+            &far_enough[1],
+            &far_enough
         ));
     }
 }

@@ -4,10 +4,9 @@ Pinned target: SPD v3.3.8 @ `7b8b845a7`; accuracy remains `partial`.
 
 The quest-NPC oracle pins the Ghost and Wandmaker cell plus the eight-int RNG
 tail immediately after reward generation across all Wandmaker depth/type
-combinations and Ghost depths 2–4. Rust now matches 16 of 18 boundaries. Ghost
-placement and reward tails match the full matrix, but Ghost rewards remain
-omitted until the remaining prior-floor drift is resolved. The existing
-Wandmaker constraint remains. Accuracy is still `partial`.
+combinations and Ghost depths 2–4. Rust matches all 18 boundaries, and Sad
+Ghost rewards are included in public reports. The existing Wandmaker constraint
+remains. Accuracy is still `partial`.
 
 Public item entries carry exact stack quantities when known and consolidate
 identical exact spawn/shop rows; differing properties remain separate.
@@ -19,32 +18,7 @@ reported as constrained on no earlier out-of-level artifact acquisition. Plain
 heap/chest/locked-chest/skeleton spawns are included, while Mimic-carried loot
 and all placement details remain excluded.
 
-## 1. Restore quest-NPC placement parity
-
-`StatueRoom` now generates the armored variant's armor/glyph, `MassGraveRoom`
-re-rolls its skeleton loop condition like Java, and Treasury mimics generate
-their held prize. Focused room boundaries and the 18-case NPC matrix pin these
-paths. The AAC floor-4 and floor-6 painter callbacks and `paintDoors` boundary
-now match Java exactly.
-
-Two Wandmaker cases remain:
-
-- AAC floor 7 diverges before room construction even though floor 6 painting
-  ends aligned; locate the floor-6 population/item lifecycle drift.
-- AAU floor 9 likewise has a different pre-shuffle room list; find the first
-  prior-floor population boundary that differs.
-Focused lifecycle probes narrow both upstream cases further: AAC matches Java
-through floor 6's `createItems` entry and all final heap/mob placements, then
-diverges before floor 7 construction; AAU does the same across floor 8→9. The
-visible AAC floor-6 difference is only the inventory-sensitive shop bag
-(Potion Bandolier in the oracle, Magical Holster in the baseline analyzer), so
-locate the first post-`createItems` persistent-state mutation rather than
-changing room construction directly.
-
-Require all 18 NPC boundaries to match, remove both NPC tail guards, and only
-then update the accuracy manifest and expose Ghost rewards.
-
-## 2. Sharpen the Sad Ghost reward
+## 1. Sharpen the Sad Ghost reward
 
 Everything except the weapon's class is independent of any deck (§10).
 
@@ -64,7 +38,7 @@ Everything except the weapon's class is independent of any deck (§10).
    the weapon is named or offered as a short ordered set, and enchantment is
    stated with its Parchment Scrap condition.
 
-## 3. Lift the Old Wandmaker constraint
+## 2. Lift the Old Wandmaker constraint
 
 Today both wands are reported as `+1…+3 wand` with no class
 (`level/state.rs:255`, `:308-313`). After step 1:
@@ -81,7 +55,7 @@ Today both wands are reported as `+1…+3 wand` with no class
    when the class stays a set. Fall back to `+1…+3` only on disagreement.
 4. Update `specs/accuracy.json` accordingly.
 
-## 4. Report the four Trinket Catalyst offers
+## 3. Report the four Trinket Catalyst offers
 
 The catalyst's four options are TRINKET deck draws 0–3, so they are exact and
 knowable before the run starts — a stronger claim than anything we show for the
