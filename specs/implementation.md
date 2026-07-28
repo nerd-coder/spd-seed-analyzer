@@ -4,7 +4,7 @@ Pinned target: SPD v3.3.8 @ `7b8b845a7`; accuracy remains `partial`.
 
 The quest-NPC oracle pins the Ghost and Wandmaker cell plus the eight-int RNG
 tail immediately after reward generation across all Wandmaker depth/type
-combinations and Ghost depths 2–4. Rust now matches 15 of 18 boundaries. Ghost
+combinations and Ghost depths 2–4. Rust now matches 16 of 18 boundaries. Ghost
 placement and reward tails match the full matrix, but Ghost rewards remain
 omitted until the remaining prior-floor drift is resolved. The existing
 Wandmaker constraint remains. Accuracy is still `partial`.
@@ -27,20 +27,12 @@ their held prize. Focused room boundaries and the 18-case NPC matrix pin these
 paths. The AAC floor-4 and floor-6 painter callbacks and `paintDoors` boundary
 now match Java exactly.
 
-Three Wandmaker cases remain:
+Two Wandmaker cases remain:
 
 - AAC floor 7 diverges before room construction even though floor 6 painting
   ends aligned; locate the floor-6 population/item lifecycle drift.
 - AAU floor 9 likewise has a different pre-shuffle room list; find the first
   prior-floor population boundary that differs.
-- AAD floor 8 has the exact reward RNG tail but chooses cell 586 instead of
-  643. Its room bounds, 54×33 map dimensions, and entrance cell 641 match
-  Java. The first mismatch is the post-decoration `createMobs` boundary: Java
-  still has `-79766741` before Rust's shared `148768364, 1701898953, ...`
-  tail, and cell 586 is empty in Java but grass in Rust. Trace the prison
-  water/grass/trap/decorate pass and restore that missing call/terrain choice;
-  do not special-case Wandmaker placement.
-
 Focused lifecycle probes narrow both upstream cases further: AAC matches Java
 through floor 6's `createItems` entry and all final heap/mob placements, then
 diverges before floor 7 construction; AAU does the same across floor 8→9. The
