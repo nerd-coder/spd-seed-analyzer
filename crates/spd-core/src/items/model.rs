@@ -90,10 +90,7 @@ pub enum QuestRewardRole {
     BlacksmithRoomArmor {
         tier: i32,
     },
-    ImpRing {
-        identity_exact: bool,
-        candidate_indices: [u8; 3],
-    },
+    ImpRing,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

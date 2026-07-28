@@ -372,29 +372,32 @@ fn imp_quest_spawns_within_city() {
                     .any(|i| i.source.as_deref() == Some("Imp.Quest"))
             {
                 saw = true;
-                // Level and curse are exact. Identity is exact when the seed
-                // rules out both known deck-shift paths, otherwise all three
-                // reachable ring classes are reported in order.
                 let ring = f
                     .items
                     .iter()
                     .find(|i| i.source.as_deref() == Some("Imp.Quest"));
                 if let Some(ring) = ring {
-                    assert!(ring.level.is_some());
+                    assert_eq!(ring.name, "ring reward");
+                    assert_eq!(ring.prediction, report::ItemPredictionKind::Constrained);
+                    assert!(ring.class_name.is_none());
+                    assert!(ring.candidate_classes.is_empty());
+                    assert!(ring.level.is_none());
+                    assert_eq!(
+                        ring.level_range,
+                        Some(report::NumericRange { min: 2, max: 4 })
+                    );
                     assert_eq!(ring.cursed, Some(true));
-                    match ring.prediction {
-                        report::ItemPredictionKind::Exact => {
-                            assert!(ring.class_name.is_some());
-                            assert!(ring.candidate_classes.is_empty());
-                            assert!(ring.conditional_notes.is_empty());
-                        }
-                        report::ItemPredictionKind::Constrained => {
-                            assert_eq!(ring.name, format!("+{} ring reward", ring.level.unwrap()));
-                            assert!(ring.class_name.is_none());
-                            assert_eq!(ring.candidate_classes.len(), 3);
-                            assert!(ring.conditional_notes.is_empty());
-                        }
-                    }
+                    assert!(ring.conditional_notes.iter().any(|note| {
+                        note.contains("5 Monk tokens") && note.contains("4 Golem tokens")
+                    }));
+                    assert!(f
+                        .quests
+                        .iter()
+                        .filter(|q| q.contains("Ambitious Imp"))
+                        .all(|q| {
+                            q.contains("floors 17–19; target follows spawn depth")
+                                && q.contains("one cursed +2…+4 ring")
+                        }));
                 }
                 break;
             }

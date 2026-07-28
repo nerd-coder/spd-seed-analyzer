@@ -403,14 +403,6 @@ impl GeneratorState {
         self.cats[cat.index()].dropped
     }
 
-    pub(crate) fn deck_remaining_weight(&self, cat: Category) -> f32 {
-        self.cats[cat.index()]
-            .probs
-            .iter()
-            .map(|probability| probability.max(0.0))
-            .sum()
-    }
-
     /// Preview category classes without advancing this generator or the active
     /// floor RNG. Item randomization runs under an isolated throwaway stream.
     pub(crate) fn preview_category_classes(

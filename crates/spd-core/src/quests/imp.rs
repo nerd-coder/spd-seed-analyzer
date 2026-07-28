@@ -1,8 +1,8 @@
 //! Port of `Imp.Quest` (Ambitious Imp, city floors 17–19).
 //!
 //! `Imp.Quest.spawn` runs at the end of `CityLevel.initRooms` (before shuffle)
-//! and generates the cursed +2 ring reward immediately (unlike Wandmaker, which
-//! generates wands in `createMobs`).
+//! and generates the cursed +2…+4 ring reward immediately (unlike Wandmaker,
+//! which generates wands in `createMobs`).
 
 use crate::generator::{Category, GeneratorState};
 use crate::items::model::GeneratedItem;
@@ -19,6 +19,8 @@ pub struct ImpQuestState {
     pub reward_ring_draw_index: Option<i32>,
     /// Ring category draw index immediately after the curse-reroll loop.
     pub reward_ring_draw_end: Option<i32>,
+    /// Fixed-profile reward level retained after the report drains the item.
+    pub reward_level: Option<i32>,
     /// Ring generated at spawn; drained once into the floor report.
     pub pending_reward: Option<GeneratedItem>,
     pub pending_summary: Option<String>,
@@ -27,8 +29,43 @@ pub struct ImpQuestState {
 #[derive(Debug, Clone)]
 pub struct ImpSpawnResult {
     pub alternative: bool,
+    /// The fixed target class for this spawn depth (Monk or Golem).
+    pub target: ImpQuestTarget,
+    /// Dwarf tokens required by `WndImp` before the reward can be claimed.
+    pub required_tokens: u8,
     pub reward: GeneratedItem,
     pub summary: String,
+}
+
+/// Target and token contract used by `Imp.Quest.process` / `WndImp`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ImpQuestTarget {
+    Monks,
+    Golems,
+}
+
+impl ImpQuestTarget {
+    fn from_alternative(alternative: bool) -> Self {
+        if alternative {
+            Self::Monks
+        } else {
+            Self::Golems
+        }
+    }
+
+    pub fn required_tokens(self) -> u8 {
+        match self {
+            Self::Monks => 5,
+            Self::Golems => 4,
+        }
+    }
+
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Monks => "Monks",
+            Self::Golems => "Golems",
+        }
+    }
 }
 
 /// `Imp.Quest.spawn(rooms)` — city only; call before room shuffle.
@@ -71,8 +108,9 @@ pub fn try_spawn(
     imp.reward_ring_draw_index = Some(generator.deck_dropped(Category::Ring));
     let reward = generate_reward(generator, depth);
     imp.reward_ring_draw_end = Some(generator.deck_dropped(Category::Ring));
-    let target = if imp.alternative { "Monks" } else { "Golems" };
-    let summary = format!("Ambitious Imp ({target}) — {}", reward.title());
+    imp.reward_level = Some(reward.level);
+    let target = ImpQuestTarget::from_alternative(imp.alternative);
+    let summary = format!("Ambitious Imp ({}) — {}", target.as_str(), reward.title());
 
     imp.pending_reward = Some(reward);
     imp.pending_summary = Some(summary);
@@ -86,21 +124,17 @@ pub fn take_pending(imp: &mut ImpQuestState) -> Option<ImpSpawnResult> {
         .pending_summary
         .take()
         .unwrap_or_else(|| "Ambitious Imp".into());
+    let target = ImpQuestTarget::from_alternative(imp.alternative);
     Some(ImpSpawnResult {
         alternative: imp.alternative,
+        target,
+        required_tokens: target.required_tokens(),
         reward,
         summary,
     })
 }
 
 fn generate_reward(generator: &mut GeneratorState, depth: i32) -> GeneratedItem {
-    let mimic_tooth_available = generator
-        .preview_category_classes(Category::Trinket, 4, depth)
-        .iter()
-        .any(|class_name| class_name == "MimicTooth");
-    let identity_exact =
-        !mimic_tooth_available && generator.deck_remaining_weight(Category::Artifact) > 0.0;
-
     // do { reward = random(RING) } while (reward.cursed);
     let mut reward = loop {
         let r = generator.random_category(Category::Ring, depth);
@@ -118,221 +152,20 @@ fn generate_reward(generator: &mut GeneratorState, depth: i32) -> GeneratedItem 
     reward.cursed = true;
     reward.source = Some("Imp.Quest".into());
     let ring_classes = Category::Ring.def().classes;
-    let mut candidate_classes = vec![reward.class_name.clone()];
-    candidate_classes.extend(generator.preview_category_classes(Category::Ring, 2, depth));
-    let candidate_indices = candidate_classes
+    // Runtime history can move the ring deck an unbounded number of draws
+    // before the quest (player-state-dependent levelgen mimic prizes and the
+    // ring fallback after runtime sources exhaust the artifact deck). Keep
+    // every ring class in internal candidate metadata. Public projection keeps
+    // only the ring category because the set cannot rule out a concrete class.
+    reward.candidate_classes = ring_classes
         .iter()
-        .map(|class_name| {
-            ring_classes
-                .iter()
-                .position(|candidate| candidate == class_name)
-                .expect("previewed ring class belongs to ring category") as u8
-        })
-        .collect::<Vec<_>>()
-        .try_into()
-        .expect("three Imp ring candidates");
+        .map(|name| (*name).to_string())
+        .collect();
     reward.provenance =
-        crate::items::model::ItemProvenance::Quest(crate::items::model::QuestRewardRole::ImpRing {
-            identity_exact,
-            candidate_indices,
-        });
+        crate::items::model::ItemProvenance::Quest(crate::items::model::QuestRewardRole::ImpRing);
     reward
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::level::create_level_partial;
-    use crate::run::{dungeon_from_run, init_run};
-    use serde::Deserialize;
-
-    const RING_DECK_FIXTURES: [&str; 5] = [
-        include_str!(
-            "../../../../tools/java-oracle/fixtures/generator/aaa-aaa-aaa-imp-ring-deck.json"
-        ),
-        include_str!(
-            "../../../../tools/java-oracle/fixtures/generator/abc-def-ghi-imp-ring-deck.json"
-        ),
-        include_str!(
-            "../../../../tools/java-oracle/fixtures/generator/gfx-pzh-dch-imp-ring-deck.json"
-        ),
-        include_str!(
-            "../../../../tools/java-oracle/fixtures/generator/hkt-jzn-xqq-imp-ring-deck.json"
-        ),
-        include_str!(
-            "../../../../tools/java-oracle/fixtures/generator/zzz-zzz-zzz-imp-ring-deck.json"
-        ),
-    ];
-
-    #[derive(Deserialize)]
-    struct RingDeckFixture {
-        contract: String,
-        spd: FixturePin,
-        input: FixtureInput,
-        spawn: FixtureSpawn,
-    }
-
-    #[derive(Deserialize)]
-    struct FixturePin {
-        version: String,
-        commit: String,
-    }
-
-    #[derive(Deserialize)]
-    struct FixtureInput {
-        seed: String,
-        numeric: i64,
-    }
-
-    #[derive(Deserialize)]
-    struct FixtureSpawn {
-        depth: i32,
-        ring_dropped_before: i32,
-        ring_dropped_after: i32,
-    }
-
-    #[test]
-    fn ring_draw_index_matches_pinned_java_at_imp_spawn() {
-        for fixture_json in RING_DECK_FIXTURES {
-            let fixture: RingDeckFixture =
-                serde_json::from_str(fixture_json).expect("Imp ring deck fixture");
-            assert_eq!(fixture.contract, "imp_ring_deck");
-            assert_eq!(fixture.spd.version, crate::SPD_VERSION);
-            assert_eq!(fixture.spd.commit, crate::SPD_COMMIT);
-
-            let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
-            for depth in 1..=fixture.spawn.depth {
-                dungeon.depth = depth;
-                create_level_partial(&mut dungeon);
-            }
-
-            assert_eq!(
-                dungeon.imp.depth, fixture.spawn.depth,
-                "{} depth",
-                fixture.input.seed
-            );
-            assert_eq!(
-                dungeon.imp.reward_ring_draw_index,
-                Some(fixture.spawn.ring_dropped_before),
-                "{} pre-reward ring draw index",
-                fixture.input.seed
-            );
-            assert_eq!(
-                dungeon.imp.reward_ring_draw_end,
-                Some(fixture.spawn.ring_dropped_after),
-                "{} post-reward ring draw index",
-                fixture.input.seed
-            );
-        }
-    }
-
-    #[test]
-    fn reward_deterministic_and_cursed_plus_two() {
-        let gen_template = init_run(42).generator;
-
-        Random::reset_generators();
-        Random::push_generator_seeded(777);
-        let r1 = generate_reward(&mut gen_template.clone(), 18);
-        Random::pop_generator();
-
-        Random::reset_generators();
-        Random::push_generator_seeded(777);
-        let r2 = generate_reward(&mut gen_template.clone(), 18);
-        Random::pop_generator();
-
-        assert_eq!(r1.class_name, r2.class_name);
-        assert_eq!(r1.level, r2.level);
-        assert!(r1.cursed);
-        // randomize_ring level 0–2 then +2 → 2–4
-        assert!((2..=4).contains(&r1.level), "level={}", r1.level);
-    }
-
-    #[test]
-    fn altered_ring_deck_changes_identity_without_changing_level_or_rng_tail() {
-        let mut fresh = init_run(42).generator;
-        let mut altered = fresh.clone();
-        Random::reset_generators();
-        Random::push_generator_seeded(123);
-        let _ = altered.random_category(Category::Ring, 18);
-        Random::pop_generator();
-
-        Random::reset_generators();
-        Random::push_generator_seeded(777);
-        let fresh_reward = generate_reward(&mut fresh, 18);
-        let fresh_tail = Random::peek_ints(8);
-        Random::pop_generator();
-
-        Random::reset_generators();
-        Random::push_generator_seeded(777);
-        let altered_reward = generate_reward(&mut altered, 18);
-        let altered_tail = Random::peek_ints(8);
-        Random::pop_generator();
-
-        assert_ne!(fresh_reward.class_name, altered_reward.class_name);
-        assert_eq!(fresh_reward.level, altered_reward.level);
-        assert_eq!(fresh_tail, altered_tail);
-    }
-
-    #[test]
-    fn reward_identity_reports_exact_or_ordered_candidates_from_seed() {
-        let mut saw_exact = false;
-        let mut saw_conditional = false;
-        for seed in 0..100 {
-            let mut generator = init_run(seed).generator;
-            Random::reset_generators();
-            Random::push_generator_seeded(777);
-            let reward = generate_reward(&mut generator, 18);
-            Random::pop_generator();
-
-            let crate::items::model::ItemProvenance::Quest(
-                crate::items::model::QuestRewardRole::ImpRing {
-                    identity_exact,
-                    candidate_indices,
-                },
-            ) = reward.provenance
-            else {
-                panic!("Imp reward provenance");
-            };
-            let ring_classes = Category::Ring.def().classes;
-            assert_eq!(
-                ring_classes[usize::from(candidate_indices[0])],
-                reward.class_name
-            );
-            assert_eq!(candidate_indices.len(), 3);
-            saw_exact |= identity_exact;
-            saw_conditional |= !identity_exact;
-            if saw_exact && saw_conditional {
-                break;
-            }
-        }
-        assert!(saw_exact, "seed scan should find a run without Mimic Tooth");
-        assert!(
-            saw_conditional,
-            "seed scan should find a run where Mimic Tooth is offered"
-        );
-    }
-
-    #[test]
-    fn depth19_always_spawns_when_not_spawned() {
-        Random::reset_generators();
-        let mut imp = ImpQuestState::default();
-        let mut gen = init_run(1).generator;
-        Random::push_generator_seeded(1);
-        let mut specs = Vec::new();
-        assert!(try_spawn(&mut imp, &mut gen, 19, &mut specs));
-        assert_eq!(specs[0].name, "AmbitiousImpRoom");
-        assert!(!imp.alternative); // golems on 19
-        assert!(imp.pending_reward.is_some());
-        Random::pop_generator();
-    }
-
-    #[test]
-    fn depth16_never_spawns() {
-        Random::reset_generators();
-        let mut imp = ImpQuestState::default();
-        let mut gen = init_run(1).generator;
-        let mut specs = Vec::new();
-        assert!(!try_spawn(&mut imp, &mut gen, 16, &mut specs));
-        assert!(specs.is_empty());
-    }
-}
+#[path = "imp/tests.rs"]
+mod tests;

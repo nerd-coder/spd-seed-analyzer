@@ -58,7 +58,8 @@ floors; the Sad Ghost examples are catalogued in
 
 ## 3. Ring-deck draw sites (complete)
 
-Deck draws (`Generator.random`), all levelgen:
+Direct ring deck draws (`Generator.random`) are levelgen except for the
+artifact-exhaustion fallback noted below:
 
 | Site | Java |
 |------|------|
@@ -69,17 +70,18 @@ Deck draws (`Generator.random`), all levelgen:
 | Crystal choice hidden prize | `CrystalChoiceRoom.java:124` |
 | Crystal vault prize cycle | `CrystalVaultRoom.java:104` |
 | Grassy grave / mass grave / secret summoning | `Generator.random()` |
-| Artifact exhaustion fallback | `Generator.java:709` |
+| Artifact exhaustion fallback, including runtime artifact requests | `Generator.java:709` |
 | Ambitious Imp reward | `Imp.java:234` |
 
 All are present in `spd-core`. Note `Generator.random()` (no-arg) is itself a
 category deck, so its ring count over a deck cycle is stable even if the
 in-cycle order shifts.
 
-## 4. Runtime paths do **not** touch the ring deck
+## 4. Direct runtime ring requests bypass the ring deck
 
-> Scope note: this section is about the **ring** deck and holds. It does not
-> generalize to every category — the ARTIFACT deck is runtime-movable. See §11.
+> Scope note: calls that directly request a runtime ring use defaults. Runtime
+> artifact requests are different: ARTIFACT is deck-backed and falls through
+> to the seeded RING deck after exhaustion. See §11.
 
 All use `randomUsingDefaults`: mob loot including Thief's
 `oneOf(RING, ARTIFACT)` (`Mob.java:997`), Ring of Wealth
@@ -88,8 +90,9 @@ All use `randomUsingDefaults`: mob loot including Thief's
 `:1170`), and runtime-spawned mimics (`useDecks=false` at
 `CursedWand.java:1066`, `DistortionTrap.java:120`).
 
-The ungenerated side-levels are likewise irrelevant: `MiningLevel` only calls
-`randomUsingDefaults(FOOD)`, `VaultLevel` only `randomUsingDefaults(...)`.
+The ungenerated side-levels add no direct ring-deck site: `MiningLevel` only
+calls `randomUsingDefaults(FOOD)`, `VaultLevel` only
+`randomUsingDefaults(...)`.
 
 ## 5. Challenge item-block rerolls cannot shift a deck index
 
@@ -147,20 +150,27 @@ tooth-free stream is the baseline stream.
 | Artifact draws before the spawn | 1–6, mode 3 |
 | Artifact deck weight left (of 11) | 5–10, median 8 |
 
-The artifact headroom means the exhaustion-to-ring fallback needs 5–10 extra
-runtime Ring of Wealth artifact draws before floor 17 to trigger; it is
-computable per seed rather than assumed.
+That 5–10 artifact headroom describes only the measured fresh baseline.
+Repeatable runtime artifact requests can close it before floor 17, so it is not
+a seed-only bound on the Imp reward.
 
 ## 8. Consequence for the Imp ring
 
-The class is fixed by (seed, ring draw index *k*); the `+2…+4` level is fixed
-by the floor's own stream and is exact regardless, since no ring subclass
-overrides `Ring.random()` (`Ring.java:259`) and the class never feeds back into
-RNG consumption. With 12 equal-weight ring classes, *k* off by one changes the
-class ~11/12 of the time.
+For a fixed profile, the class is fixed by (seed, ring draw index *k*), and the
+accepted ring class never feeds back into floor RNG because no subclass
+overrides `Ring.random()` (`Ring.java:259`). This proves that changing only *k*
+changes class without changing level or the later floor tail.
 
-Only Mimic Tooth and artifact exhaustion can move *k*, and both are checkable
-from the seed.
+Across playable routes, neither *k* nor the concrete +2…+4 level is seed-only.
+Mimic Tooth changes levelgen mimic prizes; Rat Skull can add a deck-using
+Crystal Mimic prize; earlier map/challenge paths can change levelgen draw sites;
+and repeatable runtime artifact requests fall through to RING after ARTIFACT
+exhaustion. Mossy Clump can also short-circuit a current-floor feeling roll
+before `Imp.Quest.spawn`, shifting the spawn attempt, target, curse retry, and
+level rolls. Once the 12-class equal-weight ring deck resets, every class is
+reachable. The cross-route public contract is therefore category-only: one
+conditional cursed +2…+4 ring. Full evidence and claim/shop conditions are in
+`specs/quest-rewards/ambitious-imp.md`.
 
 ## 9. Old Wandmaker reward (floors 7–9)
 

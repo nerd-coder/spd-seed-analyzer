@@ -6,7 +6,7 @@
     "commit": "7b8b845a7"
   },
   "overallStatus": "partial",
-  "summary": "Seed analysis is partial. Item identities, guaranteed floor spawns, baseline quest reward contracts, and shop stock are reported on every floor. Ordinary room loot and exact floor layouts are only published while generation is provably free of player-state influence, which in most seeds means the first floor and the boss floors. Quest option details are still being audited one quest at a time where earlier run choices can change generation.",
+  "summary": "Seed analysis is partial. Item identities, guaranteed floor spawns, route-independent quest reward contracts, and shop stock are reported on every floor. Ordinary room loot and exact floor layouts are only published while generation is provably free of player-state influence, which in most seeds means the first floor and the boss floors. Concrete quest details are hidden when earlier run choices can change them.",
   "lastReviewed": "2026-07-29",
   "areas": [
     {
@@ -25,7 +25,7 @@
       "status": "partial",
       "implemented": [
         "Guaranteed floor spawns on every floor — food, the Halls torches, Potions of Strength, Scrolls of Upgrade, Arcane Styli, Stones of Enchantment and Intuition, and the Trinket Catalyst with its four offers — with exact stack quantities, and searchable",
-        "Baseline reward options and reward rules for the Sad Ghost, Old Wandmaker, Troll Blacksmith, and Ambitious Imp, including upgrade level, curse, and conditional enchantments or glyphs",
+        "Route-independent reward contracts for the Sad Ghost, Old Wandmaker, Troll Blacksmith, and Ambitious Imp — option counts and categories, tier and upgrade ranges, curse status, conditional enchantments or glyphs, and the choices required to claim them",
         "Shop stock and quantities on every shop floor, common items named exactly and deck-driven slots given as a category and tier; the depth-20 Imp shop carries its quest-completion condition",
         "Ordinary floor loot from heaps, chests, locked chests, and skeletons, with class, stack quantity, upgrade level, and curse",
         "Seed search matches item class, a minimum upgrade level, and a floor range"
@@ -37,9 +37,9 @@
         "The Sad Ghost's concrete spawn depth, tiers, levels, and option identities can change with player state before the Ghost appears. The analyzer can recalculate the no-Tooth and held Mimic Tooth +0 to +3 cases from the chosen floor; other trinkets, challenges, and earlier artifact history are not yet enumerated",
         "The Old Wandmaker's concrete spawn floor, quest type, wand classes, and wand levels can change with earlier run choices. Reports keep only the route-independent contract: two distinct uncursed +1 to +3 wand options, with at most one claimable",
         "The Troll Blacksmith's concrete spawn floor, quest type, Smith classes, shared level, and effect identities can change if Mossy Clump shifts generation. Reports keep four mutually exclusive tier 3 to 5, +0 to +3, uncursed options; Parchment Scrap +1 held before the floor guarantees the paired effects. Reset-floor routes are not enumerated",
-        "The Ambitious Imp still needs the same end-to-end player-state audit"
+        "The Ambitious Imp's concrete spawn floor, target, ring class, and upgrade level can change with earlier run choices. Reports keep one conditional cursed +2 to +4 ring; any ring class remains possible, and both the reward and depth-20 shop require quest completion"
       ],
-      "impact": "Reports understate ordinary loot, and a listed quest option can be the analyzer's baseline route rather than the only possible option in a played run."
+      "impact": "Reports understate ordinary loot and intentionally hide concrete quest options where player state can change them."
     },
     {
       "id": "layout-and-room-selection",

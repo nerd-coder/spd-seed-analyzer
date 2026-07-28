@@ -203,28 +203,25 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
 }
 
 #[test]
-fn ordered_imp_ring_candidates_are_searchable() {
+fn category_only_imp_ring_never_matches_an_exact_ring_search() {
     let mut floor = exact_floor(18, &[]);
     floor.items.push(crate::report::ItemEntry {
-        name: "+3 ring reward".into(),
+        name: "ring reward".into(),
         quantity: 1,
         class_name: None,
-        candidate_classes: vec!["RingOfForce".into(), "RingOfHaste".into()],
+        candidate_classes: Vec::new(),
         category: "ring".into(),
         tier: None,
         tier_range: None,
-        level: Some(3),
-        level_range: None,
+        level: None,
+        level_range: Some(crate::report::NumericRange { min: 2, max: 4 }),
         cursed: Some(true),
         enchantment: None,
         prediction: ItemPredictionKind::Constrained,
-        conditional_notes: vec!["Mimic Tooth may shift the ring deck.".into()],
+        conditional_notes: vec!["Quest completion is required.".into()],
         source: Some("Imp.Quest".into()),
     });
-    assert_eq!(
-        matching_evidence(&[floor.clone()], &[constraint("RingOfHaste", 18, 18)]).len(),
-        1
-    );
+    assert!(matching_evidence(&[floor.clone()], &[constraint("RingOfHaste", 18, 18)]).is_empty());
     assert!(matching_evidence(&[floor], &[constraint("RingOfWealth", 18, 18)]).is_empty());
 }
 

@@ -37,16 +37,7 @@ pub(super) fn take_pending(dungeon: &mut DungeonState) -> InitQuestRewards {
     }
 
     if let Some(imp) = quests::take_imp_pending(&mut dungeon.imp) {
-        let reward_label = match imp.reward.provenance {
-            crate::items::model::ItemProvenance::Quest(
-                crate::items::model::QuestRewardRole::ImpRing {
-                    identity_exact: true,
-                    ..
-                },
-            ) => imp.reward.title(),
-            _ => "You’ll get the first option by default. It may change if Mimic Tooth is in your inventory or if every artifact has already appeared.".into(),
-        };
-        let public_summary = safe_summary(&imp.summary, &reward_label);
+        let public_summary = "Ambitious Imp (floors 17–19; target follows spawn depth) — complete the quest with 5 Monk or 4 Golem tokens to claim one cursed +2…+4 ring".into();
         result.summaries.push(imp.summary);
         result.public_labels.push(Some(public_summary));
         result.items.push(imp.reward);

@@ -27,7 +27,7 @@ fn prediction_kind(item: &GeneratedItem) -> ItemPredictionKind {
         ItemProvenance::Quest(
             QuestRewardRole::GhostWeapon { .. }
             | QuestRewardRole::WandmakerWand
-            | QuestRewardRole::ImpRing { .. }
+            | QuestRewardRole::ImpRing
             | QuestRewardRole::BlacksmithWeapon { .. }
             | QuestRewardRole::BlacksmithMissile { .. }
             | QuestRewardRole::BlacksmithArmor { .. }
@@ -308,15 +308,8 @@ impl LevelState {
                     "Blacksmith room missile weapon"
                 }
                 (_, Some(QuestRewardRole::BlacksmithRoomArmor { .. })) => "Blacksmith room armor",
-                (_, Some(QuestRewardRole::ImpRing { .. })) => "ring reward",
+                (_, Some(QuestRewardRole::ImpRing)) => "ring reward",
                 _ => "weapon reward",
-            };
-            let imp_identity = match quest_role {
-                Some(QuestRewardRole::ImpRing {
-                    identity_exact,
-                    candidate_indices,
-                }) => Some((identity_exact, candidate_indices)),
-                _ => None,
             };
             let ghost_weapon = match quest_role {
                 Some(QuestRewardRole::GhostWeapon {
@@ -346,9 +339,7 @@ impl LevelState {
                         | QuestRewardRole::BlacksmithArmor { .. }
                 )
             );
-            let prediction = if imp_identity.is_some_and(|(exact, _)| exact)
-                || ghost_weapon.is_some_and(|_| item.candidate_classes.len() == 1)
-            {
+            let prediction = if ghost_weapon.is_some_and(|_| item.candidate_classes.len() == 1) {
                 ItemPredictionKind::Exact
             } else {
                 prediction
@@ -357,17 +348,6 @@ impl LevelState {
             let candidate_classes = ghost_weapon
                 .filter(|_| item.candidate_classes.len() > 1)
                 .map(|_| item.candidate_classes.clone())
-                .or_else(|| {
-                    imp_identity
-                        .filter(|(exact, _)| !exact)
-                        .map(|(_, indices)| {
-                            let classes = crate::generator::Category::Ring.def().classes;
-                            indices
-                                .into_iter()
-                                .map(|index| classes[usize::from(index)].to_string())
-                                .collect()
-                        })
-                })
                 .unwrap_or_else(|| {
                     if artifact_conditional {
                         vec![item.class_name.clone()]
@@ -376,9 +356,7 @@ impl LevelState {
                     }
                 });
             let entry = ItemEntry {
-                name: if imp_identity.is_some_and(|(exact, _)| !exact) {
-                    format!("+{} ring reward", item.level)
-                } else if constrained {
+                name: if constrained {
                     constrained_name.to_string()
                 } else {
                     exact_name
@@ -400,12 +378,15 @@ impl LevelState {
                         | QuestRewardRole::BlacksmithMissile { .. }
                         | QuestRewardRole::BlacksmithArmor { .. },
                     ) => None,
+                    Some(QuestRewardRole::ImpRing) => None,
                     Some(_) => Some(item.level),
                     None if artifact_conditional => Some(item.level),
                     None => reported_level(item, constrained, shop_role),
                 },
                 level_range: if quest_role == Some(QuestRewardRole::WandmakerWand) {
                     Some(NumericRange { min: 1, max: 3 })
+                } else if quest_role == Some(QuestRewardRole::ImpRing) {
+                    Some(NumericRange { min: 2, max: 4 })
                 } else {
                     blacksmith_smith_option.then_some(NumericRange { min: 0, max: 3 })
                 },
@@ -449,6 +430,12 @@ impl LevelState {
                             );
                             notes.push(
                                 "All four options share one +0…+3 level roll. A weapon enchantment and armor glyph are retained together; Parchment Scrap +1 guarantees both when held before this floor is generated."
+                                .into(),
+                            );
+                        }
+                        if quest_role == Some(QuestRewardRole::ImpRing) {
+                            notes.push(
+                                "Conditional on accepting and completing the quest: 5 Monk tokens or 4 Golem tokens."
                                     .into(),
                             );
                         }

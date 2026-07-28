@@ -461,7 +461,7 @@ fn quest_report_json_hides_constrained_classes_titles_and_persisted_wands() {
                         | QuestRewardRole::WandmakerWand
                         | QuestRewardRole::BlacksmithRoomWeapon { .. }
                         | QuestRewardRole::BlacksmithRoomMissile { .. }
-                        | QuestRewardRole::ImpRing { .. }
+                        | QuestRewardRole::ImpRing
                 )
             ) {
                 let class_is_exact_elsewhere = report
