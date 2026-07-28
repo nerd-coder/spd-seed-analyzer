@@ -387,6 +387,7 @@ fn secret_honeypot_has_pot_honey_bomb() {
     let mut doors = DoorMap::new();
     doors.insert_test_point(0, 1, Point::new(0, 3));
     let loot = secret_honeypot(&rooms, 0, &mut map, &doors);
+    let tail = Random::peek_ints(4);
     Random::pop_generator();
 
     assert_eq!(loot.len(), 3);
@@ -398,6 +399,7 @@ fn secret_honeypot_has_pot_honey_bomb() {
         loot[2].item.class_name
     );
     assert!(map.heap_occupied.iter().any(|&occupied| occupied));
+    assert_eq!(tail, [1030305667, 2049706016, -140272461, -2083292047]);
 }
 
 #[test]

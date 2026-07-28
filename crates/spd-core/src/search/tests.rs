@@ -332,6 +332,21 @@ fn guaranteed_limited_drop_spawns_match_exact_item_searches() {
 }
 
 #[test]
+fn secret_honeypot_fixed_items_match_exact_search_evidence() {
+    let floor = exact_floor(12, &[("ShatteredPot", 0), ("Honeypot", 0)]);
+    let constraints = [
+        constraint("ShatteredPot", 12, 12),
+        constraint("Honeypot", 12, 12),
+        constraint("Bomb", 12, 12),
+    ];
+
+    let evidence = matching_evidence(&[floor], &constraints);
+    assert_eq!(evidence.len(), 2);
+    assert_eq!(evidence[0].class_name, "ShatteredPot");
+    assert_eq!(evidence[1].class_name, "Honeypot");
+}
+
+#[test]
 fn constrained_shop_stock_never_matches_its_internal_concrete_class() {
     let floor = crate::FloorReport {
         depth: 6,

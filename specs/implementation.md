@@ -26,6 +26,10 @@ All web application and component UI state now uses TanStack Store, including
 finder form state, map controls/render status, close confirmation, and elapsed
 time. DOM refs and derived memoized values remain React implementation details.
 
+Secret Honeypot room rewards are verified against pinned SPD: every such room
+reports the guaranteed Shattered Pot and Honeypot as exact searchable items,
+while the Bomb/Double Bomb result remains a constrained seed-rolled variant.
+
 ## Next steps
 
 1. Select the next user-reliability gap from `specs/accuracy.json`, verify its

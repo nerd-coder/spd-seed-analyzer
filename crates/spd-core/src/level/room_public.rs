@@ -353,6 +353,22 @@ mod tests {
     }
 
     #[test]
+    fn secret_honeypot_contract_exposes_its_two_fixed_items() {
+        let entries = RoomPublicFact::new("SecretHoneypotRoom", 12)
+            .expect("Secret Honeypot contract")
+            .entries();
+
+        assert_eq!(entries.len(), 3);
+        assert_eq!(entries[0].class_name.as_deref(), Some("ShatteredPot"));
+        assert_eq!(entries[0].prediction, ItemPredictionKind::Exact);
+        assert_eq!(entries[1].class_name.as_deref(), Some("Honeypot"));
+        assert_eq!(entries[1].prediction, ItemPredictionKind::Exact);
+        assert_eq!(entries[2].name, "Bomb variant");
+        assert_eq!(entries[2].class_name, None);
+        assert_eq!(entries[2].prediction, ItemPredictionKind::Constrained);
+    }
+
+    #[test]
     fn public_item_notes_only_describe_spawn_facts_and_conditions() {
         for room in [
             "StudyRoom",
