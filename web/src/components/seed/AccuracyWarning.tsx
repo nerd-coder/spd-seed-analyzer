@@ -71,16 +71,28 @@ export function AccuracyWarning() {
                       </ul>
                     </td>
                     <td className="min-w-48 px-2 py-2 align-top text-muted-foreground">
-                      <ul className="flex list-disc flex-col gap-1 pl-4">
-                        {area.remaining.map((item) => (
-                          <li key={item}>{item}</li>
-                        ))}
-                      </ul>
+                      {area.remaining.length > 0 ? (
+                        <ul className="flex list-disc flex-col gap-1 pl-4">
+                          {area.remaining.map((item) => (
+                            <li key={item}>{item}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <span className="text-muted-foreground/60">
+                          Nothing known
+                        </span>
+                      )}
                     </td>
                     <td className="min-w-40 px-2 py-2 align-top text-muted-foreground">
                       {area.impact}
                     </td>
-                    <td className="px-2 py-2 align-top text-warning capitalize">
+                    <td
+                      className={`px-2 py-2 align-top capitalize ${
+                        area.status === 'verified'
+                          ? 'text-muted-foreground'
+                          : 'text-warning'
+                      }`}
+                    >
                       {area.status.replaceAll('-', ' ')}
                     </td>
                   </tr>
@@ -88,6 +100,18 @@ export function AccuracyWarning() {
               </tbody>
             </table>
           </div>
+          <Alert className="max-h-[30svh] shrink-0 overflow-auto">
+            <InfoIcon />
+            <AlertTitle>{accuracy.outOfScope.title}</AlertTitle>
+            <AlertDescription>
+              <p>{accuracy.outOfScope.note}</p>
+              <ul className="flex list-disc flex-col gap-1 pl-4">
+                {accuracy.outOfScope.items.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
         </DialogContent>
       </Dialog>
     </Alert>

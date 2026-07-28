@@ -38,9 +38,19 @@ constrained.
 
 ## Next steps
 
-1. Select the next user-reliability gap from `specs/accuracy.json`, verify its
-   pinned Java generation path, and update the public projection only when the
-   seed-determined guarantee is established.
-2. Add focused parity/report/search tests, update this state file and the
+1. Narrow the public-taint blast radius. `callback_tail_sensitive` room paint
+   sets `public_generation_tainted`, and `inherited_public_taint` turns that
+   into `runtime_sensitive_layout` on *every* later floor. Measured over the
+   reference seeds, only floor 1 and the boss floors keep an exact layout,
+   room list, and ordinary loot; floors 2–24 fall back to an assumed
+   continuation with guaranteed spawns, quest rewards, and shop stock only.
+   Per `specs/generator-decks.md` the deck draws behind most of those
+   callbacks are per-depth isolated, so audit them one room family at a time
+   and demote the taint to `runtime_sensitive_placed_items_from` (the specific
+   prize) where the level RNG stream provably cannot shift.
+2. Then take the next user-reliability gap from `specs/accuracy.json`, verify
+   its pinned Java generation path, and update the public projection only when
+   the seed-determined guarantee is established.
+3. Add focused parity/report/search tests, update this state file and the
    accuracy manifest, then run the CI-equivalent Rust, Biome, WASM/Vite, and
    visual checks before committing that phase.
