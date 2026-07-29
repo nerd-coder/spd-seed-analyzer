@@ -1,7 +1,7 @@
 # Implementation resume
 
 Current state: Sad Ghost, Old Wandmaker, Troll Blacksmith, and Ambitious Imp
-rewards are audited against SPD v3.3.8 in `specs/quest-rewards/`. Public
+rewards are audited against SPD v3.3.8 in `specs/analysis/`. Public
 reports keep route-independent option counts, categories, ranges, curse and
 claim conditions. Concrete Wandmaker, Blacksmith, and Imp samples are hidden;
 Ghost retains its explicit no-Tooth and Mimic Tooth +0…+3 replay profiles.

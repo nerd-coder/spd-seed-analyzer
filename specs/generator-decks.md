@@ -54,7 +54,7 @@ item identities is the deck counters. Parity for any deck-drawn identity
 therefore reduces to: **the same draw sites fire the same number of times in
 the same order**. Player choices can change which draw sites fire on later
 floors; the Sad Ghost examples are catalogued in
-`specs/quest-rewards/sad-ghost.md`.
+`specs/analysis/quest-sad-ghost.md`.
 
 ## 3. Ring-deck draw sites (complete)
 
@@ -108,7 +108,7 @@ and boss setup. `NO_SCROLLS` is nevertheless not reward-neutral: omitting the
 queued Scroll can empty `itemsToSpawn`, after which a room painter can take a
 generated fallback that consumes the main floor stream before an NPC callback.
 Sad Ghost has a reachable `RitualRoom` counterexample; see
-`specs/quest-rewards/sad-ghost.md`.
+`specs/analysis/quest-sad-ghost.md`.
 
 ## 6. Trinket offers are seed-determined; the held trinket is not
 
@@ -135,7 +135,7 @@ The player chooses one offer, may transmute it, and chooses when/how far to
 upgrade it. Those choices are not encoded by the seed. In particular Mossy
 Clump, Mimic Tooth, and Rat Skull can change generation work before an NPC
 reward callback; see the Sad Ghost audit in
-`specs/quest-rewards/sad-ghost.md`.
+`specs/analysis/quest-sad-ghost.md`.
 
 Not having the trinket costs no RNG: `RegularLevel.java:406` evaluates
 `Random.Float()` before applying `MimicTooth.mimicChanceMultiplier()`, so the
@@ -170,7 +170,7 @@ before `Imp.Quest.spawn`, shifting the spawn attempt, target, curse retry, and
 level rolls. Once the 12-class equal-weight ring deck resets, every class is
 reachable. The cross-route public contract is therefore category-only: one
 conditional cursed +2…+4 ring. Full evidence and claim/shop conditions are in
-`specs/quest-rewards/ambitious-imp.md`.
+`specs/analysis/quest-ambitious-imp.md`.
 
 ## 9. Old Wandmaker reward (floors 7–9)
 
@@ -182,7 +182,7 @@ main-stream feeling roll and can shift room work before the quest room is
 selected; Trap Mechanism can alter painting after selection. Mimic Tooth, Rat
 Skull, artifact constructor history, and challenge-dependent prize queues can
 also add or remove painter and levelgen item draws before the NPC callback. The
-full state audit is in `specs/quest-rewards/wandmaker.md`.
+full state audit is in `specs/analysis/quest-wandmaker.md`.
 
 `Wandmaker.Quest.spawnWandmaker` (`Wandmaker.java:303`) runs at the **start** of
 `PrisonLevel.createMobs`, before `super.createMobs()`
@@ -246,7 +246,7 @@ function of the seed across every playable route. Mossy Clump can change the
 paint stream before `Ghost.Quest.spawn`; Mimic Tooth and Rat Skull can change
 pre-Ghost mimic/statue generation; and external artifact history can change a
 later artifact constructor tail. The complete state audit is in
-`specs/quest-rewards/sad-ghost.md`.
+`specs/analysis/quest-sad-ghost.md`.
 
 `Ghost.Quest.spawn` (`Ghost.java:303-362`) runs at the **start** of
 `SewerLevel.createMobs`, before `super.createMobs()` (`SewerLevel.java:140-143`)
@@ -331,7 +331,7 @@ mechanisms would have to leak for run history to move them; two are closed.
   defensive `WndBlacksmith.generateRewards(false)` fallback is deck-backed,
   but the stored pool is already present in an ordinary fresh quest and one
   Smith purchase cannot reach that fallback. Full lifecycle details are in
-  `specs/quest-rewards/blacksmith.md`.
+  `specs/analysis/quest-blacksmith.md`.
 
 **Not closed: ARTIFACT.** `randomUsingDefaults(cat)` routes artifacts straight
 back into the deck (`Generator.java:745-750`, comment: *"except for artifacts,

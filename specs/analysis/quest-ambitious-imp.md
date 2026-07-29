@@ -179,7 +179,7 @@ across every playable route.
 3. **Map-trinket and challenge history.** Mossy Clump and Trap Mechanism change
    earlier painters before ordinary items and mimic generation. `NO_SCROLLS`
    can change whether an earlier room consumes a queued item or generates a
-   fallback, as established in `specs/quest-rewards/sad-ghost.md`. Those changes
+   fallback, as established in `specs/analysis/quest-sad-ghost.md`. Those changes
    can alter earlier general-category outcomes, mimic branches, and therefore
    the RING draw count even though each later floor receives a fresh ambient
    seed.
