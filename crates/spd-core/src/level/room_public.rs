@@ -58,6 +58,12 @@ impl RoomPublicFact {
                 "5 Energy Crystals" => Some("EnergyCrystal"),
                 "Shattered Pot" => Some("ShatteredPot"),
                 "Honeypot" => Some("Honeypot"),
+                "Potion of Frost" => Some("PotionOfFrost"),
+                "Potion of Haste" => Some("PotionOfHaste"),
+                "Potion of Invisibility" => Some("PotionOfInvisibility"),
+                "Potion of Levitation" => Some("PotionOfLevitation"),
+                "Potion of Liquid Flame" => Some("PotionOfLiquidFlame"),
+                "Potion of Purity" => Some("PotionOfPurity"),
                 _ => None,
             };
             if let Some(class_name) = exact_class {
@@ -145,8 +151,18 @@ fn contracts(room: &str) -> Vec<Contract> {
             ("2–3 distinct Armory base rewards", "bomb / weapon / armor / missile", None, "The seed chooses 2–3 categories without replacement. Equipment uses the displayed depth floor-set tier range and has a +0..+2 upgrade; Bomb/Double Bomb is tierless at +0 and uncursed. Equipment curse and enchantment depend on its isolated roll and Parchment Scrap state."),
             ("Trinket Catalyst", "trinket", Some(false), "Conditional: added as a separate reward only when a guaranteed Trinket Catalyst is available on this floor."),
         ],
-        "PoolRoom" | "SentryRoom" => vec![("single room reward source", "other", None, "May spawn an eligible guaranteed floor prize; fallback is weapon, missile weapon, or armor from the room's floor-set distribution, forced uncursed with curse-enchantment stripped and a possible +1 upgrade.")],
-        "TrapsRoom" => vec![("single room reward source", "other", None, "May spawn an eligible guaranteed floor prize; fallback is weapon, missile weapon, or armor from the room's floor-set distribution, forced uncursed with curse-enchantment stripped.")],
+        "PoolRoom" => vec![
+            ("single room reward source", "other", None, "May spawn an eligible guaranteed floor prize; fallback is weapon, missile weapon, or armor from the room's floor-set distribution, forced uncursed with curse-enchantment stripped and a possible +1 upgrade."),
+            ("Potion of Invisibility", "potion", Some(false), ""),
+        ],
+        "SentryRoom" => vec![
+            ("single room reward source", "other", None, "May spawn an eligible guaranteed floor prize; fallback is weapon, missile weapon, or armor from the room's floor-set distribution, forced uncursed with curse-enchantment stripped and a possible +1 upgrade."),
+            ("Potion of Haste", "potion", Some(false), ""),
+        ],
+        "TrapsRoom" => vec![
+            ("single room reward source", "other", None, "May spawn an eligible guaranteed floor prize; fallback is weapon, missile weapon, or armor from the room's floor-set distribution, forced uncursed with curse-enchantment stripped."),
+            ("Potion of Levitation", "potion", Some(false), ""),
+        ],
         "StatueRoom" => vec![("Statue weapon", "weapon", Some(false), "A positively enchanted melee weapon is carried; Rat Skull may change the statue encounter variant.")],
         "SacrificeRoom" => vec![("weapon reward", "weapon", Some(true), "A cursed weapon from the one-higher floor-set tier range. Its final upgrade is +0..+3; prior weapon-deck history can alter identity, and Parchment Scrap may alter enchantment chance.")],
         "CrystalVaultRoom" => vec![("two crystal-vault reward sources", "other", None, "Categories rotate among wand, ring, and artifact; an exhausted artifact pool falls back to a ring, and the second chest may conditionally be a Crystal Mimic.")],
@@ -156,13 +172,13 @@ fn contracts(room: &str) -> Vec<Contract> {
         "SecretLibraryRoom" => vec![("2–3 distinct scroll-base rewards", "scroll", None, "Exotic Crystals may conditionally convert each base scroll.")],
         "SecretLaboratoryRoom" => vec![("two Energy Crystal stacks", "other", Some(false), ""), ("2–3 distinct potion-base rewards", "potion", None, "Exotic Crystals may conditionally convert each base potion.")],
         "SecretArtilleryRoom" => vec![("Double Bomb", "other", Some(false), ""), ("two default missile sources", "missile", None, "Parchment Scrap may change their curse state.")],
-        "SecretRunestoneRoom" => vec![("two default stone sources", "stone", Some(false), ""), ("Stone of Enchantment", "stone", Some(false), "")],
+        "SecretRunestoneRoom" => vec![("two default stone sources", "stone", Some(false), ""), ("Stone of Enchantment", "stone", Some(false), ""), ("Potion of Liquid Flame", "potion", Some(false), "")],
         "SecretLarderRoom" => vec![("depth-derived food cache", "food", Some(false), "Food identities and count follow the pinned depth-derived larder recipe.")],
         "SecretGardenRoom" => vec![("four secret-garden planting attempts", "seed", None, "The room attempts Starflower, Seedpod, Dewcatcher, then Seedpod or Dewcatcher; Barren Land prevents the plants from existing.")],
         "SecretHoardRoom" => vec![("exactly 16 gold piles", "gold", Some(false), "")],
         "SecretMazeRoom" => vec![("Secret Maze equipment", "other", Some(false), "Weapon or armor, always uncursed.")],
         "SecretSummoningRoom" => vec![("conditional summoning-room reward", "other", None, "Its presence depends on runtime state.")],
-        "SecretChestChasmRoom" => vec![("four locked default-stock sources", "other", None, "Matching key support is also generated.")],
+        "SecretChestChasmRoom" => vec![("four locked default-stock sources", "other", None, "Matching key support is also generated."), ("Potion of Levitation", "potion", Some(false), "")],
         "SecretHoneypotRoom" => vec![("Shattered Pot", "other", Some(false), ""), ("Honeypot", "other", Some(false), ""), ("Bomb variant", "other", Some(false), "Bomb or Double Bomb.")],
         "LibraryRoom" => vec![
             ("1–3 Library scroll rewards", "scroll", Some(false), "The first is Scroll of Identify or Scroll of Remove Curse. Later rewards are an available guaranteed Trinket Catalyst, an available guaranteed scroll, or a generated scroll; a Catalyst changes that individual reward's type."),
@@ -171,8 +187,13 @@ fn contracts(room: &str) -> Vec<Contract> {
             ("2–3 Treasury chest rewards", "gold / trinket", None, "Each reward is a guaranteed Trinket Catalyst when one is available, otherwise a generated gold pile. The seed chooses a common chest-or-open-pile presentation; chest rewards may be carried by Mimics."),
             ("six small gold piles", "gold", Some(false), "Conditional: these additional 5–12 gold piles spawn only when the seed chooses open piles instead of chests."),
         ],
-        "StorageRoom" | "MagicalFireRoom" => vec![
+        "StorageRoom" => vec![
             ("3–4 room rewards", "potion / scroll / food / gold / other", None, "The seed may include one Honeypot. Other rewards are either an eligible guaranteed floor prize or generated potion, scroll, food, or gold; concrete identities depend on prior limited-item and Generator state."),
+            ("Potion of Liquid Flame", "potion", Some(false), ""),
+        ],
+        "MagicalFireRoom" => vec![
+            ("3–4 room rewards", "potion / scroll / food / gold / other", None, "The seed may include one Honeypot. Other rewards are either an eligible guaranteed floor prize or generated potion, scroll, food, or gold; concrete identities depend on prior limited-item and Generator state."),
+            ("Potion of Frost", "potion", Some(false), ""),
         ],
         "RunestoneRoom" => vec![
             ("2–3 runestone-room rewards", "stone / trinket", None, "Each reward is an available guaranteed Trinket Catalyst, an available guaranteed runestone, or otherwise a generated runestone."),
@@ -185,7 +206,9 @@ fn contracts(room: &str) -> Vec<Contract> {
         "ToxicGasRoom" => vec![
             ("double-sized gold pile", "gold", Some(false), "A guaranteed generated gold reward with doubled quantity, found with the skeleton."),
             ("two Toxic Gas chest rewards", "gold / trinket", None, "Each chest contains a guaranteed Trinket Catalyst when one is available, otherwise a generated gold pile."),
+            ("Potion of Purity", "potion", Some(false), ""),
         ],
+        "MassGraveRoom" => vec![("Potion of Liquid Flame", "potion", Some(false), "")],
         _ => Vec::new(),
     }
 }
@@ -195,253 +218,5 @@ fn has_contract(room: &str) -> bool {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::generator::Category;
-    use crate::random::Random;
-    use crate::run::{dungeon_from_run, init_run};
-
-    #[test]
-    fn persistent_weapon_deck_changes_internal_class_not_statue_contract() {
-        Random::reset_generators();
-        let mut base = dungeon_from_run(init_run(42));
-        base.depth = 8;
-        let mut advanced = base.clone();
-        Random::push_generator_seeded(331);
-        for _ in 0..5 {
-            let _ = advanced
-                .generator
-                .random_category(Category::Weapon, advanced.depth);
-        }
-        Random::pop_generator();
-
-        Random::push_generator_seeded(991);
-        let a = base
-            .generator
-            .random_category(Category::Weapon, base.depth)
-            .class_name;
-        Random::pop_generator();
-        Random::push_generator_seeded(991);
-        let b = advanced
-            .generator
-            .random_category(Category::Weapon, advanced.depth)
-            .class_name;
-        Random::pop_generator();
-        assert_ne!(a, b, "altered persistent weapon deck changes exact class");
-
-        let fact = RoomPublicFact::new("StatueRoom", 8).expect("contract");
-        let json = serde_json::to_string(&fact.entries()).expect("serialize contract");
-        assert!(!json.contains(&a));
-        assert!(!json.contains(&b));
-    }
-
-    #[test]
-    fn larder_contract_is_exact_and_depth_derived() {
-        let entries = RoomPublicFact::new("SecretLarderRoom", 14)
-            .expect("contract")
-            .entries();
-        assert_eq!(entries.len(), 1);
-        assert_eq!(entries[0].class_name.as_deref(), Some("Pasty"));
-        assert_eq!(entries[0].prediction, ItemPredictionKind::Exact);
-    }
-
-    #[test]
-    fn sacrifice_contract_preserves_tier_and_upgrade_bounds() {
-        for (depth, minimum_tier) in [
-            (1, 2),
-            (4, 2),
-            (6, 3),
-            (9, 3),
-            (11, 3),
-            (14, 3),
-            (16, 4),
-            (19, 4),
-            (21, 4),
-            (24, 4),
-        ] {
-            let entries = RoomPublicFact::new("SacrificeRoom", depth)
-                .expect("Sacrifice contract")
-                .entries();
-            assert_eq!(entries.len(), 1);
-            let entry = &entries[0];
-            assert_eq!(entry.name, "weapon reward");
-            assert_eq!(entry.category, "weapon");
-            assert_eq!(entry.tier, None);
-            assert_eq!(
-                entry.tier_range,
-                Some(NumericRange {
-                    min: minimum_tier,
-                    max: 5
-                })
-            );
-            assert_eq!(entry.cursed, Some(true));
-            assert_eq!(entry.class_name, None);
-            assert_eq!(entry.level, None);
-            assert_eq!(entry.level_range, Some(NumericRange { min: 0, max: 3 }));
-            assert_eq!(entry.prediction, ItemPredictionKind::Constrained);
-        }
-    }
-
-    #[test]
-    fn armory_contract_preserves_count_category_and_equipment_bounds() {
-        for (depth, minimum_tier) in [(1, 2), (8, 2), (12, 3), (18, 3), (22, 4)] {
-            let entries = RoomPublicFact::new("ArmoryRoom", depth)
-                .expect("Armory contract")
-                .entries();
-            assert_eq!(entries.len(), 2);
-            let base = &entries[0];
-            assert_eq!(base.name, "2–3 distinct Armory base rewards");
-            assert_eq!(base.category, "bomb / weapon / armor / missile");
-            assert_eq!(
-                base.tier_range,
-                Some(NumericRange {
-                    min: minimum_tier,
-                    max: 5,
-                })
-            );
-            assert_eq!(base.level_range, Some(NumericRange { min: 0, max: 2 }));
-            assert_eq!(base.cursed, None);
-
-            let catalyst = &entries[1];
-            assert_eq!(catalyst.class_name.as_deref(), None);
-            assert_eq!(catalyst.category, "trinket");
-            assert_eq!(catalyst.cursed, Some(false));
-            assert!(catalyst.conditional_notes[0].starts_with("Conditional:"));
-        }
-    }
-
-    #[test]
-    fn formerly_generic_room_sets_expose_their_fixed_reward_structure() {
-        let laboratory = RoomPublicFact::new("LaboratoryRoom", 12)
-            .expect("Laboratory contract")
-            .entries();
-        assert_eq!(laboratory.len(), 3);
-        assert_eq!(laboratory[0].class_name.as_deref(), Some("EnergyCrystal"));
-        assert_eq!(laboratory[0].level, Some(0));
-
-        let toxic = RoomPublicFact::new("ToxicGasRoom", 12)
-            .expect("Toxic Gas contract")
-            .entries();
-        assert_eq!(toxic.len(), 2);
-        assert_eq!(toxic[0].category, "gold");
-        assert_eq!(toxic[1].name, "two Toxic Gas chest rewards");
-
-        let ring = RoomPublicFact::new("RingRoom", 12)
-            .expect("Ring contract")
-            .entries();
-        assert_eq!(ring[0].name, "conditional guaranteed item");
-        assert!(ring[0].conditional_notes[0].starts_with("Conditional:"));
-    }
-
-    #[test]
-    fn exact_fixed_room_items_expose_a_proven_default_level() {
-        for room in [
-            "SecretArtilleryRoom",
-            "SecretLaboratoryRoom",
-            "SecretRunestoneRoom",
-            "SecretHoneypotRoom",
-        ] {
-            for entry in RoomPublicFact::new(room, 12)
-                .expect("room contract")
-                .entries()
-            {
-                if entry.prediction == ItemPredictionKind::Exact {
-                    assert_eq!(entry.level, Some(0), "{} in {room}", entry.name);
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn secret_honeypot_contract_exposes_its_two_fixed_items() {
-        let entries = RoomPublicFact::new("SecretHoneypotRoom", 12)
-            .expect("Secret Honeypot contract")
-            .entries();
-
-        assert_eq!(entries.len(), 3);
-        assert_eq!(entries[0].class_name.as_deref(), Some("ShatteredPot"));
-        assert_eq!(entries[0].prediction, ItemPredictionKind::Exact);
-        assert_eq!(entries[1].class_name.as_deref(), Some("Honeypot"));
-        assert_eq!(entries[1].prediction, ItemPredictionKind::Exact);
-        assert_eq!(entries[2].name, "Bomb variant");
-        assert_eq!(entries[2].class_name, None);
-        assert_eq!(entries[2].prediction, ItemPredictionKind::Constrained);
-    }
-
-    #[test]
-    fn public_item_notes_only_describe_spawn_facts_and_conditions() {
-        for room in [
-            "StudyRoom",
-            "RitualRoom",
-            "RingRoom",
-            "SuspiciousChestRoom",
-            "GrassyGraveRoom",
-            "CrystalChoiceRoom",
-            "CrystalPathRoom",
-            "PitRoom",
-            "SecretLaboratoryRoom",
-            "SecretArtilleryRoom",
-            "SecretRunestoneRoom",
-            "SecretLarderRoom",
-            "SecretHoardRoom",
-            "SecretMazeRoom",
-            "SecretSummoningRoom",
-            "SecretChestChasmRoom",
-            "SecretHoneypotRoom",
-        ] {
-            let entries = RoomPublicFact::new(room, 12)
-                .expect("room contract")
-                .entries();
-            for note in entries.iter().flat_map(|entry| &entry.conditional_notes) {
-                let note = note.to_ascii_lowercase();
-                for lifecycle_term in [
-                    concat!("not ", "asserted"),
-                    "placement",
-                    "heap",
-                    "cell",
-                    "queue",
-                    "consume",
-                ] {
-                    assert!(
-                        !note.contains(lifecycle_term),
-                        "{room} exposes lifecycle term {lifecycle_term}: {note}"
-                    );
-                }
-            }
-        }
-    }
-
-    #[test]
-    fn artifact_exhaustion_changes_vault_branch_not_public_contract() {
-        Random::reset_generators();
-        let mut fresh = dungeon_from_run(init_run(91));
-        fresh.depth = 12;
-        let mut exhausted = fresh.clone();
-        Random::push_generator_seeded(712);
-        let fresh_artifact = fresh
-            .generator
-            .random_artifact(fresh.depth)
-            .expect("fresh artifact pool")
-            .class_name;
-        Random::pop_generator();
-        Random::push_generator_seeded(712);
-        while exhausted
-            .generator
-            .random_artifact(exhausted.depth)
-            .is_some()
-        {}
-        assert!(exhausted
-            .generator
-            .random_artifact(exhausted.depth)
-            .is_none());
-        Random::pop_generator();
-
-        for room in ["CrystalVaultRoom", "CrystalChoiceRoom", "PitRoom"] {
-            let json =
-                serde_json::to_string(&RoomPublicFact::new(room, 12).expect("contract").entries())
-                    .expect("serialize contract");
-            assert!(!json.contains(&fresh_artifact));
-            assert!(json.contains("artifact"));
-        }
-    }
-}
+#[path = "room_public_tests.rs"]
+mod tests;

@@ -24,7 +24,7 @@
       "area": "Items & loot",
       "status": "partial",
       "implemented": [
-        "Guaranteed floor spawns on every floor — food, the Halls torches, Potions of Strength, Scrolls of Upgrade, Arcane Styli, Stones of Enchantment and Intuition, and the Trinket Catalyst with its four offers — with exact stack quantities, and searchable. Alchemy pots are shown as guaranteed floor appearances, including the first generated pot used for trinket timing. The Catalyst floor, earliest effective trinket floor, and first-deck transmutation order are also reported. Forbidden Runes removes every second guaranteed Scroll of Upgrade when selected",
+        "Guaranteed floor spawns on every floor — food, the Halls torches, Potions of Strength, Scrolls of Upgrade, Arcane Styli, Stones of Enchantment and Intuition, and the Trinket Catalyst with its four offers — with exact stack quantities, and searchable. Floors with an exact room layout also name every guaranteed puzzle-support potion: Invisibility, Liquid Flame, Haste, Levitation, Frost, and Purity. Alchemy pots are shown as guaranteed floor appearances, including the first generated pot used for trinket timing. The Catalyst floor, earliest effective trinket floor, and first-deck transmutation order are also reported. Forbidden Runes removes every second guaranteed Scroll of Upgrade when selected",
         "Route-independent reward contracts for the Sad Ghost, Old Wandmaker, Troll Blacksmith, and Ambitious Imp — option counts and categories, tier and upgrade ranges, curse status, conditional enchantments or glyphs, and the choices required to claim them",
         "Shop stock and quantities on every shop floor, common items named exactly and deck-driven slots given as a category and tier; the depth-20 Imp shop carries its quest-completion condition",
         "Ordinary floor loot from heaps, chests, locked chests, and skeletons, with class, stack quantity, upgrade level, and curse",
@@ -62,7 +62,7 @@
       "area": "Special & secret rooms",
       "status": "partial",
       "implemented": [
-        "Layout, terrain, and prize generation for every special and secret room type in the pinned game, plus the Old Wandmaker's Mass Grave, Ritual Site, and Rot Garden quest rooms",
+        "Layout, terrain, prize generation, and guaranteed puzzle-support potions for every special and secret room type in the pinned game, plus the Old Wandmaker's Mass Grave, Ritual Site, and Rot Garden quest rooms",
         "Reward contracts for those rooms: how many drop, their categories, tier and upgrade bounds, and whether they are cursed"
       ],
       "remaining": [

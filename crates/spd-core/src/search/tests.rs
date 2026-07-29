@@ -331,6 +331,32 @@ fn guaranteed_limited_drop_spawns_match_exact_item_searches() {
 }
 
 #[test]
+fn puzzle_solution_potions_match_exact_item_searches() {
+    for (seed, class_name, source) in [
+        (25, "PotionOfHaste", "SentryRoom"),
+        (53, "PotionOfPurity", "ToxicGasRoom"),
+        (99_162_322, "PotionOfLevitation", "TrapsRoom"),
+        (8_687_205_886, "PotionOfFrost", "MagicalFireRoom"),
+    ] {
+        let result = search_seeds(&SeedSearchRequest {
+            start_seed: seed,
+            candidate_count: 1,
+            floors: 1,
+            constraints: vec![constraint(class_name, 1, 1)],
+            match_mode: MatchMode::Any,
+            max_matches: 1,
+        })
+        .expect("puzzle solution search");
+
+        let evidence = &result.matches[0].evidence[0];
+        assert_eq!(evidence.class_name, class_name);
+        assert_eq!(evidence.depth, 1);
+        assert_eq!(evidence.level, 0);
+        assert_eq!(evidence.source.as_deref(), Some(source));
+    }
+}
+
+#[test]
 fn secret_honeypot_fixed_items_match_exact_search_evidence() {
     let floor = exact_floor(12, &[("ShatteredPot", 0), ("Honeypot", 0)]);
     let constraints = [

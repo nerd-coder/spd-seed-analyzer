@@ -10,9 +10,10 @@ history. Trinket entries support progressive +0…+3 upgrades and transmutation
 without level reduction; the report exposes Catalyst offers, first-pot timing,
 the earliest effective floor, and the first-deck transmutation order. Alchemy
 pots appear as non-loot floor guarantees, including the first pot even when its
-map is an assumed continuation. An explicit fresh profile publishes exact
-ordinary heap and chest loot on floor 1; prior-play artifact history keeps most
-later ordinary loot constrained.
+map is an assumed continuation. Exact room contracts expose every guaranteed
+puzzle-support potion and make it searchable. An explicit fresh profile
+publishes exact ordinary heap and chest loot on floor 1; prior-play artifact
+history keeps most later ordinary loot constrained.
 
 Next steps:
 
