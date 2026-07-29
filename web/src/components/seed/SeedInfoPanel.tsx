@@ -14,10 +14,17 @@ import {
   FieldLegend,
   FieldSet,
 } from '@/components/ui/field'
-import { Switch } from '@/components/ui/switch'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupSelect,
+  InputGroupText,
+} from '@/components/ui/input-group'
 import type { MapProfile, SeedReport } from '@/lib/spd-wasm'
 import { changeSeedMapProfile } from '@/stores/app'
-import { HeldTrinketSettings } from './HeldTrinketSettings'
+import { ArtifactEventSettings } from './ArtifactEventSettings'
+import { ChallengeSettings } from './ChallengeSettings'
+import { TrinketEventSettings } from './TrinketEventSettings'
 
 /**
  * True when the user's input is not the same seed-code presentation as
@@ -72,26 +79,25 @@ export function SeedInfoPanel({
         <FieldSet>
           <FieldLegend>Run settings</FieldLegend>
           <FieldGroup>
-            <Field orientation="horizontal">
+            <Field>
               <FieldContent>
-                <FieldLabel htmlFor={`${sessionId}-forbidden-runes`}>
-                  Forbidden Runes
-                </FieldLabel>
+                <FieldLabel>First-generation main-path profile</FieldLabel>
                 <FieldDescription>
-                  Removes every second guaranteed Scroll of Upgrade and
-                  recalculates later generation.
+                  Record the run state known before each floor is first
+                  generated. These settings never infer combat or other runtime
+                  actions.
                 </FieldDescription>
               </FieldContent>
-              <Switch
-                id={`${sessionId}-forbidden-runes`}
-                checked={mapProfile.forbidden_runes}
-                disabled={refreshingLayout}
-                onCheckedChange={(forbidden_runes) =>
-                  updateMapProfile({ forbidden_runes })
-                }
-              />
             </Field>
-            <HeldTrinketSettings
+            <ChallengeSettings
+              sessionId={sessionId}
+              profile={mapProfile}
+              disabled={refreshingLayout}
+              onChange={(profile) =>
+                void changeSeedMapProfile(sessionId, profile)
+              }
+            />
+            <TrinketEventSettings
               sessionId={sessionId}
               profile={mapProfile}
               selection={report.trinket_selection}
@@ -100,6 +106,50 @@ export function SeedInfoPanel({
                 void changeSeedMapProfile(sessionId, profile)
               }
             />
+            <ArtifactEventSettings
+              profile={mapProfile}
+              disabled={refreshingLayout}
+              onChange={(profile) =>
+                void changeSeedMapProfile(sessionId, profile)
+              }
+            />
+            <Field orientation="horizontal">
+              <FieldContent>
+                <FieldLabel htmlFor={`${sessionId}-parchment-scrap`}>
+                  Parchment Scrap when claiming Ghost reward
+                </FieldLabel>
+                <FieldDescription>
+                  This claim-only state does not change floor generation.
+                </FieldDescription>
+              </FieldContent>
+              <InputGroup className="w-36 shrink-0">
+                <InputGroupAddon>
+                  <InputGroupText>Level</InputGroupText>
+                </InputGroupAddon>
+                <InputGroupSelect
+                  id={`${sessionId}-parchment-scrap`}
+                  aria-label="Parchment Scrap level when claiming Ghost reward"
+                  value={mapProfile.claim_state.parchment_scrap_level ?? ''}
+                  disabled={refreshingLayout}
+                  onChange={(event) =>
+                    updateMapProfile({
+                      claim_state: {
+                        parchment_scrap_level:
+                          event.target.value === ''
+                            ? undefined
+                            : Number(event.target.value),
+                      },
+                    })
+                  }
+                >
+                  <option value="">Not held</option>
+                  <option value={0}>+0</option>
+                  <option value={1}>+1</option>
+                  <option value={2}>+2</option>
+                  <option value={3}>+3</option>
+                </InputGroupSelect>
+              </InputGroup>
+            </Field>
           </FieldGroup>
         </FieldSet>
       </CardContent>

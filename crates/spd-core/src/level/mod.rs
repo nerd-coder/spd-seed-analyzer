@@ -22,7 +22,7 @@ use crate::generator::Category;
 use crate::items::model::{ForcedDropRole, GeneratedItem, ItemCategory, ItemProvenance};
 use crate::random::Random;
 use crate::report::FloorReport;
-use crate::{MapProfile, MapTrinketProfile};
+use crate::MapProfile;
 
 pub use create_items::PlacedLoot;
 pub use state::LevelState;
@@ -587,11 +587,7 @@ pub fn analyze_layouts_with_profile(
     max_floors: u32,
     profile: &MapProfile,
 ) -> Vec<FloorReport> {
-    dungeon.challenges = if profile.forbidden_runes {
-        crate::dungeon::FORBIDDEN_RUNES_CHALLENGE
-    } else {
-        0
-    };
+    dungeon.challenges = profile.challenge_mask();
     let mut floors = Vec::new();
     trinkets::reset(dungeon.seed);
     let max = max_floors.clamp(1, 26) as i32;
@@ -599,7 +595,8 @@ pub fn analyze_layouts_with_profile(
         dungeon.depth = depth;
         dungeon.branch = 0;
         trinkets::set_held(profile.held_at(depth as u32));
-        let level = create_level_layout_with_profile(dungeon, true);
+        let level =
+            create_level_layout_with_profile(dungeon, !profile.has_unmodeled_generation_inputs());
         floors.push(level.to_floor_report_with_map(true));
     }
     floors
@@ -645,15 +642,10 @@ pub fn analyze_floors_with_profile(
     max_floors: u32,
     profile: Option<&MapProfile>,
 ) -> Vec<FloorReport> {
-    dungeon.challenges = profile
-        .filter(|profile| profile.forbidden_runes)
-        .map_or(0, |_| crate::dungeon::FORBIDDEN_RUNES_CHALLENGE);
+    dungeon.challenges = profile.map_or(0, MapProfile::challenge_mask);
     let mut floors = Vec::new();
     dungeon.ghost_rewards_profiled = profile.is_some_and(|profile| {
-        profile
-            .held_trinkets
-            .iter()
-            .all(|state| matches!(state.trinket, MapTrinketProfile::MimicTooth))
+        !profile.has_unmodeled_generation_inputs() && profile.only_uses_mimic_tooth()
     });
     trinkets::reset(dungeon.seed);
     let max = max_floors.clamp(1, 26) as i32;
@@ -661,7 +653,7 @@ pub fn analyze_floors_with_profile(
         dungeon.depth = depth;
         dungeon.branch = 0;
         trinkets::set_held(profile.and_then(|profile| profile.held_at(depth as u32)));
-        let configured = profile.is_some();
+        let configured = profile.is_some_and(|profile| !profile.has_unmodeled_generation_inputs());
         let level = create_level_partial_with_profile(dungeon, configured);
         floors.push(level.to_floor_report_with_map(configured));
     }

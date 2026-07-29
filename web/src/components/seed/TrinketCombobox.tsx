@@ -16,7 +16,7 @@ import {
   ItemMedia,
   ItemTitle,
 } from '@/components/ui/item'
-import type { MapTrinketProfile, TrinketSelectionReport } from '@/lib/spd-wasm'
+import type { TrinketKind, TrinketSelectionReport } from '@/lib/spd-wasm'
 import {
   TRINKET_OPTIONS,
   type TrinketOption,
@@ -33,11 +33,11 @@ export function TrinketCombobox({
   onChange,
 }: {
   id: string
-  value: MapTrinketProfile
+  value: TrinketKind
   selection: TrinketSelectionReport
   disabled: boolean
   label: string
-  onChange: (value: MapTrinketProfile) => void
+  onChange: (value: TrinketKind) => void
 }) {
   const selected = trinketOption(value)
 

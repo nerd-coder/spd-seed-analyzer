@@ -32,8 +32,8 @@ pub use search::{
     MAX_SEARCH_MATCHES,
 };
 pub use trinkets::{
-    HeldTrinketProfile, MapMetaProfile, MapProfile, MapTrinketProfile, ProfileError,
-    TrinketSelectionReport,
+    ArtifactEvent, ArtifactEventAction, ArtifactKind, Challenge, ClaimState, MapProfile,
+    ProfileError, TrinketEvent, TrinketEventAction, TrinketKind, TrinketSelectionReport,
 };
 
 /// Pinned SPD version this port targets (from local clone at scaffold time).

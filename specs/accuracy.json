@@ -7,7 +7,7 @@
   },
   "overallStatus": "partial",
   "summary": "Seed analysis is partial. Item identities, guaranteed floor spawns, route-independent quest reward contracts, and shop stock are reported on every floor. Ordinary floor loot is exact on the first floor; later ordinary loot and exact floor layouts are published only while generation remains provably free of player-state influence. Boss-floor layouts are exact for the supported run settings. Concrete quest details are hidden when earlier run choices can change them.",
-  "lastReviewed": "2026-07-29",
+  "lastReviewed": "2026-07-30",
   "areas": [
     {
       "id": "item-identities",
@@ -33,7 +33,7 @@
       "remaining": [
         "Ordinary floor loot is exact on the first floor. Later ordinary loot is published only while the floor also has an exact layout, so most later floors list guaranteed spawns, quest rewards, and shop stock only",
         "Loot drawn after an artifact assumes no artifact was obtained outside level generation earlier in the run",
-        "Which of the four Trinket Catalyst offers a player takes, when it is upgraded, and when a Scroll of Transmutation is used are player choices. The analyzer applies the chronological held-trinket history you enter and never allows its upgrade level to decrease",
+        "Which of the four Trinket Catalyst offers a player takes, when it is upgraded, and when a Scroll of Transmutation is used are player choices. Run settings record chronological trinket acquire, upgrade, and transmutation events, but only effects already replayed by the analyzer can change a published result",
         "The Sad Ghost's concrete spawn depth, tiers, levels, and option identities can change with player state before the Ghost appears. The analyzer can recalculate the no-Tooth and held Mimic Tooth +0 to +3 cases from the chosen floor, with or without Forbidden Runes; other trinkets and earlier artifact history are not yet enumerated",
         "The Old Wandmaker's concrete spawn floor, quest type, wand classes, and wand levels can change with earlier run choices. Reports keep only the route-independent contract: two distinct uncursed +1 to +3 wand options, with at most one claimable",
         "The Troll Blacksmith's concrete spawn floor, quest type, Smith classes, shared level, and effect identities can change if Mossy Clump shifts generation. Reports keep four mutually exclusive tier 3 to 5, +0 to +3, uncursed options; Parchment Scrap +1 held before the floor guarantees the paired effects. Reset-floor routes are not enumerated",
@@ -52,7 +52,7 @@
       ],
       "remaining": [
         "An exact layout and room list is published only for the first floor and the boss floors; once a floor paints a room whose generation can react to player state, every later floor is shown as a baseline continuation instead",
-        "Held-trinket history currently covers Mossy Clump, Trap Mechanism, and Mimic Tooth. Rat Skull, Cracked Spyglass, trinket reacquisition state, and artifact changes caused during play are not yet configurable",
+        "Run settings record all challenge selections, chronological trinket acquire, upgrade, and transmutation events, external artifact events, and Parchment Scrap claim state. Rat Skull, Cracked Spyglass, Barren Land, Badder Bosses, and external artifact events are not replayed yet, so affected maps and rewards remain assumed",
         "Mining and vault side-levels are not generated, so the Troll Blacksmith's mine has no floor of its own",
         "Verification is per-seed; an unusual generation path can still diverge"
       ],
@@ -85,7 +85,7 @@
       "remaining": [
         "Cell-for-cell terrain is confirmed against the game on the first floor, Sewers floor 4, and Caves floors 11–14; other floors are checked at room, door, and generation-boundary level",
         "Maps for floors without an exact layout are drawn as assumed continuations and can differ from your run",
-        "Barren Land's plant suppression and Badder Bosses' floor-15 inactive traps are not configurable; maps currently assume both challenges are off",
+        "Barren Land and Badder Bosses can be recorded in run settings, but their plant and floor-15 trap effects are not replayed yet; affected maps remain assumed",
         "The Sewers, Prison, and Caves boss floors draw plain terrain without the game's decorative tile variants",
         "Mass Grave and other uncovered room overlays remain plain",
         "Quest side-levels, such as the Troll Blacksmith's mine, are not rendered"

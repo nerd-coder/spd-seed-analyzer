@@ -3,7 +3,8 @@
 use std::cell::RefCell;
 
 use crate::random::Random;
-use crate::{HeldTrinketProfile, MapTrinketProfile};
+use crate::trinkets::ActiveTrinket;
+use crate::TrinketKind;
 
 use super::Feeling;
 
@@ -31,9 +32,11 @@ impl FeelingDeck {
 #[derive(Default)]
 struct TrinketState {
     seed: i64,
-    held: Option<HeldTrinketProfile>,
+    held: Option<ActiveTrinket>,
     mossy: FeelingDeck,
+    mossy_instance: Option<u32>,
     trap: FeelingDeck,
+    trap_instance: Option<u32>,
 }
 
 thread_local! {
@@ -50,11 +53,27 @@ pub fn reset(seed: i64) {
     });
 }
 
-pub fn set_held(held: Option<HeldTrinketProfile>) {
-    STATE.with(|state| state.borrow_mut().held = held);
+pub fn set_held(held: Option<ActiveTrinket>) {
+    STATE.with(|state| {
+        let mut state = state.borrow_mut();
+        if let Some(active) = held {
+            match active.trinket {
+                TrinketKind::MossyClump if state.mossy_instance != Some(active.instance) => {
+                    state.mossy = FeelingDeck::default();
+                    state.mossy_instance = Some(active.instance);
+                }
+                TrinketKind::TrapMechanism if state.trap_instance != Some(active.instance) => {
+                    state.trap = FeelingDeck::default();
+                    state.trap_instance = Some(active.instance);
+                }
+                _ => {}
+            }
+        }
+        state.held = held;
+    });
 }
 
-fn level(held: Option<HeldTrinketProfile>, trinket: MapTrinketProfile) -> Option<u8> {
+fn level(held: Option<ActiveTrinket>, trinket: TrinketKind) -> Option<u8> {
     held.filter(|held| held.trinket == trinket)
         .map(|held| held.level)
 }
@@ -67,7 +86,7 @@ fn override_chance(level: Option<u8>) -> f32 {
 pub fn override_default_feeling() -> Feeling {
     STATE.with(|state| {
         let mut state = state.borrow_mut();
-        let mossy_level = level(state.held, MapTrinketProfile::MossyClump);
+        let mossy_level = level(state.held, TrinketKind::MossyClump);
         if Random::float() < override_chance(mossy_level) {
             let seed = state.seed;
             return if state
@@ -80,7 +99,7 @@ pub fn override_default_feeling() -> Feeling {
             };
         }
 
-        let trap_level = level(state.held, MapTrinketProfile::TrapMechanism);
+        let trap_level = level(state.held, TrinketKind::TrapMechanism);
         if Random::float() < override_chance(trap_level) {
             let seed = state.seed;
             return if state
@@ -98,7 +117,7 @@ pub fn override_default_feeling() -> Feeling {
 
 pub fn trap_reveal_chance() -> f32 {
     STATE.with(|state| {
-        level(state.borrow().held, MapTrinketProfile::TrapMechanism)
+        level(state.borrow().held, TrinketKind::TrapMechanism)
             .map_or(0.0, |level| 0.1 + 0.1 * f32::from(level))
     })
 }
@@ -106,13 +125,13 @@ pub fn trap_reveal_chance() -> f32 {
 /// `MimicTooth.mimicChanceMultiplier()` for the currently held profile.
 pub fn mimic_chance_multiplier() -> f32 {
     STATE.with(|state| {
-        level(state.borrow().held, MapTrinketProfile::MimicTooth)
+        level(state.borrow().held, TrinketKind::MimicTooth)
             .map_or(1.0, |level| 1.5 + 0.5 * f32::from(level))
     })
 }
 
 pub fn has_mimic_tooth() -> bool {
-    STATE.with(|state| level(state.borrow().held, MapTrinketProfile::MimicTooth).is_some())
+    STATE.with(|state| level(state.borrow().held, TrinketKind::MimicTooth).is_some())
 }
 
 #[cfg(test)]
@@ -141,10 +160,10 @@ mod tests {
         Random::reset_generators();
         Random::push_generator_seeded(91);
         reset(456);
-        set_held(Some(HeldTrinketProfile {
-            trinket: MapTrinketProfile::MossyClump,
+        set_held(Some(ActiveTrinket {
+            trinket: TrinketKind::MossyClump,
             level: 3,
-            start_depth: 1,
+            instance: 1,
         }));
         let feelings: Vec<_> = (0..6).map(|_| override_default_feeling()).collect();
         assert_eq!(
@@ -165,18 +184,44 @@ mod tests {
     }
 
     #[test]
+    fn a_new_mossy_clump_instance_resets_its_feeling_deck() {
+        Random::reset_generators();
+        Random::push_generator_seeded(91);
+        reset(456);
+        set_held(Some(ActiveTrinket {
+            trinket: TrinketKind::MossyClump,
+            level: 3,
+            instance: 1,
+        }));
+        let _ = override_default_feeling();
+        STATE.with(|state| assert!(!state.borrow().mossy.values.is_empty()));
+
+        set_held(Some(ActiveTrinket {
+            trinket: TrinketKind::MossyClump,
+            level: 3,
+            instance: 2,
+        }));
+        STATE.with(|state| {
+            let state = state.borrow();
+            assert!(state.mossy.values.is_empty());
+            assert_eq!(state.mossy_instance, Some(2));
+        });
+        Random::pop_generator();
+    }
+
+    #[test]
     fn trap_mechanism_level_controls_reveal_fraction() {
         reset(1);
-        set_held(Some(HeldTrinketProfile {
-            trinket: MapTrinketProfile::TrapMechanism,
+        set_held(Some(ActiveTrinket {
+            trinket: TrinketKind::TrapMechanism,
             level: 0,
-            start_depth: 1,
+            instance: 1,
         }));
         assert!((trap_reveal_chance() - 0.1).abs() < f32::EPSILON);
-        set_held(Some(HeldTrinketProfile {
-            trinket: MapTrinketProfile::TrapMechanism,
+        set_held(Some(ActiveTrinket {
+            trinket: TrinketKind::TrapMechanism,
             level: 3,
-            start_depth: 1,
+            instance: 1,
         }));
         assert!((trap_reveal_chance() - 0.4).abs() < f32::EPSILON);
     }
@@ -186,16 +231,16 @@ mod tests {
         reset(1);
         set_held(None);
         assert_eq!(mimic_chance_multiplier(), 1.0);
-        set_held(Some(HeldTrinketProfile {
-            trinket: MapTrinketProfile::MimicTooth,
+        set_held(Some(ActiveTrinket {
+            trinket: TrinketKind::MimicTooth,
             level: 0,
-            start_depth: 1,
+            instance: 1,
         }));
         assert_eq!(mimic_chance_multiplier(), 1.5);
-        set_held(Some(HeldTrinketProfile {
-            trinket: MapTrinketProfile::MimicTooth,
+        set_held(Some(ActiveTrinket {
+            trinket: TrinketKind::MimicTooth,
             level: 3,
-            start_depth: 1,
+            instance: 1,
         }));
         assert_eq!(mimic_chance_multiplier(), 3.0);
         assert!(has_mimic_tooth());

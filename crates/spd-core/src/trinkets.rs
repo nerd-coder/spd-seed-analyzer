@@ -1,91 +1,19 @@
-//! Player-supplied trinket history and seed-determined catalyst availability.
+//! Player-supplied first-generation main-path profile and Catalyst facts.
+
+mod model;
+mod validation;
 
 use serde::{Deserialize, Serialize};
 
 use crate::generator::Category;
 use crate::run::{dungeon_from_run, RunState};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum MapTrinketProfile {
-    NoMapAffectingTrinkets,
-    MossyClump,
-    TrapMechanism,
-    MimicTooth,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-pub struct HeldTrinketProfile {
-    pub trinket: MapTrinketProfile,
-    pub level: u8,
-    /// First main-path depth generated with this held state.
-    pub start_depth: u32,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct MapProfile {
-    /// Chronological held states, including upgrades and transmutations.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub held_trinkets: Vec<HeldTrinketProfile>,
-    pub meta: MapMetaProfile,
-    /// Whether the run enables SPD's `NO_SCROLLS` challenge (Forbidden Runes).
-    #[serde(default)]
-    pub forbidden_runes: bool,
-}
-
-impl Default for MapProfile {
-    fn default() -> Self {
-        Self {
-            held_trinkets: Vec::new(),
-            meta: MapMetaProfile::Fresh,
-            forbidden_runes: false,
-        }
-    }
-}
-
-impl MapProfile {
-    pub(crate) fn held_at(&self, depth: u32) -> Option<HeldTrinketProfile> {
-        self.held_trinkets
-            .iter()
-            .rev()
-            .find(|state| state.start_depth <= depth)
-            .copied()
-    }
-
-    pub(crate) fn validate(&self, first_effective_depth: u32) -> Result<(), ProfileError> {
-        let mut previous_depth = None;
-        let mut previous_level = None;
-        for state in &self.held_trinkets {
-            if state.level > 3 {
-                return Err(ProfileError::LevelOutOfRange(state.level));
-            }
-            if !(1..=26).contains(&state.start_depth) {
-                return Err(ProfileError::DepthOutOfRange(state.start_depth));
-            }
-            if previous_depth.is_none() && state.start_depth < first_effective_depth {
-                return Err(ProfileError::BeforeTrinketAvailable {
-                    requested: state.start_depth,
-                    earliest: first_effective_depth,
-                });
-            }
-            if previous_depth.is_some_and(|depth| state.start_depth <= depth) {
-                return Err(ProfileError::DepthsNotIncreasing);
-            }
-            if previous_level.is_some_and(|level| state.level < level) {
-                return Err(ProfileError::LevelReduced);
-            }
-            previous_depth = Some(state.start_depth);
-            previous_level = Some(state.level);
-        }
-        Ok(())
-    }
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum MapMetaProfile {
-    Fresh,
-}
+pub(crate) use model::ActiveTrinket;
+pub use model::{
+    ArtifactEvent, ArtifactEventAction, ArtifactKind, Challenge, ClaimState, MapProfile,
+    TrinketEvent, TrinketEventAction, TrinketKind,
+};
+pub use validation::ProfileError;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct TrinketSelectionReport {
@@ -124,22 +52,6 @@ impl TrinketSelectionReport {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
-pub enum ProfileError {
-    #[error("held trinket level +{0} is outside the supported +0 to +3 range")]
-    LevelOutOfRange(u8),
-    #[error("held trinket start floor {0} is outside the main-path floor range")]
-    DepthOutOfRange(u32),
-    #[error(
-        "held trinket cannot affect floor {requested}; this seed's earliest possible floor is {earliest}"
-    )]
-    BeforeTrinketAvailable { requested: u32, earliest: u32 },
-    #[error("held trinket start floors must be strictly increasing")]
-    DepthsNotIncreasing,
-    #[error("a trinket upgrade level cannot be reduced later in the run")]
-    LevelReduced,
-}
-
 #[cfg(test)]
 mod tests {
     use std::collections::HashSet;
@@ -172,23 +84,30 @@ mod tests {
     }
 
     #[test]
-    fn held_history_preserves_levels_across_upgrades_and_transmutation() {
+    fn trinket_events_preserve_upgrade_state_and_reset_new_instances() {
         let profile = MapProfile {
-            held_trinkets: vec![
-                HeldTrinketProfile {
-                    trinket: MapTrinketProfile::MossyClump,
-                    level: 0,
-                    start_depth: 4,
+            trinket_events: vec![
+                TrinketEvent {
+                    before_depth: 4,
+                    action: TrinketEventAction::Acquired {
+                        trinket: TrinketKind::MossyClump,
+                    },
                 },
-                HeldTrinketProfile {
-                    trinket: MapTrinketProfile::MossyClump,
-                    level: 2,
-                    start_depth: 7,
+                TrinketEvent {
+                    before_depth: 7,
+                    action: TrinketEventAction::Upgraded,
                 },
-                HeldTrinketProfile {
-                    trinket: MapTrinketProfile::MimicTooth,
-                    level: 2,
-                    start_depth: 9,
+                TrinketEvent {
+                    before_depth: 9,
+                    action: TrinketEventAction::Transmuted {
+                        trinket: TrinketKind::MimicTooth,
+                    },
+                },
+                TrinketEvent {
+                    before_depth: 10,
+                    action: TrinketEventAction::Transmuted {
+                        trinket: TrinketKind::MossyClump,
+                    },
                 },
             ],
             ..MapProfile::default()
@@ -197,17 +116,70 @@ mod tests {
         profile.validate(4).expect("valid progression");
         assert_eq!(profile.held_at(3), None);
         assert_eq!(profile.held_at(6).map(|state| state.level), Some(0));
-        assert_eq!(profile.held_at(8).map(|state| state.level), Some(2));
-        assert_eq!(
-            profile.held_at(9).map(|state| state.trinket),
-            Some(MapTrinketProfile::MimicTooth)
-        );
+        assert_eq!(profile.held_at(8).map(|state| state.level), Some(1));
+        let reacquired = profile.held_at(10).expect("reacquired trinket");
+        assert_eq!(reacquired.trinket, TrinketKind::MossyClump);
+        assert_eq!(reacquired.level, 1);
+        assert_eq!(reacquired.instance, 3);
+    }
 
-        let mut reduced = profile;
-        reduced.held_trinkets[2].level = 1;
+    #[test]
+    fn validation_rejects_invalid_player_event_sequences() {
+        let no_held_upgrade = MapProfile {
+            trinket_events: vec![TrinketEvent {
+                before_depth: 4,
+                action: TrinketEventAction::Upgraded,
+            }],
+            ..MapProfile::default()
+        };
         assert!(matches!(
-            reduced.validate(4),
-            Err(ProfileError::LevelReduced)
+            no_held_upgrade.validate(4),
+            Err(ProfileError::TrinketUpgradeWithoutHeld)
         ));
+
+        let duplicate_challenge = MapProfile {
+            challenges: vec![Challenge::ForbiddenRunes, Challenge::ForbiddenRunes],
+            ..MapProfile::default()
+        };
+        assert!(matches!(
+            duplicate_challenge.validate(4),
+            Err(ProfileError::ChallengeRepeated(Challenge::ForbiddenRunes))
+        ));
+    }
+
+    #[test]
+    fn profile_serializes_player_events_without_deck_counters() {
+        let profile = MapProfile {
+            challenges: vec![Challenge::BarrenLand, Challenge::ForbiddenRunes],
+            trinket_events: vec![TrinketEvent {
+                before_depth: 4,
+                action: TrinketEventAction::Acquired {
+                    trinket: TrinketKind::RatSkull,
+                },
+            }],
+            artifact_events: vec![ArtifactEvent {
+                before_depth: 2,
+                action: ArtifactEventAction::Obtained {
+                    artifact: ArtifactKind::ChaliceOfBlood,
+                },
+            }],
+            claim_state: ClaimState {
+                parchment_scrap_level: Some(1),
+            },
+        };
+
+        let value = serde_json::to_value(profile).expect("profile JSON");
+        assert_eq!(
+            value["challenges"],
+            serde_json::json!(["barren_land", "forbidden_runes"])
+        );
+        assert_eq!(value["trinket_events"][0]["kind"], "acquired");
+        assert_eq!(value["trinket_events"][0]["trinket"], "rat_skull");
+        assert_eq!(value["artifact_events"][0]["kind"], "obtained");
+        assert_eq!(
+            value["claim_state"]["parchment_scrap_level"],
+            serde_json::Value::from(1)
+        );
+        assert!(value.get("deck_counters").is_none());
     }
 }

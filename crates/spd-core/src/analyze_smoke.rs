@@ -156,10 +156,13 @@ fn first_alchemy_pot_is_a_guaranteed_floor_appearance() {
 
 #[test]
 fn forbidden_runes_profile_removes_every_second_upgrade_scroll() {
-    use crate::{analyze_seed_with_profile, MapProfile};
+    use crate::{analyze_seed_with_profile, Challenge, MapProfile};
 
-    let profile = |forbidden_runes| MapProfile {
-        forbidden_runes,
+    let profile = |forbidden_runes: bool| MapProfile {
+        challenges: forbidden_runes
+            .then_some(Challenge::ForbiddenRunes)
+            .into_iter()
+            .collect(),
         ..MapProfile::default()
     };
     let baseline = analyze_seed_with_profile("42", 4, Some(profile(false))).expect("baseline");
@@ -193,20 +196,37 @@ fn forbidden_runes_profile_removes_every_second_upgrade_scroll() {
     assert!(challenged
         .map_profile
         .as_ref()
-        .is_some_and(|profile| profile.forbidden_runes));
+        .is_some_and(|profile| profile.challenges.contains(&Challenge::ForbiddenRunes)));
 }
 
 #[test]
 fn trinket_profile_starts_on_the_configured_floor() {
-    use crate::{analyze_seed_with_profile, HeldTrinketProfile, MapProfile, MapTrinketProfile};
+    use crate::{
+        analyze_seed_with_profile, MapProfile, TrinketEvent, TrinketEventAction, TrinketKind,
+    };
 
     let baseline = MapProfile::default();
     let delayed = MapProfile {
-        held_trinkets: vec![HeldTrinketProfile {
-            trinket: MapTrinketProfile::MossyClump,
-            level: 3,
-            start_depth: 5,
-        }],
+        trinket_events: vec![
+            TrinketEvent {
+                before_depth: 5,
+                action: TrinketEventAction::Acquired {
+                    trinket: TrinketKind::MossyClump,
+                },
+            },
+            TrinketEvent {
+                before_depth: 5,
+                action: TrinketEventAction::Upgraded,
+            },
+            TrinketEvent {
+                before_depth: 5,
+                action: TrinketEventAction::Upgraded,
+            },
+            TrinketEvent {
+                before_depth: 5,
+                action: TrinketEventAction::Upgraded,
+            },
+        ],
         ..MapProfile::default()
     };
     let baseline = analyze_seed_with_profile("31", 4, Some(baseline)).expect("baseline");
@@ -225,18 +245,35 @@ fn trinket_profile_starts_on_the_configured_floor() {
 
 #[test]
 fn mimic_tooth_profile_recomputes_the_ghost_pair() {
-    use crate::{analyze_seed_with_profile, HeldTrinketProfile, MapProfile, MapTrinketProfile};
+    use crate::{
+        analyze_seed_with_profile, MapProfile, TrinketEvent, TrinketEventAction, TrinketKind,
+    };
 
     let changed = (0..500).any(|seed| {
         let baseline = analyze_seed_with_profile(&seed.to_string(), 4, Some(MapProfile::default()))
             .expect("baseline profile");
         let first_effective_depth = baseline.trinket_selection.first_effective_depth;
         let tooth = MapProfile {
-            held_trinkets: vec![HeldTrinketProfile {
-                trinket: MapTrinketProfile::MimicTooth,
-                level: 3,
-                start_depth: first_effective_depth,
-            }],
+            trinket_events: vec![
+                TrinketEvent {
+                    before_depth: first_effective_depth,
+                    action: TrinketEventAction::Acquired {
+                        trinket: TrinketKind::MimicTooth,
+                    },
+                },
+                TrinketEvent {
+                    before_depth: first_effective_depth,
+                    action: TrinketEventAction::Upgraded,
+                },
+                TrinketEvent {
+                    before_depth: first_effective_depth,
+                    action: TrinketEventAction::Upgraded,
+                },
+                TrinketEvent {
+                    before_depth: first_effective_depth,
+                    action: TrinketEventAction::Upgraded,
+                },
+            ],
             ..MapProfile::default()
         };
         let tooth = analyze_seed_with_profile(&seed.to_string(), 4, Some(tooth))

@@ -167,21 +167,87 @@ export type SeedReport = {
 }
 
 export type MapProfile = {
-  held_trinkets: HeldTrinketProfile[]
-  meta: 'fresh'
-  forbidden_runes: boolean
+  challenges: Challenge[]
+  trinket_events: TrinketEvent[]
+  artifact_events: ArtifactEvent[]
+  claim_state: ClaimState
 }
 
-export type MapTrinketProfile =
-  | 'no_map_affecting_trinkets'
+export type Challenge =
+  | 'champion_enemies'
+  | 'badder_bosses'
+  | 'on_diet'
+  | 'faith_is_my_armor'
+  | 'pharmacophobia'
+  | 'barren_land'
+  | 'swarm_intelligence'
+  | 'into_darkness'
+  | 'forbidden_runes'
+
+export type TrinketKind =
+  | 'rat_skull'
+  | 'parchment_scrap'
+  | 'petrified_seed'
+  | 'exotic_crystals'
   | 'mossy_clump'
+  | 'dimensional_sundial'
+  | 'thirteen_leaf_clover'
   | 'trap_mechanism'
   | 'mimic_tooth'
+  | 'wondrous_resin'
+  | 'eye_of_newt'
+  | 'salt_cube'
+  | 'vial_of_blood'
+  | 'shard_of_oblivion'
+  | 'chaotic_censer'
+  | 'ferret_tuft'
+  | 'cracked_spyglass'
 
-export type HeldTrinketProfile = {
-  trinket: MapTrinketProfile
-  level: number
-  start_depth: number
+export type TrinketEvent =
+  | {
+      before_depth: number
+      kind: 'acquired'
+      trinket: TrinketKind
+    }
+  | {
+      before_depth: number
+      kind: 'upgraded'
+    }
+  | {
+      before_depth: number
+      kind: 'transmuted'
+      trinket: TrinketKind
+    }
+
+export type ArtifactKind =
+  | 'alchemists_toolkit'
+  | 'chalice_of_blood'
+  | 'cloak_of_shadows'
+  | 'dried_rose'
+  | 'ethereal_chains'
+  | 'holy_tome'
+  | 'horn_of_plenty'
+  | 'master_thieves_armband'
+  | 'sandals_of_nature'
+  | 'skeleton_key'
+  | 'talisman_of_foresight'
+  | 'timekeepers_hourglass'
+  | 'unstable_spellbook'
+
+export type ArtifactEvent =
+  | {
+      before_depth: number
+      kind: 'obtained'
+      artifact: ArtifactKind
+    }
+  | {
+      before_depth: number
+      kind: 'transmuted'
+      artifact: ArtifactKind
+    }
+
+export type ClaimState = {
+  parchment_scrap_level?: number | null
 }
 
 export type TrinketSelectionReport = {
