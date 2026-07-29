@@ -199,7 +199,7 @@ async function openAnalyzer(
 
   await page.getByLabel('Enter your seed').fill(seed)
   await page.getByRole('button', { name: 'Analyze', exact: true }).click()
-  await expect(page.getByRole('tab', { name: seed })).toBeVisible()
+  await expect(page.getByRole('tab', { name: seed, exact: true })).toBeVisible()
   await expect(
     page.getByRole('heading', { name: 'Floor 1', exact: true })
   ).toBeVisible({

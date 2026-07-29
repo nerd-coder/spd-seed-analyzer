@@ -349,6 +349,17 @@ which must always use a deck"*), so these runtime sources all advance
 Note `RingOfWealth.java:288` (the RING case §4 cites) is a different branch from
 `:291`.
 
+Cracked Spyglass is an additional **automatic level-generation** route, not a
+runtime drop. `RegularLevel.createItems` adds its 0–2 hidden items through
+no-arg `Generator.randomUsingDefaults()` (`RegularLevel.java:679-689`, with the
+level-dependent chance at `CrackedSpyglass.java:52-61`). The pushed floor RNG
+isolates ambient random calls, but it does not roll back persistent Generator
+state. When the default category roll lands on ARTIFACT, holding/upgrading the
+Spyglass advances the same artifact deck before later floors. Method: pinned-
+source call-site audit from `createItems` through
+`Generator.randomUsingDefaults()` (`Generator.java:694-768`); no probability
+measurement was used for this reachability fact.
+
 The drift is not cosmetic. `randomArtifact` calls
 `Reflection.newInstance(cls).random()` **after** `popGenerator`
 (`Generator.java:866-878`), and `UnstableSpellbook`'s constructor burns a
