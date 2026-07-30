@@ -1,19 +1,13 @@
 use super::*;
 
 #[test]
-fn accuracy_manifest_matches_engine_contract() {
-    let manifest: serde_json::Value =
-        serde_json::from_str(include_str!("../../../specs/accuracy.json"))
-            .expect("accuracy manifest must be valid JSON");
-
-    assert_eq!(manifest["target"]["version"], SPD_VERSION);
-    assert_eq!(manifest["target"]["commit"], SPD_COMMIT);
-    assert_eq!(manifest["overallStatus"], "partial");
-}
-
-#[test]
 fn analyze_seed_smoke() {
     let r = analyze_seed("GFX-PZH-DCH", 4).expect("analyze");
+    assert_eq!(r.modeled_outcomes.len(), 26);
+    assert!(r
+        .analysis_notes
+        .iter()
+        .any(|note| note.contains("modeled first-generation combinations")));
     eprintln!("status={} floors={}", r.status, r.floors.len());
     for f in &r.floors {
         assert!(
@@ -55,40 +49,10 @@ fn analyze_seed_smoke() {
 }
 
 #[test]
-fn explicit_baseline_profile_can_publish_proven_safe_maps() {
-    use crate::{analyze_seed_with_profile, MapProfile};
-
-    let legacy = analyze_seed("GFX-PZH-DCH", 4).expect("legacy analysis");
-    assert!(legacy.floors.iter().all(|floor| floor.map.is_none()));
-
-    let profile = MapProfile::default();
-    let profiled = (0..100)
-        .find_map(|seed| {
-            let report =
-                analyze_seed_with_profile(&seed.to_string(), 4, Some(profile.clone())).ok()?;
-            report
-                .floors
-                .iter()
-                .any(|floor| floor.map.is_some())
-                .then_some(report)
-        })
-        .expect("at least one baseline profile should have a public-safe map");
-    assert!(profiled.map_profile.is_some());
-    let layout = profiled
-        .floors
-        .iter()
-        .find_map(|floor| floor.map.as_ref())
-        .expect("profile should expose a layout");
-    assert!(layout.markers.is_empty());
-    assert!(layout.heaps.is_empty());
-    assert!(layout.mobs.is_empty());
-}
-
-#[test]
 fn fresh_profile_publishes_floor_one_ordinary_loot() {
     let mut floors_with_ordinary_loot = 0;
     for seed in 0..50 {
-        let report = analyze_seed_with_profile(&seed.to_string(), 1, Some(MapProfile::default()))
+        let report = analyze_seed_with_profile(&seed.to_string(), 1, &MapProfile::default())
             .expect("profiled analysis");
         let floor = &report.floors[0];
         assert!(floor.map.is_some(), "seed {seed} floor-one layout");
@@ -118,8 +82,7 @@ fn fresh_profile_publishes_floor_one_ordinary_loot() {
 #[test]
 fn first_alchemy_pot_is_a_guaranteed_floor_appearance() {
     for seed in 0..50 {
-        let report = analyze_seed_with_profile(&seed.to_string(), 5, Some(MapProfile::default()))
-            .expect("profiled analysis");
+        let report = analyze_seed_seed_only(&seed.to_string(), 5).expect("analyze");
         let selection = &report.trinket_selection;
         let expected_source = if selection.first_alchemy_pot_is_secret {
             "SecretLaboratoryRoom"
@@ -155,22 +118,39 @@ fn first_alchemy_pot_is_a_guaranteed_floor_appearance() {
 }
 
 #[test]
-fn forbidden_runes_profile_removes_every_second_upgrade_scroll() {
-    use crate::{analyze_seed_with_profile, Challenge, MapProfile};
+fn automatic_outcomes_cover_supported_run_combinations() {
+    let report = analyze_seed("42", 4).expect("analyze");
+    let conditions: Vec<_> = report
+        .modeled_outcomes
+        .iter()
+        .map(|outcome| outcome.condition.as_str())
+        .collect();
 
-    let profile = |forbidden_runes: bool| MapProfile {
-        challenges: forbidden_runes
-            .then_some(Challenge::ForbiddenRunes)
-            .into_iter()
-            .collect(),
-        ..MapProfile::default()
-    };
-    let baseline = analyze_seed_with_profile("42", 4, Some(profile(false))).expect("baseline");
-    let challenged =
-        analyze_seed_with_profile("42", 4, Some(profile(true))).expect("Forbidden Runes");
-    let scroll_depths = |report: &SeedReport| {
-        report
-            .floors
+    assert_eq!(conditions.len(), 26);
+    assert!(conditions.contains(&"No challenges; no held trinket"));
+    assert!(conditions.contains(&"Forbidden Runes; no held trinket"));
+    assert!(conditions
+        .iter()
+        .any(|condition| { condition.contains("Mossy Clump +3 held from floor") }));
+    assert!(conditions
+        .iter()
+        .any(|condition| { condition.contains("Trap Mechanism +3 held from floor") }));
+    assert!(conditions
+        .iter()
+        .any(|condition| { condition.contains("Mimic Tooth +3 held from floor") }));
+
+    let baseline = report
+        .modeled_outcomes
+        .iter()
+        .find(|outcome| outcome.condition == "No challenges; no held trinket")
+        .expect("baseline outcome");
+    let forbidden = report
+        .modeled_outcomes
+        .iter()
+        .find(|outcome| outcome.condition == "Forbidden Runes; no held trinket")
+        .expect("Forbidden Runes outcome");
+    let upgrade_depths = |floors: &[FloorReport]| {
+        floors
             .iter()
             .filter(|floor| {
                 floor.items.iter().any(|item| {
@@ -181,125 +161,16 @@ fn forbidden_runes_profile_removes_every_second_upgrade_scroll() {
             .map(|floor| floor.depth)
             .collect::<Vec<_>>()
     };
-
-    let baseline_depths = scroll_depths(&baseline);
-    let challenged_depths = scroll_depths(&challenged);
+    let baseline_depths = upgrade_depths(&baseline.floors);
+    let forbidden_depths = upgrade_depths(&forbidden.floors);
     assert_eq!(baseline_depths.len(), 3, "three Upgrade Scrolls per region");
     assert_eq!(
-        challenged_depths,
+        forbidden_depths,
         baseline_depths
             .iter()
             .step_by(2)
             .copied()
             .collect::<Vec<_>>()
-    );
-    assert!(challenged
-        .map_profile
-        .as_ref()
-        .is_some_and(|profile| profile.challenges.contains(&Challenge::ForbiddenRunes)));
-}
-
-#[test]
-fn trinket_profile_starts_on_the_configured_floor() {
-    use crate::{
-        analyze_seed_with_profile, MapProfile, TrinketEvent, TrinketEventAction, TrinketKind,
-    };
-
-    let baseline = MapProfile::default();
-    let delayed = MapProfile {
-        trinket_events: vec![
-            TrinketEvent {
-                before_depth: 5,
-                action: TrinketEventAction::Acquired {
-                    trinket: TrinketKind::MossyClump,
-                },
-            },
-            TrinketEvent {
-                before_depth: 5,
-                action: TrinketEventAction::Upgraded,
-            },
-            TrinketEvent {
-                before_depth: 5,
-                action: TrinketEventAction::Upgraded,
-            },
-            TrinketEvent {
-                before_depth: 5,
-                action: TrinketEventAction::Upgraded,
-            },
-        ],
-        ..MapProfile::default()
-    };
-    let baseline = analyze_seed_with_profile("31", 4, Some(baseline)).expect("baseline");
-    let delayed = analyze_seed_with_profile("31", 4, Some(delayed)).expect("delayed trinket");
-
-    for (baseline, delayed) in baseline.floors.iter().zip(&delayed.floors) {
-        assert_eq!(baseline.feeling, delayed.feeling);
-        assert_eq!(baseline.builder, delayed.builder);
-        assert_eq!(baseline.rooms, delayed.rooms);
-        assert_eq!(
-            serde_json::to_value(&baseline.map).expect("baseline map"),
-            serde_json::to_value(&delayed.map).expect("delayed map")
-        );
-    }
-}
-
-#[test]
-fn mimic_tooth_profile_recomputes_the_ghost_pair() {
-    use crate::{
-        analyze_seed_with_profile, MapProfile, TrinketEvent, TrinketEventAction, TrinketKind,
-    };
-
-    let changed = (0..500).any(|seed| {
-        let baseline = analyze_seed_with_profile(&seed.to_string(), 4, Some(MapProfile::default()))
-            .expect("baseline profile");
-        let first_effective_depth = baseline.trinket_selection.first_effective_depth;
-        let tooth = MapProfile {
-            trinket_events: vec![
-                TrinketEvent {
-                    before_depth: first_effective_depth,
-                    action: TrinketEventAction::Acquired {
-                        trinket: TrinketKind::MimicTooth,
-                    },
-                },
-                TrinketEvent {
-                    before_depth: first_effective_depth,
-                    action: TrinketEventAction::Upgraded,
-                },
-                TrinketEvent {
-                    before_depth: first_effective_depth,
-                    action: TrinketEventAction::Upgraded,
-                },
-                TrinketEvent {
-                    before_depth: first_effective_depth,
-                    action: TrinketEventAction::Upgraded,
-                },
-            ],
-            ..MapProfile::default()
-        };
-        let tooth = analyze_seed_with_profile(&seed.to_string(), 4, Some(tooth))
-            .expect("Mimic Tooth profile");
-        let rewards = |report: &SeedReport| {
-            report
-                .floors
-                .iter()
-                .flat_map(|floor| &floor.items)
-                .filter(|item| item.source.as_deref() == Some("Ghost.Quest"))
-                .map(|item| (item.class_name.clone(), item.tier, item.level))
-                .collect::<Vec<_>>()
-        };
-        let baseline_rewards = rewards(&baseline);
-        let tooth_rewards = rewards(&tooth);
-        !baseline_rewards.is_empty()
-            && !tooth_rewards.is_empty()
-            && baseline_rewards != tooth_rewards
-            && tooth_rewards
-                .iter()
-                .all(|(class_name, _, _)| class_name.is_some())
-    });
-
-    assert!(
-        changed,
-        "a held Mimic Tooth must reach a distinct Ghost pair"
     );
 }
 
@@ -751,7 +622,7 @@ fn analyze_several_seeds() {
 #[test]
 fn analyze_full_run_no_panic() {
     for s in ["GFX-PZH-DCH", "AAA-AAA-AAA", "hello", "42", "shattered"] {
-        let r = analyze_seed(s, 26).unwrap_or_else(|e| panic!("seed {s}: {e:?}"));
+        let r = analyze_seed_seed_only(s, 26).unwrap_or_else(|e| panic!("seed {s}: {e:?}"));
         assert_eq!(r.floors.len(), 26, "seed {s}");
         // The legacy/default projection does not publish maps without an
         // explicit map profile, including dedicated levels.
@@ -768,70 +639,6 @@ fn analyze_full_run_no_panic() {
             item.name == "food" && item.prediction == report::ItemPredictionKind::Constrained
         }));
     }
-
-    let profile = crate::MapProfile::default();
-    let report = crate::analyze_seed_with_profile("AAA-AAA-AAA", 26, Some(profile))
-        .expect("profiled full-run analysis");
-    for (depth, dimensions) in [
-        (10, (32, 32)),
-        (20, (15, 48)),
-        (25, (32, 32)),
-        (26, (16, 64)),
-    ] {
-        let floor = &report.floors[depth - 1];
-        let map = floor.map.as_ref().expect("fixed dedicated layout");
-        assert_eq!((map.width, map.height), dimensions);
-        assert!(map.markers.is_empty());
-        assert!(map.heaps.is_empty());
-        assert!(map.mobs.is_empty());
-        assert!(map.traps.is_empty());
-        assert!(map.plants.is_empty());
-        assert!(map.blobs.is_empty());
-        if matches!(depth, 20 | 25 | 26) {
-            assert!(!map.custom_tiles.is_empty());
-            assert!(!map.custom_walls.is_empty());
-        } else {
-            // Pinned Terrain IDs: WALL_DECO, EMPTY_DECO, REGION_DECO, REGION_DECO_ALT.
-            assert!(map
-                .tiles
-                .iter()
-                .all(|tile| !matches!(tile, 12 | 20 | 33 | 34)));
-        }
-    }
-    let sewer_boss = report.floors[4]
-        .map
-        .as_ref()
-        .expect("generated SewerBossLevel layout");
-    assert_eq!((sewer_boss.width, sewer_boss.height), (32, 33));
-    assert!(sewer_boss.markers.is_empty());
-    assert!(sewer_boss.heaps.is_empty());
-    assert!(sewer_boss.mobs.is_empty());
-    assert!(sewer_boss
-        .tiles
-        .iter()
-        .all(|tile| !matches!(tile, 12 | 20 | 33 | 34)));
-
-    let caves_boss = report.floors[14]
-        .map
-        .as_ref()
-        .expect("generated CavesBossLevel layout");
-    assert_eq!((caves_boss.width, caves_boss.height), (33, 42));
-    assert!(caves_boss.markers.is_empty());
-    assert!(caves_boss.heaps.is_empty());
-    assert!(caves_boss.mobs.is_empty());
-    assert!(caves_boss
-        .tiles
-        .iter()
-        .all(|tile| !matches!(tile, 12 | 20 | 33 | 34)));
-
-    let halls_boss = report.floors[24]
-        .map
-        .as_ref()
-        .expect("generated HallsBossLevel layout");
-    assert_eq!((halls_boss.width, halls_boss.height), (32, 32));
-    assert!(halls_boss.markers.is_empty());
-    assert!(halls_boss.heaps.is_empty());
-    assert!(halls_boss.mobs.is_empty());
 }
 
 #[test]

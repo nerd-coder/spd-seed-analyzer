@@ -59,12 +59,7 @@ export function SessionPane({ session }: { session: SeedSession }) {
   if (session.report) {
     return (
       <div className="relative">
-        <SeedReportView
-          refreshingLayout={session.refreshingLayout}
-          sessionId={session.id}
-          mapProfile={session.mapProfile}
-          report={session.report}
-        />
+        <SeedReportView report={session.report} />
       </div>
     )
   }

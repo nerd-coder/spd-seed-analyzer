@@ -2,7 +2,9 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{analyze_seed, report::ItemPredictionKind, AnalyzeError, SeedInfo, TOTAL_SEEDS};
+use crate::{
+    analyze_seed_seed_only, report::ItemPredictionKind, AnalyzeError, SeedInfo, TOTAL_SEEDS,
+};
 
 /// Maximum candidate seeds evaluated by one search call.
 pub const MAX_SEARCH_CANDIDATES: u32 = 10_000;
@@ -168,7 +170,7 @@ pub fn search_seeds(request: &SeedSearchRequest) -> Result<SeedSearchResult, Sea
             break;
         }
 
-        let report = analyze_seed(&seed.to_string(), request.floors)
+        let report = analyze_seed_seed_only(&seed.to_string(), request.floors)
             .map_err(|source| SearchError::Analyze { seed, source })?;
         candidates_scanned += 1;
 

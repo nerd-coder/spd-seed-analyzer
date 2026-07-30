@@ -1,12 +1,11 @@
 import type {
-  MapProfile,
   SeedReport,
   SeedSearchRequest,
   SeedSearchResult,
 } from '@/lib/spd-wasm'
 
 export type SpdWorkerRequest =
-  | { type: 'analyze'; input: string; floors: number; mapProfile?: MapProfile }
+  | { type: 'analyze'; input: string; floors: number }
   | { type: 'search'; request: SeedSearchRequest }
 
 export type SpdWorkerResponse =

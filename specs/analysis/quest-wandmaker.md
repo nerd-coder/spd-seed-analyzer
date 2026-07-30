@@ -3,7 +3,7 @@
 Target: **Shattered Pixel Dungeon v3.3.8 @ `7b8b845a7`**. Java citations below
 refer to that pinned clone. This note separates the reward contract from the
 player's quest choices and from generation work that can happen before the NPC
-callback. It is an internal audit; the public accuracy manifest remains the
+callback. It is an internal audit; the public accuracy status remains the
 user-facing coverage contract.
 
 ## Verdict

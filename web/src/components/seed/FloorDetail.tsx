@@ -20,11 +20,9 @@ import type { FloorReport, IdentityMaps } from '@/lib/spd-wasm'
 
 export function FloorDetail({
   floor,
-  refreshingLayout,
   identities,
 }: {
   floor: FloorReport
-  refreshingLayout: boolean
   identities: IdentityMaps
 }) {
   const hasQuest = (floor.quests?.length ?? 0) > 0
@@ -115,7 +113,6 @@ export function FloorDetail({
               map={displayedMap}
               identities={identities}
               depth={floor.depth}
-              loading={refreshingLayout}
             />
             {showAssumedMap && (
               <Alert variant="warning" className="px-1.5 py-1">

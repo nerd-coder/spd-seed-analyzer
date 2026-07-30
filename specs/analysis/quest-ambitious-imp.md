@@ -2,8 +2,9 @@
 
 Target: **Shattered Pixel Dungeon v3.3.8 @ `7b8b845a7`**. This note separates
 the fixed quest contract from player/run state that is not encoded by the
-dungeon seed. The public accuracy manifest should promise only the intersection
-of all reachable routes unless the user explicitly selects a complete profile.
+dungeon seed. The public projection should promise only the intersection
+of all reachable routes unless the analyzer replays and labels a complete
+condition.
 
 ### Verdict
 
@@ -255,6 +256,5 @@ as evidence. The depth-20 shop remains explicitly conditional on quest
 completion. `specs/generator-decks.md` records Rat Skull and the unbounded
 artifact-exhaustion route as settled deck facts.
 
-Overall analysis remains partial for the broader reasons in
-`specs/accuracy.json`; this Imp phase does not claim complete run-history or
+Overall analysis remains partial for the broader reasons; this Imp phase does not claim complete run-history or
 floor-reset coverage.

@@ -1,9 +1,8 @@
 //! WASM bindings for `spd-core`.
 
 use spd_core::{
-    analyze_seed as core_analyze, analyze_seed_with_profile as core_analyze_profile,
-    parse_seed as core_parse, search_seeds as core_search, AnalyzeError, SearchError, SeedError,
-    SeedSearchRequest,
+    analyze_seed as core_analyze, parse_seed as core_parse, search_seeds as core_search,
+    AnalyzeError, SearchError, SeedError, SeedSearchRequest,
 };
 use wasm_bindgen::prelude::*;
 
@@ -36,24 +35,6 @@ pub fn parse_seed(input: &str) -> Result<JsValue, JsValue> {
 #[wasm_bindgen]
 pub fn analyze_seed(input: &str, floors: u32) -> Result<JsValue, JsValue> {
     let report = core_analyze(input, floors).map_err(analyze_err)?;
-    serde_wasm_bindgen::to_value(&report).map_err(|e| JsValue::from_str(&e.to_string()))
-}
-
-#[wasm_bindgen]
-pub fn analyze_seed_with_profile(
-    input: &str,
-    floors: u32,
-    profile: JsValue,
-) -> Result<JsValue, JsValue> {
-    let profile = if profile.is_null() || profile.is_undefined() {
-        None
-    } else {
-        Some(
-            serde_wasm_bindgen::from_value(profile)
-                .map_err(|e| JsValue::from_str(&format!("invalid map profile: {e}")))?,
-        )
-    };
-    let report = core_analyze_profile(input, floors, profile).map_err(analyze_err)?;
     serde_wasm_bindgen::to_value(&report).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 

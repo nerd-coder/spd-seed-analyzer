@@ -23,7 +23,6 @@ export {
   setActiveFinder,
   startFinderSearch,
 } from './finder'
-export { defaultMapProfile } from './map-profile'
 export { $meta, loadSpdMeta, type SpdMeta } from './meta'
 export {
   $activeSeedId,
@@ -37,7 +36,6 @@ export {
   analyzeDraftSeed,
   analyzeSeedInput,
   cancelSeedAnalysis,
-  changeSeedMapProfile,
   closeSeedSession,
   MAX_SAVED_SEEDS,
   normalizeSeedInput,

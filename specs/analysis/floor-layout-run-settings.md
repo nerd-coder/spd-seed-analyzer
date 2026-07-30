@@ -1,10 +1,14 @@
-# Floor layout certainty and run settings — verified audit
+# Floor layout certainty — verified audit
 
 Target: **Shattered Pixel Dungeon v3.3.8 @ `7b8b845a7`**. This audit asks
 which facts in a painter-complete main-path floor are fixed by the seed, which
-are fixed only after choosing a run profile, and which profile inputs are still
-missing. Java citations refer to the pinned clone. Rust and web citations refer
-to this repository on 2026-07-29.
+are fixed only after choosing a run condition, and which condition inputs are
+still missing. Java citations refer to the pinned clone. Rust and web citations
+refer to this repository on 2026-07-30.
+
+The public analyzer has no Run settings. It automatically replays its finite,
+currently supported condition matrix and labels each result. This is not a
+claim to enumerate arbitrary gameplay histories.
 
 The public map scope follows `MAP-LAYOUT-GOAL`: room geometry, connections,
 doors, transitions, terrain, traps, plants, and blobs after painting, but before
@@ -13,20 +17,17 @@ still matter to a **later** floor when it mutates persistent generator state.
 
 ## Verdict
 
-The updated settings are useful, but they do not yet close the layout problem.
-
-- The profile records all nine challenge choices, chronological trinket
-  acquire/upgrade/transmute events, external artifact events, and Parchment
-  Scrap claim state. Forbidden Runes plus Mossy Clump, Trap Mechanism, and
-  Mimic Tooth already select materially different conditional maps; the other
-  map-relevant inputs are stored but not yet replayed.
-- The current API still publishes only floor 1 and the dedicated boss/final
-  floors as exact. Later regular floors remain `assumed_map` continuations even
-  with an explicit profile. That matches the current accuracy manifest.
-- Rat Skull, Cracked Spyglass, Barren Land, Badder Bosses, and map-relevant
-  artifact-deck events still need generation implementations before they can
-  make a painter-complete map exact. The profile deliberately marks their
-  affected projections assumed in the meantime.
+- The analyzer automatically replays 26 conditions: Forbidden Runes on/off,
+  with no held trinket or Mossy Clump, Trap Mechanism, and Mimic Tooth at
+  +0…+3 from the seed's earliest effective floor. Each outcome is separately
+  labelled in the result view.
+- The primary seed-only projection remains conservative; the condition matrix
+  is the only source of branch-specific maps and rewards. That matches the
+  current partial accuracy status.
+- Rat Skull, Cracked Spyglass, Barren Land, Badder Bosses, map-relevant
+  artifact history, and arbitrary acquire/upgrade/transmute timing still need
+  lifecycle replay. They must remain explicitly conditional rather than being
+  silently folded into a displayed map.
 - Settings alone are insufficient. The separate layout replay stops before
   ordinary population, so it loses automatic persistent deck mutations that
   can affect later floors. The analyzer must snapshot the public map and then
@@ -40,22 +41,20 @@ seeded descent,” the missing inputs are finite and can be represented at floor
 boundaries. “Every map reachable after arbitrary play,” including sealed-floor
 Ankh regeneration, needs generation-attempt history as well.
 
-## What the current settings actually narrow
+## What the current modeled conditions actually narrow
 
-`MapProfile` stores the complete player-facing challenge set plus chronological
-trinket and artifact events, without exposing generator counters
-(`crates/spd-core/src/trinkets.rs`). A trinket acquire or transmute event starts
-a new internal instance while an upgrade preserves its current instance; the
-Catalyst/pot calculation prevents events from starting before that seed can
-first be affected.
+`MapProfile` is now an internal replay descriptor, not a user-facing setting.
+It represents challenge and chronological trinket/artifact events without
+exposing generator counters (`crates/spd-core/src/trinkets.rs`). A trinket
+acquire or transmute event starts a new internal instance while an upgrade
+preserves its current instance; the Catalyst/pot calculation prevents events
+from starting before that seed can first be affected.
 
-The map pass is deliberately separate. `analyze_seed_with_profile` runs the
-full analyzer and a cloned `analyze_layouts_with_profile`, then replaces the
-full report's map-facing fields with the layout replay
-(`crates/spd-core/src/lib.rs:84-98`). That replay calls the same generator with
-`layout_only = true` (`crates/spd-core/src/level/mod.rs:71-82,585-605`). It
-captures the map after room painting and isolated decoration, then skips quest
-NPCs, ambient mobs, and `createItems`
+The map pass is deliberately separate. Each internal modeled branch runs the
+full analyzer and a cloned `analyze_layouts_with_profile`, then replaces that
+outcome's map-facing fields with the layout replay. That replay calls the same
+generator with `layout_only = true`, captures the map after room painting and
+isolated decoration, then skips quest NPCs, ambient mobs, and `createItems`
 (`crates/spd-core/src/level/mod.rs:420-495`).
 
 The public projection exposes a map, room list, and builder only while the one
@@ -78,14 +77,14 @@ each regular floor, the complete serialized `map ?? assumed_map` was compared
 with the explicit fresh baseline. This measures present analyzer behavior; it
 is **not** Java parity evidence.
 
-| Changed profile | Eligible regular floors | Different maps | Seeds with any difference |
+| Internal comparison condition | Eligible regular floors | Different maps | Seeds with any difference |
 |---|---:|---:|---:|
 | Forbidden Runes | 400 | 13 (3.3%) | 7 / 20 |
 | Mossy Clump +3 | 336 | 302 (89.9%) | 20 / 20 |
 | Trap Mechanism +3 | 336 | 292 (86.9%) | 20 / 20 |
 | Mimic Tooth +3 | 336 | 69 (20.5%) | 17 / 20 |
 
-The settings therefore narrow the displayed continuation substantially. They
+The modeled conditions therefore narrow the displayed continuation substantially. They
 do not change its certainty label after floor 1 because unresolved state is
 still inherited across floors (`crates/spd-core/src/level/mod.rs:83-96,206-221`).
 
@@ -162,7 +161,7 @@ Mechanism also changes which generated traps are revealed
 The Tooth changes room-paint Mimic decisions. A spawned Mimic immediately
 generates an additional reward and a held Tooth adds another defaults-based
 reward (`Mimic.java:294-358`). Those calls can move the current paint stream
-and persistent item decks. The setting must remain.
+and persistent item decks. This branch belongs in the automatic outcome matrix.
 
 ## Recorded inputs not yet replayed
 
@@ -172,7 +171,8 @@ Rat Skull changes Statue versus Armored Statue construction
 (`Statue.java:198-212`) and the Crystal Vault's chest versus Crystal Mimic
 branch (`CrystalVaultRoom.java:53-82`). The alternate mob construction and
 immediate Mimic reward consume a different painter tail before later rooms and
-doors. The profile records its chronological acquire/upgrade/transmute history.
+doors. An internal replay descriptor can represent its chronological
+acquire/upgrade/transmute history.
 Its paint behavior still needs to be ported before an affected map is exact.
 
 ### 2. Cracked Spyglass — deterministic later-floor state input
@@ -183,7 +183,7 @@ under an isolated floor RNG (`RegularLevel.java:679-689`). Its count is 0.375 ×
 isolated RNG protects the ambient floor tail, but `Generator.randomUsingDefaults()`
 can still select ARTIFACT, and artifact deck mutation survives the pop. That
 can change later special-room paint, shop-floor builder RNG, and floor-20 City
-decoration. Cracked Spyglass is recorded as a held trinket event, but its
+decoration. Cracked Spyglass can be represented as a held trinket event, but its
 post-population artifact mutation still needs lifecycle replay.
 
 This new deck fact is also recorded in `specs/generator-decks.md`, where
@@ -211,7 +211,7 @@ A custom seeded/challenged run excludes prior-run Bones loot
 seeded scope. Runtime artifact draws, artifact transmutation, and automatic
 level-generation draws still need to be replayed.
 
-The player-facing input is chronological events, not internal deck counters:
+The internal branch descriptor uses chronological events, not deck counters:
 “artifact generated/obtained or transmuted before first generating floor N.”
 The profile now records them; the lifecycle must still derive and apply the
 resulting deck state from the seed.
@@ -224,8 +224,8 @@ new trinket and transfers level and knowledge, not the old instance's
 (`ScrollOfTransmutation.java:322-333`).
 
 Therefore Mossy → another trinket → a newly acquired Mossy must restart the
-Mossy deck, while upgrading the same Mossy must preserve it. The profile now
-derives that identity from acquire/transmute actions and the Rust Mossy and Trap
+Mossy deck, while upgrading the same Mossy must preserve it. The internal
+descriptor derives that identity from acquire/transmute actions and the Rust Mossy and Trap
 state resets on a new instance (`crates/spd-core/src/trinkets.rs`,
 `crates/spd-core/src/level/trinkets.rs`). Full lifecycle replay remains needed
 before those persistent decks can make later maps exact.
@@ -247,8 +247,8 @@ pinned version:
 
 The source audit found no initial painter-complete terrain hook for the other
 six challenges. Darkness changes view distance, while the remaining hooks are
-combat, mob, item-use, or post-generation behavior. The complete challenge
-mask is stored, but Barren Land and Badder Bosses still need their pinned map
+combat, mob, item-use, or post-generation behavior. Barren Land and Badder
+Bosses still need their pinned map
 behavior before an affected projection is exact.
 
 ### 6. Generation attempts, only if regenerated boss floors are in scope
@@ -267,11 +267,11 @@ history instead of silently folding them into the first-generation profile.
 ## Inputs without a direct initial map effect
 
 - Parchment Scrap changes equipment effects inside an isolated item generator;
-  the profile records its claim-only level, while the ambient stream pays the
+  an internal branch can record its claim-only level, while the ambient stream pays the
   same one `Random.Long()` either way
   (`Weapon.java:432-446`, `Armor.java:667-681`).
 - Exotic Crystals keeps the potion/scroll conversion roll in both the absent
-  and held cases (`Generator.java:729-767`). Its profile event changes excluded
+  and held cases (`Generator.java:729-767`). Its branch event changes excluded
   item identity, not the painter call count or terrain.
 - Petrified Seed, Eye of Newt, Ferret Tuft, Salt Cube, Vial of Blood, Wondrous
   Resin, Shard of Oblivion, Thirteen-leaf Clover, Chaotic Censer, and
@@ -308,8 +308,8 @@ or automatic cross-floor map effect.
 
 Use one faithful lifecycle. At the painter-complete boundary, clone/snapshot
 the layout-only public map, then continue hidden NPC/mob/item generation solely
-to preserve persistent state for the next floor. Apply user artifact events at
-their floor boundary. Do not replace a full replay's maps with a second replay
+to preserve persistent state for the next floor. Apply modeled artifact events
+at their floor boundary. Do not replace a full replay's maps with a second replay
 that skips population.
 
 ### Certainty projection

@@ -9,7 +9,6 @@ import type { FormEvent } from 'react'
 import { AppFloatingAction } from '@/components/AppFloatingAction'
 import { FinderForm } from '@/components/finder/FinderForm'
 import { randomStartSeed } from '@/components/finder/finder-types'
-import { AccuracyWarning } from '@/components/seed/AccuracyWarning'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -72,8 +71,6 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
           />
           <AppFloatingAction />
         </div>
-
-        <AccuracyWarning />
 
         <TabsList
           className="grid w-full grid-cols-2"

@@ -5,7 +5,7 @@ Target: **Shattered Pixel Dungeon v3.3.8 @ `7b8b845a7`**.
 This note defines the truthful scope for predicting item spawns and room
 rewards on the first four main-path floors. It supplements the canonical deck
 facts in `specs/generator-decks.md`; it does not change the public accuracy
-claim until the implementation and Java-oracle coverage described below land.
+status until the implementation and Java-oracle coverage described below land.
 
 ## Verdict
 
@@ -132,9 +132,10 @@ enumerate only finite, seed-reachable branches:
    condition to each differing result.
 
 Do **not** enumerate every possible combat route. Runtime artifact acquisition,
-transmutation, and equipment effects create an open-ended action space. They
-are user-supplied events that select a replay branch. The analyzer can still
-provide the no-external-artifact branch and communicate the condition.
+transmutation, and equipment effects create an open-ended action space. The
+analyzer has no settings for those events; it can only add a modelled branch
+once the event sequence and parity evidence are bounded, and must communicate
+the condition.
 
 `TrinketSelectionReport` supplies the Catalyst offer sequence, first
 alchemy-pot depth, and first effective depth. `MapProfile` now records all nine
@@ -189,8 +190,8 @@ Cover at minimum: fresh baseline seeds with each Ghost depth, Forbidden Runes,
 Barren Land, every supported held-trinket at +0 and +3 from its first legal
 depth, Rat Skull's statue/crystal branches, Cracked Spyglass followed by an
 artifact-sensitive later floor, and an external artifact event before a Ghost
-floor. Only after those fixtures pass may `specs/accuracy.json` promote floors
-2–4 from baseline/conditional to exact for the corresponding profile.
+floor. Only after those fixtures pass may floors 2–4 from baseline/conditional
+be promoted to exact for the corresponding profile.
 
 ## Non-claims
 

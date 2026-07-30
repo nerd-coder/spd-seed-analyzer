@@ -2,8 +2,8 @@
 
 Target: **Shattered Pixel Dungeon v3.3.8 @ `7b8b845a7`**. This note records
 the generation contract and the inputs that are not encoded by the dungeon
-seed. It is intentionally separate from the public accuracy manifest; the
-manifest states what the UI may promise.
+seed. It is intentionally separate from the public accuracy status; the
+status states what the UI may promise.
 
 ### Verdict
 
@@ -103,11 +103,11 @@ change the Ghost pair.
    branch advances the seeded WEP/RING deck.  A held Tooth also adds another
    default reward to each mimic. Thus Tooth can change both the weapon class
    and the main-stream position at which the Ghost reward is generated. The
-   analyzer now replays this path when the user selects **Mimic Tooth +0…+3**
-   and the first held depth: the level-specific multiplier is
+   analyzer now includes **Mimic Tooth +0…+3** held from the earliest effective
+   depth in its automatically replayed modeled outcomes: the level-specific multiplier is
    1.5×/2×/2.5×/3×, and each spawned mimic's extra default reward is consumed.
-   With that profile, the displayed Ghost pair is precomputed for that exact
-   Tooth state. “None” remains the tooth-free continuation. This does not
+   Within that labelled outcome, the displayed Ghost pair is precomputed for
+   that exact Tooth state. “None” remains the tooth-free continuation. This does not
    infer whether the player can obtain or upgrade the Tooth by that depth.
 
 3. **Rat Skull.**  It changes the Crystal Vault alternate-mimic chance
@@ -179,8 +179,8 @@ but a single baseline WEP deck index is not a sound universal candidate set:
 Mimic Tooth, Rat Skull, artifact history, and challenge-dependent queue paths
 can add or remove pre-Ghost draws. The current analyzer's
 `category_class_history()` projection is therefore exact only for the fixed
-baseline path it actually simulated; an explicit Mimic Tooth profile instead
-replays its selected Tooth path and reports its single resulting class
+baseline path it actually simulated; its labelled Mimic Tooth outcome instead
+replays the modeled Tooth path and reports its single resulting class
 (`crates/spd-core/src/quests/ghost.rs:145-220`,
 `crates/spd-core/src/generator/state.rs:434-451`).
 
@@ -190,8 +190,8 @@ The Rust port correctly models the fixed-path Ghost reward call order,
 uncursed pair, shared level, pre-generated effect identities, and conditional
 Parchment threshold (`crates/spd-core/src/quests/ghost.rs:142-216`). Its public
 projection exposes the tier and minimum scrap condition
-(`crates/spd-core/src/level/state.rs:322-435`). It also enumerates the no-Tooth
-and held Mimic Tooth +0…+3 paths when explicitly profiled. Other stateful
+(`crates/spd-core/src/level/state.rs:322-435`). It also automatically enumerates
+the no-Tooth and held Mimic Tooth +0…+3 conditions. Other stateful
 pre-Ghost branches above remain unenumerated, so the default report is still a
 baseline continuation rather than proof that every concrete Ghost class, tier,
 level, or spawn depth is seed-only.

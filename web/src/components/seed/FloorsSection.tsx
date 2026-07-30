@@ -12,11 +12,9 @@ const SCROLL_GAP_PX = 8
 
 export function FloorsSection({
   floors,
-  refreshingLayout,
   identities,
 }: {
   floors: FloorReport[]
-  refreshingLayout: boolean
   identities: IdentityMaps
 }) {
   const selectedRegion = useStore(
@@ -121,7 +119,6 @@ export function FloorsSection({
               <FloorDetail
                 key={floor.depth}
                 floor={floor}
-                refreshingLayout={refreshingLayout}
                 identities={identities}
               />
             ))}

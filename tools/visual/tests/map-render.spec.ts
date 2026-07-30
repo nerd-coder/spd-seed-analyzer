@@ -3,7 +3,6 @@ import { MAP_RENDER_FIXTURES } from './map-render-fixtures'
 
 const APP_STORAGE = {
   mode: 'spd-analyzer-mode',
-  runSettings: 'spd-analyzer-run-settings:v1',
   testInitialized: 'spd-analyzer-visual-test-initialized',
   theme: 'spd-analyzer-theme',
 } as const
@@ -129,20 +128,8 @@ async function installSyntheticMapReport(page: Page) {
     class VisualFixtureWorker {
       onmessage: ((event: MessageEvent) => void) | null = null
       onerror: ((event: ErrorEvent) => void) | null = null
-      postMessage(message: {
-        type?: string
-        mapProfile?: {
-          forbidden_runes?: boolean
-          held_trinkets?: unknown[]
-        }
-      }) {
+      postMessage(message: { type?: string }) {
         if (message.type !== 'analyze') return
-        document.documentElement.dataset.testForbiddenRunes = String(
-          message.mapProfile?.forbidden_runes ?? false
-        )
-        document.documentElement.dataset.testHeldTrinkets = JSON.stringify(
-          message.mapProfile?.held_trinkets ?? []
-        )
         setTimeout(() => {
           this.onmessage?.(
             new MessageEvent('message', {
@@ -471,46 +458,6 @@ test('map dialog initially focuses its container instead of a control', async ({
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
-test('accuracy details use a responsive modal and restore trigger focus', async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 390, height: 600 })
-  const browserErrors = await openAnalyzer(page, '2')
-  const trigger = page.getByRole('button', { name: 'View accuracy details' })
-  await trigger.click()
-
-  const dialog = page.getByRole('dialog', { name: 'Accuracy details' })
-  await expect(dialog).toBeVisible()
-  await expect(
-    dialog.getByText(/Last reviewed .+ for v?3\.3\.8\./)
-  ).toBeVisible()
-
-  const bounds = await dialog.boundingBox()
-  expect(bounds).not.toBeNull()
-  expect(bounds?.x).toBeGreaterThanOrEqual(16)
-  expect(bounds?.y).toBeGreaterThanOrEqual(16)
-  expect(bounds?.width).toBeLessThanOrEqual(358)
-  expect(bounds?.height).toBeLessThanOrEqual(568)
-
-  const scrollArea = dialog.getByTestId('accuracy-details-scroll')
-  await expect
-    .poll(() =>
-      scrollArea.evaluate(
-        (node) =>
-          node.scrollHeight > node.clientHeight &&
-          node.scrollWidth > node.clientWidth
-      )
-    )
-    .toBe(true)
-
-  await page.keyboard.press('Escape')
-  await expect(dialog).toBeHidden()
-  await expect(trigger).toBeFocused()
-
-  expect(browserErrors.console, 'browser console errors').toEqual([])
-  expect(browserErrors.page, 'uncaught page errors').toEqual([])
-})
-
 test('Sad Ghost rewards identify the baseline as non-exhaustive', async ({
   page,
 }) => {
@@ -527,74 +474,24 @@ test('Sad Ghost rewards identify the baseline as non-exhaustive', async ({
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
-test('Run settings persist while identities and maps stay visible', async ({
-  page,
-}) => {
-  await installSyntheticMapReport(page)
-  const browserErrors = await openAnalyzer(page, GENERIC_MAP_SEED)
+test('modeled outcomes replace persisted Run settings', async ({ page }) => {
+  const browserErrors = await openAnalyzer(page, '0')
 
-  const challenge = page.getByRole('switch', { name: 'Forbidden Runes' })
-  await expect(challenge).toBeVisible()
-  await expect(challenge).not.toBeChecked()
+  const outcome = page.getByLabel('Modeled outcome')
+  await expect(outcome).toBeVisible()
+  await expect(outcome.locator('option')).toHaveCount(26)
+  await expect(outcome).toHaveValue('No challenges; no held trinket')
+  await expect(
+    page.getByRole('switch', { name: 'Forbidden Runes' })
+  ).toHaveCount(0)
   await expect(page.getByRole('switch', { name: 'Identities' })).toHaveCount(0)
   await expect(page.getByRole('switch', { name: 'Floor maps' })).toHaveCount(0)
   await expect(page.getByRole('heading', { name: 'Identities' })).toBeVisible()
-  await expect(
-    page.getByRole('button', { name: `Expand floor ${GENERIC_MAP_FLOOR} map` })
-  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Floor 1' })).toBeVisible()
 
-  await page.getByRole('button', { name: 'Add trinket change' }).click()
-  await expect(
-    page.getByRole('combobox', {
-      name: 'Trinket history entry 1',
-      exact: true,
-    })
-  ).toBeVisible()
-  await expect(
-    page.getByRole('button', { name: 'Add trinket change' })
-  ).toBeEnabled()
-  await challenge.click()
-  await expect(challenge).toBeChecked()
-  await expect(page.locator('html')).toHaveAttribute(
-    'data-test-forbidden-runes',
-    'true'
-  )
-  await expect(page.locator('html')).toHaveAttribute(
-    'data-test-held-trinkets',
-    JSON.stringify([{ trinket: 'mossy_clump', level: 0, start_depth: 4 }])
-  )
-
-  const savedSettings = await page.evaluate((key) => {
-    const value = localStorage.getItem(key)
-    return value ? JSON.parse(value) : null
-  }, APP_STORAGE.runSettings)
-  expect(savedSettings).toEqual([
-    {
-      sessionId: GENERIC_MAP_SEED,
-      profile: {
-        held_trinkets: [{ trinket: 'mossy_clump', level: 0, start_depth: 4 }],
-        meta: 'fresh',
-        forbidden_runes: true,
-      },
-    },
-  ])
-
-  await page.reload()
-  await expect(challenge).toBeChecked()
-  await expect(
-    page.getByRole('combobox', {
-      name: 'Trinket history entry 1',
-      exact: true,
-    })
-  ).toBeVisible()
-  await expect(page.locator('html')).toHaveAttribute(
-    'data-test-forbidden-runes',
-    'true'
-  )
-  await expect(page.locator('html')).toHaveAttribute(
-    'data-test-held-trinkets',
-    JSON.stringify([{ trinket: 'mossy_clump', level: 0, start_depth: 4 }])
-  )
+  await outcome.selectOption('Forbidden Runes; no held trinket')
+  await expect(outcome).toHaveValue('Forbidden Runes; no held trinket')
+  await expect(page.getByRole('heading', { name: 'Floor 1' })).toBeVisible()
 
   expect(browserErrors.console, 'browser console errors').toEqual([])
   expect(browserErrors.page, 'uncaught page errors').toEqual([])

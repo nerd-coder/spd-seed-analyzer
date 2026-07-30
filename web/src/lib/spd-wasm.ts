@@ -161,93 +161,16 @@ export type SeedReport = {
   identities: IdentityMaps
   trinket_selection: TrinketSelectionReport
   floors: FloorReport[]
+  modeled_outcomes?: ModeledOutcome[]
+  analysis_notes?: string[]
   status: string
   message?: string | null
-  map_profile?: MapProfile | null
 }
 
-export type MapProfile = {
-  challenges: Challenge[]
-  trinket_events: TrinketEvent[]
-  artifact_events: ArtifactEvent[]
-  claim_state: ClaimState
-}
-
-export type Challenge =
-  | 'champion_enemies'
-  | 'badder_bosses'
-  | 'on_diet'
-  | 'faith_is_my_armor'
-  | 'pharmacophobia'
-  | 'barren_land'
-  | 'swarm_intelligence'
-  | 'into_darkness'
-  | 'forbidden_runes'
-
-export type TrinketKind =
-  | 'rat_skull'
-  | 'parchment_scrap'
-  | 'petrified_seed'
-  | 'exotic_crystals'
-  | 'mossy_clump'
-  | 'dimensional_sundial'
-  | 'thirteen_leaf_clover'
-  | 'trap_mechanism'
-  | 'mimic_tooth'
-  | 'wondrous_resin'
-  | 'eye_of_newt'
-  | 'salt_cube'
-  | 'vial_of_blood'
-  | 'shard_of_oblivion'
-  | 'chaotic_censer'
-  | 'ferret_tuft'
-  | 'cracked_spyglass'
-
-export type TrinketEvent =
-  | {
-      before_depth: number
-      kind: 'acquired'
-      trinket: TrinketKind
-    }
-  | {
-      before_depth: number
-      kind: 'upgraded'
-    }
-  | {
-      before_depth: number
-      kind: 'transmuted'
-      trinket: TrinketKind
-    }
-
-export type ArtifactKind =
-  | 'alchemists_toolkit'
-  | 'chalice_of_blood'
-  | 'cloak_of_shadows'
-  | 'dried_rose'
-  | 'ethereal_chains'
-  | 'holy_tome'
-  | 'horn_of_plenty'
-  | 'master_thieves_armband'
-  | 'sandals_of_nature'
-  | 'skeleton_key'
-  | 'talisman_of_foresight'
-  | 'timekeepers_hourglass'
-  | 'unstable_spellbook'
-
-export type ArtifactEvent =
-  | {
-      before_depth: number
-      kind: 'obtained'
-      artifact: ArtifactKind
-    }
-  | {
-      before_depth: number
-      kind: 'transmuted'
-      artifact: ArtifactKind
-    }
-
-export type ClaimState = {
-  parchment_scrap_level?: number | null
+export type ModeledOutcome = {
+  condition: string
+  notes?: string[]
+  floors: FloorReport[]
 }
 
 export type TrinketSelectionReport = {
@@ -323,27 +246,9 @@ export async function parseSeed(input: string): Promise<SeedInfo> {
 
 export async function analyzeSeed(
   input: string,
-  floors: number,
-  mapProfile?: MapProfile
+  floors: number
 ): Promise<SeedReport> {
   await ensureWasm()
-  if (mapProfile) {
-    const analyzeWithProfile = (
-      wasmBindings as unknown as {
-        analyze_seed_with_profile?: (
-          input: string,
-          floors: number,
-          profile: MapProfile
-        ) => SeedReport
-      }
-    ).analyze_seed_with_profile
-    if (!analyzeWithProfile) {
-      throw new Error(
-        'Generation profiles are unavailable. Rebuild the WASM package.'
-      )
-    }
-    return analyzeWithProfile(input, floors, mapProfile)
-  }
   return wasmBindings.analyze_seed(input, floors) as SeedReport
 }
 

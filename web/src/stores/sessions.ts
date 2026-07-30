@@ -5,14 +5,8 @@
  * Ephemeral: draft input, session runtime (reports), analyzing, form error.
  */
 
-import type { MapProfile, SeedReport } from '@/lib/spd-wasm'
+import type { SeedReport } from '@/lib/spd-wasm'
 import { analyzeSeedInWorker, type WorkerTask } from '@/lib/spd-worker-client'
-import {
-  defaultMapProfile,
-  pruneSavedMapProfiles,
-  savedMapProfile,
-  saveMapProfile,
-} from './map-profile'
 import { AppStore, derivedStore, persistentStore } from './store-utils'
 
 // —— keys / limits ————————————————————————————————————————————————
@@ -26,7 +20,7 @@ export const MAX_SAVED_SEEDS = 10
 /** Full main-path depth range (SPD clamps to 26). */
 export const ANALYZE_FLOORS = 26
 
-/** Delay between sequential re-analyzes after refresh (ms). */
+/** Delay between sequential re-analyzes during session restore (ms). */
 const REANALYZE_GAP_MS = 350
 
 // —— types ————————————————————————————————————————————————————————
@@ -48,8 +42,6 @@ export type SeedSession = {
   error: string | null
   startedAt: number | null
   finishedAt: number | null
-  refreshingLayout: boolean
-  mapProfile: MapProfile
 }
 
 // —— helpers ——————————————————————————————————————————————————————
@@ -163,31 +155,14 @@ function patchSession(id: string, patch: Partial<SeedSession>) {
   $sessions.set(prev.map((s) => (s.id === id ? { ...s, ...patch } : s)))
 }
 
-async function runAnalyze(
-  id: string,
-  input: string,
-  refreshLayout = false,
-  profile = $sessions.get().find((session) => session.id === id)?.mapProfile ??
-    defaultMapProfile()
-): Promise<boolean> {
-  patchSession(
-    id,
-    refreshLayout
-      ? {
-          refreshingLayout: true,
-          error: null,
-          startedAt: Date.now(),
-          finishedAt: null,
-        }
-      : {
-          status: 'loading',
-          refreshingLayout: false,
-          error: null,
-          startedAt: Date.now(),
-          finishedAt: null,
-        }
-  )
-  const task = analyzeSeedInWorker(input, ANALYZE_FLOORS, profile)
+async function runAnalyze(id: string, input: string): Promise<boolean> {
+  patchSession(id, {
+    status: 'loading',
+    error: null,
+    startedAt: Date.now(),
+    finishedAt: null,
+  })
+  const task = analyzeSeedInWorker(input, ANALYZE_FLOORS)
   analyzeTasks.get(id)?.cancel()
   analyzeTasks.set(id, task)
   try {
@@ -197,7 +172,6 @@ async function runAnalyze(
       status: 'ready',
       report,
       error: null,
-      refreshingLayout: false,
       finishedAt: Date.now(),
     })
     return true
@@ -207,7 +181,6 @@ async function runAnalyze(
       status: 'error',
       report: null,
       error: err instanceof Error ? err.message : String(err),
-      refreshingLayout: false,
       finishedAt: Date.now(),
     })
     return false
@@ -238,7 +211,6 @@ export function closeSeedSession(id: string) {
   if (idx < 0) return
   const next = prev.filter((s) => s.id !== id)
   $sessions.set(next)
-  pruneSavedMapProfiles(next.map((session) => session.id))
   setSavedInputs(next.map((s) => s.input))
   if ($activeSeedId.get() === id) {
     const fallback = next[idx] ?? next[idx - 1] ?? next[0] ?? null
@@ -297,12 +269,9 @@ async function analyzeSeedInputInternal(
     error: null,
     startedAt: Date.now(),
     finishedAt: null,
-    refreshingLayout: false,
-    mapProfile: defaultMapProfile(),
   }
   nextSessions = [...nextSessions, session]
   $sessions.set(nextSessions)
-  pruneSavedMapProfiles(nextSessions.map((item) => item.id))
   setSavedInputs(nextSessions.map((s) => s.input))
   $activeSeedId.set(id)
   if (clearDraftOnCreate) {
@@ -322,28 +291,6 @@ async function analyzeSeedInputInternal(
  */
 export async function analyzeSeedInput(input: string): Promise<void> {
   await analyzeSeedInputInternal(input, false)
-}
-
-export async function changeSeedMapProfile(
-  id: string,
-  profile: MapProfile
-): Promise<void> {
-  const session = $sessions.get().find((item) => item.id === id)
-  if (
-    !session ||
-    JSON.stringify(profile) === JSON.stringify(session.mapProfile)
-  ) {
-    return
-  }
-  patchSession(id, { mapProfile: profile })
-  saveMapProfile(id, profile)
-  if (!session.report || session.status !== 'ready') return
-  $analyzing.set(true)
-  try {
-    await runAnalyze(id, session.input, true, profile)
-  } finally {
-    $analyzing.set(false)
-  }
 }
 
 /**
@@ -377,7 +324,6 @@ export function startSessionRehydrate(): () => void {
 
   if (saved.length === 0) {
     $sessions.set([])
-    pruneSavedMapProfiles([])
     return () => {}
   }
 
@@ -391,11 +337,8 @@ export function startSessionRehydrate(): () => void {
       error: null,
       startedAt: null,
       finishedAt: null,
-      refreshingLayout: false,
-      mapProfile: savedMapProfile(id) ?? defaultMapProfile(),
     }
   })
-  pruneSavedMapProfiles(restored.map((session) => session.id))
 
   closedIds.clear()
   $sessions.set(restored)

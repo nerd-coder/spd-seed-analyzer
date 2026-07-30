@@ -205,7 +205,6 @@ mod tests {
 
     #[test]
     fn sewer_boss_structures_match_normalized_java_oracles() {
-        let profile = crate::MapProfile::default();
         for (seed, json) in [
             (
                 "AAA-AAA-AAA",
@@ -240,7 +239,8 @@ mod tests {
         ] {
             let fixture: Fixture = serde_json::from_str(json).unwrap();
             let oracle = &fixture.floors[0];
-            let report = crate::analyze_seed_with_profile(seed, 5, Some(profile.clone())).unwrap();
+            let report =
+                crate::analyze_seed_with_profile(seed, 5, &crate::MapProfile::default()).unwrap();
             let actual = report.floors[4].map.as_ref().expect("depth-5 layout");
             assert_eq!(
                 (actual.width, actual.height),
@@ -294,7 +294,6 @@ mod tests {
 
     #[test]
     fn caves_boss_structures_match_normalized_java_oracles() {
-        let profile = crate::MapProfile::default();
         for (seed, json) in [
             (
                 "AAA-AAA-AAA",
@@ -323,7 +322,8 @@ mod tests {
         ] {
             let fixture: Fixture = serde_json::from_str(json).unwrap();
             let oracle = &fixture.floors[0];
-            let report = crate::analyze_seed_with_profile(seed, 15, Some(profile.clone())).unwrap();
+            let report =
+                crate::analyze_seed_with_profile(seed, 15, &crate::MapProfile::default()).unwrap();
             let actual = report.floors[14].map.as_ref().expect("depth-15 layout");
             assert_eq!(
                 (actual.width, actual.height),
@@ -372,7 +372,6 @@ mod tests {
 
     #[test]
     fn halls_boss_structures_match_exact_java_oracles() {
-        let profile = crate::MapProfile::default();
         for (seed, json) in [
             (
                 "AAA-AAA-AAA",
@@ -401,7 +400,8 @@ mod tests {
         ] {
             let fixture: Fixture = serde_json::from_str(json).unwrap();
             let oracle = &fixture.floors[0];
-            let report = crate::analyze_seed_with_profile(seed, 25, Some(profile.clone())).unwrap();
+            let report =
+                crate::analyze_seed_with_profile(seed, 25, &crate::MapProfile::default()).unwrap();
             let actual = report.floors[24].map.as_ref().expect("depth-25 layout");
             assert_eq!(
                 (actual.width, actual.height),
@@ -429,7 +429,6 @@ mod tests {
 
     #[test]
     fn halls_boss_custom_layers_match_java_for_preserved_runs() {
-        let profile = crate::MapProfile::default();
         for (seed, json) in [
             (
                 "AAA-AAA-AAA",
@@ -446,7 +445,8 @@ mod tests {
         ] {
             let fixture: Fixture = serde_json::from_str(json).unwrap();
             let oracle = &fixture.floors[0];
-            let report = crate::analyze_seed_with_profile(seed, 25, Some(profile.clone())).unwrap();
+            let report =
+                crate::analyze_seed_with_profile(seed, 25, &crate::MapProfile::default()).unwrap();
             let actual = report.floors[24].map.as_ref().expect("depth-25 layout");
             assert_eq!(
                 actual.custom_tiles,
