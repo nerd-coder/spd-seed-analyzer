@@ -1,6 +1,7 @@
 //! Static seed-only contracts emitted by room painters.
 
-use crate::report::{ItemEntry, ItemPredictionKind, NumericRange};
+use crate::report::{ItemCondition, ItemEntry, ItemPredictionKind, NumericRange};
+use crate::trinkets::Challenge;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RoomPublicFact {
@@ -36,6 +37,7 @@ impl RoomPublicFact {
                 enchantment: None,
                 prediction: ItemPredictionKind::Constrained,
                 spawn_conditions: Vec::new(),
+                conditions: contract_conditions(note),
                 notes: (!note.is_empty())
                     .then(|| note.into())
                     .into_iter()
@@ -88,6 +90,20 @@ impl RoomPublicFact {
     }
 }
 
+fn contract_conditions(note: &str) -> Vec<ItemCondition> {
+    let mut conditions = Vec::new();
+    if note.contains("artifact") {
+        conditions.push(ItemCondition::Artifact { events: Vec::new() });
+    }
+    if note.contains("Barren Land") {
+        conditions.push(ItemCondition::Challenge {
+            challenge: Challenge::BarrenLand,
+            enabled: false,
+        });
+    }
+    conditions
+}
+
 fn larder_entries(depth: i32) -> Vec<ItemEntry> {
     let units = 1 + depth / 5;
     [("Pasty", units / 3), ("ChargrilledMeat", units % 3)]
@@ -107,6 +123,7 @@ fn larder_entries(depth: i32) -> Vec<ItemEntry> {
             enchantment: None,
             prediction: ItemPredictionKind::Exact,
             spawn_conditions: Vec::new(),
+            conditions: Vec::new(),
             notes: vec![format!(
                 "Exact depth-derived larder count ({units} food units)."
             )],

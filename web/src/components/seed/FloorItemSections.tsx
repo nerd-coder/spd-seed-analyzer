@@ -18,13 +18,11 @@ import { formatItemSource, isHighlightSource } from '@/lib/labels'
 import type {
   FloorReport,
   IdentityMaps,
+  ItemCondition,
   ItemDependencyCondition,
   ItemEntry,
   ItemSpawnCondition,
 } from '@/lib/spd-wasm'
-
-const IMP_SHOP_CONDITION =
-  'Appears only if the Ambitious Imp quest was completed before this shop is spawned.'
 
 function itemGroup(
   item: ItemEntry
@@ -43,8 +41,37 @@ function itemGroup(
   return 'general'
 }
 
-function ItemNotes({ notes }: { notes?: string[] }) {
-  if (!notes?.length) return null
+function typedConditionLabel(condition: ItemCondition): string {
+  switch (condition.type) {
+    case 'challenge':
+      return `${humanize(condition.challenge)} ${condition.enabled ? 'enabled' : 'disabled'}`
+    case 'trinket':
+      return condition.events.length
+        ? `Trinket state (${condition.events.length} events)`
+        : 'Trinket state'
+    case 'artifact':
+      return condition.events.length
+        ? `Artifact history (${condition.events.length} events)`
+        : 'Artifact history'
+    case 'quest':
+      return `Quest: ${humanize(condition.quest_id)}${condition.depth ? ` before floor ${condition.depth}` : ''}`
+    case 'choice':
+      return `${humanize(condition.group_id)}: choose ${condition.selected_count} of ${condition.option_count}${condition.favor_requirement ? ` (${condition.favor_requirement} favor)` : ''}`
+    case 'inventory':
+      return `Inventory: ${humanize(condition.requirement_id)}`
+    case 'runtime':
+      return `Runtime state: ${humanize(condition.state_id)}`
+  }
+}
+
+function ItemConditions({
+  conditions,
+  title = 'Conditions',
+}: {
+  conditions?: ItemCondition[]
+  title?: string
+}) {
+  if (!conditions?.length) return null
 
   return (
     <Popover>
@@ -52,18 +79,19 @@ function ItemNotes({ notes }: { notes?: string[] }) {
         <Button
           variant="ghost"
           size="icon-xs"
-          aria-label="Show item notes"
-          className="text-warning"
+          aria-label={`Show ${title.toLowerCase()}`}
         >
           <WarningIcon weight="fill" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start">
         <PopoverHeader>
-          <PopoverTitle>Notes</PopoverTitle>
+          <PopoverTitle>{title}</PopoverTitle>
           <PopoverDescription className="flex flex-col gap-1.5">
-            {notes.map((note) => (
-              <span key={note}>{note}</span>
+            {conditions.map((condition, index) => (
+              <span key={`${condition.type}-${index}`}>
+                {typedConditionLabel(condition)}
+              </span>
             ))}
           </PopoverDescription>
         </PopoverHeader>
@@ -204,12 +232,14 @@ function CandidateOptions({
                   <Badge variant="destructive">cursed</Badge>
                 ) : null}
                 {item.enchantment ? (
-                  <Badge variant="secondary">
-                    {finderItemLabel(item.enchantment)}
-                  </Badge>
+                  <Badge variant="secondary">{item.enchantment.type}</Badge>
                 ) : null}
+                <ItemConditions conditions={item.conditions} />
+                <ItemConditions
+                  conditions={item.enchantment?.conditions}
+                  title="Enchantment conditions"
+                />
                 <SpawnConditions conditions={item.spawn_conditions} />
-                <ItemNotes notes={item.notes} />
               </span>
             </div>
           </div>
@@ -267,12 +297,10 @@ export function FloorItemList({
   items,
   identities,
   depth,
-  showNotes = true,
 }: {
   items: ItemEntry[]
   identities: IdentityMaps
   depth: number
-  showNotes?: boolean
 }) {
   return (
     <ul className="flex flex-col gap-1.5 text-sm">
@@ -334,9 +362,7 @@ export function FloorItemList({
                     <Badge variant="destructive">cursed</Badge>
                   ) : null}
                   {item.enchantment ? (
-                    <Badge variant="secondary">
-                      {finderItemLabel(item.enchantment)}
-                    </Badge>
+                    <Badge variant="secondary">{item.enchantment.type}</Badge>
                   ) : null}
                   {sourceLabel ? (
                     <Badge
@@ -349,7 +375,11 @@ export function FloorItemList({
                     </Badge>
                   ) : null}
                   <SpawnConditions conditions={item.spawn_conditions} />
-                  {showNotes ? <ItemNotes notes={item.notes} /> : null}
+                  <ItemConditions conditions={item.conditions} />
+                  <ItemConditions
+                    conditions={item.enchantment?.conditions}
+                    title="Enchantment conditions"
+                  />
                 </span>
               </>
             )}
@@ -368,9 +398,6 @@ export function FloorItemSections({
   identities: IdentityMaps
 }) {
   const groups = partitionFloorItems(floor.items)
-  const impShop =
-    groups.shop.length > 0 &&
-    groups.shop.every((item) => item.source === 'ImpShopRoom')
   const sections = [
     { key: 'guaranteed', label: 'Guaranteed spawns', items: groups.guaranteed },
     { key: 'loot', label: 'Floor loot', items: groups.loot },
@@ -378,12 +405,7 @@ export function FloorItemSections({
     {
       key: 'shop',
       label: 'Shop',
-      items: impShop
-        ? groups.shop.map((item) => ({
-            ...item,
-            notes: item.notes?.filter((note) => note !== IMP_SHOP_CONDITION),
-          }))
-        : groups.shop,
+      items: groups.shop,
     },
   ].filter(({ items }) => items.length > 0)
 
@@ -398,20 +420,11 @@ export function FloorItemSections({
                 ({items.length})
               </span>
             </p>
-            {key === 'loot' ? (
-              <ItemNotes
-                notes={[...new Set(items.flatMap((item) => item.notes ?? []))]}
-              />
-            ) : null}
-            {key === 'shop' && impShop ? (
-              <ItemNotes notes={[IMP_SHOP_CONDITION]} />
-            ) : null}
           </div>
           <FloorItemList
             items={items}
             identities={identities}
             depth={floor.depth}
-            showNotes={key !== 'loot'}
           />
         </div>
       ))}

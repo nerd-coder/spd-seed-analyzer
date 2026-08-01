@@ -24,8 +24,8 @@ pub use items::IdentityMaps;
 pub use java_random::JavaRandom;
 pub use random::Random;
 pub use report::{
-    AnalyzeError, FloorReport, GuaranteedAppearance, GuaranteedAppearanceKind,
-    ItemDependencyCondition, ItemSpawnCondition, SeedInfo, SeedReport,
+    AnalyzeError, FloorReport, GuaranteedAppearance, GuaranteedAppearanceKind, ItemCondition,
+    ItemDependencyCondition, ItemEnchantment, ItemSpawnCondition, SeedInfo, SeedReport,
 };
 pub use run::{dungeon_from_run, init_run, RunState};
 pub use search::{
@@ -82,10 +82,6 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
         conditional::baseline_condition(),
         &alternatives,
     );
-    report.analysis_notes = vec![
-        "Item spawn conditions cover Forbidden Runes plus supported Mossy Clump, Trap Mechanism, and Mimic Tooth routes from this seed's actual Catalyst and exact completed-floor Transmutation Scroll spawns.".into(),
-        "Rat Skull, Cracked Spyglass, Barren Land, Badder Bosses, external artifact events, combat drops, farming, and other runtime paths are not replayed. Analysis remains partial.".into(),
-    ];
     // Parity probes retain the latest replay trace for oracle inspection. Keep
     // that diagnostic state on the conservative finder projection rather than
     // whichever conditional route happened to be discovered last.
@@ -155,11 +151,7 @@ fn analyze_seed_internal(
         identities,
         trinket_selection,
         floors: floor_reports,
-        analysis_notes: Vec::new(),
         status: "partial".to_string(),
-        message: Some(
-            "Analysis accuracy is partial; results may differ from the pinned game.".to_string(),
-        ),
     })
 }
 

@@ -8,10 +8,7 @@ fn analyze_seed_smoke() {
         .iter()
         .flat_map(|floor| &floor.items)
         .any(|item| !item.spawn_conditions.is_empty()));
-    assert!(r
-        .analysis_notes
-        .iter()
-        .any(|note| note.contains("actual Catalyst")));
+    assert_eq!(r.status, "partial");
     eprintln!("status={} floors={}", r.status, r.floors.len());
     for f in &r.floors {
         eprintln!(
@@ -129,9 +126,20 @@ fn automatic_item_conditions_cover_supported_run_combinations() {
             ..
         }
     )));
-    assert!(dependencies
+    assert!(report
+        .floors
         .iter()
-        .any(|condition| matches!(condition, ItemDependencyCondition::Trinket { .. })));
+        .flat_map(|floor| &floor.items)
+        .flat_map(|item| item.conditions.iter())
+        .chain(report.floors.iter().flat_map(|floor| {
+            floor.items.iter().flat_map(|item| {
+                item.enchantment
+                    .as_ref()
+                    .into_iter()
+                    .flat_map(|e| &e.conditions)
+            })
+        }))
+        .any(|condition| matches!(condition, report::ItemCondition::Trinket { .. })));
     assert!(report
         .floors
         .iter()
@@ -156,6 +164,60 @@ fn public_contract_serializes_conditions_on_items_only() {
         .iter()
         .flat_map(|floor| floor["items"].as_array().unwrap())
         .any(|item| item.get("spawn_conditions").is_some()));
+    assert!(value.get("analysis_notes").is_none());
+    assert!(value.get("message").is_none());
+    assert!(value["identities"]["potions"][0].get("name").is_none());
+    for item in value["floors"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .flat_map(|floor| floor["items"].as_array().unwrap())
+    {
+        assert!(item.get("notes").is_none());
+        if let Some(enchantment) = item.get("enchantment") {
+            assert!(enchantment.get("type").is_some());
+            assert!(enchantment.get("conditions").is_some());
+            assert!(enchantment.is_object());
+        }
+    }
+}
+
+#[test]
+fn no_op_spawn_dependencies_are_not_serialized() {
+    let item = crate::report::ItemEntry {
+        name: "test".into(),
+        quantity: 1,
+        class_name: None,
+        candidate_classes: Vec::new(),
+        category: "other".into(),
+        tier: None,
+        tier_range: None,
+        level: None,
+        level_range: None,
+        cursed: None,
+        enchantment: None,
+        prediction: report::ItemPredictionKind::Constrained,
+        spawn_conditions: vec![report::ItemSpawnCondition {
+            all_of: vec![report::ItemDependencyCondition::Trinket { events: Vec::new() }],
+        }],
+        conditions: Vec::new(),
+        notes: Vec::new(),
+        source: None,
+    };
+    let value = serde_json::to_value(item).expect("serialize item");
+    assert!(value.get("spawn_conditions").is_none());
+}
+
+#[test]
+fn enchantments_serialize_type_and_conditions() {
+    let enchantment = report::ItemEnchantment {
+        enchantment_type: "Corrupting".into(),
+        conditions: Vec::new(),
+    };
+    let value = serde_json::to_value(enchantment).expect("serialize enchantment");
+    assert_eq!(value["type"], "Corrupting");
+    assert_eq!(value["conditions"], serde_json::json!([]));
+    assert_eq!(value.as_object().unwrap().len(), 2);
 }
 
 #[test]

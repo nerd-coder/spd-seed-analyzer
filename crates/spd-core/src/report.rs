@@ -259,15 +259,22 @@ pub struct ItemEntry {
     pub cursed: Option<bool>,
     /// Seed-determined enchantment or glyph, whether unconditional or conditional.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub enchantment: Option<String>,
+    pub enchantment: Option<ItemEnchantment>,
     pub prediction: ItemPredictionKind,
     /// Alternative player-state profiles under which this item may spawn.
     /// Any clause is sufficient; an empty list means the modeled dependency
     /// axes do not change this item.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        default,
+        skip_serializing_if = "spawn_conditions_empty_after_normalization",
+        serialize_with = "serialize_spawn_conditions"
+    )]
     pub spawn_conditions: Vec<ItemSpawnCondition>,
-    /// Non-spawn qualifications such as mutually exclusive reward choices.
+    /// Gate-only conditions that affect this item's presence or retained effect.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub conditions: Vec<ItemCondition>,
+    /// Legacy internal diagnostics retained for parity tests; never serialized.
+    #[serde(skip)]
     pub notes: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
@@ -300,6 +307,47 @@ pub struct ItemSpawnCondition {
     pub all_of: Vec<ItemDependencyCondition>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ItemEnchantment {
+    #[serde(rename = "type")]
+    pub enchantment_type: String,
+    pub conditions: Vec<ItemCondition>,
+}
+
+/// Typed gate conditions for item presence or retained effects.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum ItemCondition {
+    Challenge {
+        challenge: Challenge,
+        enabled: bool,
+    },
+    Trinket {
+        events: Vec<TrinketEvent>,
+    },
+    Artifact {
+        events: Vec<ArtifactEvent>,
+    },
+    Quest {
+        quest_id: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        depth: Option<u32>,
+    },
+    Choice {
+        group_id: String,
+        option_count: u32,
+        selected_count: u32,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        favor_requirement: Option<u32>,
+    },
+    Inventory {
+        requirement_id: String,
+    },
+    Runtime {
+        state_id: String,
+    },
+}
+
 /// A condition axis that is allowed to affect public item presence.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(tag = "type", rename_all = "snake_case")]
@@ -320,6 +368,38 @@ pub enum ItemDependencyCondition {
     },
 }
 
+fn spawn_conditions_empty_after_normalization(conditions: &[ItemSpawnCondition]) -> bool {
+    conditions.iter().all(|clause| {
+        clause.all_of.iter().all(|dependency| {
+            matches!(dependency, ItemDependencyCondition::Trinket { events } if events.is_empty())
+        })
+    })
+}
+
+fn serialize_spawn_conditions<S>(
+    conditions: &[ItemSpawnCondition],
+    serializer: S,
+) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+{
+    let normalized: Vec<ItemSpawnCondition> = conditions
+        .iter()
+        .filter_map(|clause| {
+            let all_of = clause
+                .all_of
+                .iter()
+                .filter(|dependency| {
+                    !matches!(dependency, ItemDependencyCondition::Trinket { events } if events.is_empty())
+                })
+                .cloned()
+                .collect::<Vec<_>>();
+            (!all_of.is_empty()).then_some(ItemSpawnCondition { all_of })
+        })
+        .collect();
+    normalized.serialize(serializer)
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SeedReport {
     pub seed: SeedInfo,
@@ -329,13 +409,8 @@ pub struct SeedReport {
     pub identities: IdentityMaps,
     pub trinket_selection: TrinketSelectionReport,
     pub floors: Vec<FloorReport>,
-    /// Scope and caveats for automatic item-condition analysis.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub analysis_notes: Vec<String>,
     /// `"partial"` while only forced drops exist; `"ok"` when full levelgen lands.
     pub status: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub message: Option<String>,
 }
 
 #[derive(Debug, thiserror::Error)]

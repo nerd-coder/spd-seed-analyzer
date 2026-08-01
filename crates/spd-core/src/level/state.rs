@@ -2,19 +2,21 @@
 
 use crate::items::model::{GeneratedItem, ItemProvenance, QuestRewardRole, ShopStockRole};
 use crate::report::{
-    FloorMap, FloorReport, ItemDependencyCondition, ItemEntry, ItemPredictionKind,
-    ItemSpawnCondition, NumericRange,
+    FloorMap, FloorReport, ItemCondition, ItemDependencyCondition, ItemEnchantment, ItemEntry,
+    ItemPredictionKind, ItemSpawnCondition, NumericRange,
 };
 use crate::rooms::init_rooms::BuilderKind;
-use crate::trinkets::{
-    ArtifactEvent, ArtifactEventAction, ArtifactKind, TrinketEvent, TrinketEventAction, TrinketKind,
-};
+use crate::trinkets::{ArtifactEvent, ArtifactEventAction, ArtifactKind};
 
 use super::Feeling;
 
 #[path = "state/forced_queue.rs"]
 mod forced_queue;
 use forced_queue::public_entries as forced_public_entries;
+
+#[path = "state/conditions.rs"]
+mod conditions;
+use conditions::{item_conditions, item_conditions_typed, legacy_item_notes, parchment_condition};
 
 #[path = "state_map.rs"]
 mod state_map;
@@ -65,7 +67,7 @@ fn merge_identical_items(items: Vec<ItemEntry>) -> Vec<ItemEntry> {
                     && existing.enchantment == item.enchantment
                     && existing.prediction == item.prediction
                     && existing.spawn_conditions == item.spawn_conditions
-                    && existing.notes == item.notes
+                    && existing.conditions == item.conditions
                     && existing.source == item.source
             })
         });
@@ -411,54 +413,25 @@ impl LevelState {
                 },
                 enchantment: (!blacksmith_smith_option)
                     .then(|| item.potential_enchantment.clone())
-                    .flatten(),
-                prediction,
-                spawn_conditions: item_conditions(
-                    self.depth as u32,
-                    artifact_conditional,
-                    ghost_enchantment_condition.flatten(),
-                ),
-                notes: ghost_enchantment_condition
                     .flatten()
-                    .map(|level| {
-                        vec![format!(
-                            "{} — kept only with Parchment Scrap +{} or better",
-                            item.potential_enchantment.as_deref().unwrap_or("Enchantment"),
-                            level
-                        )]
-                    })
-                    .unwrap_or_else(|| {
-                        let mut notes = Vec::new();
-                        if quest_role == Some(QuestRewardRole::WandmakerWand) {
-                            notes.push(
-                                "One of two distinct wand options; completing the quest lets you choose one."
-                                .into(),
-                            );
-                        }
-                        if blacksmith_smith_option {
-                            notes.push(
-                                "One of four mutually exclusive options, available after spending 2,000 favor on Smith."
-                                    .into(),
-                            );
-                            notes.push(
-                                "All four options share one +0…+3 level roll. A weapon enchantment and armor glyph are retained together; Parchment Scrap +1 guarantees both when held before this floor is generated."
-                                .into(),
-                            );
-                        }
-                        if quest_role == Some(QuestRewardRole::ImpRing) {
-                            notes.push(
-                                "Conditional on accepting and completing the quest: 5 Monk tokens or 4 Golem tokens."
-                                    .into(),
-                            );
-                        }
-                        if imp_shop_conditional {
-                            notes.push(
-                                "Appears only if the Ambitious Imp quest was completed before this shop is spawned."
-                                    .into(),
-                            );
-                        }
-                        notes
+                    .map(|enchantment_type| ItemEnchantment {
+                        enchantment_type,
+                        conditions: ghost_enchantment_condition
+                            .flatten()
+                            .map(|level| parchment_condition(self.depth as u32, level))
+                            .into_iter()
+                            .collect(),
                     }),
+                prediction,
+                spawn_conditions: item_conditions(artifact_conditional),
+                conditions: item_conditions_typed(quest_role, imp_shop_conditional),
+                notes: legacy_item_notes(
+                    quest_role,
+                    blacksmith_smith_option,
+                    imp_shop_conditional,
+                    ghost_enchantment_condition.flatten(),
+                    item.potential_enchantment.as_deref(),
+                ),
                 source: item.source.clone(),
             };
             if shop_role.is_some() {
@@ -473,10 +446,6 @@ impl LevelState {
             } else {
                 "ShopRoom"
             };
-            let shop_spawn_condition = (self.depth == 20).then(|| {
-                "Appears only if the Ambitious Imp quest was completed before this shop is spawned."
-                    .into()
-            });
             shop_items.push(ItemEntry {
                 name: "inventory-dependent bag stock".into(),
                 quantity: 1,
@@ -491,12 +460,19 @@ impl LevelState {
                 enchantment: None,
                 prediction: ItemPredictionKind::Constrained,
                 spawn_conditions: Vec::new(),
-                notes: std::iter::once(
-                    "A bag may be offered; its presence and identity depend on inventory and prior limited drops."
-                        .into(),
-                )
-                .chain(shop_spawn_condition.clone())
-                .collect(),
+                conditions: vec![
+                    ItemCondition::Inventory {
+                        requirement_id: "bag_stock".into(),
+                    },
+                    ItemCondition::Runtime {
+                        state_id: "limited_drop_history".into(),
+                    },
+                ],
+                notes: {
+                    let mut notes = vec!["A bag may be offered; its presence and identity depend on inventory and prior limited drops.".into()];
+                    if self.depth == 20 { notes.push("Appears only if the Ambitious Imp quest was completed before this shop is spawned.".into()); }
+                    notes
+                },
                 source: Some(shop_source.into()),
             });
             shop_items.push(ItemEntry {
@@ -522,7 +498,12 @@ impl LevelState {
                         }],
                     }],
                 }],
-                notes: shop_spawn_condition.into_iter().collect(),
+                conditions: if self.depth == 20 {
+                    vec![ItemCondition::Quest { quest_id: "ambitious_imp".into(), depth: Some(self.depth as u32) }]
+                } else {
+                    Vec::new()
+                },
+                notes: if self.depth == 20 { vec!["Appears only if the Ambitious Imp quest was completed before this shop is spawned.".into()] } else { Vec::new() },
                 source: Some(shop_source.into()),
             });
         }
@@ -585,34 +566,6 @@ impl LevelState {
             assumed_map,
         }
     }
-}
-
-fn item_conditions(
-    depth: u32,
-    artifact_conditional: bool,
-    parchment_level: Option<i8>,
-) -> Vec<ItemSpawnCondition> {
-    let mut all_of = Vec::new();
-    if artifact_conditional {
-        all_of.push(ItemDependencyCondition::Artifact { events: Vec::new() });
-    }
-    if let Some(level) = parchment_level {
-        let mut events = vec![TrinketEvent {
-            before_depth: depth,
-            action: TrinketEventAction::Acquired {
-                trinket: TrinketKind::ParchmentScrap,
-            },
-        }];
-        events.extend((0..level).map(|_| TrinketEvent {
-            before_depth: depth,
-            action: TrinketEventAction::Upgraded,
-        }));
-        all_of.push(ItemDependencyCondition::Trinket { events });
-    }
-    (!all_of.is_empty())
-        .then_some(ItemSpawnCondition { all_of })
-        .into_iter()
-        .collect()
 }
 
 fn is_blacklisted(item: &GeneratedItem) -> bool {

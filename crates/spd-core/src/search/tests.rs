@@ -64,6 +64,7 @@ fn exact_floor(depth: u32, classes: &[(&str, i32)]) -> crate::FloorReport {
                 enchantment: None,
                 prediction: ItemPredictionKind::Exact,
                 spawn_conditions: Vec::new(),
+                conditions: Vec::new(),
                 notes: vec![],
                 source: Some("test".into()),
             })
@@ -190,6 +191,7 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
             enchantment: None,
             prediction: crate::report::ItemPredictionKind::Constrained,
             spawn_conditions: Vec::new(),
+            conditions: Vec::new(),
             notes: vec!["Parchment Scrap may alter enchantment chance.".into()],
             source: Some("SacrificeRoom".into()),
         }],
@@ -223,6 +225,7 @@ fn category_only_imp_ring_never_matches_an_exact_ring_search() {
         enchantment: None,
         prediction: ItemPredictionKind::Constrained,
         spawn_conditions: Vec::new(),
+        conditions: Vec::new(),
         notes: vec!["Quest completion is required.".into()],
         source: Some("Imp.Quest".into()),
     });
@@ -247,6 +250,7 @@ fn conditional_floor_loot_candidates_keep_levels_for_search() {
         enchantment: None,
         prediction: ItemPredictionKind::Constrained,
         spawn_conditions: Vec::new(),
+        conditions: Vec::new(),
         notes: vec!["Assumes no external artifact acquisition".into()],
         source: Some("heap".into()),
     });
@@ -397,6 +401,7 @@ fn constrained_shop_stock_never_matches_its_internal_concrete_class() {
             enchantment: None,
             prediction: crate::report::ItemPredictionKind::Constrained,
             spawn_conditions: Vec::new(),
+            conditions: Vec::new(),
             notes: vec![],
             source: Some("ShopRoom".into()),
         }],

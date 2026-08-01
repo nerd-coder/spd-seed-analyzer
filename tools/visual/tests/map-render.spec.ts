@@ -94,7 +94,7 @@ async function installSyntheticMapReport(page: Page) {
       category: 'scroll',
       level: 2,
       cursed: true,
-      enchantment: 'Blazing',
+      enchantment: { type: 'Blazing', conditions: [] },
       prediction: 'exact',
       spawn_conditions: [
         {

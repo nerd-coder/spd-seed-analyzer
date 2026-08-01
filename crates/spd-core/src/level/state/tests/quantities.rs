@@ -16,6 +16,7 @@ fn exact_item(name: &str, class_name: &str, quantity: i32, level: i32) -> ItemEn
         enchantment: None,
         prediction: ItemPredictionKind::Exact,
         spawn_conditions: Vec::new(),
+        conditions: Vec::new(),
         notes: Vec::new(),
         source: Some("ShopRoom".into()),
     }

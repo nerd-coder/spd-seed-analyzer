@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::catalog::{
-    display_name, POTION_COLORS, POTION_ITEMS, RING_GEMS, RING_ITEMS, SCROLL_ITEMS, SCROLL_RUNES,
+    POTION_COLORS, POTION_ITEMS, RING_GEMS, RING_ITEMS, SCROLL_ITEMS, SCROLL_RUNES,
 };
 use super::status_handler::assign_labels;
 
@@ -11,8 +11,6 @@ use super::status_handler::assign_labels;
 pub struct IdentityEntry {
     /// Java simple class name.
     pub item: String,
-    /// Human-readable English title.
-    pub name: String,
     /// Appearance label (color / rune / gem).
     pub appearance: String,
 }
@@ -27,11 +25,7 @@ pub struct IdentityMaps {
 fn to_entries(pairs: Vec<(String, String)>) -> Vec<IdentityEntry> {
     pairs
         .into_iter()
-        .map(|(item, appearance)| IdentityEntry {
-            name: display_name(&item),
-            item,
-            appearance,
-        })
+        .map(|(item, appearance)| IdentityEntry { item, appearance })
         .collect()
 }
 

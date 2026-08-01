@@ -9,7 +9,6 @@ export type SeedInfo = {
 
 export type IdentityEntry = {
   item: string
-  name: string
   appearance: string
 }
 
@@ -34,13 +33,12 @@ export type ItemEntry = {
   level_range?: { min: number; max: number } | null
   /** Present when the item is cursed (chip in item list). */
   cursed?: boolean | null
-  /** Seed-determined enchantment or glyph, possibly subject to a condition. */
-  enchantment?: string | null
+  /** Seed-determined enchantment or glyph, with any retention conditions. */
+  enchantment?: ItemEnchantment | null
   prediction: 'exact' | 'constrained'
   /** Alternative dependency clauses; any one clause may produce this variant. */
   spawn_conditions?: ItemSpawnCondition[]
-  /** Informational qualifications that do not control item generation. */
-  notes?: string[]
+  conditions?: ItemCondition[]
   source?: string | null
 }
 
@@ -74,6 +72,26 @@ export type ItemDependencyCondition =
 
 export type ItemSpawnCondition = {
   all_of?: ItemDependencyCondition[]
+}
+
+export type ItemCondition =
+  | { type: 'challenge'; challenge: Challenge; enabled: boolean }
+  | { type: 'trinket'; events: TrinketEvent[] }
+  | { type: 'artifact'; events: ArtifactEvent[] }
+  | { type: 'quest'; quest_id: string; depth?: number }
+  | {
+      type: 'choice'
+      group_id: string
+      option_count: number
+      selected_count: number
+      favor_requirement?: number
+    }
+  | { type: 'inventory'; requirement_id: string }
+  | { type: 'runtime'; state_id: string }
+
+export type ItemEnchantment = {
+  type: string
+  conditions: ItemCondition[]
 }
 
 export type FloorMap = {
@@ -196,9 +214,7 @@ export type SeedReport = {
   identities: IdentityMaps
   trinket_selection: TrinketSelectionReport
   floors: FloorReport[]
-  analysis_notes?: string[]
   status: string
-  message?: string | null
 }
 
 export type TrinketSelectionReport = {

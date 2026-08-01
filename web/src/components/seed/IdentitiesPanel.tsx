@@ -1,4 +1,5 @@
 import { useStore } from '@tanstack/react-store'
+import { finderItemLabel } from '@/components/finder/finder-items'
 import { ItemIcon } from '@/components/ItemIcon'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { appearanceDescription, shortIdentityName } from '@/lib/identity'
@@ -15,7 +16,8 @@ function IdentityGrid({
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-2">
       {entries.map((e) => {
-        const shortName = shortIdentityName(e.name, category)
+        const name = finderItemLabel(e.item)
+        const shortName = shortIdentityName(name, category)
         return (
           <div key={e.item} className="flex min-w-0 items-center gap-2">
             <ItemIcon
@@ -23,11 +25,11 @@ function IdentityGrid({
               category={category}
               appearance={e.appearance}
               size={24}
-              title={e.name}
+              title={name}
               className="shrink-0"
             />
             <div className="min-w-0 leading-tight">
-              <div className="truncate text-sm font-medium" title={e.name}>
+              <div className="truncate text-sm font-medium" title={name}>
                 {shortName}
               </div>
               <div className="text-muted-foreground truncate text-xs capitalize">

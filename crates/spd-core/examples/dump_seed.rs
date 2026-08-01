@@ -9,11 +9,7 @@ fn main() {
         .and_then(|s| s.parse().ok())
         .unwrap_or(6);
     let r = analyze_seed(&seed, floors).expect("analyze");
-    println!(
-        "status={} msg={}",
-        r.status,
-        r.message.as_deref().unwrap_or("")
-    );
+    println!("status={}", r.status);
     for f in r.floors {
         println!(
             "--- floor {} feeling={:?} builder={:?}",

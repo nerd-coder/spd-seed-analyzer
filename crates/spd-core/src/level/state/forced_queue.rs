@@ -24,6 +24,7 @@ fn constrained_spawn_entry(name: &str, class_name: &str, category: &str) -> Item
                 enabled: false,
             }],
         }],
+        conditions: Vec::new(),
         notes: Vec::new(),
         source: Some("guaranteed floor spawn".into()),
     }
@@ -44,6 +45,7 @@ fn guaranteed_spawn_entry(name: &str, class_name: &str, category: &str) -> ItemE
         enchantment: None,
         prediction: ItemPredictionKind::Exact,
         spawn_conditions: Vec::new(),
+        conditions: Vec::new(),
         notes: Vec::new(),
         source: Some("guaranteed floor spawn".into()),
     }
@@ -89,6 +91,7 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
             enchantment: None,
             prediction: ItemPredictionKind::Constrained,
             spawn_conditions: Vec::new(),
+            conditions: Vec::new(),
             notes: Vec::new(),
             source: Some("guaranteed floor spawn".into()),
         }]
@@ -123,6 +126,7 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
             enchantment: None,
             prediction: ItemPredictionKind::Constrained,
             spawn_conditions: Vec::new(),
+            conditions: Vec::new(),
             notes: Vec::new(),
             source: Some("guaranteed floor spawn".into()),
         });

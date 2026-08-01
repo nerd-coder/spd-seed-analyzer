@@ -28,9 +28,16 @@ fn merge_contexts(contexts: &[(&ItemSpawnCondition, &Vec<ItemEntry>)]) -> Vec<It
     let mut merged = Vec::<(ItemEntry, Vec<usize>)>::new();
     for (context_index, (_, items)) in contexts.iter().enumerate() {
         for item in *items {
-            if let Some((_, present_in)) = merged.iter_mut().find(|(candidate, present_in)| {
-                items_equivalent(candidate, item) && !present_in.contains(&context_index)
-            }) {
+            if let Some((candidate, present_in)) =
+                merged.iter_mut().find(|(candidate, present_in)| {
+                    items_equivalent(candidate, item) && !present_in.contains(&context_index)
+                })
+            {
+                for condition in &item.conditions {
+                    if !candidate.conditions.contains(condition) {
+                        candidate.conditions.push(condition.clone());
+                    }
+                }
                 present_in.push(context_index);
             } else {
                 merged.push((item.clone(), vec![context_index]));
@@ -169,5 +176,9 @@ fn items_equivalent(left: &ItemEntry, right: &ItemEntry) -> bool {
     right.source = None;
     left.spawn_conditions.clear();
     right.spawn_conditions.clear();
+    left.conditions.clear();
+    right.conditions.clear();
+    left.notes.clear();
+    right.notes.clear();
     left == right
 }
