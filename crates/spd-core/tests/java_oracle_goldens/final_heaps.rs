@@ -248,8 +248,11 @@ fn assert_aaa_aad_public_report_facts(
         "Sacrifice contract is public only when room selection is seed-safe in {context}"
     );
     assert!(
-        floor.items.iter().all(|item| item.category != "seed"),
-        "public report omits the runtime-history-sensitive random seed heap in {context}"
+        floor.items.iter().any(|item| {
+            item.category == "seed"
+                && item.prediction == spd_core::report::ItemPredictionKind::Exact
+        }),
+        "fresh-run floor-one baseline publishes its exact seed heap in {context}"
     );
 }
 
@@ -544,19 +547,11 @@ fn depth_one_final_heaps_match_report_projection() {
             "depth-one final heap cells in {context}"
         );
         if let Some(public_map) = &report.floors[0].map {
-            let mut actual_mobs: Vec<_> = public_map
-                .markers
-                .iter()
-                .filter(|marker| marker.kind == spd_core::report::MapMarkerKind::Mob)
-                .map(|marker| OracleMob {
-                    cell: marker.cell,
-                    class_name: marker.label.clone(),
-                })
-                .collect();
-            actual_mobs.sort();
-            assert_eq!(
-                actual_mobs, expected_floor.final_mobs,
-                "depth-one final mobs in {context}"
+            assert!(
+                public_map.markers.is_empty()
+                    && public_map.heaps.is_empty()
+                    && public_map.mobs.is_empty(),
+                "public depth-one map must remain painter-only in {context}"
             );
         }
         assert_aaa_aad_public_report_facts(&fixture, &report.floors[0], &context);

@@ -203,7 +203,11 @@ fn artifact_shifted_floor_loot_keeps_searchable_properties_and_one_candidate() {
     assert_eq!(loot.candidate_classes, ["PotionOfHealing"]);
     assert_eq!(loot.level, Some(2));
     assert_eq!(loot.cursed, Some(true));
-    assert_eq!(loot.conditional_notes.len(), 1);
+    assert!(loot.notes.is_empty());
+    assert!(matches!(
+        loot.spawn_conditions[0].all_of[0],
+        ItemDependencyCondition::Artifact { ref events } if events.is_empty()
+    ));
 }
 
 fn empty_level_state(depth: i32) -> LevelState {

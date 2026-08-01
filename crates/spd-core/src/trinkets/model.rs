@@ -110,6 +110,12 @@ impl TrinketKind {
             Self::CrackedSpyglass => "CrackedSpyglass",
         }
     }
+
+    pub(crate) fn from_class_name(class_name: &str) -> Option<Self> {
+        Self::ALL
+            .into_iter()
+            .find(|trinket| trinket.class_name() == class_name)
+    }
 }
 
 /// Artifacts that can be present in the pinned generator's unique artifact deck.

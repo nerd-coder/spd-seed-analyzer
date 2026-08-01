@@ -37,8 +37,43 @@ export type ItemEntry = {
   /** Seed-determined enchantment or glyph, possibly subject to a condition. */
   enchantment?: string | null
   prediction: 'exact' | 'constrained'
-  conditional_notes?: string[]
+  /** Alternative dependency clauses; any one clause may produce this variant. */
+  spawn_conditions?: ItemSpawnCondition[]
+  /** Informational qualifications that do not control item generation. */
+  notes?: string[]
   source?: string | null
+}
+
+export type Challenge =
+  | 'champion_enemies'
+  | 'badder_bosses'
+  | 'on_diet'
+  | 'faith_is_my_armor'
+  | 'pharmacophobia'
+  | 'barren_land'
+  | 'swarm_intelligence'
+  | 'into_darkness'
+  | 'forbidden_runes'
+
+export type TrinketEvent = {
+  before_depth: number
+  kind: 'acquired' | 'upgraded' | 'transmuted'
+  trinket?: string
+}
+
+export type ArtifactEvent = {
+  before_depth: number
+  kind: 'obtained' | 'transmuted'
+  artifact: string
+}
+
+export type ItemDependencyCondition =
+  | { type: 'challenge'; challenge: Challenge; enabled: boolean }
+  | { type: 'trinket'; events?: TrinketEvent[] }
+  | { type: 'artifact'; events?: ArtifactEvent[] }
+
+export type ItemSpawnCondition = {
+  all_of?: ItemDependencyCondition[]
 }
 
 export type FloorMap = {
@@ -161,16 +196,9 @@ export type SeedReport = {
   identities: IdentityMaps
   trinket_selection: TrinketSelectionReport
   floors: FloorReport[]
-  modeled_outcomes?: ModeledOutcome[]
   analysis_notes?: string[]
   status: string
   message?: string | null
-}
-
-export type ModeledOutcome = {
-  condition: string
-  notes?: string[]
-  floors: FloorReport[]
 }
 
 export type TrinketSelectionReport = {

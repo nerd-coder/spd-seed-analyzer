@@ -1,5 +1,5 @@
 import { WarningIcon } from '@phosphor-icons/react'
-import { CircleQuestionMark } from 'lucide-react'
+import { CircleQuestionMark, ListFilterIcon } from 'lucide-react'
 import { finderItemLabel } from '@/components/finder/finder-items'
 import { ItemIcon } from '@/components/ItemIcon'
 import { ItemName } from '@/components/ItemName'
@@ -15,7 +15,13 @@ import {
 } from '@/components/ui/popover'
 import { itemAppearance } from '@/lib/identity'
 import { formatItemSource, isHighlightSource } from '@/lib/labels'
-import type { FloorReport, IdentityMaps, ItemEntry } from '@/lib/spd-wasm'
+import type {
+  FloorReport,
+  IdentityMaps,
+  ItemDependencyCondition,
+  ItemEntry,
+  ItemSpawnCondition,
+} from '@/lib/spd-wasm'
 
 const IMP_SHOP_CONDITION =
   'Appears only if the Ambitious Imp quest was completed before this shop is spawned.'
@@ -37,7 +43,7 @@ function itemGroup(
   return 'general'
 }
 
-function ConditionalNotes({ notes }: { notes?: string[] }) {
+function ItemNotes({ notes }: { notes?: string[] }) {
   if (!notes?.length) return null
 
   return (
@@ -46,7 +52,7 @@ function ConditionalNotes({ notes }: { notes?: string[] }) {
         <Button
           variant="ghost"
           size="icon-xs"
-          aria-label="Show conditions"
+          aria-label="Show item notes"
           className="text-warning"
         >
           <WarningIcon weight="fill" />
@@ -54,13 +60,106 @@ function ConditionalNotes({ notes }: { notes?: string[] }) {
       </PopoverTrigger>
       <PopoverContent align="start">
         <PopoverHeader>
-          <PopoverTitle>Conditions</PopoverTitle>
+          <PopoverTitle>Notes</PopoverTitle>
           <PopoverDescription className="flex flex-col gap-1.5">
             {notes.map((note) => (
               <span key={note}>{note}</span>
             ))}
           </PopoverDescription>
         </PopoverHeader>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+function humanize(value: string): string {
+  return value
+    .split('_')
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+}
+
+function conditionLabel(condition: ItemDependencyCondition): string {
+  if (condition.type === 'challenge') {
+    return `${humanize(condition.challenge)} ${condition.enabled ? 'enabled' : 'disabled'}`
+  }
+  if (condition.type === 'artifact') {
+    const events = condition.events ?? []
+    if (events.length === 0) return 'No external artifact history'
+    return events
+      .map(
+        (event) =>
+          `${humanize(event.artifact)} ${event.kind} before floor ${event.before_depth}`
+      )
+      .join('; ')
+  }
+  const events = condition.events ?? []
+  if (events.length === 0) return 'No generation-affecting trinket'
+
+  let level = 0
+  return events
+    .map((event) => {
+      if (event.kind === 'upgraded') {
+        level += 1
+        return `upgrade to +${level} before floor ${event.before_depth}`
+      }
+      level = 0
+      return `${event.kind === 'acquired' ? 'get' : 'transmute to'} ${humanize(
+        event.trinket ?? 'trinket'
+      )} before floor ${event.before_depth}`
+    })
+    .join('; ')
+}
+
+function shortConditionLabel(conditions: ItemSpawnCondition[]): string {
+  const conditionTypes = [
+    ...new Set(
+      conditions.flatMap((condition) =>
+        (condition.all_of ?? []).map((dependency) => dependency.type)
+      )
+    ),
+  ]
+  if (conditions.length !== 1) {
+    return `${conditionTypes.map(humanize).join(' + ')} conditions`
+  }
+  const dependencies = conditions[0].all_of ?? []
+  if (dependencies.length !== 1) {
+    return `${conditionTypes.map(humanize).join(' + ')} requirements`
+  }
+  return conditionLabel(dependencies[0])
+}
+
+function SpawnConditions({
+  conditions,
+}: {
+  conditions?: ItemSpawnCondition[]
+}) {
+  if (!conditions?.length) return null
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="xs">
+          <ListFilterIcon data-icon="inline-start" />
+          {shortConditionLabel(conditions)}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-80">
+        <PopoverHeader>
+          <PopoverTitle>Spawn conditions</PopoverTitle>
+          <PopoverDescription>
+            Any one of these modeled routes may produce this item and its shown
+            properties.
+          </PopoverDescription>
+        </PopoverHeader>
+        <ol className="mt-3 flex list-decimal flex-col gap-2 pl-4 text-sm">
+          {conditions.map((condition, index) => (
+            <li key={`${index}-${JSON.stringify(condition)}`}>
+              {(condition.all_of ?? []).map(conditionLabel).join(' · ')}
+            </li>
+          ))}
+        </ol>
       </PopoverContent>
     </Popover>
   )
@@ -109,7 +208,8 @@ function CandidateOptions({
                     {finderItemLabel(item.enchantment)}
                   </Badge>
                 ) : null}
-                <ConditionalNotes notes={item.conditional_notes} />
+                <SpawnConditions conditions={item.spawn_conditions} />
+                <ItemNotes notes={item.notes} />
               </span>
             </div>
           </div>
@@ -167,12 +267,12 @@ export function FloorItemList({
   items,
   identities,
   depth,
-  showConditionalNotes = true,
+  showNotes = true,
 }: {
   items: ItemEntry[]
   identities: IdentityMaps
   depth: number
-  showConditionalNotes?: boolean
+  showNotes?: boolean
 }) {
   return (
     <ul className="flex flex-col gap-1.5 text-sm">
@@ -248,9 +348,8 @@ export function FloorItemList({
                       {sourceLabel}
                     </Badge>
                   ) : null}
-                  {showConditionalNotes ? (
-                    <ConditionalNotes notes={item.conditional_notes} />
-                  ) : null}
+                  <SpawnConditions conditions={item.spawn_conditions} />
+                  {showNotes ? <ItemNotes notes={item.notes} /> : null}
                 </span>
               </>
             )}
@@ -282,9 +381,7 @@ export function FloorItemSections({
       items: impShop
         ? groups.shop.map((item) => ({
             ...item,
-            conditional_notes: item.conditional_notes?.filter(
-              (note) => note !== IMP_SHOP_CONDITION
-            ),
+            notes: item.notes?.filter((note) => note !== IMP_SHOP_CONDITION),
           }))
         : groups.shop,
     },
@@ -302,23 +399,19 @@ export function FloorItemSections({
               </span>
             </p>
             {key === 'loot' ? (
-              <ConditionalNotes
-                notes={[
-                  ...new Set(
-                    items.flatMap((item) => item.conditional_notes ?? [])
-                  ),
-                ]}
+              <ItemNotes
+                notes={[...new Set(items.flatMap((item) => item.notes ?? []))]}
               />
             ) : null}
             {key === 'shop' && impShop ? (
-              <ConditionalNotes notes={[IMP_SHOP_CONDITION]} />
+              <ItemNotes notes={[IMP_SHOP_CONDITION]} />
             ) : null}
           </div>
           <FloorItemList
             items={items}
             identities={identities}
             depth={floor.depth}
-            showConditionalNotes={key !== 'loot'}
+            showNotes={key !== 'loot'}
           />
         </div>
       ))}

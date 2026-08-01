@@ -44,9 +44,9 @@ export function SeedInfoPanel({ report }: { report: SeedReport }) {
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground">
-          The analyzer replays its currently modeled run combinations and labels
-          the condition for every outcome. Other player-state paths remain
-          explicitly partial.
+          Each floor includes every currently modeled item variant. Items that
+          depend on challenges, trinkets, or artifacts show that condition
+          beside the result. Unsupported player-state paths remain partial.
         </p>
       </CardContent>
     </Card>

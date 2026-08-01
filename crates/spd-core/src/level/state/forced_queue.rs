@@ -1,14 +1,10 @@
 //! Seed-only projection of the exact initial `itemsToSpawn` queue.
 
 use crate::items::model::{ForcedDropRole, GeneratedItem, ItemProvenance};
-use crate::report::{ItemEntry, ItemPredictionKind};
+use crate::report::{ItemDependencyCondition, ItemEntry, ItemPredictionKind, ItemSpawnCondition};
+use crate::trinkets::Challenge;
 
-fn constrained_spawn_entry(
-    name: &str,
-    class_name: &str,
-    category: &str,
-    condition: impl Into<String>,
-) -> ItemEntry {
+fn constrained_spawn_entry(name: &str, class_name: &str, category: &str) -> ItemEntry {
     ItemEntry {
         name: name.into(),
         quantity: 1,
@@ -22,7 +18,13 @@ fn constrained_spawn_entry(
         cursed: None,
         enchantment: None,
         prediction: ItemPredictionKind::Constrained,
-        conditional_notes: vec![condition.into()],
+        spawn_conditions: vec![ItemSpawnCondition {
+            all_of: vec![ItemDependencyCondition::Challenge {
+                challenge: Challenge::ForbiddenRunes,
+                enabled: false,
+            }],
+        }],
+        notes: Vec::new(),
         source: Some("guaranteed floor spawn".into()),
     }
 }
@@ -41,7 +43,8 @@ fn guaranteed_spawn_entry(name: &str, class_name: &str, category: &str) -> ItemE
         cursed: None,
         enchantment: None,
         prediction: ItemPredictionKind::Exact,
-        conditional_notes: Vec::new(),
+        spawn_conditions: Vec::new(),
+        notes: Vec::new(),
         source: Some("guaranteed floor spawn".into()),
     }
 }
@@ -85,7 +88,8 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
             cursed: None,
             enchantment: None,
             prediction: ItemPredictionKind::Constrained,
-            conditional_notes: Vec::new(),
+            spawn_conditions: Vec::new(),
+            notes: Vec::new(),
             source: Some("guaranteed floor spawn".into()),
         }]
     };
@@ -118,7 +122,8 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
             cursed: None,
             enchantment: None,
             prediction: ItemPredictionKind::Constrained,
-            conditional_notes: Vec::new(),
+            spawn_conditions: Vec::new(),
+            notes: Vec::new(),
             source: Some("guaranteed floor spawn".into()),
         });
     }
@@ -138,7 +143,6 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
                     "Scroll of Upgrade",
                     "ScrollOfUpgrade",
                     "scroll",
-                    "Does not spawn when Forbidden Runes is active.",
                 ));
                 continue;
             }

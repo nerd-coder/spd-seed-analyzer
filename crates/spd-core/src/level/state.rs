@@ -1,8 +1,14 @@
 //! Internal per-floor state and its public report projection.
 
 use crate::items::model::{GeneratedItem, ItemProvenance, QuestRewardRole, ShopStockRole};
-use crate::report::{FloorMap, FloorReport, ItemEntry, ItemPredictionKind, NumericRange};
+use crate::report::{
+    FloorMap, FloorReport, ItemDependencyCondition, ItemEntry, ItemPredictionKind,
+    ItemSpawnCondition, NumericRange,
+};
 use crate::rooms::init_rooms::BuilderKind;
+use crate::trinkets::{
+    ArtifactEvent, ArtifactEventAction, ArtifactKind, TrinketEvent, TrinketEventAction, TrinketKind,
+};
 
 use super::Feeling;
 
@@ -58,7 +64,8 @@ fn merge_identical_items(items: Vec<ItemEntry>) -> Vec<ItemEntry> {
                     && existing.cursed == item.cursed
                     && existing.enchantment == item.enchantment
                     && existing.prediction == item.prediction
-                    && existing.conditional_notes == item.conditional_notes
+                    && existing.spawn_conditions == item.spawn_conditions
+                    && existing.notes == item.notes
                     && existing.source == item.source
             })
         });
@@ -406,7 +413,12 @@ impl LevelState {
                     .then(|| item.potential_enchantment.clone())
                     .flatten(),
                 prediction,
-                conditional_notes: ghost_enchantment_condition
+                spawn_conditions: item_conditions(
+                    self.depth as u32,
+                    artifact_conditional,
+                    ghost_enchantment_condition.flatten(),
+                ),
+                notes: ghost_enchantment_condition
                     .flatten()
                     .map(|level| {
                         vec![format!(
@@ -425,7 +437,7 @@ impl LevelState {
                         }
                         if blacksmith_smith_option {
                             notes.push(
-                                "One of four mutually exclusive options, available only if you spend 2,000 favor on Smith."
+                                "One of four mutually exclusive options, available after spending 2,000 favor on Smith."
                                     .into(),
                             );
                             notes.push(
@@ -442,12 +454,6 @@ impl LevelState {
                         if imp_shop_conditional {
                             notes.push(
                                 "Appears only if the Ambitious Imp quest was completed before this shop is spawned."
-                                    .into(),
-                            );
-                        }
-                        if artifact_conditional {
-                            notes.push(
-                                "Assumes no artifact was obtained outside level generation earlier in this run"
                                     .into(),
                             );
                         }
@@ -484,7 +490,8 @@ impl LevelState {
                 cursed: None,
                 enchantment: None,
                 prediction: ItemPredictionKind::Constrained,
-                conditional_notes: std::iter::once(
+                spawn_conditions: Vec::new(),
+                notes: std::iter::once(
                     "A bag may be offered; its presence and identity depend on inventory and prior limited drops."
                         .into(),
                 )
@@ -505,12 +512,17 @@ impl LevelState {
                 cursed: None,
                 enchantment: None,
                 prediction: ItemPredictionKind::Constrained,
-                conditional_notes: std::iter::once(
-                    "Sandbag presence and quantity depend on the hero's Timekeeper's Hourglass state."
-                        .into(),
-                )
-                .chain(shop_spawn_condition)
-                .collect(),
+                spawn_conditions: vec![ItemSpawnCondition {
+                    all_of: vec![ItemDependencyCondition::Artifact {
+                        events: vec![ArtifactEvent {
+                            before_depth: self.depth as u32,
+                            action: ArtifactEventAction::Obtained {
+                                artifact: ArtifactKind::TimekeepersHourglass,
+                            },
+                        }],
+                    }],
+                }],
+                notes: shop_spawn_condition.into_iter().collect(),
                 source: Some(shop_source.into()),
             });
         }
@@ -573,6 +585,34 @@ impl LevelState {
             assumed_map,
         }
     }
+}
+
+fn item_conditions(
+    depth: u32,
+    artifact_conditional: bool,
+    parchment_level: Option<i8>,
+) -> Vec<ItemSpawnCondition> {
+    let mut all_of = Vec::new();
+    if artifact_conditional {
+        all_of.push(ItemDependencyCondition::Artifact { events: Vec::new() });
+    }
+    if let Some(level) = parchment_level {
+        let mut events = vec![TrinketEvent {
+            before_depth: depth,
+            action: TrinketEventAction::Acquired {
+                trinket: TrinketKind::ParchmentScrap,
+            },
+        }];
+        events.extend((0..level).map(|_| TrinketEvent {
+            before_depth: depth,
+            action: TrinketEventAction::Upgraded,
+        }));
+        all_of.push(ItemDependencyCondition::Trinket { events });
+    }
+    (!all_of.is_empty())
+        .then_some(ItemSpawnCondition { all_of })
+        .into_iter()
+        .collect()
 }
 
 fn is_blacklisted(item: &GeneratedItem) -> bool {

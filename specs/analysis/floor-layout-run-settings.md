@@ -6,9 +6,10 @@ are fixed only after choosing a run condition, and which condition inputs are
 still missing. Java citations refer to the pinned clone. Rust and web citations
 refer to this repository on 2026-07-30.
 
-The public analyzer has no Run settings. It automatically replays its finite,
-currently supported condition matrix and labels each result. This is not a
-claim to enumerate arbitrary gameplay histories.
+The public analyzer has no Run settings. It shows a passive fresh-run baseline,
+automatically discovers its finite supported routes, and places only changed
+facets beneath affected floors. This is not a claim to enumerate arbitrary
+gameplay histories.
 
 The public map scope follows `MAP-LAYOUT-GOAL`: room geometry, connections,
 doors, transitions, terrain, traps, plants, and blobs after painting, but before
@@ -17,21 +18,21 @@ still matter to a **later** floor when it mutates persistent generator state.
 
 ## Verdict
 
-- The analyzer automatically replays 26 conditions: Forbidden Runes on/off,
-  with no held trinket or Mossy Clump, Trap Mechanism, and Mimic Tooth at
-  +0…+3 from the seed's earliest effective floor. Each outcome is separately
-  labelled in the result view.
-- The primary seed-only projection remains conservative; the condition matrix
-  is the only source of branch-specific maps and rewards. That matches the
-  current partial accuracy status.
+- The baseline assumes no challenges, no crafted/held trinket, no upgrades or
+  Transmutation Scroll use, and no external artifact history. Supported “If
+  you…” routes use the seed's actual Catalyst offers and exact Transmutation
+  Scrolls from completed floors.
+- Forbidden Runes and chronological Mossy Clump, Trap Mechanism, and Mimic
+  Tooth levels are replayed automatically. Unchanged floors are omitted and
+  identical public deltas are grouped. The separate finder projection remains
+  conservative and seed-only.
 - Rat Skull, Cracked Spyglass, Barren Land, Badder Bosses, map-relevant
   artifact history, and arbitrary acquire/upgrade/transmute timing still need
   lifecycle replay. They must remain explicitly conditional rather than being
   silently folded into a displayed map.
-- Settings alone are insufficient. The separate layout replay stops before
-  ordinary population, so it loses automatic persistent deck mutations that
-  can affect later floors. The analyzer must snapshot the public map and then
-  continue a faithful hidden lifecycle to carry state forward.
+- Each route now snapshots its public painter-complete map and then continues
+  NPC, mob, and item population on the same dungeon lifecycle, retaining the
+  persistent state needed by the next floor.
 - Exact room **selection** can be recovered earlier than exact painted maps.
   The current single `runtime_sensitive_layout` flag unnecessarily hides room
   lists, room bounds, and connections together with later painter uncertainty.
@@ -41,7 +42,7 @@ seeded descent,” the missing inputs are finite and can be represented at floor
 boundaries. “Every map reachable after arbitrary play,” including sealed-floor
 Ankh regeneration, needs generation-attempt history as well.
 
-## What the current modeled conditions actually narrow
+## What the current conditional routes actually narrow
 
 `MapProfile` is now an internal replay descriptor, not a user-facing setting.
 It represents challenge and chronological trinket/artifact events without
@@ -50,12 +51,10 @@ acquire or transmute event starts a new internal instance while an upgrade
 preserves its current instance; the Catalyst/pot calculation prevents events
 from starting before that seed can first be affected.
 
-The map pass is deliberately separate. Each internal modeled branch runs the
-full analyzer and a cloned `analyze_layouts_with_profile`, then replaces that
-outcome's map-facing fields with the layout replay. That replay calls the same
-generator with `layout_only = true`, captures the map after room painting and
-isolated decoration, then skips quest NPCs, ambient mobs, and `createItems`
-(`crates/spd-core/src/level/mod.rs:420-495`).
+Each internal route uses `create_level_internal` once per depth. It captures
+`layout_map` after room painting and isolated decoration, then continues quest
+NPC, ambient mob, and item population before moving to the next depth
+(`crates/spd-core/src/level/mod.rs`).
 
 The public projection exposes a map, room list, and builder only while the one
 coarse `runtime_sensitive_layout` flag is false; otherwise it moves the map to
@@ -69,9 +68,10 @@ exact:   1, 5, 10, 15, 20, 25, 26
 assumed: 2–4, 6–9, 11–14, 16–19, 21–24
 ```
 
-### Analyzer sensitivity measurement
+### Pre-migration analyzer sensitivity measurement
 
-Method: current generated WASM, numeric seeds 0…19, floors 1…24. Each +3
+Method: the former fixed-profile generated WASM, numeric seeds 0…19, floors
+1…24. Each +3
 trinket was first held on that seed's reported earliest effective floor. For
 each regular floor, the complete serialized `map ?? assumed_map` was compared
 with the explicit fresh baseline. This measures present analyzer behavior; it

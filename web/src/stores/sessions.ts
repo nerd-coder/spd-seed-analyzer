@@ -167,6 +167,7 @@ async function runAnalyze(id: string, input: string): Promise<boolean> {
   analyzeTasks.set(id, task)
   try {
     const report = await task.promise
+    console.log('[Analyze] analysis result', report)
     if (analyzeTasks.get(id) !== task) return false
     patchSession(id, {
       status: 'ready',

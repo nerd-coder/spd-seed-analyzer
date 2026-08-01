@@ -63,7 +63,8 @@ fn exact_floor(depth: u32, classes: &[(&str, i32)]) -> crate::FloorReport {
                 cursed: Some(false),
                 enchantment: None,
                 prediction: ItemPredictionKind::Exact,
-                conditional_notes: vec![],
+                spawn_conditions: Vec::new(),
+                notes: vec![],
                 source: Some("test".into()),
             })
             .collect(),
@@ -188,7 +189,8 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
             cursed: Some(true),
             enchantment: None,
             prediction: crate::report::ItemPredictionKind::Constrained,
-            conditional_notes: vec!["Parchment Scrap may alter enchantment chance.".into()],
+            spawn_conditions: Vec::new(),
+            notes: vec!["Parchment Scrap may alter enchantment chance.".into()],
             source: Some("SacrificeRoom".into()),
         }],
         quests: Vec::new(),
@@ -220,7 +222,8 @@ fn category_only_imp_ring_never_matches_an_exact_ring_search() {
         cursed: Some(true),
         enchantment: None,
         prediction: ItemPredictionKind::Constrained,
-        conditional_notes: vec!["Quest completion is required.".into()],
+        spawn_conditions: Vec::new(),
+        notes: vec!["Quest completion is required.".into()],
         source: Some("Imp.Quest".into()),
     });
     assert!(matching_evidence(&[floor.clone()], &[constraint("RingOfHaste", 18, 18)]).is_empty());
@@ -243,7 +246,8 @@ fn conditional_floor_loot_candidates_keep_levels_for_search() {
         cursed: Some(false),
         enchantment: None,
         prediction: ItemPredictionKind::Constrained,
-        conditional_notes: vec!["Assumes no external artifact acquisition".into()],
+        spawn_conditions: Vec::new(),
+        notes: vec!["Assumes no external artifact acquisition".into()],
         source: Some("heap".into()),
     });
     let mut wanted = constraint("Longsword", 8, 8);
@@ -392,7 +396,8 @@ fn constrained_shop_stock_never_matches_its_internal_concrete_class() {
             cursed: Some(false),
             enchantment: None,
             prediction: crate::report::ItemPredictionKind::Constrained,
-            conditional_notes: vec![],
+            spawn_conditions: Vec::new(),
+            notes: vec![],
             source: Some("ShopRoom".into()),
         }],
         quests: vec![],

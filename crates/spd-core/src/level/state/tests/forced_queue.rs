@@ -61,7 +61,7 @@ fn floor_one_projection_publishes_exact_food_identity() {
         Some(generated.class_name.as_str())
     );
     assert_eq!(food.prediction, ItemPredictionKind::Exact);
-    assert!(food.conditional_notes.is_empty());
+    assert!(food.notes.is_empty());
     let expected_name = match generated.class_name.as_str() {
         "Food" => "ration of food",
         "Pasty" => "pasty",
@@ -109,7 +109,7 @@ fn later_food_is_constrained_without_generator_history_copy() {
                 .expect("public food entry");
             assert_eq!(food.prediction, ItemPredictionKind::Constrained);
             assert!(food.class_name.is_none());
-            assert!(food.conditional_notes.is_empty());
+            assert!(food.notes.is_empty());
         }
     }
 }
@@ -145,7 +145,7 @@ fn halls_torches_precede_food_and_survive_public_taint_as_one_constraint() {
     assert_eq!(torch_entries[0].quantity, 2);
     assert_eq!(torch_entries[0].prediction, ItemPredictionKind::Exact);
     assert_eq!(torch_entries[0].class_name.as_deref(), Some("Torch"));
-    assert!(torch_entries[0].conditional_notes.is_empty());
+    assert!(torch_entries[0].notes.is_empty());
 }
 
 #[test]
@@ -162,7 +162,7 @@ fn upgrade_scroll_contract_distinguishes_guaranteed_and_conditional_spawns() {
     assert_eq!(odd_entry.name, "Scroll of Upgrade");
     assert_eq!(odd_entry.class_name.as_deref(), Some("ScrollOfUpgrade"));
     assert_eq!(odd_entry.prediction, ItemPredictionKind::Exact);
-    assert!(odd_entry.conditional_notes.is_empty());
+    assert!(odd_entry.notes.is_empty());
 
     let mut even = GeneratedItem::new("ScrollOfUpgrade", ItemCategory::Scroll);
     even.provenance = ItemProvenance::Forced(ForcedDropRole::UpgradeScroll {
@@ -175,7 +175,14 @@ fn upgrade_scroll_contract_distinguishes_guaranteed_and_conditional_spawns() {
         .expect("even Scroll contract");
     assert_eq!(even_entry.name, "Scroll of Upgrade");
     assert_eq!(even_entry.class_name.as_deref(), Some("ScrollOfUpgrade"));
-    assert!(even_entry.conditional_notes[0].contains("Forbidden Runes"));
+    assert!(even_entry.notes.is_empty());
+    assert!(matches!(
+        even_entry.spawn_conditions[0].all_of[0],
+        crate::report::ItemDependencyCondition::Challenge {
+            challenge: crate::trinkets::Challenge::ForbiddenRunes,
+            enabled: false
+        }
+    ));
 }
 
 #[test]

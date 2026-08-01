@@ -1,8 +1,5 @@
-import { WarningIcon } from '@phosphor-icons/react'
-import { ItemIcon } from '@/components/ItemIcon'
 import { ItemName } from '@/components/ItemName'
 import { FloorItemList } from '@/components/seed/FloorItemSections'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { type ParsedQuest, parseQuest } from '@/lib/labels'
 import type { IdentityMaps, ItemEntry } from '@/lib/spd-wasm'
@@ -50,12 +47,7 @@ export function QuestCard({
   const parsed = parseQuest(quest)
   const styles = QUEST_KIND_STYLES[parsed.kind]
   const hasDetailedRewards = rewards.length > 0
-  const hasUnruledOutGhostOptions = parsed.kind === 'ghost'
-  const rewardSummary =
-    parsed.kind === 'imp' &&
-    rewards.every((reward) => !reward.candidate_classes?.length)
-      ? null
-      : parsed.rewards
+  const rewardSummary = hasDetailedRewards ? null : parsed.rewards
   return (
     <div
       className={cn(
@@ -78,30 +70,7 @@ export function QuestCard({
           </p>
           {rewardSummary ? (
             <p className="text-sm leading-snug">
-              {parsed.kind === 'blacksmith' &&
-              rewardSummary ===
-                'You will get access to those items if you select Smith' ? (
-                <span>
-                  You will get access to those items if you select{' '}
-                  <strong>Smith</strong>
-                </span>
-              ) : parsed.kind === 'imp' ? (
-                <span>
-                  You’ll get the first option by default. It may change if{' '}
-                  <span className="inline-flex items-center gap-1 align-middle">
-                    <ItemIcon
-                      classNameItem="MimicTooth"
-                      size={16}
-                      title="Mimic Tooth"
-                    />
-                    Mimic Tooth
-                  </span>{' '}
-                  is in your inventory or if every artifact has already
-                  appeared.
-                </span>
-              ) : (
-                <ItemName name={rewardSummary} />
-              )}
+              <ItemName name={rewardSummary} />
             </p>
           ) : null}
           {hasDetailedRewards ? (
@@ -110,17 +79,6 @@ export function QuestCard({
               identities={identities}
               depth={depth}
             />
-          ) : null}
-          {hasUnruledOutGhostOptions ? (
-            <Alert variant="warning">
-              <WarningIcon weight="fill" />
-              <AlertTitle>Other Ghost options may be possible</AlertTitle>
-              <AlertDescription>
-                The listed pair is the analyzer’s baseline. Earlier trinket
-                choices or artifact history can change generation before the
-                Ghost reward is rolled.
-              </AlertDescription>
-            </Alert>
           ) : null}
         </div>
       ) : null}

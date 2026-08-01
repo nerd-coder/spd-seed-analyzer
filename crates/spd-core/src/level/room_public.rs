@@ -35,7 +35,8 @@ impl RoomPublicFact {
                 cursed,
                 enchantment: None,
                 prediction: ItemPredictionKind::Constrained,
-                conditional_notes: (!note.is_empty())
+                spawn_conditions: Vec::new(),
+                notes: (!note.is_empty())
                     .then(|| note.into())
                     .into_iter()
                     .collect(),
@@ -105,7 +106,8 @@ fn larder_entries(depth: i32) -> Vec<ItemEntry> {
             cursed: Some(false),
             enchantment: None,
             prediction: ItemPredictionKind::Exact,
-            conditional_notes: vec![format!(
+            spawn_conditions: Vec::new(),
+            notes: vec![format!(
                 "Exact depth-derived larder count ({units} food units)."
             )],
             source: Some("SecretLarderRoom".into()),

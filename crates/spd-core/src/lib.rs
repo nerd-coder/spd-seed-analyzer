@@ -3,6 +3,7 @@
 //! Target game source: local clone of 00-Evan/shattered-pixel-dungeon (see README).
 
 pub mod builders;
+mod conditional;
 pub mod dungeon;
 pub mod dungeon_seed;
 pub mod generator;
@@ -23,8 +24,8 @@ pub use items::IdentityMaps;
 pub use java_random::JavaRandom;
 pub use random::Random;
 pub use report::{
-    AnalyzeError, FloorReport, GuaranteedAppearance, GuaranteedAppearanceKind, ModeledOutcome,
-    SeedInfo, SeedReport,
+    AnalyzeError, FloorReport, GuaranteedAppearance, GuaranteedAppearanceKind,
+    ItemDependencyCondition, ItemSpawnCondition, SeedInfo, SeedReport,
 };
 pub use run::{dungeon_from_run, init_run, RunState};
 pub use search::{
@@ -61,41 +62,34 @@ pub fn parse_seed(input: &str) -> Result<SeedInfo, SeedError> {
     })
 }
 
-/// Analyze a seed and replay every currently modeled run-condition branch.
-///
-/// The primary `floors` projection contains only facts safe without selecting
-/// a player-controlled run state. `modeled_outcomes` supplies the separate
-/// first-generation replays for supported conditions.
+/// Analyze a seed and merge every currently supported item-generating profile
+/// into each floor's item list with structured spawn conditions.
 pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError> {
-    let seed = parse_seed(input)?;
-    let first_effective_depth =
-        TrinketSelectionReport::for_run(&init_run(seed.numeric)).first_effective_depth;
-    let mut modeled_outcomes = Vec::new();
-
-    for (condition, notes, profile) in modeled_profiles(first_effective_depth) {
-        let outcome = analyze_seed_internal(input, floors, Some(&profile))?;
-        modeled_outcomes.push(ModeledOutcome {
-            condition,
-            notes,
-            floors: outcome.floors,
-        });
+    let baseline_profile = MapProfile::default();
+    let mut report = analyze_seed_internal(input, floors, Some(&baseline_profile))?;
+    let routes = conditional::discover_routes(
+        &report.trinket_selection,
+        &report.floors,
+        report.floors_requested,
+    );
+    let mut alternatives = Vec::new();
+    for route in routes {
+        let alternative = analyze_seed_internal(input, route.max_depth, Some(&route.profile))?;
+        alternatives.push((route, alternative.floors));
     }
-
-    // Run the conservative projection last. A few parity probes retain the
-    // most-recent replay trace, which must remain the profile-free path for
-    // callers that inspect it after `analyze_seed` returns.
-    let mut report = analyze_seed_internal(input, floors, None)?;
-    report.modeled_outcomes = modeled_outcomes;
+    conditional::merge_possible_items(
+        &mut report.floors,
+        conditional::baseline_condition(),
+        &alternatives,
+    );
     report.analysis_notes = vec![
-        "The seed-only result never assumes a challenge, trinket, or artifact history."
-            .to_string(),
-        format!(
-            "{} modeled first-generation combinations are replayed below: Forbidden Runes on or off, with no held trinket or Mossy Clump, Trap Mechanism, and Mimic Tooth at +0 through +3 from floor {first_effective_depth}.",
-            report.modeled_outcomes.len()
-        ),
-        "Acquire/upgrade/transmute timing, Rat Skull, Cracked Spyglass, Barren Land, Badder Bosses, external artifacts, and other runtime paths are not fully replayed yet. Their effects remain conditional while analysis status is partial."
-            .to_string(),
+        "Item spawn conditions cover Forbidden Runes plus supported Mossy Clump, Trap Mechanism, and Mimic Tooth routes from this seed's actual Catalyst and exact completed-floor Transmutation Scroll spawns.".into(),
+        "Rat Skull, Cracked Spyglass, Barren Land, Badder Bosses, external artifact events, combat drops, farming, and other runtime paths are not replayed. Analysis remains partial.".into(),
     ];
+    // Parity probes retain the latest replay trace for oracle inspection. Keep
+    // that diagnostic state on the conservative finder projection rather than
+    // whichever conditional route happened to be discovered last.
+    let _ = analyze_seed_internal(input, floors, None)?;
     Ok(report)
 }
 
@@ -129,20 +123,8 @@ fn analyze_seed_internal(
         profile.validate(trinket_selection.first_effective_depth)?;
     }
     let mut dungeon = dungeon_from_run(run);
-    let mut layout_dungeon = dungeon.clone();
     let identities = dungeon.identities.clone();
     let mut floor_reports = level::analyze_floors_with_profile(&mut dungeon, floors, profile);
-    if let Some(profile) = profile {
-        let layouts = level::analyze_layouts_with_profile(&mut layout_dungeon, floors, profile);
-        for (report, layout) in floor_reports.iter_mut().zip(layouts) {
-            report.feeling = layout.feeling;
-            report.builder = layout.builder;
-            report.rooms = layout.rooms;
-            report.guaranteed_appearances = layout.guaranteed_appearances;
-            report.map = layout.map;
-            report.assumed_map = layout.assumed_map;
-        }
-    }
     if let Some(floor) = floor_reports
         .iter_mut()
         .find(|floor| floor.depth == trinket_selection.first_alchemy_pot_depth)
@@ -173,74 +155,12 @@ fn analyze_seed_internal(
         identities,
         trinket_selection,
         floors: floor_reports,
-        modeled_outcomes: Vec::new(),
         analysis_notes: Vec::new(),
         status: "partial".to_string(),
         message: Some(
             "Analysis accuracy is partial; results may differ from the pinned game.".to_string(),
         ),
     })
-}
-
-fn modeled_profiles(first_effective_depth: u32) -> Vec<(String, Vec<String>, MapProfile)> {
-    let mut profiles = Vec::new();
-    for forbidden_runes in [false, true] {
-        let challenge_label = forbidden_runes.then_some("Forbidden Runes");
-        let base_profile = MapProfile {
-            challenges: forbidden_runes
-                .then_some(Challenge::ForbiddenRunes)
-                .into_iter()
-                .collect(),
-            ..MapProfile::default()
-        };
-        profiles.push((
-            challenge_label
-                .map(|challenge| format!("{challenge}; no held trinket"))
-                .unwrap_or_else(|| "No challenges; no held trinket".to_string()),
-            vec![
-                "This is one modeled first-generation condition, not a claim about player choices."
-                    .to_string(),
-            ],
-            base_profile,
-        ));
-
-        for (trinket, label) in [
-            (TrinketKind::MossyClump, "Mossy Clump"),
-            (TrinketKind::TrapMechanism, "Trap Mechanism"),
-            (TrinketKind::MimicTooth, "Mimic Tooth"),
-        ] {
-            for level in 0..=3 {
-                let mut trinket_events = vec![TrinketEvent {
-                    before_depth: first_effective_depth,
-                    action: TrinketEventAction::Acquired { trinket },
-                }];
-                trinket_events.extend((0..level).map(|_| TrinketEvent {
-                    before_depth: first_effective_depth,
-                    action: TrinketEventAction::Upgraded,
-                }));
-                let profile = MapProfile {
-                    challenges: forbidden_runes
-                        .then_some(Challenge::ForbiddenRunes)
-                        .into_iter()
-                        .collect(),
-                    trinket_events,
-                    ..MapProfile::default()
-                };
-                let challenge_prefix = challenge_label
-                    .map(|challenge| format!("{challenge}; "))
-                    .unwrap_or_default();
-                profiles.push((
-                    format!("{challenge_prefix}{label} +{level} held from floor {first_effective_depth}"),
-                    vec![
-                        "This is a modeled possible held-trinket condition. Its actual acquisition, upgrade, or transmutation route is player-dependent."
-                            .to_string(),
-                    ],
-                    profile,
-                ));
-            }
-        }
-    }
-    profiles
 }
 
 #[cfg(test)]

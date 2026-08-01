@@ -108,7 +108,7 @@ fn armory_contract_preserves_count_category_and_equipment_bounds() {
         assert_eq!(catalyst.class_name.as_deref(), None);
         assert_eq!(catalyst.category, "trinket");
         assert_eq!(catalyst.cursed, Some(false));
-        assert!(catalyst.conditional_notes[0].starts_with("Conditional:"));
+        assert!(catalyst.notes[0].starts_with("Conditional:"));
     }
 }
 
@@ -132,7 +132,7 @@ fn formerly_generic_room_sets_expose_their_fixed_reward_structure() {
         .expect("Ring contract")
         .entries();
     assert_eq!(ring[0].name, "conditional guaranteed item");
-    assert!(ring[0].conditional_notes[0].starts_with("Conditional:"));
+    assert!(ring[0].notes[0].starts_with("Conditional:"));
 }
 
 #[test]
@@ -177,7 +177,7 @@ fn puzzle_room_contracts_expose_guaranteed_solution_potions() {
         assert_eq!(potion.cursed, Some(false));
         assert_eq!(potion.prediction, ItemPredictionKind::Exact);
         assert_eq!(potion.source.as_deref(), Some(room));
-        assert!(potion.conditional_notes.is_empty());
+        assert!(potion.notes.is_empty());
     }
 }
 
@@ -240,7 +240,7 @@ fn public_item_notes_only_describe_spawn_facts_and_conditions() {
         let entries = RoomPublicFact::new(room, 12)
             .expect("room contract")
             .entries();
-        for note in entries.iter().flat_map(|entry| &entry.conditional_notes) {
+        for note in entries.iter().flat_map(|entry| &entry.notes) {
             let note = note.to_ascii_lowercase();
             for lifecycle_term in [
                 concat!("not ", "asserted"),

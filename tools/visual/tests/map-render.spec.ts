@@ -87,6 +87,27 @@ async function installSyntheticMapReport(page: Page) {
             }
           : null,
     }))
+    ;(floors[3].items as unknown[]).push({
+      name: 'Synthetic conditional item +2',
+      quantity: 1,
+      class_name: 'ScrollOfTransmutation',
+      category: 'scroll',
+      level: 2,
+      cursed: true,
+      enchantment: 'Blazing',
+      prediction: 'exact',
+      spawn_conditions: [
+        {
+          all_of: [
+            {
+              type: 'challenge',
+              challenge: 'forbidden_runes',
+              enabled: false,
+            },
+          ],
+        },
+      ],
+    })
     const report = {
       seed: {
         input: 'VISUAL-MAP',
@@ -122,6 +143,7 @@ async function installSyntheticMapReport(page: Page) {
         ],
       },
       floors,
+      analysis_notes: ['Synthetic conditional analysis remains partial.'],
       status: 'partial',
       message: 'Synthetic Playwright renderer fixture.',
     }
@@ -330,6 +352,7 @@ test('mobile map dialog fills the viewport and supports 1x and 2x zoom', async (
   const browserErrors = await openAnalyzer(page, GENERIC_MAP_SEED)
   await page
     .getByRole('button', { name: `Expand floor ${GENERIC_MAP_FLOOR} map` })
+    .first()
     .click()
 
   const dialog = page.getByRole('dialog')
@@ -401,6 +424,7 @@ test('floor rooms open from a title chip and desktop maps use a large dialog', a
 
   await page
     .getByRole('button', { name: `Expand floor ${GENERIC_MAP_FLOOR} map` })
+    .first()
     .click()
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
@@ -441,6 +465,7 @@ test('map dialog initially focuses its container instead of a control', async ({
   const browserErrors = await openAnalyzer(page, GENERIC_MAP_SEED)
   await page
     .getByRole('button', { name: `Expand floor ${GENERIC_MAP_FLOOR} map` })
+    .first()
     .click()
 
   const dialog = page.getByRole('dialog')
@@ -458,29 +483,24 @@ test('map dialog initially focuses its container instead of a control', async ({
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
-test('Sad Ghost rewards identify the baseline as non-exhaustive', async ({
-  page,
-}) => {
+test('Sad Ghost rewards no longer use a separate warning', async ({ page }) => {
   const browserErrors = await openAnalyzer(page, '0')
 
-  const warning = page
-    .getByRole('alert')
-    .filter({ hasText: 'Other Ghost options may be possible' })
-  await expect(warning).toBeVisible()
-  await expect(warning).toContainText('analyzer’s baseline')
-  await expect(warning).toContainText('artifact history')
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Other Ghost options' })
+  ).toHaveCount(0)
 
   expect(browserErrors.console, 'browser console errors').toEqual([])
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
-test('modeled outcomes replace persisted Run settings', async ({ page }) => {
-  const browserErrors = await openAnalyzer(page, '0')
+test('conditional items render inline with their item properties', async ({
+  page,
+}) => {
+  await installSyntheticMapReport(page)
+  const browserErrors = await openAnalyzer(page, GENERIC_MAP_SEED)
 
-  const outcome = page.getByLabel('Modeled outcome')
-  await expect(outcome).toBeVisible()
-  await expect(outcome.locator('option')).toHaveCount(26)
-  await expect(outcome).toHaveValue('No challenges; no held trinket')
+  await expect(page.getByLabel('Modeled outcome')).toHaveCount(0)
   await expect(
     page.getByRole('switch', { name: 'Forbidden Runes' })
   ).toHaveCount(0)
@@ -488,10 +508,20 @@ test('modeled outcomes replace persisted Run settings', async ({ page }) => {
   await expect(page.getByRole('switch', { name: 'Floor maps' })).toHaveCount(0)
   await expect(page.getByRole('heading', { name: 'Identities' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Floor 1' })).toBeVisible()
-
-  await outcome.selectOption('Forbidden Runes; no held trinket')
-  await expect(outcome).toHaveValue('Forbidden Runes; no held trinket')
-  await expect(page.getByRole('heading', { name: 'Floor 1' })).toBeVisible()
+  await expect(page.getByText('Synthetic conditional item +2')).toBeVisible()
+  await expect(page.getByText('cursed', { exact: true })).toBeVisible()
+  await expect(page.getByText('Blazing', { exact: true })).toBeVisible()
+  const condition = page.getByRole('button', {
+    name: 'Forbidden Runes disabled',
+  })
+  await expect(condition).toBeVisible()
+  await condition.click()
+  await expect(
+    page.getByText('Spawn conditions', { exact: true })
+  ).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Expand floor 4 map' })
+  ).toHaveCount(1)
 
   expect(browserErrors.console, 'browser console errors').toEqual([])
   expect(browserErrors.page, 'uncaught page errors').toEqual([])

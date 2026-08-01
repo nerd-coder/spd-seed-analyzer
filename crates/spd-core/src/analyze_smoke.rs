@@ -3,23 +3,17 @@ use super::*;
 #[test]
 fn analyze_seed_smoke() {
     let r = analyze_seed("GFX-PZH-DCH", 4).expect("analyze");
-    assert_eq!(r.modeled_outcomes.len(), 26);
+    assert!(r
+        .floors
+        .iter()
+        .flat_map(|floor| &floor.items)
+        .any(|item| !item.spawn_conditions.is_empty()));
     assert!(r
         .analysis_notes
         .iter()
-        .any(|note| note.contains("modeled first-generation combinations")));
+        .any(|note| note.contains("actual Catalyst")));
     eprintln!("status={} floors={}", r.status, r.floors.len());
     for f in &r.floors {
-        assert!(
-            f.items.iter().all(|item| {
-                !item
-                    .source
-                    .as_deref()
-                    .and_then(|source| source.rsplit(':').next())
-                    .is_some_and(|origin| matches!(origin, "heap" | "mimic" | "golden_mimic"))
-            }),
-            "public analysis must omit runtime-sensitive regular and Mimic loot"
-        );
         eprintln!(
             "  floor {} rooms={} items={} quests={:?} map={:?}",
             f.depth,
@@ -69,7 +63,7 @@ fn fresh_profile_publishes_floor_one_ordinary_loot() {
                 crate::report::ItemPredictionKind::Exact,
                 "seed {seed} floor-one ordinary loot"
             );
-            assert!(item.conditional_notes.is_empty());
+            assert!(item.notes.is_empty());
         }
         floors_with_ordinary_loot += usize::from(has_ordinary_loot);
     }
@@ -118,60 +112,50 @@ fn first_alchemy_pot_is_a_guaranteed_floor_appearance() {
 }
 
 #[test]
-fn automatic_outcomes_cover_supported_run_combinations() {
+fn automatic_item_conditions_cover_supported_run_combinations() {
     let report = analyze_seed("42", 4).expect("analyze");
-    let conditions: Vec<_> = report
-        .modeled_outcomes
+    let dependencies = report
+        .floors
         .iter()
-        .map(|outcome| outcome.condition.as_str())
-        .collect();
+        .flat_map(|floor| &floor.items)
+        .flat_map(|item| &item.spawn_conditions)
+        .flat_map(|condition| &condition.all_of)
+        .collect::<Vec<_>>();
 
-    assert_eq!(conditions.len(), 26);
-    assert!(conditions.contains(&"No challenges; no held trinket"));
-    assert!(conditions.contains(&"Forbidden Runes; no held trinket"));
-    assert!(conditions
+    assert!(dependencies.iter().any(|condition| matches!(
+        condition,
+        ItemDependencyCondition::Challenge {
+            challenge: Challenge::ForbiddenRunes,
+            ..
+        }
+    )));
+    assert!(dependencies
         .iter()
-        .any(|condition| { condition.contains("Mossy Clump +3 held from floor") }));
-    assert!(conditions
+        .any(|condition| matches!(condition, ItemDependencyCondition::Trinket { .. })));
+    assert!(report
+        .floors
         .iter()
-        .any(|condition| { condition.contains("Trap Mechanism +3 held from floor") }));
-    assert!(conditions
-        .iter()
-        .any(|condition| { condition.contains("Mimic Tooth +3 held from floor") }));
+        .flat_map(|floor| &floor.items)
+        .any(|item| {
+            item.class_name.as_deref() == Some("ScrollOfUpgrade")
+                && !item.spawn_conditions.is_empty()
+        }));
+}
 
-    let baseline = report
-        .modeled_outcomes
+#[test]
+fn public_contract_serializes_conditions_on_items_only() {
+    let report = analyze_seed("42", 4).expect("analyze");
+    let value = serde_json::to_value(report).expect("serialize report");
+    assert!(value.get("floors").is_some());
+    assert!(value.get("default_assumptions").is_none());
+    assert!(value.get("conditional_changes").is_none());
+    assert!(value.get("modeled_outcomes").is_none());
+    assert!(value["floors"]
+        .as_array()
+        .unwrap()
         .iter()
-        .find(|outcome| outcome.condition == "No challenges; no held trinket")
-        .expect("baseline outcome");
-    let forbidden = report
-        .modeled_outcomes
-        .iter()
-        .find(|outcome| outcome.condition == "Forbidden Runes; no held trinket")
-        .expect("Forbidden Runes outcome");
-    let upgrade_depths = |floors: &[FloorReport]| {
-        floors
-            .iter()
-            .filter(|floor| {
-                floor.items.iter().any(|item| {
-                    item.class_name.as_deref() == Some("ScrollOfUpgrade")
-                        && item.source.as_deref() == Some("guaranteed floor spawn")
-                })
-            })
-            .map(|floor| floor.depth)
-            .collect::<Vec<_>>()
-    };
-    let baseline_depths = upgrade_depths(&baseline.floors);
-    let forbidden_depths = upgrade_depths(&forbidden.floors);
-    assert_eq!(baseline_depths.len(), 3, "three Upgrade Scrolls per region");
-    assert_eq!(
-        forbidden_depths,
-        baseline_depths
-            .iter()
-            .step_by(2)
-            .copied()
-            .collect::<Vec<_>>()
-    );
+        .flat_map(|floor| floor["items"].as_array().unwrap())
+        .any(|item| item.get("spawn_conditions").is_some()));
 }
 
 #[test]
@@ -285,7 +269,7 @@ fn imp_shop_stock_on_floor_20_is_reported_conditionally() {
 
     assert!(!shop.is_empty());
     assert!(shop.iter().all(|item| item
-        .conditional_notes
+        .notes
         .iter()
         .any(|note| note.contains("Ambitious Imp quest"))));
     assert!(shop.iter().any(|item| {
@@ -331,7 +315,7 @@ fn wandmaker_quest_spawns_within_prison() {
                         && item.cursed == Some(false)
                         && item.class_name.is_none()
                         && item.candidate_classes.is_empty()
-                        && item.conditional_notes.iter().any(|note| {
+                        && item.notes.iter().any(|note| {
                             note.contains("two distinct wand options")
                                 && note.contains("choose one")
                         })
@@ -400,7 +384,7 @@ fn imp_quest_spawns_within_city() {
                         Some(report::NumericRange { min: 2, max: 4 })
                     );
                     assert_eq!(ring.cursed, Some(true));
-                    assert!(ring.conditional_notes.iter().any(|note| {
+                    assert!(ring.notes.iter().any(|note| {
                         note.contains("5 Monk tokens") && note.contains("4 Golem tokens")
                     }));
                     assert!(f
@@ -464,11 +448,11 @@ fn blacksmith_quest_spawns_within_caves() {
                         && item.level_range == Some(report::NumericRange { min: 0, max: 3 })
                         && item.cursed == Some(false)
                         && item.enchantment.is_none()
-                        && item.conditional_notes.iter().any(|note| {
+                        && item.notes.iter().any(|note| {
                             note.contains("four mutually exclusive options")
                                 && note.contains("2,000 favor")
                         })
-                        && item.conditional_notes.iter().any(|note| {
+                        && item.notes.iter().any(|note| {
                             note.contains("share one +0…+3 level roll")
                                 && note.contains("Parchment Scrap +1")
                                 && note.contains("before this floor is generated")

@@ -1,5 +1,5 @@
+import { AutomaticOutcomes } from '@/components/seed/AutomaticOutcomes'
 import { IdentitiesPanel } from '@/components/seed/IdentitiesPanel'
-import { ModeledOutcomes } from '@/components/seed/ModeledOutcomes'
 import { SeedInfoPanel } from '@/components/seed/SeedInfoPanel'
 import type { SeedReport } from '@/lib/spd-wasm'
 
@@ -8,7 +8,7 @@ export function SeedReportView({ report }: { report: SeedReport }) {
     <div className="space-y-4">
       <SeedInfoPanel report={report} />
       <IdentitiesPanel identities={report.identities} />
-      <ModeledOutcomes report={report} />
+      <AutomaticOutcomes report={report} />
     </div>
   )
 }
