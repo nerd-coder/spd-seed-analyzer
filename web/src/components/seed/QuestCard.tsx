@@ -1,7 +1,7 @@
 import { FloorItemList } from '@/components/seed/FloorItemSections'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import type { IdentityMaps, ItemEntry, QuestReport } from '@/lib/spd-wasm'
+import type { IdentityMaps, ItemGroup, QuestReport } from '@/lib/spd-wasm'
 import { cn } from '@/lib/utils'
 
 const QUEST_STYLES: Record<
@@ -70,18 +70,18 @@ export function QuestCard({
   depth,
 }: {
   quest: QuestReport
-  rewards: ItemEntry[]
+  rewards: ItemGroup[]
   identities: IdentityMaps
   depth: number
 }) {
   const styles = QUEST_STYLES[quest.type]
   const contract = baselineContract(quest)
   const baselineRewards = contract
-    ? rewards.filter((item) => item.prediction === 'baseline')
+    ? groupsWithPrediction(rewards, 'baseline')
     : []
   const displayedRewards = baselineRewards.length
     ? baselineRewards
-    : rewards.filter((item) => item.prediction !== 'baseline')
+    : withoutPrediction(rewards, 'baseline')
 
   return (
     <div
@@ -123,4 +123,26 @@ export function QuestCard({
       ) : null}
     </div>
   )
+}
+
+function groupsWithPrediction(groups: ItemGroup[], prediction: 'baseline') {
+  return groups
+    .map((group) => ({
+      ...group,
+      variants: group.variants.filter(
+        (variant) => variant.prediction === prediction
+      ),
+    }))
+    .filter((group) => group.variants.length > 0)
+}
+
+function withoutPrediction(groups: ItemGroup[], prediction: 'baseline') {
+  return groups
+    .map((group) => ({
+      ...group,
+      variants: group.variants.filter(
+        (variant) => variant.prediction !== prediction
+      ),
+    }))
+    .filter((group) => group.variants.length > 0)
 }

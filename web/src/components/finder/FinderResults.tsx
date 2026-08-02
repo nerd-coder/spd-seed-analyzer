@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/empty'
 import {
   Item,
+  ItemActions,
   ItemContent,
   ItemDescription,
   ItemGroup,
@@ -144,9 +145,14 @@ function ResultCard({
                       {source ? ` · ${source}` : ''}
                     </ItemDescription>
                   </ItemContent>
-                  <Badge variant="outline">
-                    Item {evidence.constraintIndex + 1}
-                  </Badge>
+                  <ItemActions>
+                    {evidence.prediction === 'baseline' ? (
+                      <Badge variant="secondary">Fresh baseline</Badge>
+                    ) : null}
+                    <Badge variant="outline">
+                      Item {evidence.constraintIndex + 1}
+                    </Badge>
+                  </ItemActions>
                 </Item>
               )
             })}

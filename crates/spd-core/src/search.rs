@@ -25,6 +25,10 @@ pub struct SeedSearchRequest {
     pub floors: u32,
     pub constraints: Vec<ItemConstraint>,
     pub match_mode: MatchMode,
+    /// Allow fresh/no-history baseline predictions to satisfy constraints.
+    /// These matches are planning evidence, not seed-wide guarantees.
+    #[serde(default)]
+    pub include_baseline: bool,
     pub max_matches: u32,
 }
 
@@ -72,8 +76,8 @@ pub struct SeedMatch {
     pub identities: IdentityMaps,
     /// At most one (the first) matching item per satisfied constraint.
     pub evidence: Vec<ItemMatchEvidence>,
-    /// Fresh/no-history planning highlights. These never contribute search
-    /// evidence and remain explicitly baseline predictions.
+    /// Fresh/no-history planning highlights. They contribute search evidence
+    /// only when `includeBaseline` is enabled and remain explicitly labeled.
     pub baseline_items: Vec<BaselineItemEvidence>,
 }
 
@@ -81,6 +85,8 @@ pub struct SeedMatch {
 #[serde(rename_all = "camelCase")]
 pub struct BaselineItemEvidence {
     pub depth: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
     #[serde(flatten)]
     pub item: ItemEntry,
 }
@@ -93,6 +99,7 @@ pub struct ItemMatchEvidence {
     pub depth: u32,
     pub name: String,
     pub level: i32,
+    pub prediction: ItemPredictionKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
 }
@@ -188,7 +195,11 @@ pub fn search_seeds(request: &SeedSearchRequest) -> Result<SeedSearchResult, Sea
             .map_err(|source| SearchError::Analyze { seed, source })?;
         candidates_scanned += 1;
 
-        let evidence = matching_evidence(&report.floors, &request.constraints);
+        let evidence = matching_evidence(
+            &report.floors,
+            &request.constraints,
+            request.include_baseline,
+        );
         let is_match = match request.match_mode {
             MatchMode::Any => !evidence.is_empty(),
             MatchMode::All => evidence.len() == request.constraints.len(),
@@ -201,10 +212,12 @@ pub fn search_seeds(request: &SeedSearchRequest) -> Result<SeedSearchResult, Sea
                     floor
                         .items
                         .iter()
+                        .flat_map(|group| &group.variants)
                         .filter(|item| item.prediction == ItemPredictionKind::Baseline)
                         .cloned()
                         .map(|item| BaselineItemEvidence {
                             depth: floor.depth,
+                            source: item.source.clone(),
                             item,
                         })
                 })
@@ -244,6 +257,7 @@ pub fn search_seeds(request: &SeedSearchRequest) -> Result<SeedSearchResult, Sea
 fn matching_evidence(
     floors: &[crate::FloorReport],
     constraints: &[ItemConstraint],
+    include_baseline: bool,
 ) -> Vec<ItemMatchEvidence> {
     constraints
         .iter()
@@ -255,25 +269,44 @@ fn matching_evidence(
                     (constraint.min_depth..=constraint.max_depth).contains(&floor.depth)
                 })
                 .find_map(|floor| {
-                    floor.items.iter().find_map(|item| {
-                        ((item.prediction == ItemPredictionKind::Exact
-                            && item.class_name.as_deref() == Some(constraint.class_name.as_str())
-                            || item
+                    floor
+                        .items
+                        .iter()
+                        .flat_map(|group| &group.variants)
+                        .find_map(|item| {
+                            let concrete_class_matches =
+                                item.class_name.as_deref() == Some(constraint.class_name.as_str());
+                            let candidate_class_matches = item
                                 .candidate_classes
                                 .iter()
-                                .any(|candidate| candidate == &constraint.class_name))
-                            && constraint.min_level.is_none_or(|minimum| {
-                                item.level.is_some_and(|level| level >= minimum)
-                            }))
-                        .then(|| ItemMatchEvidence {
-                            constraint_index: constraint_index as u32,
-                            class_name: constraint.class_name.clone(),
-                            depth: floor.depth,
-                            name: item.name.clone(),
-                            level: item.level.expect("exact predictions expose level"),
-                            source: item.source.clone(),
+                                .any(|candidate| candidate == &constraint.class_name);
+                            let class_matches = match item.prediction {
+                                ItemPredictionKind::Exact => {
+                                    concrete_class_matches || candidate_class_matches
+                                }
+                                ItemPredictionKind::Baseline => {
+                                    include_baseline
+                                        && (concrete_class_matches || candidate_class_matches)
+                                }
+                                ItemPredictionKind::Constrained => candidate_class_matches,
+                            };
+
+                            (class_matches
+                                && constraint.min_level.is_none_or(|minimum| {
+                                    item.level.is_some_and(|level| level >= minimum)
+                                }))
+                            .then(|| ItemMatchEvidence {
+                                constraint_index: constraint_index as u32,
+                                class_name: constraint.class_name.clone(),
+                                depth: floor.depth,
+                                name: item.name.clone(),
+                                level: item
+                                    .level
+                                    .expect("searchable predictions expose a concrete level"),
+                                prediction: item.prediction,
+                                source: item.source.clone(),
+                            })
                         })
-                    })
                 })
         })
         .collect()

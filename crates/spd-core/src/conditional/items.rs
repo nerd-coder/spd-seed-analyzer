@@ -1,5 +1,6 @@
 use crate::report::{
-    FloorReport, ItemDependencyCondition, ItemEntry, ItemPredictionKind, ItemSpawnCondition,
+    group_item_entries, FloorReport, ItemDependencyCondition, ItemEntry, ItemPredictionKind,
+    ItemSpawnCondition,
 };
 
 use super::DiscoveredRoute;
@@ -13,6 +14,7 @@ pub(crate) fn merge_possible_items(
         let (mut baseline_samples, baseline_items): (Vec<_>, Vec<_>) =
             std::mem::take(&mut floor.items)
                 .into_iter()
+                .flat_map(|group| group.variants)
                 .partition(|item| item.prediction == ItemPredictionKind::Baseline);
         let alternative_items = alternatives
             .iter()
@@ -28,6 +30,7 @@ pub(crate) fn merge_possible_items(
                         let items = candidate
                             .items
                             .iter()
+                            .flat_map(|group| &group.variants)
                             .filter(|item| item.prediction != ItemPredictionKind::Baseline)
                             .cloned()
                             .collect::<Vec<_>>();
@@ -42,8 +45,9 @@ pub(crate) fn merge_possible_items(
                     .map(|(condition, items)| (*condition, items)),
             )
             .collect::<Vec<_>>();
-        floor.items = merge_contexts(&contexts);
-        floor.items.append(&mut baseline_samples);
+        let mut entries = merge_contexts(&contexts);
+        entries.append(&mut baseline_samples);
+        floor.items = group_item_entries(entries);
     }
 }
 

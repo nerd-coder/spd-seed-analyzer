@@ -13,6 +13,7 @@ export type FinderFormState = {
   floors: number
   maxMatches: FinderNumericInput
   matchMode: SeedSearchMatchMode
+  includeBaseline: boolean
   constraints: FinderConstraint[]
 }
 
@@ -25,6 +26,7 @@ export function createFinderFormStore(initialStartSeed: number) {
     floors: 20,
     maxMatches: 10,
     matchMode: 'all',
+    includeBaseline: false,
     constraints: [
       {
         id: 1,

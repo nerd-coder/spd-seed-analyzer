@@ -180,7 +180,7 @@ fn transmuted_acquisitions(
 fn exact_transmutation_scroll_depths(floors: &[FloorReport]) -> Vec<u32> {
     let mut depths = Vec::new();
     for floor in floors.iter().filter(|floor| floor.depth < VERIFIED_DEPTH) {
-        for item in &floor.items {
+        for item in floor.items.iter().flat_map(|group| &group.variants) {
             if item.prediction == ItemPredictionKind::Exact
                 && item.class_name.as_deref() == Some("ScrollOfTransmutation")
             {

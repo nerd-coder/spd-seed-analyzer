@@ -46,18 +46,31 @@ fn higher_floor_sacrifice_reward_exposes_the_fresh_baseline() {
     let rewards: Vec<_> = report
         .items
         .iter()
-        .filter(|item| item.source.as_deref() == Some("SacrificeRoom"))
+        .filter(|group| group.source.as_deref() == Some("SacrificeRoom"))
         .collect();
     assert_eq!(rewards.len(), 1);
-    assert_eq!(rewards[0].name, "corrupting sword +2");
-    assert_eq!(rewards[0].class_name.as_deref(), Some("Sword"));
-    assert_eq!(rewards[0].tier, None);
-    assert_eq!(rewards[0].tier_range, None);
-    assert_eq!(rewards[0].cursed, Some(true));
-    assert_eq!(rewards[0].level, Some(2));
-    assert_eq!(rewards[0].level_range, None);
+    let variants = &rewards[0].variants;
+    assert_eq!(variants.len(), 2);
+    assert_eq!(variants[0].name, "weapon reward");
+    assert_eq!(variants[0].class_name, None);
     assert_eq!(
-        rewards[0].prediction,
+        variants[0].tier_range,
+        Some(crate::report::NumericRange { min: 3, max: 5 })
+    );
+    assert_eq!(
+        variants[0].level_range,
+        Some(crate::report::NumericRange { min: 0, max: 3 })
+    );
+    assert_eq!(
+        variants[0].prediction,
+        crate::report::ItemPredictionKind::Constrained
+    );
+    assert_eq!(variants[1].name, "corrupting sword +2");
+    assert_eq!(variants[1].class_name.as_deref(), Some("Sword"));
+    assert_eq!(variants[1].cursed, Some(true));
+    assert_eq!(variants[1].level, Some(2));
+    assert_eq!(
+        variants[1].prediction,
         crate::report::ItemPredictionKind::Baseline
     );
 }
@@ -111,23 +124,57 @@ fn floor_one_sacrifice_reward_is_an_exact_seed_fact() {
             .iter()
             .filter(|item| item.source.as_deref() == Some("SacrificeRoom"))
             .collect::<Vec<_>>(),
-        vec![&crate::report::ItemEntry {
-            name: "corrupting mace +1".into(),
-            quantity: 1,
-            class_name: Some("Mace".into()),
-            candidate_classes: Vec::new(),
-            category: "weapon".into(),
-            tier: None,
-            tier_range: None,
-            level: Some(1),
-            level_range: None,
-            cursed: Some(true),
-            enchantment: None,
-            prediction: crate::report::ItemPredictionKind::Exact,
-            spawn_conditions: Vec::new(),
-            conditions: Vec::new(),
-            notes: Vec::new(),
-            source: Some("SacrificeRoom".into()),
-        }]
+        vec![&crate::report::ItemGroup::single(
+            crate::report::ItemEntry {
+                name: "corrupting mace +1".into(),
+                quantity: 1,
+                class_name: Some("Mace".into()),
+                candidate_classes: Vec::new(),
+                category: "weapon".into(),
+                tier: None,
+                tier_range: None,
+                level: Some(1),
+                level_range: None,
+                cursed: Some(true),
+                enchantment: None,
+                prediction: crate::report::ItemPredictionKind::Exact,
+                spawn_conditions: Vec::new(),
+                conditions: Vec::new(),
+                notes: Vec::new(),
+                source: Some("SacrificeRoom".into()),
+            }
+        )]
     );
+}
+
+#[test]
+fn equipment_room_contracts_and_baselines_share_one_group() {
+    for source in ["SacrificeRoom", "CryptRoom", "StatueRoom"] {
+        let contract = super::super::super::room_public::RoomPublicFact::new(source, 13)
+            .expect("equipment room contract")
+            .entries()
+            .into_iter()
+            .next()
+            .expect("equipment reward");
+        let mut baseline = contract.clone();
+        baseline.name = "sampled equipment".into();
+        baseline.class_name = Some("SampleClass".into());
+        baseline.tier_range = None;
+        baseline.level = Some(2);
+        baseline.level_range = None;
+        baseline.prediction = crate::report::ItemPredictionKind::Baseline;
+
+        let groups = crate::report::group_item_entries(vec![baseline, contract]);
+        assert_eq!(groups.len(), 1, "{source}");
+        assert_eq!(groups[0].source.as_deref(), Some(source));
+        assert_eq!(groups[0].variants.len(), 2);
+        assert_eq!(
+            groups[0].variants[0].prediction,
+            crate::report::ItemPredictionKind::Constrained
+        );
+        assert_eq!(
+            groups[0].variants[1].prediction,
+            crate::report::ItemPredictionKind::Baseline
+        );
+    }
 }

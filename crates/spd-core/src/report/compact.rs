@@ -25,7 +25,7 @@ impl SeedReport {
         let mut last_depth = None;
         for floor in &self.floors {
             let mut grouped: BTreeMap<String, Vec<String>> = BTreeMap::new();
-            for item in &floor.items {
+            for item in floor.item_variants() {
                 if item.class_name.is_none() || !is_baseline_highlight(item) {
                     continue;
                 }

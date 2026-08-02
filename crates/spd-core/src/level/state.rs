@@ -2,8 +2,8 @@
 
 use crate::items::model::{GeneratedItem, ItemProvenance, QuestRewardRole, ShopStockRole};
 use crate::report::{
-    FloorMap, FloorReport, ItemCondition, ItemDependencyCondition, ItemEnchantment, ItemEntry,
-    ItemPredictionKind, ItemSpawnCondition, NumericRange, QuestReport,
+    group_item_entries, FloorMap, FloorReport, ItemCondition, ItemDependencyCondition,
+    ItemEnchantment, ItemEntry, ItemPredictionKind, ItemSpawnCondition, NumericRange, QuestReport,
 };
 use crate::rooms::init_rooms::BuilderKind;
 use crate::trinkets::{ArtifactEvent, ArtifactEventAction, ArtifactKind};
@@ -652,13 +652,7 @@ impl LevelState {
                             self.runtime_sensitive_layout,
                             item,
                         );
-                        let baseline_room_prize = self.baseline_projection
-                            && self.depth > 1
-                            && matches!(
-                                item.source.as_deref(),
-                                Some("SacrificeRoom" | "CryptRoom" | "StatueRoom")
-                            );
-                        if !concrete_floor_one_prize && !baseline_room_prize {
+                        if !concrete_floor_one_prize {
                             return false;
                         }
                         let Some(source) = item.source.as_deref() else {
@@ -724,7 +718,7 @@ impl LevelState {
             possible_rooms: Vec::new(),
             guaranteed_appearances,
             initial_encounters,
-            items,
+            items: group_item_entries(items),
             quests: self.quests[..self
                 .runtime_sensitive_quests_from
                 .unwrap_or(self.quests.len())]

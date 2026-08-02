@@ -18,7 +18,7 @@ export type IdentityMaps = {
   rings: IdentityEntry[]
 }
 
-export type ItemEntry = {
+export type ItemVariant = {
   name: string
   /** Number of identical items represented by this entry. */
   quantity: number
@@ -39,7 +39,12 @@ export type ItemEntry = {
   /** Alternative dependency clauses; any one clause may produce this variant. */
   spawn_conditions?: ItemSpawnCondition[]
   conditions?: ItemCondition[]
+}
+
+export type ItemGroup = {
   source?: string | null
+  /** Alternative projections of one logical spawn, not additional items. */
+  variants: ItemVariant[]
 }
 
 export type Challenge =
@@ -197,7 +202,7 @@ export type FloorReport = {
   guaranteed_appearances?: GuaranteedAppearance[]
   initial_encounters?: InitialEncounter[]
   /** Includes exact, constrained, and baseline-analysis entries. */
-  items: ItemEntry[]
+  items: ItemGroup[]
   quests: QuestReport[]
   map?: FloorMap | null
   assumed_map?: FloorMap | null
@@ -321,6 +326,7 @@ export type SeedSearchRequest = {
   floors: number
   constraints: SeedSearchConstraint[]
   matchMode: SeedSearchMatchMode
+  includeBaseline?: boolean
   maxMatches: number
 }
 
@@ -330,6 +336,7 @@ export type SeedSearchEvidence = {
   depth: number
   name: string
   level: number
+  prediction: ItemVariant['prediction']
   source?: string | null
 }
 
@@ -340,8 +347,9 @@ export type SeedSearchMatch = {
   baselineItems: SeedSearchBaselineItem[]
 }
 
-export type SeedSearchBaselineItem = ItemEntry & {
+export type SeedSearchBaselineItem = ItemVariant & {
   depth: number
+  source?: string | null
 }
 
 export type SeedSearchResult = {

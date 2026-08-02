@@ -12,7 +12,13 @@ import {
   useRef,
 } from 'react'
 import { Button } from '@/components/ui/button'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
 import { createFinderFormStore } from '@/stores/ui'
 import { ConstraintEditor } from './ConstraintEditor'
@@ -59,6 +65,7 @@ export function FinderForm({
     floors,
     maxMatches,
     matchMode,
+    includeBaseline,
     constraints,
   } = useStore(formStore)
 
@@ -156,6 +163,7 @@ export function FinderForm({
         })
       ),
       matchMode,
+      includeBaseline,
       maxMatches: Number(maxMatches),
     })
   }
@@ -197,6 +205,27 @@ export function FinderForm({
           onUpdate={updateConstraint}
         />
       </FieldGroup>
+      <Field orientation="horizontal">
+        <FieldContent>
+          <FieldLabel htmlFor="finder-include-baseline">
+            Include fresh-baseline matches
+          </FieldLabel>
+          <FieldDescription>
+            Planning only: identities can change with prior player or runtime
+            history.
+          </FieldDescription>
+        </FieldContent>
+        <Switch
+          id="finder-include-baseline"
+          size="sm"
+          checked={includeBaseline}
+          disabled={running}
+          onCheckedChange={(checked) =>
+            updateState({ includeBaseline: checked })
+          }
+          aria-label="Include fresh-baseline matches"
+        />
+      </Field>
       <div className="flex items-center justify-between gap-2">
         <Field orientation="horizontal" className="w-auto gap-2">
           <FieldLabel htmlFor="finder-match-rule">

@@ -4,7 +4,7 @@ import { FloorAppearanceSection } from '@/components/seed/FloorAppearanceSection
 import { FloorEncounterSection } from '@/components/seed/FloorEncounterSection'
 import {
   FloorItemSections,
-  visibleFloorItems,
+  visibleItemGroups,
 } from '@/components/seed/FloorItemSections'
 import { QuestCard } from '@/components/seed/QuestCard'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -36,7 +36,7 @@ export function FloorDetail({
   const showMap = !!floor.map
   const showAssumedMap = !floor.map && !!floor.assumed_map
   const displayedMap = floor.map ?? floor.assumed_map ?? null
-  const visibleItems = visibleFloorItems(floor.items)
+  const visibleItems = visibleItemGroups(floor.items)
 
   const details = (
     <div className="min-w-0 flex-1 space-y-3">

@@ -18,67 +18,91 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
     ({ includeBaselines, seed }) => {
       const wandItems: Record<string, unknown>[] = [
         {
-          name: 'wand reward',
-          quantity: 1,
-          category: 'wand',
-          level_range: { min: 1, max: 3 },
-          cursed: false,
-          prediction: 'constrained',
           source: 'Wandmaker.Quest',
+          variants: [
+            {
+              name: 'wand reward',
+              quantity: 1,
+              category: 'wand',
+              level_range: { min: 1, max: 3 },
+              cursed: false,
+              prediction: 'constrained',
+            },
+          ],
         },
         {
-          name: 'wand reward',
-          quantity: 1,
-          category: 'wand',
-          level_range: { min: 1, max: 3 },
-          cursed: false,
-          prediction: 'constrained',
           source: 'Wandmaker.Quest',
+          variants: [
+            {
+              name: 'wand reward',
+              quantity: 1,
+              category: 'wand',
+              level_range: { min: 1, max: 3 },
+              cursed: false,
+              prediction: 'constrained',
+            },
+          ],
         },
       ]
       const impItems: Record<string, unknown>[] = [
         {
-          name: 'ring reward',
-          quantity: 1,
-          category: 'ring',
-          level_range: { min: 2, max: 4 },
-          cursed: true,
-          prediction: 'constrained',
           source: 'Imp.Quest',
+          variants: [
+            {
+              name: 'ring reward',
+              quantity: 1,
+              category: 'ring',
+              level_range: { min: 2, max: 4 },
+              cursed: true,
+              prediction: 'constrained',
+            },
+          ],
         },
       ]
       if (includeBaselines) {
         wandItems.push(
           {
-            name: 'wand of blast wave +2',
-            quantity: 1,
-            class_name: 'WandOfBlastWave',
-            category: 'wand',
-            level: 2,
-            cursed: false,
-            prediction: 'baseline',
             source: 'Wandmaker.Quest',
+            variants: [
+              {
+                name: 'wand of blast wave +2',
+                quantity: 1,
+                class_name: 'WandOfBlastWave',
+                category: 'wand',
+                level: 2,
+                cursed: false,
+                prediction: 'baseline',
+              },
+            ],
           },
           {
-            name: 'wand of corrosion +1',
-            quantity: 1,
-            class_name: 'WandOfCorrosion',
-            category: 'wand',
-            level: 1,
-            cursed: false,
-            prediction: 'baseline',
             source: 'Wandmaker.Quest',
+            variants: [
+              {
+                name: 'wand of corrosion +1',
+                quantity: 1,
+                class_name: 'WandOfCorrosion',
+                category: 'wand',
+                level: 1,
+                cursed: false,
+                prediction: 'baseline',
+              },
+            ],
           }
         )
         impItems.push({
-          name: 'ring of haste +3',
-          quantity: 1,
-          class_name: 'RingOfHaste',
-          category: 'ring',
-          level: 3,
-          cursed: true,
-          prediction: 'baseline',
           source: 'Imp.Quest',
+          variants: [
+            {
+              name: 'ring of haste +3',
+              quantity: 1,
+              class_name: 'RingOfHaste',
+              category: 'ring',
+              level: 3,
+              cursed: true,
+              prediction: 'baseline',
+            },
+          ],
         })
       }
 

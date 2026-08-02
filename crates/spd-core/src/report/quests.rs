@@ -10,7 +10,7 @@ pub struct QuestDepthRange {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct QuestRewardSelection {
-    /// Joins canonical reward entries in `FloorReport.items` through `ItemEntry.source`.
+    /// Joins canonical reward groups in `FloorReport.items` through `ItemGroup.source`.
     pub item_source: String,
     pub option_count: u32,
     pub selected_count: u32,

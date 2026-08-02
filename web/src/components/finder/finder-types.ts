@@ -41,6 +41,7 @@ export type FinderConfig = {
   floors: number
   constraints: SeedSearchConstraint[]
   matchMode: SeedSearchMatchMode
+  includeBaseline: boolean
   maxMatches: number
 }
 

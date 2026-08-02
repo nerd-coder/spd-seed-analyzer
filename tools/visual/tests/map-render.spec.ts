@@ -88,50 +88,90 @@ async function installSyntheticMapReport(page: Page) {
           : null,
     }))
     ;(floors[3].items as unknown[]).push({
-      name: 'Synthetic conditional item',
-      quantity: 1,
-      class_name: 'ScrollOfTransmutation',
-      category: 'scroll',
-      level_range: { min: 0, max: 3 },
-      cursed: true,
-      enchantment: {
-        type: 'Blazing',
-        conditions: [
-          {
-            type: 'trinket',
-            events: [
-              { before_depth: 4, kind: 'acquired', trinket: 'ParchmentScrap' },
-              { before_depth: 4, kind: 'upgraded' },
+      variants: [
+        {
+          name: 'Synthetic conditional item',
+          quantity: 1,
+          class_name: 'ScrollOfTransmutation',
+          category: 'scroll',
+          level_range: { min: 0, max: 3 },
+          cursed: true,
+          enchantment: {
+            type: 'Blazing',
+            conditions: [
+              {
+                type: 'trinket',
+                events: [
+                  {
+                    before_depth: 4,
+                    kind: 'acquired',
+                    trinket: 'ParchmentScrap',
+                  },
+                  { before_depth: 4, kind: 'upgraded' },
+                ],
+              },
             ],
           },
-        ],
-      },
-      prediction: 'exact',
-      conditions: [
-        {
-          type: 'state',
-          state_id: 'synthetic_upgrade_route',
-        },
-      ],
-      spawn_conditions: [
-        {
-          all_of: [
+          prediction: 'exact',
+          conditions: [
             {
-              type: 'challenge',
-              challenge: 'forbidden_runes',
-              enabled: false,
+              type: 'state',
+              state_id: 'synthetic_upgrade_route',
+            },
+          ],
+          spawn_conditions: [
+            {
+              all_of: [
+                {
+                  type: 'challenge',
+                  challenge: 'forbidden_runes',
+                  enabled: false,
+                },
+              ],
             },
           ],
         },
       ],
     })
     ;(floors[3].items as unknown[]).push({
-      name: 'Trinket Catalyst',
-      quantity: 1,
-      class_name: 'TrinketCatalyst',
-      category: 'trinket',
-      candidate_classes: ['MossyClump', 'MimicTooth', 'RatSkull', 'SaltCube'],
-      prediction: 'exact',
+      variants: [
+        {
+          name: 'Trinket Catalyst',
+          quantity: 1,
+          class_name: 'TrinketCatalyst',
+          category: 'trinket',
+          candidate_classes: [
+            'MossyClump',
+            'MimicTooth',
+            'RatSkull',
+            'SaltCube',
+          ],
+          prediction: 'exact',
+        },
+      ],
+    })
+    ;(floors[3].items as unknown[]).push({
+      source: 'SacrificeRoom',
+      variants: [
+        {
+          name: 'weapon reward',
+          quantity: 1,
+          category: 'weapon',
+          tier_range: { min: 2, max: 5 },
+          level_range: { min: 0, max: 3 },
+          cursed: true,
+          prediction: 'constrained',
+        },
+        {
+          name: 'friendly sickle +2',
+          quantity: 1,
+          class_name: 'Sickle',
+          category: 'weapon',
+          level: 2,
+          cursed: true,
+          prediction: 'baseline',
+        },
+      ],
     })
     const report = {
       seed: {
@@ -611,6 +651,54 @@ test('finder result displays only matched constraints', async ({ page }) => {
   expect(errors.page, 'uncaught page errors').toEqual([])
 })
 
+test('finder can opt into SacrificeRoom fresh-baseline items', async ({
+  page,
+}) => {
+  const errors: BrowserErrors = { console: [], page: [] }
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.console.push(message.text())
+  })
+  page.on('pageerror', (error) => errors.page.push(error.message))
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
+  await page.addInitScript((storage) => {
+    localStorage.clear()
+    localStorage.setItem(storage.mode, 'finder')
+    localStorage.setItem(storage.theme, 'light')
+  }, APP_STORAGE)
+
+  await page.goto('/')
+  await page
+    .getByRole('spinbutton', { name: 'Start seed' })
+    .fill('3293380032588')
+  await page.getByRole('spinbutton', { name: 'Candidates' }).fill('10')
+  await page.getByRole('combobox', { name: 'Depth' }).selectOption('4')
+  await page.getByRole('spinbutton', { name: 'Results' }).fill('1')
+  await page.getByLabel('Item 1 type').selectOption('Sickle')
+  await page.getByLabel('Item 1 upgrade level').selectOption('2')
+
+  const includeBaseline = page.getByRole('switch', {
+    name: 'Include fresh-baseline matches',
+  })
+  await expect(includeBaseline).not.toBeChecked()
+  await includeBaseline.click()
+  await page.getByRole('button', { name: 'Find seeds' }).click()
+
+  await expect(page.getByText('PUB-CLI-VNW', { exact: true })).toBeVisible({
+    timeout: 60_000,
+  })
+  const result = page
+    .locator('[data-slot="item"]')
+    .filter({ hasText: 'friendly sickle' })
+  await expect(result).toContainText('friendly sickle +2')
+  await expect(result).toContainText('Sacrifice')
+  await expect(
+    result.getByText('Fresh baseline', { exact: true })
+  ).toBeVisible()
+
+  expect(errors.console, 'browser console errors').toEqual([])
+  expect(errors.page, 'uncaught page errors').toEqual([])
+})
+
 test('conditional items render inline with their item properties', async ({
   page,
 }) => {
@@ -625,14 +713,19 @@ test('conditional items render inline with their item properties', async ({
   await expect(page.getByRole('switch', { name: 'Floor maps' })).toHaveCount(0)
   await expect(page.getByRole('heading', { name: 'Identities' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Floor 1' })).toBeVisible()
-  await expect(page.getByText('Synthetic conditional item')).toBeVisible()
-  await expect(page.getByText('+0…+3', { exact: true })).toBeVisible()
+  const syntheticItem = page.getByRole('listitem').filter({
+    hasText: 'Synthetic conditional item',
+  })
+  await expect(syntheticItem).toBeVisible()
+  await expect(syntheticItem.getByText('+0…+3', { exact: true })).toBeVisible()
   await expect(
     page.getByRole('button', { name: 'Show upgrade conditions' })
   ).toHaveCount(0)
-  await expect(page.getByText('cursed', { exact: true })).toBeVisible()
-  await expect(page.getByText('Blazing', { exact: true })).toBeVisible()
-  const condition = page.getByRole('button', {
+  await expect(syntheticItem.getByText('cursed', { exact: true })).toBeVisible()
+  await expect(
+    syntheticItem.getByText('Blazing', { exact: true })
+  ).toBeVisible()
+  const condition = syntheticItem.getByRole('button', {
     name: 'Forbidden Runes disabled',
   })
   await expect(condition).toBeVisible()
@@ -640,7 +733,7 @@ test('conditional items render inline with their item properties', async ({
   await expect(
     page.getByText('Spawn conditions', { exact: true })
   ).toBeVisible()
-  const enhancement = page.getByRole('button', {
+  const enhancement = syntheticItem.getByRole('button', {
     name: 'Show enchantment conditions',
   })
   await enhancement.click()
@@ -654,6 +747,12 @@ test('conditional items render inline with their item properties', async ({
     page.getByText('Trinket transmutation rotation', { exact: true })
   ).toBeVisible()
   await expect(page.getByText('Trap Mechanism', { exact: true })).toBeVisible()
+  const sacrificeReward = page.getByRole('listitem').filter({
+    hasText: 'weapon reward',
+  })
+  await expect(sacrificeReward).toHaveCount(1)
+  await expect(sacrificeReward).toContainText('friendly sickle +2')
+  await expect(sacrificeReward).toContainText('Fresh baseline')
   await expect(
     page.getByRole('button', { name: 'Expand floor 4 map' })
   ).toHaveCount(1)

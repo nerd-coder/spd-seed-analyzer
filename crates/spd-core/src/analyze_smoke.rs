@@ -6,7 +6,7 @@ fn analyze_seed_smoke() {
     assert!(r
         .floors
         .iter()
-        .flat_map(|floor| &floor.items)
+        .flat_map(report::FloorReport::item_variants)
         .any(|item| !item.spawn_conditions.is_empty()));
     assert_eq!(r.status, "partial");
     eprintln!("status={} floors={}", r.status, r.floors.len());
@@ -308,7 +308,7 @@ fn automatic_item_conditions_cover_supported_run_combinations() {
     let dependencies = report
         .floors
         .iter()
-        .flat_map(|floor| &floor.items)
+        .flat_map(report::FloorReport::item_variants)
         .flat_map(|item| &item.spawn_conditions)
         .flat_map(|condition| &condition.all_of)
         .collect::<Vec<_>>();
@@ -323,10 +323,10 @@ fn automatic_item_conditions_cover_supported_run_combinations() {
     assert!(report
         .floors
         .iter()
-        .flat_map(|floor| &floor.items)
+        .flat_map(report::FloorReport::item_variants)
         .flat_map(|item| item.conditions.iter())
         .chain(report.floors.iter().flat_map(|floor| {
-            floor.items.iter().flat_map(|item| {
+            floor.item_variants().flat_map(|item| {
                 item.enchantment
                     .as_ref()
                     .into_iter()
@@ -337,7 +337,7 @@ fn automatic_item_conditions_cover_supported_run_combinations() {
     assert!(report
         .floors
         .iter()
-        .flat_map(|floor| &floor.items)
+        .flat_map(report::FloorReport::item_variants)
         .any(|item| {
             item.class_name.as_deref() == Some("ScrollOfUpgrade")
                 && !item.spawn_conditions.is_empty()
@@ -357,7 +357,8 @@ fn public_contract_serializes_conditions_on_items_only() {
         .unwrap()
         .iter()
         .flat_map(|floor| floor["items"].as_array().unwrap())
-        .any(|item| item.get("spawn_conditions").is_some()));
+        .flat_map(|group| group["variants"].as_array().unwrap())
+        .any(|variant| variant.get("spawn_conditions").is_some()));
     assert!(value["floors"]
         .as_array()
         .unwrap()
@@ -371,6 +372,7 @@ fn public_contract_serializes_conditions_on_items_only() {
         .unwrap()
         .iter()
         .flat_map(|floor| floor["items"].as_array().unwrap())
+        .flat_map(|group| group["variants"].as_array().unwrap())
     {
         assert!(item.get("notes").is_none());
         if let Some(enchantment) = item.get("enchantment") {
@@ -405,6 +407,57 @@ fn no_op_spawn_dependencies_are_not_serialized() {
     };
     let value = serde_json::to_value(item).expect("serialize item");
     assert!(value.get("spawn_conditions").is_none());
+}
+
+#[test]
+fn pub_cli_vnw_groups_the_depth_four_sacrifice_reward() {
+    let report = analyze_seed("PUB-CLI-VNW", 4).expect("analyze");
+    let floor = report
+        .floors
+        .iter()
+        .find(|floor| floor.depth == 4)
+        .expect("depth four");
+    let groups = floor
+        .items
+        .iter()
+        .filter(|group| group.source.as_deref() == Some("SacrificeRoom"))
+        .collect::<Vec<_>>();
+    assert_eq!(groups.len(), 1);
+
+    let variants = &groups[0].variants;
+    assert_eq!(variants.len(), 2);
+    assert_eq!(variants[0].name, "weapon reward");
+    assert_eq!(
+        variants[0].prediction,
+        report::ItemPredictionKind::Constrained
+    );
+    assert_eq!(variants[0].class_name, None);
+    assert_eq!(
+        variants[0].tier_range,
+        Some(report::NumericRange { min: 2, max: 5 })
+    );
+    assert_eq!(
+        variants[0].level_range,
+        Some(report::NumericRange { min: 0, max: 3 })
+    );
+    assert_eq!(variants[0].cursed, Some(true));
+    assert!(variants[0].spawn_conditions.is_empty());
+
+    assert_eq!(variants[1].name, "friendly sickle +2");
+    assert_eq!(variants[1].class_name.as_deref(), Some("Sickle"));
+    assert_eq!(variants[1].level, Some(2));
+    assert_eq!(variants[1].cursed, Some(true));
+    assert_eq!(variants[1].prediction, report::ItemPredictionKind::Baseline);
+
+    let value = serde_json::to_value(groups[0]).expect("serialize grouped reward");
+    assert_eq!(value["source"], "SacrificeRoom");
+    assert_eq!(value["variants"].as_array().unwrap().len(), 2);
+    assert!(value["variants"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|variant| variant.get("source").is_none()));
+    assert!(!value.to_string().contains("forbidden_runes"));
 }
 
 #[test]

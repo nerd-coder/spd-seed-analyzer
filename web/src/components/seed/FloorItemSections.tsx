@@ -23,12 +23,13 @@ import { formatItemSource, isHighlightSource } from '@/lib/labels'
 import type {
   FloorReport,
   IdentityMaps,
-  ItemEntry,
+  ItemGroup,
+  ItemVariant,
   TrinketSelectionReport,
 } from '@/lib/spd-wasm'
 
-function itemGroup(
-  item: ItemEntry
+function itemSection(
+  item: ItemGroup
 ): 'shop' | 'quest' | 'guaranteed' | 'loot' | 'general' {
   const source = item.source ?? ''
   if (source.includes('ShopRoom')) return 'shop'
@@ -74,7 +75,7 @@ function CandidateOptions({
   item,
   identities,
 }: {
-  item: ItemEntry
+  item: ItemVariant
   identities: IdentityMaps
 }) {
   return (
@@ -131,7 +132,7 @@ function CatalystOffers({
   identities,
   trinketSelection,
 }: {
-  item: ItemEntry
+  item: ItemVariant
   identities: IdentityMaps
   trinketSelection?: TrinketSelectionReport
 }) {
@@ -175,110 +176,146 @@ function CatalystOffers({
   )
 }
 
+function ItemVariantRow({
+  item,
+  source,
+  identities,
+  trinketSelection,
+  showSource,
+}: {
+  item: ItemVariant
+  source?: string | null
+  identities: IdentityMaps
+  trinketSelection?: TrinketSelectionReport
+  showSource: boolean
+}) {
+  const displayedLevelRange = item.name.includes('…') ? null : item.level_range
+  const sourceLabel =
+    !showSource ||
+    source?.includes('ShopRoom') ||
+    source === 'Ghost.Quest' ||
+    source === 'Wandmaker.Quest' ||
+    source === 'Blacksmith.Quest' ||
+    source === 'Imp.Quest'
+      ? null
+      : formatItemSource(source)
+
+  if (item.candidate_classes?.length) {
+    return item.name === 'Trinket Catalyst' ? (
+      <CatalystOffers
+        item={item}
+        identities={identities}
+        trinketSelection={trinketSelection}
+      />
+    ) : (
+      <CandidateOptions item={item} identities={identities} />
+    )
+  }
+
+  return (
+    <div className="flex min-w-0 items-center gap-2">
+      {item.name === 'artifact or ring' ? (
+        <CircleQuestionMark
+          aria-label="Unknown artifact or ring"
+          className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+        />
+      ) : (
+        <ItemIcon
+          classNameItem={item.class_name}
+          category={item.category}
+          appearance={itemAppearance(item, identities)}
+          size={16}
+          title={item.name}
+          className="mt-0.5"
+        />
+      )}
+      <span className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
+        <ItemName name={item.name} />
+        {item.quantity > 1 ? (
+          <span className="font-mono text-muted-foreground tabular-nums">
+            x{item.quantity}
+          </span>
+        ) : null}
+        {item.tier != null ? (
+          <Badge variant="outline">tier {item.tier}</Badge>
+        ) : null}
+        {item.tier_range ? (
+          <Badge variant="outline">
+            tier {item.tier_range.min}–{item.tier_range.max}
+          </Badge>
+        ) : null}
+        {displayedLevelRange ? (
+          <Badge variant="outline">
+            +{displayedLevelRange.min}…+{displayedLevelRange.max}
+          </Badge>
+        ) : null}
+        {item.cursed === true ? (
+          <Badge variant="destructive">cursed</Badge>
+        ) : null}
+        {item.enchantment ? (
+          <Badge variant="secondary">{item.enchantment.type}</Badge>
+        ) : null}
+        {sourceLabel ? (
+          <Badge
+            variant={isHighlightSource(source) ? 'secondary' : 'outline'}
+            title={source ?? undefined}
+          >
+            {sourceLabel}
+          </Badge>
+        ) : null}
+        <SpawnConditionDetails conditions={item.spawn_conditions} />
+        {displayedLevelRange ? null : (
+          <UpgradeConditionDetails
+            levelRange={item.level_range}
+            conditions={item.conditions}
+          />
+        )}
+        <EnchantmentConditionDetails enchantment={item.enchantment} />
+      </span>
+    </div>
+  )
+}
+
 export function FloorItemList({
   items,
   identities,
   depth,
   trinketSelection,
 }: {
-  items: ItemEntry[]
+  items: ItemGroup[]
   identities: IdentityMaps
   depth: number
   trinketSelection?: TrinketSelectionReport
 }) {
   return (
     <ul className="flex flex-col gap-1.5 text-sm">
-      {items.map((item, index) => {
-        const displayedLevelRange = item.name.includes('…')
-          ? null
-          : item.level_range
-        const sourceLabel =
-          itemGroup(item) === 'shop' ||
-          item.source === 'Ghost.Quest' ||
-          item.source === 'Wandmaker.Quest' ||
-          item.source === 'Blacksmith.Quest' ||
-          item.source === 'Imp.Quest'
-            ? null
-            : formatItemSource(item.source)
-        return (
-          <li key={`${depth}-${index}`} className="flex items-center gap-2">
-            {item.candidate_classes?.length ? (
-              item.name === 'Trinket Catalyst' ? (
-                <CatalystOffers
-                  item={item}
-                  identities={identities}
-                  trinketSelection={trinketSelection}
-                />
-              ) : (
-                <CandidateOptions item={item} identities={identities} />
-              )
-            ) : (
-              <>
-                {item.name === 'artifact or ring' ? (
-                  <CircleQuestionMark
-                    aria-label="Unknown artifact or ring"
-                    className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-                  />
-                ) : (
-                  <ItemIcon
-                    classNameItem={item.class_name}
-                    category={item.category}
-                    appearance={itemAppearance(item, identities)}
-                    size={16}
-                    title={item.name}
-                    className="mt-0.5"
-                  />
-                )}
-                <span className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                  <ItemName name={item.name} />
-                  {item.quantity > 1 ? (
-                    <span className="font-mono text-muted-foreground tabular-nums">
-                      x{item.quantity}
-                    </span>
-                  ) : null}
-                  {item.tier != null ? (
-                    <Badge variant="outline">tier {item.tier}</Badge>
-                  ) : null}
-                  {item.tier_range ? (
-                    <Badge variant="outline">
-                      tier {item.tier_range.min}–{item.tier_range.max}
-                    </Badge>
-                  ) : null}
-                  {displayedLevelRange ? (
-                    <Badge variant="outline">
-                      +{displayedLevelRange.min}…+{displayedLevelRange.max}
-                    </Badge>
-                  ) : null}
-                  {item.cursed === true ? (
-                    <Badge variant="destructive">cursed</Badge>
-                  ) : null}
-                  {item.enchantment ? (
-                    <Badge variant="secondary">{item.enchantment.type}</Badge>
-                  ) : null}
-                  {sourceLabel ? (
-                    <Badge
-                      variant={
-                        isHighlightSource(item.source) ? 'secondary' : 'outline'
-                      }
-                      title={item.source ?? undefined}
-                    >
-                      {sourceLabel}
-                    </Badge>
-                  ) : null}
-                  <SpawnConditionDetails conditions={item.spawn_conditions} />
-                  {displayedLevelRange ? null : (
-                    <UpgradeConditionDetails
-                      levelRange={item.level_range}
-                      conditions={item.conditions}
-                    />
-                  )}
-                  <EnchantmentConditionDetails enchantment={item.enchantment} />
-                </span>
-              </>
-            )}
-          </li>
-        )
-      })}
+      {items.map((group, index) => (
+        <li key={`${depth}-${index}`} className="flex min-w-0 flex-col gap-1">
+          {group.variants.map((item, variantIndex) => (
+            <div
+              key={`${item.prediction}-${variantIndex}`}
+              className={
+                variantIndex === 0
+                  ? 'min-w-0'
+                  : 'flex min-w-0 items-center gap-2 pl-6'
+              }
+            >
+              {variantIndex > 0 ? (
+                <Badge variant="outline" className="shrink-0">
+                  Fresh baseline
+                </Badge>
+              ) : null}
+              <ItemVariantRow
+                item={item}
+                source={group.source}
+                identities={identities}
+                trinketSelection={trinketSelection}
+                showSource={variantIndex === 0}
+              />
+            </div>
+          ))}
+        </li>
+      ))}
     </ul>
   )
 }
@@ -292,7 +329,7 @@ export function FloorItemSections({
   identities: IdentityMaps
   trinketSelection?: TrinketSelectionReport
 }) {
-  const groups = partitionFloorItems(visibleFloorItems(floor.items))
+  const groups = partitionFloorItems(visibleItemGroups(floor.items))
   const sections = [
     { key: 'guaranteed', label: 'Guaranteed spawns', items: groups.guaranteed },
     { key: 'loot', label: 'Floor loot', items: groups.loot },
@@ -315,7 +352,9 @@ export function FloorItemSections({
                 ({items.length})
               </span>
             </p>
-            {items.some((item) => item.prediction === 'baseline') ? (
+            {items.some((group) =>
+              group.variants.some((item) => item.prediction === 'baseline')
+            ) ? (
               <BaselineItemsPopover />
             ) : null}
           </div>
@@ -331,26 +370,36 @@ export function FloorItemSections({
   )
 }
 
-export function visibleFloorItems(items: ItemEntry[]) {
+export function visibleItemGroups(items: ItemGroup[]) {
   const exactItems = new Set(
-    items.filter((item) => item.prediction === 'exact').map(itemDisplayKey)
+    items.flatMap((group) =>
+      group.variants
+        .filter((item) => item.prediction === 'exact')
+        .map((item) => itemDisplayKey(item, group.source))
+    )
   )
-  return items.filter(
-    (item) =>
-      item.prediction !== 'baseline' || !exactItems.has(itemDisplayKey(item))
-  )
+  return items
+    .map((group) => ({
+      ...group,
+      variants: group.variants.filter(
+        (item) =>
+          item.prediction !== 'baseline' ||
+          !exactItems.has(itemDisplayKey(item, group.source))
+      ),
+    }))
+    .filter((group) => group.variants.length > 0)
 }
 
-function itemDisplayKey(item: ItemEntry) {
-  return JSON.stringify([item.class_name, item.level, item.source])
+function itemDisplayKey(item: ItemVariant, source?: string | null) {
+  return JSON.stringify([item.class_name, item.level, source])
 }
 
-export function partitionFloorItems(items: ItemEntry[]) {
+export function partitionFloorItems(items: ItemGroup[]) {
   return {
-    general: items.filter((item) => itemGroup(item) === 'general'),
-    guaranteed: items.filter((item) => itemGroup(item) === 'guaranteed'),
-    loot: items.filter((item) => itemGroup(item) === 'loot'),
-    shop: items.filter((item) => itemGroup(item) === 'shop'),
-    quest: items.filter((item) => itemGroup(item) === 'quest'),
+    general: items.filter((item) => itemSection(item) === 'general'),
+    guaranteed: items.filter((item) => itemSection(item) === 'guaranteed'),
+    loot: items.filter((item) => itemSection(item) === 'loot'),
+    shop: items.filter((item) => itemSection(item) === 'shop'),
+    quest: items.filter((item) => itemSection(item) === 'quest'),
   }
 }

@@ -221,10 +221,9 @@ pub struct FloorReport {
     /// Runtime summons and respawns are deliberately excluded.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub initial_encounters: Vec<InitialEncounter>,
-    /// Item facts and fresh/no-history baseline samples for this floor.
-    /// Consumers must distinguish baseline samples through
-    /// `ItemEntry::prediction`; only exact items are finder evidence.
-    pub items: Vec<ItemEntry>,
+    /// Logical item spawns and their exact, constrained, or fresh-baseline variants.
+    /// Only exact variants are finder evidence.
+    pub items: Vec<ItemGroup>,
     pub quests: Vec<QuestReport>,
     /// Present when geometry build succeeded.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -234,6 +233,12 @@ pub struct FloorReport {
     /// prediction and must be presented with its assumption warning.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub assumed_map: Option<FloorMap>,
+}
+
+impl FloorReport {
+    pub fn item_variants(&self) -> impl Iterator<Item = &ItemEntry> {
+        self.items.iter().flat_map(|group| &group.variants)
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -353,8 +358,105 @@ pub struct ItemEntry {
     /// Legacy internal diagnostics retained for parity tests; never serialized.
     #[serde(skip)]
     pub notes: Vec<String>,
+    /// Internal provenance copied to `ItemGroup::source` in floor reports.
+    #[serde(skip)]
+    pub source: Option<String>,
+}
+
+/// One logical item spawn. Multiple variants are alternative projections of
+/// that spawn, rather than additional items.
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+pub struct ItemGroup {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
+    pub variants: Vec<ItemEntry>,
+}
+
+impl ItemGroup {
+    pub fn single(item: ItemEntry) -> Self {
+        Self {
+            source: item.source.clone(),
+            variants: vec![item],
+        }
+    }
+}
+
+impl From<ItemEntry> for ItemGroup {
+    fn from(item: ItemEntry) -> Self {
+        Self::single(item)
+    }
+}
+
+impl std::ops::Deref for ItemGroup {
+    type Target = ItemEntry;
+
+    fn deref(&self) -> &Self::Target {
+        self.variants
+            .first()
+            .expect("public item groups always contain a variant")
+    }
+}
+
+impl<'de> Deserialize<'de> for ItemGroup {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct WireGroup {
+            source: Option<String>,
+            variants: Vec<ItemEntry>,
+        }
+
+        let mut wire = WireGroup::deserialize(deserializer)?;
+        for variant in &mut wire.variants {
+            variant.source = wire.source.clone();
+        }
+        Ok(Self {
+            source: wire.source,
+            variants: wire.variants,
+        })
+    }
+}
+
+pub(crate) fn group_item_entries(entries: Vec<ItemEntry>) -> Vec<ItemGroup> {
+    let mut groups: Vec<ItemGroup> = Vec::with_capacity(entries.len());
+    for entry in entries {
+        let equipment_room = matches!(
+            entry.source.as_deref(),
+            Some("SacrificeRoom" | "CryptRoom" | "StatueRoom")
+        );
+        let paired_prediction = matches!(
+            entry.prediction,
+            ItemPredictionKind::Constrained | ItemPredictionKind::Baseline
+        );
+        let matching = (equipment_room && paired_prediction).then(|| {
+            groups.iter_mut().find(|group| {
+                group.source == entry.source
+                    && group.variants.len() == 1
+                    && group.variants[0].category == entry.category
+                    && matches!(
+                        (group.variants[0].prediction, entry.prediction),
+                        (
+                            ItemPredictionKind::Constrained,
+                            ItemPredictionKind::Baseline
+                        ) | (
+                            ItemPredictionKind::Baseline,
+                            ItemPredictionKind::Constrained
+                        )
+                    )
+            })
+        });
+        if let Some(Some(group)) = matching {
+            group.variants.push(entry);
+            group
+                .variants
+                .sort_by_key(|variant| variant.prediction == ItemPredictionKind::Baseline);
+        } else {
+            groups.push(ItemGroup::single(entry));
+        }
+    }
+    groups
 }
 
 const fn default_item_quantity() -> i32 {
