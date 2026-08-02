@@ -198,10 +198,11 @@ Without a fully fixed generation profile, the honest public contract is:
   reward contract.
 
 The Rust implementation replays the fixed profile's call order and stores both
-exact options for parity, while exposing all 13 WAND classes as the conservative
-candidate set. A public projection that displays a concrete class or sampled
-level without an explicit replay profile is not sound; shared projection work
-must render generic wand options and a +1..+3 level range in that case.
+exact options plus all 13 WAND classes internally for parity. The public report
+keeps generic +1..+3 wand options as the route-independent contract and may
+also carry the concrete pair as an explicitly labelled fresh/no-history
+baseline. Shared renderers must not expand the full category at a sampled
+level or present the baseline pair as universal.
 
 ## Verification
 

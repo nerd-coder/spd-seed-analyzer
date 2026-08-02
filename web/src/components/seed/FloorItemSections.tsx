@@ -44,21 +44,21 @@ function itemGroup(
   return 'general'
 }
 
-function OtherItemsBaselinePopover() {
+function BaselineItemsPopover() {
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
           size="icon-xs"
-          aria-label="About baseline other-item rewards"
+          aria-label="About fresh baseline items"
         >
           <InfoIcon />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80">
         <PopoverHeader>
-          <PopoverTitle>Fresh baseline rewards</PopoverTitle>
+          <PopoverTitle>Fresh baseline items</PopoverTitle>
           <PopoverDescription>
             This is baseline analysis only. Player choices, trinkets,
             challenges, or prior generation can change these items, so they are
@@ -180,24 +180,24 @@ export function FloorItemList({
   identities,
   depth,
   trinketSelection,
-  showQuestSources = false,
 }: {
   items: ItemEntry[]
   identities: IdentityMaps
   depth: number
   trinketSelection?: TrinketSelectionReport
-  showQuestSources?: boolean
 }) {
   return (
     <ul className="flex flex-col gap-1.5 text-sm">
       {items.map((item, index) => {
+        const displayedLevelRange = item.name.includes('…')
+          ? null
+          : item.level_range
         const sourceLabel =
           itemGroup(item) === 'shop' ||
-          (!showQuestSources &&
-            (item.source === 'Ghost.Quest' ||
-              item.source === 'Wandmaker.Quest' ||
-              item.source === 'Blacksmith.Quest' ||
-              item.source === 'Imp.Quest'))
+          item.source === 'Ghost.Quest' ||
+          item.source === 'Wandmaker.Quest' ||
+          item.source === 'Blacksmith.Quest' ||
+          item.source === 'Imp.Quest'
             ? null
             : formatItemSource(item.source)
         return (
@@ -244,9 +244,9 @@ export function FloorItemList({
                       tier {item.tier_range.min}–{item.tier_range.max}
                     </Badge>
                   ) : null}
-                  {item.level_range && !item.name.includes('…') ? (
+                  {displayedLevelRange ? (
                     <Badge variant="outline">
-                      +{item.level_range.min}…+{item.level_range.max}
+                      +{displayedLevelRange.min}…+{displayedLevelRange.max}
                     </Badge>
                   ) : null}
                   {item.cursed === true ? (
@@ -266,10 +266,12 @@ export function FloorItemList({
                     </Badge>
                   ) : null}
                   <SpawnConditionDetails conditions={item.spawn_conditions} />
-                  <UpgradeConditionDetails
-                    levelRange={item.level_range}
-                    conditions={item.conditions}
-                  />
+                  {displayedLevelRange ? null : (
+                    <UpgradeConditionDetails
+                      levelRange={item.level_range}
+                      conditions={item.conditions}
+                    />
+                  )}
                   <EnchantmentConditionDetails enchantment={item.enchantment} />
                 </span>
               </>
@@ -290,21 +292,7 @@ export function FloorItemSections({
   identities: IdentityMaps
   trinketSelection?: TrinketSelectionReport
 }) {
-  const reportItems = floor.items.filter(
-    (item) => item.prediction !== 'baseline'
-  )
-  const groups = partitionFloorItems(reportItems)
-  const baselineItems = floor.items.filter(
-    (baseline) =>
-      baseline.prediction === 'baseline' &&
-      !reportItems.some(
-        (item) =>
-          item.prediction === 'exact' &&
-          item.class_name === baseline.class_name &&
-          item.level === baseline.level &&
-          item.source === baseline.source
-      )
-  )
+  const groups = partitionFloorItems(visibleFloorItems(floor.items))
   const sections = [
     { key: 'guaranteed', label: 'Guaranteed spawns', items: groups.guaranteed },
     { key: 'loot', label: 'Floor loot', items: groups.loot },
@@ -318,31 +306,6 @@ export function FloorItemSections({
 
   return (
     <>
-      {baselineItems.length > 0 ? (
-        <div className="flex flex-col gap-1">
-          <div className="flex flex-wrap items-center gap-1">
-            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-              Fresh baseline highlights
-              <span className="ml-1.5 font-mono font-normal tabular-nums normal-case">
-                ({baselineItems.length})
-              </span>
-            </p>
-            <Badge variant="outline">planning only</Badge>
-            <OtherItemsBaselinePopover />
-          </div>
-          <p className="text-muted-foreground text-xs leading-relaxed">
-            This is baseline analysis only. Player choices, trinkets,
-            challenges, or prior generation can change these items.
-          </p>
-          <FloorItemList
-            items={baselineItems}
-            identities={identities}
-            depth={floor.depth}
-            trinketSelection={trinketSelection}
-            showQuestSources
-          />
-        </div>
-      ) : null}
       {sections.map(({ key, label, items }) => (
         <div key={key} className="flex flex-col gap-1">
           <div className="flex items-center gap-1">
@@ -352,7 +315,9 @@ export function FloorItemSections({
                 ({items.length})
               </span>
             </p>
-            {key === 'general' ? <OtherItemsBaselinePopover /> : null}
+            {items.some((item) => item.prediction === 'baseline') ? (
+              <BaselineItemsPopover />
+            ) : null}
           </div>
           <FloorItemList
             items={items}
@@ -364,6 +329,20 @@ export function FloorItemSections({
       ))}
     </>
   )
+}
+
+export function visibleFloorItems(items: ItemEntry[]) {
+  const exactItems = new Set(
+    items.filter((item) => item.prediction === 'exact').map(itemDisplayKey)
+  )
+  return items.filter(
+    (item) =>
+      item.prediction !== 'baseline' || !exactItems.has(itemDisplayKey(item))
+  )
+}
+
+function itemDisplayKey(item: ItemEntry) {
+  return JSON.stringify([item.class_name, item.level, item.source])
 }
 
 export function partitionFloorItems(items: ItemEntry[]) {

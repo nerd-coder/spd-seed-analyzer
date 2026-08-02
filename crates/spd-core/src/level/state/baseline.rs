@@ -18,6 +18,18 @@ pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
         ItemProvenance::Quest(role) => Some(role),
         _ => None,
     };
+    // Wandmaker and Imp keep their full categories internally for parity and
+    // conservative reasoning. Publishing those categories on a concrete
+    // baseline sample makes shared renderers present every class at the
+    // sample's exact level, which is not a sound cross-profile claim.
+    let candidate_classes = if matches!(
+        quest_role,
+        Some(QuestRewardRole::WandmakerWand | QuestRewardRole::ImpRing)
+    ) {
+        Vec::new()
+    } else {
+        item.candidate_classes.clone()
+    };
     let artifact_conditional = item.artifact_conditional
         && item
             .source
@@ -32,7 +44,7 @@ pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
         name: title.strip_prefix("cursed ").unwrap_or(&title).into(),
         quantity: item.quantity.max(1),
         class_name: Some(item.class_name.clone()),
-        candidate_classes: item.candidate_classes.clone(),
+        candidate_classes,
         category: format!("{:?}", item.category).to_ascii_lowercase(),
         tier: crate::generator::weapon_tier_for_class(&item.class_name),
         tier_range: None,

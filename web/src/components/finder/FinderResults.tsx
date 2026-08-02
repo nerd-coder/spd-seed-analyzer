@@ -36,7 +36,6 @@ import {
 } from '@/components/ui/item'
 import { Progress } from '@/components/ui/progress'
 import { formatElapsed, useElapsedTime } from '@/hooks/useElapsedTime'
-import { itemAppearance } from '@/lib/identity'
 import { formatItemSource } from '@/lib/labels'
 import type { SeedSearchMatch } from '@/lib/spd-wasm'
 import type { FinderRunState } from './finder-types'
@@ -114,7 +113,7 @@ function ResultCard({
           </Badge>
         </CardAction>
       </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+      <CardContent>
         <div className="flex flex-col gap-2">
           <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
             Matched constraints
@@ -153,57 +152,6 @@ function ResultCard({
             })}
           </ItemGroup>
         </div>
-
-        {match.baselineItems.length > 0 ? (
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="min-w-0 flex-1">
-                <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                  Fresh baseline highlights
-                </p>
-                <p className="text-muted-foreground text-xs">
-                  This is baseline analysis only. These items did not match the
-                  search and can change with player choices or prior generation.
-                </p>
-              </div>
-              <Badge variant="outline">planning only</Badge>
-            </div>
-            <ItemGroup className="gap-2">
-              {match.baselineItems.map((item, baselineIndex) => {
-                const source = formatItemSource(item.source)
-                return (
-                  <Item
-                    key={`${item.depth}-${item.class_name}-${item.source}-${baselineIndex}`}
-                    variant="outline"
-                    size="sm"
-                  >
-                    <ItemMedia>
-                      <ItemIcon
-                        classNameItem={item.class_name}
-                        category={item.category}
-                        appearance={itemAppearance(item, match.identities)}
-                        size={24}
-                        title={item.name}
-                      />
-                    </ItemMedia>
-                    <ItemContent>
-                      <ItemTitle>
-                        <ItemName name={item.name} />
-                      </ItemTitle>
-                      <ItemDescription>
-                        Floor {item.depth}
-                        {source ? ` · ${source}` : ''}
-                      </ItemDescription>
-                    </ItemContent>
-                    {item.cursed === true ? (
-                      <Badge variant="destructive">cursed</Badge>
-                    ) : null}
-                  </Item>
-                )
-              })}
-            </ItemGroup>
-          </div>
-        ) : null}
       </CardContent>
       <CardFooter className="justify-end">
         <Button

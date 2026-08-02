@@ -1,7 +1,10 @@
 import { DepthIcon } from '@/components/DepthIcon'
 import { FloorMapPreview } from '@/components/FloorMapPreview'
 import { FloorAppearanceSection } from '@/components/seed/FloorAppearanceSection'
-import { FloorItemSections } from '@/components/seed/FloorItemSections'
+import {
+  FloorItemSections,
+  visibleFloorItems,
+} from '@/components/seed/FloorItemSections'
 import { QuestCard } from '@/components/seed/QuestCard'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -32,6 +35,7 @@ export function FloorDetail({
   const showMap = !!floor.map
   const showAssumedMap = !floor.map && !!floor.assumed_map
   const displayedMap = floor.map ?? floor.assumed_map ?? null
+  const visibleItems = visibleFloorItems(floor.items)
 
   const details = (
     <div className="min-w-0 flex-1 space-y-3">
@@ -45,10 +49,8 @@ export function FloorDetail({
               <QuestCard
                 key={`${floor.depth}-quest-${i}`}
                 quest={q}
-                rewards={floor.items.filter(
-                  (item) =>
-                    item.prediction !== 'baseline' &&
-                    item.source === q.contract.rewards.item_source
+                rewards={visibleItems.filter(
+                  (item) => item.source === q.contract.rewards.item_source
                 )}
                 identities={identities}
                 depth={floor.depth}

@@ -88,11 +88,11 @@ async function installSyntheticMapReport(page: Page) {
           : null,
     }))
     ;(floors[3].items as unknown[]).push({
-      name: 'Synthetic conditional item +2',
+      name: 'Synthetic conditional item',
       quantity: 1,
       class_name: 'ScrollOfTransmutation',
       category: 'scroll',
-      level: 2,
+      level_range: { min: 0, max: 3 },
       cursed: true,
       enchantment: {
         type: 'Blazing',
@@ -107,6 +107,12 @@ async function installSyntheticMapReport(page: Page) {
         ],
       },
       prediction: 'exact',
+      conditions: [
+        {
+          type: 'state',
+          state_id: 'synthetic_upgrade_route',
+        },
+      ],
       spawn_conditions: [
         {
           all_of: [
@@ -524,11 +530,11 @@ test('Other items explains fresh baseline equipment rewards', async ({
 }) => {
   const browserErrors = await openAnalyzer(page, 'AAA-AAA-AAA')
   const info = page
-    .getByRole('button', { name: 'About baseline other-item rewards' })
+    .getByRole('button', { name: 'About fresh baseline items' })
     .first()
   await info.click()
   await expect(
-    page.getByText('Fresh baseline rewards', { exact: true })
+    page.getByText('Fresh baseline items', { exact: true })
   ).toBeVisible()
   await expect(
     page.getByText('not seed-wide guarantees', { exact: false })
@@ -538,34 +544,30 @@ test('Other items explains fresh baseline equipment rewards', async ({
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
-test('analyzer displays fresh baseline highlights separately from guaranteed items', async ({
+test('analyzer displays baseline items in their ordinary item group', async ({
   page,
 }) => {
   const browserErrors = await openAnalyzer(page, 'RZN-LKU-EFS')
   const baselineItem = page.getByRole('listitem').filter({
     has: page.getByRole('img', { name: 'Ring of Wealth +2' }),
   })
+  const otherItems = page
+    .getByText(/^Other items/)
+    .first()
+    .locator('../..')
 
-  await expect(
-    page.getByText(/^Fresh baseline highlights/).first()
-  ).toBeVisible()
-  await expect(
-    page.getByText('planning only', { exact: true }).first()
-  ).toBeVisible()
-  await expect(
-    page.getByText('This is baseline analysis only.', { exact: false }).first()
-  ).toBeVisible()
+  await expect(page.getByText(/^Fresh baseline highlights/)).toHaveCount(0)
+  await expect(otherItems).toContainText('Ring of Wealth +2')
   await expect(baselineItem).toContainText('Ring of Wealth +2')
   await expect(baselineItem).toContainText('Crystal choice')
   await expect(baselineItem).toContainText('cursed')
+  await expect(page.getByText('planning only', { exact: true })).toHaveCount(0)
 
   expect(browserErrors.console, 'browser console errors').toEqual([])
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
-test('finder result displays baseline highlights outside matched constraints', async ({
-  page,
-}) => {
+test('finder result displays only matched constraints', async ({ page }) => {
   const errors: BrowserErrors = { console: [], page: [] }
   page.on('console', (message) => {
     if (message.type() === 'error') errors.console.push(message.text())
@@ -601,16 +603,9 @@ test('finder result displays baseline highlights outside matched constraints', a
   await expect(page.getByText('ration of food', { exact: true })).toBeVisible()
   await expect(
     page.getByText('Fresh baseline highlights', { exact: true })
-  ).toBeVisible()
-  await expect(
-    page.getByText(
-      'This is baseline analysis only. These items did not match the search and can change with player choices or prior generation.',
-      { exact: true }
-    )
-  ).toBeVisible()
-  await expect(page.getByText('planning only', { exact: true })).toBeVisible()
-  await expect(page.getByText('Ring of Wealth +2')).toBeVisible()
-  await expect(page.getByText('Floor 1 · Crystal choice')).toBeVisible()
+  ).toHaveCount(0)
+  await expect(page.getByText('planning only', { exact: true })).toHaveCount(0)
+  await expect(page.getByText('Ring of Wealth +2')).toHaveCount(0)
 
   expect(errors.console, 'browser console errors').toEqual([])
   expect(errors.page, 'uncaught page errors').toEqual([])
@@ -630,7 +625,11 @@ test('conditional items render inline with their item properties', async ({
   await expect(page.getByRole('switch', { name: 'Floor maps' })).toHaveCount(0)
   await expect(page.getByRole('heading', { name: 'Identities' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Floor 1' })).toBeVisible()
-  await expect(page.getByText('Synthetic conditional item +2')).toBeVisible()
+  await expect(page.getByText('Synthetic conditional item')).toBeVisible()
+  await expect(page.getByText('+0…+3', { exact: true })).toBeVisible()
+  await expect(
+    page.getByRole('button', { name: 'Show upgrade conditions' })
+  ).toHaveCount(0)
   await expect(page.getByText('cursed', { exact: true })).toBeVisible()
   await expect(page.getByText('Blazing', { exact: true })).toBeVisible()
   const condition = page.getByRole('button', {

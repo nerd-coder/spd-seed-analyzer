@@ -529,9 +529,11 @@ fn wandmaker_quest_spawns_within_prison() {
                     })
                     .collect();
                 assert_eq!(baseline_rewards.len(), 2);
-                assert!(baseline_rewards
-                    .iter()
-                    .all(|item| item.class_name.is_some() && item.level.is_some()));
+                assert!(baseline_rewards.iter().all(|item| {
+                    item.class_name.is_some()
+                        && item.level.is_some()
+                        && item.candidate_classes.is_empty()
+                }));
                 if let Some(map) = &f.map {
                     assert!(map.mobs.is_empty());
                     assert!(map.heaps.is_empty());
@@ -582,10 +584,10 @@ fn imp_quest_spawns_within_city() {
                     .any(|i| i.source.as_deref() == Some("Imp.Quest"))
             {
                 saw = true;
-                let ring = f
-                    .items
-                    .iter()
-                    .find(|i| i.source.as_deref() == Some("Imp.Quest"));
+                let ring = f.items.iter().find(|item| {
+                    item.source.as_deref() == Some("Imp.Quest")
+                        && item.prediction != report::ItemPredictionKind::Baseline
+                });
                 if let Some(ring) = ring {
                     assert_eq!(ring.name, "ring reward");
                     assert_eq!(ring.prediction, report::ItemPredictionKind::Constrained);
@@ -613,6 +615,21 @@ fn imp_quest_spawns_within_city() {
                                 })
                     )));
                 }
+                let baseline_rings: Vec<_> = f
+                    .items
+                    .iter()
+                    .filter(|item| {
+                        item.source.as_deref() == Some("Imp.Quest")
+                            && item.prediction == report::ItemPredictionKind::Baseline
+                    })
+                    .collect();
+                assert_eq!(baseline_rings.len(), 1);
+                assert!(baseline_rings.iter().all(|item| {
+                    item.class_name.is_some()
+                        && item.level.is_some()
+                        && item.cursed == Some(true)
+                        && item.candidate_classes.is_empty()
+                }));
                 break;
             }
         }

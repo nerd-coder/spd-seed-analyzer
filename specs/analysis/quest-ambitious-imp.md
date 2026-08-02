@@ -248,13 +248,14 @@ classes in quest-local metadata (`crates/spd-core/src/quests/imp.rs`). Fixed
 Mossy regressions cover reward-level, spawn-depth, and depth-18 target
 divergence.
 
-The public projection now keeps only the route-independent contract: a
-conditional cursed +2…+4 ring, the depth-to-target rule, and the 5-Monk /
-4-Golem token requirements. It exposes neither the sampled class and level nor
-a partial candidate list, so exact ring searches cannot treat a baseline route
-as evidence. The depth-20 shop remains explicitly conditional on quest
-completion. `specs/generator-decks.md` records Rat Skull and the unbounded
-artifact-exhaustion route as settled deck facts.
+The public report keeps the route-independent contract: a conditional cursed
++2…+4 ring, the depth-to-target rule, and the 5-Monk / 4-Golem token
+requirements. It may also carry the concrete ring as an explicitly labelled
+fresh/no-history baseline, but it exposes no candidate-class expansion and
+exact ring searches cannot treat that sample as evidence. The depth-20 shop
+remains explicitly conditional on quest completion. `specs/generator-decks.md`
+records Rat Skull and the unbounded artifact-exhaustion route as settled deck
+facts.
 
 Overall analysis remains partial for the broader reasons; this Imp phase does not claim complete run-history or
 floor-reset coverage.

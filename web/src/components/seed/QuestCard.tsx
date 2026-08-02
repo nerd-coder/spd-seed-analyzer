@@ -1,4 +1,5 @@
 import { FloorItemList } from '@/components/seed/FloorItemSections'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import type { IdentityMaps, ItemEntry, QuestReport } from '@/lib/spd-wasm'
 import { cn } from '@/lib/utils'
@@ -43,11 +44,22 @@ function targetSummary(quest: QuestReport) {
     case 'sad_ghost':
       return `Target: ${label(quest.baseline.target)}`
     case 'old_wandmaker':
-      return `Target: ${label(quest.baseline.objective)}`
+      return `Baseline target: ${label(quest.baseline.objective)}`
     case 'troll_blacksmith':
       return `Target: ${label(quest.baseline.objective)}`
     case 'ambitious_imp':
-      return `Target: ${label(quest.baseline.target)} (${quest.baseline.required_tokens} tokens)`
+      return `Baseline target: ${label(quest.baseline.target)} (${quest.baseline.required_tokens} tokens)`
+  }
+}
+
+function baselineContract(quest: QuestReport) {
+  switch (quest.type) {
+    case 'old_wandmaker':
+      return 'Reward contract: two distinct uncursed +1…+3 wands; complete the quest and choose one.'
+    case 'ambitious_imp':
+      return 'Reward contract: one cursed +2…+4 ring after completing the quest.'
+    default:
+      return null
   }
 }
 
@@ -63,27 +75,47 @@ export function QuestCard({
   depth: number
 }) {
   const styles = QUEST_STYLES[quest.type]
+  const contract = baselineContract(quest)
+  const baselineRewards = contract
+    ? rewards.filter((item) => item.prediction === 'baseline')
+    : []
+  const displayedRewards = baselineRewards.length
+    ? baselineRewards
+    : rewards.filter((item) => item.prediction !== 'baseline')
 
   return (
     <div
+      data-quest-type={quest.type}
       className={cn(
-        'space-y-1.5 rounded-none border px-3 py-2.5',
+        'flex flex-col gap-1.5 rounded-none border px-3 py-2.5',
         styles.border
       )}
     >
-      <Badge variant="outline" className={cn('font-medium', styles.badge)}>
-        {styles.title}
-      </Badge>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Badge variant="outline" className={cn('font-medium', styles.badge)}>
+          {styles.title}
+        </Badge>
+        {contract ? <Badge variant="outline">Fresh baseline</Badge> : null}
+      </div>
       <p className="text-muted-foreground text-xs leading-relaxed">
         {targetSummary(quest)}
       </p>
-      {rewards.length > 0 ? (
+      {contract ? (
+        <Alert variant="warning">
+          <AlertTitle>Fresh/no-history baseline</AlertTitle>
+          <AlertDescription>
+            Player choices, trinkets, challenges, or prior generation can change
+            this target and reward. {contract}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+      {displayedRewards.length > 0 ? (
         <div className="flex flex-col gap-1 border-t pt-2">
           <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            Rewards
+            {baselineRewards.length ? 'Baseline rewards' : 'Rewards'}
           </p>
           <FloorItemList
-            items={rewards}
+            items={displayedRewards}
             identities={identities}
             depth={depth}
           />

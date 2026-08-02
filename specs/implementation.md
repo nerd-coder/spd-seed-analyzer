@@ -6,9 +6,13 @@ OR-of-AND clauses and serialize without empty trinket clauses. Rust owns all
 condition derivation; WASM and React consume the contract and render reusable
 typed-condition popovers. `floors.items` contains exact, constrained, and
 fresh/no-history baseline entries, distinguished by `prediction`; there is no
-parallel baseline-items floor field. The analyzer and finder label baseline
-items as baseline analysis only, and they never become finder evidence. Exact
-claims remain limited to seed-safe paths. Public accuracy is `partial`.
+parallel baseline-items floor field. The analyzer keeps baseline items in their
+ordinary item or quest group instead of rendering a separate baseline section;
+Wandmaker and Imp cards show only their concrete fresh baseline rewards with a
+visible route-independent reward contract, never a full-category candidate
+expansion. The finder shows only matching evidence, and baseline items never
+become finder evidence. Exact claims remain limited to seed-safe paths. Public
+accuracy is `partial`.
 
 Next steps:
 
