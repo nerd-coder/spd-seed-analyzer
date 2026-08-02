@@ -189,11 +189,16 @@ impl LevelState {
                     .iter()
                     .enumerate()
                     .filter(|(_, item)| {
-                        matches!(item.provenance, ItemProvenance::Room(_))
-                            && item
-                                .source
-                                .as_deref()
-                                .is_some_and(|source| source.ends_with(":forced"))
+                        item.source.as_deref().is_some_and(|source| {
+                            source.ends_with(":forced")
+                                // These painters each create exactly one equipment reward.
+                                // On Floor 1 there is no earlier player-controlled generator
+                                // history, so the sampled result is a seed fact.
+                                || matches!(
+                                    source,
+                                    "SacrificeRoom" | "CryptRoom" | "StatueRoom"
+                                )
+                        })
                     })
                     .map(|(index, _)| index)
                     .collect()
@@ -213,6 +218,7 @@ impl LevelState {
         let mut shop_items = Vec::new();
         let mut has_shop = false;
         for (index, item) in self.placed_items.iter().enumerate() {
+            let exact_floor_one_room_prize = exact_floor_one_room_prize_indices.contains(&index);
             let past_runtime_sensitive_boundary = self
                 .runtime_sensitive_placed_items_from
                 .is_some_and(|boundary| index >= boundary);
@@ -236,9 +242,10 @@ impl LevelState {
             if is_blacklisted(item) || is_unpublished_main_loot(item) {
                 continue;
             }
-            // Sacrifice is represented only by its static room contract. The
-            // sampled weapon remains internal for Java parity.
-            if item.source.as_deref() == Some("SacrificeRoom") {
+            // Outside Floor 1 Sacrifice is represented only by its static
+            // room contract. Its sampled weapon depends on prior generator
+            // history and remains internal for Java parity.
+            if item.source.as_deref() == Some("SacrificeRoom") && !exact_floor_one_room_prize {
                 continue;
             }
             if item.provenance == ItemProvenance::Quest(QuestRewardRole::WandmakerPersisted) {
@@ -246,7 +253,6 @@ impl LevelState {
             }
             // Room contracts are emitted independently of the sampled exact
             // items so runtime-sensitive count/control flow cannot leak.
-            let exact_floor_one_room_prize = exact_floor_one_room_prize_indices.contains(&index);
             if matches!(item.provenance, ItemProvenance::Room(_)) && !exact_floor_one_room_prize {
                 continue;
             }
@@ -560,14 +566,14 @@ impl LevelState {
         if !self.runtime_sensitive_rooms {
             for fact in &self.room_public_facts {
                 items.extend(fact.entries().into_iter().filter(|entry| {
-                    !(entry.name == "single room reward source"
-                        && exact_floor_one_room_prize_indices.iter().any(|&index| {
-                            self.placed_items[index]
-                                .source
-                                .as_deref()
-                                .and_then(|source| source.strip_suffix(":forced"))
-                                == entry.source.as_deref()
-                        }))
+                    !exact_floor_one_room_prize_indices.iter().any(|&index| {
+                        let Some(source) = self.placed_items[index].source.as_deref() else {
+                            return false;
+                        };
+                        let room = source.strip_suffix(":forced").unwrap_or(source);
+                        Some(room) == entry.source.as_deref()
+                            && (source == room || entry.name == "single room reward source")
+                    })
                 }));
             }
         }
