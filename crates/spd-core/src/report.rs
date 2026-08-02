@@ -1,5 +1,7 @@
 //! Serializable analysis report types.
 
+mod quests;
+
 use serde::{Deserialize, Serialize};
 
 use crate::dungeon_seed::SeedError;
@@ -7,6 +9,8 @@ use crate::items::IdentityMaps;
 use crate::trinkets::{
     ArtifactEvent, Challenge, ProfileError, TrinketEvent, TrinketSelectionReport,
 };
+
+pub use quests::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SeedInfo {
@@ -205,7 +209,7 @@ pub struct FloorReport {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub guaranteed_appearances: Vec<GuaranteedAppearance>,
     pub items: Vec<ItemEntry>,
-    pub quests: Vec<String>,
+    pub quests: Vec<QuestReport>,
     /// Present when geometry build succeeded.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub map: Option<FloorMap>,

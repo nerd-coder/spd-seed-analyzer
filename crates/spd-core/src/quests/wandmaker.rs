@@ -66,7 +66,6 @@ pub struct WandmakerSpawnResult {
     pub quest_type: WandmakerQuestType,
     pub wand1: GeneratedItem,
     pub wand2: GeneratedItem,
-    pub summary: String,
     /// Cell occupied before `RegularLevel.createMobs` places ambient enemies.
     pub cell: usize,
 }
@@ -156,18 +155,10 @@ pub fn try_spawn_wandmaker(
     dungeon.wandmaker.wand1 = Some(wand1.clone());
     dungeon.wandmaker.wand2 = Some(wand2.clone());
 
-    let summary = format!(
-        "Old Wandmaker ({}) — {} / {}",
-        quest_type.as_str(),
-        wand1.title(),
-        wand2.title()
-    );
-
     Some(WandmakerSpawnResult {
         quest_type,
         wand1,
         wand2,
-        summary,
         cell,
     })
 }

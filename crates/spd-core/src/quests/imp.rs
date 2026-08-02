@@ -23,7 +23,6 @@ pub struct ImpQuestState {
     pub reward_level: Option<i32>,
     /// Ring generated at spawn; drained once into the floor report.
     pub pending_reward: Option<GeneratedItem>,
-    pub pending_summary: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -34,7 +33,6 @@ pub struct ImpSpawnResult {
     /// Dwarf tokens required by `WndImp` before the reward can be claimed.
     pub required_tokens: u8,
     pub reward: GeneratedItem,
-    pub summary: String,
 }
 
 /// Target and token contract used by `Imp.Quest.process` / `WndImp`.
@@ -109,28 +107,19 @@ pub fn try_spawn(
     let reward = generate_reward(generator, depth);
     imp.reward_ring_draw_end = Some(generator.deck_dropped(Category::Ring));
     imp.reward_level = Some(reward.level);
-    let target = ImpQuestTarget::from_alternative(imp.alternative);
-    let summary = format!("Ambitious Imp ({}) — {}", target.as_str(), reward.title());
-
     imp.pending_reward = Some(reward);
-    imp.pending_summary = Some(summary);
     true
 }
 
 /// Take the reward produced on the floor where the Imp room was just added.
 pub fn take_pending(imp: &mut ImpQuestState) -> Option<ImpSpawnResult> {
     let reward = imp.pending_reward.take()?;
-    let summary = imp
-        .pending_summary
-        .take()
-        .unwrap_or_else(|| "Ambitious Imp".into());
     let target = ImpQuestTarget::from_alternative(imp.alternative);
     Some(ImpSpawnResult {
         alternative: imp.alternative,
         target,
         required_tokens: target.required_tokens(),
         reward,
-        summary,
     })
 }
 

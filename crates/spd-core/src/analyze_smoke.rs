@@ -285,7 +285,11 @@ fn ghost_quest_spawns_within_sewers_sometime() {
     for depth in 1..=4 {
         dungeon.depth = depth;
         let state = level::create_level_partial(&mut dungeon);
-        if state.quests.iter().any(|quest| quest.contains("Sad Ghost")) {
+        if state
+            .quests
+            .iter()
+            .any(|quest| matches!(quest, report::QuestReport::SadGhost { .. }))
+        {
             assert!(state
                 .placed_items
                 .iter()
@@ -299,10 +303,13 @@ fn ghost_quest_spawns_within_sewers_sometime() {
                     .count(),
                 2
             );
-            assert!(report
-                .quests
-                .iter()
-                .any(|quest| quest.contains("Sad Ghost")));
+            assert!(report.quests.iter().any(|quest| matches!(
+                quest,
+                report::QuestReport::SadGhost { contract, .. }
+                    if contract.rewards.item_source == "Ghost.Quest"
+                        && contract.rewards.option_count == 2
+                        && contract.rewards.selected_count == 1
+            )));
             saw = true;
         }
     }
@@ -327,7 +334,7 @@ fn prior_runtime_divergence_preserves_pinned_ghost_rewards() {
             assert!(report
                 .quests
                 .iter()
-                .any(|quest| quest.contains("Sad Ghost")));
+                .any(|quest| matches!(quest, report::QuestReport::SadGhost { .. })));
             assert_eq!(
                 report
                     .items
@@ -417,7 +424,9 @@ fn wandmaker_quest_spawns_within_prison() {
     ] {
         let r = analyze_seed(s, 9).expect("analyze");
         for f in &r.floors {
-            if f.quests.iter().any(|q| q.contains("Old Wandmaker"))
+            if f.quests
+                .iter()
+                .any(|q| matches!(q, report::QuestReport::OldWandmaker { .. }))
                 || f.items
                     .iter()
                     .any(|i| i.source.as_deref() == Some("Wandmaker.Quest"))
@@ -444,17 +453,16 @@ fn wandmaker_quest_spawns_within_prison() {
                     assert!(map.mobs.is_empty());
                     assert!(map.heaps.is_empty());
                 }
-                assert!(f.quests.iter().all(|q| !q.contains(" / ")));
-                assert!(f
-                    .quests
-                    .iter()
-                    .filter(|q| q.contains("Old Wandmaker"))
-                    .all(|q| {
-                        q.contains("floors 7–9; route-dependent type")
-                            && q.contains("two distinct uncursed +1…+3 wand options")
-                            && q.contains("choose one after completion")
-                            && !q.contains(" / ")
-                    }));
+                assert!(f.quests.iter().any(|quest| matches!(
+                    quest,
+                    report::QuestReport::OldWandmaker { contract, baseline }
+                        if contract.spawn_depth_range == report::QuestDepthRange { min: 7, max: 9 }
+                            && contract.rewards.item_source == "Wandmaker.Quest"
+                            && contract.rewards.option_count == 2
+                            && contract.rewards.selected_count == 1
+                            && contract.objective_options.len() == 3
+                            && contract.objective_options.contains(&baseline.objective)
+                )));
                 saw = true;
                 break;
             }
@@ -483,7 +491,9 @@ fn imp_quest_spawns_within_city() {
     ] {
         let r = analyze_seed(s, 19).expect("analyze");
         for f in &r.floors {
-            if f.quests.iter().any(|q| q.contains("Ambitious Imp"))
+            if f.quests
+                .iter()
+                .any(|q| matches!(q, report::QuestReport::AmbitiousImp { .. }))
                 || f.items
                     .iter()
                     .any(|i| i.source.as_deref() == Some("Imp.Quest"))
@@ -507,14 +517,18 @@ fn imp_quest_spawns_within_city() {
                     assert!(ring.notes.iter().any(|note| {
                         note.contains("5 Monk tokens") && note.contains("4 Golem tokens")
                     }));
-                    assert!(f
-                        .quests
-                        .iter()
-                        .filter(|q| q.contains("Ambitious Imp"))
-                        .all(|q| {
-                            q.contains("floors 17–19; target follows spawn depth")
-                                && q.contains("one cursed +2…+4 ring")
-                        }));
+                    assert!(f.quests.iter().any(|quest| matches!(
+                        quest,
+                        report::QuestReport::AmbitiousImp { contract, baseline }
+                            if contract.spawn_depth_range == report::QuestDepthRange { min: 17, max: 19 }
+                                && contract.rewards.item_source == "Imp.Quest"
+                                && contract.rewards.option_count == 1
+                                && contract.rewards.selected_count == 1
+                                && contract.target_rules.iter().any(|rule| {
+                                    rule.target == baseline.target
+                                        && rule.required_tokens == baseline.required_tokens
+                                })
+                    )));
                 }
                 break;
             }
@@ -541,7 +555,9 @@ fn blacksmith_quest_spawns_within_caves() {
     ] {
         let r = analyze_seed(s, 14).expect("analyze");
         for f in &r.floors {
-            if f.quests.iter().any(|q| q.contains("Blacksmith"))
+            if f.quests
+                .iter()
+                .any(|q| matches!(q, report::QuestReport::TrollBlacksmith { .. }))
                 || f.items
                     .iter()
                     .any(|i| i.source.as_deref() == Some("Blacksmith.Quest"))
@@ -609,16 +625,16 @@ fn blacksmith_quest_spawns_within_caves() {
                         .iter()
                         .any(|marker| { marker.label == "Blacksmith room equipment" }));
                 }
-                assert!(f
-                    .quests
-                    .iter()
-                    .filter(|q| q.contains("Blacksmith"))
-                    .all(|q| {
-                        q.contains("floors 12–14; Crystal or Gnoll")
-                            && q.ends_with(
-                                " — spend 2,000 favor on Smith to choose one of four options",
-                            )
-                    }));
+                assert!(f.quests.iter().any(|quest| matches!(
+                    quest,
+                    report::QuestReport::TrollBlacksmith { contract, baseline }
+                        if contract.spawn_depth_range == report::QuestDepthRange { min: 12, max: 14 }
+                            && contract.rewards.item_source == "Blacksmith.Quest"
+                            && contract.rewards.option_count == 4
+                            && contract.rewards.selected_count == 1
+                            && contract.rewards.favor_requirement == Some(2_000)
+                            && contract.objective_options.contains(&baseline.objective)
+                )));
                 break;
             }
         }

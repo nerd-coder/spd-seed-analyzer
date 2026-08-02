@@ -3,7 +3,7 @@
 use crate::items::model::{GeneratedItem, ItemProvenance, QuestRewardRole, ShopStockRole};
 use crate::report::{
     FloorMap, FloorReport, ItemCondition, ItemDependencyCondition, ItemEnchantment, ItemEntry,
-    ItemPredictionKind, ItemSpawnCondition, NumericRange,
+    ItemPredictionKind, ItemSpawnCondition, NumericRange, QuestReport,
 };
 use crate::rooms::init_rooms::BuilderKind;
 use crate::trinkets::{ArtifactEvent, ArtifactEventAction, ArtifactKind};
@@ -120,14 +120,10 @@ pub struct LevelState {
     /// tail because its RNG path can differ with artifact exhaustion/history.
     #[doc(hidden)]
     pub runtime_sensitive_placed_items_from: Option<usize>,
-    /// First quest summary selected after the runtime-sensitive shop callback.
+    /// First quest selected after the runtime-sensitive shop callback.
     #[doc(hidden)]
     pub runtime_sensitive_quests_from: Option<usize>,
-    pub quests: Vec<String>,
-    /// Public-safe label for reward-bearing quest summaries. `None` means the
-    /// exact internal summary is safe to expose.
-    #[doc(hidden)]
-    pub quest_public_labels: Vec<Option<String>>,
+    pub quests: Vec<QuestReport>,
     #[doc(hidden)]
     pub runtime_sensitive_map: bool,
     /// Builder and room metadata can depend on a pre-build player-state callback.
@@ -599,16 +595,7 @@ impl LevelState {
             quests: self.quests[..self
                 .runtime_sensitive_quests_from
                 .unwrap_or(self.quests.len())]
-                .iter()
-                .enumerate()
-                .map(|(index, exact)| {
-                    self.quest_public_labels
-                        .get(index)
-                        .and_then(|label| label.as_deref())
-                        .unwrap_or(exact)
-                        .to_string()
-                })
-                .collect(),
+                .to_vec(),
             // Public maps are painter-complete floor layouts, captured before
             // NPC, mob, and item population. Final entity maps remain internal.
             map: exact_map,

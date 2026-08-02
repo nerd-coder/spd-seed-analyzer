@@ -16,7 +16,6 @@ fn projection_emits_one_static_contract_and_never_the_sampled_weapon() {
         runtime_sensitive_placed_items_from: None,
         runtime_sensitive_quests_from: None,
         quests: vec![],
-        quest_public_labels: vec![],
         runtime_sensitive_map: false,
         runtime_sensitive_layout: false,
         runtime_sensitive_feeling: false,

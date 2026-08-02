@@ -99,9 +99,8 @@ fn hkt_floor_seven_lifecycle_matches_oracle() {
         actual_rewards, expected.quest_rewards,
         "HKT floor-7 Wandmaker rewards"
     );
-    assert_eq!(
-        actual.quests,
-        ["Old Wandmaker (Elemental Embers) — wand Of Prismatic Light +1 / wand Of Corrosion +1"],
-        "HKT floor-7 Wandmaker report summary"
-    );
+    assert!(actual
+        .quests
+        .iter()
+        .any(|quest| matches!(quest, spd_core::QuestReport::OldWandmaker { .. })));
 }

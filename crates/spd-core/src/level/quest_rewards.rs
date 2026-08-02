@@ -4,25 +4,28 @@ use crate::dungeon::DungeonState;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::level::TerrainMap;
 use crate::quests;
+use crate::report::{
+    AmbitiousImpQuestBaseline, AmbitiousImpQuestContract, BlacksmithObjective, GhostTarget,
+    GhostTargetRule, ImpTarget, ImpTargetRule, OldWandmakerQuestBaseline,
+    OldWandmakerQuestContract, QuestDepthRange, QuestReport, QuestRewardSelection,
+    SadGhostQuestBaseline, SadGhostQuestContract, TrollBlacksmithQuestBaseline,
+    TrollBlacksmithQuestContract, WandmakerObjective,
+};
 use crate::rooms::room::Room;
 
 pub(super) struct InitQuestRewards {
     pub items: Vec<GeneratedItem>,
-    pub summaries: Vec<String>,
-    pub public_labels: Vec<Option<String>>,
+    pub quests: Vec<QuestReport>,
 }
 
 pub(super) fn take_pending(dungeon: &mut DungeonState) -> InitQuestRewards {
     let mut result = InitQuestRewards {
         items: Vec::new(),
-        summaries: Vec::new(),
-        public_labels: Vec::new(),
+        quests: Vec::new(),
     };
 
     if let Some(bs) = quests::take_blacksmith_pending(&mut dungeon.blacksmith) {
-        let public_summary = "Troll Blacksmith (floors 12–14; Crystal or Gnoll) — spend 2,000 favor on Smith to choose one of four options".into();
-        result.summaries.push(bs.summary);
-        result.public_labels.push(Some(public_summary));
+        result.quests.push(blacksmith_report(bs.quest_type));
         for mut reward in bs.rewards {
             if matches!(
                 reward.category,
@@ -37,9 +40,9 @@ pub(super) fn take_pending(dungeon: &mut DungeonState) -> InitQuestRewards {
     }
 
     if let Some(imp) = quests::take_imp_pending(&mut dungeon.imp) {
-        let public_summary = "Ambitious Imp (floors 17–19; target follows spawn depth) — complete the quest with 5 Monk or 4 Golem tokens to claim one cursed +2…+4 ring".into();
-        result.summaries.push(imp.summary);
-        result.public_labels.push(Some(public_summary));
+        result
+            .quests
+            .push(imp_report(imp.target, imp.required_tokens));
         result.items.push(imp.reward);
     }
     result
@@ -47,8 +50,7 @@ pub(super) fn take_pending(dungeon: &mut DungeonState) -> InitQuestRewards {
 
 pub(super) struct SpawnedQuestRewards {
     pub items: Vec<GeneratedItem>,
-    pub summaries: Vec<String>,
-    pub public_labels: Vec<Option<String>>,
+    pub quests: Vec<QuestReport>,
 }
 
 pub(super) fn spawn_npcs(
@@ -58,16 +60,13 @@ pub(super) fn spawn_npcs(
 ) -> SpawnedQuestRewards {
     let mut result = SpawnedQuestRewards {
         items: Vec::new(),
-        summaries: Vec::new(),
-        public_labels: Vec::new(),
+        quests: Vec::new(),
     };
     if let Some(exit) = rooms.iter().find(|room| room.is_exit() && !room.is_empty()) {
         if let Some(ghost) = quests::try_spawn_ghost(dungeon, exit, map) {
             map.mob_occupied[ghost.cell] = true;
             map.known_mobs[ghost.cell] = Some("Ghost");
-            let public_summary = safe_summary(&ghost.summary, "reward options");
-            result.summaries.push(ghost.summary);
-            result.public_labels.push(Some(public_summary));
+            result.quests.push(ghost_report(ghost.quest_type));
             result.items.extend([ghost.weapon, ghost.armor]);
         }
     }
@@ -78,22 +77,127 @@ pub(super) fn spawn_npcs(
         if let Some(wandmaker) = quests::try_spawn_wandmaker(dungeon, entrance, map) {
             map.mob_occupied[wandmaker.cell] = true;
             map.known_mobs[wandmaker.cell] = Some("Wandmaker");
-            let public_summary = "Old Wandmaker (floors 7–9; route-dependent type) — two distinct uncursed +1…+3 wand options; choose one after completion".into();
-            result.summaries.push(wandmaker.summary);
-            result.public_labels.push(Some(public_summary));
+            result.quests.push(wandmaker_report(wandmaker.quest_type));
             result.items.extend([wandmaker.wand1, wandmaker.wand2]);
         }
     }
     result
 }
 
-fn safe_summary(summary: &str, reward_label: &str) -> String {
-    let prefix = summary_prefix(summary);
-    format!("{prefix} — {reward_label}")
+fn reward_selection(
+    item_source: &str,
+    option_count: u32,
+    selected_count: u32,
+    favor_requirement: Option<u32>,
+) -> QuestRewardSelection {
+    QuestRewardSelection {
+        item_source: item_source.into(),
+        option_count,
+        selected_count,
+        favor_requirement,
+    }
 }
 
-fn summary_prefix(summary: &str) -> String {
-    summary
-        .split_once(" — ")
-        .map_or_else(|| summary.to_string(), |(prefix, _)| prefix.to_string())
+fn ghost_report(quest_type: quests::GhostType) -> QuestReport {
+    let target = match quest_type {
+        quests::GhostType::FetidRat => GhostTarget::FetidRat,
+        quests::GhostType::GnollTrickster => GhostTarget::GnollTrickster,
+        quests::GhostType::GreatCrab => GhostTarget::GreatCrab,
+    };
+    QuestReport::SadGhost {
+        contract: SadGhostQuestContract {
+            spawn_depth_range: QuestDepthRange { min: 2, max: 4 },
+            target_rules: vec![
+                GhostTargetRule {
+                    spawn_depth: 2,
+                    target: GhostTarget::FetidRat,
+                },
+                GhostTargetRule {
+                    spawn_depth: 3,
+                    target: GhostTarget::GnollTrickster,
+                },
+                GhostTargetRule {
+                    spawn_depth: 4,
+                    target: GhostTarget::GreatCrab,
+                },
+            ],
+            rewards: reward_selection("Ghost.Quest", 2, 1, None),
+        },
+        baseline: SadGhostQuestBaseline { target },
+    }
+}
+
+fn wandmaker_report(quest_type: quests::WandmakerQuestType) -> QuestReport {
+    let objective = match quest_type {
+        quests::WandmakerQuestType::CorpseDust => WandmakerObjective::CorpseDust,
+        quests::WandmakerQuestType::ElementalEmbers => WandmakerObjective::ElementalEmbers,
+        quests::WandmakerQuestType::Rotberry => WandmakerObjective::Rotberry,
+    };
+    QuestReport::OldWandmaker {
+        contract: OldWandmakerQuestContract {
+            spawn_depth_range: QuestDepthRange { min: 7, max: 9 },
+            objective_options: vec![
+                WandmakerObjective::CorpseDust,
+                WandmakerObjective::ElementalEmbers,
+                WandmakerObjective::Rotberry,
+            ],
+            rewards: reward_selection("Wandmaker.Quest", 2, 1, None),
+        },
+        baseline: OldWandmakerQuestBaseline { objective },
+    }
+}
+
+fn blacksmith_report(quest_type: quests::BlacksmithQuestType) -> QuestReport {
+    let objective = match quest_type {
+        quests::BlacksmithQuestType::Crystal => BlacksmithObjective::Crystal,
+        quests::BlacksmithQuestType::Gnoll => BlacksmithObjective::Gnoll,
+        quests::BlacksmithQuestType::Fungi => unreachable!("Fungi cannot spawn in pinned SPD"),
+    };
+    QuestReport::TrollBlacksmith {
+        contract: TrollBlacksmithQuestContract {
+            spawn_depth_range: QuestDepthRange { min: 12, max: 14 },
+            objective_options: vec![BlacksmithObjective::Crystal, BlacksmithObjective::Gnoll],
+            rewards: reward_selection("Blacksmith.Quest", 4, 1, Some(2_000)),
+        },
+        baseline: TrollBlacksmithQuestBaseline { objective },
+    }
+}
+
+fn imp_report(target: quests::ImpQuestTarget, required_tokens: u8) -> QuestReport {
+    let target = match target {
+        quests::ImpQuestTarget::Monks => ImpTarget::Monk,
+        quests::ImpQuestTarget::Golems => ImpTarget::Golem,
+    };
+    QuestReport::AmbitiousImp {
+        contract: AmbitiousImpQuestContract {
+            spawn_depth_range: QuestDepthRange { min: 17, max: 19 },
+            target_rules: vec![
+                ImpTargetRule {
+                    spawn_depth: 17,
+                    target: ImpTarget::Monk,
+                    required_tokens: 5,
+                },
+                ImpTargetRule {
+                    spawn_depth: 18,
+                    target: ImpTarget::Monk,
+                    required_tokens: 5,
+                },
+                ImpTargetRule {
+                    spawn_depth: 18,
+                    target: ImpTarget::Golem,
+                    required_tokens: 4,
+                },
+                ImpTargetRule {
+                    spawn_depth: 19,
+                    target: ImpTarget::Golem,
+                    required_tokens: 4,
+                },
+            ],
+            rewards: reward_selection("Imp.Quest", 1, 1, None),
+        },
+        baseline: AmbitiousImpQuestBaseline {
+            target,
+            required_tokens: required_tokens.into(),
+        },
+    }
 }

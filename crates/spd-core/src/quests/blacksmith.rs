@@ -47,8 +47,6 @@ pub struct BlacksmithQuestState {
     /// Optional pre-rolled enchant/glyph (30% base; stored separately in SPD).
     pub smith_enchant: Option<String>,
     pub smith_glyph: Option<String>,
-    /// Summary produced at spawn; drained once into the floor report.
-    pub pending_summary: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -57,7 +55,6 @@ pub struct BlacksmithSpawnResult {
     pub rewards: Vec<GeneratedItem>,
     pub smith_enchant: Option<String>,
     pub smith_glyph: Option<String>,
-    pub summary: String,
 }
 
 /// `Blacksmith.Quest.spawn(rooms)` — caves only; call before room shuffle.
@@ -102,29 +99,19 @@ pub fn try_spawn(
 
     generate_rewards(blacksmith, generator, depth, true);
 
-    let qtype = BlacksmithQuestType::from_int(blacksmith.quest_type);
-    let reward_titles: Vec<String> = blacksmith.smith_rewards.iter().map(|r| r.title()).collect();
-    let summary = format!(
-        "Blacksmith ({}) — {}",
-        qtype.as_str(),
-        reward_titles.join(", ")
-    );
-    blacksmith.pending_summary = Some(summary);
     true
 }
 
 /// Take the reward pool produced on the floor where the smith room was added.
 pub fn take_pending(blacksmith: &mut BlacksmithQuestState) -> Option<BlacksmithSpawnResult> {
-    if !blacksmith.spawned || blacksmith.pending_summary.is_none() {
+    if !blacksmith.spawned || blacksmith.smith_rewards.is_empty() {
         return None;
     }
-    let summary = blacksmith.pending_summary.take()?;
     Some(BlacksmithSpawnResult {
         quest_type: BlacksmithQuestType::from_int(blacksmith.quest_type),
-        rewards: blacksmith.smith_rewards.clone(),
+        rewards: std::mem::take(&mut blacksmith.smith_rewards),
         smith_enchant: blacksmith.smith_enchant.clone(),
         smith_glyph: blacksmith.smith_glyph.clone(),
-        summary,
     })
 }
 

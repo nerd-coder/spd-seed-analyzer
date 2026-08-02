@@ -1,10 +1,7 @@
 import { DepthIcon } from '@/components/DepthIcon'
 import { FloorMapPreview } from '@/components/FloorMapPreview'
 import { FloorAppearanceSection } from '@/components/seed/FloorAppearanceSection'
-import {
-  FloorItemSections,
-  partitionFloorItems,
-} from '@/components/seed/FloorItemSections'
+import { FloorItemSections } from '@/components/seed/FloorItemSections'
 import { QuestCard } from '@/components/seed/QuestCard'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -32,7 +29,6 @@ export function FloorDetail({
   trinketSelection: TrinketSelectionReport
 }) {
   const hasQuest = (floor.quests?.length ?? 0) > 0
-  const questRewards = partitionFloorItems(floor.items).quest
   const showMap = !!floor.map
   const showAssumedMap = !floor.map && !!floor.assumed_map
   const displayedMap = floor.map ?? floor.assumed_map ?? null
@@ -49,7 +45,9 @@ export function FloorDetail({
               <QuestCard
                 key={`${floor.depth}-quest-${i}`}
                 quest={q}
-                rewards={questRewards}
+                rewards={floor.items.filter(
+                  (item) => item.source === q.contract.rewards.item_source
+                )}
                 identities={identities}
                 depth={floor.depth}
               />

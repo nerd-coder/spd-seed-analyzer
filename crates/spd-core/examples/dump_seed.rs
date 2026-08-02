@@ -17,7 +17,7 @@ fn main() {
         );
         println!("  rooms: {}", f.rooms.join(", "));
         if !f.quests.is_empty() {
-            println!("  quests: {}", f.quests.join(" | "));
+            println!("  quests: {:#?}", f.quests);
         }
         for it in f.items {
             println!(

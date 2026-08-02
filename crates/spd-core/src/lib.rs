@@ -24,8 +24,12 @@ pub use items::IdentityMaps;
 pub use java_random::JavaRandom;
 pub use random::Random;
 pub use report::{
-    AnalyzeError, FloorReport, GuaranteedAppearance, GuaranteedAppearanceKind, ItemCondition,
-    ItemDependencyCondition, ItemEnchantment, ItemSpawnCondition, SeedInfo, SeedReport,
+    AmbitiousImpQuestBaseline, AmbitiousImpQuestContract, AnalyzeError, BlacksmithObjective,
+    FloorReport, GhostTarget, GuaranteedAppearance, GuaranteedAppearanceKind, ImpTarget,
+    ImpTargetRule, ItemCondition, ItemDependencyCondition, ItemEnchantment, ItemSpawnCondition,
+    OldWandmakerQuestBaseline, OldWandmakerQuestContract, QuestDepthRange, QuestReport,
+    QuestRewardSelection, SadGhostQuestBaseline, SadGhostQuestContract, SeedInfo, SeedReport,
+    TrollBlacksmithQuestBaseline, TrollBlacksmithQuestContract, WandmakerObjective,
 };
 pub use run::{dungeon_from_run, init_run, RunState};
 pub use search::{

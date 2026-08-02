@@ -195,10 +195,71 @@ export type FloorReport = {
   rooms?: string[]
   guaranteed_appearances?: GuaranteedAppearance[]
   items: ItemEntry[]
-  quests: string[]
+  quests: QuestReport[]
   map?: FloorMap | null
   assumed_map?: FloorMap | null
 }
+
+export type QuestDepthRange = {
+  min: number
+  max: number
+}
+
+export type QuestRewardSelection = {
+  item_source: string
+  option_count: number
+  selected_count: number
+  favor_requirement?: number | null
+}
+
+export type GhostTarget = 'fetid_rat' | 'gnoll_trickster' | 'great_crab'
+
+export type WandmakerObjective = 'corpse_dust' | 'elemental_embers' | 'rotberry'
+
+export type BlacksmithObjective = 'crystal' | 'gnoll'
+export type ImpTarget = 'monk' | 'golem'
+
+export type QuestReport =
+  | {
+      type: 'sad_ghost'
+      contract: {
+        spawn_depth_range: QuestDepthRange
+        target_rules: { spawn_depth: number; target: GhostTarget }[]
+        rewards: QuestRewardSelection
+      }
+      baseline: { target: GhostTarget }
+    }
+  | {
+      type: 'old_wandmaker'
+      contract: {
+        spawn_depth_range: QuestDepthRange
+        objective_options: WandmakerObjective[]
+        rewards: QuestRewardSelection
+      }
+      baseline: { objective: WandmakerObjective }
+    }
+  | {
+      type: 'troll_blacksmith'
+      contract: {
+        spawn_depth_range: QuestDepthRange
+        objective_options: BlacksmithObjective[]
+        rewards: QuestRewardSelection
+      }
+      baseline: { objective: BlacksmithObjective }
+    }
+  | {
+      type: 'ambitious_imp'
+      contract: {
+        spawn_depth_range: QuestDepthRange
+        target_rules: {
+          spawn_depth: number
+          target: ImpTarget
+          required_tokens: number
+        }[]
+        rewards: QuestRewardSelection
+      }
+      baseline: { target: ImpTarget; required_tokens: number }
+    }
 
 export type GuaranteedAppearance = {
   name: string

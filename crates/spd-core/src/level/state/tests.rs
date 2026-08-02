@@ -36,7 +36,6 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
         runtime_sensitive_placed_items_from: None,
         runtime_sensitive_quests_from: None,
         quests: vec![],
-        quest_public_labels: vec![],
         runtime_sensitive_map: false,
         runtime_sensitive_layout: false,
         runtime_sensitive_feeling: false,
@@ -225,7 +224,6 @@ fn empty_level_state(depth: i32) -> LevelState {
         runtime_sensitive_placed_items_from: None,
         runtime_sensitive_quests_from: None,
         quests: vec![],
-        quest_public_labels: vec![],
         runtime_sensitive_map: false,
         runtime_sensitive_layout: false,
         runtime_sensitive_feeling: false,
@@ -338,7 +336,6 @@ fn room_reward_projection_hides_all_concrete_fields_and_deduplicates_counts() {
         runtime_sensitive_placed_items_from: None,
         runtime_sensitive_quests_from: None,
         quests: vec![],
-        quest_public_labels: vec![],
         runtime_sensitive_map: false,
         runtime_sensitive_layout: false,
         runtime_sensitive_feeling: false,
@@ -499,14 +496,12 @@ fn quest_report_json_hides_constrained_classes_titles_and_persisted_wands() {
                 saw_persisted_wands = true;
             }
         }
-        for summary in &state.quests {
-            if let Some((prefix, titles)) = summary.split_once(" — ") {
-                assert!(report.quests.iter().all(|quest| !quest.contains(titles)));
-                assert!(report.quests.iter().all(|quest| {
-                    !quest.starts_with(prefix) || quest.starts_with(&format!("{prefix} — "))
-                }));
-            }
-        }
+        assert_eq!(
+            report.quests,
+            state.quests[..state
+                .runtime_sensitive_quests_from
+                .unwrap_or(state.quests.len())]
+        );
         if saw_persisted_wands && state.quests.is_empty() {
             assert!(report
                 .items

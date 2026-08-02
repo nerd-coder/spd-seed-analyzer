@@ -52,7 +52,6 @@ pub struct GhostSpawnResult {
     pub quest_type: GhostType,
     pub weapon: GeneratedItem,
     pub armor: GeneratedItem,
-    pub summary: String,
     /// Cell occupied before `RegularLevel.createMobs` places ambient enemies.
     pub cell: usize,
 }
@@ -118,18 +117,10 @@ pub fn try_spawn_ghost(
         *trace.borrow_mut() = Some((dungeon.depth, quest_type as i32, cell, Random::peek_ints(8)));
     });
 
-    let summary = format!(
-        "Sad Ghost ({}) — {} / {}",
-        quest_type.as_str(),
-        weapon.title(),
-        armor.title()
-    );
-
     Some(GhostSpawnResult {
         quest_type,
         weapon,
         armor,
-        summary,
         cell,
     })
 }

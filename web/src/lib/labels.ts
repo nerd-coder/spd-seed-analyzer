@@ -1,5 +1,5 @@
 /**
- * Human-readable labels for item sources and floor quests (seed-finder UX).
+ * Human-readable labels for item sources (seed-finder UX).
  * Backend strings stay machine-ish; UI maps them here.
  */
 
@@ -130,56 +130,4 @@ export function isHighlightSource(source: string | null | undefined): boolean {
   return /Quest|Crystal|Shop|Blacksmith|Crypt|Armory|Pool|Treasury|Library|Statue|Secret|MassGrave|Laboratory|Storage|Runestone|Pit|Garden|Sentry|Traps|MagicalFire|Sacrifice|ToxicGas|MagicWell/i.test(
     source
   )
-}
-
-export type ParsedQuest = {
-  /** e.g. "Sad Ghost", "Blacksmith" */
-  title: string
-  /** e.g. "Great Crab", "Gnoll" */
-  detail: string | null
-  /** Reward summary after em dash */
-  rewards: string | null
-  /** Original full string */
-  raw: string
-  kind: 'ghost' | 'wandmaker' | 'blacksmith' | 'imp' | 'other'
-}
-
-function questKind(title: string): ParsedQuest['kind'] {
-  const t = title.toLowerCase()
-  if (t.includes('ghost')) return 'ghost'
-  if (t.includes('wandmaker')) return 'wandmaker'
-  if (t.includes('blacksmith')) return 'blacksmith'
-  if (t.includes('imp')) return 'imp'
-  return 'other'
-}
-
-/**
- * Parse quest summary strings like:
- * `Sad Ghost (Great Crab) — hand Axe +1 / scale Armor +1`
- * `Blacksmith (Gnoll) — glaive, war Hammer, bolas, scale Armor`
- */
-export function parseQuest(raw: string): ParsedQuest {
-  const em = raw.indexOf('—')
-  let head = raw
-  let rewards: string | null = null
-  if (em >= 0) {
-    head = raw.slice(0, em).trim()
-    rewards = raw.slice(em + 1).trim() || null
-  }
-
-  let title = head
-  let detail: string | null = null
-  const m = head.match(/^(.*?)\s*\(([^)]+)\)\s*$/)
-  if (m) {
-    title = m[1].trim()
-    detail = m[2].trim()
-  }
-
-  return {
-    title,
-    detail,
-    rewards,
-    raw,
-    kind: questKind(title),
-  }
 }

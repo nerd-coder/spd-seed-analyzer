@@ -145,7 +145,7 @@ fn depth14_always_spawns_when_not_spawned() {
     assert_eq!(specs[0].name, "BlacksmithRoom");
     assert!(matches!(bs.quest_type, 1 | 2));
     assert_eq!(bs.smith_rewards.len(), 4);
-    assert!(bs.pending_summary.is_some());
+    assert!(!bs.smith_rewards.is_empty());
     Random::pop_generator();
 }
 

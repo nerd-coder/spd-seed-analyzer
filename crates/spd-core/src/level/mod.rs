@@ -215,7 +215,6 @@ fn create_level_internal(
     let mut floor_map = None;
     let mut layout_map = None;
     let mut quests = Vec::new();
-    let mut quest_public_labels = Vec::new();
     let mut runtime_sensitive_map = runtime_sensitive_prebuild || challenge_sensitive_upgrade_queue;
     let mut runtime_sensitive_layout = runtime_sensitive_prebuild;
     let runtime_sensitive_feeling = runtime_sensitive_prebuild;
@@ -264,7 +263,6 @@ fn create_level_internal(
                 runtime_sensitive_placed_items_from,
                 runtime_sensitive_quests_from,
                 quests,
-                quest_public_labels,
                 runtime_sensitive_map,
                 runtime_sensitive_layout,
                 runtime_sensitive_feeling,
@@ -284,8 +282,7 @@ fn create_level_internal(
 
         let pending_quests = quest_rewards::take_pending(dungeon);
         placed_items.extend(pending_quests.items);
-        quests.extend(pending_quests.summaries);
-        quest_public_labels.extend(pending_quests.public_labels);
+        quests.extend(pending_quests.quests);
 
         if let (Some(wand1), Some(wand2)) = (
             dungeon.wandmaker.wand1.as_ref(),
@@ -461,10 +458,9 @@ fn create_level_internal(
                     pre_mobs_rng_probe = Random::peek_ints(8);
                 }
                 let spawned = quest_rewards::spawn_npcs(dungeon, &floor.rooms, &mut map);
-                let spawned_quest = !spawned.summaries.is_empty();
+                let spawned_quest = !spawned.quests.is_empty();
                 placed_items.extend(spawned.items);
-                quests.extend(spawned.summaries);
-                quest_public_labels.extend(spawned.public_labels);
+                quests.extend(spawned.quests);
                 // The quest-NPC oracle verifies placement and reward RNG after
                 // every covered painter path. A current-floor paint boundary
                 // therefore does not suppress these independently pinned facts.
@@ -566,7 +562,6 @@ fn create_level_internal(
         runtime_sensitive_placed_items_from,
         runtime_sensitive_quests_from,
         quests,
-        quest_public_labels,
         runtime_sensitive_map,
         runtime_sensitive_layout,
         runtime_sensitive_feeling,
