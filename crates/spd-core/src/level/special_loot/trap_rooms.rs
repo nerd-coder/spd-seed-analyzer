@@ -13,7 +13,7 @@ use super::special_rooms::{bomb_random, is_curse_enchant, storage_prize};
 use crate::dungeon::DungeonState;
 use crate::geom::{Point, Rect};
 use crate::items::enchants;
-use crate::items::model::{GeneratedItem, ItemCategory};
+use crate::items::model::{GeneratedItem, ItemCategory, ItemProvenance, RoomLootRole};
 use crate::level::create_items::PlacedLoot;
 use crate::level::painter::DoorMap;
 use crate::level::terrain::{TerrainMap, EMPTY, EMPTY_SP, WALL};
@@ -334,6 +334,7 @@ pub(super) fn secret_honeypot(
     burn_drop_pos(room, &mut occupied);
     let mut bomb = bomb_random();
     bomb.source = Some("SecretHoneypotRoom".into());
+    bomb.provenance = ItemProvenance::Room(RoomLootRole::SecretHoneypotBomb);
     out.push(PlacedLoot {
         item: bomb,
         heap_type: "heap",

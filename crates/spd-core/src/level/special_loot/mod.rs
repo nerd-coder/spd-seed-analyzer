@@ -120,7 +120,7 @@ pub fn special_room_loot(
         // at least 10. Smaller instances are ring-shaped geometry with no
         // reward callback, so they must not emit an item contract.
         if room.name != "RingRoom" || standard_paint.center_loot.is_some() {
-            if let Some(fact) = super::room_public::RoomPublicFact::new(&room.name, dungeon.depth) {
+            if let Some(fact) = super::room_public::RoomPublicFact::for_room(room, dungeon.depth) {
                 room_public_facts.push(fact);
             }
         }

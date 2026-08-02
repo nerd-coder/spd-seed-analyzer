@@ -3,7 +3,7 @@
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::geom::Point;
-use crate::items::model::{GeneratedItem, ItemCategory};
+use crate::items::model::{GeneratedItem, ItemCategory, ItemProvenance, RoomLootRole};
 use crate::items::randomize::randomize_item;
 use crate::level::create_items::PlacedLoot;
 use crate::level::terrain::TerrainMap;
@@ -67,7 +67,8 @@ pub(super) fn grassy_graves(
         };
 
         // Java evaluates the position before generating this grave's item.
-        let mut item = if i == prize_index {
+        let is_prize = i == prize_index;
+        let mut item = if is_prize {
             dungeon.generator.random(dungeon.depth)
         } else {
             let mut gold = GeneratedItem::new("Gold", ItemCategory::Gold);
@@ -75,7 +76,11 @@ pub(super) fn grassy_graves(
             gold
         };
         item.source = Some("GrassyGraveRoom".into());
-        super::tag_room_item(&mut item);
+        item.provenance = ItemProvenance::Room(if is_prize {
+            RoomLootRole::GrassyGravePrize
+        } else {
+            RoomLootRole::GrassyGraveGold
+        });
         if let Some(cell) = map.point_to_cell(x, y) {
             map.item_allowed[cell] = false;
             map.record_heap(cell, "tomb", item.clone());

@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "analyze_smoke/room_reward_regressions.rs"]
+mod room_reward_regressions;
+
 #[test]
 fn analyze_seed_smoke() {
     let r = analyze_seed("GFX-PZH-DCH", 4).expect("analyze");
@@ -282,7 +285,10 @@ fn compact_report_promotes_exact_floor_one_room_rewards() {
         .expect("exact floor-one Crystal Choice Wealth ring");
     assert_eq!(wealth.level, Some(2));
     assert_eq!(wealth.cursed, Some(true));
-    assert_eq!(wealth.source.as_deref(), Some("CrystalChoiceRoom"));
+    assert_eq!(
+        wealth.source.as_deref(),
+        Some("CrystalChoiceRoom:hidden_reward")
+    );
     assert_eq!(wealth.prediction, report::ItemPredictionKind::Exact);
     assert!(floor_one.items.iter().all(|item| {
         item.class_name.as_deref() != Some("RingOfWealth")

@@ -1,5 +1,5 @@
 use super::conditions::{item_conditions, item_conditions_typed};
-use super::{is_blacklisted, is_unpublished_main_loot};
+use super::{is_blacklisted, is_unpublished_main_loot, sources::reported_source};
 use crate::items::model::{GeneratedItem, ItemProvenance, QuestRewardRole, RoomLootRole};
 use crate::report::{ItemEnchantment, ItemEntry, ItemPredictionKind};
 
@@ -13,6 +13,9 @@ pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
             RoomLootRole::PoolEquipment
                 | RoomLootRole::SuspiciousChestGold
                 | RoomLootRole::SuspiciousChestMimicReward
+                | RoomLootRole::CrystalChoiceHidden
+                | RoomLootRole::SecretHoneypotBomb
+                | RoomLootRole::GrassyGravePrize
         )
     );
     if item.source.is_none()
@@ -56,7 +59,7 @@ pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
         ItemProvenance::Room(RoomLootRole::SuspiciousChestMimicReward) => {
             Some("SuspiciousChestRoom:mimic_reward".into())
         }
-        _ => item.source.clone(),
+        _ => reported_source(item, false),
     };
     let mut public_name: String = if item.category == crate::items::model::ItemCategory::Gold {
         "gold".into()

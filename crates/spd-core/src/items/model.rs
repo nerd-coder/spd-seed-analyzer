@@ -57,6 +57,10 @@ pub enum RoomLootRole {
     PoolEquipment,
     SuspiciousChestGold,
     SuspiciousChestMimicReward,
+    CrystalChoiceHidden,
+    SecretHoneypotBomb,
+    GrassyGravePrize,
+    GrassyGraveGold,
     RuntimeSensitive,
 }
 

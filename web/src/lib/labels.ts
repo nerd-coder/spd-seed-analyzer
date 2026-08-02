@@ -34,11 +34,16 @@ const SOURCE_LABELS: Record<string, string> = {
   equipment: 'Equipment fallback',
   gold: 'Gold fallback',
   mimic_reward: 'Mimic bonus',
+  hidden_reward: 'Hidden reward',
+  bomb: 'Bomb reward',
+  prize: 'Generator reward',
+  gold_tombs: 'Gold tombs',
   StorageRoom: 'Storage',
   RunestoneRoom: 'Runestone',
   LaboratoryRoom: 'Laboratory',
   StatueRoom: 'Statue room',
   MassGraveRoom: 'Mass grave',
+  GrassyGraveRoom: 'Grassy grave',
   CrystalVaultRoom: 'Crystal vault',
   CrystalChoiceRoom: 'Crystal choice',
   CrystalPathRoom: 'Crystal path',
@@ -131,7 +136,7 @@ export function formatItemSource(
 /** Whether a source is high-value for seed finding (quests / crystal / shop / etc.). */
 export function isHighlightSource(source: string | null | undefined): boolean {
   if (!source) return false
-  return /Quest|Crystal|Shop|Blacksmith|Crypt|Armory|Pool|Suspicious|Treasury|Library|Statue|Secret|MassGrave|Laboratory|Storage|Runestone|Pit|Garden|Sentry|Traps|MagicalFire|Sacrifice|ToxicGas|MagicWell/i.test(
+  return /Quest|Crystal|Shop|Blacksmith|Crypt|Armory|Pool|Suspicious|Treasury|Library|Statue|Secret|MassGrave|GrassyGrave|Laboratory|Storage|Runestone|Pit|Garden|Sentry|Traps|MagicalFire|Sacrifice|ToxicGas|MagicWell/i.test(
     source
   )
 }

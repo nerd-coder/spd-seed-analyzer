@@ -58,3 +58,17 @@ test('floor one shows exact room rewards and non-positional encounters', async (
   ).toBeVisible()
   expect(browserErrors).toEqual([])
 })
+
+test('Shattered Pot uses its in-game item sprite', async ({ page }) => {
+  await openFloorOne(page, 'MWH-KAE-DHG')
+  const floor = page
+    .getByRole('heading', { name: 'Floor 2', exact: true })
+    .locator('xpath=ancestor::section[1]')
+  const icon = floor.getByRole('img', { name: 'Shattered Pot' })
+
+  await expect(icon).toBeVisible()
+  await expect(icon.locator('[aria-hidden="true"]')).toHaveCSS(
+    'background-position',
+    '-96px -48px'
+  )
+})

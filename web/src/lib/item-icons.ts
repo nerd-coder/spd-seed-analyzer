@@ -128,6 +128,7 @@ export const CLASS_ICON: Record<string, number> = {
   Gold: 18,
   GuidePage: 496,
   Honeypot: 53,
+  ShatteredPot: 54,
   IronKey: 55,
   MagicalHolster: 485,
   MysteryMeat: 432,

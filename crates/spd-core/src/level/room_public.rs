@@ -1,12 +1,17 @@
 //! Static seed-only contracts emitted by room painters.
 
 use crate::report::{ItemCondition, ItemEntry, ItemPredictionKind, NumericRange};
+use crate::rooms::room::Room;
 use crate::trinkets::Challenge;
+
+#[path = "room_public/grassy_grave.rs"]
+mod grassy_grave;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RoomPublicFact {
     pub room: String,
     depth: i32,
+    grassy_grave_rewards: Option<u32>,
 }
 
 impl RoomPublicFact {
@@ -14,12 +19,24 @@ impl RoomPublicFact {
         has_contract(room).then(|| Self {
             room: room.into(),
             depth,
+            grassy_grave_rewards: None,
         })
+    }
+
+    pub fn for_room(room: &Room, depth: i32) -> Option<Self> {
+        let mut fact = Self::new(&room.name, depth)?;
+        if room.name == "GrassyGraveRoom" {
+            fact.grassy_grave_rewards = Some(grassy_grave::reward_count(room));
+        }
+        Some(fact)
     }
 
     pub fn entries(&self) -> Vec<ItemEntry> {
         if self.room == "SecretLarderRoom" {
             return larder_entries(self.depth);
+        }
+        if let Some(reward_count) = self.grassy_grave_rewards {
+            return grassy_grave::entries(reward_count, self.depth);
         }
         let mut entries: Vec<_> = contracts(&self.room)
             .into_iter()
@@ -67,6 +84,14 @@ impl RoomPublicFact {
             if entry.name == "possible gold fallback" {
                 entry.level = Some(0);
                 entry.source = Some("SuspiciousChestRoom:gold".into());
+            }
+            if entry.name == "hidden crystal-choice reward" {
+                entry.source = Some("CrystalChoiceRoom:hidden_reward".into());
+            }
+            if entry.name == "Bomb reward" {
+                entry.candidate_classes = vec!["Bomb".into(), "DoubleBomb".into()];
+                entry.level = Some(0);
+                entry.source = Some("SecretHoneypotRoom:bomb".into());
             }
             let exact_class = match entry.name.as_str() {
                 "Double Bomb" => Some("DoubleBomb"),
@@ -226,7 +251,7 @@ fn contracts(room: &str) -> Vec<Contract> {
         "SecretMazeRoom" => vec![("Secret Maze equipment", "other", Some(false), "Weapon or armor, always uncursed.")],
         "SecretSummoningRoom" => vec![("conditional summoning-room reward", "other", None, "Its presence depends on runtime state.")],
         "SecretChestChasmRoom" => vec![("four locked default-stock sources", "other", None, "Matching key support is also generated."), ("Potion of Levitation", "potion", Some(false), "")],
-        "SecretHoneypotRoom" => vec![("Shattered Pot", "other", Some(false), ""), ("Honeypot", "other", Some(false), ""), ("Bomb variant", "other", Some(false), "Bomb or Double Bomb.")],
+        "SecretHoneypotRoom" => vec![("Shattered Pot", "other", Some(false), ""), ("Honeypot", "other", Some(false), ""), ("Bomb reward", "other", Some(false), "Bomb or Double Bomb.")],
         "LibraryRoom" => vec![
             ("1–3 Library scroll rewards", "scroll", Some(false), "The first is Scroll of Identify or Scroll of Remove Curse. Later rewards are an available guaranteed Trinket Catalyst, an available guaranteed scroll, or a generated scroll; a Catalyst changes that individual reward's type."),
         ],

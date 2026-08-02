@@ -79,9 +79,10 @@ pub(crate) fn is_baseline_highlight(item: &ItemEntry) -> bool {
         "Ghost.Quest" | "Wandmaker.Quest" | "Blacksmith.Quest" | "Imp.Quest" | "StatueRoom" => {
             return true
         }
-        "CrystalChoiceRoom" => {
+        "CrystalChoiceRoom" | "CrystalChoiceRoom:hidden_reward" => {
             return matches!(item.category.as_str(), "ring" | "artifact" | "wand")
         }
+        "SecretHoneypotRoom:bomb" | "GrassyGraveRoom:prize" => return true,
         "PitRoom" => {
             return matches!(
                 item.category.as_str(),
@@ -187,7 +188,9 @@ fn compact_capitalize(value: &str) -> String {
 fn compact_source(source: Option<&str>, floor: &FloorReport) -> Option<String> {
     let source = source?;
     let label = match source {
-        "CrystalChoiceRoom" => "Crystal Choice".into(),
+        "CrystalChoiceRoom" | "CrystalChoiceRoom:hidden_reward" => "Crystal Choice".into(),
+        "SecretHoneypotRoom:bomb" => "Secret Honeypot".into(),
+        "GrassyGraveRoom:prize" => "Grassy Grave".into(),
         "SecretRunestoneRoom" | "SecretArtilleryRoom" | "SecretLibraryRoom" => "Secret Room".into(),
         "StatueRoom" => "Statue".into(),
         "PitRoom" => "Pit".into(),

@@ -25,6 +25,10 @@ mod encounters;
 mod baseline;
 use baseline::item_entry as baseline_item_entry;
 
+#[path = "state/sources.rs"]
+mod sources;
+use sources::reported_source;
+
 #[path = "state_map.rs"]
 mod state_map;
 use state_map::{guaranteed_appearances, reported_level};
@@ -562,15 +566,7 @@ impl LevelState {
                     reachable_parchment_level,
                     item.potential_enchantment.as_deref(),
                 ),
-                source: exact_floor_one_room_prize
-                    .then(|| {
-                        item.source
-                            .as_deref()
-                            .expect("exact Floor 1 room prize has a source")
-                            .trim_end_matches(":forced")
-                            .to_string()
-                    })
-                    .or_else(|| item.source.clone()),
+                source: reported_source(item, exact_floor_one_room_prize),
             };
             if shop_role.is_some() {
                 shop_items.push(entry);
@@ -666,10 +662,10 @@ impl LevelState {
                         if !concrete_floor_one_prize {
                             return false;
                         }
-                        let Some(source) = item.source.as_deref() else {
+                        let Some(source) = reported_source(item, true) else {
                             return false;
                         };
-                        let room = source.split(':').next().unwrap_or(source);
+                        let room = source.split(':').next().unwrap_or(&source);
                         let entry_room = entry
                             .source
                             .as_deref()
@@ -678,7 +674,10 @@ impl LevelState {
                             return false;
                         }
                         entry.class_name.as_deref().map_or_else(
-                            || source == room || entry.name == "single room reward source",
+                            || {
+                                entry.source.as_deref() == Some(source.as_str())
+                                    || entry.name == "single room reward source"
+                            },
                             |class_name| class_name == item.class_name,
                         )
                     })

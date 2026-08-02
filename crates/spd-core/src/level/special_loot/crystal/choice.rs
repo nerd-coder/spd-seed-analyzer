@@ -3,7 +3,7 @@
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::geom::{Point, Rect};
-use crate::items::model::{GeneratedItem, ItemCategory};
+use crate::items::model::{GeneratedItem, ItemCategory, ItemProvenance, RoomLootRole};
 use crate::level::create_items::PlacedLoot;
 use crate::level::painter::DoorMap;
 use crate::level::terrain::{TerrainMap, CRYSTAL_DOOR, EMPTY, EMPTY_SP, WALL};
@@ -177,6 +177,7 @@ pub(super) fn paint(
     let hidden_cat = *Random::one_of(&[Category::Wand, Category::Ring, Category::Artifact]);
     let mut hidden = dungeon.generator.random_category(hidden_cat, dungeon.depth);
     hidden.source = Some("CrystalChoiceRoom".into());
+    hidden.provenance = ItemProvenance::Room(RoomLootRole::CrystalChoiceHidden);
     let hidden_center = room_center(room2);
     let hidden_cell = map
         .point_to_cell(hidden_center.x, hidden_center.y)

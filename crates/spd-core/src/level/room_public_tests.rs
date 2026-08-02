@@ -249,8 +249,10 @@ fn secret_honeypot_contract_exposes_its_two_fixed_items() {
     assert_eq!(entries[0].prediction, ItemPredictionKind::Exact);
     assert_eq!(entries[1].class_name.as_deref(), Some("Honeypot"));
     assert_eq!(entries[1].prediction, ItemPredictionKind::Exact);
-    assert_eq!(entries[2].name, "Bomb variant");
+    assert_eq!(entries[2].name, "Bomb reward");
     assert_eq!(entries[2].class_name, None);
+    assert_eq!(entries[2].candidate_classes, ["Bomb", "DoubleBomb"]);
+    assert_eq!(entries[2].level, Some(0));
     assert_eq!(entries[2].prediction, ItemPredictionKind::Constrained);
 }
 

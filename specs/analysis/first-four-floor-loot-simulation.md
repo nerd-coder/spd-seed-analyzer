@@ -113,6 +113,33 @@ its tier bounds follow `Generator.floorSetTierProbs[depth / 5 + 1]`
 (`Generator.java:613-619`, `:775-853`). The public report pairs these invariant
 bounds with the explicitly labelled fresh/no-history concrete replay.
 
+### Crystal Choice, Secret Honeypot, and Grassy Grave
+
+`CrystalChoiceRoom` creates 3–4 potion/scroll rewards and exactly one separate
+hidden reward whose category is wand, ring, or artifact; artifact exhaustion
+falls back to a ring (`CrystalChoiceRoom.java:105-127`,
+`Generator.java:698-710`). The universal hidden-reward contract and a concrete
+fresh/no-history result are two projections of that one spawn and must be
+grouped rather than reported as additional items.
+
+`SecretHoneypotRoom` always creates one Shattered Pot, one Honeypot, and one
+`Bomb.random()` result (`SecretHoneypotRoom.java:46-59`). The last reward is
+exactly Bomb or Double Bomb, with Double Bomb selected on one of four outcomes
+(`Bomb.java:229-236`). The two fixed items are exact room-presence facts; a
+later-floor concrete bomb identity remains a labelled baseline when earlier
+generation history is unresolved.
+
+`GrassyGraveRoom` derives its tomb count as
+`max(width - 2, height - 2) / 2`, selects exactly one tomb for a general
+`Generator.random()` reward, and fills every other tomb with randomized gold
+(`GrassyGraveRoom.java:53-69`). Room dimensions are fixed during build before
+the runtime-sensitive painter tail, so the report can state the exact reward
+count and exact split between one general reward and the remaining gold
+rewards. The general reward's concrete fresh-baseline identity and randomized
+gold amounts are not universal later-floor claims. Each gold reward is still
+bounded by the depth formula `30 + depth*10` through `60 + depth*20`
+(`Gold.java:88-92`).
+
 ## Floors 2–4 and the Sad Ghost
 
 The Ghost spawn attempt happens at the start of `SewerLevel.createMobs`, after
