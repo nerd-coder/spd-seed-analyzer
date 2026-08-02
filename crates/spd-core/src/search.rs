@@ -78,7 +78,7 @@ pub struct SeedSearchResult {
 pub struct SeedMatch {
     pub seed: SeedInfo,
     pub identities: IdentityMaps,
-    /// At most one (the first) matching item per satisfied constraint.
+    /// One distinct matching item occurrence per satisfied constraint.
     pub evidence: Vec<ItemMatchEvidence>,
     /// Fresh/no-history planning highlights. They contribute search evidence
     /// only when `includeBaseline` is enabled and remain explicitly labeled.
@@ -263,57 +263,151 @@ fn matching_evidence(
     constraints: &[ItemConstraint],
     include_baseline: bool,
 ) -> Vec<ItemMatchEvidence> {
-    constraints
+    let occurrences = floors
+        .iter()
+        .flat_map(|floor| {
+            floor.items.iter().flat_map(move |group| {
+                let quantity = group
+                    .variants
+                    .iter()
+                    .map(|item| item.quantity.max(0))
+                    .max()
+                    .unwrap_or(0)
+                    .min(constraints.len() as i32);
+                (0..quantity).map(move |copy_index| ItemOccurrence {
+                    depth: floor.depth,
+                    group,
+                    copy_index,
+                })
+            })
+        })
+        .collect::<Vec<_>>();
+    let mut assigned_constraints = vec![None; occurrences.len()];
+
+    for constraint_index in 0..constraints.len() {
+        let mut visited_occurrences = vec![false; occurrences.len()];
+        assign_constraint(
+            constraint_index,
+            constraints,
+            &occurrences,
+            include_baseline,
+            &mut assigned_constraints,
+            &mut visited_occurrences,
+        );
+    }
+
+    let mut evidence = assigned_constraints
         .iter()
         .enumerate()
-        .filter_map(|(constraint_index, constraint)| {
-            floors
-                .iter()
-                .filter(|floor| {
-                    (constraint.min_depth..=constraint.max_depth).contains(&floor.depth)
-                })
-                .find_map(|floor| {
-                    floor
-                        .items
-                        .iter()
-                        .flat_map(|group| &group.variants)
-                        .find_map(|item| {
-                            let concrete_class_matches =
-                                item.class_name.as_deref() == Some(constraint.class_name.as_str());
-                            let candidate_class_matches = item
-                                .candidate_classes
-                                .iter()
-                                .any(|candidate| candidate == &constraint.class_name);
-                            let class_matches = match item.prediction {
-                                ItemPredictionKind::Exact => {
-                                    concrete_class_matches || candidate_class_matches
-                                }
-                                ItemPredictionKind::Baseline => {
-                                    include_baseline
-                                        && (concrete_class_matches || candidate_class_matches)
-                                }
-                                ItemPredictionKind::Constrained => candidate_class_matches,
-                            };
-
-                            (class_matches
-                                && constraint.min_level.is_none_or(|minimum| {
-                                    item.level.is_some_and(|level| level >= minimum)
-                                }))
-                            .then(|| ItemMatchEvidence {
-                                constraint_index: constraint_index as u32,
-                                class_name: constraint.class_name.clone(),
-                                depth: floor.depth,
-                                name: item.name.clone(),
-                                level: item
-                                    .level
-                                    .expect("searchable predictions expose a concrete level"),
-                                prediction: item.prediction,
-                                source: item.source.clone(),
-                            })
-                        })
-                })
+        .filter_map(|(occurrence_index, constraint_index)| {
+            let constraint_index = (*constraint_index)?;
+            evidence_for(
+                constraint_index,
+                &constraints[constraint_index],
+                occurrences[occurrence_index],
+                include_baseline,
+            )
         })
-        .collect()
+        .collect::<Vec<_>>();
+    evidence.sort_unstable_by_key(|item| item.constraint_index);
+    evidence
+}
+
+#[derive(Clone, Copy)]
+struct ItemOccurrence<'a> {
+    depth: u32,
+    group: &'a crate::report::ItemGroup,
+    copy_index: i32,
+}
+
+fn assign_constraint(
+    constraint_index: usize,
+    constraints: &[ItemConstraint],
+    occurrences: &[ItemOccurrence<'_>],
+    include_baseline: bool,
+    assigned_constraints: &mut [Option<usize>],
+    visited_occurrences: &mut [bool],
+) -> bool {
+    for (occurrence_index, occurrence) in occurrences.iter().copied().enumerate() {
+        if visited_occurrences[occurrence_index]
+            || matching_item(&constraints[constraint_index], occurrence, include_baseline).is_none()
+        {
+            continue;
+        }
+        visited_occurrences[occurrence_index] = true;
+
+        let can_assign = assigned_constraints[occurrence_index].is_none_or(|assigned| {
+            assign_constraint(
+                assigned,
+                constraints,
+                occurrences,
+                include_baseline,
+                assigned_constraints,
+                visited_occurrences,
+            )
+        });
+        if can_assign {
+            assigned_constraints[occurrence_index] = Some(constraint_index);
+            return true;
+        }
+    }
+    false
+}
+
+fn evidence_for(
+    constraint_index: usize,
+    constraint: &ItemConstraint,
+    occurrence: ItemOccurrence<'_>,
+    include_baseline: bool,
+) -> Option<ItemMatchEvidence> {
+    let item = matching_item(constraint, occurrence, include_baseline)?;
+    Some(ItemMatchEvidence {
+        constraint_index: constraint_index as u32,
+        class_name: constraint.class_name.clone(),
+        depth: occurrence.depth,
+        name: item.name.clone(),
+        level: item
+            .level
+            .expect("searchable predictions expose a concrete level"),
+        prediction: item.prediction,
+        source: item.source.clone(),
+    })
+}
+
+fn matching_item<'a>(
+    constraint: &ItemConstraint,
+    occurrence: ItemOccurrence<'a>,
+    include_baseline: bool,
+) -> Option<&'a ItemEntry> {
+    if !(constraint.min_depth..=constraint.max_depth).contains(&occurrence.depth) {
+        return None;
+    }
+
+    occurrence
+        .group
+        .variants
+        .iter()
+        .filter(|item| item.quantity > occurrence.copy_index)
+        .find(|item| {
+            let concrete_class_matches =
+                item.class_name.as_deref() == Some(constraint.class_name.as_str());
+            let candidate_class_matches = item
+                .candidate_classes
+                .iter()
+                .any(|candidate| candidate == &constraint.class_name);
+            let class_matches = match item.prediction {
+                ItemPredictionKind::Exact => concrete_class_matches || candidate_class_matches,
+                ItemPredictionKind::Baseline => {
+                    include_baseline && (concrete_class_matches || candidate_class_matches)
+                }
+                ItemPredictionKind::Constrained => candidate_class_matches,
+            };
+
+            class_matches
+                && constraint
+                    .min_level
+                    .is_none_or(|minimum| item.level.is_some_and(|level| level >= minimum))
+        })
 }
 
 #[cfg(test)]

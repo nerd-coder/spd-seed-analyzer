@@ -1,5 +1,7 @@
 use super::*;
 
+mod matching;
+
 #[test]
 fn depth_four_search_completes_with_minimum_size_secret_larder() {
     let result = search_seeds(&SeedSearchRequest {
