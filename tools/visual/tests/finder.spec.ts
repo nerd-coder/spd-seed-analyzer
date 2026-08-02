@@ -78,3 +78,41 @@ test('finder keeps its form and reuses only result-less search tabs', async ({
   expect(consoleErrors, 'browser console errors').toEqual([])
   expect(pageErrors, 'uncaught page errors').toEqual([])
 })
+
+test('finder shortcuts randomize the seed and submit the search', async ({
+  page,
+}) => {
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
+  await page.addInitScript((storage) => {
+    localStorage.clear()
+    localStorage.setItem(storage.mode, 'finder')
+    localStorage.setItem(storage.theme, 'light')
+  }, APP_STORAGE)
+
+  await page.goto('/')
+  await configureNoMatchSearch(page, '111')
+
+  const startSeed = page.getByRole('spinbutton', { name: 'Start seed' })
+  const randomButton = page.getByRole('button', {
+    name: 'Choose a random start seed',
+  })
+  await expect(randomButton).toHaveAttribute('aria-keyshortcuts', 'Control+R')
+  await randomButton.hover()
+  await expect(page.getByRole('tooltip')).toContainText('Ctrl + R')
+
+  const seedBefore = await startSeed.inputValue()
+  await page.keyboard.press('Control+r')
+  await expect(startSeed).not.toHaveValue(seedBefore)
+
+  const findButton = page.getByRole('button', { name: 'Find seeds' })
+  await expect(findButton).toHaveAttribute('aria-keyshortcuts', 'Control+F')
+  await findButton.focus()
+  await expect(
+    page.getByRole('tooltip').filter({ hasText: 'Find seeds' })
+  ).toContainText('Ctrl + F')
+
+  await page.keyboard.press('Control+f')
+  await expect(page.getByText('10 / 10 scanned')).toBeVisible({
+    timeout: 60_000,
+  })
+})

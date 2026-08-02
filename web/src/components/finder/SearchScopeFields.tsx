@@ -6,6 +6,7 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from '@/components/ui/input-group'
+import { Kbd } from '@/components/ui/kbd'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import {
   Popover,
@@ -16,13 +17,17 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
   type FinderNumericInput,
   isIntegerInRange,
   MAX_CANDIDATES,
   MAX_FLOORS,
   MAX_RESULTS,
   MIN_CANDIDATES,
-  randomStartSeed,
   TOTAL_SEEDS,
 } from './finder-types'
 
@@ -37,6 +42,7 @@ type SearchScopeFieldsProps = {
   onCandidateCountChange: (value: FinderNumericInput) => void
   onFloorsChange: (value: number) => void
   onMaxMatchesChange: (value: FinderNumericInput) => void
+  onRandomStartSeed: () => void
 }
 
 function inputNumber(value: string, valueAsNumber: number): FinderNumericInput {
@@ -54,6 +60,7 @@ export function SearchScopeFields({
   onCandidateCountChange,
   onFloorsChange,
   onMaxMatchesChange,
+  onRandomStartSeed,
 }: SearchScopeFieldsProps) {
   const startSeedInvalid = !isIntegerInRange(startSeed, 0, TOTAL_SEEDS - 1)
   const candidateCountInvalid = !isIntegerInRange(
@@ -118,16 +125,23 @@ export function SearchScopeFields({
               </PopoverDescription>
             </PopoverContent>
           </Popover>
-          <InputGroupButton
-            size="icon-sm"
-            variant="default"
-            disabled={running}
-            onClick={() => onStartSeedChange(randomStartSeed())}
-            aria-label="Choose a random start seed"
-            title="Random start seed"
-          >
-            <ShuffleAngularIcon />
-          </InputGroupButton>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <InputGroupButton
+                size="icon-sm"
+                variant="default"
+                disabled={running}
+                onClick={onRandomStartSeed}
+                aria-label="Choose a random start seed"
+                aria-keyshortcuts="Control+R"
+              >
+                <ShuffleAngularIcon />
+              </InputGroupButton>
+            </TooltipTrigger>
+            <TooltipContent>
+              Random start seed <Kbd>Ctrl + R</Kbd>
+            </TooltipContent>
+          </Tooltip>
         </InputGroup>
         {attempted && startSeedInvalid ? (
           <FieldError>Use an integer from 0 to 5,429,503,678,975.</FieldError>

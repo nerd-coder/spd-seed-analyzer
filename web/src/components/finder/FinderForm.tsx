@@ -4,10 +4,22 @@ import {
   StopIcon,
 } from '@phosphor-icons/react'
 import { useStore } from '@tanstack/react-store'
-import { type FormEvent, type MouseEvent, useEffect, useRef } from 'react'
+import {
+  type FormEvent,
+  type MouseEvent,
+  useCallback,
+  useEffect,
+  useRef,
+} from 'react'
 import { Button } from '@/components/ui/button'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Kbd } from '@/components/ui/kbd'
 import { Switch } from '@/components/ui/switch'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { $finderForm } from '@/stores/app'
 import { ConstraintEditor } from './ConstraintEditor'
 import {
@@ -18,6 +30,7 @@ import {
   MAX_CONSTRAINTS,
   MAX_RESULTS,
   MIN_CANDIDATES,
+  randomStartSeed,
   TOTAL_SEEDS,
 } from './finder-types'
 import { SearchScopeFields } from './SearchScopeFields'
@@ -37,6 +50,7 @@ export function FinderForm({
   onSearch,
   onCancel,
 }: FinderFormProps) {
+  const formRef = useRef<HTMLFormElement>(null)
   const suppressNextSubmit = useRef(false)
   const {
     attempted,
@@ -74,9 +88,43 @@ export function FinderForm({
     return () => window.clearTimeout(timer)
   }, [cancelCooldown])
 
-  function updateState(patch: Partial<ReturnType<typeof $finderForm.get>>) {
+  const updateState = useCallback(function updateState(
+    patch: Partial<ReturnType<typeof $finderForm.get>>
+  ) {
     $finderForm.set({ ...$finderForm.get(), ...patch })
-  }
+  }, [])
+
+  const randomizeStartSeed = useCallback(() => {
+    updateState({ startSeed: randomStartSeed() })
+  }, [updateState])
+
+  useEffect(() => {
+    function handleShortcut(event: KeyboardEvent) {
+      if (
+        !event.ctrlKey ||
+        event.altKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        event.repeat
+      ) {
+        return
+      }
+
+      switch (event.key.toLowerCase()) {
+        case 'r':
+          event.preventDefault()
+          if (!running) randomizeStartSeed()
+          break
+        case 'f':
+          event.preventDefault()
+          if (!running && !cancelCooldown) formRef.current?.requestSubmit()
+          break
+      }
+    }
+
+    window.addEventListener('keydown', handleShortcut)
+    return () => window.removeEventListener('keydown', handleShortcut)
+  }, [cancelCooldown, randomizeStartSeed, running])
 
   function updateFloors(value: number) {
     updateState({
@@ -163,7 +211,12 @@ export function FinderForm({
   }
 
   return (
-    <form onSubmit={submit} noValidate className="flex flex-col gap-3">
+    <form
+      ref={formRef}
+      onSubmit={submit}
+      noValidate
+      className="flex flex-col gap-3"
+    >
       <FieldGroup className="gap-2">
         <SearchScopeFields
           startSeed={startSeed}
@@ -178,6 +231,7 @@ export function FinderForm({
           }
           onFloorsChange={updateFloors}
           onMaxMatchesChange={(value) => updateState({ maxMatches: value })}
+          onRandomStartSeed={randomizeStartSeed}
         />
 
         <ConstraintEditor
@@ -222,10 +276,21 @@ export function FinderForm({
             {cancelRequested ? 'Cancelling…' : 'Cancel'}
           </Button>
         ) : (
-          <Button type="submit" disabled={cancelCooldown}>
-            <MagnifyingGlassIcon data-icon="inline-start" />
-            Find seeds
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="submit"
+                disabled={cancelCooldown}
+                aria-keyshortcuts="Control+F"
+              >
+                <MagnifyingGlassIcon data-icon="inline-start" />
+                Find seeds
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              Find seeds <Kbd>Ctrl + F</Kbd>
+            </TooltipContent>
+          </Tooltip>
         )}
       </div>
     </form>
