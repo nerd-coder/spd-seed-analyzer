@@ -93,24 +93,102 @@ fn floor_one_traps_room_relocates_its_exact_forced_reward() {
 }
 
 #[test]
-fn compact_report_retains_concrete_baseline_without_promoting_finder_facts() {
+fn floor_one_runestone_rewards_and_initial_encounters_are_exact() {
+    let report = analyze_seed("AAA-AAA-AFU", 1).expect("analyze");
+    let floor = &report.floors[0];
+    let runestones: Vec<_> = floor
+        .items
+        .iter()
+        .filter(|item| item.source.as_deref() == Some("RunestoneRoom"))
+        .map(|item| (item.class_name.as_deref(), item.prediction, item.quantity))
+        .collect();
+    assert_eq!(
+        runestones,
+        [
+            (
+                Some("StoneOfBlast"),
+                crate::report::ItemPredictionKind::Exact,
+                1,
+            ),
+            (
+                Some("StoneOfDeepSleep"),
+                crate::report::ItemPredictionKind::Exact,
+                1,
+            ),
+        ]
+    );
+
+    assert_eq!(
+        floor
+            .initial_encounters
+            .iter()
+            .map(|encounter| (encounter.class_name.as_str(), encounter.quantity))
+            .collect::<Vec<_>>(),
+        [("Rat", 6), ("Snake", 2)]
+    );
+    let snake = floor
+        .initial_encounters
+        .iter()
+        .find(|encounter| encounter.class_name == "Snake")
+        .expect("initial snakes");
+    assert!(matches!(
+        snake.combat_rewards.as_slice(),
+        [crate::report::CombatReward {
+            prediction: crate::report::CombatRewardPrediction::RuntimeChance,
+            chance: Some(crate::report::RewardChance {
+                numerator: 1,
+                denominator: 4,
+            }),
+            class_name: None,
+            ..
+        }]
+    ));
+}
+
+#[test]
+fn floor_one_room_mobs_keep_fixed_combat_rewards_non_positional() {
+    let report = analyze_seed("AAA-AAA-AAA", 1).expect("analyze");
+    let floor = &report.floors[0];
+    let piranhas = floor
+        .initial_encounters
+        .iter()
+        .find(|encounter| encounter.class_name == "Piranha")
+        .expect("PoolRoom piranhas");
+    assert_eq!(piranhas.quantity, 3);
+    assert!(matches!(
+        piranhas.combat_rewards.as_slice(),
+        [crate::report::CombatReward {
+            class_name: Some(class_name),
+            prediction: crate::report::CombatRewardPrediction::Guaranteed,
+            chance: None,
+            ..
+        }] if class_name == "MysteryMeat"
+    ));
+    assert!(
+        floor.map.as_ref().is_some_and(|map| map.mobs.is_empty()),
+        "public map remains painter-only"
+    );
+}
+
+#[test]
+fn compact_report_promotes_exact_floor_one_room_rewards() {
     let report = analyze_seed("RZN-LKU-EFS", 17).expect("analyze compact-report fixture");
     let floor_one = &report.floors[0];
     let wealth = floor_one
         .items
         .iter()
         .find(|item| {
-            item.prediction == report::ItemPredictionKind::Baseline
+            item.prediction == report::ItemPredictionKind::Exact
                 && item.class_name.as_deref() == Some("RingOfWealth")
         })
-        .expect("baseline Crystal Choice Wealth ring");
+        .expect("exact floor-one Crystal Choice Wealth ring");
     assert_eq!(wealth.level, Some(2));
     assert_eq!(wealth.cursed, Some(true));
     assert_eq!(wealth.source.as_deref(), Some("CrystalChoiceRoom"));
-    assert_eq!(wealth.prediction, report::ItemPredictionKind::Baseline);
+    assert_eq!(wealth.prediction, report::ItemPredictionKind::Exact);
     assert!(floor_one.items.iter().all(|item| {
         item.class_name.as_deref() != Some("RingOfWealth")
-            || item.prediction == report::ItemPredictionKind::Baseline
+            || item.prediction == report::ItemPredictionKind::Exact
     }));
 
     let compact = report.compact_text();

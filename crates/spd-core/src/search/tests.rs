@@ -49,6 +49,7 @@ fn exact_floor(depth: u32, classes: &[(&str, i32)]) -> crate::FloorReport {
         rooms: vec![],
         possible_rooms: vec![],
         guaranteed_appearances: vec![],
+        initial_encounters: vec![],
         items: classes
             .iter()
             .map(|(class_name, level)| crate::report::ItemEntry {
@@ -179,6 +180,7 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
         rooms: vec!["SacrificeRoom".into()],
         possible_rooms: vec![],
         guaranteed_appearances: vec![],
+        initial_encounters: vec![],
         items: vec![crate::report::ItemEntry {
             name: "weapon reward".into(),
             quantity: 1,
@@ -305,7 +307,7 @@ fn floor_one_exact_food_identity_matches_exact_item_search() {
 }
 
 #[test]
-fn finder_matches_include_baseline_highlights_without_using_them_as_evidence() {
+fn finder_baseline_highlights_exclude_promoted_floor_one_rewards() {
     let numeric = crate::parse_seed("RZN-LKU-EFS")
         .expect("fixture seed")
         .numeric;
@@ -322,10 +324,8 @@ fn finder_matches_include_baseline_highlights_without_using_them_as_evidence() {
     let matched = &result.matches[0];
     assert_eq!(matched.evidence.len(), 1);
     assert_eq!(matched.evidence[0].class_name, "Food");
-    assert!(matched.baseline_items.iter().any(|item| {
-        item.depth == 1
-            && item.item.class_name.as_deref() == Some("RingOfWealth")
-            && item.item.prediction == ItemPredictionKind::Baseline
+    assert!(matched.baseline_items.iter().all(|item| {
+        item.depth != 1 || item.item.class_name.as_deref() != Some("RingOfWealth")
     }));
     assert!(matched.baseline_items.iter().all(|item| {
         item.item.prediction == ItemPredictionKind::Baseline
@@ -371,12 +371,23 @@ fn guaranteed_limited_drop_spawns_match_exact_item_searches() {
 
 #[test]
 fn puzzle_solution_potions_match_exact_item_searches() {
-    for (seed, class_name, source) in [
-        (25, "PotionOfHaste", "SentryRoom"),
-        (53, "PotionOfPurity", "ToxicGasRoom"),
-        (99_162_322, "PotionOfLevitation", "TrapsRoom"),
-        (8_687_205_886, "PotionOfFrost", "MagicalFireRoom"),
+    for (seed, class_name, room_source, evidence_source) in [
+        (25, "PotionOfHaste", "SentryRoom", "SentryRoom"),
+        (53, "PotionOfPurity", "ToxicGasRoom", "RingRoom"),
+        (99_162_322, "PotionOfLevitation", "TrapsRoom", "TrapsRoom"),
+        (
+            8_687_205_886,
+            "PotionOfFrost",
+            "MagicalFireRoom",
+            "MagicalFireRoom",
+        ),
     ] {
+        let report = crate::analyze_seed(&seed.to_string(), 1).expect("puzzle solution report");
+        assert!(report.floors[0].items.iter().any(|item| {
+            item.class_name.as_deref() == Some(class_name)
+                && item.source.as_deref() == Some(room_source)
+        }));
+
         let result = search_seeds(&SeedSearchRequest {
             start_seed: seed,
             candidate_count: 1,
@@ -391,7 +402,9 @@ fn puzzle_solution_potions_match_exact_item_searches() {
         assert_eq!(evidence.class_name, class_name);
         assert_eq!(evidence.depth, 1);
         assert_eq!(evidence.level, 0);
-        assert_eq!(evidence.source.as_deref(), Some(source));
+        // Seed 53 also relocates another guaranteed Purity potion into a
+        // RingRoom, which is the first exact copy selected as search evidence.
+        assert_eq!(evidence.source.as_deref(), Some(evidence_source));
     }
 }
 
@@ -419,6 +432,7 @@ fn constrained_shop_stock_never_matches_its_internal_concrete_class() {
         rooms: vec!["ShopRoom".into()],
         possible_rooms: vec![],
         guaranteed_appearances: vec![],
+        initial_encounters: vec![],
         items: vec![crate::report::ItemEntry {
             name: "weapon stock".into(),
             quantity: 1,

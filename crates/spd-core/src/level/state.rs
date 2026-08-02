@@ -18,6 +18,9 @@ use forced_queue::public_entries as forced_public_entries;
 mod conditions;
 use conditions::{item_conditions, item_conditions_typed, legacy_item_notes, parchment_condition};
 
+#[path = "state/encounters.rs"]
+mod encounters;
+
 #[path = "state/baseline.rs"]
 mod baseline;
 use baseline::item_entry as baseline_item_entry;
@@ -99,6 +102,24 @@ fn is_unpublished_main_loot(item: &GeneratedItem) -> bool {
         .as_deref()
         .and_then(|source| source.rsplit(':').next())
         .is_some_and(|origin| matches!(origin, "mimic" | "golden_mimic"))
+}
+
+fn is_exact_floor_one_room_prize(
+    depth: i32,
+    runtime_sensitive_layout: bool,
+    item: &GeneratedItem,
+) -> bool {
+    depth == 1
+        && !runtime_sensitive_layout
+        && (matches!(item.provenance, ItemProvenance::Room(_))
+            || item.source.as_deref().is_some_and(|source| {
+                source.ends_with(":forced")
+                    // These painters predate the common Room provenance tag.
+                    || matches!(
+                        source,
+                        "SacrificeRoom" | "CryptRoom" | "StatueRoom"
+                    )
+            }))
 }
 
 #[derive(Debug, Clone)]
@@ -215,28 +236,20 @@ impl LevelState {
         } else {
             Vec::new()
         };
-        let exact_floor_one_room_prize_indices: Vec<_> =
-            if self.depth == 1 && !self.runtime_sensitive_layout {
-                self.placed_items
-                    .iter()
-                    .enumerate()
-                    .filter(|(_, item)| {
-                        item.source.as_deref().is_some_and(|source| {
-                            source.ends_with(":forced")
-                                // These painters each create exactly one equipment reward.
-                                // On Floor 1 there is no earlier player-controlled generator
-                                // history, so the sampled result is a seed fact.
-                                || matches!(
-                                    source,
-                                    "SacrificeRoom" | "CryptRoom" | "StatueRoom"
-                                )
-                        })
-                    })
-                    .map(|(index, _)| index)
-                    .collect()
-            } else {
-                Vec::new()
-            };
+        let exact_floor_one_room_prize_indices: Vec<_> = if self.depth == 1
+            && !self.runtime_sensitive_layout
+        {
+            self.placed_items
+                .iter()
+                .enumerate()
+                .filter(|(_, item)| {
+                    is_exact_floor_one_room_prize(self.depth, self.runtime_sensitive_layout, item)
+                })
+                .map(|(index, _)| index)
+                .collect()
+        } else {
+            Vec::new()
+        };
         // A Floor 1 room can relocate a queued guaranteed spawn. Publish the
         // item at its reward source, rather than listing it twice or exposing
         // the private queue-consumption lifecycle.
@@ -277,7 +290,9 @@ impl LevelState {
                     _ => continue,
                 }
             }
-            if is_blacklisted(item) || is_unpublished_main_loot(item) {
+            if (is_blacklisted(item) && !exact_floor_one_room_prize)
+                || (is_unpublished_main_loot(item) && !exact_floor_one_room_prize)
+            {
                 continue;
             }
             // Outside Floor 1 Sacrifice is represented only by its static
@@ -456,6 +471,19 @@ impl LevelState {
                         Vec::new()
                     }
                 });
+            let mut conditions = item_conditions_typed(quest_role, imp_shop_conditional);
+            if exact_floor_one_room_prize
+                && item.source.as_deref().is_some_and(|source| {
+                    source
+                        .rsplit(':')
+                        .next()
+                        .is_some_and(|tail| tail.contains("mimic"))
+                })
+            {
+                conditions.push(ItemCondition::Runtime {
+                    state_id: "defeat_mimic".into(),
+                });
+            }
             let entry = ItemEntry {
                 name: if constrained {
                     constrained_name.to_string()
@@ -515,7 +543,7 @@ impl LevelState {
                     }),
                 prediction,
                 spawn_conditions: item_conditions(artifact_conditional),
-                conditions: item_conditions_typed(quest_role, imp_shop_conditional),
+                conditions,
                 notes: legacy_item_notes(
                     quest_role,
                     blacksmith_smith_option,
@@ -619,15 +647,11 @@ impl LevelState {
             for fact in &self.room_public_facts {
                 items.extend(fact.entries().into_iter().filter(|entry| {
                     !self.placed_items.iter().any(|item| {
-                        let concrete_floor_one_prize = self.depth == 1
-                            && !self.runtime_sensitive_layout
-                            && item.source.as_deref().is_some_and(|source| {
-                                source.ends_with(":forced")
-                                    || matches!(
-                                        source,
-                                        "SacrificeRoom" | "CryptRoom" | "StatueRoom"
-                                    )
-                            });
+                        let concrete_floor_one_prize = is_exact_floor_one_room_prize(
+                            self.depth,
+                            self.runtime_sensitive_layout,
+                            item,
+                        );
                         let baseline_room_prize = self.baseline_projection
                             && self.depth > 1
                             && matches!(
@@ -640,9 +664,14 @@ impl LevelState {
                         let Some(source) = item.source.as_deref() else {
                             return false;
                         };
-                        let room = source.strip_suffix(":forced").unwrap_or(source);
-                        Some(room) == entry.source.as_deref()
-                            && (source == room || entry.name == "single room reward source")
+                        let room = source.split(':').next().unwrap_or(source);
+                        if Some(room) != entry.source.as_deref() {
+                            return false;
+                        }
+                        entry.class_name.as_deref().map_or_else(
+                            || source == room || entry.name == "single room reward source",
+                            |class_name| class_name == item.class_name,
+                        )
                     })
                 }));
             }
@@ -669,6 +698,12 @@ impl LevelState {
             .flatten();
         let guaranteed_appearances =
             guaranteed_appearances(&self.rooms, !self.runtime_sensitive_rooms);
+        let initial_encounters = encounters::initial_encounters(
+            self.depth,
+            self.runtime_sensitive_layout,
+            self.map.as_ref(),
+            &self.placed_items,
+        );
 
         FloorReport {
             depth: self.depth as u32,
@@ -688,6 +723,7 @@ impl LevelState {
             },
             possible_rooms: Vec::new(),
             guaranteed_appearances,
+            initial_encounters,
             items,
             quests: self.quests[..self
                 .runtime_sensitive_quests_from

@@ -195,11 +195,27 @@ export type FloorReport = {
   builder?: string | null
   rooms?: string[]
   guaranteed_appearances?: GuaranteedAppearance[]
+  initial_encounters?: InitialEncounter[]
   /** Includes exact, constrained, and baseline-analysis entries. */
   items: ItemEntry[]
   quests: QuestReport[]
   map?: FloorMap | null
   assumed_map?: FloorMap | null
+}
+
+export type InitialEncounter = {
+  class: string
+  name: string
+  quantity: number
+  combat_rewards?: CombatReward[]
+}
+
+export type CombatReward = {
+  name: string
+  class_name?: string | null
+  category: string
+  prediction: 'guaranteed' | 'runtime_chance' | 'generated_with_floor'
+  chance?: { numerator: number; denominator: number } | null
 }
 
 export type QuestDepthRange = {

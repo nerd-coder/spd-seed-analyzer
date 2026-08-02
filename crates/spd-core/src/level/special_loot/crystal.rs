@@ -65,6 +65,9 @@ pub(super) fn crystal_vault(
     } else {
         "crystal_chest"
     };
+    if second_heap == "crystal_mimic" {
+        i2.source = Some("CrystalVaultRoom:crystal_mimic".into());
+    }
 
     items_to_spawn.push(GeneratedItem::new("CrystalKey", ItemCategory::Other));
     items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));

@@ -217,6 +217,10 @@ pub struct FloorReport {
     /// Seed-determined non-loot features that are guaranteed to exist on this floor.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub guaranteed_appearances: Vec<GuaranteedAppearance>,
+    /// Exact non-positional entity summary for the floor's initial generated state.
+    /// Runtime summons and respawns are deliberately excluded.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub initial_encounters: Vec<InitialEncounter>,
     /// Item facts and fresh/no-history baseline samples for this floor.
     /// Consumers must distinguish baseline samples through
     /// `ItemEntry::prediction`; only exact items are finder evidence.
@@ -230,6 +234,46 @@ pub struct FloorReport {
     /// prediction and must be presented with its assumption warning.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub assumed_map: Option<FloorMap>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct InitialEncounter {
+    #[serde(rename = "class")]
+    pub class_name: String,
+    pub name: String,
+    pub quantity: u32,
+    /// Base rewards associated with defeating this generated entity. Empty means
+    /// the pinned class has no seed-analysis combat reward.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub combat_rewards: Vec<CombatReward>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CombatReward {
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub class_name: Option<String>,
+    pub category: String,
+    pub prediction: CombatRewardPrediction,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub chance: Option<RewardChance>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CombatRewardPrediction {
+    /// A fixed class reward on an ordinary eligible defeat.
+    Guaranteed,
+    /// The occurrence and/or identity is rolled on the gameplay RNG stream.
+    RuntimeChance,
+    /// The concrete carried reward was generated with the floor.
+    GeneratedWithFloor,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub struct RewardChance {
+    pub numerator: u32,
+    pub denominator: u32,
 }
 
 /// A room type and count observed in one or more modeled generation profiles.
