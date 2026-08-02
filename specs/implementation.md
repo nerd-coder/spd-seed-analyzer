@@ -4,11 +4,11 @@ Current state: the public report uses typed item conditions, name-less identity
 entries, and an `{type, conditions}` enchantment object. Spawn conditions remain
 OR-of-AND clauses and serialize without empty trinket clauses. Rust owns all
 condition derivation; WASM and React consume the contract and render reusable
-typed-condition popovers. Higher-floor Sacrifice, Crypt, and Statue equipment
-also exposes a curated, clearly labelled fresh/no-history baseline in compact
-reports, the analyzer, and finder result cards. Baseline items are planning
-previews and never finder evidence; exact claims remain limited to seed-safe
-paths. Public accuracy is `partial`.
+typed-condition popovers. `floors.items` contains exact, constrained, and
+fresh/no-history baseline entries, distinguished by `prediction`; there is no
+parallel baseline-items floor field. The analyzer and finder label baseline
+items as baseline analysis only, and they never become finder evidence. Exact
+claims remain limited to seed-safe paths. Public accuracy is `partial`.
 
 Next steps:
 

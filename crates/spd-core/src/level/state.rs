@@ -190,7 +190,7 @@ impl LevelState {
 
     pub fn to_floor_report_with_map(&self, allow_map: bool) -> FloorReport {
         let mut items = forced_public_entries(self.depth, &self.initial_forced_items);
-        let baseline_items = if self.baseline_projection {
+        let baseline_items: Vec<_> = if self.baseline_projection {
             self.placed_items
                 .iter()
                 .filter_map(baseline_item_entry)
@@ -625,7 +625,19 @@ impl LevelState {
                 }));
             }
         }
-        let items = merge_identical_items(items);
+        let mut items = merge_identical_items(items);
+        for baseline in baseline_items {
+            let already_projected = items.iter().any(|item| {
+                item.class_name == baseline.class_name
+                    && item.source == baseline.source
+                    && item.level == baseline.level
+                    && item.cursed == baseline.cursed
+                    && item.enchantment == baseline.enchantment
+            });
+            if !already_projected {
+                items.push(baseline);
+            }
+        }
         let exact_map = allow_map
             .then(|| self.layout_map.clone())
             .flatten()
@@ -655,7 +667,6 @@ impl LevelState {
             possible_rooms: Vec::new(),
             guaranteed_appearances,
             items,
-            baseline_items,
             quests: self.quests[..self
                 .runtime_sensitive_quests_from
                 .unwrap_or(self.quests.len())]

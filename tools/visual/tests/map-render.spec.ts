@@ -552,6 +552,9 @@ test('analyzer displays fresh baseline highlights separately from guaranteed ite
   await expect(
     page.getByText('planning only', { exact: true }).first()
   ).toBeVisible()
+  await expect(
+    page.getByText('This is baseline analysis only.', { exact: false }).first()
+  ).toBeVisible()
   await expect(baselineItem).toContainText('Ring of Wealth +2')
   await expect(baselineItem).toContainText('Crystal choice')
   await expect(baselineItem).toContainText('cursed')
@@ -601,7 +604,7 @@ test('finder result displays baseline highlights outside matched constraints', a
   ).toBeVisible()
   await expect(
     page.getByText(
-      'Planning preview only; these items did not match the search.',
+      'This is baseline analysis only. These items did not match the search and can change with player choices or prior generation.',
       { exact: true }
     )
   ).toBeVisible()

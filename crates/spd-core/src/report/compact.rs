@@ -5,11 +5,10 @@ use super::*;
 impl SeedReport {
     /// Render the compact, seed-finder-style view of the report.
     ///
-    /// The formatter prefers `baseline_items` when available, making the
-    /// output useful for planning while preserving the explicit baseline
-    /// caveat in the machine-readable projection. It intentionally omits
-    /// routine food/potion stock and unresolved entries without a concrete
-    /// class; callers should use `floors[*].items` for the complete contract.
+    /// Baseline samples are identified by `ItemEntry::prediction`, keeping the
+    /// output useful for planning while preserving the explicit caveat in the
+    /// machine-readable projection. It intentionally omits routine food/potion
+    /// stock and unresolved entries without a concrete class.
     pub fn compact_text(&self) -> String {
         let mut out = String::new();
         let seed = self
@@ -25,13 +24,8 @@ impl SeedReport {
 
         let mut last_depth = None;
         for floor in &self.floors {
-            let entries = if floor.baseline_items.is_empty() {
-                &floor.items
-            } else {
-                &floor.baseline_items
-            };
             let mut grouped: BTreeMap<String, Vec<String>> = BTreeMap::new();
-            for item in entries {
+            for item in &floor.items {
                 if item.class_name.is_none() || !is_baseline_highlight(item) {
                     continue;
                 }

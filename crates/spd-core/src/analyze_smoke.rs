@@ -97,18 +97,21 @@ fn compact_report_retains_concrete_baseline_without_promoting_finder_facts() {
     let report = analyze_seed("RZN-LKU-EFS", 17).expect("analyze compact-report fixture");
     let floor_one = &report.floors[0];
     let wealth = floor_one
-        .baseline_items
+        .items
         .iter()
-        .find(|item| item.class_name.as_deref() == Some("RingOfWealth"))
+        .find(|item| {
+            item.prediction == report::ItemPredictionKind::Baseline
+                && item.class_name.as_deref() == Some("RingOfWealth")
+        })
         .expect("baseline Crystal Choice Wealth ring");
     assert_eq!(wealth.level, Some(2));
     assert_eq!(wealth.cursed, Some(true));
     assert_eq!(wealth.source.as_deref(), Some("CrystalChoiceRoom"));
     assert_eq!(wealth.prediction, report::ItemPredictionKind::Baseline);
-    assert!(floor_one
-        .items
-        .iter()
-        .all(|item| item.class_name.as_deref() != Some("RingOfWealth")));
+    assert!(floor_one.items.iter().all(|item| {
+        item.class_name.as_deref() != Some("RingOfWealth")
+            || item.prediction == report::ItemPredictionKind::Baseline
+    }));
 
     let compact = report.compact_text();
     assert!(compact.starts_with("RZN-LKU-EFS\nShPD v3.3.8\n\n"));
@@ -251,6 +254,11 @@ fn public_contract_serializes_conditions_on_items_only() {
         .iter()
         .flat_map(|floor| floor["items"].as_array().unwrap())
         .any(|item| item.get("spawn_conditions").is_some()));
+    assert!(value["floors"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|floor| floor.get("baseline_items").is_none()));
     assert!(value.get("analysis_notes").is_none());
     assert!(value.get("message").is_none());
     assert!(value["identities"]["potions"][0].get("name").is_none());
@@ -494,7 +502,10 @@ fn wandmaker_quest_spawns_within_prison() {
                 let rewards: Vec<_> = f
                     .items
                     .iter()
-                    .filter(|i| i.source.as_deref() == Some("Wandmaker.Quest"))
+                    .filter(|i| {
+                        i.source.as_deref() == Some("Wandmaker.Quest")
+                            && i.prediction != report::ItemPredictionKind::Baseline
+                    })
                     .collect();
                 assert_eq!(rewards.len(), 2);
                 assert!(rewards.iter().all(|item| {
@@ -509,6 +520,18 @@ fn wandmaker_quest_spawns_within_prison() {
                                 && note.contains("choose one")
                         })
                 }));
+                let baseline_rewards: Vec<_> = f
+                    .items
+                    .iter()
+                    .filter(|item| {
+                        item.source.as_deref() == Some("Wandmaker.Quest")
+                            && item.prediction == report::ItemPredictionKind::Baseline
+                    })
+                    .collect();
+                assert_eq!(baseline_rewards.len(), 2);
+                assert!(baseline_rewards
+                    .iter()
+                    .all(|item| item.class_name.is_some() && item.level.is_some()));
                 if let Some(map) = &f.map {
                     assert!(map.mobs.is_empty());
                     assert!(map.heaps.is_empty());

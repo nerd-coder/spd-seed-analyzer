@@ -199,8 +199,9 @@ pub fn search_seeds(request: &SeedSearchRequest) -> Result<SeedSearchResult, Sea
                 .iter()
                 .flat_map(|floor| {
                     floor
-                        .baseline_items
+                        .items
                         .iter()
+                        .filter(|item| item.prediction == ItemPredictionKind::Baseline)
                         .cloned()
                         .map(|item| BaselineItemEvidence {
                             depth: floor.depth,

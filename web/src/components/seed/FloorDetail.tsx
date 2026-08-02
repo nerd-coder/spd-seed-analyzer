@@ -46,7 +46,9 @@ export function FloorDetail({
                 key={`${floor.depth}-quest-${i}`}
                 quest={q}
                 rewards={floor.items.filter(
-                  (item) => item.source === q.contract.rewards.item_source
+                  (item) =>
+                    item.prediction !== 'baseline' &&
+                    item.source === q.contract.rewards.item_source
                 )}
                 identities={identities}
                 depth={floor.depth}

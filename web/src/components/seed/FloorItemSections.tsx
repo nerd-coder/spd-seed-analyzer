@@ -60,8 +60,9 @@ function OtherItemsBaselinePopover() {
         <PopoverHeader>
           <PopoverTitle>Fresh baseline rewards</PopoverTitle>
           <PopoverDescription>
-            Player choices, trinkets, challenges, or prior generation can change
-            it, so these values are not seed-wide guarantees.
+            This is baseline analysis only. Player choices, trinkets,
+            challenges, or prior generation can change these items, so they are
+            not seed-wide guarantees.
           </PopoverDescription>
         </PopoverHeader>
       </PopoverContent>
@@ -289,10 +290,14 @@ export function FloorItemSections({
   identities: IdentityMaps
   trinketSelection?: TrinketSelectionReport
 }) {
-  const groups = partitionFloorItems(floor.items)
-  const baselineItems = (floor.baseline_items ?? []).filter(
+  const reportItems = floor.items.filter(
+    (item) => item.prediction !== 'baseline'
+  )
+  const groups = partitionFloorItems(reportItems)
+  const baselineItems = floor.items.filter(
     (baseline) =>
-      !floor.items.some(
+      baseline.prediction === 'baseline' &&
+      !reportItems.some(
         (item) =>
           item.prediction === 'exact' &&
           item.class_name === baseline.class_name &&
@@ -325,6 +330,10 @@ export function FloorItemSections({
             <Badge variant="outline">planning only</Badge>
             <OtherItemsBaselinePopover />
           </div>
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            This is baseline analysis only. Player choices, trinkets,
+            challenges, or prior generation can change these items.
+          </p>
           <FloorItemList
             items={baselineItems}
             identities={identities}

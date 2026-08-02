@@ -162,7 +162,8 @@ function ResultCard({
                   Fresh baseline highlights
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  Planning preview only; these items did not match the search.
+                  This is baseline analysis only. These items did not match the
+                  search and can change with player choices or prior generation.
                 </p>
               </div>
               <Badge variant="outline">planning only</Badge>

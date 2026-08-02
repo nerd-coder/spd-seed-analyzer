@@ -1,4 +1,6 @@
-use crate::report::{FloorReport, ItemDependencyCondition, ItemEntry, ItemSpawnCondition};
+use crate::report::{
+    FloorReport, ItemDependencyCondition, ItemEntry, ItemPredictionKind, ItemSpawnCondition,
+};
 
 use super::DiscoveredRoute;
 
@@ -8,8 +10,13 @@ pub(crate) fn merge_possible_items(
     alternatives: &[(DiscoveredRoute, Vec<FloorReport>)],
 ) {
     for floor in baseline {
-        let contexts = std::iter::once((&baseline_condition, &floor.items))
-            .chain(alternatives.iter().filter_map(|(route, floors)| {
+        let (mut baseline_samples, baseline_items): (Vec<_>, Vec<_>) =
+            std::mem::take(&mut floor.items)
+                .into_iter()
+                .partition(|item| item.prediction == ItemPredictionKind::Baseline);
+        let alternative_items = alternatives
+            .iter()
+            .filter_map(|(route, floors)| {
                 (floor.depth <= route.max_depth)
                     .then(|| {
                         floors
@@ -17,10 +24,26 @@ pub(crate) fn merge_possible_items(
                             .find(|candidate| candidate.depth == floor.depth)
                     })
                     .flatten()
-                    .map(|candidate| (&route.condition, &candidate.items))
-            }))
+                    .map(|candidate| {
+                        let items = candidate
+                            .items
+                            .iter()
+                            .filter(|item| item.prediction != ItemPredictionKind::Baseline)
+                            .cloned()
+                            .collect::<Vec<_>>();
+                        (&route.condition, items)
+                    })
+            })
+            .collect::<Vec<_>>();
+        let contexts = std::iter::once((&baseline_condition, &baseline_items))
+            .chain(
+                alternative_items
+                    .iter()
+                    .map(|(condition, items)| (*condition, items)),
+            )
             .collect::<Vec<_>>();
         floor.items = merge_contexts(&contexts);
+        floor.items.append(&mut baseline_samples);
     }
 }
 

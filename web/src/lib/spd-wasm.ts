@@ -195,9 +195,8 @@ export type FloorReport = {
   builder?: string | null
   rooms?: string[]
   guaranteed_appearances?: GuaranteedAppearance[]
+  /** Includes exact, constrained, and baseline-analysis entries. */
   items: ItemEntry[]
-  /** Curated fresh/no-history planning highlights; never finder evidence. */
-  baseline_items?: ItemEntry[]
   quests: QuestReport[]
   map?: FloorMap | null
   assumed_map?: FloorMap | null

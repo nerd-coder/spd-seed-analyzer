@@ -217,15 +217,10 @@ pub struct FloorReport {
     /// Seed-determined non-loot features that are guaranteed to exist on this floor.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub guaranteed_appearances: Vec<GuaranteedAppearance>,
+    /// Item facts and fresh/no-history baseline samples for this floor.
+    /// Consumers must distinguish baseline samples through
+    /// `ItemEntry::prediction`; only exact items are finder evidence.
     pub items: Vec<ItemEntry>,
-    /// Concrete fresh/no-history replay results retained for compact seed
-    /// summaries. These are explicitly baseline facts: player-controlled
-    /// Generator history may change their identity or presence on later
-    /// floors. The conservative `items` projection remains the finder-evidence
-    /// and guaranteed-spawn contract; consumers must label this separate list
-    /// as planning-only baseline information.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub baseline_items: Vec<ItemEntry>,
     pub quests: Vec<QuestReport>,
     /// Present when geometry build succeeded.
     #[serde(skip_serializing_if = "Option::is_none")]

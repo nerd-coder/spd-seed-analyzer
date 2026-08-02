@@ -3,9 +3,9 @@ use super::{is_blacklisted, is_unpublished_main_loot};
 use crate::items::model::{GeneratedItem, ItemProvenance, QuestRewardRole};
 use crate::report::{ItemEnchantment, ItemEntry, ItemPredictionKind};
 
-/// Project one concrete result from the fresh/no-history replay. This is kept
-/// separate from the conservative public item list: a baseline is useful for
-/// a compact seed-finder-style report, but it is not a universal seed claim.
+/// Project one concrete result from the fresh/no-history replay. The result is
+/// marked as baseline analysis inside the public item list: it is useful for a
+/// compact seed-finder-style report, but it is not a universal seed claim.
 pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
     if item.source.is_none()
         || is_blacklisted(item)
