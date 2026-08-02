@@ -71,6 +71,28 @@ fn fresh_profile_publishes_floor_one_ordinary_loot() {
 }
 
 #[test]
+fn floor_one_traps_room_relocates_its_exact_forced_reward() {
+    let report = analyze_seed("HKH-FKC-YTK", 1).expect("analyze");
+    let floor = &report.floors[0];
+    let prize = floor
+        .items
+        .iter()
+        .find(|item| item.source.as_deref() == Some("TrapsRoom"))
+        .expect("TrapsRoom reward");
+
+    assert_eq!(prize.name, "ration of food");
+    assert_eq!(prize.class_name.as_deref(), Some("Food"));
+    assert_eq!(prize.prediction, crate::report::ItemPredictionKind::Exact);
+    assert!(!floor.items.iter().any(|item| {
+        item.name == "single room reward source" && item.source.as_deref() == Some("TrapsRoom")
+    }));
+    assert!(!floor.items.iter().any(|item| {
+        item.class_name.as_deref() == Some("Food")
+            && item.source.as_deref() == Some("guaranteed floor spawn")
+    }));
+}
+
+#[test]
 fn first_alchemy_pot_is_a_guaranteed_floor_appearance() {
     for seed in 0..50 {
         let report = analyze_seed_seed_only(&seed.to_string(), 5).expect("analyze");

@@ -182,6 +182,33 @@ impl LevelState {
 
     pub fn to_floor_report_with_map(&self, allow_map: bool) -> FloorReport {
         let mut items = forced_public_entries(self.depth, &self.initial_forced_items);
+        let exact_floor_one_room_prize_indices: Vec<_> =
+            if self.depth == 1 && !self.runtime_sensitive_layout {
+                self.placed_items
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, item)| {
+                        matches!(item.provenance, ItemProvenance::Room(_))
+                            && item
+                                .source
+                                .as_deref()
+                                .is_some_and(|source| source.ends_with(":forced"))
+                    })
+                    .map(|(index, _)| index)
+                    .collect()
+            } else {
+                Vec::new()
+            };
+        // A Floor 1 room can relocate a queued guaranteed spawn. Publish the
+        // item at its reward source, rather than listing it twice or exposing
+        // the private queue-consumption lifecycle.
+        for &index in &exact_floor_one_room_prize_indices {
+            let prize = &self.placed_items[index];
+            items.retain(|entry| {
+                !(entry.source.as_deref() == Some("guaranteed floor spawn")
+                    && entry.class_name.as_deref() == Some(&prize.class_name))
+            });
+        }
         let mut shop_items = Vec::new();
         let mut has_shop = false;
         for (index, item) in self.placed_items.iter().enumerate() {
@@ -218,7 +245,8 @@ impl LevelState {
             }
             // Room contracts are emitted independently of the sampled exact
             // items so runtime-sensitive count/control flow cannot leak.
-            if matches!(item.provenance, ItemProvenance::Room(_)) {
+            let exact_floor_one_room_prize = exact_floor_one_room_prize_indices.contains(&index);
+            if matches!(item.provenance, ItemProvenance::Room(_)) && !exact_floor_one_room_prize {
                 continue;
             }
             let artifact_conditional = item.artifact_conditional
@@ -259,7 +287,9 @@ impl LevelState {
             } else {
                 item.title()
             };
-            let exact_name = if item.category == crate::items::model::ItemCategory::Gold {
+            let exact_name = if exact_floor_one_room_prize && item.class_name == "Food" {
+                "ration of food".to_string()
+            } else if item.category == crate::items::model::ItemCategory::Gold {
                 "gold".to_string()
             } else if item.cursed {
                 full_title
@@ -348,7 +378,9 @@ impl LevelState {
                         | QuestRewardRole::BlacksmithArmor { .. }
                 )
             );
-            let prediction = if ghost_weapon.is_some_and(|_| item.candidate_classes.len() == 1) {
+            let prediction = if exact_floor_one_room_prize
+                || ghost_weapon.is_some_and(|_| item.candidate_classes.len() == 1)
+            {
                 ItemPredictionKind::Exact
             } else {
                 prediction
@@ -432,7 +464,15 @@ impl LevelState {
                     ghost_enchantment_condition.flatten(),
                     item.potential_enchantment.as_deref(),
                 ),
-                source: item.source.clone(),
+                source: exact_floor_one_room_prize
+                    .then(|| {
+                        item.source
+                            .as_deref()
+                            .expect("exact Floor 1 room prize has a source")
+                            .trim_end_matches(":forced")
+                            .to_string()
+                    })
+                    .or_else(|| item.source.clone()),
             };
             if shop_role.is_some() {
                 shop_items.push(entry);
@@ -515,7 +555,16 @@ impl LevelState {
         items.extend(shop_items);
         if !self.runtime_sensitive_layout {
             for fact in &self.room_public_facts {
-                items.extend(fact.entries());
+                items.extend(fact.entries().into_iter().filter(|entry| {
+                    !(entry.name == "single room reward source"
+                        && exact_floor_one_room_prize_indices.iter().any(|&index| {
+                            self.placed_items[index]
+                                .source
+                                .as_deref()
+                                .and_then(|source| source.strip_suffix(":forced"))
+                                == entry.source.as_deref()
+                        }))
+                }));
             }
         }
         let items = merge_identical_items(items);
