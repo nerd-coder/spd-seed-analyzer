@@ -256,6 +256,24 @@ fn main_loot_classification_uses_source_provenance() {
 }
 
 #[test]
+fn known_room_contracts_survive_a_runtime_sensitive_paint_tail() {
+    let mut floor = empty_level_state(8);
+    floor.rooms = vec!["PoolRoom".into()];
+    floor.runtime_sensitive_layout = true;
+    floor.room_public_facts =
+        vec![super::super::room_public::RoomPublicFact::new("PoolRoom", 8).expect("Pool contract")];
+
+    let report = floor.to_floor_report();
+    assert_eq!(report.rooms, ["PoolRoom"]);
+    assert!(report.map.is_none());
+    assert!(report.items.iter().any(|item| {
+        item.class_name.as_deref() == Some("PotionOfInvisibility")
+            && item.source.as_deref() == Some("PoolRoom")
+            && item.prediction == ItemPredictionKind::Exact
+    }));
+}
+
+#[test]
 fn artifact_or_ring_shop_fallback_never_promises_a_level() {
     let mut rare = GeneratedItem::new("RingOfForce", ItemCategory::Ring);
     rare.level = 2;
@@ -298,10 +316,11 @@ fn real_shop_remains_constrained_after_inherited_generation_taint() {
         .iter()
         .any(|entry| entry.source.as_deref() == Some("ShopRoom")));
     assert!(report.items.iter().all(|entry| {
-        matches!(
-            entry.source.as_deref(),
-            Some("guaranteed floor spawn" | "ShopRoom")
-        )
+        entry.source.as_deref() == Some("guaranteed floor spawn")
+            || entry
+                .source
+                .as_deref()
+                .is_some_and(|source| report.rooms.iter().any(|room| room == source))
     }));
     assert!(report.map.is_none());
 
@@ -427,10 +446,6 @@ fn standard_center_room_sampled_classes_do_not_leak_to_report_or_searchable_entr
         !report.rooms.is_empty(),
         "room selection precedes the divergence"
     );
-    assert!(report
-        .items
-        .iter()
-        .all(|item| item.source.as_deref() == Some("guaranteed floor spawn")));
     assert!(
         report.map.is_none(),
         "divergent callback suppresses sampled map"

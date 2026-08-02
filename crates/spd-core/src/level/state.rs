@@ -554,7 +554,10 @@ impl LevelState {
             (&a.name, &a.class_name, &a.category).cmp(&(&b.name, &b.class_name, &b.category))
         });
         items.extend(shop_items);
-        if !self.runtime_sensitive_layout {
+        // These are room-class contracts, not painter/map facts. Once the
+        // room selection is known, a later runtime-sensitive paint callback
+        // cannot make its guaranteed reward contract disappear.
+        if !self.runtime_sensitive_rooms {
             for fact in &self.room_public_facts {
                 items.extend(fact.entries().into_iter().filter(|entry| {
                     !(entry.name == "single room reward source"

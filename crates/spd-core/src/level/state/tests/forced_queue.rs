@@ -234,10 +234,13 @@ fn held_trinket_sensitive_default_feeling_hides_the_prebuild_floor_tail() {
     assert!(public.builder.is_none());
     assert!(public.rooms.is_empty());
     assert!(public.map.is_none());
-    assert!(public
-        .items
-        .iter()
-        .all(|item| item.source.as_deref() == Some("guaranteed floor spawn")));
+    assert!(public.items.iter().all(|item| {
+        item.source.as_deref() == Some("guaranteed floor spawn")
+            || item
+                .source
+                .as_deref()
+                .is_some_and(|source| public.rooms.iter().any(|room| room == source))
+    }));
 }
 
 #[test]
@@ -263,10 +266,13 @@ fn public_generation_taint_suppresses_later_floor_samples() {
     assert!(public.builder.is_some());
     assert!(!public.rooms.is_empty());
     assert!(public.map.is_none());
-    assert!(public
-        .items
-        .iter()
-        .all(|item| item.source.as_deref() == Some("guaranteed floor spawn")));
+    assert!(public.items.iter().all(|item| {
+        item.source.as_deref() == Some("guaranteed floor spawn")
+            || item
+                .source
+                .as_deref()
+                .is_some_and(|source| public.rooms.iter().any(|room| room == source))
+    }));
     assert!(
         !clean_floor.to_floor_report().rooms.is_empty(),
         "the control proves suppression comes from inherited taint"
@@ -299,9 +305,10 @@ fn public_generation_taint_survives_a_nonregular_boss_floor() {
         .iter()
         .any(|item| item.source.as_deref() == Some("ShopRoom")));
     assert!(public.items.iter().all(|item| {
-        matches!(
-            item.source.as_deref(),
-            Some("guaranteed floor spawn" | "ShopRoom")
-        )
+        item.source.as_deref() == Some("guaranteed floor spawn")
+            || item
+                .source
+                .as_deref()
+                .is_some_and(|source| public.rooms.iter().any(|room| room == source))
     }));
 }
