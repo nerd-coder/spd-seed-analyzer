@@ -259,7 +259,7 @@ fn cxg_floor_nine_aligned_sentry_completes() {
     let floor = floor.expect("floor nine");
     assert!(floor.rooms.iter().any(|room| room == "SentryRoom"));
     let public = floor.to_floor_report();
-    assert!(public.rooms.is_empty());
+    assert!(public.rooms.iter().any(|room| room == "SentryRoom"));
     assert!(public.map.is_none());
 }
 

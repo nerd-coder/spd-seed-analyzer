@@ -212,6 +212,11 @@ fn create_level_internal(
     runtime_sensitive_prebuild |= inherited_public_taint;
     let mut runtime_sensitive_placed_items_from = runtime_sensitive_prebuild.then_some(0);
     let mut runtime_sensitive_quests_from = runtime_sensitive_quest_prebuild.then_some(0);
+    // `public_generation_tainted` tracks post-build deck/population paths.
+    // Those can invalidate later item/map facts, but room selection only
+    // consumes the seeded room state before painting. Only a current-floor
+    // pre-build feeling override can make the selected room list unknown.
+    let runtime_sensitive_rooms = runtime_sensitive_quest_prebuild;
     let mut floor_map = None;
     let mut layout_map = None;
     let mut quests = Vec::new();
@@ -265,6 +270,7 @@ fn create_level_internal(
                 quests,
                 runtime_sensitive_map,
                 runtime_sensitive_layout,
+                runtime_sensitive_rooms,
                 runtime_sensitive_feeling,
                 room_public_facts,
                 complete: false,
@@ -564,6 +570,7 @@ fn create_level_internal(
         quests,
         runtime_sensitive_map,
         runtime_sensitive_layout,
+        runtime_sensitive_rooms,
         runtime_sensitive_feeling,
         room_public_facts,
         complete: build_ok,

@@ -385,7 +385,7 @@ fn shop_stock_on_floor_6() {
         .collect();
     assert!(!shop.is_empty());
     let public = state.to_floor_report();
-    assert!(public.rooms.is_empty());
+    assert!(!public.rooms.is_empty());
     assert!(public
         .items
         .iter()
@@ -754,6 +754,18 @@ fn analyze_several_seeds() {
     }
 }
 
+#[test]
+fn seed_only_baseline_keeps_regular_floor_room_facts() {
+    let report = analyze_seed_seed_only("0", 4).expect("analyze");
+    for floor in &report.floors {
+        assert!(
+            !floor.rooms.is_empty(),
+            "depth {} should retain its no-extra-state room list",
+            floor.depth
+        );
+    }
+}
+
 /// UI requests 26 floors; depth 26 is LastLevel (not RegularLevel).
 /// Previously panicked in secrets_for_floor (region index 5) → WASM "unreachable".
 #[test]
@@ -761,13 +773,13 @@ fn analyze_full_run_no_panic() {
     for s in ["GFX-PZH-DCH", "AAA-AAA-AAA", "hello", "42", "shattered"] {
         let r = analyze_seed_seed_only(s, 26).unwrap_or_else(|e| panic!("seed {s}: {e:?}"));
         assert_eq!(r.floors.len(), 26, "seed {s}");
-        // The legacy/default projection does not publish maps without an
-        // explicit map profile, including dedicated levels.
+        // Dedicated levels have no regular-room builder, but their pinned
+        // layouts remain available in the concrete no-extra-state baseline.
         for depth in [5u32, 10, 15, 20, 25, 26] {
             let f = r.floors.iter().find(|f| f.depth == depth).expect("depth");
             assert!(
-                f.map.is_none(),
-                "depth {depth} should skip RegularLevel paint"
+                f.builder.is_none(),
+                "depth {depth} should not use a RegularLevel builder"
             );
         }
         // A mid Halls floor should still generate

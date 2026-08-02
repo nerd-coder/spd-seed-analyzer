@@ -38,6 +38,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
         quests: vec![],
         runtime_sensitive_map: false,
         runtime_sensitive_layout: false,
+        runtime_sensitive_rooms: false,
         runtime_sensitive_feeling: false,
         room_public_facts: vec![
             super::super::room_public::RoomPublicFact::new("SacrificeRoom", 3)
@@ -226,6 +227,7 @@ fn empty_level_state(depth: i32) -> LevelState {
         quests: vec![],
         runtime_sensitive_map: false,
         runtime_sensitive_layout: false,
+        runtime_sensitive_rooms: false,
         runtime_sensitive_feeling: false,
         room_public_facts: vec![],
         complete: true,
@@ -338,6 +340,7 @@ fn room_reward_projection_hides_all_concrete_fields_and_deduplicates_counts() {
         quests: vec![],
         runtime_sensitive_map: false,
         runtime_sensitive_layout: false,
+        runtime_sensitive_rooms: false,
         runtime_sensitive_feeling: false,
         room_public_facts: vec![
             super::super::room_public::RoomPublicFact::new("ArmoryRoom", 7)
@@ -420,15 +423,14 @@ fn standard_center_room_sampled_classes_do_not_leak_to_report_or_searchable_entr
         }
     }
     let (report, sampled) = found.expect("standard center-room loot fixture");
-    let json = serde_json::to_string(&report).expect("serialize public report");
-    if report.rooms.is_empty() {
-        assert!(report
-            .items
-            .iter()
-            .all(|item| { item.source.as_deref() == Some("guaranteed floor spawn") }));
-    } else {
-        assert!(json.contains("reward"));
-    }
+    assert!(
+        !report.rooms.is_empty(),
+        "room selection precedes the divergence"
+    );
+    assert!(report
+        .items
+        .iter()
+        .all(|item| item.source.as_deref() == Some("guaranteed floor spawn")));
     assert!(
         report.map.is_none(),
         "divergent callback suppresses sampled map"

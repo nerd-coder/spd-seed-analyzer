@@ -260,8 +260,8 @@ fn public_generation_taint_suppresses_later_floor_samples() {
         "internal parity map is retained"
     );
     assert!(public.feeling.is_none());
-    assert!(public.builder.is_none());
-    assert!(public.rooms.is_empty());
+    assert!(public.builder.is_some());
+    assert!(!public.rooms.is_empty());
     assert!(public.map.is_none());
     assert!(public
         .items
@@ -291,8 +291,8 @@ fn public_generation_taint_survives_a_nonregular_boss_floor() {
     );
     let public = prison.to_floor_report();
     assert!(public.feeling.is_none());
-    assert!(public.builder.is_none());
-    assert!(public.rooms.is_empty());
+    assert!(public.builder.is_some());
+    assert!(!public.rooms.is_empty());
     assert!(public.map.is_none());
     assert!(public
         .items

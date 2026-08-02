@@ -81,6 +81,11 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
         let alternative = analyze_seed_internal(input, route.max_depth, Some(&route.profile))?;
         alternatives.push((route, alternative.floors));
     }
+    conditional::merge_possible_rooms(
+        &mut report.floors,
+        conditional::baseline_condition(),
+        &alternatives,
+    );
     conditional::merge_possible_items(
         &mut report.floors,
         conditional::baseline_condition(),
@@ -96,7 +101,11 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
 /// Seed-only projection used by the bounded finder. It deliberately avoids
 /// replaying the UI-facing modeled branch matrix for every candidate seed.
 pub(crate) fn analyze_seed_seed_only(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError> {
-    analyze_seed_internal(input, floors, None)
+    // A seed-only search still has a concrete baseline: no challenges, held
+    // trinket, or prior player history. Replaying that profile prevents the
+    // default-feeling callback from tainting all later layout facts merely
+    // because this internal fast path omitted an explicit profile.
+    analyze_seed_internal(input, floors, Some(&MapProfile::default()))
 }
 
 /// Internal profile replay used by parity tests.

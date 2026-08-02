@@ -18,6 +18,7 @@ fn projection_emits_one_static_contract_and_never_the_sampled_weapon() {
         quests: vec![],
         runtime_sensitive_map: false,
         runtime_sensitive_layout: false,
+        runtime_sensitive_rooms: false,
         runtime_sensitive_feeling: false,
         room_public_facts: vec![super::super::super::room_public::RoomPublicFact::new(
             "SacrificeRoom",

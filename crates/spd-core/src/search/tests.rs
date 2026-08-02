@@ -47,6 +47,7 @@ fn exact_floor(depth: u32, classes: &[(&str, i32)]) -> crate::FloorReport {
         feeling: None,
         builder: None,
         rooms: vec![],
+        possible_rooms: vec![],
         guaranteed_appearances: vec![],
         items: classes
             .iter()
@@ -176,6 +177,7 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
         feeling: None,
         builder: None,
         rooms: vec!["SacrificeRoom".into()],
+        possible_rooms: vec![],
         guaranteed_appearances: vec![],
         items: vec![crate::report::ItemEntry {
             name: "weapon reward".into(),
@@ -386,6 +388,7 @@ fn constrained_shop_stock_never_matches_its_internal_concrete_class() {
         feeling: None,
         builder: None,
         rooms: vec!["ShopRoom".into()],
+        possible_rooms: vec![],
         guaranteed_appearances: vec![],
         items: vec![crate::report::ItemEntry {
             name: "weapon stock".into(),

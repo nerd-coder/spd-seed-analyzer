@@ -7,6 +7,8 @@ use crate::trinkets::{
 
 mod items;
 pub(crate) use items::merge_possible_items;
+mod rooms;
+pub(crate) use rooms::merge_possible_rooms;
 
 const VERIFIED_DEPTH: u32 = 4;
 

@@ -205,6 +205,13 @@ pub struct FloorReport {
     /// Room types selected by `initRooms` (order after shuffle).
     #[serde(default)]
     pub rooms: Vec<String>,
+    /// Room types that can occur in the modeled player/trinket profiles.
+    ///
+    /// `rooms` remains the no-extra-player-state baseline for compatibility.
+    /// This field is the machine-readable projection when a profile can alter
+    /// the layout. Each entry's conditions are alternatives (logical OR).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub possible_rooms: Vec<PossibleRoom>,
     /// Seed-determined non-loot features that are guaranteed to exist on this floor.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub guaranteed_appearances: Vec<GuaranteedAppearance>,
@@ -218,6 +225,23 @@ pub struct FloorReport {
     /// prediction and must be presented with its assumption warning.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub assumed_map: Option<FloorMap>,
+}
+
+/// A room type and count observed in one or more modeled generation profiles.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct PossibleRoom {
+    #[serde(rename = "class")]
+    pub class_name: String,
+    /// Number of rooms of this type for the associated profile condition.
+    pub quantity: u32,
+    /// Alternative player-state profiles under which this exact count occurs.
+    /// An empty list means the modeled dependency axes do not change it.
+    #[serde(
+        default,
+        skip_serializing_if = "spawn_conditions_empty_after_normalization",
+        serialize_with = "serialize_spawn_conditions"
+    )]
+    pub spawn_conditions: Vec<ItemSpawnCondition>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

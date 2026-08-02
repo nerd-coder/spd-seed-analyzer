@@ -129,6 +129,11 @@ pub struct LevelState {
     /// Builder and room metadata can depend on a pre-build player-state callback.
     #[doc(hidden)]
     pub runtime_sensitive_layout: bool,
+    /// Room selection and the builder are fixed before room painting. Later
+    /// paint callbacks and inherited deck taint may hide a map without
+    /// invalidating these facts.
+    #[doc(hidden)]
+    pub runtime_sensitive_rooms: bool,
     /// The baseline feeling can be overridden by held trinkets before build.
     #[doc(hidden)]
     pub runtime_sensitive_feeling: bool,
@@ -572,12 +577,12 @@ impl LevelState {
             .then(|| self.layout_map.clone())
             .flatten();
         let guaranteed_appearances =
-            guaranteed_appearances(&self.rooms, !self.runtime_sensitive_layout);
+            guaranteed_appearances(&self.rooms, !self.runtime_sensitive_rooms);
 
         FloorReport {
             depth: self.depth as u32,
             feeling: (!self.runtime_sensitive_feeling).then(|| self.feeling.as_str().to_string()),
-            builder: (!self.runtime_sensitive_layout)
+            builder: (!self.runtime_sensitive_rooms)
                 .then(|| {
                     self.builder.map(|builder| match builder {
                         BuilderKind::Loop => "loop".to_string(),
@@ -585,11 +590,12 @@ impl LevelState {
                     })
                 })
                 .flatten(),
-            rooms: if self.runtime_sensitive_layout {
+            rooms: if self.runtime_sensitive_rooms {
                 Vec::new()
             } else {
                 self.rooms.clone()
             },
+            possible_rooms: Vec::new(),
             guaranteed_appearances,
             items,
             quests: self.quests[..self
