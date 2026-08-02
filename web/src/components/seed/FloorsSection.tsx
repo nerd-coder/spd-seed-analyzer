@@ -3,7 +3,11 @@ import { useCallback, useRef } from 'react'
 import { FloorDetail } from '@/components/seed/FloorDetail'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { groupFloorsByRegion } from '@/lib/regions'
-import type { FloorReport, IdentityMaps } from '@/lib/spd-wasm'
+import type {
+  FloorReport,
+  IdentityMaps,
+  TrinketSelectionReport,
+} from '@/lib/spd-wasm'
 import { cn } from '@/lib/utils'
 import { $reportNavigation, setSelectedRegion } from '@/stores/app'
 
@@ -13,9 +17,11 @@ const SCROLL_GAP_PX = 8
 export function FloorsSection({
   floors,
   identities,
+  trinketSelection,
 }: {
   floors: FloorReport[]
   identities: IdentityMaps
+  trinketSelection: TrinketSelectionReport
 }) {
   const selectedRegion = useStore(
     $reportNavigation,
@@ -120,6 +126,7 @@ export function FloorsSection({
                 key={floor.depth}
                 floor={floor}
                 identities={identities}
+                trinketSelection={trinketSelection}
               />
             ))}
           </TabsContent>

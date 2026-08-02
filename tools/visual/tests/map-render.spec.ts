@@ -94,7 +94,18 @@ async function installSyntheticMapReport(page: Page) {
       category: 'scroll',
       level: 2,
       cursed: true,
-      enchantment: { type: 'Blazing', conditions: [] },
+      enchantment: {
+        type: 'Blazing',
+        conditions: [
+          {
+            type: 'trinket',
+            events: [
+              { before_depth: 4, kind: 'acquired', trinket: 'ParchmentScrap' },
+              { before_depth: 4, kind: 'upgraded' },
+            ],
+          },
+        ],
+      },
       prediction: 'exact',
       spawn_conditions: [
         {
@@ -107,6 +118,14 @@ async function installSyntheticMapReport(page: Page) {
           ],
         },
       ],
+    })
+    ;(floors[3].items as unknown[]).push({
+      name: 'Trinket Catalyst',
+      quantity: 1,
+      class_name: 'TrinketCatalyst',
+      category: 'trinket',
+      candidate_classes: ['MossyClump', 'MimicTooth', 'RatSkull', 'SaltCube'],
+      prediction: 'exact',
     })
     const report = {
       seed: {
@@ -519,6 +538,20 @@ test('conditional items render inline with their item properties', async ({
   await expect(
     page.getByText('Spawn conditions', { exact: true })
   ).toBeVisible()
+  const enhancement = page.getByRole('button', {
+    name: 'Show enchantment conditions',
+  })
+  await enhancement.click()
+  await expect(
+    page.getByText('Enchantment conditions', { exact: true })
+  ).toBeVisible()
+  await page
+    .getByRole('button', { name: 'Show trinket transmutation rotation' })
+    .click()
+  await expect(
+    page.getByText('Trinket transmutation rotation', { exact: true })
+  ).toBeVisible()
+  await expect(page.getByText('Trap Mechanism', { exact: true })).toBeVisible()
   await expect(
     page.getByRole('button', { name: 'Expand floor 4 map' })
   ).toHaveCount(1)

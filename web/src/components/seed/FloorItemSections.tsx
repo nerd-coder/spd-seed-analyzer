@@ -1,27 +1,21 @@
-import { WarningIcon } from '@phosphor-icons/react'
-import { CircleQuestionMark, ListFilterIcon } from 'lucide-react'
+import { CircleQuestionMark } from 'lucide-react'
 import { finderItemLabel } from '@/components/finder/finder-items'
 import { ItemIcon } from '@/components/ItemIcon'
 import { ItemName } from '@/components/ItemName'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
-  Popover,
-  PopoverContent,
-  PopoverDescription,
-  PopoverHeader,
-  PopoverTitle,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+  EnchantmentConditionDetails,
+  SpawnConditionDetails,
+  UpgradeConditionDetails,
+} from '@/components/seed/ItemConditionDetails'
+import { TrinketRotationPopover } from '@/components/seed/TrinketRotationPopover'
+import { Badge } from '@/components/ui/badge'
 import { itemAppearance } from '@/lib/identity'
 import { formatItemSource, isHighlightSource } from '@/lib/labels'
 import type {
   FloorReport,
   IdentityMaps,
-  ItemCondition,
-  ItemDependencyCondition,
   ItemEntry,
-  ItemSpawnCondition,
+  TrinketSelectionReport,
 } from '@/lib/spd-wasm'
 
 function itemGroup(
@@ -39,158 +33,6 @@ function itemGroup(
   }
   if (source === 'heap') return 'loot'
   return 'general'
-}
-
-function typedConditionLabel(condition: ItemCondition): string {
-  switch (condition.type) {
-    case 'challenge':
-      return `${humanize(condition.challenge)} ${condition.enabled ? 'enabled' : 'disabled'}`
-    case 'trinket':
-      return condition.events.length
-        ? `Trinket state (${condition.events.length} events)`
-        : 'Trinket state'
-    case 'artifact':
-      return condition.events.length
-        ? `Artifact history (${condition.events.length} events)`
-        : 'Artifact history'
-    case 'quest':
-      return `Quest: ${humanize(condition.quest_id)}${condition.depth ? ` before floor ${condition.depth}` : ''}`
-    case 'choice':
-      return `${humanize(condition.group_id)}: choose ${condition.selected_count} of ${condition.option_count}${condition.favor_requirement ? ` (${condition.favor_requirement} favor)` : ''}`
-    case 'inventory':
-      return `Inventory: ${humanize(condition.requirement_id)}`
-    case 'runtime':
-      return `Runtime state: ${humanize(condition.state_id)}`
-  }
-}
-
-function ItemConditions({
-  conditions,
-  title = 'Conditions',
-}: {
-  conditions?: ItemCondition[]
-  title?: string
-}) {
-  if (!conditions?.length) return null
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          aria-label={`Show ${title.toLowerCase()}`}
-        >
-          <WarningIcon weight="fill" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="start">
-        <PopoverHeader>
-          <PopoverTitle>{title}</PopoverTitle>
-          <PopoverDescription className="flex flex-col gap-1.5">
-            {conditions.map((condition, index) => (
-              <span key={`${condition.type}-${index}`}>
-                {typedConditionLabel(condition)}
-              </span>
-            ))}
-          </PopoverDescription>
-        </PopoverHeader>
-      </PopoverContent>
-    </Popover>
-  )
-}
-
-function humanize(value: string): string {
-  return value
-    .split('_')
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-}
-
-function conditionLabel(condition: ItemDependencyCondition): string {
-  if (condition.type === 'challenge') {
-    return `${humanize(condition.challenge)} ${condition.enabled ? 'enabled' : 'disabled'}`
-  }
-  if (condition.type === 'artifact') {
-    const events = condition.events ?? []
-    if (events.length === 0) return 'No external artifact history'
-    return events
-      .map(
-        (event) =>
-          `${humanize(event.artifact)} ${event.kind} before floor ${event.before_depth}`
-      )
-      .join('; ')
-  }
-  const events = condition.events ?? []
-  if (events.length === 0) return 'No generation-affecting trinket'
-
-  let level = 0
-  return events
-    .map((event) => {
-      if (event.kind === 'upgraded') {
-        level += 1
-        return `upgrade to +${level} before floor ${event.before_depth}`
-      }
-      level = 0
-      return `${event.kind === 'acquired' ? 'get' : 'transmute to'} ${humanize(
-        event.trinket ?? 'trinket'
-      )} before floor ${event.before_depth}`
-    })
-    .join('; ')
-}
-
-function shortConditionLabel(conditions: ItemSpawnCondition[]): string {
-  const conditionTypes = [
-    ...new Set(
-      conditions.flatMap((condition) =>
-        (condition.all_of ?? []).map((dependency) => dependency.type)
-      )
-    ),
-  ]
-  if (conditions.length !== 1) {
-    return `${conditionTypes.map(humanize).join(' + ')} conditions`
-  }
-  const dependencies = conditions[0].all_of ?? []
-  if (dependencies.length !== 1) {
-    return `${conditionTypes.map(humanize).join(' + ')} requirements`
-  }
-  return conditionLabel(dependencies[0])
-}
-
-function SpawnConditions({
-  conditions,
-}: {
-  conditions?: ItemSpawnCondition[]
-}) {
-  if (!conditions?.length) return null
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" size="xs">
-          <ListFilterIcon data-icon="inline-start" />
-          {shortConditionLabel(conditions)}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-80">
-        <PopoverHeader>
-          <PopoverTitle>Spawn conditions</PopoverTitle>
-          <PopoverDescription>
-            Any one of these modeled routes may produce this item and its shown
-            properties.
-          </PopoverDescription>
-        </PopoverHeader>
-        <ol className="mt-3 flex list-decimal flex-col gap-2 pl-4 text-sm">
-          {conditions.map((condition, index) => (
-            <li key={`${index}-${JSON.stringify(condition)}`}>
-              {(condition.all_of ?? []).map(conditionLabel).join(' · ')}
-            </li>
-          ))}
-        </ol>
-      </PopoverContent>
-    </Popover>
-  )
 }
 
 function CandidateOptions({
@@ -234,12 +76,12 @@ function CandidateOptions({
                 {item.enchantment ? (
                   <Badge variant="secondary">{item.enchantment.type}</Badge>
                 ) : null}
-                <ItemConditions conditions={item.conditions} />
-                <ItemConditions
-                  conditions={item.enchantment?.conditions}
-                  title="Enchantment conditions"
+                <UpgradeConditionDetails
+                  levelRange={item.level_range}
+                  conditions={item.conditions}
                 />
-                <SpawnConditions conditions={item.spawn_conditions} />
+                <EnchantmentConditionDetails enchantment={item.enchantment} />
+                <SpawnConditionDetails conditions={item.spawn_conditions} />
               </span>
             </div>
           </div>
@@ -252,9 +94,11 @@ function CandidateOptions({
 function CatalystOffers({
   item,
   identities,
+  trinketSelection,
 }: {
   item: ItemEntry
   identities: IdentityMaps
+  trinketSelection?: TrinketSelectionReport
 }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -270,8 +114,11 @@ function CatalystOffers({
         <ItemName name={item.name} />
       </div>
       <div className="flex flex-col gap-1 pl-6">
-        <span className="font-medium text-muted-foreground">
+        <span className="flex items-center gap-1 font-medium text-muted-foreground">
           Trinket offers
+          <TrinketRotationPopover
+            sequence={trinketSelection?.transmutation_sequence ?? []}
+          />
         </span>
         {item.candidate_classes?.map((className) => {
           const candidate = { category: item.category, class_name: className }
@@ -297,10 +144,12 @@ export function FloorItemList({
   items,
   identities,
   depth,
+  trinketSelection,
 }: {
   items: ItemEntry[]
   identities: IdentityMaps
   depth: number
+  trinketSelection?: TrinketSelectionReport
 }) {
   return (
     <ul className="flex flex-col gap-1.5 text-sm">
@@ -317,7 +166,11 @@ export function FloorItemList({
           <li key={`${depth}-${index}`} className="flex items-center gap-2">
             {item.candidate_classes?.length ? (
               item.name === 'Trinket Catalyst' ? (
-                <CatalystOffers item={item} identities={identities} />
+                <CatalystOffers
+                  item={item}
+                  identities={identities}
+                  trinketSelection={trinketSelection}
+                />
               ) : (
                 <CandidateOptions item={item} identities={identities} />
               )
@@ -374,12 +227,12 @@ export function FloorItemList({
                       {sourceLabel}
                     </Badge>
                   ) : null}
-                  <SpawnConditions conditions={item.spawn_conditions} />
-                  <ItemConditions conditions={item.conditions} />
-                  <ItemConditions
-                    conditions={item.enchantment?.conditions}
-                    title="Enchantment conditions"
+                  <SpawnConditionDetails conditions={item.spawn_conditions} />
+                  <UpgradeConditionDetails
+                    levelRange={item.level_range}
+                    conditions={item.conditions}
                   />
+                  <EnchantmentConditionDetails enchantment={item.enchantment} />
                 </span>
               </>
             )}
@@ -393,9 +246,11 @@ export function FloorItemList({
 export function FloorItemSections({
   floor,
   identities,
+  trinketSelection,
 }: {
   floor: FloorReport
   identities: IdentityMaps
+  trinketSelection?: TrinketSelectionReport
 }) {
   const groups = partitionFloorItems(floor.items)
   const sections = [
@@ -425,6 +280,7 @@ export function FloorItemSections({
             items={items}
             identities={identities}
             depth={floor.depth}
+            trinketSelection={trinketSelection}
           />
         </div>
       ))}

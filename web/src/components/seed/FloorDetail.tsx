@@ -16,14 +16,20 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import type { FloorReport, IdentityMaps } from '@/lib/spd-wasm'
+import type {
+  FloorReport,
+  IdentityMaps,
+  TrinketSelectionReport,
+} from '@/lib/spd-wasm'
 
 export function FloorDetail({
   floor,
   identities,
+  trinketSelection,
 }: {
   floor: FloorReport
   identities: IdentityMaps
+  trinketSelection: TrinketSelectionReport
 }) {
   const hasQuest = (floor.quests?.length ?? 0) > 0
   const questRewards = partitionFloorItems(floor.items).quest
@@ -53,7 +59,11 @@ export function FloorDetail({
       )}
 
       <FloorAppearanceSection appearances={floor.guaranteed_appearances} />
-      <FloorItemSections floor={floor} identities={identities} />
+      <FloorItemSections
+        floor={floor}
+        identities={identities}
+        trinketSelection={trinketSelection}
+      />
     </div>
   )
 
