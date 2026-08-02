@@ -93,6 +93,28 @@ fn floor_one_traps_room_relocates_its_exact_forced_reward() {
 }
 
 #[test]
+fn ghost_enchantment_parchment_requirement_is_compact() {
+    let report = analyze_seed("HKH-FKC-YTK", 3).expect("analyze");
+    let enchantment = report.floors[2].items[3]
+        .enchantment
+        .as_ref()
+        .expect("floor-three fourth item has a conditional enchantment");
+
+    assert_eq!(
+        serde_json::to_value(enchantment.conditions.as_slice()).expect("serialize conditions"),
+        serde_json::json!([{
+            "type": "trinket",
+            "events": [{
+                "before_depth": 3,
+                "kind": "acquired",
+                "trinket": "parchment_scrap",
+                "min_upgrades": 1
+            }]
+        }])
+    );
+}
+
+#[test]
 fn first_alchemy_pot_is_a_guaranteed_floor_appearance() {
     for seed in 0..50 {
         let report = analyze_seed_seed_only(&seed.to_string(), 5).expect("analyze");
@@ -249,18 +271,13 @@ fn enchantment_trinket_events_serialize_with_their_details() {
     let enchantment = report::ItemEnchantment {
         enchantment_type: "Chilling".into(),
         conditions: vec![report::ItemCondition::Trinket {
-            events: vec![
-                TrinketEvent {
-                    before_depth: 3,
-                    action: TrinketEventAction::Acquired {
-                        trinket: TrinketKind::ParchmentScrap,
-                    },
+            events: vec![TrinketEvent {
+                before_depth: 3,
+                action: TrinketEventAction::Acquired {
+                    trinket: TrinketKind::ParchmentScrap,
+                    min_upgrades: Some(1),
                 },
-                TrinketEvent {
-                    before_depth: 3,
-                    action: TrinketEventAction::Upgraded,
-                },
-            ],
+            }],
         }],
     };
 
@@ -271,9 +288,9 @@ fn enchantment_trinket_events_serialize_with_their_details() {
             {
                 "before_depth": 3,
                 "kind": "acquired",
-                "trinket": "parchment_scrap"
-            },
-            { "before_depth": 3, "kind": "upgraded" }
+                "trinket": "parchment_scrap",
+                "min_upgrades": 1
+            }
         ])
     );
 }

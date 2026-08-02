@@ -58,7 +58,10 @@ fn profiled_imp_outcome(seed: i64, trinket: Option<TrinketKind>) -> (i32, bool, 
                 [
                     TrinketEvent {
                         before_depth: 17,
-                        action: TrinketEventAction::Acquired { trinket },
+                        action: TrinketEventAction::Acquired {
+                            trinket,
+                            min_upgrades: None,
+                        },
                     },
                     TrinketEvent {
                         before_depth: 17,

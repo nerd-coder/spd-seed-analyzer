@@ -57,6 +57,7 @@ export type TrinketEvent = {
   before_depth: number
   kind: 'acquired' | 'upgraded' | 'transmuted'
   trinket?: string
+  min_upgrades?: number
 }
 
 export type ArtifactEvent = {

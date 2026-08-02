@@ -18,8 +18,18 @@ impl MapProfile {
             .take_while(|event| event.before_depth <= depth)
         {
             match event.action {
-                TrinketEventAction::Acquired { trinket }
-                | TrinketEventAction::Transmuted { trinket } => {
+                TrinketEventAction::Acquired {
+                    trinket,
+                    min_upgrades,
+                } => {
+                    next_instance += 1;
+                    held = Some(ActiveTrinket {
+                        trinket,
+                        level: min_upgrades.unwrap_or(0),
+                        instance: next_instance,
+                    });
+                }
+                TrinketEventAction::Transmuted { trinket } => {
                     next_instance += 1;
                     held = Some(ActiveTrinket {
                         trinket,
@@ -43,7 +53,8 @@ impl MapProfile {
                 matches!(
                     event.action,
                     TrinketEventAction::Acquired {
-                        trinket: TrinketKind::MimicTooth
+                        trinket: TrinketKind::MimicTooth,
+                        ..
                     } | TrinketEventAction::Transmuted {
                         trinket: TrinketKind::MimicTooth
                     } | TrinketEventAction::Upgraded
@@ -62,7 +73,8 @@ impl MapProfile {
                 matches!(
                     event.action,
                     TrinketEventAction::Acquired {
-                        trinket: TrinketKind::RatSkull | TrinketKind::CrackedSpyglass
+                        trinket: TrinketKind::RatSkull | TrinketKind::CrackedSpyglass,
+                        ..
                     } | TrinketEventAction::Transmuted {
                         trinket: TrinketKind::RatSkull | TrinketKind::CrackedSpyglass
                     }
@@ -94,11 +106,18 @@ impl MapProfile {
                 return Err(ProfileError::TrinketEventsOutOfOrder);
             }
             match event.action {
-                TrinketEventAction::Acquired { trinket } => {
+                TrinketEventAction::Acquired {
+                    trinket,
+                    min_upgrades,
+                } => {
                     if held.is_some() {
                         return Err(ProfileError::TrinketAlreadyHeld);
                     }
-                    held = Some((trinket, 0));
+                    let level = min_upgrades.unwrap_or(0);
+                    if level > 3 {
+                        return Err(ProfileError::TrinketLevelOutOfRange);
+                    }
+                    held = Some((trinket, level));
                 }
                 TrinketEventAction::Upgraded => match held {
                     None => return Err(ProfileError::TrinketUpgradeWithoutHeld),

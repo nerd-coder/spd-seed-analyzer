@@ -38,35 +38,14 @@ function label(value: string) {
     .join(' ')
 }
 
-function rangeLabel({ min, max }: { min: number; max: number }) {
-  return min === max ? `Floor ${min}` : `Floors ${min}–${max}`
-}
-
-function contractSummary(quest: QuestReport) {
-  const reward = `${quest.contract.rewards.option_count} option${
-    quest.contract.rewards.option_count === 1 ? '' : 's'
-  }; choose ${quest.contract.rewards.selected_count}`
-
-  switch (quest.type) {
-    case 'sad_ghost':
-      return `${rangeLabel(quest.contract.spawn_depth_range)}; target follows spawn floor. ${reward}.`
-    case 'old_wandmaker':
-      return `${rangeLabel(quest.contract.spawn_depth_range)}; possible objectives: ${quest.contract.objective_options.map(label).join(', ')}. ${reward}.`
-    case 'troll_blacksmith':
-      return `${rangeLabel(quest.contract.spawn_depth_range)}; possible objectives: ${quest.contract.objective_options.map(label).join(', ')}. ${reward}; ${quest.contract.rewards.favor_requirement?.toLocaleString()} favor required.`
-    case 'ambitious_imp':
-      return `${rangeLabel(quest.contract.spawn_depth_range)}; target and tokens follow spawn floor. ${reward}.`
-  }
-}
-
-function baselineSummary(quest: QuestReport) {
+function targetSummary(quest: QuestReport) {
   switch (quest.type) {
     case 'sad_ghost':
       return `Target: ${label(quest.baseline.target)}`
     case 'old_wandmaker':
-      return `Objective: ${label(quest.baseline.objective)}`
+      return `Target: ${label(quest.baseline.objective)}`
     case 'troll_blacksmith':
-      return `Objective: ${label(quest.baseline.objective)}`
+      return `Target: ${label(quest.baseline.objective)}`
     case 'ambitious_imp':
       return `Target: ${label(quest.baseline.target)} (${quest.baseline.required_tokens} tokens)`
   }
@@ -96,16 +75,8 @@ export function QuestCard({
         {styles.title}
       </Badge>
       <p className="text-muted-foreground text-xs leading-relaxed">
-        {contractSummary(quest)}
+        {targetSummary(quest)}
       </p>
-      <div className="border-t pt-2">
-        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-          Baseline continuation
-        </p>
-        <p className="text-muted-foreground text-xs leading-relaxed">
-          {baselineSummary(quest)} This can change with player or run state.
-        </p>
-      </div>
       {rewards.length > 0 ? (
         <div className="flex flex-col gap-1 border-t pt-2">
           <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">

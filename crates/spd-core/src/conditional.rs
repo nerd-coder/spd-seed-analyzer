@@ -112,7 +112,10 @@ fn direct_acquisitions(selection: &TrinketSelectionReport) -> Vec<AcquisitionRou
             effective_depth: selection.first_effective_depth,
             events: vec![TrinketEvent {
                 before_depth: selection.first_effective_depth,
-                action: TrinketEventAction::Acquired { trinket },
+                action: TrinketEventAction::Acquired {
+                    trinket,
+                    min_upgrades: None,
+                },
             }],
         })
         .collect()
@@ -134,7 +137,10 @@ fn transmuted_acquisitions(
 
     let mut events = vec![TrinketEvent {
         before_depth: selection.first_effective_depth,
-        action: TrinketEventAction::Acquired { trinket: initial },
+        action: TrinketEventAction::Acquired {
+            trinket: initial,
+            min_upgrades: None,
+        },
     }];
     let mut routes = Vec::new();
     let mut current = initial;

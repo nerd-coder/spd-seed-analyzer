@@ -91,6 +91,7 @@ mod tests {
                     before_depth: 4,
                     action: TrinketEventAction::Acquired {
                         trinket: TrinketKind::MossyClump,
+                        min_upgrades: None,
                     },
                 },
                 TrinketEvent {
@@ -155,6 +156,7 @@ mod tests {
                 before_depth: 4,
                 action: TrinketEventAction::Acquired {
                     trinket: TrinketKind::RatSkull,
+                    min_upgrades: None,
                 },
             }],
             artifact_events: vec![ArtifactEvent {

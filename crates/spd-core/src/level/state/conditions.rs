@@ -53,16 +53,13 @@ pub(super) fn legacy_item_notes(
 }
 
 pub(super) fn parchment_condition(depth: u32, level: i8) -> ItemCondition {
-    let mut events = vec![TrinketEvent {
+    let events = vec![TrinketEvent {
         before_depth: depth,
         action: TrinketEventAction::Acquired {
             trinket: TrinketKind::ParchmentScrap,
+            min_upgrades: (level > 0).then_some(level as u8),
         },
     }];
-    events.extend((0..level).map(|_| TrinketEvent {
-        before_depth: depth,
-        action: TrinketEventAction::Upgraded,
-    }));
     ItemCondition::Trinket { events }
 }
 
@@ -108,7 +105,14 @@ mod tests {
     #[test]
     fn parchment_is_an_enchantment_condition_not_a_spawn_condition() {
         let condition = parchment_condition(3, 1);
-        assert!(matches!(condition, ItemCondition::Trinket { ref events } if events.len() == 2));
+        assert!(matches!(condition, ItemCondition::Trinket { ref events }
+        if matches!(events.as_slice(), [TrinketEvent {
+            before_depth: 3,
+            action: TrinketEventAction::Acquired {
+                trinket: TrinketKind::ParchmentScrap,
+                min_upgrades: Some(1),
+            },
+        }])));
         assert!(item_conditions(false).is_empty());
     }
 

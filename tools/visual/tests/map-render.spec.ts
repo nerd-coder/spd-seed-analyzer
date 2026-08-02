@@ -502,11 +502,17 @@ test('map dialog initially focuses its container instead of a control', async ({
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
-test('Sad Ghost rewards no longer use a separate warning', async ({ page }) => {
+test('Sad Ghost card shows only its resolved target', async ({ page }) => {
   const browserErrors = await openAnalyzer(page, '0')
 
   await expect(
     page.getByRole('alert').filter({ hasText: 'Other Ghost options' })
+  ).toHaveCount(0)
+  await expect(
+    page.getByText(/^Target: (Fetid Rat|Gnoll Trickster|Great Crab)$/)
+  ).toBeVisible()
+  await expect(
+    page.getByText('target follows spawn floor', { exact: false })
   ).toHaveCount(0)
 
   expect(browserErrors.console, 'browser console errors').toEqual([])

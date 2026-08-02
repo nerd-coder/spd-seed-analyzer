@@ -152,9 +152,17 @@ pub struct TrinketEvent {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum TrinketEventAction {
-    Acquired { trinket: TrinketKind },
+    Acquired {
+        trinket: TrinketKind,
+        /// Minimum upgrades required when this event describes a condition.
+        /// Omitted for an ordinary acquisition at +0.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        min_upgrades: Option<u8>,
+    },
     Upgraded,
-    Transmuted { trinket: TrinketKind },
+    Transmuted {
+        trinket: TrinketKind,
+    },
 }
 
 /// An externally observed artifact event which occurs before a floor is first

@@ -30,13 +30,15 @@ fn direct_routes_use_only_actual_supported_offers() {
     assert!(matches!(
         routes[0].events[0].action,
         TrinketEventAction::Acquired {
-            trinket: TrinketKind::MossyClump
+            trinket: TrinketKind::MossyClump,
+            ..
         }
     ));
     assert!(matches!(
         routes[1].events[0].action,
         TrinketEventAction::Acquired {
-            trinket: TrinketKind::MimicTooth
+            trinket: TrinketKind::MimicTooth,
+            ..
         }
     ));
 }
@@ -78,6 +80,7 @@ fn profile_conditions_are_structured_dependency_axes() {
             before_depth: 2,
             action: TrinketEventAction::Acquired {
                 trinket: TrinketKind::MossyClump,
+                min_upgrades: None,
             },
         }],
         ..MapProfile::default()

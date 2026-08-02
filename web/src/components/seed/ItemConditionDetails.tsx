@@ -53,7 +53,10 @@ function dependencyDescription(condition: ItemDependencyCondition): string {
       }
       level = 0
       const trinket = humanize(event.trinket ?? 'trinket')
-      return `${trinket} is ${event.kind === 'acquired' ? 'acquired' : 'transmuted'} before floor ${event.before_depth}`
+      const upgradeRequirement = event.min_upgrades
+        ? ` at +${event.min_upgrades} or better`
+        : ''
+      return `${trinket} is ${event.kind === 'acquired' ? 'acquired' : 'transmuted'}${upgradeRequirement} before floor ${event.before_depth}`
     })
     .join(' and ')
 }
@@ -188,7 +191,7 @@ export function EnchantmentConditionDetails({
           size="icon-xs"
           aria-label="Show enchantment conditions"
         >
-          <WarningIcon weight="fill" />
+          <SparklesIcon />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80">
