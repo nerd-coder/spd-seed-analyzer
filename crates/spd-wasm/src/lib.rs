@@ -6,6 +6,14 @@ use spd_core::{
 };
 use wasm_bindgen::prelude::*;
 
+/// Uses serde_json before crossing the WASM boundary so Serde's flattened,
+/// internally-tagged event enums retain their fields in JavaScript objects.
+fn json_value<T: serde::Serialize>(value: &T) -> Result<JsValue, JsValue> {
+    let json =
+        serde_json::to_string(value).map_err(|error| JsValue::from_str(&error.to_string()))?;
+    js_sys::JSON::parse(&json)
+}
+
 fn seed_err(e: SeedError) -> JsValue {
     JsValue::from_str(&e.to_string())
 }
@@ -28,14 +36,14 @@ pub fn start() {
 #[wasm_bindgen]
 pub fn parse_seed(input: &str) -> Result<JsValue, JsValue> {
     let info = core_parse(input).map_err(seed_err)?;
-    serde_wasm_bindgen::to_value(&info).map_err(|e| JsValue::from_str(&e.to_string()))
+    json_value(&info)
 }
 
 /// Analyze a seed for `floors` depths. Returns a `SeedReport` object.
 #[wasm_bindgen]
 pub fn analyze_seed(input: &str, floors: u32) -> Result<JsValue, JsValue> {
     let report = core_analyze(input, floors).map_err(analyze_err)?;
-    serde_wasm_bindgen::to_value(&report).map_err(|e| JsValue::from_str(&e.to_string()))
+    json_value(&report)
 }
 
 /// Search a bounded, resumable chunk of numeric seeds using item constraints.
@@ -44,7 +52,7 @@ pub fn search_seeds(request: JsValue) -> Result<JsValue, JsValue> {
     let request: SeedSearchRequest = serde_wasm_bindgen::from_value(request)
         .map_err(|e| JsValue::from_str(&format!("invalid search request: {e}")))?;
     let result = core_search(&request).map_err(search_err)?;
-    serde_wasm_bindgen::to_value(&result).map_err(|e| JsValue::from_str(&e.to_string()))
+    json_value(&result)
 }
 
 /// Pinned SPD version string.

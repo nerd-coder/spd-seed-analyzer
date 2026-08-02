@@ -221,6 +221,42 @@ fn enchantments_serialize_type_and_conditions() {
 }
 
 #[test]
+fn enchantment_trinket_events_serialize_with_their_details() {
+    use crate::trinkets::{TrinketEvent, TrinketEventAction, TrinketKind};
+
+    let enchantment = report::ItemEnchantment {
+        enchantment_type: "Chilling".into(),
+        conditions: vec![report::ItemCondition::Trinket {
+            events: vec![
+                TrinketEvent {
+                    before_depth: 3,
+                    action: TrinketEventAction::Acquired {
+                        trinket: TrinketKind::ParchmentScrap,
+                    },
+                },
+                TrinketEvent {
+                    before_depth: 3,
+                    action: TrinketEventAction::Upgraded,
+                },
+            ],
+        }],
+    };
+
+    let value = serde_json::to_value(enchantment).expect("serialize enchantment");
+    assert_eq!(
+        value["conditions"][0]["events"],
+        serde_json::json!([
+            {
+                "before_depth": 3,
+                "kind": "acquired",
+                "trinket": "parchment_scrap"
+            },
+            { "before_depth": 3, "kind": "upgraded" }
+        ])
+    );
+}
+
+#[test]
 fn ghost_quest_spawns_within_sewers_sometime() {
     let mut dungeon = dungeon_from_run(init_run(0));
     let mut saw = false;
