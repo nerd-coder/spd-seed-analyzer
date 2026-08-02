@@ -93,6 +93,29 @@ fn floor_one_traps_room_relocates_its_exact_forced_reward() {
 }
 
 #[test]
+fn small_floor_two_ring_rooms_do_not_report_phantom_rewards() {
+    let report = analyze_seed("PUB-CLI-VQH", 2).expect("analyze");
+    let floor = &report.floors[1];
+
+    assert_eq!(
+        floor
+            .rooms
+            .iter()
+            .filter(|room| room.as_str() == "RingRoom")
+            .count(),
+        2,
+        "fixture keeps both small RingRoom instances"
+    );
+    assert!(
+        floor
+            .items
+            .iter()
+            .all(|item| item.source.as_deref() != Some("RingRoom")),
+        "small RingRooms have no placeCenterDetail call or item reward"
+    );
+}
+
+#[test]
 fn floor_one_runestone_rewards_and_initial_encounters_are_exact() {
     let report = analyze_seed("AAA-AAA-AFU", 1).expect("analyze");
     let floor = &report.floors[0];

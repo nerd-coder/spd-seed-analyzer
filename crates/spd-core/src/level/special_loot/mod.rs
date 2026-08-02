@@ -88,10 +88,7 @@ pub fn special_room_loot(
         place_doors_for_room(rooms, ri, &mut doors);
 
         let room = &rooms[ri];
-        if let Some(fact) = super::room_public::RoomPublicFact::new(&room.name, dungeon.depth) {
-            room_public_facts.push(fact);
-        }
-        if first_sensitive_loot_index.is_none() && callback_tail_sensitive(&room.name) {
+        if first_sensitive_loot_index.is_none() && callback_tail_sensitive(room) {
             first_sensitive_loot_index = Some(
                 out.iter()
                     .filter(|placed| placed.heap_type != "plant")
@@ -119,6 +116,14 @@ pub fn special_room_loot(
                 dungeon.depth,
             )
         };
+        // `RingRoom` only calls `placeCenterDetail` when both dimensions are
+        // at least 10. Smaller instances are ring-shaped geometry with no
+        // reward callback, so they must not emit an item contract.
+        if room.name != "RingRoom" || standard_paint.center_loot.is_some() {
+            if let Some(fact) = super::room_public::RoomPublicFact::new(&room.name, dungeon.depth) {
+                room_public_facts.push(fact);
+            }
+        }
         let mut standard_loot = standard_rooms::paint_center_loot(
             dungeon,
             room,
@@ -372,7 +377,11 @@ fn runtime_sensitive_room(name: &str) -> bool {
     )
 }
 
-fn callback_tail_sensitive(name: &str) -> bool {
+fn callback_tail_sensitive(room: &Room) -> bool {
+    let name = room.name.as_str();
+    if name == "RingRoom" && room.width().min(room.height()) < 10 {
+        return false;
+    }
     matches!(
         name,
         "ArmoryRoom"

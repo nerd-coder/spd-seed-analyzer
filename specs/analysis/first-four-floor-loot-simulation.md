@@ -85,6 +85,13 @@ returns null when the queue is empty (`Level.java:799-826`). Exact replay must
 therefore preserve painter order and the queue rather than independently roll
 each room reward.
 
+`RingRoom` names a sewer room shape, not a ring reward. It invokes
+`placeCenterDetail` only when its smaller dimension is at least 10; smaller
+instances contain no item at all (`RingRoom.java:48-103`). When the callback
+does run, it passes `Level.findPrizeItem()` directly to `Level.drop`, so the
+possible reward is an eligible queued guaranteed floor item, never a ring by
+virtue of the room class (`RingRoom.java:102-103`, `Level.java:799-826`).
+
 ## Floors 2–4 and the Sad Ghost
 
 The Ghost spawn attempt happens at the start of `SewerLevel.createMobs`, after
