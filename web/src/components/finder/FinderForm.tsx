@@ -4,23 +4,11 @@ import {
   StopIcon,
 } from '@phosphor-icons/react'
 import { useStore } from '@tanstack/react-store'
-import {
-  type FormEvent,
-  type MouseEvent,
-  useEffect,
-  useMemo,
-  useRef,
-} from 'react'
+import { type FormEvent, type MouseEvent, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from '@/components/ui/field'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Switch } from '@/components/ui/switch'
-import { createFinderFormStore } from '@/stores/ui'
+import { $finderForm } from '@/stores/app'
 import { ConstraintEditor } from './ConstraintEditor'
 import {
   type FinderConfig,
@@ -37,7 +25,6 @@ import { SearchScopeFields } from './SearchScopeFields'
 const CANCEL_COOLDOWN_MS = 1_000
 
 type FinderFormProps = {
-  initialStartSeed: number
   running: boolean
   cancelRequested: boolean
   onSearch: (config: FinderConfig) => void
@@ -45,18 +32,12 @@ type FinderFormProps = {
 }
 
 export function FinderForm({
-  initialStartSeed,
   running,
   cancelRequested,
   onSearch,
   onCancel,
 }: FinderFormProps) {
-  const nextConstraintId = useRef(2)
   const suppressNextSubmit = useRef(false)
-  const formStore = useMemo(
-    () => createFinderFormStore(initialStartSeed),
-    [initialStartSeed]
-  )
   const {
     attempted,
     cancelCooldown,
@@ -65,9 +46,8 @@ export function FinderForm({
     floors,
     maxMatches,
     matchMode,
-    includeBaseline,
     constraints,
-  } = useStore(formStore)
+  } = useStore($finderForm)
 
   const startSeedInvalid = !isIntegerInRange(startSeed, 0, TOTAL_SEEDS - 1)
   const candidateCountInvalid = !isIntegerInRange(
@@ -88,14 +68,14 @@ export function FinderForm({
   useEffect(() => {
     if (!cancelCooldown) return
     const timer = window.setTimeout(
-      () => formStore.set({ ...formStore.get(), cancelCooldown: false }),
+      () => $finderForm.set({ ...$finderForm.get(), cancelCooldown: false }),
       CANCEL_COOLDOWN_MS
     )
     return () => window.clearTimeout(timer)
-  }, [cancelCooldown, formStore])
+  }, [cancelCooldown])
 
-  function updateState(patch: Partial<ReturnType<typeof formStore.get>>) {
-    formStore.set({ ...formStore.get(), ...patch })
+  function updateState(patch: Partial<ReturnType<typeof $finderForm.get>>) {
+    $finderForm.set({ ...$finderForm.get(), ...patch })
   }
 
   function updateFloors(value: number) {
@@ -121,11 +101,15 @@ export function FinderForm({
 
   function addConstraint() {
     if (constraints.length >= MAX_CONSTRAINTS) return
+    const nextConstraintId =
+      constraints.reduce((highest, constraint) => {
+        return Math.max(highest, constraint.id)
+      }, 0) + 1
     updateState({
       constraints: [
         ...constraints,
         {
-          id: nextConstraintId.current++,
+          id: nextConstraintId,
           className: 'RingOfWealth',
           minLevel: null,
           minDepth: 1,
@@ -163,7 +147,6 @@ export function FinderForm({
         })
       ),
       matchMode,
-      includeBaseline,
       maxMatches: Number(maxMatches),
     })
   }
@@ -205,27 +188,6 @@ export function FinderForm({
           onUpdate={updateConstraint}
         />
       </FieldGroup>
-      <Field orientation="horizontal">
-        <FieldContent>
-          <FieldLabel htmlFor="finder-include-baseline">
-            Include fresh-baseline matches
-          </FieldLabel>
-          <FieldDescription>
-            Planning only: identities can change with prior player or runtime
-            history.
-          </FieldDescription>
-        </FieldContent>
-        <Switch
-          id="finder-include-baseline"
-          size="sm"
-          checked={includeBaseline}
-          disabled={running}
-          onCheckedChange={(checked) =>
-            updateState({ includeBaseline: checked })
-          }
-          aria-label="Include fresh-baseline matches"
-        />
-      </Field>
       <div className="flex items-center justify-between gap-2">
         <Field orientation="horizontal" className="w-auto gap-2">
           <FieldLabel htmlFor="finder-match-rule">

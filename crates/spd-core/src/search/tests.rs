@@ -133,7 +133,7 @@ fn validation_rejects_unbounded_and_malformed_requests() {
 }
 
 #[test]
-fn baseline_search_opt_in_defaults_to_false_when_omitted() {
+fn baseline_search_defaults_to_included_when_omitted() {
     let request: SeedSearchRequest = serde_json::from_value(serde_json::json!({
         "startSeed": 0,
         "candidateCount": 1,
@@ -148,7 +148,7 @@ fn baseline_search_opt_in_defaults_to_false_when_omitted() {
     }))
     .expect("request without includeBaseline");
 
-    assert!(!request.include_baseline);
+    assert!(request.include_baseline);
 }
 
 #[test]
@@ -408,6 +408,91 @@ fn sacrifice_sickle_requires_baseline_opt_in_and_is_labeled() {
     assert_eq!(evidence.level, 2);
     assert_eq!(evidence.prediction, ItemPredictionKind::Baseline);
     assert_eq!(evidence.source.as_deref(), Some("SacrificeRoom"));
+}
+
+#[test]
+fn every_quest_exposes_searchable_rewards_including_baseline_samples() {
+    let report = crate::analyze_seed_seed_only("0", 20).expect("seed-zero quest report");
+    let quest_sources = [
+        "Ghost.Quest",
+        "Wandmaker.Quest",
+        "Blacksmith.Quest",
+        "Imp.Quest",
+    ];
+    let searchable_rewards = report
+        .floors
+        .iter()
+        .flat_map(|floor| {
+            floor
+                .items
+                .iter()
+                .flat_map(|group| &group.variants)
+                .filter(|item| {
+                    item.source
+                        .as_deref()
+                        .is_some_and(|source| quest_sources.contains(&source))
+                })
+                .flat_map(|item| {
+                    let concrete = match item.prediction {
+                        ItemPredictionKind::Exact | ItemPredictionKind::Baseline => {
+                            item.class_name.iter().cloned().collect::<Vec<_>>()
+                        }
+                        ItemPredictionKind::Constrained => item.candidate_classes.clone(),
+                    };
+                    concrete.into_iter().map(|class_name| {
+                        (
+                            class_name,
+                            floor.depth,
+                            item.source.clone().expect("quest reward source"),
+                        )
+                    })
+                })
+        })
+        .collect::<Vec<_>>();
+
+    for source in quest_sources {
+        assert!(
+            searchable_rewards
+                .iter()
+                .any(|(_, _, reward_source)| reward_source == source),
+            "missing searchable rewards from {source}"
+        );
+    }
+    assert!(report.floors.iter().any(|floor| {
+        floor
+            .items
+            .iter()
+            .flat_map(|group| &group.variants)
+            .any(|item| {
+                item.prediction == ItemPredictionKind::Baseline
+                    && item
+                        .source
+                        .as_deref()
+                        .is_some_and(|source| quest_sources.contains(&source))
+            })
+    }));
+
+    let result = search_seeds(&SeedSearchRequest {
+        start_seed: 0,
+        candidate_count: 1,
+        floors: 20,
+        constraints: searchable_rewards
+            .iter()
+            .map(|(class_name, depth, _)| constraint(class_name, *depth, *depth))
+            .collect(),
+        match_mode: MatchMode::All,
+        include_baseline: true,
+        max_matches: 1,
+    })
+    .expect("quest reward search");
+
+    assert_eq!(result.matches.len(), 1);
+    let evidence = &result.matches[0].evidence;
+    assert_eq!(evidence.len(), searchable_rewards.len());
+    assert!(evidence.iter().all(|item| item
+        .source
+        .as_deref()
+        .is_some_and(|source| quest_sources.contains(&source))));
 }
 
 #[test]

@@ -17,6 +17,10 @@ pub const MAX_SEARCH_MATCHES: u32 = 100;
 
 const PARTIAL_SEARCH_MESSAGE: &str = "Search results use the partial analyzer; generated loot is incomplete and may not match the pinned game.";
 
+const fn baseline_search_default() -> bool {
+    true
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SeedSearchRequest {
@@ -27,7 +31,7 @@ pub struct SeedSearchRequest {
     pub match_mode: MatchMode,
     /// Allow fresh/no-history baseline predictions to satisfy constraints.
     /// These matches are planning evidence, not seed-wide guarantees.
-    #[serde(default)]
+    #[serde(default = "baseline_search_default")]
     pub include_baseline: bool,
     pub max_matches: u32,
 }

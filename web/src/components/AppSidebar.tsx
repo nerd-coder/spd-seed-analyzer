@@ -8,7 +8,6 @@ import { useStore } from '@tanstack/react-store'
 import type { FormEvent } from 'react'
 import { AppFloatingAction } from '@/components/AppFloatingAction'
 import { FinderForm } from '@/components/finder/FinderForm'
-import { randomStartSeed } from '@/components/finder/finder-types'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -36,8 +35,6 @@ import {
   setSeedInput,
   startFinderSearch,
 } from '@/stores/app'
-
-const finderStartSeed = randomStartSeed()
 
 export function AppSidebar({ mode }: { mode: AppMode }) {
   const seedInput = useStore($seedInput)
@@ -131,7 +128,6 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
           </form>
         ) : (
           <FinderForm
-            initialStartSeed={finderStartSeed}
             running={activeFinder?.run.status === 'running'}
             cancelRequested={activeFinder?.run.cancelRequested ?? false}
             onSearch={(config) => void startFinderSearch(config)}

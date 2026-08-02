@@ -823,7 +823,10 @@ fn blacksmith_quest_spawns_within_caves() {
                 let rewards: Vec<_> = f
                     .items
                     .iter()
-                    .filter(|i| i.source.as_deref() == Some("Blacksmith.Quest"))
+                    .filter(|item| {
+                        item.source.as_deref() == Some("Blacksmith.Quest")
+                            && item.prediction != report::ItemPredictionKind::Baseline
+                    })
                     .collect();
                 assert_eq!(
                     rewards.len(),
@@ -850,6 +853,18 @@ fn blacksmith_quest_spawns_within_caves() {
                                 && note.contains("Parchment Scrap +1")
                                 && note.contains("before this floor is generated")
                         })
+                }));
+                let baseline_rewards: Vec<_> = f
+                    .items
+                    .iter()
+                    .filter(|item| {
+                        item.source.as_deref() == Some("Blacksmith.Quest")
+                            && item.prediction == report::ItemPredictionKind::Baseline
+                    })
+                    .collect();
+                assert_eq!(baseline_rewards.len(), 4);
+                assert!(baseline_rewards.iter().all(|item| {
+                    item.class_name.is_some() && item.level.is_some() && item.cursed == Some(false)
                 }));
                 let room_rewards: Vec<_> = f
                     .items

@@ -1,4 +1,3 @@
-import { finderItemLabel } from '@/components/finder/finder-items'
 import {
   type FinderConfig,
   type FinderRunState,
@@ -33,11 +32,12 @@ const cancelledIds = new Set<string>()
 const searchTasks = new Map<string, WorkerTask<unknown>>()
 let nextFinderId = 1
 
-function searchName(config: FinderConfig): string {
-  if (config.constraints.length !== 1) {
-    return `Find ${config.constraints.length} items`
-  }
-  return finderItemLabel(config.constraints[0].className)
+function discardSearchTask(id: string) {
+  const task = searchTasks.get(id)
+  if (!task) return
+  cancelledIds.add(id)
+  task.cancel()
+  searchTasks.delete(id)
 }
 
 function patchFinderSession(id: string, run: FinderRunState) {
@@ -56,9 +56,7 @@ export function setActiveFinder(id: string | null) {
 }
 
 export function closeFinderSession(id: string) {
-  cancelledIds.add(id)
-  searchTasks.get(id)?.cancel()
-  searchTasks.delete(id)
+  discardSearchTask(id)
   const sessions = $finderSessions.get()
   const index = sessions.findIndex((session) => session.id === id)
   if (index < 0) return
@@ -97,7 +95,7 @@ export async function startFinderSearch(config: FinderConfig) {
   const id = `finder-${nextFinderId++}`
   const session: FinderSession = {
     id,
-    name: searchName(config),
+    name: String(config.startSeed),
     config,
     run: {
       ...INITIAL_FINDER_RUN,
@@ -110,12 +108,26 @@ export async function startFinderSearch(config: FinderConfig) {
     },
   }
   const existing = $finderSessions.get()
-  const dropped = existing.slice(
-    0,
-    Math.max(0, existing.length + 1 - MAX_FINDER_SESSIONS)
-  )
-  for (const item of dropped) cancelledIds.add(item.id)
-  $finderSessions.set([...existing.slice(dropped.length), session])
+  const activeId = $activeFinderId.get()
+  const activeIndex = existing.findIndex((item) => item.id === activeId)
+  const replaceActive =
+    activeIndex >= 0 && existing[activeIndex].run.matches.length === 0
+  if (replaceActive) {
+    const replaced = existing[activeIndex]
+    discardSearchTask(replaced.id)
+    $finderSessions.set(
+      existing.map((item, index) => (index === activeIndex ? session : item))
+    )
+  } else {
+    const dropped = existing.slice(
+      0,
+      Math.max(0, existing.length + 1 - MAX_FINDER_SESSIONS)
+    )
+    for (const item of dropped) {
+      discardSearchTask(item.id)
+    }
+    $finderSessions.set([...existing.slice(dropped.length), session])
+  }
   $activeFinderId.set(id)
   try {
     const task = searchSeedsInWorker(

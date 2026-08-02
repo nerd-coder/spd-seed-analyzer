@@ -76,7 +76,9 @@ pub(crate) fn is_baseline_highlight(item: &ItemEntry) -> bool {
         return false;
     }
     match source {
-        "Ghost.Quest" | "Wandmaker.Quest" | "Imp.Quest" | "StatueRoom" => return true,
+        "Ghost.Quest" | "Wandmaker.Quest" | "Blacksmith.Quest" | "Imp.Quest" | "StatueRoom" => {
+            return true
+        }
         "CrystalChoiceRoom" => {
             return matches!(item.category.as_str(), "ring" | "artifact" | "wand")
         }
@@ -196,6 +198,7 @@ fn compact_source(source: Option<&str>, floor: &FloorReport) -> Option<String> {
             )),
             _ => None,
         })?,
+        "Blacksmith.Quest" => "Blacksmith".into(),
         "Imp.Quest" => floor.quests.iter().find_map(|quest| match quest {
             QuestReport::AmbitiousImp { baseline, .. } => Some(format!(
                 "Imp/{}",

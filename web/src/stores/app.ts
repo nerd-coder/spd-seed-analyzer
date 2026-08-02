@@ -57,7 +57,9 @@ export {
   type Theme,
 } from './theme'
 export {
+  $finderForm,
   $reportNavigation,
+  type FinderFormState,
   type ReportNavigationState,
   setIdentitiesTab,
   setSelectedRegion,

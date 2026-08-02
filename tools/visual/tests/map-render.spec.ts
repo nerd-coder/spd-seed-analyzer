@@ -651,7 +651,7 @@ test('finder result displays only matched constraints', async ({ page }) => {
   expect(errors.page, 'uncaught page errors').toEqual([])
 })
 
-test('finder can opt into SacrificeRoom fresh-baseline items', async ({
+test('finder includes SacrificeRoom fresh-baseline items by default', async ({
   page,
 }) => {
   const errors: BrowserErrors = { console: [], page: [] }
@@ -675,12 +675,9 @@ test('finder can opt into SacrificeRoom fresh-baseline items', async ({
   await page.getByRole('spinbutton', { name: 'Results' }).fill('1')
   await page.getByLabel('Item 1 type').selectOption('Sickle')
   await page.getByLabel('Item 1 upgrade level').selectOption('2')
-
-  const includeBaseline = page.getByRole('switch', {
-    name: 'Include fresh-baseline matches',
-  })
-  await expect(includeBaseline).not.toBeChecked()
-  await includeBaseline.click()
+  await expect(
+    page.getByRole('switch', { name: 'Include fresh-baseline matches' })
+  ).toHaveCount(0)
   await page.getByRole('button', { name: 'Find seeds' }).click()
 
   await expect(page.getByText('PUB-CLI-VNW', { exact: true })).toBeVisible({

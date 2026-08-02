@@ -86,7 +86,7 @@ export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
               {session.run.status === 'running' ? (
                 <SpinnerGapIcon className="shrink-0 animate-spin" />
               ) : null}
-              <span className="truncate text-xs">
+              <span className="truncate font-mono text-xs">
                 {session.name} ({session.run.matches.length})
               </span>
             </TabsTrigger>
