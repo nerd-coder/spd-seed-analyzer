@@ -424,7 +424,14 @@ pub(crate) fn group_item_entries(entries: Vec<ItemEntry>) -> Vec<ItemGroup> {
     for entry in entries {
         let equipment_room = matches!(
             entry.source.as_deref(),
-            Some("SacrificeRoom" | "CryptRoom" | "StatueRoom")
+            Some(
+                "SacrificeRoom"
+                    | "CryptRoom"
+                    | "StatueRoom"
+                    | "PoolRoom:equipment"
+                    | "SuspiciousChestRoom:gold"
+                    | "SuspiciousChestRoom:mimic_reward"
+            )
         );
         let paired_prediction = matches!(
             entry.prediction,
@@ -434,7 +441,11 @@ pub(crate) fn group_item_entries(entries: Vec<ItemEntry>) -> Vec<ItemGroup> {
             groups.iter_mut().find(|group| {
                 group.source == entry.source
                     && group.variants.len() == 1
-                    && group.variants[0].category == entry.category
+                    && (group.variants[0].category == entry.category
+                        || matches!(
+                            entry.source.as_deref(),
+                            Some("PoolRoom:equipment" | "SuspiciousChestRoom:mimic_reward")
+                        ))
                     && matches!(
                         (group.variants[0].prediction, entry.prediction),
                         (

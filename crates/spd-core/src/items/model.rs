@@ -54,6 +54,9 @@ pub enum ForcedDropRole {
 pub enum RoomLootRole {
     CryptArmor,
     StatueWeapon,
+    PoolEquipment,
+    SuspiciousChestGold,
+    SuspiciousChestMimicReward,
     RuntimeSensitive,
 }
 

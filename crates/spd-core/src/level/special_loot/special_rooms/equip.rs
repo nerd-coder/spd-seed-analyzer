@@ -8,7 +8,7 @@ use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::geom::Point;
 use crate::items::enchants;
-use crate::items::model::{GeneratedItem, ItemCategory};
+use crate::items::model::{GeneratedItem, ItemCategory, ItemProvenance, RoomLootRole};
 use crate::level::create_items::PlacedLoot;
 use crate::level::terrain::{TerrainMap, EMPTY, STATUE, WALL, WATER};
 use crate::random::Random;
@@ -223,6 +223,7 @@ fn pool_prize_without_piranhas(
         prize.level += 1;
     }
     prize.source = Some("PoolRoom".into());
+    prize.provenance = ItemProvenance::Room(RoomLootRole::PoolEquipment);
     items_to_spawn.push(GeneratedItem::new(
         "PotionOfInvisibility",
         ItemCategory::Potion,

@@ -318,12 +318,15 @@ fn paint_special(
     };
 
     if runtime_sensitive_room(name) {
-        let role = match name {
-            "CryptRoom" => RoomLootRole::CryptArmor,
-            "StatueRoom" => RoomLootRole::StatueWeapon,
-            _ => RoomLootRole::RuntimeSensitive,
-        };
         for placed in &mut loot {
+            let role = match placed.item.provenance {
+                ItemProvenance::Room(role) => role,
+                _ => match name {
+                    "CryptRoom" => RoomLootRole::CryptArmor,
+                    "StatueRoom" => RoomLootRole::StatueWeapon,
+                    _ => RoomLootRole::RuntimeSensitive,
+                },
+            };
             placed.item.provenance = ItemProvenance::Room(role);
         }
         // Heap items were cloned before the common provenance pass. Tag those
@@ -334,7 +337,13 @@ fn paint_special(
                     .source
                     .as_deref()
                     .is_some_and(|source| source.split(':').next() == Some(name))
+                    && !matches!(item.provenance, ItemProvenance::Room(_))
                 {
+                    let role = match name {
+                        "CryptRoom" => RoomLootRole::CryptArmor,
+                        "StatueRoom" => RoomLootRole::StatueWeapon,
+                        _ => RoomLootRole::RuntimeSensitive,
+                    };
                     item.provenance = ItemProvenance::Room(role);
                 }
             }

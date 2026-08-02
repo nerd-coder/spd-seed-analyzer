@@ -73,6 +73,12 @@ fn pool_find_prize_history_changes_internal_branch_not_public_contract() {
         let fallback_item = pool_prize(&mut fallback_dungeon, &room, &mut Vec::new()).item;
         Random::pop_generator();
         if queued_item.class_name != fallback_item.class_name {
+            assert_eq!(
+                fallback_item.provenance,
+                crate::items::model::ItemProvenance::Room(
+                    crate::items::model::RoomLootRole::PoolEquipment
+                )
+            );
             assert_eq!(queued_public_snapshot, consumed_public_snapshot);
             observed = Some((queued_item.class_name, fallback_item.class_name));
             break;

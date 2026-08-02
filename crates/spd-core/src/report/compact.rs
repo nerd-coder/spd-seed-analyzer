@@ -88,6 +88,9 @@ pub(crate) fn is_baseline_highlight(item: &ItemEntry) -> bool {
                 "ring" | "artifact" | "weapon" | "armor" | "missile" | "wand"
             )
         }
+        "PoolRoom:equipment" | "SuspiciousChestRoom:gold" | "SuspiciousChestRoom:mimic_reward" => {
+            return true
+        }
         "SecretRunestoneRoom" => return class_name == "StoneOfEnchantment",
         _ => {}
     }
@@ -100,7 +103,9 @@ pub(crate) fn is_baseline_highlight(item: &ItemEntry) -> bool {
 fn compact_item_name(item: &ItemEntry, identities: &IdentityMaps) -> String {
     let class_name = item.class_name.as_deref().unwrap_or_default();
     let cursed = item.cursed == Some(true) || item.name.starts_with("cursed ");
-    let mut name = if let Some(effect) = class_name.strip_prefix("RingOf") {
+    let mut name = if item.category == "gold" {
+        format!("{} Gold", item.quantity)
+    } else if let Some(effect) = class_name.strip_prefix("RingOf") {
         compact_humanize(effect)
     } else if let Some(effect) = class_name.strip_prefix("ScrollOf") {
         let mut name = compact_humanize(effect);
@@ -186,6 +191,9 @@ fn compact_source(source: Option<&str>, floor: &FloorReport) -> Option<String> {
         "SecretRunestoneRoom" | "SecretArtilleryRoom" | "SecretLibraryRoom" => "Secret Room".into(),
         "StatueRoom" => "Statue".into(),
         "PitRoom" => "Pit".into(),
+        "PoolRoom:equipment" => "Pool".into(),
+        "SuspiciousChestRoom:gold" => "Suspicious Chest".into(),
+        "SuspiciousChestRoom:mimic_reward" => "Suspicious Chest Mimic".into(),
         "Ghost.Quest" => "Ghost".into(),
         "Wandmaker.Quest" => floor.quests.iter().find_map(|quest| match quest {
             QuestReport::OldWandmaker { baseline, .. } => Some(format!(

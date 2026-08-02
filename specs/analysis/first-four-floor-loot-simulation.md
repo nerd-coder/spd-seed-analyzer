@@ -92,6 +92,27 @@ does run, it passes `Level.findPrizeItem()` directly to `Level.drop`, so the
 possible reward is an eligible queued guaranteed floor item, never a ring by
 virtue of the room class (`RingRoom.java:102-103`, `Level.java:799-826`).
 
+### Suspicious Chest and Pool reward bounds
+
+`SuspiciousChestRoom` first takes an eligible guaranteed floor item and falls
+back to randomized gold only when none is available
+(`SuspiciousChestRoom.java:55-60`). The chest has a one-third baseline Mimic
+chance, modified by Mimic Tooth; a Mimic keeps that prize and generates one
+additional gold, missile, armor, weapon, or ring reward
+(`SuspiciousChestRoom.java:65-70`, `Mimic.java:315-359`). Equipment and rings
+from that extra reward begin at +0…+2. Public spawn reports keep a relocated
+guaranteed item under its guaranteed-floor entry and expose only the possible
+gold fallback and conditional Mimic bonus as additional room rewards.
+
+`PoolRoom` likewise has a one-third attempt to take an eligible guaranteed
+floor item. Otherwise it generates weapon, missile, or armor from one floor set
+above the normal depth set, clears the cursed flag and any curse enchantment,
+then has a one-third chance to upgrade once (`PoolRoom.java:103-143`). The
+fallback therefore spans +0…+3 after the equipment's normal +0…+2 randomization;
+its tier bounds follow `Generator.floorSetTierProbs[depth / 5 + 1]`
+(`Generator.java:613-619`, `:775-853`). The public report pairs these invariant
+bounds with the explicitly labelled fresh/no-history concrete replay.
+
 ## Floors 2–4 and the Sad Ghost
 
 The Ghost spawn attempt happens at the start of `SewerLevel.createMobs`, after

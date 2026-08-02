@@ -232,6 +232,17 @@ impl LevelState {
                 .iter()
                 .filter_map(baseline_item_entry)
                 .filter(crate::report::is_baseline_highlight)
+                .filter(|item| {
+                    self.depth > 1
+                        || !matches!(
+                            item.source.as_deref(),
+                            Some(
+                                "PoolRoom:equipment"
+                                    | "SuspiciousChestRoom:gold"
+                                    | "SuspiciousChestRoom:mimic_reward"
+                            )
+                        )
+                })
                 .collect()
         } else {
             Vec::new()
@@ -659,7 +670,11 @@ impl LevelState {
                             return false;
                         };
                         let room = source.split(':').next().unwrap_or(source);
-                        if Some(room) != entry.source.as_deref() {
+                        let entry_room = entry
+                            .source
+                            .as_deref()
+                            .map(|source| source.split(':').next().unwrap_or(source));
+                        if Some(room) != entry_room {
                             return false;
                         }
                         entry.class_name.as_deref().map_or_else(

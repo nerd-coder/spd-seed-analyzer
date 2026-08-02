@@ -113,6 +113,44 @@ fn armory_contract_preserves_count_category_and_equipment_bounds() {
 }
 
 #[test]
+fn suspicious_chest_and_pool_contracts_expose_reward_bounds() {
+    let suspicious = RoomPublicFact::new("SuspiciousChestRoom", 2)
+        .expect("Suspicious Chest contract")
+        .entries();
+    assert_eq!(suspicious.len(), 2);
+    assert_eq!(suspicious[0].name, "possible gold fallback");
+    assert_eq!(suspicious[0].level, Some(0));
+    assert_eq!(suspicious[0].cursed, Some(false));
+    assert_eq!(suspicious[1].name, "conditional Mimic bonus reward");
+    assert_eq!(
+        suspicious[1].tier_range,
+        Some(NumericRange { min: 2, max: 5 })
+    );
+    assert_eq!(
+        suspicious[1].level_range,
+        Some(NumericRange { min: 0, max: 2 })
+    );
+
+    for (depth, minimum_tier) in [(2, 2), (7, 3), (12, 3), (17, 4), (22, 4)] {
+        let pool = RoomPublicFact::new("PoolRoom", depth)
+            .expect("Pool contract")
+            .entries();
+        assert_eq!(pool.len(), 2);
+        assert_eq!(pool[0].name, "possible Pool equipment reward");
+        assert_eq!(pool[0].category, "weapon / armor / missile");
+        assert_eq!(
+            pool[0].tier_range,
+            Some(NumericRange {
+                min: minimum_tier,
+                max: 5,
+            })
+        );
+        assert_eq!(pool[0].level_range, Some(NumericRange { min: 0, max: 3 }));
+        assert_eq!(pool[0].cursed, Some(false));
+    }
+}
+
+#[test]
 fn formerly_generic_room_sets_expose_their_fixed_reward_structure() {
     let laboratory = RoomPublicFact::new("LaboratoryRoom", 12)
         .expect("Laboratory contract")

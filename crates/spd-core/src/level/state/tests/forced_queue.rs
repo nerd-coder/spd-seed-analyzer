@@ -236,10 +236,10 @@ fn held_trinket_sensitive_default_feeling_hides_the_prebuild_floor_tail() {
     assert!(public.map.is_none());
     assert!(public.items.iter().all(|item| {
         item.source.as_deref() == Some("guaranteed floor spawn")
-            || item
-                .source
-                .as_deref()
-                .is_some_and(|source| public.rooms.iter().any(|room| room == source))
+            || item.source.as_deref().is_some_and(|source| {
+                let room_source = source.split(':').next().unwrap_or(source);
+                public.rooms.iter().any(|room| room == room_source)
+            })
     }));
 }
 
@@ -268,10 +268,10 @@ fn public_generation_taint_suppresses_later_floor_samples() {
     assert!(public.map.is_none());
     assert!(public.items.iter().all(|item| {
         item.source.as_deref() == Some("guaranteed floor spawn")
-            || item
-                .source
-                .as_deref()
-                .is_some_and(|source| public.rooms.iter().any(|room| room == source))
+            || item.source.as_deref().is_some_and(|source| {
+                let room_source = source.split(':').next().unwrap_or(source);
+                public.rooms.iter().any(|room| room == room_source)
+            })
     }));
     assert!(
         !clean_floor.to_floor_report().rooms.is_empty(),
@@ -306,9 +306,9 @@ fn public_generation_taint_survives_a_nonregular_boss_floor() {
         .any(|item| item.source.as_deref() == Some("ShopRoom")));
     assert!(public.items.iter().all(|item| {
         item.source.as_deref() == Some("guaranteed floor spawn")
-            || item
-                .source
-                .as_deref()
-                .is_some_and(|source| public.rooms.iter().any(|room| room == source))
+            || item.source.as_deref().is_some_and(|source| {
+                let room_source = source.split(':').next().unwrap_or(source);
+                public.rooms.iter().any(|room| room == room_source)
+            })
     }));
 }

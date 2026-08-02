@@ -18,6 +18,10 @@ pub(super) fn tag_room_item(item: &mut GeneratedItem) {
     item.provenance = ItemProvenance::Room(RoomLootRole::RuntimeSensitive);
 }
 
+fn tag_room_item_as(item: &mut GeneratedItem, role: RoomLootRole) {
+    item.provenance = ItemProvenance::Room(role);
+}
+
 pub(super) fn paint_center_loot(
     dungeon: &mut DungeonState,
     room: &Room,
@@ -95,7 +99,9 @@ fn suspicious_chest(
     map: &mut TerrainMap,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
+    let mut gold_fallback = false;
     let mut prize = find_prize_item(items_to_spawn, None).unwrap_or_else(|| {
+        gold_fallback = true;
         let mut gold = GeneratedItem::new("Gold", ItemCategory::Gold);
         randomize_item(&mut gold, dungeon.depth);
         gold
@@ -117,8 +123,15 @@ fn suspicious_chest(
         prize.source = Some("SuspiciousChestRoom:mimic".into());
         let mut reward = mimic_reward(dungeon);
         reward.source = Some("SuspiciousChestRoom:mimic".into());
-        tag_room_item(&mut prize);
-        tag_room_item(&mut reward);
+        tag_room_item_as(
+            &mut prize,
+            if gold_fallback {
+                RoomLootRole::SuspiciousChestGold
+            } else {
+                RoomLootRole::RuntimeSensitive
+            },
+        );
+        tag_room_item_as(&mut reward, RoomLootRole::SuspiciousChestMimicReward);
         vec![
             PlacedLoot {
                 item: prize,
@@ -131,7 +144,14 @@ fn suspicious_chest(
         ]
     } else {
         prize.source = Some("SuspiciousChestRoom".into());
-        tag_room_item(&mut prize);
+        tag_room_item_as(
+            &mut prize,
+            if gold_fallback {
+                RoomLootRole::SuspiciousChestGold
+            } else {
+                RoomLootRole::RuntimeSensitive
+            },
+        );
         vec![PlacedLoot {
             item: prize,
             heap_type: "chest",
@@ -247,6 +267,14 @@ mod tests {
                 .is_some_and(|source| source.starts_with("SuspiciousChestRoom"))
         }));
         assert!(loot.iter().all(|drop| drop.heap_type == "mimic"));
+        assert_eq!(
+            loot[0].item.provenance,
+            ItemProvenance::Room(RoomLootRole::SuspiciousChestGold)
+        );
+        assert_eq!(
+            loot[1].item.provenance,
+            ItemProvenance::Room(RoomLootRole::SuspiciousChestMimicReward)
+        );
         assert_eq!(
             map.known_mobs.iter().flatten().copied().collect::<Vec<_>>(),
             ["Mimic"]

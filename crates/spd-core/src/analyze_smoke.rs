@@ -116,6 +116,81 @@ fn small_floor_two_ring_rooms_do_not_report_phantom_rewards() {
 }
 
 #[test]
+fn pub_cli_vqh_narrows_floor_two_suspicious_chest_rewards() {
+    let report = analyze_seed("PUB-CLI-VQH", 2).expect("analyze");
+    let floor = &report.floors[1];
+
+    let gold_fallback = floor
+        .items
+        .iter()
+        .find(|group| group.source.as_deref() == Some("SuspiciousChestRoom:gold"))
+        .expect("Suspicious Chest gold fallback contract");
+    assert_eq!(gold_fallback.variants.len(), 1);
+    assert_eq!(gold_fallback.category, "gold");
+    assert_eq!(gold_fallback.level, Some(0));
+    assert_eq!(gold_fallback.cursed, Some(false));
+
+    let mimic_reward = floor
+        .items
+        .iter()
+        .find(|group| group.source.as_deref() == Some("SuspiciousChestRoom:mimic_reward"))
+        .expect("Suspicious Chest Mimic reward");
+    assert_eq!(mimic_reward.variants.len(), 2);
+    assert_eq!(
+        mimic_reward.variants[0].tier_range,
+        Some(crate::report::NumericRange { min: 2, max: 5 })
+    );
+    assert_eq!(
+        mimic_reward.variants[0].level_range,
+        Some(crate::report::NumericRange { min: 0, max: 2 })
+    );
+    assert_eq!(
+        mimic_reward.variants[1].prediction,
+        crate::report::ItemPredictionKind::Baseline
+    );
+    assert_eq!(mimic_reward.variants[1].class_name.as_deref(), Some("Gold"));
+    assert_eq!(mimic_reward.variants[1].quantity, 68);
+    assert_eq!(mimic_reward.variants[1].level, Some(0));
+    assert!(report
+        .compact_text()
+        .contains("2 68 Gold Suspicious Chest Mimic"));
+}
+
+#[test]
+fn pub_cli_vnw_narrows_floor_two_pool_reward() {
+    let report = analyze_seed("PUB-CLI-VNW", 2).expect("analyze");
+    let floor = &report.floors[1];
+    let pool = floor
+        .items
+        .iter()
+        .find(|group| group.source.as_deref() == Some("PoolRoom:equipment"))
+        .expect("Pool equipment reward");
+
+    assert_eq!(pool.variants.len(), 2);
+    assert_eq!(pool.variants[0].category, "weapon / armor / missile");
+    assert_eq!(
+        pool.variants[0].tier_range,
+        Some(crate::report::NumericRange { min: 2, max: 5 })
+    );
+    assert_eq!(
+        pool.variants[0].level_range,
+        Some(crate::report::NumericRange { min: 0, max: 3 })
+    );
+    assert_eq!(pool.variants[0].cursed, Some(false));
+    assert_eq!(
+        pool.variants[1].prediction,
+        crate::report::ItemPredictionKind::Baseline
+    );
+    assert_eq!(pool.variants[1].class_name.as_deref(), Some("Katana"));
+    assert_eq!(pool.variants[1].name, "katana +0");
+    assert_eq!(pool.variants[1].category, "weapon");
+    assert_eq!(pool.variants[1].tier, Some(4));
+    assert_eq!(pool.variants[1].level, Some(0));
+    assert_eq!(pool.variants[1].cursed, Some(false));
+    assert!(report.compact_text().contains("2 Katana +0 Pool"));
+}
+
+#[test]
 fn floor_one_runestone_rewards_and_initial_encounters_are_exact() {
     let report = analyze_seed("AAA-AAA-AFU", 1).expect("analyze");
     let floor = &report.floors[0];

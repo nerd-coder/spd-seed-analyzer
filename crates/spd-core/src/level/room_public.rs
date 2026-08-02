@@ -54,6 +54,20 @@ impl RoomPublicFact {
                 entry.tier_range = Some(regular_equipment_tier_range(self.depth));
                 entry.level_range = Some(NumericRange { min: 0, max: 2 });
             }
+            if entry.name == "possible Pool equipment reward" {
+                entry.tier_range = Some(pool_equipment_tier_range(self.depth));
+                entry.level_range = Some(NumericRange { min: 0, max: 3 });
+                entry.source = Some("PoolRoom:equipment".into());
+            }
+            if entry.name == "conditional Mimic bonus reward" {
+                entry.tier_range = Some(regular_equipment_tier_range(self.depth));
+                entry.level_range = Some(NumericRange { min: 0, max: 2 });
+                entry.source = Some("SuspiciousChestRoom:mimic_reward".into());
+            }
+            if entry.name == "possible gold fallback" {
+                entry.level = Some(0);
+                entry.source = Some("SuspiciousChestRoom:gold".into());
+            }
             let exact_class = match entry.name.as_str() {
                 "Double Bomb" => Some("DoubleBomb"),
                 "Stone of Enchantment" => Some("StoneOfEnchantment"),
@@ -157,6 +171,17 @@ fn regular_equipment_tier_range(depth: i32) -> NumericRange {
     }
 }
 
+fn pool_equipment_tier_range(depth: i32) -> NumericRange {
+    // PoolRoom explicitly requests one floor set above the normal depth set.
+    match (depth / 5 + 1).clamp(0, 4) {
+        0 => NumericRange { min: 2, max: 5 },
+        1 => NumericRange { min: 2, max: 5 },
+        2 | 3 => NumericRange { min: 3, max: 5 },
+        4 => NumericRange { min: 4, max: 5 },
+        _ => unreachable!(),
+    }
+}
+
 type Contract = (&'static str, &'static str, Option<bool>, &'static str);
 
 fn contracts(room: &str) -> Vec<Contract> {
@@ -164,14 +189,17 @@ fn contracts(room: &str) -> Vec<Contract> {
         "CryptRoom" => vec![("Crypt armor reward", "armor", Some(true), "Armor from this depth's Crypt floor-set distribution; Parchment Scrap may alter its glyph and conditional upgrade.")],
         "StudyRoom" | "RitualRoom" => vec![("single center-room reward source", "other", None, "An eligible guaranteed item, otherwise a potion or scroll.")],
         "RingRoom" => vec![("conditional guaranteed item", "other", None, "Conditional: this standard room and its unchanged reward exist only when an eligible guaranteed floor item is available.")],
-        "SuspiciousChestRoom" => vec![("suspicious chest reward source", "other", None, "An eligible guaranteed item or gold; a Mimic may add a general reward.")],
+        "SuspiciousChestRoom" => vec![
+            ("possible gold fallback", "gold", Some(false), "Conditional: appears only when no eligible guaranteed floor item is available."),
+            ("conditional Mimic bonus reward", "gold / weapon / armor / missile / ring", None, "Conditional: a Mimic adds one generated reward. Equipment and rings have the displayed +0..+2 range; the tier range applies only to weapon, armor, and missile outcomes."),
+        ],
         "GrassyGraveRoom" => vec![("geometry-derived tomb set", "other", None, "One general Generator prize plus gold in every remaining tomb.")],
         "ArmoryRoom" => vec![
             ("2–3 distinct Armory base rewards", "bomb / weapon / armor / missile", None, "The seed chooses 2–3 categories without replacement. Equipment uses the displayed depth floor-set tier range and has a +0..+2 upgrade; Bomb/Double Bomb is tierless at +0 and uncursed. Equipment curse and enchantment depend on its isolated roll and Parchment Scrap state."),
             ("Trinket Catalyst", "trinket", Some(false), "Conditional: added as a separate reward only when a guaranteed Trinket Catalyst is available on this floor."),
         ],
         "PoolRoom" => vec![
-            ("single room reward source", "other", None, "May spawn an eligible guaranteed floor prize; fallback is weapon, missile weapon, or armor from the room's floor-set distribution, forced uncursed with curse-enchantment stripped and a possible +1 upgrade."),
+            ("possible Pool equipment reward", "weapon / armor / missile", Some(false), "Conditional: used when the room does not select an eligible guaranteed floor item. Equipment comes from one floor set above the normal depth set, has the displayed +0..+3 final upgrade range, and has curse-enchantment stripped."),
             ("Potion of Invisibility", "potion", Some(false), ""),
         ],
         "SentryRoom" => vec![
