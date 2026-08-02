@@ -3,7 +3,9 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    analyze_seed_seed_only, report::ItemPredictionKind, AnalyzeError, SeedInfo, TOTAL_SEEDS,
+    analyze_seed_seed_only,
+    report::{ItemEntry, ItemPredictionKind},
+    AnalyzeError, IdentityMaps, SeedInfo, TOTAL_SEEDS,
 };
 
 /// Maximum candidate seeds evaluated by one search call.
@@ -67,8 +69,20 @@ pub struct SeedSearchResult {
 #[serde(rename_all = "camelCase")]
 pub struct SeedMatch {
     pub seed: SeedInfo,
+    pub identities: IdentityMaps,
     /// At most one (the first) matching item per satisfied constraint.
     pub evidence: Vec<ItemMatchEvidence>,
+    /// Fresh/no-history planning highlights. These never contribute search
+    /// evidence and remain explicitly baseline predictions.
+    pub baseline_items: Vec<BaselineItemEvidence>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct BaselineItemEvidence {
+    pub depth: u32,
+    #[serde(flatten)]
+    pub item: ItemEntry,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -180,9 +194,25 @@ pub fn search_seeds(request: &SeedSearchRequest) -> Result<SeedSearchResult, Sea
             MatchMode::All => evidence.len() == request.constraints.len(),
         };
         if is_match {
+            let baseline_items = report
+                .floors
+                .iter()
+                .flat_map(|floor| {
+                    floor
+                        .baseline_items
+                        .iter()
+                        .cloned()
+                        .map(|item| BaselineItemEvidence {
+                            depth: floor.depth,
+                            item,
+                        })
+                })
+                .collect();
             matches.push(SeedMatch {
                 seed: report.seed,
+                identities: report.identities,
                 evidence,
+                baseline_items,
             });
             if matches.len() == request.max_matches as usize {
                 break;

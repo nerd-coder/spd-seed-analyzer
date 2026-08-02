@@ -33,8 +33,8 @@ pub use report::{
 };
 pub use run::{dungeon_from_run, init_run, RunState};
 pub use search::{
-    search_seeds, ItemConstraint, ItemMatchEvidence, MatchMode, SearchError, SeedMatch,
-    SeedSearchRequest, SeedSearchResult, MAX_SEARCH_CANDIDATES, MAX_SEARCH_CONSTRAINTS,
+    search_seeds, BaselineItemEvidence, ItemConstraint, ItemMatchEvidence, MatchMode, SearchError,
+    SeedMatch, SeedSearchRequest, SeedSearchResult, MAX_SEARCH_CANDIDATES, MAX_SEARCH_CONSTRAINTS,
     MAX_SEARCH_MATCHES,
 };
 pub use trinkets::{

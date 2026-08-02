@@ -27,8 +27,9 @@ pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
         "Fresh/no-history baseline replay; player-controlled generation history can change this result."
             .into(),
     ];
+    let title = item.title();
     Some(ItemEntry {
-        name: item.title(),
+        name: title.strip_prefix("cursed ").unwrap_or(&title).into(),
         quantity: item.quantity.max(1),
         class_name: Some(item.class_name.clone()),
         candidate_classes: item.candidate_classes.clone(),

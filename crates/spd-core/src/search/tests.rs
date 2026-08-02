@@ -307,6 +307,35 @@ fn floor_one_exact_food_identity_matches_exact_item_search() {
 }
 
 #[test]
+fn finder_matches_include_baseline_highlights_without_using_them_as_evidence() {
+    let numeric = crate::parse_seed("RZN-LKU-EFS")
+        .expect("fixture seed")
+        .numeric;
+    let result = search_seeds(&SeedSearchRequest {
+        start_seed: numeric,
+        candidate_count: 1,
+        floors: 17,
+        constraints: vec![constraint("Food", 1, 1)],
+        match_mode: MatchMode::Any,
+        max_matches: 1,
+    })
+    .expect("baseline-highlight finder result");
+
+    let matched = &result.matches[0];
+    assert_eq!(matched.evidence.len(), 1);
+    assert_eq!(matched.evidence[0].class_name, "Food");
+    assert!(matched.baseline_items.iter().any(|item| {
+        item.depth == 1
+            && item.item.class_name.as_deref() == Some("RingOfWealth")
+            && item.item.prediction == ItemPredictionKind::Baseline
+    }));
+    assert!(matched.baseline_items.iter().all(|item| {
+        item.item.prediction == ItemPredictionKind::Baseline
+            && item.item.class_name.as_deref() != Some("Food")
+    }));
+}
+
+#[test]
 fn guaranteed_limited_drop_spawns_match_exact_item_searches() {
     for class_name in [
         "PotionOfStrength",

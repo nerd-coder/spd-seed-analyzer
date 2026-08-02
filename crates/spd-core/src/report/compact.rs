@@ -32,7 +32,7 @@ impl SeedReport {
             };
             let mut grouped: BTreeMap<String, Vec<String>> = BTreeMap::new();
             for item in entries {
-                if item.class_name.is_none() || !compact_highlight(item) {
+                if item.class_name.is_none() || !is_baseline_highlight(item) {
                     continue;
                 }
                 let label = compact_item_name(item, &self.identities);
@@ -75,7 +75,7 @@ impl SeedReport {
     }
 }
 
-fn compact_highlight(item: &ItemEntry) -> bool {
+pub(crate) fn is_baseline_highlight(item: &ItemEntry) -> bool {
     let class_name = item.class_name.as_deref().unwrap_or_default();
     let source = item.source.as_deref().unwrap_or_default();
     if source.contains("ShopRoom") {

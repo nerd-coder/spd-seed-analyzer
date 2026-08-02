@@ -58,7 +58,7 @@ function OtherItemsBaselinePopover() {
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80">
         <PopoverHeader>
-          <PopoverTitle>Baseline rewards</PopoverTitle>
+          <PopoverTitle>Fresh baseline rewards</PopoverTitle>
           <PopoverDescription>
             Player choices, trinkets, challenges, or prior generation can change
             it, so these values are not seed-wide guarantees.
@@ -179,21 +179,24 @@ export function FloorItemList({
   identities,
   depth,
   trinketSelection,
+  showQuestSources = false,
 }: {
   items: ItemEntry[]
   identities: IdentityMaps
   depth: number
   trinketSelection?: TrinketSelectionReport
+  showQuestSources?: boolean
 }) {
   return (
     <ul className="flex flex-col gap-1.5 text-sm">
       {items.map((item, index) => {
         const sourceLabel =
           itemGroup(item) === 'shop' ||
-          item.source === 'Ghost.Quest' ||
-          item.source === 'Wandmaker.Quest' ||
-          item.source === 'Blacksmith.Quest' ||
-          item.source === 'Imp.Quest'
+          (!showQuestSources &&
+            (item.source === 'Ghost.Quest' ||
+              item.source === 'Wandmaker.Quest' ||
+              item.source === 'Blacksmith.Quest' ||
+              item.source === 'Imp.Quest'))
             ? null
             : formatItemSource(item.source)
         return (
@@ -287,6 +290,16 @@ export function FloorItemSections({
   trinketSelection?: TrinketSelectionReport
 }) {
   const groups = partitionFloorItems(floor.items)
+  const baselineItems = (floor.baseline_items ?? []).filter(
+    (baseline) =>
+      !floor.items.some(
+        (item) =>
+          item.prediction === 'exact' &&
+          item.class_name === baseline.class_name &&
+          item.level === baseline.level &&
+          item.source === baseline.source
+      )
+  )
   const sections = [
     { key: 'guaranteed', label: 'Guaranteed spawns', items: groups.guaranteed },
     { key: 'loot', label: 'Floor loot', items: groups.loot },
@@ -300,6 +313,27 @@ export function FloorItemSections({
 
   return (
     <>
+      {baselineItems.length > 0 ? (
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-wrap items-center gap-1">
+            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+              Fresh baseline highlights
+              <span className="ml-1.5 font-mono font-normal tabular-nums normal-case">
+                ({baselineItems.length})
+              </span>
+            </p>
+            <Badge variant="outline">planning only</Badge>
+            <OtherItemsBaselinePopover />
+          </div>
+          <FloorItemList
+            items={baselineItems}
+            identities={identities}
+            depth={floor.depth}
+            trinketSelection={trinketSelection}
+            showQuestSources
+          />
+        </div>
+      ) : null}
       {sections.map(({ key, label, items }) => (
         <div key={key} className="flex flex-col gap-1">
           <div className="flex items-center gap-1">

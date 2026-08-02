@@ -194,6 +194,7 @@ impl LevelState {
             self.placed_items
                 .iter()
                 .filter_map(baseline_item_entry)
+                .filter(crate::report::is_baseline_highlight)
                 .collect()
         } else {
             Vec::new()

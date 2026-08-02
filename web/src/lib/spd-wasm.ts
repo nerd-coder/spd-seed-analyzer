@@ -196,6 +196,8 @@ export type FloorReport = {
   rooms?: string[]
   guaranteed_appearances?: GuaranteedAppearance[]
   items: ItemEntry[]
+  /** Curated fresh/no-history planning highlights; never finder evidence. */
+  baseline_items?: ItemEntry[]
   quests: QuestReport[]
   map?: FloorMap | null
   assumed_map?: FloorMap | null
@@ -318,7 +320,13 @@ export type SeedSearchEvidence = {
 
 export type SeedSearchMatch = {
   seed: SeedInfo
+  identities: IdentityMaps
   evidence: SeedSearchEvidence[]
+  baselineItems: SeedSearchBaselineItem[]
+}
+
+export type SeedSearchBaselineItem = ItemEntry & {
+  depth: number
 }
 
 export type SeedSearchResult = {

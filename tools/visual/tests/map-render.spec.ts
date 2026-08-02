@@ -538,6 +538,81 @@ test('Other items explains fresh baseline equipment rewards', async ({
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
+test('analyzer displays fresh baseline highlights separately from guaranteed items', async ({
+  page,
+}) => {
+  const browserErrors = await openAnalyzer(page, 'RZN-LKU-EFS')
+  const baselineItem = page.getByRole('listitem').filter({
+    has: page.getByRole('img', { name: 'Ring of Wealth +2' }),
+  })
+
+  await expect(
+    page.getByText(/^Fresh baseline highlights/).first()
+  ).toBeVisible()
+  await expect(
+    page.getByText('planning only', { exact: true }).first()
+  ).toBeVisible()
+  await expect(baselineItem).toContainText('Ring of Wealth +2')
+  await expect(baselineItem).toContainText('Crystal choice')
+  await expect(baselineItem).toContainText('cursed')
+
+  expect(browserErrors.console, 'browser console errors').toEqual([])
+  expect(browserErrors.page, 'uncaught page errors').toEqual([])
+})
+
+test('finder result displays baseline highlights outside matched constraints', async ({
+  page,
+}) => {
+  const errors: BrowserErrors = { console: [], page: [] }
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.console.push(message.text())
+  })
+  page.on('pageerror', (error) => errors.page.push(error.message))
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
+  await page.addInitScript((storage) => {
+    localStorage.clear()
+    localStorage.setItem(storage.mode, 'finder')
+    localStorage.setItem(storage.theme, 'light')
+  }, APP_STORAGE)
+
+  await page.goto('/')
+  await expect(page).toHaveTitle('SPD Seed Analyzer')
+  await expect(
+    page.getByRole('heading', { name: 'No searches yet' })
+  ).toBeVisible()
+  await page
+    .getByRole('spinbutton', { name: 'Start seed' })
+    .fill('3755006876548')
+  await page.getByRole('spinbutton', { name: 'Candidates' }).fill('10')
+  await page.getByRole('combobox', { name: 'Depth' }).selectOption('17')
+  await page.getByRole('spinbutton', { name: 'Results' }).fill('1')
+  await page.getByLabel('Item 1 type').selectOption('Food')
+  await page.getByRole('button', { name: 'Find seeds' }).click()
+
+  await expect(page.getByText('RZN-LKU-EFS', { exact: true })).toBeVisible({
+    timeout: 60_000,
+  })
+  await expect(
+    page.getByText('Matched constraints', { exact: true })
+  ).toBeVisible()
+  await expect(page.getByText('ration of food', { exact: true })).toBeVisible()
+  await expect(
+    page.getByText('Fresh baseline highlights', { exact: true })
+  ).toBeVisible()
+  await expect(
+    page.getByText(
+      'Planning preview only; these items did not match the search.',
+      { exact: true }
+    )
+  ).toBeVisible()
+  await expect(page.getByText('planning only', { exact: true })).toBeVisible()
+  await expect(page.getByText('Ring of Wealth +2')).toBeVisible()
+  await expect(page.getByText('Floor 1 · Crystal choice')).toBeVisible()
+
+  expect(errors.console, 'browser console errors').toEqual([])
+  expect(errors.page, 'uncaught page errors').toEqual([])
+})
+
 test('conditional items render inline with their item properties', async ({
   page,
 }) => {

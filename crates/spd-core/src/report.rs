@@ -11,6 +11,7 @@ use crate::trinkets::{
     ArtifactEvent, Challenge, ProfileError, TrinketEvent, TrinketSelectionReport,
 };
 
+pub(crate) use compact::is_baseline_highlight;
 pub use quests::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -220,8 +221,9 @@ pub struct FloorReport {
     /// Concrete fresh/no-history replay results retained for compact seed
     /// summaries. These are explicitly baseline facts: player-controlled
     /// Generator history may change their identity or presence on later
-    /// floors. The conservative `items` projection remains the finder/UI
-    /// contract for guaranteed spawns.
+    /// floors. The conservative `items` projection remains the finder-evidence
+    /// and guaranteed-spawn contract; consumers must label this separate list
+    /// as planning-only baseline information.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub baseline_items: Vec<ItemEntry>,
     pub quests: Vec<QuestReport>,
