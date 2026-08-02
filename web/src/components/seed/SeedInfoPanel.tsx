@@ -1,6 +1,6 @@
 import {
   Card,
-  CardContent,
+  // CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -25,7 +25,7 @@ export function SeedInfoPanel({ report }: { report: SeedReport }) {
 
   return (
     <Card>
-      <CardHeader className="gap-3">
+      <CardHeader>
         <CardTitle className="font-mono">{input}</CardTitle>
         <CardDescription>
           {showCustomAndCanonical && (
@@ -42,13 +42,8 @@ export function SeedInfoPanel({ report }: { report: SeedReport }) {
           </p>
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground">
-          Each floor includes every currently modeled item variant. Items that
-          depend on challenges, trinkets, or artifacts show that condition
-          beside the result. Unsupported player-state paths remain partial.
-        </p>
-      </CardContent>
+      {/* <CardContent>
+      </CardContent> */}
     </Card>
   )
 }
