@@ -95,10 +95,14 @@ fn floor_one_traps_room_relocates_its_exact_forced_reward() {
 #[test]
 fn ghost_enchantment_parchment_requirement_is_compact() {
     let report = analyze_seed("HKH-FKC-YTK", 3).expect("analyze");
-    let enchantment = report.floors[2].items[3]
+    let enchantment = report.floors[2]
+        .items
+        .iter()
+        .find(|item| item.source.as_deref() == Some("Ghost.Quest"))
+        .expect("Ghost reward")
         .enchantment
         .as_ref()
-        .expect("floor-three fourth item has a conditional enchantment");
+        .expect("Ghost reward has a conditional enchantment");
 
     assert_eq!(
         serde_json::to_value(enchantment.conditions.as_slice()).expect("serialize conditions"),

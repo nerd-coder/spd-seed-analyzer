@@ -132,6 +132,7 @@ fn analyze_seed_internal(
         profile.validate(trinket_selection.first_effective_depth)?;
     }
     let mut dungeon = dungeon_from_run(run);
+    dungeon.baseline_projection = profile.is_some_and(|profile| profile == &MapProfile::default());
     let identities = dungeon.identities.clone();
     let mut floor_reports = level::analyze_floors_with_profile(&mut dungeon, floors, profile);
     if let Some(floor) = floor_reports

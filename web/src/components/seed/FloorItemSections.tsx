@@ -1,4 +1,4 @@
-import { CircleQuestionMark } from 'lucide-react'
+import { CircleQuestionMark, InfoIcon } from 'lucide-react'
 import { finderItemLabel } from '@/components/finder/finder-items'
 import { ItemIcon } from '@/components/ItemIcon'
 import { ItemName } from '@/components/ItemName'
@@ -9,6 +9,15 @@ import {
 } from '@/components/seed/ItemConditionDetails'
 import { TrinketRotationPopover } from '@/components/seed/TrinketRotationPopover'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { itemAppearance } from '@/lib/identity'
 import { formatItemSource, isHighlightSource } from '@/lib/labels'
 import type {
@@ -33,6 +42,31 @@ function itemGroup(
   }
   if (source === 'heap') return 'loot'
   return 'general'
+}
+
+function OtherItemsBaselinePopover() {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          aria-label="About baseline other-item rewards"
+        >
+          <InfoIcon />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-80">
+        <PopoverHeader>
+          <PopoverTitle>Baseline rewards</PopoverTitle>
+          <PopoverDescription>
+            Player choices, trinkets, challenges, or prior generation can change
+            it, so these values are not seed-wide guarantees.
+          </PopoverDescription>
+        </PopoverHeader>
+      </PopoverContent>
+    </Popover>
+  )
 }
 
 function CandidateOptions({
@@ -275,6 +309,7 @@ export function FloorItemSections({
                 ({items.length})
               </span>
             </p>
+            {key === 'general' ? <OtherItemsBaselinePopover /> : null}
           </div>
           <FloorItemList
             items={items}

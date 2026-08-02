@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn projection_emits_one_static_contract_and_never_the_sampled_weapon() {
+fn higher_floor_sacrifice_reward_exposes_the_fresh_baseline() {
     let mut floor = LevelState {
         depth: 13,
         feeling: Feeling::None,
@@ -20,6 +20,7 @@ fn projection_emits_one_static_contract_and_never_the_sampled_weapon() {
         runtime_sensitive_layout: false,
         runtime_sensitive_rooms: false,
         runtime_sensitive_feeling: false,
+        baseline_projection: true,
         room_public_facts: vec![super::super::super::room_public::RoomPublicFact::new(
             "SacrificeRoom",
             13,
@@ -48,21 +49,17 @@ fn projection_emits_one_static_contract_and_never_the_sampled_weapon() {
         .filter(|item| item.source.as_deref() == Some("SacrificeRoom"))
         .collect();
     assert_eq!(rewards.len(), 1);
+    assert_eq!(rewards[0].name, "corrupting sword +2");
+    assert_eq!(rewards[0].class_name.as_deref(), Some("Sword"));
     assert_eq!(rewards[0].tier, None);
-    assert_eq!(
-        rewards[0].tier_range,
-        Some(crate::report::NumericRange { min: 3, max: 5 })
-    );
+    assert_eq!(rewards[0].tier_range, None);
     assert_eq!(rewards[0].cursed, Some(true));
+    assert_eq!(rewards[0].level, Some(2));
+    assert_eq!(rewards[0].level_range, None);
     assert_eq!(
-        rewards[0].level_range,
-        Some(crate::report::NumericRange { min: 0, max: 3 })
+        rewards[0].prediction,
+        crate::report::ItemPredictionKind::Baseline
     );
-    assert!(rewards[0].class_name.is_none());
-    let json = serde_json::to_string(&report).expect("serialize Sacrifice projection");
-    for secret in ["Sword", "Corrupting"] {
-        assert!(!json.contains(secret), "leaked {secret}: {json}");
-    }
 }
 
 #[test]
@@ -85,6 +82,7 @@ fn floor_one_sacrifice_reward_is_an_exact_seed_fact() {
         runtime_sensitive_layout: false,
         runtime_sensitive_rooms: false,
         runtime_sensitive_feeling: false,
+        baseline_projection: true,
         room_public_facts: vec![super::super::super::room_public::RoomPublicFact::new(
             "SacrificeRoom",
             1,

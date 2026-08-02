@@ -137,6 +137,9 @@ pub struct LevelState {
     /// The baseline feeling can be overridden by held trinkets before build.
     #[doc(hidden)]
     pub runtime_sensitive_feeling: bool,
+    /// This replay uses the UI's declared fresh, no-history profile.
+    #[doc(hidden)]
+    pub baseline_projection: bool,
     #[doc(hidden)]
     pub room_public_facts: Vec<super::room_public::RoomPublicFact>,
     #[doc(hidden)]
@@ -219,6 +222,12 @@ impl LevelState {
         let mut has_shop = false;
         for (index, item) in self.placed_items.iter().enumerate() {
             let exact_floor_one_room_prize = exact_floor_one_room_prize_indices.contains(&index);
+            let baseline_room_prize = self.baseline_projection
+                && self.depth > 1
+                && matches!(
+                    item.source.as_deref(),
+                    Some("SacrificeRoom" | "CryptRoom" | "StatueRoom")
+                );
             let past_runtime_sensitive_boundary = self
                 .runtime_sensitive_placed_items_from
                 .is_some_and(|boundary| index >= boundary);
@@ -232,7 +241,7 @@ impl LevelState {
             // alter the remaining floor stream. Its fixed entries and public
             // deck constraints therefore remain safe even when that callback
             // suppresses the layout and later loot.
-            if past_runtime_sensitive_boundary {
+            if past_runtime_sensitive_boundary && !baseline_room_prize {
                 match item.provenance {
                     ItemProvenance::Shop(_) => {}
                     ItemProvenance::Quest(_) if !quest_past_runtime_sensitive_boundary => {}
@@ -245,7 +254,10 @@ impl LevelState {
             // Outside Floor 1 Sacrifice is represented only by its static
             // room contract. Its sampled weapon depends on prior generator
             // history and remains internal for Java parity.
-            if item.source.as_deref() == Some("SacrificeRoom") && !exact_floor_one_room_prize {
+            if item.source.as_deref() == Some("SacrificeRoom")
+                && !exact_floor_one_room_prize
+                && !baseline_room_prize
+            {
                 continue;
             }
             if item.provenance == ItemProvenance::Quest(QuestRewardRole::WandmakerPersisted) {
@@ -253,7 +265,10 @@ impl LevelState {
             }
             // Room contracts are emitted independently of the sampled exact
             // items so runtime-sensitive count/control flow cannot leak.
-            if matches!(item.provenance, ItemProvenance::Room(_)) && !exact_floor_one_room_prize {
+            if matches!(item.provenance, ItemProvenance::Room(_))
+                && !exact_floor_one_room_prize
+                && !baseline_room_prize
+            {
                 continue;
             }
             let artifact_conditional = item.artifact_conditional
@@ -389,6 +404,8 @@ impl LevelState {
                 || ghost_weapon.is_some_and(|_| item.candidate_classes.len() == 1)
             {
                 ItemPredictionKind::Exact
+            } else if baseline_room_prize {
+                ItemPredictionKind::Baseline
             } else {
                 prediction
             };
@@ -566,8 +583,26 @@ impl LevelState {
         if !self.runtime_sensitive_rooms {
             for fact in &self.room_public_facts {
                 items.extend(fact.entries().into_iter().filter(|entry| {
-                    !exact_floor_one_room_prize_indices.iter().any(|&index| {
-                        let Some(source) = self.placed_items[index].source.as_deref() else {
+                    !self.placed_items.iter().any(|item| {
+                        let concrete_floor_one_prize = self.depth == 1
+                            && !self.runtime_sensitive_layout
+                            && item.source.as_deref().is_some_and(|source| {
+                                source.ends_with(":forced")
+                                    || matches!(
+                                        source,
+                                        "SacrificeRoom" | "CryptRoom" | "StatueRoom"
+                                    )
+                            });
+                        let baseline_room_prize = self.baseline_projection
+                            && self.depth > 1
+                            && matches!(
+                                item.source.as_deref(),
+                                Some("SacrificeRoom" | "CryptRoom" | "StatueRoom")
+                            );
+                        if !concrete_floor_one_prize && !baseline_room_prize {
+                            return false;
+                        }
+                        let Some(source) = item.source.as_deref() else {
                             return false;
                         };
                         let room = source.strip_suffix(":forced").unwrap_or(source);

@@ -33,6 +33,9 @@ pub struct DungeonState {
     pub sacrifice_parchment_scrap_level: Option<i32>,
     /// Once player state can alter generation, later sampled public facts are tainted.
     pub public_generation_tainted: bool,
+    /// True only for the UI's fresh no-history replay, whose sampled room
+    /// equipment may be exposed as a labelled baseline.
+    pub baseline_projection: bool,
     /// The active profile fixes every currently modeled pre-Ghost route.
     pub ghost_rewards_profiled: bool,
     /// Items forced onto the next level (`Level.itemsToSpawn`).

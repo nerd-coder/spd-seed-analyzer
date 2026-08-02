@@ -519,6 +519,25 @@ test('Sad Ghost card shows only its resolved target', async ({ page }) => {
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
+test('Other items explains fresh baseline equipment rewards', async ({
+  page,
+}) => {
+  const browserErrors = await openAnalyzer(page, 'AAA-AAA-AAA')
+  const info = page
+    .getByRole('button', { name: 'About baseline other-item rewards' })
+    .first()
+  await info.click()
+  await expect(
+    page.getByText('Fresh baseline rewards', { exact: true })
+  ).toBeVisible()
+  await expect(
+    page.getByText('not seed-wide guarantees', { exact: false })
+  ).toBeVisible()
+
+  expect(browserErrors.console, 'browser console errors').toEqual([])
+  expect(browserErrors.page, 'uncaught page errors').toEqual([])
+})
+
 test('conditional items render inline with their item properties', async ({
   page,
 }) => {

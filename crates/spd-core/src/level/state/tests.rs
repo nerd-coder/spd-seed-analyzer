@@ -40,6 +40,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
         runtime_sensitive_layout: false,
         runtime_sensitive_rooms: false,
         runtime_sensitive_feeling: false,
+        baseline_projection: false,
         room_public_facts: vec![
             super::super::room_public::RoomPublicFact::new("SacrificeRoom", 3)
                 .expect("Sacrifice contract"),
@@ -229,6 +230,7 @@ fn empty_level_state(depth: i32) -> LevelState {
         runtime_sensitive_layout: false,
         runtime_sensitive_rooms: false,
         runtime_sensitive_feeling: false,
+        baseline_projection: false,
         room_public_facts: vec![],
         complete: true,
         map: None,
@@ -361,6 +363,7 @@ fn room_reward_projection_hides_all_concrete_fields_and_deduplicates_counts() {
         runtime_sensitive_layout: false,
         runtime_sensitive_rooms: false,
         runtime_sensitive_feeling: false,
+        baseline_projection: false,
         room_public_facts: vec![
             super::super::room_public::RoomPublicFact::new("ArmoryRoom", 7)
                 .expect("Armory contract"),

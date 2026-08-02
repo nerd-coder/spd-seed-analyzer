@@ -35,7 +35,7 @@ export type ItemEntry = {
   cursed?: boolean | null
   /** Seed-determined enchantment or glyph, with any retention conditions. */
   enchantment?: ItemEnchantment | null
-  prediction: 'exact' | 'constrained'
+  prediction: 'exact' | 'baseline' | 'constrained'
   /** Alternative dependency clauses; any one clause may produce this variant. */
   spawn_conditions?: ItemSpawnCondition[]
   conditions?: ItemCondition[]

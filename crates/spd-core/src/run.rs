@@ -55,6 +55,7 @@ pub fn dungeon_from_run(run: RunState) -> DungeonState {
         hero_inventory: HeroInventory::fresh_warrior(),
         sacrifice_parchment_scrap_level: None,
         public_generation_tainted: false,
+        baseline_projection: false,
         ghost_rewards_profiled: false,
         items_to_spawn: Vec::new(),
         ghost: crate::quests::GhostQuestState::default(),

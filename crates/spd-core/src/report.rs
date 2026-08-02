@@ -323,6 +323,9 @@ pub struct NumericRange {
 pub enum ItemPredictionKind {
     /// Concrete identity and properties are safe to use for display and search.
     Exact,
+    /// Concrete result from the fresh, no-history replay. It is useful for
+    /// planning but player-controlled prior generation can change it.
+    Baseline,
     /// Only the explicitly populated constraints are seed-only guarantees.
     Constrained,
 }

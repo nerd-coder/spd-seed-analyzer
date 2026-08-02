@@ -4,8 +4,10 @@ Current state: the public report uses typed item conditions, name-less identity
 entries, and an `{type, conditions}` enchantment object. Spawn conditions remain
 OR-of-AND clauses and serialize without empty trinket clauses. Rust owns all
 condition derivation; WASM and React consume the contract and render reusable
-typed-condition popovers. The finder remains on its conservative seed-only
-projection, and public accuracy is `partial`.
+typed-condition popovers. Higher-floor Sacrifice, Crypt, and Statue equipment
+also exposes a clearly labelled fresh/no-history baseline (never finder
+evidence); exact claims remain limited to seed-safe paths. Public accuracy is
+`partial`.
 
 Next steps:
 
