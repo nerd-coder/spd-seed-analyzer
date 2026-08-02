@@ -189,6 +189,22 @@ impl LevelState {
     }
 
     pub fn to_floor_report_with_map(&self, allow_map: bool) -> FloorReport {
+        self.to_floor_report_with_context(allow_map, None)
+    }
+
+    pub(crate) fn to_floor_report_with_trinket_availability(
+        &self,
+        allow_map: bool,
+        first_effective_trinket_depth: u32,
+    ) -> FloorReport {
+        self.to_floor_report_with_context(allow_map, Some(first_effective_trinket_depth))
+    }
+
+    fn to_floor_report_with_context(
+        &self,
+        allow_map: bool,
+        first_effective_trinket_depth: Option<u32>,
+    ) -> FloorReport {
         let mut items = forced_public_entries(self.depth, &self.initial_forced_items);
         let baseline_items: Vec<_> = if self.baseline_projection {
             self.placed_items
@@ -405,6 +421,13 @@ impl LevelState {
                 ) => Some(minimum_parchment_level),
                 _ => None,
             };
+            let minimum_parchment_level = ghost_enchantment_condition.flatten();
+            let reachable_parchment_level = minimum_parchment_level.filter(|_| {
+                first_effective_trinket_depth
+                    .is_none_or(|first_depth| self.depth as u32 >= first_depth)
+            });
+            let potential_enchantment_is_reachable =
+                minimum_parchment_level.is_none() || reachable_parchment_level.is_some();
             let blacksmith_smith_option = matches!(
                 quest_role,
                 Some(
@@ -480,13 +503,12 @@ impl LevelState {
                 } else {
                     Some(item.cursed)
                 },
-                enchantment: (!blacksmith_smith_option)
+                enchantment: (!blacksmith_smith_option && potential_enchantment_is_reachable)
                     .then(|| item.potential_enchantment.clone())
                     .flatten()
                     .map(|enchantment_type| ItemEnchantment {
                         enchantment_type,
-                        conditions: ghost_enchantment_condition
-                            .flatten()
+                        conditions: reachable_parchment_level
                             .map(|level| parchment_condition(self.depth as u32, level))
                             .into_iter()
                             .collect(),
@@ -498,7 +520,7 @@ impl LevelState {
                     quest_role,
                     blacksmith_smith_option,
                     imp_shop_conditional,
-                    ghost_enchantment_condition.flatten(),
+                    reachable_parchment_level,
                     item.potential_enchantment.as_deref(),
                 ),
                 source: exact_floor_one_room_prize

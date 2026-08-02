@@ -135,29 +135,55 @@ fn compact_report_retains_concrete_baseline_without_promoting_finder_facts() {
 }
 
 #[test]
-fn ghost_enchantment_parchment_requirement_is_compact() {
+fn ghost_enchantment_omits_unreachable_parchment_requirement() {
     let report = analyze_seed("HKH-FKC-YTK", 3).expect("analyze");
-    let enchantment = report.floors[2]
+    assert_eq!(report.trinket_selection.first_effective_depth, 5);
+    let reward = report.floors[2]
         .items
         .iter()
         .find(|item| item.source.as_deref() == Some("Ghost.Quest"))
-        .expect("Ghost reward")
-        .enchantment
-        .as_ref()
-        .expect("Ghost reward has a conditional enchantment");
+        .expect("Ghost reward");
 
-    assert_eq!(
-        serde_json::to_value(enchantment.conditions.as_slice()).expect("serialize conditions"),
-        serde_json::json!([{
-            "type": "trinket",
-            "events": [{
-                "before_depth": 3,
-                "kind": "acquired",
-                "trinket": "parchment_scrap",
-                "min_upgrades": 1
-            }]
-        }])
-    );
+    assert!(reward.enchantment.is_none());
+    assert!(reward
+        .notes
+        .iter()
+        .all(|note| !note.contains("Parchment Scrap")));
+}
+
+#[test]
+fn ghost_enchantment_keeps_reachable_parchment_requirement() {
+    let report = analyze_seed_with_profile("5", 4, &MapProfile::default()).expect("analyze");
+    let (reward_depth, enchantment) = report
+        .floors
+        .iter()
+        .find_map(|floor| {
+            floor
+                .items
+                .iter()
+                .filter(|item| item.source.as_deref() == Some("Ghost.Quest"))
+                .find_map(|item| {
+                    item.enchantment
+                        .as_ref()
+                        .filter(|value| !value.conditions.is_empty())
+                })
+                .map(|enchantment| (floor.depth, enchantment))
+        })
+        .expect("reachable conditional Ghost enchantment");
+    let first_effective_depth = report.trinket_selection.first_effective_depth;
+    assert!(reward_depth >= first_effective_depth);
+
+    assert!(matches!(
+        enchantment.conditions.as_slice(),
+        [ItemCondition::Trinket { events }]
+            if matches!(events.as_slice(), [TrinketEvent {
+                before_depth,
+                action: TrinketEventAction::Acquired {
+                    trinket: TrinketKind::ParchmentScrap,
+                    ..
+                },
+            }] if *before_depth == reward_depth)
+    ));
 }
 
 #[test]
@@ -200,7 +226,7 @@ fn first_alchemy_pot_is_a_guaranteed_floor_appearance() {
 
 #[test]
 fn automatic_item_conditions_cover_supported_run_combinations() {
-    let report = analyze_seed("42", 4).expect("analyze");
+    let report = analyze_seed("5", 4).expect("analyze");
     let dependencies = report
         .floors
         .iter()

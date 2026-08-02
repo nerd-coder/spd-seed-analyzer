@@ -134,7 +134,12 @@ fn analyze_seed_internal(
     let mut dungeon = dungeon_from_run(run);
     dungeon.baseline_projection = profile.is_some_and(|profile| profile == &MapProfile::default());
     let identities = dungeon.identities.clone();
-    let mut floor_reports = level::analyze_floors_with_profile(&mut dungeon, floors, profile);
+    let mut floor_reports = level::analyze_floors_with_profile_and_trinket_availability(
+        &mut dungeon,
+        floors,
+        profile,
+        trinket_selection.first_effective_depth,
+    );
     if let Some(floor) = floor_reports
         .iter_mut()
         .find(|floor| floor.depth == trinket_selection.first_alchemy_pot_depth)

@@ -591,6 +591,9 @@ pub fn analyze_layouts_with_profile(
     max_floors: u32,
     profile: &MapProfile,
 ) -> Vec<FloorReport> {
+    let mut availability_preview = dungeon.clone();
+    let (catalyst_depth, pot_depth, _) = first_trinket_availability(&mut availability_preview);
+    let first_effective_trinket_depth = catalyst_depth.max(pot_depth) + 1;
     dungeon.challenges = profile.challenge_mask();
     let mut floors = Vec::new();
     trinkets::reset(dungeon.seed);
@@ -601,7 +604,9 @@ pub fn analyze_layouts_with_profile(
         trinkets::set_held(profile.held_at(depth as u32));
         let level =
             create_level_layout_with_profile(dungeon, !profile.has_unmodeled_generation_inputs());
-        floors.push(level.to_floor_report_with_map(true));
+        floors.push(
+            level.to_floor_report_with_trinket_availability(true, first_effective_trinket_depth),
+        );
     }
     floors
 }
@@ -646,6 +651,23 @@ pub fn analyze_floors_with_profile(
     max_floors: u32,
     profile: Option<&MapProfile>,
 ) -> Vec<FloorReport> {
+    let mut availability_preview = dungeon.clone();
+    let (catalyst_depth, pot_depth, _) = first_trinket_availability(&mut availability_preview);
+    let first_effective_trinket_depth = catalyst_depth.max(pot_depth) + 1;
+    analyze_floors_with_profile_and_trinket_availability(
+        dungeon,
+        max_floors,
+        profile,
+        first_effective_trinket_depth,
+    )
+}
+
+pub(crate) fn analyze_floors_with_profile_and_trinket_availability(
+    dungeon: &mut DungeonState,
+    max_floors: u32,
+    profile: Option<&MapProfile>,
+    first_effective_trinket_depth: u32,
+) -> Vec<FloorReport> {
     dungeon.challenges = profile.map_or(0, MapProfile::challenge_mask);
     let mut floors = Vec::new();
     dungeon.ghost_rewards_profiled = profile.is_some_and(|profile| {
@@ -659,7 +681,12 @@ pub fn analyze_floors_with_profile(
         trinkets::set_held(profile.and_then(|profile| profile.held_at(depth as u32)));
         let configured = profile.is_some_and(|profile| !profile.has_unmodeled_generation_inputs());
         let level = create_level_partial_with_profile(dungeon, configured);
-        floors.push(level.to_floor_report_with_map(configured));
+        floors.push(
+            level.to_floor_report_with_trinket_availability(
+                configured,
+                first_effective_trinket_depth,
+            ),
+        );
     }
     floors
 }
