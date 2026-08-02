@@ -49,6 +49,7 @@ fn exact_floor(depth: u32, classes: &[(&str, i32)]) -> crate::FloorReport {
         rooms: vec![],
         possible_rooms: vec![],
         guaranteed_appearances: vec![],
+        baseline_items: vec![],
         items: classes
             .iter()
             .map(|(class_name, level)| crate::report::ItemEntry {
@@ -179,6 +180,7 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
         rooms: vec!["SacrificeRoom".into()],
         possible_rooms: vec![],
         guaranteed_appearances: vec![],
+        baseline_items: vec![],
         items: vec![crate::report::ItemEntry {
             name: "weapon reward".into(),
             quantity: 1,
@@ -390,6 +392,7 @@ fn constrained_shop_stock_never_matches_its_internal_concrete_class() {
         rooms: vec!["ShopRoom".into()],
         possible_rooms: vec![],
         guaranteed_appearances: vec![],
+        baseline_items: vec![],
         items: vec![crate::report::ItemEntry {
             name: "weapon stock".into(),
             quantity: 1,

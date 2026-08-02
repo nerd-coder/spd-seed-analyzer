@@ -18,6 +18,10 @@ use forced_queue::public_entries as forced_public_entries;
 mod conditions;
 use conditions::{item_conditions, item_conditions_typed, legacy_item_notes, parchment_condition};
 
+#[path = "state/baseline.rs"]
+mod baseline;
+use baseline::item_entry as baseline_item_entry;
+
 #[path = "state_map.rs"]
 mod state_map;
 use state_map::{guaranteed_appearances, reported_level};
@@ -186,6 +190,14 @@ impl LevelState {
 
     pub fn to_floor_report_with_map(&self, allow_map: bool) -> FloorReport {
         let mut items = forced_public_entries(self.depth, &self.initial_forced_items);
+        let baseline_items = if self.baseline_projection {
+            self.placed_items
+                .iter()
+                .filter_map(baseline_item_entry)
+                .collect()
+        } else {
+            Vec::new()
+        };
         let exact_floor_one_room_prize_indices: Vec<_> =
             if self.depth == 1 && !self.runtime_sensitive_layout {
                 self.placed_items
@@ -642,6 +654,7 @@ impl LevelState {
             possible_rooms: Vec::new(),
             guaranteed_appearances,
             items,
+            baseline_items,
             quests: self.quests[..self
                 .runtime_sensitive_quests_from
                 .unwrap_or(self.quests.len())]

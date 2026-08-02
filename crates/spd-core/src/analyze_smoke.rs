@@ -93,6 +93,45 @@ fn floor_one_traps_room_relocates_its_exact_forced_reward() {
 }
 
 #[test]
+fn compact_report_retains_concrete_baseline_without_promoting_finder_facts() {
+    let report = analyze_seed("RZN-LKU-EFS", 17).expect("analyze compact-report fixture");
+    let floor_one = &report.floors[0];
+    let wealth = floor_one
+        .baseline_items
+        .iter()
+        .find(|item| item.class_name.as_deref() == Some("RingOfWealth"))
+        .expect("baseline Crystal Choice Wealth ring");
+    assert_eq!(wealth.level, Some(2));
+    assert_eq!(wealth.cursed, Some(true));
+    assert_eq!(wealth.source.as_deref(), Some("CrystalChoiceRoom"));
+    assert_eq!(wealth.prediction, report::ItemPredictionKind::Baseline);
+    assert!(floor_one
+        .items
+        .iter()
+        .all(|item| item.class_name.as_deref() != Some("RingOfWealth")));
+
+    let compact = report.compact_text();
+    assert!(compact.starts_with("RZN-LKU-EFS\nShPD v3.3.8\n\n"));
+    for expected in [
+        "1 (cursed) Wealth +2 Crystal Choice",
+        "2 Remove Curse YNGVI",
+        "2 Stone of Enchantment Secret Room",
+        "2 Vampiric Quarterstaff +1 Statue",
+        "3 Wealth +1 Pit",
+        "4 Rose",
+        "4 Transmutation GYFU",
+        "7 Disintegration +2 , Magic Missile +1 Wandmaker - Dust",
+        "17 (cursed) Sharpshooting +4 Imp/Monks",
+    ] {
+        assert!(
+            compact.contains(expected),
+            "missing compact line: {expected}"
+        );
+    }
+    assert_eq!(report.status, "partial");
+}
+
+#[test]
 fn ghost_enchantment_parchment_requirement_is_compact() {
     let report = analyze_seed("HKH-FKC-YTK", 3).expect("analyze");
     let enchantment = report.floors[2]

@@ -1,5 +1,6 @@
 //! Serializable analysis report types.
 
+mod compact;
 mod quests;
 
 use serde::{Deserialize, Serialize};
@@ -216,6 +217,13 @@ pub struct FloorReport {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub guaranteed_appearances: Vec<GuaranteedAppearance>,
     pub items: Vec<ItemEntry>,
+    /// Concrete fresh/no-history replay results retained for compact seed
+    /// summaries. These are explicitly baseline facts: player-controlled
+    /// Generator history may change their identity or presence on later
+    /// floors. The conservative `items` projection remains the finder/UI
+    /// contract for guaranteed spawns.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub baseline_items: Vec<ItemEntry>,
     pub quests: Vec<QuestReport>,
     /// Present when geometry build succeeded.
     #[serde(skip_serializing_if = "Option::is_none")]
