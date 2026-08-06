@@ -3,14 +3,15 @@
 This package performs strict pixel comparisons of the analyzer's deterministic
 map canvas backing bitmap in Chromium. Capturing the backing bitmap avoids
 viewport clipping when a full-resolution map is taller than its dialog. The
-regular-floor cases come from `tools/visual/tests/map-render-fixtures.ts`;
-browser-rendered baselines are committed in `tools/visual/snapshots/`.
+main-floor and Blacksmith mining branch cases come from
+`tools/visual/tests/map-render-fixtures.ts`; browser-rendered baselines are
+committed in `tools/visual/snapshots/`.
 
 The snapshots cover only the public structural-layout projection: room
 geometry, walls, traversable floor, doors, and entrances/exits. Entity-rich
-gameplay captures, quest branches, decoration, traps, plants, blobs, heaps,
-mobs, item placement, explored FOV, and animation state are product non-goals
-and are not visual-regression inputs.
+gameplay captures, quest branches other than Blacksmith mining levels,
+decoration, traps, plants, blobs, heaps, mobs, item placement, explored FOV,
+and animation state are product non-goals and are not visual-regression inputs.
 
 ## First-time setup
 

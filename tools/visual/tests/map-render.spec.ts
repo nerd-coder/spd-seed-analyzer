@@ -1,5 +1,10 @@
 import { expect, type Locator, type Page, test } from '@playwright/test'
-import { MAP_RENDER_FIXTURES } from './map-render-fixtures'
+import {
+  MAP_RENDER_FIXTURES,
+  type MapRenderLevelIdentity,
+  mapRenderSnapshotName,
+  mapRenderTestName,
+} from './map-render-fixtures'
 
 const APP_STORAGE = {
   mode: 'spd-analyzer-mode',
@@ -361,7 +366,12 @@ async function snapshotCanvas(canvas: Locator, snapshot: string) {
   })
 }
 
-async function captureFloor(page: Page, floor: number, snapshot: string) {
+async function captureLevel(
+  page: Page,
+  level: MapRenderLevelIdentity,
+  snapshot: string
+) {
+  const floor = level.depth
   const region = floorRegions.find(
     ({ first, last }) => floor >= first && floor <= last
   )
@@ -370,12 +380,35 @@ async function captureFloor(page: Page, floor: number, snapshot: string) {
   const regionTab = page.getByRole('tab', { name: region.name })
   await regionTab.click()
   await expect(regionTab).toHaveAttribute('aria-selected', 'true')
-  await page.getByRole('button', { name: `Expand floor ${floor} map` }).click()
+
+  const mapLabel =
+    level.kind === 'main'
+      ? `floor ${floor} map`
+      : `Blacksmith Mine floor ${floor}, branch ${level.branch} map`
+  const dialogTitle =
+    level.kind === 'main'
+      ? `Floor ${floor}`
+      : `Blacksmith Mine - Floor ${floor}, branch ${level.branch}`
+
+  if (level.kind === 'branch') {
+    const branchSection = page
+      .getByRole('heading', { name: 'Blacksmith Mine', exact: true })
+      .locator('..')
+      .locator('..')
+    await expect(branchSection).toContainText(`Objective: ${level.objective}`)
+    await expect(branchSection).toContainText(
+      `Floor ${floor}, branch ${level.branch}`
+    )
+  }
+
+  await page
+    .getByRole('button', { name: `Expand ${mapLabel}`, exact: true })
+    .click()
 
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
   await expect(
-    dialog.getByRole('heading', { name: `Floor ${floor}` })
+    dialog.getByRole('heading', { name: dialogTitle, exact: true })
   ).toBeVisible()
 
   const canvas = dialog.getByRole('img', {
@@ -394,15 +427,9 @@ async function captureFloor(page: Page, floor: number, snapshot: string) {
 }
 
 for (const fixture of MAP_RENDER_FIXTURES) {
-  test(`${fixture.seed} floor ${fixture.floor} structural layout`, async ({
-    page,
-  }) => {
+  test(mapRenderTestName(fixture), async ({ page }) => {
     const browserErrors = await openAnalyzer(page, fixture.seed)
-    await captureFloor(
-      page,
-      fixture.floor,
-      `${fixture.seed}-F${fixture.floor}.png`
-    )
+    await captureLevel(page, fixture.level, mapRenderSnapshotName(fixture))
 
     expect(browserErrors.console, 'browser console errors').toEqual([])
     expect(browserErrors.page, 'uncaught page errors').toEqual([])

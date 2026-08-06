@@ -1,3 +1,5 @@
+import { tilesetRegion } from '@/lib/dungeon-tile-visuals'
+
 const MOB_ASSET_URLS = {
   rat: '/assets/sprites/rat.png',
   snake: '/assets/sprites/snake.png',
@@ -49,11 +51,6 @@ function loadImage(url: string): Promise<HTMLImageElement> {
   return promise
 }
 
-function regionIndex(tileset: string): number {
-  const index = ['sewers', 'prison', 'caves', 'city', 'halls'].indexOf(tileset)
-  return index < 0 ? 0 : index
-}
-
 async function loadMobAssets(): Promise<MobAssets> {
   const entries = await Promise.all(
     Object.entries(MOB_ASSET_URLS).map(
@@ -64,8 +61,7 @@ async function loadMobAssets(): Promise<MobAssets> {
 }
 
 export async function loadMapAssets(tileset: string): Promise<MapAssets> {
-  const region = regionIndex(tileset)
-  const key = ['sewers', 'prison', 'caves', 'city', 'halls'][region]
+  const region = tilesetRegion(tileset)
   const [
     tiles,
     terrainFeatures,
@@ -79,7 +75,7 @@ export async function loadMapAssets(tileset: string): Promise<MapAssets> {
     weakFloor,
     hallsSpecial,
   ] = await Promise.all([
-    loadImage(`/assets/environment/tiles_${key}.png`),
+    loadImage(`/assets/environment/tiles_${tileset}.png`),
     loadImage('/assets/environment/terrain_features.png'),
     loadImage(`/assets/environment/water${region}.png`),
     loadImage('/assets/sprites/items.png'),

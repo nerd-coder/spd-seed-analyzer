@@ -61,6 +61,28 @@ const WALL_OVERHANG = xy(1, 13)
 const DOOR_OVERHANG = xy(1, 15)
 const OTHER_OVERHANG = xy(9, 15)
 
+export function tilesetRegion(tileset: string): number {
+  switch (tileset) {
+    case 'sewers':
+      return 0
+    case 'prison':
+      return 1
+    case 'caves':
+    case 'caves_crystal':
+    case 'caves_gnoll':
+      return 2
+    case 'city':
+      return 3
+    case 'halls':
+      return 4
+    default:
+      throw new Error(`Unsupported map tileset: ${tileset}`)
+  }
+}
+
+const isMiningTileset = (tileset: string) =>
+  tileset === 'caves_crystal' || tileset === 'caves_gnoll'
+
 const direct = new Map<number, number>([
   [Terrain.EMPTY, FLOOR],
   [Terrain.GRASS, FLOOR + 2],
@@ -303,6 +325,7 @@ export function wallVisual(
   tiles: number[],
   variance: number[],
   width: number,
+  tileset: string,
   cell: number
 ): number | null {
   const tile = tiles[cell] ?? Terrain.WALL
@@ -319,7 +342,9 @@ export function wallVisual(
       let visual =
         tile === Terrain.BOOKSHELF || below === Terrain.BOOKSHELF
           ? WALL_INTERNAL + 32
-          : WALL_INTERNAL
+          : isMiningTileset(tileset) && tile === Terrain.WALL_DECO
+            ? WALL_INTERNAL + 16
+            : WALL_INTERNAL
       if (!wallStitchable(tileAt(tiles, width, cell, 1, 0))) visual += 1
       if (!wallStitchable(tileAt(tiles, width, cell, 1, 1))) visual += 2
       if (!wallStitchable(tileAt(tiles, width, cell, -1, 1))) visual += 4
@@ -331,7 +356,12 @@ export function wallVisual(
   if (tile === Terrain.LOCKED_EXIT || tile === Terrain.UNLOCKED_EXIT)
     return DOOR_OVERHANG + 6
   if (below !== -1 && wallStitchable(below)) {
-    let visual = below === Terrain.BOOKSHELF ? WALL_OVERHANG + 8 : WALL_OVERHANG
+    let visual =
+      isMiningTileset(tileset) && below === Terrain.WALL_DECO
+        ? WALL_OVERHANG + 4
+        : below === Terrain.BOOKSHELF
+          ? WALL_OVERHANG + 8
+          : WALL_OVERHANG
     if (!wallStitchable(tileAt(tiles, width, cell, 1, 1))) visual += 1
     if (!wallStitchable(tileAt(tiles, width, cell, -1, 1))) visual += 2
     return visual
@@ -361,11 +391,11 @@ export function wallVisual(
 }
 
 export function featureVisual(tile: number, tileset: string, variance: number) {
-  const stage = ['sewers', 'prison', 'caves', 'city', 'halls'].indexOf(tileset)
+  const stage = tilesetRegion(tileset)
   const alt = variance >= 50 ? 1 : 0
-  if (tile === Terrain.HIGH_GRASS) return 9 + 16 * Math.max(0, stage) + alt
-  if (tile === Terrain.FURROWED_GRASS) return 11 + 16 * Math.max(0, stage) + alt
-  if (tile === Terrain.GRASS) return 13 + 16 * Math.max(0, stage) + alt
+  if (tile === Terrain.HIGH_GRASS) return 9 + 16 * stage + alt
+  if (tile === Terrain.FURROWED_GRASS) return 11 + 16 * stage + alt
+  if (tile === Terrain.GRASS) return 13 + 16 * stage + alt
   if (tile === Terrain.EMBERS) return 9 + 16 * 5 + alt
   return null
 }

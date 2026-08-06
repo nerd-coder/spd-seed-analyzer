@@ -234,7 +234,7 @@ export function renderStaticMap(
     const raised = raisedTerrainVisual(map.tiles[cell], variance, cell)
     if (raised != null)
       drawSheetTile(ctx, assets.tiles, raised, cell, map.width, scale)
-    const wall = wallVisual(map.tiles, variance, map.width, cell)
+    const wall = wallVisual(map.tiles, variance, map.width, map.tileset, cell)
     if (wall != null)
       drawSheetTile(ctx, assets.tiles, wall, cell, map.width, scale)
   }

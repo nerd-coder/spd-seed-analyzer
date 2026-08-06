@@ -106,6 +106,7 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
                   <Button
                     type="submit"
                     size="default"
+                    aria-label="Analyze"
                     disabled={analyzing || !normalizeSeedInput(seedInput)}
                   >
                     {analyzing ? (

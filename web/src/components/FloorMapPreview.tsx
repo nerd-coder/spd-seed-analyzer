@@ -23,6 +23,8 @@ type Props = {
   map: FloorMap
   identities: IdentityMaps
   depth: number
+  mapLabel?: string
+  dialogTitle?: string
   className?: string
   loading?: boolean
 }
@@ -44,6 +46,8 @@ export function FloorMapPreview({
   map,
   identities,
   depth,
+  mapLabel = `floor ${depth} map`,
+  dialogTitle = `Floor ${depth}`,
   className,
   loading = false,
 }: Props) {
@@ -62,8 +66,8 @@ export function FloorMapPreview({
             'hover:ring-1 hover:ring-ring focus-visible:ring-2 focus-visible:ring-ring',
             className
           )}
-          title={`Floor ${depth} map — click to expand`}
-          aria-label={`Expand floor ${depth} map`}
+          title={`${mapLabel} - click to expand`}
+          aria-label={`Expand ${mapLabel}`}
         >
           <span className="absolute inset-0 flex items-center justify-center">
             <FloorMapCanvas
@@ -83,7 +87,7 @@ export function FloorMapPreview({
           {loading ? (
             <span className="absolute inset-0 flex items-center justify-center bg-black/65 text-white">
               <SpinnerGapIcon className="animate-spin" aria-hidden />
-              <span className="sr-only">Regenerating floor {depth} map</span>
+              <span className="sr-only">Regenerating {mapLabel}</span>
             </span>
           ) : null}
         </button>
@@ -98,7 +102,7 @@ export function FloorMapPreview({
         showCloseButton
       >
         <DialogHeader>
-          <DialogTitle className="font-mono">Floor {depth}</DialogTitle>
+          <DialogTitle className="font-mono">{dialogTitle}</DialogTitle>
           <DialogDescription>
             {map.width}×{map.height} · {map.tileset} · discoverable crop{' '}
             {viewport.width}×{viewport.height} · layout only, before mobs and

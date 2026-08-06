@@ -18,10 +18,86 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import type {
+  BranchFloorReport,
   FloorReport,
   IdentityMaps,
   TrinketSelectionReport,
 } from '@/lib/spd-wasm'
+
+function branchAccessText(branch: BranchFloorReport) {
+  const conditions: string[] = []
+  if (branch.access.requires_acceptance) {
+    conditions.push(
+      `accept ${branch.access.quest_id.replaceAll('_', ' ')} quest`
+    )
+  }
+  if (branch.access.required_item) {
+    conditions.push(`carry ${branch.access.required_item.replaceAll('_', ' ')}`)
+  }
+  return conditions.length > 0
+    ? conditions.join(' and ')
+    : 'No additional access condition'
+}
+
+function BlacksmithMineBranch({
+  branch,
+  identities,
+}: {
+  branch: BranchFloorReport
+  identities: IdentityMaps
+}) {
+  const showAssumedMap = !branch.map && !!branch.assumed_map
+  const displayedMap = branch.map ?? branch.assumed_map ?? null
+  const identity = `Floor ${branch.id.depth}, branch ${branch.id.branch}`
+  const mapLabel = `Blacksmith Mine ${identity.toLowerCase()} map`
+
+  return (
+    <section className="space-y-3 border-l-2 border-amber-700/40 bg-muted/25 px-3 py-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <h4 className="font-heading text-sm font-medium">Blacksmith Mine</h4>
+        <Badge variant="secondary">Objective: {branch.objective}</Badge>
+        <Badge variant="outline" className="font-mono text-xs">
+          {identity}
+        </Badge>
+      </div>
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1 space-y-2 text-xs">
+          <p>
+            <span className="text-muted-foreground font-medium">Access:</span>{' '}
+            <span className="capitalize">{branchAccessText(branch)}</span>
+          </p>
+          {branch.rooms.length > 0 && (
+            <p className="text-muted-foreground leading-relaxed">
+              <span className="font-medium text-foreground">Rooms:</span>{' '}
+              {branch.rooms
+                .map((room) => room.replace(/Room$/, ''))
+                .join(' · ')}
+            </p>
+          )}
+          {showAssumedMap && (
+            <Alert variant="warning" className="px-2 py-1.5">
+              <AlertTitle className="text-[10px] leading-tight">
+                Assumed branch layout
+              </AlertTitle>
+              <AlertDescription className="text-[9px] leading-tight text-pretty">
+                Baseline continuation through unresolved player or meta state.
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
+        {displayedMap && (
+          <FloorMapPreview
+            map={displayedMap}
+            identities={identities}
+            depth={branch.id.depth}
+            mapLabel={mapLabel}
+            dialogTitle={`Blacksmith Mine - ${identity}`}
+          />
+        )}
+      </div>
+    </section>
+  )
+}
 
 export function FloorDetail({
   floor,
@@ -145,6 +221,18 @@ export function FloorDetail({
           </div>
         )}
       </div>
+
+      {floor.branches && floor.branches.length > 0 && (
+        <div className="space-y-2 pt-1">
+          {floor.branches.map((branch) => (
+            <BlacksmithMineBranch
+              key={`${branch.id.depth}-${branch.id.branch}`}
+              branch={branch}
+              identities={identities}
+            />
+          ))}
+        </div>
+      )}
     </section>
   )
 }

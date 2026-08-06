@@ -207,6 +207,27 @@ export type FloorReport = {
   quests: QuestReport[]
   map?: FloorMap | null
   assumed_map?: FloorMap | null
+  branches?: BranchFloorReport[]
+}
+
+export type BranchFloorId = {
+  depth: number
+  branch: number
+}
+
+export type BranchFloorReport = {
+  id: BranchFloorId
+  origin: BranchFloorId
+  kind: 'blacksmith_mine'
+  objective: 'Crystal' | 'Gnoll' | 'Fungi'
+  access: {
+    quest_id: string
+    requires_acceptance: boolean
+    required_item?: string | null
+  }
+  rooms: string[]
+  map?: FloorMap | null
+  assumed_map?: FloorMap | null
 }
 
 export type InitialEncounter = {
