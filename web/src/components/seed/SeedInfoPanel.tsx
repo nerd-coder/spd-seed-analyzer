@@ -36,6 +36,7 @@ export function SeedInfoPanel({ report }: { report: SeedReport }) {
               </span>
             </p>
           )}
+          {report.seed.daily && <p>Daily Run (UTC)</p>}
           <p>
             Numeric:{' '}
             <span className="text-foreground font-mono">{numeric}</span>

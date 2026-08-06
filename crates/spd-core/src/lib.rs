@@ -19,7 +19,7 @@ pub mod run;
 pub mod search;
 pub mod trinkets;
 
-pub use dungeon_seed::{DungeonSeed, SeedError, TOTAL_SEEDS};
+pub use dungeon_seed::{DungeonSeed, SeedError, FIRST_DAILY_DATE, TOTAL_SEEDS};
 pub use items::IdentityMaps;
 pub use java_random::JavaRandom;
 pub use random::Random;
@@ -52,8 +52,13 @@ pub fn parse_seed(input: &str) -> Result<SeedInfo, SeedError> {
     if trimmed.is_empty() {
         return Err(SeedError::Empty);
     }
-    let numeric = DungeonSeed::convert_from_text(trimmed)?;
-    let code = if numeric < TOTAL_SEEDS {
+    let daily = DungeonSeed::is_daily_date_text(trimmed);
+    let numeric = if daily {
+        DungeonSeed::convert_from_daily_date(trimmed)?
+    } else {
+        DungeonSeed::convert_from_text(trimmed)?
+    };
+    let code = if !daily {
         DungeonSeed::convert_to_code(numeric).ok()
     } else {
         None
@@ -63,6 +68,7 @@ pub fn parse_seed(input: &str) -> Result<SeedInfo, SeedError> {
         numeric,
         code,
         formatted: DungeonSeed::format_text(trimmed),
+        daily,
     })
 }
 

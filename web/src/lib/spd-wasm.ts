@@ -5,6 +5,7 @@ export type SeedInfo = {
   numeric: number
   code: string | null
   formatted: string
+  daily: boolean
 }
 
 export type IdentityEntry = {

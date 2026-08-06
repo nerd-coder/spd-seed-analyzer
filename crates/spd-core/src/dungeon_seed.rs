@@ -4,6 +4,9 @@ use thiserror::Error;
 
 /// Largest possible seed has a value of 26^9.
 pub const TOTAL_SEEDS: i64 = 5_429_503_678_976; // 26^9
+pub const FIRST_DAILY_DATE: &str = "2025-03-01";
+const MILLIS_PER_DAY: i64 = 86_400_000;
+const FIRST_DAILY_EPOCH_DAY: i64 = 20_148;
 
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
 pub enum SeedError {
@@ -13,12 +16,58 @@ pub enum SeedError {
     InvalidCode,
     #[error("seeds must be within the range [0, TOTAL_SEEDS)")]
     OutOfRange,
+    #[error("Daily Run dates must use a valid YYYY-MM-DD date")]
+    InvalidDailyDate,
+    #[error("Daily Runs in SPD v3.3.8 begin on 2025-03-01")]
+    DailyBeforeStart,
 }
 
 /// Seed encode/decode helpers.
 pub struct DungeonSeed;
 
 impl DungeonSeed {
+    /// Whether the input has the exact shape used for an SPD Daily Run date.
+    pub fn is_daily_date_text(input: &str) -> bool {
+        let bytes = input.as_bytes();
+        bytes.len() == 10
+            && bytes[4] == b'-'
+            && bytes[7] == b'-'
+            && bytes
+                .iter()
+                .enumerate()
+                .all(|(index, byte)| index == 4 || index == 7 || byte.is_ascii_digit())
+    }
+
+    /// Converts an SPD Daily Run date to its root dungeon seed.
+    pub fn convert_from_daily_date(date: &str) -> Result<i64, SeedError> {
+        if !Self::is_daily_date_text(date) {
+            return Err(SeedError::InvalidDailyDate);
+        }
+
+        let year = date[0..4]
+            .parse::<i32>()
+            .map_err(|_| SeedError::InvalidDailyDate)?;
+        let month = date[5..7]
+            .parse::<u32>()
+            .map_err(|_| SeedError::InvalidDailyDate)?;
+        let day = date[8..10]
+            .parse::<u32>()
+            .map_err(|_| SeedError::InvalidDailyDate)?;
+        if year == 0
+            || !(1..=12).contains(&month)
+            || !(1..=days_in_month(year, month)).contains(&day)
+        {
+            return Err(SeedError::InvalidDailyDate);
+        }
+
+        let epoch_day =
+            days_before_year(year) + days_before_month(year, month) + i64::from(day - 1);
+        if epoch_day < FIRST_DAILY_EPOCH_DAY {
+            return Err(SeedError::DailyBeforeStart);
+        }
+        Ok(epoch_day * MILLIS_PER_DAY + TOTAL_SEEDS)
+    }
+
     /// Takes a seed code (`ABC-DEF-GHI` or `ABCDEFGHI`) and converts to long value.
     pub fn convert_from_code(code: &str) -> Result<i64, SeedError> {
         let mut code = code.to_string();
@@ -135,6 +184,32 @@ impl DungeonSeed {
     }
 }
 
+fn is_leap_year(year: i32) -> bool {
+    year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)
+}
+
+fn days_in_month(year: i32, month: u32) -> u32 {
+    match month {
+        2 if is_leap_year(year) => 29,
+        2 => 28,
+        4 | 6 | 9 | 11 => 30,
+        _ => 31,
+    }
+}
+
+fn days_before_year(year: i32) -> i64 {
+    let previous_year = i64::from(year - 1);
+    let days_through_previous_year =
+        previous_year * 365 + previous_year / 4 - previous_year / 100 + previous_year / 400;
+    // 1970-01-01 is Unix epoch day zero.
+    days_through_previous_year - 719_162
+}
+
+fn days_before_month(year: i32, month: u32) -> i64 {
+    const CUMULATIVE_DAYS: [i64; 12] = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    CUMULATIVE_DAYS[(month - 1) as usize] + i64::from(month > 2 && is_leap_year(year))
+}
+
 /// `Long.toString(n, 26)` equivalent for non-negative n.
 fn to_string_radix_26(mut n: u64) -> String {
     if n == 0 {
@@ -201,6 +276,34 @@ mod tests {
     #[test]
     fn convert_from_code_rejects_short() {
         assert!(DungeonSeed::convert_from_code("ABC").is_err());
+    }
+
+    #[test]
+    fn daily_date_matches_upstream_seed_formula() {
+        assert_eq!(
+            DungeonSeed::convert_from_daily_date(FIRST_DAILY_DATE).unwrap(),
+            7_170_290_878_976
+        );
+        assert_eq!(
+            DungeonSeed::convert_from_daily_date("2026-08-06").unwrap(),
+            7_215_478_078_976
+        );
+    }
+
+    #[test]
+    fn daily_date_validates_calendar_and_supported_range() {
+        assert_eq!(
+            DungeonSeed::convert_from_daily_date("2024-02-29"),
+            Err(SeedError::DailyBeforeStart)
+        );
+        assert_eq!(
+            DungeonSeed::convert_from_daily_date("2025-02-29"),
+            Err(SeedError::InvalidDailyDate)
+        );
+        assert_eq!(
+            DungeonSeed::convert_from_daily_date("2025-13-01"),
+            Err(SeedError::InvalidDailyDate)
+        );
     }
 
     #[test]

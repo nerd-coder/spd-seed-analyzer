@@ -43,6 +43,15 @@ fn analyze_seed_smoke() {
 }
 
 #[test]
+fn analyzes_daily_run_date() {
+    let report = analyze_seed("2025-03-01", 1).expect("analyze Daily Run");
+    assert_eq!(report.seed.numeric, 7_170_290_878_976);
+    assert!(report.seed.daily);
+    assert_eq!(report.seed.code, None);
+    assert_eq!(report.floors.len(), 1);
+}
+
+#[test]
 fn fresh_profile_publishes_floor_one_ordinary_loot() {
     let mut floors_with_ordinary_loot = 0;
     for seed in 0..50 {

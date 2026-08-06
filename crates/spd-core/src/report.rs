@@ -21,6 +21,8 @@ pub struct SeedInfo {
     /// Canonical `ABC-DEF-GHI` when representable.
     pub code: Option<String>,
     pub formatted: String,
+    #[serde(default)]
+    pub daily: bool,
 }
 
 /// Floor map for canvas rendering (SPD terrain IDs + tileset key).

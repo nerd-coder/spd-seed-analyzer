@@ -97,7 +97,7 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
                       id="seed"
                       value={seedInput}
                       onChange={(event) => setSeedInput(event.target.value)}
-                      placeholder="XXX-XXX-XXX"
+                      placeholder="XXX-XXX-XXX or YYYY-MM-DD"
                       autoComplete="off"
                       spellCheck={false}
                       className="font-mono uppercase"
@@ -116,12 +116,11 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
                     ) : (
                       <MagnifyingGlassIcon data-icon="inline-start" />
                     )}
-                    Analyze
                   </Button>
                 </div>
                 <FieldDescription>
-                  Codes, numeric seeds, or free-text fun seeds. Up to{' '}
-                  {MAX_SAVED_SEEDS} open seeds are kept (oldest dropped).
+                  Codes, numeric seeds, Daily Run dates, or free-text fun seeds.
+                  Up to {MAX_SAVED_SEEDS} open seeds are kept (oldest dropped).
                 </FieldDescription>
               </Field>
             </FieldGroup>
