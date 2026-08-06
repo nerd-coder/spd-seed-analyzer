@@ -66,14 +66,6 @@ function BlacksmithMineBranch({
             <span className="text-muted-foreground font-medium">Access:</span>{' '}
             <span className="capitalize">{branchAccessText(branch)}</span>
           </p>
-          {branch.rooms.length > 0 && (
-            <p className="text-muted-foreground leading-relaxed">
-              <span className="font-medium text-foreground">Rooms:</span>{' '}
-              {branch.rooms
-                .map((room) => room.replace(/Room$/, ''))
-                .join(' · ')}
-            </p>
-          )}
           {showAssumedMap && (
             <Alert variant="warning" className="px-2 py-1.5">
               <AlertTitle className="text-[10px] leading-tight">
