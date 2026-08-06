@@ -30,7 +30,7 @@ pub struct SeedInfo {
 pub struct FloorMap {
     pub width: u32,
     pub height: u32,
-    /// Tileset key: `sewers` | `prison` | `caves` | `city` | `halls`
+    /// Main-region or mining-branch tileset key used by the web renderer.
     pub tileset: String,
     /// Row-major SPD `Terrain` values
     pub tiles: Vec<u16>,
@@ -233,6 +233,43 @@ pub struct FloorReport {
     /// Layout produced by the analyzer's baseline continuation after an
     /// unresolved player/meta-state branch. This is never an exact public
     /// prediction and must be presented with its assumption warning.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub assumed_map: Option<FloorMap>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub branches: Vec<BranchFloorReport>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub struct BranchFloorId {
+    pub depth: u32,
+    pub branch: u32,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum BranchFloorKind {
+    BlacksmithMine,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct BranchAccessReport {
+    pub quest_id: String,
+    pub requires_acceptance: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub required_item: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct BranchFloorReport {
+    pub id: BranchFloorId,
+    pub origin: BranchFloorId,
+    pub kind: BranchFloorKind,
+    pub objective: String,
+    pub access: BranchAccessReport,
+    #[serde(default)]
+    pub rooms: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub map: Option<FloorMap>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub assumed_map: Option<FloorMap>,
 }

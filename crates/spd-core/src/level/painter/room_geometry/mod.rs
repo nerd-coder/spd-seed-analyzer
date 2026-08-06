@@ -11,6 +11,8 @@ use crate::rooms::room::Room;
 
 use super::DoorMap;
 
+pub(crate) use patch_rooms::{clean_diagonal_edges, setup_patch};
+
 #[derive(Debug, Default)]
 pub(crate) struct StandardPaintResult {
     /// Center already selected by `Room.center()` for center-loot rooms.

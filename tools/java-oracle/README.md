@@ -155,7 +155,19 @@ these commands (stdout is the default when `--output` is omitted):
 ./tools/java-oracle/run --halls-paint-trace 16 \
   --output tools/java-oracle/fixtures/traces/gfx-pzh-dch-floor-16-city-paint.json \
   GFX-PZH-DCH
+./tools/java-oracle/run --mining-level 12 crystal \
+  --output tools/java-oracle/fixtures/mining/aaa-aaa-aaa-floor-12-crystal.json \
+  AAA-AAA-AAA
+./tools/java-oracle/run --mining-level 12 gnoll \
+  --output tools/java-oracle/fixtures/mining/aaa-aaa-aaa-floor-12-gnoll.json \
+  AAA-AAA-AAA
 ```
+
+`--mining-level` supports depths 12-14 in branch 1. It initializes a fresh run,
+directly forces the requested Blacksmith objective, constructs the canonical
+`MiningLevel`, and stops at `createMobs`. These fixtures compare objective-specific
+painter output; they do not represent the Blacksmith objective naturally rolled
+by a main-branch run.
 
 `--final-heaps-depth` accepts every depth from 1 through 26 and always emits
 the additive render fields. The AAA-AAA-AAA,

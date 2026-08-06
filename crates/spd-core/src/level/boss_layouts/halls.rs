@@ -211,6 +211,7 @@ fn blank_map() -> terrain::TerrainMap {
         trap_destroys_items: vec![false; len],
         trap_names: vec![None; len],
         branch_exits: Vec::new(),
+        branch_entrances: Vec::new(),
         custom_tiles: Vec::new(),
         custom_walls: Vec::new(),
     }

@@ -83,7 +83,7 @@ fn patch_params(style: PatchStyle, room: &Room) -> (f32, i32, bool, bool) {
     }
 }
 
-pub(super) fn setup_patch(
+pub(crate) fn setup_patch(
     room: &Room,
     room_index: usize,
     doors: &DoorMap,
@@ -173,7 +173,7 @@ fn all_open_cells_reachable(mask: &[bool], width: i32, start: usize) -> bool {
         .all(|(&filled, seen)| filled || seen)
 }
 
-pub(super) fn clean_diagonal_edges(mask: &mut [bool], width: i32) {
+pub(crate) fn clean_diagonal_edges(mask: &mut [bool], width: i32) {
     let width = width as usize;
     for i in 0..mask.len().saturating_sub(width) {
         if !mask[i] {

@@ -34,6 +34,10 @@ gradle.beforeProject { project ->
 				gradle.startParameter.projectProperties['oracleCavesBossPatch']
 		def hallsPaintTrace =
 				gradle.startParameter.projectProperties['oracleHallsPaintTrace']
+		def miningLevelDepth =
+				gradle.startParameter.projectProperties['oracleMiningLevelDepth']
+		def miningLevelObjective =
+				gradle.startParameter.projectProperties['oracleMiningLevelObjective']
         if (sourceDir == null || seed == null) {
             throw new GradleException('javaOracleDump requires oracleSourceDir and oracleSeed')
         }
@@ -99,6 +103,9 @@ gradle.beforeProject { project ->
 			}
 			if (hallsPaintTrace != null) {
 				args('halls-paint-trace', hallsPaintTrace)
+			}
+			if (miningLevelDepth != null) {
+				args('mining-level', miningLevelDepth, miningLevelObjective)
 			}
         }
     }

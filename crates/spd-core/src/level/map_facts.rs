@@ -179,7 +179,7 @@ impl MapFacts {
         self.markers.sort_by_key(|marker| marker.cell);
     }
 
-    pub fn into_floor_map(
+    pub(crate) fn into_floor_map(
         mut self,
         map: &TerrainMap,
         depth: i32,
@@ -190,7 +190,11 @@ impl MapFacts {
         FloorMap {
             width: map.width as u32,
             height: map.height as u32,
-            tileset: terrain::tileset_for_depth(depth).to_string(),
+            tileset: if branch == 1 {
+                "mining".to_string()
+            } else {
+                terrain::tileset_for_depth(depth).to_string()
+            },
             tiles: map.map.iter().map(|&tile| tile as u16).collect(),
             tile_variance: tile_variance(map.len(), depth_seed),
             discoverable: discoverable(&map.map, map.width),
@@ -303,6 +307,12 @@ fn transitions(map: &TerrainMap, depth: i32, branch: i32) -> Vec<MapTransition> 
     let mut transitions = Vec::new();
     for (cell, &tile) in map.map.iter().enumerate() {
         let (transition_type, dest_depth, dest_branch, dest_type) = match tile {
+            terrain::ENTRANCE if map.branch_entrances.contains(&cell) => (
+                "BRANCH_ENTRANCE",
+                depth,
+                branch - 1,
+                Some("BRANCH_EXIT".to_string()),
+            ),
             terrain::EXIT if map.branch_exits.contains(&cell) => (
                 "BRANCH_EXIT",
                 depth,

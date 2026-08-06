@@ -7,6 +7,7 @@ mod create_mobs;
 mod forced_drops;
 mod map_facts;
 mod maze;
+mod mining;
 mod painter;
 pub mod patch;
 mod quest_rewards;
@@ -604,9 +605,14 @@ pub fn analyze_layouts_with_profile(
         trinkets::set_held(profile.held_at(depth as u32));
         let level =
             create_level_layout_with_profile(dungeon, !profile.has_unmodeled_generation_inputs());
-        floors.push(
-            level.to_floor_report_with_trinket_availability(true, first_effective_trinket_depth),
-        );
+        let mut report =
+            level.to_floor_report_with_trinket_availability(true, first_effective_trinket_depth);
+        if dungeon.blacksmith.depth == depth {
+            if let Some(branch) = mining::generate(dungeon, true) {
+                report.branches.push(branch.report);
+            }
+        }
+        floors.push(report);
     }
     floors
 }
@@ -681,12 +687,14 @@ pub(crate) fn analyze_floors_with_profile_and_trinket_availability(
         trinkets::set_held(profile.and_then(|profile| profile.held_at(depth as u32)));
         let configured = profile.is_some_and(|profile| !profile.has_unmodeled_generation_inputs());
         let level = create_level_partial_with_profile(dungeon, configured);
-        floors.push(
-            level.to_floor_report_with_trinket_availability(
-                configured,
-                first_effective_trinket_depth,
-            ),
-        );
+        let mut report = level
+            .to_floor_report_with_trinket_availability(configured, first_effective_trinket_depth);
+        if dungeon.blacksmith.depth == depth {
+            if let Some(branch) = mining::generate(dungeon, configured) {
+                report.branches.push(branch.report);
+            }
+        }
+        floors.push(report);
     }
     floors
 }

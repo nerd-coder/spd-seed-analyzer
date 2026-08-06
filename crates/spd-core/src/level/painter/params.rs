@@ -42,7 +42,7 @@ pub fn trap_metadata(name: &str) -> Option<TrapMetadata> {
         "OozeTrap" => (3, 0),
         "PitfallTrap" => (0, 4),
         "PoisonDartTrap" => (3, 5),
-        "RockfallTrap" => (7, 4),
+        "RockfallTrap" | "GnollRockfallTrap" => (7, 4),
         "ShockingTrap" => (2, 0),
         "StormTrap" => (2, 3),
         "SummoningTrap" => (4, 1),
@@ -63,6 +63,7 @@ pub fn trap_metadata(name: &str) -> Option<TrapMetadata> {
                 | "GrimTrap"
                 | "PoisonDartTrap"
                 | "RockfallTrap"
+                | "GnollRockfallTrap"
                 | "ToxicVent"
                 | "WornDartTrap"
         ),

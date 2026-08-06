@@ -28,6 +28,7 @@ pub struct Door {
     pub x: i32,
     pub y: i32,
     pub door_type: DoorType,
+    type_locked: bool,
 }
 
 impl Door {
@@ -36,14 +37,20 @@ impl Door {
             x: p.x,
             y: p.y,
             door_type: DoorType::Empty,
+            type_locked: false,
         }
     }
 
     /// SPD `Door.set` — only upgrades type (higher ordinal wins).
     pub fn set(&mut self, t: DoorType) {
-        if t > self.door_type {
+        if !self.type_locked && t > self.door_type {
             self.door_type = t;
         }
+    }
+
+    pub(crate) fn set_and_lock(&mut self, t: DoorType) {
+        self.set(t);
+        self.type_locked = true;
     }
 }
 

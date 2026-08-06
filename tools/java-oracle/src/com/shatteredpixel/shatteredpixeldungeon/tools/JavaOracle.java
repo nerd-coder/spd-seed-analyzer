@@ -27,9 +27,9 @@ public final class JavaOracle {
 	}
 
 	public static void main(String[] args) {
-		if (args.length < 1 || args.length > 3) {
+		if (args.length < 1 || args.length > 4) {
 			System.err.println(
-					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection]");
+					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH | mining-level DEPTH crystal|gnoll | generator-deck-rollover | generator-lifecycle | shop-bag-selection]");
 			System.exit(2);
 		}
 
@@ -56,6 +56,16 @@ public final class JavaOracle {
 				args.length == 2 && "secret-library-order".equals(args[1]);
 		boolean cavesBossPatch = args.length == 2 && "caves-boss-patch".equals(args[1]);
 		boolean hallsPaintTrace = args.length == 3 && "halls-paint-trace".equals(args[1]);
+		boolean miningLevel = args.length == 4 && "mining-level".equals(args[1]);
+		if (miningLevel) {
+			System.out.print(MiningLevelOracle.generateJson(
+					inputSeed, numericSeed, Integer.parseInt(args[2]), args[3]));
+			return;
+		}
+		if (args.length == 4) {
+			System.err.println("Unknown oracle contract: " + args[1]);
+			System.exit(2);
+		}
 		if (secretLibraryOrder) {
 			System.out.print(FloorOracle.generateSecretLibraryOrderJson(inputSeed, numericSeed));
 			return;
@@ -365,7 +375,7 @@ public final class JavaOracle {
 		return json.toString();
 	}
 
-	private static void appendTransitions(
+	static void appendTransitions(
 			StringBuilder json, List<FloorVisualFacts.TransitionFact> transitions) {
 		for (int index = 0; index < transitions.size(); index++) {
 			FloorVisualFacts.TransitionFact transition = transitions.get(index);
@@ -389,7 +399,7 @@ public final class JavaOracle {
 		}
 	}
 
-	private static void appendTraps(StringBuilder json, List<FloorVisualFacts.TrapFact> traps) {
+	static void appendTraps(StringBuilder json, List<FloorVisualFacts.TrapFact> traps) {
 		for (int index = 0; index < traps.size(); index++) {
 			FloorVisualFacts.TrapFact trap = traps.get(index);
 			json.append("        { \"cell\": ").append(trap.cell)
@@ -403,7 +413,7 @@ public final class JavaOracle {
 		}
 	}
 
-	private static void appendPlants(StringBuilder json, List<FloorVisualFacts.PlantFact> plants) {
+	static void appendPlants(StringBuilder json, List<FloorVisualFacts.PlantFact> plants) {
 		for (int index = 0; index < plants.size(); index++) {
 			FloorVisualFacts.PlantFact plant = plants.get(index);
 			json.append("        { \"cell\": ").append(plant.cell)
@@ -414,7 +424,7 @@ public final class JavaOracle {
 		}
 	}
 
-	private static void appendBlobs(StringBuilder json, List<FloorVisualFacts.BlobFact> blobs) {
+	static void appendBlobs(StringBuilder json, List<FloorVisualFacts.BlobFact> blobs) {
 		for (int blobIndex = 0; blobIndex < blobs.size(); blobIndex++) {
 			FloorVisualFacts.BlobFact blob = blobs.get(blobIndex);
 			json.append("        {\n");

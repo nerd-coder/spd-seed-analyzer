@@ -43,6 +43,8 @@ pub const CRYSTAL_DOOR: i32 = 31;
 pub const CUSTOM_DECO_EMPTY: i32 = 32;
 pub const REGION_DECO: i32 = 33;
 pub const REGION_DECO_ALT: i32 = 34;
+pub const MINE_CRYSTAL: i32 = 35;
+pub const MINE_BOULDER: i32 = 36;
 pub const ENTRANCE_SP: i32 = 37;
 const NULL_TILE: i32 = -1;
 
@@ -113,6 +115,8 @@ pub struct TerrainMap {
     pub trap_names: Vec<Option<&'static str>>,
     /// `EXIT` cells backed by an explicit quest-branch transition.
     pub branch_exits: Vec<usize>,
+    /// `ENTRANCE` cells returning from a side branch to its main-path origin.
+    pub branch_entrances: Vec<usize>,
     /// Painter-complete custom ground overlays, in Java insertion order.
     pub custom_tiles: Vec<MapCustomTile>,
     /// Painter-complete custom wall overlays, in Java insertion order.
@@ -228,6 +232,8 @@ impl TerrainMap {
                 | SECRET_DOOR
                 | REGION_DECO
                 | REGION_DECO_ALT
+                | MINE_CRYSTAL
+                | MINE_BOULDER
         )
     }
 
@@ -432,6 +438,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
     let trap_destroys_items = vec![false; len];
     let trap_names = vec![None; len];
     let branch_exits = Vec::new();
+    let branch_entrances = Vec::new();
 
     Some(TerrainMap {
         width,
@@ -455,6 +462,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
         trap_destroys_items,
         trap_names,
         branch_exits,
+        branch_entrances,
         custom_tiles: Vec::new(),
         custom_walls: Vec::new(),
     })

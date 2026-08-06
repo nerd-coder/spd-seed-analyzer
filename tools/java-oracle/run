@@ -21,13 +21,15 @@ figure_eight_trace=""
 free_space_trace=""
 caves_boss_patch=""
 halls_paint_trace=""
+mining_level_depth=""
+mining_level_objective=""
 
 usage() {
 	cat >&2 <<'EOF'
 Usage: tools/java-oracle/run [--source PATH] [--output FILE]
                              [--depth 1 | --final-heaps-depth 1..26 |
                              --figure-eight-trace DEPTH | --free-space-trace DEPTH | --halls-paint-trace DEPTH |
-                             --caves-boss-patch |
+                             --caves-boss-patch | --mining-level DEPTH crystal|gnoll |
                              --generator-deck-rollover | --generator-lifecycle | --imp-ring-deck | --quest-npc-placement |
                              --shop-bag-selection | --sacrifice-reward] SEED
 
@@ -48,6 +50,8 @@ and non-advancing RNG probes after each room callback and paintDoors for
 regular floors 2-4, 6-9, 12, 16-19, and 21-24.
 With --sacrifice-reward, applies Parchment Scrap +3 at the floor-13 entry
 boundary and captures the reward stored in the SacrificialFire blob.
+With --mining-level, directly forces the named Blacksmith objective and captures
+the branch-1 MiningLevel at the createMobs boundary. This is not a natural roll.
 EOF
 }
 
@@ -120,6 +124,12 @@ while (($# > 0)); do
 			halls_paint_trace="$2"
 			shift 2
 			;;
+		--mining-level)
+			[[ $# -ge 3 ]] || { usage; exit 2; }
+			mining_level_depth="$2"
+			mining_level_objective="$3"
+			shift 3
+			;;
 		-h|--help)
 			usage
 			exit 0
@@ -149,6 +159,14 @@ if [[ -n "$depth" && -n "$final_heaps_depth" ]]; then
 	echo "--depth and --final-heaps-depth are separate contracts and cannot be combined" >&2
 	exit 2
 fi
+if [[ -n "$mining_level_depth" && (! "$mining_level_depth" =~ ^(12|13|14)$) ]]; then
+	echo "The mining-level oracle supports depths 12 through 14" >&2
+	exit 2
+fi
+if [[ -n "$mining_level_depth" && "$mining_level_objective" != "crystal" && "$mining_level_objective" != "gnoll" ]]; then
+	echo "The mining-level objective must be crystal or gnoll" >&2
+	exit 2
+fi
 selected_contracts=0
 [[ -n "$depth" ]] && ((selected_contracts += 1))
 [[ -n "$final_heaps_depth" ]] && ((selected_contracts += 1))
@@ -162,6 +180,7 @@ selected_contracts=0
 [[ -n "$figure_eight_trace" ]] && ((selected_contracts += 1))
 [[ -n "$caves_boss_patch" ]] && ((selected_contracts += 1))
 [[ -n "$halls_paint_trace" ]] && ((selected_contracts += 1))
+[[ -n "$mining_level_depth" ]] && ((selected_contracts += 1))
 if ((selected_contracts > 1)); then
 	echo "Choose only one oracle contract" >&2
 	exit 2
@@ -245,6 +264,10 @@ if [[ -n "$caves_boss_patch" ]]; then
 fi
 if [[ -n "$halls_paint_trace" ]]; then
 	gradle_args+=(-PoracleHallsPaintTrace="$halls_paint_trace")
+fi
+if [[ -n "$mining_level_depth" ]]; then
+	gradle_args+=(-PoracleMiningLevelDepth="$mining_level_depth")
+	gradle_args+=(-PoracleMiningLevelObjective="$mining_level_objective")
 fi
 gradle_args+=(:core:javaOracleDump)
 

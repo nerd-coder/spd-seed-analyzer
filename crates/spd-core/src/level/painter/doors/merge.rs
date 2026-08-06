@@ -170,7 +170,7 @@ pub(super) fn merge_rooms(
     merge_rooms_with_terrain(map, r, n, start, EMPTY, depth)
 }
 
-pub(in crate::level::painter) fn merge_rooms_with_terrain(
+pub(crate) fn merge_rooms_with_terrain(
     map: &mut TerrainMap,
     r: &Room,
     n: &Room,

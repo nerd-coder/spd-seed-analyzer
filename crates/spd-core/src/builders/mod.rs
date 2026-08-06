@@ -142,6 +142,32 @@ pub fn build_rooms(
     false
 }
 
+/// `MiningLevel.builder()`: one long FigureEight path and one tunnel per path/branch room.
+pub(crate) fn build_mining_rooms(rooms: &mut Vec<Room>, depth: i32, max_tries: u32) -> bool {
+    let params = BuilderParams {
+        path_length: 0.8,
+        path_len_jitter: [1.0, 0.0, 0.0, 0.0],
+        path_tunnel_chances: [1.0, 0.0, 0.0],
+        branch_tunnel_chances: [1.0, 0.0, 0.0],
+        ..Default::default()
+    };
+    let mut state = figure_eight::FigureEightState::default();
+    for _ in 0..max_tries {
+        clear_all_connections(rooms);
+        for room in rooms.iter_mut() {
+            room.set_empty();
+        }
+        rooms.retain(|room| room.kind != crate::rooms::types::RoomKind::Connection);
+        for (id, room) in rooms.iter_mut().enumerate() {
+            room.id = id;
+        }
+        if figure_eight::build(rooms, &params, depth, &mut state, &mut |_| {}).is_ok() {
+            return true;
+        }
+    }
+    false
+}
+
 /// Pinned `SewerBossLevel.builder()` retry loop.
 pub(crate) fn build_sewer_boss_rooms(
     rooms: &mut Vec<Room>,

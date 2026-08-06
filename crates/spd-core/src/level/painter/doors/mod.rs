@@ -20,7 +20,7 @@ use crate::rooms::types::RoomKind;
 
 pub use model::{apply_room_door_types, place_doors_for_room, DoorMap, DoorType};
 
-pub(super) use merge::merge_rooms_with_terrain;
+pub(crate) use merge::merge_rooms_with_terrain;
 use merge::{is_mergeable_standard, is_normal_size, merge_rooms};
 
 /// Graph edge: non-blocked door types (SPD `Room.edges`).

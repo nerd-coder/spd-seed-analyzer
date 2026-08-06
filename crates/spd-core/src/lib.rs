@@ -25,8 +25,9 @@ pub use java_random::JavaRandom;
 pub use random::Random;
 pub use report::{
     AmbitiousImpQuestBaseline, AmbitiousImpQuestContract, AnalyzeError, BlacksmithObjective,
-    FloorReport, GhostTarget, GuaranteedAppearance, GuaranteedAppearanceKind, ImpTarget,
-    ImpTargetRule, ItemCondition, ItemDependencyCondition, ItemEnchantment, ItemSpawnCondition,
+    BranchAccessReport, BranchFloorId, BranchFloorKind, BranchFloorReport, FloorReport,
+    GhostTarget, GuaranteedAppearance, GuaranteedAppearanceKind, ImpTarget, ImpTargetRule,
+    ItemCondition, ItemDependencyCondition, ItemEnchantment, ItemSpawnCondition,
     OldWandmakerQuestBaseline, OldWandmakerQuestContract, QuestDepthRange, QuestReport,
     QuestRewardSelection, SadGhostQuestBaseline, SadGhostQuestContract, SeedInfo, SeedReport,
     TrollBlacksmithQuestBaseline, TrollBlacksmithQuestContract, WandmakerObjective,

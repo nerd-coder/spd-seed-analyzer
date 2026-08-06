@@ -741,6 +741,7 @@ impl LevelState {
             // NPC, mob, and item population. Final entity maps remain internal.
             map: exact_map,
             assumed_map,
+            branches: Vec::new(),
         }
     }
 }
