@@ -150,6 +150,10 @@ test("Don't let me down retries an empty search from a random seed", async ({
       { timeout: 60_000 }
     )
     .toBeGreaterThan(120)
+  await expect(page.getByText('Attempt 2')).toBeVisible()
+  await expect(page.getByText(/^Start seed \d+$/)).not.toHaveText(
+    'Start seed 111'
+  )
 
   await page.getByRole('button', { name: 'Cancel' }).click()
   await expect(page.getByText('Search cancelled')).toBeVisible()

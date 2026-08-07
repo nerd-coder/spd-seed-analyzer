@@ -57,6 +57,8 @@ export type FinderRunState = {
   status: FinderStatus
   scanned: number
   requestedCandidates: number
+  attemptNumber: number
+  attemptStartSeed: number | null
   currentCandidateNumber: number | null
   currentCandidateSeed: number | null
   currentDepth: number | null
@@ -75,6 +77,8 @@ export const INITIAL_FINDER_RUN: FinderRunState = {
   status: 'idle',
   scanned: 0,
   requestedCandidates: 0,
+  attemptNumber: 0,
+  attemptStartSeed: null,
   currentCandidateNumber: null,
   currentCandidateSeed: null,
   currentDepth: null,

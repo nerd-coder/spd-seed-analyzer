@@ -102,6 +102,8 @@ export async function startFinderSearch(config: FinderConfig) {
       ...INITIAL_FINDER_RUN,
       status: 'running',
       requestedCandidates: config.candidateCount,
+      attemptNumber: 1,
+      attemptStartSeed: config.startSeed,
       currentDepth: config.floors,
       nextSeed: config.startSeed,
       startedAt: Date.now(),
@@ -132,6 +134,7 @@ export async function startFinderSearch(config: FinderConfig) {
   $activeFinderId.set(id)
   try {
     let attemptStartSeed = config.startSeed
+    let attemptNumber = 1
     while (true) {
       const { nonStop: _nonStop, ...searchConfig } = {
         ...config,
@@ -168,11 +171,14 @@ export async function startFinderSearch(config: FinderConfig) {
 
       if (config.nonStop && result.matches.length === 0) {
         attemptStartSeed = randomStartSeed()
+        attemptNumber += 1
         const current = $finderSessions.get().find((item) => item.id === id)
         if (current?.run.status !== 'running') return
         patchFinderSession(id, {
           ...current.run,
           scanned: 0,
+          attemptNumber,
+          attemptStartSeed,
           currentCandidateNumber: null,
           currentCandidateSeed: null,
           nextSeed: attemptStartSeed,
@@ -187,6 +193,8 @@ export async function startFinderSearch(config: FinderConfig) {
         status: 'completed',
         scanned: result.candidatesScanned,
         requestedCandidates: config.candidateCount,
+        attemptNumber,
+        attemptStartSeed,
         currentCandidateNumber: result.candidatesScanned || null,
         currentCandidateSeed:
           result.candidatesScanned > 0

@@ -220,6 +220,14 @@ export function FinderResults({
           </CardAction>
         </CardHeader>
         <CardContent>
+          {run.status === 'running' && run.attemptStartSeed !== null ? (
+            <div className="mb-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+              <span>Attempt {run.attemptNumber}</span>
+              <span className="font-mono">
+                Start seed {run.attemptStartSeed}
+              </span>
+            </div>
+          ) : null}
           <Progress
             value={progress}
             aria-label={`${run.scanned} of ${run.requestedCandidates} candidates scanned`}
