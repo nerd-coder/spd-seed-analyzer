@@ -136,7 +136,7 @@ test("Don't let me down retries an empty search from a random seed", async ({
     .getByRole('button', { name: "About Don't let me down mode" })
     .hover()
   await expect(page.getByRole('tooltip')).toContainText(
-    'retry from another random seed'
+    'until the targeted result count is reached'
   )
   await nonStop.click()
   await page.getByRole('button', { name: 'Find' }).click()

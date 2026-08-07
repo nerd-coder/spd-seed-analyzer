@@ -278,7 +278,8 @@ export function FinderForm({
                   </button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  If a search finds no results, retry from another random seed.
+                  Keep searching from new random seeds until the targeted result
+                  count is reached.
                 </TooltipContent>
               </Tooltip>
             </div>

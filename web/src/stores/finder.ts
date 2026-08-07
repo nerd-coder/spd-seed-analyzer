@@ -4,8 +4,22 @@ import {
   INITIAL_FINDER_RUN,
   randomStartSeed,
 } from '@/components/finder/finder-types'
+import type { SeedSearchMatch } from '@/lib/spd-wasm'
 import { searchSeedsInWorker, type WorkerTask } from '@/lib/spd-worker-client'
 import { AppStore, derivedStore } from './store-utils'
+
+function mergeMatches(
+  existing: SeedSearchMatch[],
+  incoming: SeedSearchMatch[]
+): SeedSearchMatch[] {
+  if (incoming.length === 0) return existing
+  if (existing.length === 0) return incoming
+  const bySeed = new Map(existing.map((match) => [match.seed.numeric, match]))
+  for (const match of incoming) {
+    bySeed.set(match.seed.numeric, match)
+  }
+  return Array.from(bySeed.values())
+}
 
 export const MAX_FINDER_SESSIONS = 10
 
@@ -135,10 +149,13 @@ export async function startFinderSearch(config: FinderConfig) {
   try {
     let attemptStartSeed = config.startSeed
     let attemptNumber = 1
+    let accumulatedMatches: SeedSearchMatch[] = []
     while (true) {
+      const remainingMatches = config.maxMatches - accumulatedMatches.length
       const { nonStop: _nonStop, ...searchConfig } = {
         ...config,
         startSeed: attemptStartSeed,
+        maxMatches: remainingMatches,
       }
       const task = searchSeedsInWorker(
         searchConfig,
@@ -150,7 +167,7 @@ export async function startFinderSearch(config: FinderConfig) {
             scanned: result.candidatesScanned,
             nextSeed: result.nextSeed,
             exhausted: result.exhausted,
-            matches: result.matches,
+            matches: mergeMatches(accumulatedMatches, result.matches),
             message: result.message,
           })
         },
@@ -169,7 +186,11 @@ export async function startFinderSearch(config: FinderConfig) {
       const result = await task.promise
       if (cancelledIds.has(id)) return
 
-      if (config.nonStop && result.matches.length === 0) {
+      accumulatedMatches = mergeMatches(accumulatedMatches, result.matches)
+
+      // Non-stop keeps retrying from fresh random seeds until the target
+      // result count is filled (or the user cancels).
+      if (config.nonStop && accumulatedMatches.length < config.maxMatches) {
         attemptStartSeed = randomStartSeed()
         attemptNumber += 1
         const current = $finderSessions.get().find((item) => item.id === id)
@@ -183,7 +204,7 @@ export async function startFinderSearch(config: FinderConfig) {
           currentCandidateSeed: null,
           nextSeed: attemptStartSeed,
           exhausted: false,
-          matches: [],
+          matches: accumulatedMatches,
           message: null,
         })
         continue
@@ -204,12 +225,13 @@ export async function startFinderSearch(config: FinderConfig) {
         nextSeed: result.nextSeed,
         exhausted: result.exhausted,
         cancelRequested: false,
-        completionReason: result.exhausted
-          ? 'exhausted'
-          : result.matches.length >= config.maxMatches
+        completionReason:
+          accumulatedMatches.length >= config.maxMatches
             ? 'result-limit'
-            : 'scanned',
-        matches: result.matches,
+            : result.exhausted
+              ? 'exhausted'
+              : 'scanned',
+        matches: accumulatedMatches,
         message: result.message,
         error: null,
         startedAt: session.run.startedAt,
