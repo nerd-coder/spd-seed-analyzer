@@ -1,4 +1,5 @@
 import {
+  InfoIcon,
   MagnifyingGlassIcon,
   SpinnerGapIcon,
   StopIcon,
@@ -60,6 +61,7 @@ export function FinderForm({
     floors,
     maxMatches,
     matchMode,
+    nonStop,
     constraints,
   } = useStore($finderForm)
 
@@ -196,6 +198,7 @@ export function FinderForm({
       ),
       matchMode,
       maxMatches: Number(maxMatches),
+      nonStop,
     })
   }
 
@@ -242,22 +245,53 @@ export function FinderForm({
           onUpdate={updateConstraint}
         />
       </FieldGroup>
-      <div className="flex items-center justify-between gap-2">
-        <Field orientation="horizontal" className="w-auto gap-2">
-          <FieldLabel htmlFor="finder-match-rule">
-            {matchMode === 'all' ? 'Match all' : 'Match any'}
-          </FieldLabel>
-          <Switch
-            id="finder-match-rule"
-            size="sm"
-            checked={matchMode === 'all'}
-            disabled={running}
-            onCheckedChange={(checked) =>
-              updateState({ matchMode: checked ? 'all' : 'any' })
-            }
-            aria-label={matchMode === 'all' ? 'Match all' : 'Match any'}
-          />
-        </Field>
+      <div className="flex items-end justify-between gap-2">
+        <div className="flex flex-col gap-2">
+          <Field orientation="horizontal" className="w-auto gap-2">
+            <FieldLabel htmlFor="finder-match-rule">
+              {matchMode === 'all' ? 'Match all' : 'Match any'}
+            </FieldLabel>
+            <Switch
+              id="finder-match-rule"
+              size="sm"
+              checked={matchMode === 'all'}
+              disabled={running}
+              onCheckedChange={(checked) =>
+                updateState({ matchMode: checked ? 'all' : 'any' })
+              }
+              aria-label={matchMode === 'all' ? 'Match all' : 'Match any'}
+            />
+          </Field>
+          <Field orientation="horizontal" className="w-auto gap-2">
+            <div className="flex flex-1 items-center gap-1">
+              <FieldLabel htmlFor="finder-non-stop">
+                Don&apos;t let me down
+              </FieldLabel>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded-sm focus-visible:ring-2 focus-visible:outline-none"
+                    aria-label="About Don't let me down mode"
+                  >
+                    <InfoIcon className="size-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  If a search finds no results, retry from another random seed.
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <Switch
+              id="finder-non-stop"
+              size="sm"
+              checked={nonStop}
+              disabled={running}
+              onCheckedChange={(checked) => updateState({ nonStop: checked })}
+              aria-label="Don't let me down"
+            />
+          </Field>
+        </div>
         {running ? (
           <Button
             type="button"
@@ -284,11 +318,11 @@ export function FinderForm({
                 aria-keyshortcuts="Control+F"
               >
                 <MagnifyingGlassIcon data-icon="inline-start" />
-                Find seeds
+                Find
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              Find seeds <Kbd>Ctrl + F</Kbd>
+              Find <Kbd>Ctrl + F</Kbd>
             </TooltipContent>
           </Tooltip>
         )}

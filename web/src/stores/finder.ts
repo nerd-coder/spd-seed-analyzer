@@ -2,6 +2,7 @@ import {
   type FinderConfig,
   type FinderRunState,
   INITIAL_FINDER_RUN,
+  randomStartSeed,
 } from '@/components/finder/finder-types'
 import { searchSeedsInWorker, type WorkerTask } from '@/lib/spd-worker-client'
 import { AppStore, derivedStore } from './store-utils'
@@ -130,58 +131,84 @@ export async function startFinderSearch(config: FinderConfig) {
   }
   $activeFinderId.set(id)
   try {
-    const task = searchSeedsInWorker(
-      config,
-      (result) => {
-        const current = $finderSessions.get().find((item) => item.id === id)
-        if (current?.run.status !== 'running') return
-        patchFinderSession(id, {
-          ...current.run,
-          scanned: result.candidatesScanned,
-          nextSeed: result.nextSeed,
-          exhausted: result.exhausted,
-          matches: result.matches,
-          message: result.message,
-        })
-      },
-      ({ candidateNumber, seed, depth }) => {
-        const current = $finderSessions.get().find((item) => item.id === id)
-        if (current?.run.status !== 'running') return
-        patchFinderSession(id, {
-          ...current.run,
-          currentCandidateNumber: candidateNumber,
-          currentCandidateSeed: seed,
-          currentDepth: depth,
-        })
+    let attemptStartSeed = config.startSeed
+    while (true) {
+      const { nonStop: _nonStop, ...searchConfig } = {
+        ...config,
+        startSeed: attemptStartSeed,
       }
-    )
-    searchTasks.set(id, task)
-    const result = await task.promise
-    if (cancelledIds.has(id)) return
-    patchFinderSession(id, {
-      status: 'completed',
-      scanned: result.candidatesScanned,
-      requestedCandidates: config.candidateCount,
-      currentCandidateNumber: result.candidatesScanned || null,
-      currentCandidateSeed:
-        result.candidatesScanned > 0
-          ? config.startSeed + result.candidatesScanned - 1
-          : null,
-      currentDepth: config.floors,
-      nextSeed: result.nextSeed,
-      exhausted: result.exhausted,
-      cancelRequested: false,
-      completionReason: result.exhausted
-        ? 'exhausted'
-        : result.matches.length >= config.maxMatches
-          ? 'result-limit'
-          : 'scanned',
-      matches: result.matches,
-      message: result.message,
-      error: null,
-      startedAt: session.run.startedAt,
-      finishedAt: Date.now(),
-    })
+      const task = searchSeedsInWorker(
+        searchConfig,
+        (result) => {
+          const current = $finderSessions.get().find((item) => item.id === id)
+          if (current?.run.status !== 'running') return
+          patchFinderSession(id, {
+            ...current.run,
+            scanned: result.candidatesScanned,
+            nextSeed: result.nextSeed,
+            exhausted: result.exhausted,
+            matches: result.matches,
+            message: result.message,
+          })
+        },
+        ({ candidateNumber, seed, depth }) => {
+          const current = $finderSessions.get().find((item) => item.id === id)
+          if (current?.run.status !== 'running') return
+          patchFinderSession(id, {
+            ...current.run,
+            currentCandidateNumber: candidateNumber,
+            currentCandidateSeed: seed,
+            currentDepth: depth,
+          })
+        }
+      )
+      searchTasks.set(id, task)
+      const result = await task.promise
+      if (cancelledIds.has(id)) return
+
+      if (config.nonStop && result.matches.length === 0) {
+        attemptStartSeed = randomStartSeed()
+        const current = $finderSessions.get().find((item) => item.id === id)
+        if (current?.run.status !== 'running') return
+        patchFinderSession(id, {
+          ...current.run,
+          scanned: 0,
+          currentCandidateNumber: null,
+          currentCandidateSeed: null,
+          nextSeed: attemptStartSeed,
+          exhausted: false,
+          matches: [],
+          message: null,
+        })
+        continue
+      }
+
+      patchFinderSession(id, {
+        status: 'completed',
+        scanned: result.candidatesScanned,
+        requestedCandidates: config.candidateCount,
+        currentCandidateNumber: result.candidatesScanned || null,
+        currentCandidateSeed:
+          result.candidatesScanned > 0
+            ? attemptStartSeed + result.candidatesScanned - 1
+            : null,
+        currentDepth: config.floors,
+        nextSeed: result.nextSeed,
+        exhausted: result.exhausted,
+        cancelRequested: false,
+        completionReason: result.exhausted
+          ? 'exhausted'
+          : result.matches.length >= config.maxMatches
+            ? 'result-limit'
+            : 'scanned',
+        matches: result.matches,
+        message: result.message,
+        error: null,
+        startedAt: session.run.startedAt,
+        finishedAt: Date.now(),
+      })
+      break
+    }
   } catch (error) {
     if (cancelledIds.has(id)) return
     patchFinderSession(id, {

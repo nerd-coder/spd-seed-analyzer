@@ -42,6 +42,7 @@ export type FinderConfig = {
   constraints: SeedSearchConstraint[]
   matchMode: SeedSearchMatchMode
   maxMatches: number
+  nonStop: boolean
 }
 
 export type FinderCompletionReason = 'scanned' | 'result-limit' | 'exhausted'

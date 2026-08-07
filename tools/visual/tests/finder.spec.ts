@@ -15,8 +15,8 @@ async function configureNoMatchSearch(page: Page, startSeed: string) {
 }
 
 async function startAndWait(page: Page) {
-  await page.getByRole('button', { name: 'Find seeds' }).click()
-  await expect(page.getByRole('button', { name: 'Find seeds' })).toBeVisible({
+  await page.getByRole('button', { name: 'Find' }).click()
+  await expect(page.getByRole('button', { name: 'Find' })).toBeVisible({
     timeout: 60_000,
   })
 }
@@ -104,15 +104,53 @@ test('finder shortcuts randomize the seed and submit the search', async ({
   await page.keyboard.press('Control+r')
   await expect(startSeed).not.toHaveValue(seedBefore)
 
-  const findButton = page.getByRole('button', { name: 'Find seeds' })
+  const findButton = page.getByRole('button', { name: 'Find' })
   await expect(findButton).toHaveAttribute('aria-keyshortcuts', 'Control+F')
   await findButton.focus()
   await expect(
-    page.getByRole('tooltip').filter({ hasText: 'Find seeds' })
+    page.getByRole('tooltip').filter({ hasText: 'Find' })
   ).toContainText('Ctrl + F')
 
   await page.keyboard.press('Control+f')
   await expect(page.getByText('10 / 10 scanned')).toBeVisible({
     timeout: 60_000,
   })
+})
+
+test("Don't let me down retries an empty search from a random seed", async ({
+  page,
+}) => {
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
+  await page.addInitScript((storage) => {
+    localStorage.clear()
+    localStorage.setItem(storage.mode, 'finder')
+    localStorage.setItem(storage.theme, 'light')
+  }, APP_STORAGE)
+
+  await page.goto('/')
+  await configureNoMatchSearch(page, '111')
+
+  const nonStop = page.getByRole('switch', { name: "Don't let me down" })
+  await expect(nonStop).toBeVisible()
+  await page
+    .getByRole('button', { name: "About Don't let me down mode" })
+    .hover()
+  await expect(page.getByRole('tooltip')).toContainText(
+    'retry from another random seed'
+  )
+  await nonStop.click()
+  await page.getByRole('button', { name: 'Find' }).click()
+
+  await expect
+    .poll(
+      async () => {
+        const text = await page.getByText(/^Current:/).textContent()
+        return Number(text?.match(/^Current:\s+(\d+)/)?.[1] ?? 0)
+      },
+      { timeout: 60_000 }
+    )
+    .toBeGreaterThan(120)
+
+  await page.getByRole('button', { name: 'Cancel' }).click()
+  await expect(page.getByText('Search cancelled')).toBeVisible()
 })

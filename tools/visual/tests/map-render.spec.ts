@@ -659,7 +659,7 @@ test('finder result displays only matched constraints', async ({ page }) => {
   await page.getByRole('combobox', { name: 'Depth' }).selectOption('17')
   await page.getByRole('spinbutton', { name: 'Results' }).fill('1')
   await page.getByLabel('Item 1 type').selectOption('Food')
-  await page.getByRole('button', { name: 'Find seeds' }).click()
+  await page.getByRole('button', { name: 'Find' }).click()
 
   await expect(page.getByText('RZN-LKU-EFS', { exact: true })).toBeVisible({
     timeout: 60_000,
@@ -705,7 +705,7 @@ test('finder includes SacrificeRoom fresh-baseline items by default', async ({
   await expect(
     page.getByRole('switch', { name: 'Include fresh-baseline matches' })
   ).toHaveCount(0)
-  await page.getByRole('button', { name: 'Find seeds' }).click()
+  await page.getByRole('button', { name: 'Find' }).click()
 
   await expect(page.getByText('PUB-CLI-VNW', { exact: true })).toBeVisible({
     timeout: 60_000,
