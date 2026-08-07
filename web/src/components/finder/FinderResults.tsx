@@ -87,12 +87,10 @@ function statusCopy(run: FinderRunState): {
 function ResultCard({
   match,
   index,
-  disabled,
   onAnalyze,
 }: {
   match: SeedSearchMatch
   index: number
-  disabled: boolean
   onAnalyze: (match: SeedSearchMatch) => void
 }) {
   const canonical = match.seed.code ?? match.seed.formatted
@@ -163,7 +161,6 @@ function ResultCard({
         <Button
           type="button"
           variant="outline"
-          disabled={disabled}
           onClick={() => onAnalyze(match)}
         >
           Analyze seed
@@ -311,7 +308,6 @@ export function FinderResults({
                 key={match.seed.numeric}
                 match={match}
                 index={index}
-                disabled={run.status === 'running'}
                 onAnalyze={onAnalyze}
               />
             ))}
