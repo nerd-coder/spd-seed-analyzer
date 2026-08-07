@@ -1,6 +1,6 @@
 import { BinocularsIcon, SpinnerGapIcon, XIcon } from '@phosphor-icons/react'
 import { useStore } from '@tanstack/react-store'
-import { useMemo, useRef } from 'react'
+import { useRef } from 'react'
 import { ScrollableSessionTabs } from '@/components/ScrollableSessionTabs'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,22 +18,19 @@ import { useSeedTabsHeight } from '@/hooks/useSeedTabsHeight'
 import type { SeedSearchMatch } from '@/lib/spd-wasm'
 import {
   $activeFinderId,
+  $finderCloseConfirmationId,
   $finderSessions,
   analyzeSeedInput,
   closeFinderSession,
   setActiveFinder,
+  setFinderCloseConfirmation,
 } from '@/stores/app'
-import { AppStore } from '@/stores/store-utils'
 import { FinderResults } from './FinderResults'
 
 export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
   const sessions = useStore($finderSessions)
   const activeId = useStore($activeFinderId)
-  const closeConfirmationStore = useMemo(
-    () => new AppStore<string | null>(null),
-    []
-  )
-  const closeConfirmationId = useStore(closeConfirmationStore)
+  const closeConfirmationId = useStore($finderCloseConfirmationId)
   const tabsRef = useRef<HTMLDivElement>(null)
   useSeedTabsHeight(tabsRef, sessions.length > 0)
 
@@ -45,7 +42,7 @@ export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
 
   function requestClose(id: string, running: boolean) {
     if (running) {
-      closeConfirmationStore.set(id)
+      setFinderCloseConfirmation(id)
       return
     }
     closeFinderSession(id)
@@ -54,7 +51,6 @@ export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
   function confirmClose() {
     if (!closeConfirmationId) return
     closeFinderSession(closeConfirmationId)
-    closeConfirmationStore.set(null)
   }
 
   if (sessions.length === 0) {
@@ -114,7 +110,7 @@ export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
       <Dialog
         open={closeConfirmationId !== null}
         onOpenChange={(open) => {
-          if (!open) closeConfirmationStore.set(null)
+          if (!open) setFinderCloseConfirmation(null)
         }}
       >
         <DialogContent showCloseButton={false}>

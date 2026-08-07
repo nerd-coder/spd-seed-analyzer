@@ -25,6 +25,7 @@ import { TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   $activeFinderSession,
   $analyzing,
+  $finderRunning,
   $formError,
   $seedInput,
   type AppMode,
@@ -41,6 +42,7 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
   const analyzing = useStore($analyzing)
   const formError = useStore($formError)
   const activeFinder = useStore($activeFinderSession)
+  const finderRunning = useStore($finderRunning)
 
   async function onAnalyze(event: FormEvent) {
     event.preventDefault()
@@ -74,16 +76,30 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
           aria-label="Analyzer mode"
         >
           <TabsTrigger value="analyze">
-            <MagnifyingGlassIcon data-icon="inline-start" />
+            {analyzing ? (
+              <SpinnerGapIcon
+                data-icon="inline-start"
+                className="animate-spin"
+              />
+            ) : (
+              <MagnifyingGlassIcon data-icon="inline-start" />
+            )}
             Analyze
           </TabsTrigger>
           <TabsTrigger value="finder">
-            <BinocularsIcon data-icon="inline-start" />
+            {finderRunning ? (
+              <SpinnerGapIcon
+                data-icon="inline-start"
+                className="animate-spin"
+              />
+            ) : (
+              <BinocularsIcon data-icon="inline-start" />
+            )}
             Find
           </TabsTrigger>
         </TabsList>
 
-        {mode === 'analyze' ? (
+        <div className={mode === 'analyze' ? undefined : 'hidden'}>
           <form onSubmit={onAnalyze}>
             <FieldGroup className="gap-2">
               <Field>
@@ -126,21 +142,22 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
               </Field>
             </FieldGroup>
           </form>
-        ) : (
+          {formError ? (
+            <Alert variant="destructive" className="mt-4">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{formError}</AlertDescription>
+            </Alert>
+          ) : null}
+        </div>
+
+        <div className={mode === 'finder' ? undefined : 'hidden'}>
           <FinderForm
             running={activeFinder?.run.status === 'running'}
             cancelRequested={activeFinder?.run.cancelRequested ?? false}
             onSearch={(config) => void startFinderSearch(config)}
             onCancel={() => cancelFinderSearch()}
           />
-        )}
-
-        {mode === 'analyze' && formError ? (
-          <Alert variant="destructive">
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{formError}</AlertDescription>
-          </Alert>
-        ) : null}
+        </div>
       </div>
     </aside>
   )

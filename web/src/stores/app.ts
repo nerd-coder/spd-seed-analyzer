@@ -15,12 +15,15 @@ import { persistentStore } from './store-utils'
 export {
   $activeFinderId,
   $activeFinderSession,
+  $finderCloseConfirmationId,
+  $finderRunning,
   $finderSessions,
   cancelFinderSearch,
   closeFinderSession,
   type FinderSession,
   MAX_FINDER_SESSIONS,
   setActiveFinder,
+  setFinderCloseConfirmation,
   startFinderSearch,
 } from './finder'
 export { $meta, loadSpdMeta, type SpdMeta } from './meta'

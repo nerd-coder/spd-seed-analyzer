@@ -32,6 +32,7 @@ export type FinderSession = {
 
 export const $finderSessions = new AppStore<FinderSession[]>([])
 export const $activeFinderId = new AppStore<string | null>(null)
+export const $finderCloseConfirmationId = new AppStore<string | null>(null)
 export const $activeFinderSession = derivedStore(
   [$finderSessions, $activeFinderId] as const,
   () => {
@@ -41,6 +42,9 @@ export const $activeFinderSession = derivedStore(
       sessions.find((session) => session.id === activeId) ?? sessions[0] ?? null
     )
   }
+)
+export const $finderRunning = derivedStore([$finderSessions] as const, () =>
+  $finderSessions.get().some((session) => session.run.status === 'running')
 )
 
 const cancelledIds = new Set<string>()
@@ -70,8 +74,15 @@ export function setActiveFinder(id: string | null) {
   $activeFinderId.set(id)
 }
 
+export function setFinderCloseConfirmation(id: string | null) {
+  $finderCloseConfirmationId.set(id)
+}
+
 export function closeFinderSession(id: string) {
   discardSearchTask(id)
+  if ($finderCloseConfirmationId.get() === id) {
+    $finderCloseConfirmationId.set(null)
+  }
   const sessions = $finderSessions.get()
   const index = sessions.findIndex((session) => session.id === id)
   if (index < 0) return

@@ -1,6 +1,6 @@
 import {
+  BinocularsIcon,
   InfoIcon,
-  MagnifyingGlassIcon,
   SpinnerGapIcon,
   StopIcon,
 } from '@phosphor-icons/react'
@@ -318,7 +318,7 @@ export function FinderForm({
                 disabled={cancelCooldown}
                 aria-keyshortcuts="Control+F"
               >
-                <MagnifyingGlassIcon data-icon="inline-start" />
+                <BinocularsIcon data-icon="inline-start" />
                 Find
               </Button>
             </TooltipTrigger>
