@@ -331,7 +331,8 @@ fn real_shop_remains_constrained_after_inherited_generation_taint() {
         candidate_count: 1,
         floors: 6,
         constraints: vec![crate::ItemConstraint {
-            class_name: "LeatherArmor".into(),
+            item_group: "armor".into(),
+            class_name: Some("LeatherArmor".into()),
             min_level: None,
             min_depth: 6,
             max_depth: 6,

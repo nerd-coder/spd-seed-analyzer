@@ -336,7 +336,8 @@ export type TrinketSelectionReport = {
 export type SeedSearchMatchMode = 'any' | 'all'
 
 export type SeedSearchConstraint = {
-  className: string
+  itemGroup: string
+  className?: string | null
   minLevel: number | null
   minDepth: number
   maxDepth: number
@@ -354,7 +355,8 @@ export type SeedSearchRequest = {
 
 export type SeedSearchEvidence = {
   constraintIndex: number
-  className: string
+  itemGroup: string
+  className?: string | null
   depth: number
   name: string
   level: number

@@ -2,16 +2,16 @@ import { PlusIcon, TrashIcon } from '@phosphor-icons/react'
 import { ItemIcon } from '@/components/ItemIcon'
 import { Button } from '@/components/ui/button'
 import { Field, FieldGroup, FieldLegend, FieldSet } from '@/components/ui/field'
-import { InputGroup, InputGroupAddon } from '@/components/ui/input-group'
+import { InputGroup } from '@/components/ui/input-group'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import {
-  NativeSelect,
-  NativeSelectOptGroup,
-  NativeSelectOption,
-} from '@/components/ui/native-select'
-import {
-  FINDER_ITEM_GROUPS,
-  finderItemLabel,
+  FINDER_GROUP_ORDER,
+  type FinderItemGroup,
+  fromCoreCategory,
+  isFinderItemGroupUpgradeable,
   isFinderItemUpgradeable,
+  itemsForGroup,
+  toCoreCategory,
 } from './finder-items'
 import { type FinderConstraint, MAX_CONSTRAINTS } from './finder-types'
 
@@ -37,9 +37,14 @@ export function ConstraintEditor({
       <FieldLegend variant="label">Item constraints</FieldLegend>
       <FieldGroup className="gap-2">
         {constraints.map((constraint, index) => {
-          const itemLabel = finderItemLabel(constraint.className)
-          const upgradeable = isFinderItemUpgradeable(constraint.className)
-          const isFirst = index === 0
+          const uiGroup = fromCoreCategory(constraint.itemGroup)
+          const itemsInGroup = itemsForGroup(uiGroup)
+
+          // Use item level upgradeable logic if an item is selected, otherwise fallback to group logic
+          const upgradeable = constraint.className
+            ? isFinderItemUpgradeable(constraint.className)
+            : isFinderItemGroupUpgradeable(uiGroup)
+
           return (
             <Field
               key={constraint.id}
@@ -47,55 +52,92 @@ export function ConstraintEditor({
             >
               <div className="flex items-center gap-1">
                 <InputGroup className="min-w-0 flex-1">
-                  <InputGroupAddon align="inline-start" className="py-0">
+                  <div className="relative flex w-10 shrink-0 items-center justify-center border-r py-0">
                     <ItemIcon
-                      classNameItem={constraint.className}
+                      classNameItem={constraint.className ?? undefined}
+                      category={
+                        constraint.className
+                          ? undefined
+                          : toCoreCategory(uiGroup)
+                      }
                       size={16}
                       sourceWidth={
-                        constraint.className.startsWith('RingOf')
+                        constraint.className?.startsWith('RingOf')
                           ? 8
                           : undefined
                       }
                       sourceHeight={
-                        constraint.className.startsWith('RingOf')
+                        constraint.className?.startsWith('RingOf')
                           ? 10
                           : undefined
                       }
                       scaleSource={false}
-                      title={itemLabel}
+                      title={
+                        constraint.className
+                          ? itemsInGroup.find(
+                              (i) => i.className === constraint.className
+                            )?.label
+                          : uiGroup
+                      }
                     />
-                  </InputGroupAddon>
+                    <NativeSelect
+                      value={uiGroup}
+                      disabled={running}
+                      aria-label={`Item ${index + 1} category`}
+                      onChange={(event) => {
+                        const newUiGroup = event.target.value as FinderItemGroup
+                        const coreCategory = toCoreCategory(newUiGroup)
+
+                        onUpdate(constraint.id, {
+                          itemGroup: coreCategory,
+                          className: null,
+                          minLevel: isFinderItemGroupUpgradeable(newUiGroup)
+                            ? constraint.minLevel
+                            : null,
+                        })
+                      }}
+                      className="absolute inset-0 h-full w-full opacity-0 cursor-pointer [&_[data-slot=native-select]]:h-full [&_[data-slot=native-select]]:border-0 [&_[data-slot=native-select]]:bg-transparent"
+                    >
+                      {FINDER_GROUP_ORDER.map((groupLabel) => (
+                        <NativeSelectOption key={groupLabel} value={groupLabel}>
+                          {groupLabel}
+                        </NativeSelectOption>
+                      ))}
+                    </NativeSelect>
+                  </div>
+
                   <NativeSelect
-                    value={constraint.className}
+                    value={constraint.className ?? 'any'}
                     disabled={running}
-                    aria-label={`Item ${index + 1} type`}
+                    aria-label={`Item ${index + 1} name`}
                     onChange={(event) => {
-                      const className = event.target.value
+                      const val = event.target.value
+                      const newClassName = val === 'any' ? null : val
+
                       onUpdate(constraint.id, {
-                        className,
-                        minLevel: isFinderItemUpgradeable(className)
+                        className: newClassName,
+                        minLevel: (
+                          newClassName
+                            ? isFinderItemUpgradeable(newClassName)
+                            : isFinderItemGroupUpgradeable(uiGroup)
+                        )
                           ? constraint.minLevel
                           : null,
                       })
                     }}
                     className="min-w-0 flex-1 [&_[data-slot=native-select]]:border-0 [&_[data-slot=native-select]]:bg-transparent [&_[data-slot=native-select]]:focus-visible:ring-0"
                   >
-                    {FINDER_ITEM_GROUPS.map((group) => (
-                      <NativeSelectOptGroup
-                        key={group.label}
-                        label={group.label}
+                    <NativeSelectOption value="any">Any</NativeSelectOption>
+                    {itemsInGroup.map((item) => (
+                      <NativeSelectOption
+                        key={item.className}
+                        value={item.className}
                       >
-                        {group.items.map((item) => (
-                          <NativeSelectOption
-                            key={item.className}
-                            value={item.className}
-                          >
-                            {item.label}
-                          </NativeSelectOption>
-                        ))}
-                      </NativeSelectOptGroup>
+                        {item.label}
+                      </NativeSelectOption>
                     ))}
                   </NativeSelect>
+
                   {upgradeable ? (
                     <NativeSelect
                       value={
@@ -124,28 +166,35 @@ export function ConstraintEditor({
                     </NativeSelect>
                   ) : null}
                 </InputGroup>
+
                 <Button
                   type="button"
                   size="icon-sm"
                   variant="ghost"
-                  className={
-                    isFirst
-                      ? undefined
-                      : 'text-destructive hover:bg-destructive/10 hover:text-destructive'
-                  }
-                  disabled={
-                    running ||
-                    (isFirst && constraints.length >= MAX_CONSTRAINTS)
-                  }
-                  onClick={isFirst ? onAdd : () => onRemove(constraint.id)}
-                  aria-label={isFirst ? 'Add item' : `Remove item ${index + 1}`}
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive shrink-0"
+                  disabled={running || constraints.length <= 1}
+                  onClick={() => onRemove(constraint.id)}
+                  aria-label={`Remove item ${index + 1}`}
                 >
-                  {isFirst ? <PlusIcon /> : <TrashIcon />}
+                  <TrashIcon />
                 </Button>
               </div>
             </Field>
           )
         })}
+
+        <div className="pt-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={running || constraints.length >= MAX_CONSTRAINTS}
+            onClick={onAdd}
+            className="w-full flex items-center justify-center gap-1"
+          >
+            <PlusIcon /> Add item
+          </Button>
+        </div>
       </FieldGroup>
     </FieldSet>
   )

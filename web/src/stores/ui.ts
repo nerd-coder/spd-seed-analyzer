@@ -30,6 +30,7 @@ export const $finderForm = new AppStore<FinderFormState>({
   constraints: [
     {
       id: 1,
+      itemGroup: 'ring',
       className: 'RingOfWealth',
       minLevel: null,
       minDepth: 1,

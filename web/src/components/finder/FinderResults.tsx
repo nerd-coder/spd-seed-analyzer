@@ -122,13 +122,13 @@ function ResultCard({
               const source = formatItemSource(evidence.source)
               return (
                 <Item
-                  key={`${evidence.constraintIndex}-${evidence.depth}-${evidence.className}`}
+                  key={`${evidence.constraintIndex}-${evidence.depth}-${evidence.className ?? evidence.itemGroup}`}
                   variant="muted"
                   size="sm"
                 >
                   <ItemMedia>
                     <ItemIcon
-                      classNameItem={evidence.className}
+                      classNameItem={evidence.className ?? undefined}
                       size={24}
                       title={evidence.name}
                     />

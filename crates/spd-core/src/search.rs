@@ -39,8 +39,9 @@ pub struct SeedSearchRequest {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ItemConstraint {
-    /// Exact Java simple class name, such as `PotionOfHealing`.
-    pub class_name: String,
+    pub item_group: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub class_name: Option<String>,
     /// Optional minimum requested upgrade level (`None` accepts any level).
     #[serde(default)]
     pub min_level: Option<i32>,
@@ -99,7 +100,9 @@ pub struct BaselineItemEvidence {
 #[serde(rename_all = "camelCase")]
 pub struct ItemMatchEvidence {
     pub constraint_index: u32,
-    pub class_name: String,
+    pub item_group: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub class_name: Option<String>,
     pub depth: u32,
     pub name: String,
     pub level: i32,
@@ -121,7 +124,7 @@ pub enum SearchError {
     #[error("constraints must contain at most {MAX_SEARCH_CONSTRAINTS} entries")]
     TooManyConstraints,
     #[error("constraints[{index}].className must not be empty or whitespace")]
-    EmptyClassName { index: usize },
+    EmptyItemGroup { index: usize },
     #[error("constraints[{index}].className must be at most 128 characters")]
     ClassNameTooLong { index: usize },
     #[error("constraints[{index}].minLevel must be between 1 and 4 when present")]
@@ -156,10 +159,16 @@ impl SeedSearchRequest {
             return Err(SearchError::TooManyConstraints);
         }
         for (index, constraint) in self.constraints.iter().enumerate() {
-            if constraint.class_name.trim().is_empty() {
-                return Err(SearchError::EmptyClassName { index });
+            if constraint.item_group.trim().is_empty() {
+                return Err(SearchError::EmptyItemGroup { index });
             }
-            if constraint.class_name.chars().count() > 128 {
+            if constraint
+                .class_name
+                .as_deref()
+                .map(|s| s.chars().count())
+                .unwrap_or(0)
+                > 128
+            {
                 return Err(SearchError::ClassNameTooLong { index });
             }
             if constraint
@@ -363,6 +372,7 @@ fn evidence_for(
     let item = matching_item(constraint, occurrence, include_baseline)?;
     Some(ItemMatchEvidence {
         constraint_index: constraint_index as u32,
+        item_group: constraint.item_group.clone(),
         class_name: constraint.class_name.clone(),
         depth: occurrence.depth,
         name: item.name.clone(),
@@ -389,18 +399,26 @@ fn matching_item<'a>(
         .iter()
         .filter(|item| item.quantity > occurrence.copy_index)
         .find(|item| {
-            let concrete_class_matches =
-                item.class_name.as_deref() == Some(constraint.class_name.as_str());
-            let candidate_class_matches = item
-                .candidate_classes
-                .iter()
-                .any(|candidate| candidate == &constraint.class_name);
-            let class_matches = match item.prediction {
-                ItemPredictionKind::Exact => concrete_class_matches || candidate_class_matches,
-                ItemPredictionKind::Baseline => {
-                    include_baseline && (concrete_class_matches || candidate_class_matches)
+            if item.category != constraint.item_group {
+                return false;
+            }
+
+            let class_matches = if let Some(class_name) = &constraint.class_name {
+                let concrete_class_matches =
+                    item.class_name.as_deref() == Some(class_name.as_str());
+                let candidate_class_matches = item
+                    .candidate_classes
+                    .iter()
+                    .any(|candidate| candidate == class_name);
+                match item.prediction {
+                    ItemPredictionKind::Exact => concrete_class_matches || candidate_class_matches,
+                    ItemPredictionKind::Baseline => {
+                        include_baseline && (concrete_class_matches || candidate_class_matches)
+                    }
+                    ItemPredictionKind::Constrained => candidate_class_matches,
                 }
-                ItemPredictionKind::Constrained => candidate_class_matches,
+            } else {
+                true
             };
 
             class_matches

@@ -1,9 +1,4 @@
-import {
-  CLASS_ICON,
-  POTION_CLASSES,
-  RING_CLASSES,
-  SCROLL_CLASSES,
-} from '@/lib/item-icons'
+import { CLASS_ICON, RING_CLASSES } from '@/lib/item-icons'
 
 export type FinderItemOption = {
   className: string
@@ -11,37 +6,10 @@ export type FinderItemOption = {
   group: FinderItemGroup
 }
 
-export type FinderItemGroup =
-  | 'Potions'
-  | 'Scrolls'
-  | 'Rings'
-  | 'Weapons'
-  | 'Armor'
-  | 'Missiles & darts'
-  | 'Wands'
-  | 'Artifacts'
-  | 'Trinkets'
-  | 'Seeds'
-  | 'Runestones'
-  | 'Supplies & other'
+export type FinderItemGroup = 'Rings' | 'Wands' | 'Artifacts'
 
-const GROUP_ORDER: FinderItemGroup[] = [
-  'Potions',
-  'Scrolls',
-  'Rings',
-  'Weapons',
-  'Armor',
-  'Missiles & darts',
-  'Wands',
-  'Artifacts',
-  'Trinkets',
-  'Seeds',
-  'Runestones',
-  'Supplies & other',
-]
+const GROUP_ORDER: FinderItemGroup[] = ['Rings', 'Wands', 'Artifacts']
 
-const POTION_SET = new Set<string>(POTION_CLASSES)
-const SCROLL_SET = new Set<string>(SCROLL_CLASSES)
 const RING_SET = new Set<string>(RING_CLASSES)
 
 const ARTIFACTS = new Set([
@@ -61,72 +29,40 @@ const ARTIFACTS = new Set([
   'UnstableSpellbook',
 ])
 
-const TRINKETS = new Set([
-  'ChaoticCenser',
-  'CrackedSpyglass',
-  'DimensionalSundial',
-  'ExoticCrystals',
-  'EyeOfNewt',
-  'FerretTuft',
-  'MimicTooth',
-  'MossyClump',
-  'ParchmentScrap',
-  'PetrifiedSeed',
-  'RatSkull',
-  'SaltCube',
-  'ShardOfOblivion',
-  'ThirteenLeafClover',
-  'TrapMechanism',
-  'VialOfBlood',
-  'WondrousResin',
-])
-
 function words(value: string): string {
   return value.replace(/([a-z])([A-Z])/g, '$1 $2')
 }
 
 export function finderItemLabel(className: string): string {
-  if (className.startsWith('PotionOf')) {
-    return `Potion of ${words(className.slice('PotionOf'.length))}`
-  }
-  if (className.startsWith('ScrollOf')) {
-    return `Scroll of ${words(className.slice('ScrollOf'.length))}`
-  }
   if (className.startsWith('RingOf')) {
     return `Ring of ${words(className.slice('RingOf'.length))}`
+  }
+  if (className.startsWith('WandOf')) {
+    return `Wand of ${words(className.slice('WandOf'.length))}`
   }
   return words(className)
 }
 
-function itemGroup(className: string): FinderItemGroup {
-  if (POTION_SET.has(className)) return 'Potions'
-  if (SCROLL_SET.has(className)) return 'Scrolls'
+function itemGroup(className: string): FinderItemGroup | null {
   if (RING_SET.has(className)) return 'Rings'
-  if (className.endsWith('Armor')) return 'Armor'
   if (className.startsWith('WandOf')) return 'Wands'
-  if (className.endsWith('Seed')) return 'Seeds'
-  if (className.startsWith('StoneOf')) return 'Runestones'
   if (ARTIFACTS.has(className)) return 'Artifacts'
-  if (TRINKETS.has(className)) return 'Trinkets'
-
-  const icon = CLASS_ICON[className]
-  if (icon >= 96 && icon <= 134) return 'Weapons'
-  if (icon >= 145 && icon <= 172) return 'Missiles & darts'
-  return 'Supplies & other'
+  return null
 }
 
 const allOptions = Array.from(
-  new Set<string>([
-    ...Object.keys(CLASS_ICON),
-    ...POTION_CLASSES,
-    ...SCROLL_CLASSES,
-    ...RING_CLASSES,
-  ])
-).map((className) => ({
-  className,
-  label: finderItemLabel(className),
-  group: itemGroup(className),
-}))
+  new Set<string>([...Object.keys(CLASS_ICON), ...RING_CLASSES])
+)
+  .map((className) => {
+    const group = itemGroup(className)
+    if (!group) return null
+    return {
+      className,
+      label: finderItemLabel(className),
+      group,
+    }
+  })
+  .filter((item): item is FinderItemOption => item !== null)
 
 export const FINDER_ITEM_GROUPS = GROUP_ORDER.map((label) => ({
   label,
@@ -135,13 +71,7 @@ export const FINDER_ITEM_GROUPS = GROUP_ORDER.map((label) => ({
     .sort((a, b) => a.label.localeCompare(b.label)),
 })).filter((group) => group.items.length > 0)
 
-const UPGRADEABLE_GROUPS = new Set<FinderItemGroup>([
-  'Rings',
-  'Weapons',
-  'Armor',
-  'Missiles & darts',
-  'Wands',
-])
+const UPGRADEABLE_GROUPS = new Set<FinderItemGroup>(['Rings', 'Wands'])
 
 const ITEM_GROUP_BY_CLASS = new Map(
   allOptions.map((item) => [item.className, item.group])
@@ -150,4 +80,36 @@ const ITEM_GROUP_BY_CLASS = new Map(
 export function isFinderItemUpgradeable(className: string): boolean {
   const group = ITEM_GROUP_BY_CLASS.get(className)
   return group !== undefined && UPGRADEABLE_GROUPS.has(group)
+}
+
+export const FINDER_GROUP_ORDER = GROUP_ORDER
+
+export function toCoreCategory(group: FinderItemGroup): string {
+  switch (group) {
+    case 'Rings':
+      return 'ring'
+    case 'Wands':
+      return 'wand'
+    case 'Artifacts':
+      return 'artifact'
+  }
+}
+
+export function fromCoreCategory(core: string): FinderItemGroup {
+  switch (core) {
+    case 'wand':
+      return 'Wands'
+    case 'artifact':
+      return 'Artifacts'
+    default:
+      return 'Rings'
+  }
+}
+
+export function isFinderItemGroupUpgradeable(group: FinderItemGroup): boolean {
+  return UPGRADEABLE_GROUPS.has(group)
+}
+
+export function itemsForGroup(group: FinderItemGroup) {
+  return FINDER_ITEM_GROUPS.find((g) => g.label === group)?.items || []
 }

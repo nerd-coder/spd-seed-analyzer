@@ -160,6 +160,7 @@ export function FinderForm({
         ...constraints,
         {
           id: nextConstraintId,
+          itemGroup: 'ring',
           className: 'RingOfWealth',
           minLevel: null,
           minDepth: 1,
@@ -189,7 +190,8 @@ export function FinderForm({
       candidateCount: Number(candidateCount),
       floors,
       constraints: constraints.map(
-        ({ className, minLevel, minDepth, maxDepth }) => ({
+        ({ itemGroup, className, minLevel, minDepth, maxDepth }) => ({
+          itemGroup,
           className,
           minLevel,
           minDepth: Number(minDepth),

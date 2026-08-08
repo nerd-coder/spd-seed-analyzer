@@ -1,3 +1,39 @@
+fn category_for(class_name: &str) -> &'static str {
+    if class_name == "Food" || class_name == "Pasty" || class_name == "Meat" {
+        "food"
+    } else if class_name.starts_with("Ring") {
+        "ring"
+    } else if class_name == "Sword"
+        || class_name == "Sickle"
+        || class_name == "Quarterstaff"
+        || class_name == "Axe"
+        || class_name == "Longsword"
+        || class_name == "RunicBlade"
+        || class_name == "Greatsword"
+        || class_name == "Mace"
+        || class_name == "Sai"
+        || class_name == "BattleAxe"
+        || class_name == "Greatshield"
+    {
+        "weapon"
+    } else if class_name == "Tomahawk" || class_name == "Dart" || class_name == "Boomerang" {
+        "missile"
+    } else if class_name.ends_with("Armor") {
+        "armor"
+    } else if class_name.starts_with("StoneOf") {
+        "stone"
+    } else if class_name.starts_with("Potion") {
+        "potion"
+    } else if class_name.starts_with("Scroll") {
+        "scroll"
+    } else if class_name.starts_with("Wand") {
+        "wand"
+    } else if class_name.ends_with("Seed") {
+        "seed"
+    } else {
+        "other"
+    }
+}
 use super::*;
 
 mod matching;
@@ -9,7 +45,8 @@ fn depth_four_search_completes_with_minimum_size_secret_larder() {
         candidate_count: 10,
         floors: 4,
         constraints: vec![ItemConstraint {
-            class_name: "RingOfWealth".into(),
+            item_group: "ring".into(),
+            class_name: Some("RingOfWealth".into()),
             min_level: None,
             min_depth: 1,
             max_depth: 4,
@@ -26,7 +63,8 @@ fn depth_four_search_completes_with_minimum_size_secret_larder() {
 
 fn constraint(class_name: &str, min_depth: u32, max_depth: u32) -> ItemConstraint {
     ItemConstraint {
-        class_name: class_name.to_string(),
+        item_group: category_for(class_name).into(),
+        class_name: Some(class_name.to_string()),
         min_level: None,
         min_depth,
         max_depth,
@@ -62,7 +100,7 @@ fn exact_floor(depth: u32, classes: &[(&str, i32)]) -> crate::FloorReport {
                     quantity: 1,
                     class_name: Some((*class_name).into()),
                     candidate_classes: Vec::new(),
-                    category: "other".into(),
+                    category: category_for(class_name).into(),
                     tier: None,
                     tier_range: None,
                     level: Some(*level),
@@ -108,10 +146,16 @@ fn validation_rejects_unbounded_and_malformed_requests() {
         Err(SearchError::EmptyConstraints)
     ));
 
-    value.constraints = vec![constraint(" \t ", 1, 1)];
+    value.constraints = vec![ItemConstraint {
+        item_group: " \t ".into(),
+        class_name: None,
+        min_level: None,
+        min_depth: 1,
+        max_depth: 1,
+    }];
     assert!(matches!(
         value.validate(),
-        Err(SearchError::EmptyClassName { index: 0 })
+        Err(SearchError::EmptyItemGroup { index: 0 })
     ));
 
     value.constraints = vec![constraint("Food", 2, 1)];
@@ -142,6 +186,7 @@ fn baseline_search_defaults_to_included_when_omitted() {
         "candidateCount": 1,
         "floors": 1,
         "constraints": [{
+            "itemGroup": "food",
             "className": "Food",
             "minDepth": 1,
             "maxDepth": 1
@@ -241,7 +286,8 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
         branches: vec![],
     };
     let constraints = [ItemConstraint {
-        class_name: "Sword".into(),
+        item_group: "weapon".into(),
+        class_name: Some("Sword".into()),
         min_level: None,
         min_depth: 13,
         max_depth: 13,
@@ -374,7 +420,7 @@ fn finder_baseline_highlights_exclude_promoted_floor_one_rewards() {
 
     let matched = &result.matches[0];
     assert_eq!(matched.evidence.len(), 1);
-    assert_eq!(matched.evidence[0].class_name, "Food");
+    assert_eq!(matched.evidence[0].class_name.as_deref(), Some("Food"));
     assert!(matched.baseline_items.iter().all(|item| {
         item.depth != 1 || item.item.class_name.as_deref() != Some("RingOfWealth")
     }));
@@ -407,7 +453,7 @@ fn sacrifice_sickle_requires_baseline_opt_in_and_is_labeled() {
     request.include_baseline = true;
     let with_baseline = search_seeds(&request).expect("baseline-inclusive search");
     let evidence = &with_baseline.matches[0].evidence[0];
-    assert_eq!(evidence.class_name, "Sickle");
+    assert_eq!(evidence.class_name.as_deref(), Some("Sickle"));
     assert_eq!(evidence.depth, 4);
     assert_eq!(evidence.level, 2);
     assert_eq!(evidence.prediction, ItemPredictionKind::Baseline);
@@ -490,6 +536,7 @@ fn every_quest_exposes_searchable_rewards_including_baseline_samples() {
     })
     .expect("quest reward search");
 
+    println!("{:?}", searchable_rewards);
     assert_eq!(result.matches.len(), 1);
     let evidence = &result.matches[0].evidence;
     assert_eq!(evidence.len(), searchable_rewards.len());
@@ -568,7 +615,7 @@ fn puzzle_solution_potions_match_exact_item_searches() {
         .expect("puzzle solution search");
 
         let evidence = &result.matches[0].evidence[0];
-        assert_eq!(evidence.class_name, class_name);
+        assert_eq!(evidence.class_name.as_deref(), Some(class_name));
         assert_eq!(evidence.depth, 1);
         assert_eq!(evidence.level, 0);
         // Seed 53 also relocates another guaranteed Purity potion into a
@@ -588,8 +635,8 @@ fn secret_honeypot_fixed_items_match_exact_search_evidence() {
 
     let evidence = matching_evidence(&[floor], &constraints, false);
     assert_eq!(evidence.len(), 2);
-    assert_eq!(evidence[0].class_name, "ShatteredPot");
-    assert_eq!(evidence[1].class_name, "Honeypot");
+    assert_eq!(evidence[0].class_name.as_deref(), Some("ShatteredPot"));
+    assert_eq!(evidence[1].class_name.as_deref(), Some("Honeypot"));
 }
 
 #[test]
@@ -627,7 +674,8 @@ fn constrained_shop_stock_never_matches_its_internal_concrete_class() {
         branches: vec![],
     };
     let constraints = [ItemConstraint {
-        class_name: "Quarterstaff".into(),
+        item_group: "weapon".into(),
+        class_name: Some("Quarterstaff".into()),
         min_level: None,
         min_depth: 6,
         max_depth: 6,
@@ -656,7 +704,8 @@ fn real_constrained_quest_class_never_matches_exact_search() {
             continue;
         };
         let constraints = [ItemConstraint {
-            class_name: internal.class_name.clone(),
+            item_group: format!("{:?}", internal.category).to_ascii_lowercase(),
+            class_name: Some(internal.class_name.clone()),
             min_level: None,
             min_depth: depth as u32,
             max_depth: depth as u32,
