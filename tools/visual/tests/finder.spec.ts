@@ -197,3 +197,125 @@ test("Don't let me down retries an empty search from a random seed", async ({
   await page.getByRole('button', { name: 'Cancel' }).click()
   await expect(page.getByText('Search cancelled')).toBeVisible()
 })
+
+test('finder search results survive page reload', async ({ page }) => {
+  const consoleErrors: string[] = []
+  const pageErrors: string[] = []
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text())
+  })
+  page.on('pageerror', (error) => pageErrors.push(error.message))
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
+  await page.goto('/')
+  await page.evaluate((storage) => {
+    localStorage.clear()
+    localStorage.setItem(storage.mode, 'finder')
+    localStorage.setItem(storage.theme, 'light')
+  }, APP_STORAGE)
+  await page.reload()
+
+  await page
+    .getByRole('spinbutton', { name: 'Start seed' })
+    .fill('3293380032588')
+  await page.getByRole('spinbutton', { name: 'Candidates' }).fill('10')
+  await page.getByRole('combobox', { name: 'Depth' }).selectOption('4')
+  await page.getByRole('spinbutton', { name: 'Results' }).fill('1')
+  await page.getByLabel('Item 1 name').selectOption('RingOfWealth')
+  await page.getByLabel('Item 1 upgrade level').selectOption('any')
+
+  await startAndWait(page)
+  await expect(
+    page.getByRole('tab', { name: '3293380032588 (1)' })
+  ).toBeVisible()
+
+  await page.reload()
+
+  await expect(
+    page.getByRole('tab', { name: '3293380032588 (1)' })
+  ).toBeVisible()
+  const result = page
+    .locator('[data-slot="item"]')
+    .filter({ hasText: 'Ring of Wealth' })
+  await expect(result).toBeVisible()
+
+  expect(consoleErrors, 'browser console errors').toEqual([])
+  expect(pageErrors, 'uncaught page errors').toEqual([])
+})
+
+test('ongoing search survives reload', async ({ page }) => {
+  const consoleErrors: string[] = []
+  const pageErrors: string[] = []
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text())
+  })
+  page.on('pageerror', (error) => pageErrors.push(error.message))
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
+  await page.goto('/')
+  await page.evaluate((storage) => {
+    localStorage.clear()
+    localStorage.setItem(storage.mode, 'finder')
+    localStorage.setItem(storage.theme, 'light')
+  }, APP_STORAGE)
+  await page.reload()
+
+  await page
+    .getByRole('spinbutton', { name: 'Start seed' })
+    .fill('3293380032588')
+  await page.getByRole('spinbutton', { name: 'Candidates' }).fill('1000')
+  await page.getByRole('combobox', { name: 'Depth' }).selectOption('4')
+  await page.getByRole('spinbutton', { name: 'Results' }).fill('5')
+  await page.getByLabel('Item 1 name').selectOption('RingOfWealth')
+  await page.getByLabel('Item 1 upgrade level').selectOption('any')
+
+  await page.getByRole('button', { name: 'Find' }).click()
+  await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible()
+
+  page.on('dialog', async (dialog) => {
+    if (dialog.type() === 'beforeunload') {
+      await dialog.accept()
+    }
+  })
+
+  await page.reload()
+
+  await expect(page.getByRole('tab', { name: /3293380032588/ })).toBeVisible()
+  await expect(
+    page.locator('[data-slot="item"]').filter({ hasText: 'Ring of Wealth' })
+  ).toBeVisible({ timeout: 60_000 })
+
+  expect(consoleErrors, 'browser console errors').toEqual([])
+  expect(pageErrors, 'uncaught page errors').toEqual([])
+})
+
+test('shows confirmation dialog when reloading during an ongoing search', async ({
+  page,
+}) => {
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
+  await page.addInitScript((storage) => {
+    localStorage.clear()
+    localStorage.setItem(storage.mode, 'finder')
+    localStorage.setItem(storage.theme, 'light')
+  }, APP_STORAGE)
+
+  await page.goto('/')
+  await page.getByRole('spinbutton', { name: 'Start seed' }).fill('1000')
+  await page.getByRole('spinbutton', { name: 'Candidates' }).fill('1000')
+  await page.getByRole('combobox', { name: 'Depth' }).selectOption('20')
+  await page.getByRole('spinbutton', { name: 'Results' }).fill('10')
+  await page.getByLabel('Item 1 name').selectOption('RingOfWealth')
+  await page.getByLabel('Item 1 upgrade level').selectOption('4')
+
+  await page.getByRole('button', { name: 'Find' }).click()
+  await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible()
+
+  let beforeUnloadTriggered = false
+  page.on('dialog', async (dialog) => {
+    if (dialog.type() === 'beforeunload') {
+      beforeUnloadTriggered = true
+      await dialog.accept()
+    }
+  })
+
+  await page.reload()
+  expect(beforeUnloadTriggered).toBe(true)
+})

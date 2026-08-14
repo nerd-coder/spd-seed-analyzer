@@ -24,6 +24,7 @@ export {
   MAX_FINDER_SESSIONS,
   setActiveFinder,
   setFinderCloseConfirmation,
+  startFinderRehydrate,
   startFinderSearch,
 } from './finder'
 export { $meta, loadSpdMeta, type SpdMeta } from './meta'

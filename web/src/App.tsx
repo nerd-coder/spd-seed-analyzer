@@ -7,9 +7,12 @@ import { SiteFooter } from '@/components/SiteFooter'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import {
+  $analyzing,
+  $finderRunning,
   $mode,
   loadSpdMeta,
   setMode,
+  startFinderRehydrate,
   startSessionRehydrate,
 } from '@/stores/app'
 
@@ -21,6 +24,20 @@ export default function App() {
   }, [])
 
   useEffect(() => startSessionRehydrate(), [])
+  useEffect(() => startFinderRehydrate(), [])
+
+  useEffect(() => {
+    function handleBeforeUnload(event: BeforeUnloadEvent) {
+      const isBusy = $analyzing.get() || $finderRunning.get()
+      if (isBusy) {
+        event.preventDefault()
+        event.returnValue = ''
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [])
 
   return (
     <TooltipProvider delayDuration={200}>
