@@ -749,3 +749,73 @@ fn search_does_not_wrap_at_total_seeds() {
     assert!(result.exhausted);
     assert!(!result.match_limit_reached);
 }
+
+#[test]
+fn any_item_in_category_matches_exact_and_upgraded_items() {
+    let mut floor = exact_floor(2, &[]);
+    floor.items.push(
+        crate::report::ItemEntry {
+            name: "Ring of Wealth +1".into(),
+            quantity: 1,
+            class_name: Some("RingOfWealth".into()),
+            candidate_classes: Vec::new(),
+            category: "ring".into(),
+            tier: None,
+            tier_range: None,
+            level: Some(1),
+            level_range: None,
+            cursed: Some(false),
+            enchantment: None,
+            prediction: ItemPredictionKind::Exact,
+            spawn_conditions: Vec::new(),
+            conditions: Vec::new(),
+            notes: Vec::new(),
+            source: Some("CrystalVault".into()),
+        }
+        .into(),
+    );
+
+    // Matches any ring
+    let any_ring = ItemConstraint {
+        item_group: "ring".into(),
+        class_name: None,
+        min_level: None,
+        min_depth: 1,
+        max_depth: 5,
+    };
+    let evidence = matching_evidence(&[floor.clone()], &[any_ring], false);
+    assert_eq!(evidence.len(), 1);
+    assert_eq!(evidence[0].class_name.as_deref(), Some("RingOfWealth"));
+    assert_eq!(evidence[0].level, 1);
+
+    // Matches any ring with min_level <= 1
+    let upgraded_ring = ItemConstraint {
+        item_group: "ring".into(),
+        class_name: None,
+        min_level: Some(1),
+        min_depth: 1,
+        max_depth: 5,
+    };
+    let evidence = matching_evidence(&[floor.clone()], &[upgraded_ring], false);
+    assert_eq!(evidence.len(), 1);
+
+    // Does not match when min_level > 1
+    let higher_level_ring = ItemConstraint {
+        item_group: "ring".into(),
+        class_name: None,
+        min_level: Some(2),
+        min_depth: 1,
+        max_depth: 5,
+    };
+    assert!(matching_evidence(&[floor.clone()], &[higher_level_ring], false).is_empty());
+
+    // Does not match another category
+    let any_wand = ItemConstraint {
+        item_group: "wand".into(),
+        class_name: None,
+        min_level: None,
+        min_depth: 1,
+        max_depth: 5,
+    };
+    assert!(matching_evidence(&[floor], &[any_wand], false).is_empty());
+}

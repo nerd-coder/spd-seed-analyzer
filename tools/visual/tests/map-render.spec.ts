@@ -658,7 +658,8 @@ test('finder result displays only matched constraints', async ({ page }) => {
   await page.getByRole('spinbutton', { name: 'Candidates' }).fill('10')
   await page.getByRole('combobox', { name: 'Depth' }).selectOption('17')
   await page.getByRole('spinbutton', { name: 'Results' }).fill('1')
-  await page.getByLabel('Item 1 type').selectOption('Food')
+  await page.getByLabel('Item 1 name').selectOption('RingOfSharpshooting')
+  await page.getByLabel('Item 1 upgrade level').selectOption('4')
   await page.getByRole('button', { name: 'Find' }).click()
 
   await expect(page.getByText('RZN-LKU-EFS', { exact: true })).toBeVisible({
@@ -667,7 +668,10 @@ test('finder result displays only matched constraints', async ({ page }) => {
   await expect(
     page.getByText('Matched constraints', { exact: true })
   ).toBeVisible()
-  await expect(page.getByText('ration of food', { exact: true })).toBeVisible()
+  const resultItem = page
+    .locator('[data-slot="item"]')
+    .filter({ hasText: /ring of sharpshooting/i })
+  await expect(resultItem).toBeVisible()
   await expect(
     page.getByText('Fresh baseline highlights', { exact: true })
   ).toHaveCount(0)
@@ -678,7 +682,7 @@ test('finder result displays only matched constraints', async ({ page }) => {
   expect(errors.page, 'uncaught page errors').toEqual([])
 })
 
-test('finder includes SacrificeRoom fresh-baseline items by default', async ({
+test('finder includes Wandmaker fresh-baseline items by default', async ({
   page,
 }) => {
   const errors: BrowserErrors = { console: [], page: [] }
@@ -696,25 +700,25 @@ test('finder includes SacrificeRoom fresh-baseline items by default', async ({
   await page.goto('/')
   await page
     .getByRole('spinbutton', { name: 'Start seed' })
-    .fill('3293380032588')
+    .fill('3755006876548')
   await page.getByRole('spinbutton', { name: 'Candidates' }).fill('10')
-  await page.getByRole('combobox', { name: 'Depth' }).selectOption('4')
+  await page.getByRole('combobox', { name: 'Depth' }).selectOption('7')
   await page.getByRole('spinbutton', { name: 'Results' }).fill('1')
-  await page.getByLabel('Item 1 type').selectOption('Sickle')
+  await page.getByLabel('Item 1 category').selectOption('Wands')
+  await page.getByLabel('Item 1 name').selectOption('WandOfDisintegration')
   await page.getByLabel('Item 1 upgrade level').selectOption('2')
   await expect(
     page.getByRole('switch', { name: 'Include fresh-baseline matches' })
   ).toHaveCount(0)
   await page.getByRole('button', { name: 'Find' }).click()
 
-  await expect(page.getByText('PUB-CLI-VNW', { exact: true })).toBeVisible({
+  await expect(page.getByText('RZN-LKU-EFS', { exact: true })).toBeVisible({
     timeout: 60_000,
   })
   const result = page
     .locator('[data-slot="item"]')
-    .filter({ hasText: 'friendly sickle' })
-  await expect(result).toContainText('friendly sickle +2')
-  await expect(result).toContainText('Sacrifice')
+    .filter({ hasText: /wand of disintegration/i })
+  await expect(result).toContainText(/wand of disintegration/i)
   await expect(
     result.getByText('Fresh baseline', { exact: true })
   ).toBeVisible()

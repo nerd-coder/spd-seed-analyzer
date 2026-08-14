@@ -123,7 +123,7 @@ pub enum SearchError {
     EmptyConstraints,
     #[error("constraints must contain at most {MAX_SEARCH_CONSTRAINTS} entries")]
     TooManyConstraints,
-    #[error("constraints[{index}].className must not be empty or whitespace")]
+    #[error("constraints[{index}].itemGroup must not be empty or whitespace")]
     EmptyItemGroup { index: usize },
     #[error("constraints[{index}].className must be at most 128 characters")]
     ClassNameTooLong { index: usize },
@@ -373,12 +373,14 @@ fn evidence_for(
     Some(ItemMatchEvidence {
         constraint_index: constraint_index as u32,
         item_group: constraint.item_group.clone(),
-        class_name: constraint.class_name.clone(),
+        class_name: item
+            .class_name
+            .clone()
+            .or_else(|| item.candidate_classes.first().cloned())
+            .or_else(|| constraint.class_name.clone()),
         depth: occurrence.depth,
         name: item.name.clone(),
-        level: item
-            .level
-            .expect("searchable predictions expose a concrete level"),
+        level: item.level.unwrap_or(0),
         prediction: item.prediction,
         source: item.source.clone(),
     })
@@ -418,7 +420,10 @@ fn matching_item<'a>(
                     ItemPredictionKind::Constrained => candidate_class_matches,
                 }
             } else {
-                true
+                match item.prediction {
+                    ItemPredictionKind::Exact | ItemPredictionKind::Constrained => true,
+                    ItemPredictionKind::Baseline => include_baseline,
+                }
             };
 
             class_matches

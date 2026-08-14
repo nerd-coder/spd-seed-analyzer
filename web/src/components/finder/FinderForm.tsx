@@ -72,9 +72,21 @@ export function FinderForm({
     MAX_CANDIDATES
   )
   const maxMatchesInvalid = !isIntegerInRange(maxMatches, 1, MAX_RESULTS)
-  const constraintsInvalid = constraints.some(
-    (constraint) => !constraint.className
-  )
+  const constraintsInvalid =
+    constraints.length === 0 ||
+    constraints.length > MAX_CONSTRAINTS ||
+    constraints.some(
+      (constraint) =>
+        !constraint.itemGroup ||
+        (constraint.className != null &&
+          (constraint.className.length === 0 ||
+            constraint.className.length > 128)) ||
+        (constraint.minLevel !== null &&
+          !isIntegerInRange(constraint.minLevel, 1, 4)) ||
+        !isIntegerInRange(constraint.minDepth, 1, floors) ||
+        !isIntegerInRange(constraint.maxDepth, 1, floors) ||
+        constraint.minDepth > constraint.maxDepth
+    )
   const invalid =
     startSeedInvalid ||
     candidateCountInvalid ||

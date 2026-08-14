@@ -10,7 +10,7 @@ async function configureNoMatchSearch(page: Page, startSeed: string) {
   await page.getByRole('spinbutton', { name: 'Candidates' }).fill('10')
   await page.getByRole('combobox', { name: 'Depth' }).selectOption('1')
   await page.getByRole('spinbutton', { name: 'Results' }).fill('1')
-  await page.getByLabel('Item 1 type').selectOption('MagesStaff')
+  await page.getByLabel('Item 1 name').selectOption('RingOfMight')
   await page.getByLabel('Item 1 upgrade level').selectOption('4')
 }
 
@@ -44,7 +44,7 @@ test('finder keeps its form and reuses only result-less search tabs', async ({
   await expect(
     page.getByRole('spinbutton', { name: 'Start seed' })
   ).toHaveValue('111')
-  await expect(page.getByLabel('Item 1 type')).toHaveValue('MagesStaff')
+  await expect(page.getByLabel('Item 1 name')).toHaveValue('RingOfMight')
   await expect(
     page.getByRole('switch', { name: 'Include fresh-baseline matches' })
   ).toHaveCount(0)
@@ -61,8 +61,8 @@ test('finder keeps its form and reuses only result-less search tabs', async ({
     .getByRole('spinbutton', { name: 'Start seed' })
     .fill('3293380032588')
   await page.getByRole('combobox', { name: 'Depth' }).selectOption('4')
-  await page.getByLabel('Item 1 type').selectOption('Sickle')
-  await page.getByLabel('Item 1 upgrade level').selectOption('2')
+  await page.getByLabel('Item 1 name').selectOption('RingOfWealth')
+  await page.getByLabel('Item 1 upgrade level').selectOption('any')
   await startAndWait(page)
   await expect(
     page.getByRole('tab', { name: '3293380032588 (1)' })
@@ -74,6 +74,45 @@ test('finder keeps its form and reuses only result-less search tabs', async ({
   await expect(
     page.getByRole('tab', { name: '3293380032588 (1)' })
   ).toBeVisible()
+
+  expect(consoleErrors, 'browser console errors').toEqual([])
+  expect(pageErrors, 'uncaught page errors').toEqual([])
+})
+
+test('finder searches successfully when item name is set to any', async ({
+  page,
+}) => {
+  const consoleErrors: string[] = []
+  const pageErrors: string[] = []
+  page.on('console', (message) => {
+    if (message.type() === 'error') consoleErrors.push(message.text())
+  })
+  page.on('pageerror', (error) => pageErrors.push(error.message))
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
+  await page.addInitScript((storage) => {
+    localStorage.clear()
+    localStorage.setItem(storage.mode, 'finder')
+    localStorage.setItem(storage.theme, 'light')
+  }, APP_STORAGE)
+
+  await page.goto('/')
+  await page
+    .getByRole('spinbutton', { name: 'Start seed' })
+    .fill('3293380032588')
+  await page.getByRole('spinbutton', { name: 'Candidates' }).fill('10')
+  await page.getByRole('combobox', { name: 'Depth' }).selectOption('4')
+  await page.getByRole('spinbutton', { name: 'Results' }).fill('1')
+  await page.getByLabel('Item 1 name').selectOption('any')
+  await page.getByLabel('Item 1 upgrade level').selectOption('any')
+
+  await startAndWait(page)
+  await expect(
+    page.getByRole('tab', { name: '3293380032588 (1)' })
+  ).toBeVisible()
+  const result = page
+    .locator('[data-slot="item"]')
+    .filter({ hasText: 'Ring of Wealth' })
+  await expect(result).toBeVisible()
 
   expect(consoleErrors, 'browser console errors').toEqual([])
   expect(pageErrors, 'uncaught page errors').toEqual([])

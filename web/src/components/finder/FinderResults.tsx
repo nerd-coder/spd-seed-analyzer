@@ -129,7 +129,17 @@ function ResultCard({
                   <ItemMedia>
                     <ItemIcon
                       classNameItem={evidence.className ?? undefined}
+                      category={evidence.itemGroup}
                       size={24}
+                      sourceWidth={
+                        evidence.className?.startsWith('RingOf') ? 8 : undefined
+                      }
+                      sourceHeight={
+                        evidence.className?.startsWith('RingOf')
+                          ? 10
+                          : undefined
+                      }
+                      scaleSource={false}
                       title={evidence.name}
                     />
                   </ItemMedia>
