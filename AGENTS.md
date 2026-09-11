@@ -3,7 +3,7 @@
 Shattered Pixel Dungeon seed analyzer: **Bun + Vite + React + shadcn** UI, **Rust → WASM** engine.
 
 Progress / resume: `specs/implementation.md` (create one if missing and saving progress is requested)
-Pinned game: SPD **v3.3.8** @ `7b8b845a7` — local clone often at `/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`
+Pinned game: SPD **v4.0.0** @ `2bb34a4e9` — local clone often at `/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`
 
 ## Layout
 

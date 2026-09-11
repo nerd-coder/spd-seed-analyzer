@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-readonly EXPECTED_COMMIT="7b8b845a76fe76c6b7c031ae9e570852411f56db"
+readonly EXPECTED_COMMIT="2bb34a4e91d29c8785a9363cad6ddfe5122b1d4f"
 readonly DEFAULT_SOURCE="/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon"
 
 tool_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -33,11 +33,11 @@ Usage: tools/java-oracle/run [--source PATH] [--output FILE]
                              --generator-deck-rollover | --generator-lifecycle | --imp-ring-deck | --quest-npc-placement |
                              --shop-bag-selection | --sacrifice-reward] SEED
 
-Dumps SPD v3.3.8 run facts as stable JSON. With --depth 1, includes the pinned
+Dumps SPD v4.0.0 run facts as stable JSON. With --depth 1, includes the pinned
 depth-one pre-build item slice. With --final-heaps-depth 1-4, 6-9, 11-15, or 16-21, records
 heaps after the real level generation lifecycle completes. Floors 6-9 are
 generated after all prior floors to retain run-persistent state. The source checkout
-must be pinned at 7b8b845a7. With --generator-deck-rollover, records the exact
+must be pinned at 2bb34a4e9. With --generator-deck-rollover, records the exact
 Food deck draw sequence and private/base RNG probes through its first reset.
 With --shop-bag-selection, calls the pinned ShopRoom.ChooseBag against two
 unique-winner floor-11 backpack profiles without generating a floor.

@@ -157,7 +157,7 @@ final class FloorOracle {
 			Map<Class<?>, Float> chances = new HashMap<>(template);
 			StringBuilder out = new StringBuilder("{\n  \"schema_version\": 1,\n"
 					+ "  \"contract\": \"secret-library-order\",\n"
-					+ "  \"spd\": { \"version\": \"v3.3.8\", \"commit\": \"7b8b845a7\" },\n"
+					+ "  \"spd\": " + JavaOracle.spdJson() + ",\n"
 					+ "  \"input\": { \"seed\": \"" + JavaOracle.escape(inputSeed)
 					+ "\", \"numeric\": " + numericSeed + " },\n  \"entries\": [\n");
 			int index = 0;

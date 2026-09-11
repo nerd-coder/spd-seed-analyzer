@@ -89,7 +89,7 @@ final class ShopBagOracle {
 		json.append("{\n");
 		json.append("  \"schema_version\": 1,\n");
 		json.append("  \"contract\": \"shop_bag_selection\",\n");
-		json.append("  \"spd\": { \"version\": \"v3.3.8\", \"commit\": \"7b8b845a7\" },\n");
+		json.append("  \"spd\": ").append(JavaOracle.spdJson()).append(",\n");
 		json.append("  \"input\": { \"seed\": \"")
 				.append(JavaOracle.escape(inputSeed))
 				.append("\", \"numeric\": ")

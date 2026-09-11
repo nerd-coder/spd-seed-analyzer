@@ -42,7 +42,7 @@ final class SacrificeRewardOracle {
 		return "{\n"
 				+ "  \"schema_version\": 1,\n"
 				+ "  \"contract\": \"sacrifice_reward_player_state\",\n"
-				+ "  \"spd\": { \"version\": \"v3.3.8\", \"commit\": \"7b8b845a7\" },\n"
+				+ "  \"spd\": " + JavaOracle.spdJson() + ",\n"
 				+ "  \"input\": { \"seed\": \"" + inputSeed + "\", \"numeric\": " + seed
 				+ ", \"depth\": 13, \"parchment_scrap_level\": 3 },\n"
 				+ "  \"lifecycle\": \"created_during_room_paint_and_stored_in_blob\",\n"

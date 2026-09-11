@@ -47,7 +47,7 @@ type MobFrame = {
   sourceY?: number
 }
 
-/** Pinned v3.3.8 idle frames from the matching Sprite classes. */
+/** Pinned v4.0.0 idle frames from the matching Sprite classes. */
 const MOB_FRAMES: Record<string, MobFrame> = {
   Rat: { asset: 'rat', width: 16, height: 15 },
   Snake: { asset: 'snake', width: 12, height: 11 },

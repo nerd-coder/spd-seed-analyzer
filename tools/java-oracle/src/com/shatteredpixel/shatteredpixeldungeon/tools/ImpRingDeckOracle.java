@@ -45,7 +45,7 @@ final class ImpRingDeckOracle {
 		return "{\n"
 				+ "  \"schema_version\": 1,\n"
 				+ "  \"contract\": \"imp_ring_deck\",\n"
-				+ "  \"spd\": { \"version\": \"v3.3.8\", \"commit\": \"7b8b845a7\" },\n"
+				+ "  \"spd\": " + JavaOracle.spdJson() + ",\n"
 				+ "  \"input\": { \"seed\": \"" + JavaOracle.escape(inputSeed)
 				+ "\", \"numeric\": " + numericSeed + " },\n"
 				+ "  \"spawn\": { \"depth\": " + spawn.depth

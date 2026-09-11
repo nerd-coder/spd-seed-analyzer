@@ -1,4 +1,4 @@
-/** Pinned SPD v3.3.8 `DungeonTileSheet` / tilemap visual selection. */
+/** Pinned SPD v4.0.0 `DungeonTileSheet` / tilemap visual selection. */
 
 export const TILE_PX = 16
 export const SHEET_COLS = 16

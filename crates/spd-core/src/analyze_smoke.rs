@@ -44,8 +44,8 @@ fn analyze_seed_smoke() {
 
 #[test]
 fn analyzes_daily_run_date() {
-    let report = analyze_seed("2025-03-01", 1).expect("analyze Daily Run");
-    assert_eq!(report.seed.numeric, 7_170_290_878_976);
+    let report = analyze_seed("2026-04-01", 1).expect("analyze Daily Run");
+    assert_eq!(report.seed.numeric, 7_204_505_278_976);
     assert!(report.seed.daily);
     assert_eq!(report.seed.code, None);
     assert_eq!(report.floors.len(), 1);
@@ -305,7 +305,7 @@ fn compact_report_promotes_exact_floor_one_room_rewards() {
     }));
 
     let compact = report.compact_text();
-    assert!(compact.starts_with("RZN-LKU-EFS\nShPD v3.3.8\n\n"));
+    assert!(compact.starts_with("RZN-LKU-EFS\nShPD v4.0.0\n\n"));
     for expected in [
         "1 (cursed) Wealth +2 Crystal Choice",
         "2 Remove Curse YNGVI",

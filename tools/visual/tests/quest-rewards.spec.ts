@@ -113,8 +113,8 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
           code: null,
           formatted: seed,
         },
-        spd_version: 'v3.3.8',
-        spd_commit: '7b8b845a7',
+        spd_version: 'v4.0.0',
+        spd_commit: '2bb34a4e9',
         floors_requested: 19,
         identities: { potions: [], scrolls: [], rings: [] },
         trinket_selection: {

@@ -1,5 +1,7 @@
 # Generator decks — verified facts
 
+Pin moved to SPD **v4.0.0 @ `2bb34a4e9`**; these deck facts are stale until workstream 01.
+
 Verified against SPD **v3.3.8 @ `7b8b845a7`** on 2026-07-28. Java line numbers
 are from that commit. **Re-verify only when the pinned version changes** — the
 deck mechanism, the call sites, and the challenge behaviour below are all

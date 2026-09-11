@@ -4,9 +4,9 @@ use thiserror::Error;
 
 /// Largest possible seed has a value of 26^9.
 pub const TOTAL_SEEDS: i64 = 5_429_503_678_976; // 26^9
-pub const FIRST_DAILY_DATE: &str = "2025-03-01";
+pub const FIRST_DAILY_DATE: &str = "2026-04-01";
 const MILLIS_PER_DAY: i64 = 86_400_000;
-const FIRST_DAILY_EPOCH_DAY: i64 = 20_148;
+const FIRST_DAILY_EPOCH_DAY: i64 = 20_544;
 
 #[derive(Debug, Error, Clone, PartialEq, Eq)]
 pub enum SeedError {
@@ -18,7 +18,7 @@ pub enum SeedError {
     OutOfRange,
     #[error("Daily Run dates must use a valid YYYY-MM-DD date")]
     InvalidDailyDate,
-    #[error("Daily Runs in SPD v3.3.8 begin on 2025-03-01")]
+    #[error("Daily Runs in SPD v4.0.0 begin on 2026-04-01")]
     DailyBeforeStart,
 }
 
@@ -282,7 +282,7 @@ mod tests {
     fn daily_date_matches_upstream_seed_formula() {
         assert_eq!(
             DungeonSeed::convert_from_daily_date(FIRST_DAILY_DATE).unwrap(),
-            7_170_290_878_976
+            7_204_505_278_976
         );
         assert_eq!(
             DungeonSeed::convert_from_daily_date("2026-08-06").unwrap(),
@@ -292,6 +292,10 @@ mod tests {
 
     #[test]
     fn daily_date_validates_calendar_and_supported_range() {
+        assert_eq!(
+            DungeonSeed::convert_from_daily_date("2025-03-01"),
+            Err(SeedError::DailyBeforeStart)
+        );
         assert_eq!(
             DungeonSeed::convert_from_daily_date("2024-02-29"),
             Err(SeedError::DailyBeforeStart)

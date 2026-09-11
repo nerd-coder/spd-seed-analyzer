@@ -185,8 +185,8 @@ async function installSyntheticMapReport(page: Page) {
         code: null,
         formatted: 'VISUAL-MAP',
       },
-      spd_version: 'v3.3.8',
-      spd_commit: '7b8b845a7',
+      spd_version: 'v4.0.0',
+      spd_commit: '2bb34a4e9',
       floors_requested: 4,
       identities: { potions: [], scrolls: [], rings: [] },
       trinket_selection: {
