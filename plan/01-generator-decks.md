@@ -1,6 +1,6 @@
 # 01 — Generator decks, enchants, new draw sites
 
-Status: **open**
+Status: **closed**
 
 Port `Generator` and weapon enchant *tables* to v4, then re-verify `specs/generator-decks.md`. Do not implement the vault level or replace the Imp quest report here — only the deck mechanics and oracles those later PRs will need.
 
