@@ -5,18 +5,13 @@ commit. **Re-verify only when the pinned version changes** — the deck
 mechanism, the call sites, and the challenge behaviour below are all
 version-sensitive.
 
-Imp/vault draw sites: 01 remaining / 02. The Imp row in §3 and the Imp
-measurements in §7–§8 still describe the v3 Imp ring / vault call sites until
-those PRs land.
-
 Method: reading the pinned clone, plus temporary `eprintln!` instrumentation in
-`generator/state.rs` (`random_deck_item`, `random_artifact`) and
-`quests/imp.rs` run over `analyze_seed(.., 19)`. Instrumentation was reverted;
-the measurements are reproducible by re-adding it. The Imp's exact pre-reward
-ring draw index is additionally pinned for five reference seeds by the
-`imp-ring-deck` Java-oracle contract, which records `Category.RING.dropped`
-immediately around `Imp.Quest.spawn` and is compared to Rust in
-`quests/imp.rs` tests.
+`generator/state.rs` (`random_deck_item`, `random_artifact`) run over
+`analyze_seed(.., 19)`. Instrumentation was reverted; the measurements are
+reproducible by re-adding it. Imp spawn deck counters and first-option class
+for five reference seeds are pinned by the `imp-ring-deck` Java oracle around
+`CityLevel.initRooms`. VaultLevel `usingDefaults` is pinned by
+`tools/java-oracle/fixtures/vault/aaa-aaa-aaa-floor-17.json`.
 
 Sections 9–10 were measured the same way: temporary probe fields on
 `WandmakerQuestState` / `GhostQuestState` recording the deck index and the
@@ -73,14 +68,18 @@ Direct ring deck draws (`Generator.random`) are levelgen:
 | Crystal choice hidden prize | `CrystalChoiceRoom.java:124` |
 | Crystal vault prize cycle | `CrystalVaultRoom.java:104` |
 | Grassy grave / mass grave / secret summoning | `Generator.random()` |
-| Ambitious Imp reward | `Imp.java:234` |
+| Ambitious Imp spawn | `Imp.java:308-353` (`Quest.spawn`) |
 
-Artifact exhaustion is no longer a ring-deck site; see §4. Imp/vault draw
-sites: 01 remaining / 02.
+The `random(ARTIFACT)` fallback is not a ring-deck site; see §4. Imp spawn
+is: `randomArtifact()` (`Imp.java:319`); on miss `random(RING)` (`:324`); a
+second `random(RING)` with class uniqueness (`:330-336`); `Random.Int(2)`
+then `random(WEP_T5)+random(MIS_T4)` or `random(MIS_T5)+random(WEP_T4)`
+(`:338-344`); `new PlateArmor().inscribe()` (no ARMOR deck, `:345`);
+`random(WAND)` (`:346`). All `cursed = false` (`:351-353`). Call site:
+`CityLevel.initRooms` (`CityLevel.java:191-194`).
 
-All are present in `spd-core`. Note `Generator.random()` (no-arg) is itself a
-category deck, so its ring count over a deck cycle is stable even if the
-in-cycle order shifts.
+Note `Generator.random()` (no-arg) is itself a category deck, so its ring
+count over a deck cycle is stable even if the in-cycle order shifts.
 
 ## 4. Direct runtime ring requests bypass the ring deck
 
@@ -97,13 +96,19 @@ All use `randomUsingDefaults`: mob loot including Thief's
 `:1174`), and runtime-spawned mimics (`useDecks=false` at
 `CursedWand.java:1081`, `DistortionTrap.java:120`).
 
-The ungenerated side-levels add no direct ring-deck site: `MiningLevel` only
-calls `randomUsingDefaults(FOOD)`, `VaultLevel` only
-`randomUsingDefaults(...)`. Imp/vault draw sites: 01 remaining / 02.
+Branch side-levels add no ring-deck site. `MiningLevel` only calls
+`randomUsingDefaults(FOOD)`. `VaultLevel.createEquipment`
+(`VaultLevel.java:381`) draws WEP/MIS/WAND/RING via `randomUsingDefaults`
+(`:241-376`); `createConsumabe` (`:485`) does not touch those decks;
+`build()` adds three default FOOD (`:141-143`). ARTIFACT is unused.
+`RING.dropped` stays flat: AAA-AAA-AAA vault fixture
+`tools/java-oracle/fixtures/vault/aaa-aaa-aaa-floor-17.json` records 0→0
+around `VaultLevel.create()`.
 
 Method: reading `Generator.java:706-710` on the pinned v4 clone, plus a
 `spd-core` unit test that exhausts `random_artifact` and snapshots
-`RING.dropped` around the fallback `random(ARTIFACT)`.
+`RING.dropped` around the fallback `random(ARTIFACT)`. Vault counters come
+from that fixture.
 
 ## 5. Challenge item-block rerolls cannot shift a deck index
 
@@ -152,36 +157,52 @@ Not having the trinket costs no RNG: `RegularLevel.java:406` evaluates
 `Random.Float()` before applying `MimicTooth.mimicChanceMultiplier()`, so the
 tooth-free stream is the baseline stream.
 
-## 7. Measurements at the Ambitious Imp spawn (44 seeds, floors 1–19)
+## 7. Measurements at the Ambitious Imp spawn (five oracle seeds)
 
-| Quantity | Distribution |
-|----------|--------------|
-| Ring draws preceding the Imp's | 0–6, mode 4 |
-| Imp reward draws (curse reroll) | 1× in 30, 2× in 14 (30% curse chance) |
-| Artifact draws before the spawn | 1–6, mode 3 |
-| Artifact deck weight left (of 11) | 5–10, median 8 |
+`Imp.Quest.spawn` fills six `rewardOptions` during `CityLevel.initRooms` on
+the first success of `Random.Int(20 - depth) == 0` for depths 17–19
+(`Imp.java:306-353`). The `imp-ring-deck` Java oracle records those
+`dropped` counters around `initRooms`.
 
-That 5–10 artifact headroom describes only the measured fresh baseline.
-Repeatable runtime artifact requests can close it before floor 17, so it is not
-a seed-only bound on the Imp reward.
+| Seed | Depth | RING | ARTIFACT | WAND | WEP/MIS pair | First option |
+|------|------:|-----:|---------:|-----:|--------------|--------------|
+| AAA-AAA-AAA | 19 | 4→5 | 1→2 | 4→5 | WEP_T5+MIS_T4 | SandalsOfNature |
+| ABC-DEF-GHI | 18 | 4→5 | 3→4 | 5→6 | MIS_T5+WEP_T4 | MasterThievesArmband |
+| GFX-PZH-DCH | 17 | 1→2 | 2→3 | 5→6 | WEP_T5+MIS_T4 | TimekeepersHourglass |
+| HKT-JZN-XQQ | 19 | 4→5 | 3→4 | 4→5 | MIS_T5+WEP_T4 | SandalsOfNature |
+| ZZZ-ZZZ-ZZZ | 18 | 3→4 | 3→4 | 4→5 | WEP_T5+MIS_T4 | TalismanOfForesight |
 
-## 8. Consequence for the Imp ring
+All five advance ARTIFACT and WAND by 1 and RING by 1 (option 1 was an
+artifact, so the RING uniqueness loop did not retry). Every option is
+`cursed = false`.
 
-For a fixed profile, the class is fixed by (seed, ring draw index *k*), and the
-accepted ring class never feeds back into floor RNG because no subclass
-overrides `Ring.random()` (`Ring.java:259`). This proves that changing only *k*
-changes class without changing level or the later floor tail.
+## 8. Consequence for the Imp reward pool
 
-Across playable routes, neither *k* nor the concrete +2…+4 level is seed-only.
-Mimic Tooth changes levelgen mimic prizes; Rat Skull can add a deck-using
-Crystal Mimic prize; earlier map/challenge paths can change levelgen draw sites;
-and repeatable runtime artifact requests fall through to RING after ARTIFACT
-exhaustion. Mossy Clump can also short-circuit a current-floor feeling roll
-before `Imp.Quest.spawn`, shifting the spawn attempt, target, curse retry, and
-level rolls. Once the 12-class equal-weight ring deck resets, every class is
-reachable. The cross-route public contract is therefore category-only: one
-conditional cursed +2…+4 ring. Full evidence and claim/shop conditions are in
-`specs/analysis/quest-ambitious-imp.md`.
+Spawn always writes a take-one pool of six (`Imp.java:318-353`). The seed
+determines that pool under a fixed profile; it does not determine which of
+the six the player keeps. Shop access (`earnedShop` / score) is not a seed
+fact.
+
+Option 1 is an ARTIFACT deck draw (`randomArtifact`). If that deck is
+exhausted, the same slot is a RING deck draw (`Generator.random(RING)`,
+`Imp.java:323-327`) — labelled, and not the `random(ARTIFACT)` defaults
+fallback of §4. The five oracle seeds all still have artifact headroom
+(ARTIFACT +1; first option is an artifact class). Option 2 is always a RING
+deck draw; the uniqueness loop can consume extra RING draws only when
+option 1 was already a ring. Options 3–4 are one WEP/MIS pair from the
+coin flip in §7. Option 5 is a constructed `PlateArmor` (no ARMOR deck).
+Option 6 is a WAND deck draw. Every option is then `cursed = false`.
+
+For a fixed profile, each deck-drawn class is index-keyed (§1). No `Ring`
+subclass overrides `Ring.random()` (`Ring.java:259`), so a RING slot's
+class is decoupled from its later floor-stream level roll. Across playable
+routes, spawn depth, deck indices, and the WEP/MIS coin flip are not
+seed-only: Mimic Tooth changes levelgen mimic prizes; Rat Skull can add a
+deck-using Crystal Mimic prize; earlier map/challenge paths can change
+levelgen draw sites; Mossy Clump can short-circuit a current-floor feeling
+roll before `Imp.Quest.spawn`. Runtime artifact requests still advance
+`ARTIFACT.dropped` (§11), which can flip option 1 from artifact to ring.
+Quest conditions are in `specs/analysis/quest-ambitious-imp.md`.
 
 ## 9. Old Wandmaker reward (floors 7–9)
 

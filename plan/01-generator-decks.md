@@ -80,7 +80,7 @@ Enchant *type* weights stay `{50, 40, 10}`. Bucket membership changes, so a gene
 2. `fix(core): clone WEP_T3 default probs and pin them in the lifecycle oracle` — tiny; may fold into PR 1.
 3. `feat(core): add v4 weapon enchant and curse tables` — `items/enchants.rs` + table test. Needed before 02’s `.enchant()` identities.
 4. `test(oracle): capture Imp spawn and vault usingDefaults draw sites` — extend `ImpRingDeckOracle` / add a vault-equipment oracle that forces `VaultLevel` like `MiningLevelOracle.java` and records `RING/WAND/ARTIFACT.dropped` before vs after `create()` (must stay flat: vault must not move RING.dropped).
-5. `docs(decks): re-verify generator-decks.md for v4.0.0` — measurements: same method as the current file (instrument `random_deck_item` / `random_artifact`, revert). Include the Imp pre-reward index for the five existing seeds (`AAA-AAA-AAA`, `ABC-DEF-GHI`, `GFX-PZH-DCH`, `HKT-JZN-XQQ`, `ZZZ-ZZZ-ZZZ`).
+5. `docs(decks): re-verify generator-decks.md for v4.0.0` — Imp spawn and vault usingDefaults facts live in `specs/generator-decks.md` §3/§4/§7–§8, from the committed `*-imp-ring-deck.json` and `aaa-aaa-aaa-floor-17.json` oracles.
 
 ## Dependencies
 
