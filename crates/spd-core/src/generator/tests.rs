@@ -1,4 +1,5 @@
 use super::*;
+use crate::items::model::ItemCategory;
 use crate::random::Random;
 
 #[path = "tests/lifecycle.rs"]
@@ -60,13 +61,13 @@ fn consumable_decks_advance_level_stream_for_exotic_conversion_check() {
     // level stream, even when ExoticCrystals makes conversion impossible.
     let before_scroll = Random::peek_ints(2);
     let scroll = generator.random_category(Category::Scroll, 1);
-    assert_eq!(scroll.category, crate::items::model::ItemCategory::Scroll);
+    assert_eq!(scroll.category, ItemCategory::Scroll);
     assert_eq!(Random::int(), before_scroll[1]);
 
     // Non-convertible categories do not perform that extra base-stream draw.
     let before_stone = Random::peek_ints(1);
     let stone = generator.random_category(Category::Stone, 1);
-    assert_eq!(stone.category, crate::items::model::ItemCategory::Stone);
+    assert_eq!(stone.category, ItemCategory::Stone);
     assert_eq!(Random::int(), before_stone[0]);
 
     Random::pop_generator();
@@ -83,7 +84,7 @@ fn cumulative_default_consumable_selection_skips_exotic_conversion_draw() {
     // default path's exotic-conversion check.
     let before = Random::peek_ints(2);
     let potion = generator.random_using_defaults(Category::Potion, 1);
-    assert_eq!(potion.category, crate::items::model::ItemCategory::Potion);
+    assert_eq!(potion.category, ItemCategory::Potion);
     assert_eq!(Random::int(), before[1]);
 
     Random::pop_generator();
@@ -117,5 +118,53 @@ fn concrete_undo_drop_preserves_pinned_java_no_op_semantics() {
         state_after_draw,
         "Generator.undoDrop(concreteClass) is a no-op at pinned SPD's inverted assignability check"
     );
+    Random::pop_generator();
+}
+
+#[test]
+fn exhausted_artifact_fallback_uses_ring_defaults_without_moving_ring_deck() {
+    Random::reset_generators();
+    Random::push_generator_seeded(0xA471_FAC7);
+    let mut generator = GeneratorState::full_reset_ordered();
+
+    let mut artifacts = 0;
+    while let Some(item) = generator.random_artifact(1) {
+        assert_eq!(item.category, ItemCategory::Artifact);
+        artifacts += 1;
+        assert!(
+            artifacts <= 11,
+            "fresh artifact deck has 11 positive-weight classes"
+        );
+    }
+    assert_eq!(artifacts, 11);
+
+    let ring_before = generator.deck_snapshot(Category::Ring);
+    let fallback = generator.random_category(Category::Artifact, 1);
+    assert_eq!(fallback.category, ItemCategory::Ring);
+    assert_eq!(generator.deck_snapshot(Category::Ring), ring_before);
+    assert_eq!(
+        generator.deck_dropped(Category::Ring),
+        ring_before.dropped,
+        "v4 random(ARTIFACT) miss uses randomUsingDefaults(RING)"
+    );
+
+    let ring = generator.random_category(Category::Ring, 1);
+    assert_eq!(ring.category, ItemCategory::Ring);
+    assert_eq!(
+        generator.deck_dropped(Category::Ring),
+        ring_before.dropped + 1,
+        "deck-backed random(RING) still advances RING.dropped"
+    );
+    Random::pop_generator();
+}
+
+#[test]
+fn full_reset_clones_wep_t3_default_probs() {
+    Random::reset_generators();
+    Random::push_generator_seeded(0x7E93);
+    let generator = GeneratorState::full_reset_ordered();
+    let snapshot = generator.deck_snapshot(Category::WepT3);
+    assert_eq!(snapshot.probabilities.len(), 6);
+    assert_eq!(snapshot.probabilities, vec![2., 2., 2., 2., 2., 2.]);
     Random::pop_generator();
 }

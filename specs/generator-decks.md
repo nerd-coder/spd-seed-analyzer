@@ -1,11 +1,13 @@
 # Generator decks — verified facts
 
-Pin moved to SPD **v4.0.0 @ `2bb34a4e9`**; these deck facts are stale until workstream 01.
-
-Verified against SPD **v3.3.8 @ `7b8b845a7`** on 2026-07-28. Java line numbers
-are from that commit. **Re-verify only when the pinned version changes** — the
-deck mechanism, the call sites, and the challenge behaviour below are all
+Verified against SPD **v4.0.0 @ `2bb34a4e9`**. Java line numbers are from that
+commit. **Re-verify only when the pinned version changes** — the deck
+mechanism, the call sites, and the challenge behaviour below are all
 version-sensitive.
+
+Imp/vault draw sites: 01 remaining / 02. The Imp row in §3 and the Imp
+measurements in §7–§8 still describe the v3 Imp ring / vault call sites until
+those PRs land.
 
 Method: reading the pinned clone, plus temporary `eprintln!` instrumentation in
 `generator/state.rs` (`random_deck_item`, `random_artifact`) and
@@ -60,8 +62,7 @@ floors; the Sad Ghost examples are catalogued in
 
 ## 3. Ring-deck draw sites (complete)
 
-Direct ring deck draws (`Generator.random`) are levelgen except for the
-artifact-exhaustion fallback noted below:
+Direct ring deck draws (`Generator.random`) are levelgen:
 
 | Site | Java |
 |------|------|
@@ -72,8 +73,10 @@ artifact-exhaustion fallback noted below:
 | Crystal choice hidden prize | `CrystalChoiceRoom.java:124` |
 | Crystal vault prize cycle | `CrystalVaultRoom.java:104` |
 | Grassy grave / mass grave / secret summoning | `Generator.random()` |
-| Artifact exhaustion fallback, including runtime artifact requests | `Generator.java:709` |
 | Ambitious Imp reward | `Imp.java:234` |
+
+Artifact exhaustion is no longer a ring-deck site; see §4. Imp/vault draw
+sites: 01 remaining / 02.
 
 All are present in `spd-core`. Note `Generator.random()` (no-arg) is itself a
 category deck, so its ring count over a deck cycle is stable even if the
@@ -81,20 +84,26 @@ in-cycle order shifts.
 
 ## 4. Direct runtime ring requests bypass the ring deck
 
-> Scope note: calls that directly request a runtime ring use defaults. Runtime
-> artifact requests are different: ARTIFACT is deck-backed and falls through
-> to the seeded RING deck after exhaustion. See §11.
+> Scope note: calls that directly request a runtime ring use defaults.
+> Artifact exhaustion is also defaults: `Generator.random(ARTIFACT)` falls
+> through to `randomUsingDefaults(RING)` (`Generator.java:706-710`) and does
+> **not** move `RING.dropped`. Runtime `randomUsingDefaults(ARTIFACT)` still
+> uses the artifact deck (`Generator.java:744-752`). See §11.
 
 All use `randomUsingDefaults`: mob loot including Thief's
-`oneOf(RING, ARTIFACT)` (`Mob.java:997`), Ring of Wealth
+`oneOf(RING, ARTIFACT)` (`Mob.java:1106`), Ring of Wealth
 (`RingOfWealth.java:288`), Scroll of Transmutation
-(`ScrollOfTransmutation.java:276`), Cursed Wand (`CursedWand.java:1082`,
-`:1170`), and runtime-spawned mimics (`useDecks=false` at
-`CursedWand.java:1066`, `DistortionTrap.java:120`).
+(`ScrollOfTransmutation.java:276`), Cursed Wand (`CursedWand.java:1081`,
+`:1174`), and runtime-spawned mimics (`useDecks=false` at
+`CursedWand.java:1081`, `DistortionTrap.java:120`).
 
 The ungenerated side-levels add no direct ring-deck site: `MiningLevel` only
 calls `randomUsingDefaults(FOOD)`, `VaultLevel` only
-`randomUsingDefaults(...)`.
+`randomUsingDefaults(...)`. Imp/vault draw sites: 01 remaining / 02.
+
+Method: reading `Generator.java:706-710` on the pinned v4 clone, plus a
+`spd-core` unit test that exhausts `random_artifact` and snapshots
+`RING.dropped` around the fallback `random(ARTIFACT)`.
 
 ## 5. Challenge item-block rerolls cannot shift a deck index
 
@@ -336,16 +345,16 @@ mechanisms would have to leak for run history to move them; two are closed.
   `specs/analysis/quest-blacksmith.md`.
 
 **Not closed: ARTIFACT.** `randomUsingDefaults(cat)` routes artifacts straight
-back into the deck (`Generator.java:745-750`, comment: *"except for artifacts,
+back into the deck (`Generator.java:744-752`, comment: *"except for artifacts,
 which must always use a deck"*), so these runtime sources all advance
 `ARTIFACT.dropped`:
 
 | Runtime source | Java |
 |----------------|------|
 | Ring of Wealth equipment drop | `RingOfWealth.java:291` |
-| Thief steal-loot | `Thief.java:52` → `Mob.java:997` |
+| Thief steal-loot | `Thief.java:52` → `Mob.java:1106` |
 | Scroll of Transmutation | `ScrollOfTransmutation.java:298` |
-| Cursed Wand | `CursedWand.java:1170` |
+| Cursed Wand | `CursedWand.java:1174` |
 | Gnoll Exile / Ebony Mimic / tooth-mimic extras | `randomUsingDefaults()` no-arg landing on ARTIFACT |
 
 Note `RingOfWealth.java:288` (the RING case §4 cites) is a different branch from
@@ -364,12 +373,15 @@ measurement was used for this reachability fact.
 
 The drift is not cosmetic. `randomArtifact` calls
 `Reflection.newInstance(cls).random()` **after** `popGenerator`
-(`Generator.java:866-878`), and `UnstableSpellbook`'s constructor burns a
+(`Generator.java:856-878`), and `UnstableSpellbook`'s constructor burns a
 variable number of `Random.chances` rolls in `setupScrolls`
 (`UnstableSpellbook.java:90-103`). A shifted artifact index therefore changes
 floor-stream consumption and desyncs every later draw on that floor, which in
-turn shifts the deck counters every later floor reads. Deck exhaustion also
-falls through to a RING draw (`Generator.java:707`), the §8 Imp lever.
+turn shifts the deck counters every later floor reads. Deck exhaustion falls
+through to `randomUsingDefaults(RING)` (`Generator.java:706-710`) and does
+**not** move `RING.dropped`. Runtime `randomUsingDefaults(ARTIFACT)` still uses
+the artifact deck (`Generator.java:744-752`). Only the ARTIFACT→RING
+fallthrough changed.
 
 **Consequence for a fixed challenge/trinket/meta profile:** everything generated
 before the run's *first* levelgen ARTIFACT deck draw is free of artifact-history

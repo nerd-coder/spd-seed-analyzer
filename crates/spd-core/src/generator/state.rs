@@ -164,7 +164,8 @@ impl GeneratorState {
                 if let Some(item) = self.random_artifact(depth) {
                     item
                 } else {
-                    self.random_category(Category::Ring, depth)
+                    // Extra artifacts must not move RING.dropped.
+                    self.random_using_defaults(Category::Ring, depth)
                 }
             }
             _ => self.random_deck_item(cat, depth),
