@@ -608,11 +608,7 @@ pub fn analyze_layouts_with_profile(
             create_level_layout_with_profile(dungeon, !profile.has_unmodeled_generation_inputs());
         let mut report =
             level.to_floor_report_with_trinket_availability(true, first_effective_trinket_depth);
-        if dungeon.blacksmith.depth == depth {
-            if let Some(branch) = mining::generate(dungeon, true) {
-                report.branches.push(branch.report);
-            }
-        }
+        attach_side_branches(dungeon, true, &mut report);
         floors.push(report);
     }
     floors
@@ -690,14 +686,24 @@ pub(crate) fn analyze_floors_with_profile_and_trinket_availability(
         let level = create_level_partial_with_profile(dungeon, configured);
         let mut report = level
             .to_floor_report_with_trinket_availability(configured, first_effective_trinket_depth);
-        if dungeon.blacksmith.depth == depth {
-            if let Some(branch) = mining::generate(dungeon, configured) {
-                report.branches.push(branch.report);
-            }
-        }
+        attach_side_branches(dungeon, configured, &mut report);
         floors.push(report);
     }
     floors
+}
+
+fn attach_side_branches(dungeon: &DungeonState, expose_map: bool, report: &mut FloorReport) {
+    if dungeon.blacksmith.depth == dungeon.depth {
+        if let Some(branch) = mining::generate(dungeon, expose_map) {
+            report.branches.push(branch.report);
+        }
+    }
+    if dungeon.imp.spawned && dungeon.imp.depth == dungeon.depth {
+        let mut vault_dungeon = dungeon.clone();
+        if let Some(layout) = vault::generate(&mut vault_dungeon, expose_map) {
+            report.branches.push(layout.report);
+        }
+    }
 }
 
 #[cfg(test)]

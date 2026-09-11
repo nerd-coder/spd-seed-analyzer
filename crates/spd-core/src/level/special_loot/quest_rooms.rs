@@ -325,7 +325,4 @@ pub(super) fn ambitious_imp_room_npc(
         map.mob_occupied[cell] = true;
         map.known_mobs[cell] = Some("Imp");
     }
-    if let Some(cell) = map.point_to_cell(center.x, center.y) {
-        map.branch_exits.push(cell);
-    }
 }

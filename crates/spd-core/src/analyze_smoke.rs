@@ -736,7 +736,22 @@ fn imp_shop_stock_on_floor_20_is_reported_conditionally() {
     assert!(shop.iter().all(|item| item
         .notes
         .iter()
-        .any(|note| note.contains("Ambitious Imp quest"))));
+        .any(|note| note.contains("Ambitious Imp quest") && note.contains("score > 2000"))));
+    assert!(shop.iter().all(|item| {
+        item.conditions.iter().any(|condition| {
+            matches!(
+                condition,
+                report::ItemCondition::Quest {
+                    quest_id,
+                    ..
+                } if quest_id == "ambitious_imp"
+            )
+        })
+    }));
+    assert!(public
+        .guaranteed_appearances
+        .iter()
+        .all(|appearance| appearance.source.as_deref() != Some("ImpShopRoom")));
     assert!(shop.iter().any(|item| {
         item.class_name.as_deref() == Some("PlateArmor")
             && item.prediction == crate::report::ItemPredictionKind::Exact
@@ -897,6 +912,17 @@ fn imp_quest_spawns_within_city() {
                         && item.cursed == Some(false)
                         && item.candidate_classes.is_empty()
                 }));
+                let vault = f
+                    .branches
+                    .iter()
+                    .find(|branch| matches!(branch.kind, report::BranchFloorKind::ImpVault))
+                    .expect("nested imp vault");
+                assert_eq!(vault.id.depth, f.depth);
+                assert_eq!(vault.id.branch, 1);
+                assert_eq!(vault.origin.depth, f.depth);
+                assert!(vault.access.requires_acceptance);
+                assert_eq!(vault.access.required_item, None);
+                assert!(vault.map.is_some());
                 break;
             }
         }

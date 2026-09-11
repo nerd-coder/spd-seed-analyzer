@@ -18,7 +18,10 @@ use forced_queue::public_entries as forced_public_entries;
 
 #[path = "state/conditions.rs"]
 mod conditions;
-use conditions::{item_conditions, item_conditions_typed, legacy_item_notes, parchment_condition};
+use conditions::{
+    imp_shop_access_note, item_conditions, item_conditions_typed, legacy_item_notes,
+    parchment_condition,
+};
 
 #[path = "state/encounters.rs"]
 mod encounters;
@@ -623,17 +626,28 @@ impl LevelState {
                 enchantment: None,
                 prediction: ItemPredictionKind::Constrained,
                 spawn_conditions: Vec::new(),
-                conditions: vec![
-                    ItemCondition::Inventory {
-                        requirement_id: "bag_stock".into(),
-                    },
-                    ItemCondition::Runtime {
-                        state_id: "limited_drop_history".into(),
-                    },
-                ],
+                conditions: {
+                    let mut conditions = vec![
+                        ItemCondition::Inventory {
+                            requirement_id: "bag_stock".into(),
+                        },
+                        ItemCondition::Runtime {
+                            state_id: "limited_drop_history".into(),
+                        },
+                    ];
+                    if self.depth == 20 {
+                        conditions.push(ItemCondition::Quest {
+                            quest_id: "ambitious_imp".into(),
+                            depth: Some(self.depth as u32),
+                        });
+                    }
+                    conditions
+                },
                 notes: {
                     let mut notes = vec!["A bag may be offered; its presence and identity depend on inventory and prior limited drops.".into()];
-                    if self.depth == 20 { notes.push("Appears only if the Ambitious Imp quest was completed before this shop is spawned.".into()); }
+                    if self.depth == 20 {
+                        notes.push(imp_shop_access_note().into());
+                    }
                     notes
                 },
                 source: Some(shop_source.into()),
@@ -662,11 +676,18 @@ impl LevelState {
                     }],
                 }],
                 conditions: if self.depth == 20 {
-                    vec![ItemCondition::Quest { quest_id: "ambitious_imp".into(), depth: Some(self.depth as u32) }]
+                    vec![ItemCondition::Quest {
+                        quest_id: "ambitious_imp".into(),
+                        depth: Some(self.depth as u32),
+                    }]
                 } else {
                     Vec::new()
                 },
-                notes: if self.depth == 20 { vec!["Appears only if the Ambitious Imp quest was completed before this shop is spawned.".into()] } else { Vec::new() },
+                notes: if self.depth == 20 {
+                    vec![imp_shop_access_note().into()]
+                } else {
+                    Vec::new()
+                },
                 source: Some(shop_source.into()),
             });
         }

@@ -252,6 +252,7 @@ pub struct BranchFloorId {
 #[serde(rename_all = "snake_case")]
 pub enum BranchFloorKind {
     BlacksmithMine,
+    ImpVault,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

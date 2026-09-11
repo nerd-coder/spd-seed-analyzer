@@ -2,6 +2,10 @@ use crate::items::model::QuestRewardRole;
 use crate::report::{ItemCondition, ItemDependencyCondition, ItemSpawnCondition};
 use crate::trinkets::{TrinketEvent, TrinketEventAction, TrinketKind};
 
+pub(super) fn imp_shop_access_note() -> &'static str {
+    "Appears only if the Ambitious Imp quest is completed with score > 2000 before this shop is spawned."
+}
+
 pub(super) fn item_conditions(artifact_conditional: bool) -> Vec<ItemSpawnCondition> {
     let mut all_of = Vec::new();
     if artifact_conditional {
@@ -41,10 +45,7 @@ pub(super) fn legacy_item_notes(
         notes.push("One of six vault take-out options; the player keeps at most one.".into());
     }
     if imp_shop_conditional {
-        notes.push(
-            "Appears only if the Ambitious Imp quest was completed before this shop is spawned."
-                .into(),
-        );
+        notes.push(imp_shop_access_note().into());
     }
     notes
 }

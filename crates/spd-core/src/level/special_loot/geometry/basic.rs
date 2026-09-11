@@ -363,6 +363,9 @@ pub(super) fn paint_ambitious_imp(
         draw_inside(map, room, door, 1, crate::level::terrain::EMPTY);
     }
     set(map, center, crate::level::terrain::EXIT);
+    if let Some(cell) = map.point_to_cell(center.x, center.y) {
+        map.branch_exits.push(cell);
+    }
 
     for y in room.top..=room.bottom {
         for x in room.left..=room.right {

@@ -218,8 +218,8 @@ export type BranchFloorId = {
 export type BranchFloorReport = {
   id: BranchFloorId
   origin: BranchFloorId
-  kind: 'blacksmith_mine'
-  objective: 'Crystal' | 'Gnoll' | 'Fungi'
+  kind: 'blacksmith_mine' | 'imp_vault'
+  objective: string
   access: {
     quest_id: string
     requires_acceptance: boolean
