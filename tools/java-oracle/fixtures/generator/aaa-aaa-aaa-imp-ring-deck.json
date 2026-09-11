@@ -3,5 +3,29 @@
   "contract": "imp_ring_deck",
   "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
   "input": { "seed": "AAA-AAA-AAA", "numeric": 0 },
-  "spawn": { "depth": 19, "ring_dropped_before": 4, "ring_dropped_after": 5 }
+  "spawn": {
+    "depth": 19,
+    "ring_dropped_before": 4,
+    "ring_dropped_after": 5,
+    "artifact_dropped_before": 1,
+    "artifact_dropped_after": 2,
+    "wand_dropped_before": 4,
+    "wand_dropped_after": 5,
+    "wep_t4_dropped_before": 5,
+    "wep_t4_dropped_after": 5,
+    "wep_t5_dropped_before": 2,
+    "wep_t5_dropped_after": 3,
+    "mis_t4_dropped_before": 3,
+    "mis_t4_dropped_after": 4,
+    "mis_t5_dropped_before": 1,
+    "mis_t5_dropped_after": 1,
+    "reward_options": [
+      { "class": "SandalsOfNature", "level": 2, "cursed": false },
+      { "class": "RingOfHaste", "level": 2, "cursed": false },
+      { "class": "Greatshield", "level": 2, "cursed": false },
+      { "class": "Javelin", "level": 4, "cursed": false },
+      { "class": "PlateArmor", "level": 3, "cursed": false },
+      { "class": "WandOfMagicMissile", "level": 2, "cursed": false }
+    ]
+  }
 }

@@ -3,5 +3,29 @@
   "contract": "imp_ring_deck",
   "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
   "input": { "seed": "HKT-JZN-XQQ", "numeric": 1548095554788 },
-  "spawn": { "depth": 19, "ring_dropped_before": 4, "ring_dropped_after": 5 }
+  "spawn": {
+    "depth": 19,
+    "ring_dropped_before": 4,
+    "ring_dropped_after": 5,
+    "artifact_dropped_before": 3,
+    "artifact_dropped_after": 4,
+    "wand_dropped_before": 4,
+    "wand_dropped_after": 5,
+    "wep_t4_dropped_before": 8,
+    "wep_t4_dropped_after": 9,
+    "wep_t5_dropped_before": 1,
+    "wep_t5_dropped_after": 1,
+    "mis_t4_dropped_before": 3,
+    "mis_t4_dropped_after": 3,
+    "mis_t5_dropped_before": 2,
+    "mis_t5_dropped_after": 3,
+    "reward_options": [
+      { "class": "SandalsOfNature", "level": 2, "cursed": false },
+      { "class": "RingOfFuror", "level": 4, "cursed": false },
+      { "class": "Trident", "level": 4, "cursed": false },
+      { "class": "RunicBlade", "level": 5, "cursed": false },
+      { "class": "PlateArmor", "level": 3, "cursed": false },
+      { "class": "WandOfBlastWave", "level": 4, "cursed": false }
+    ]
+  }
 }

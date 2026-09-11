@@ -3,5 +3,29 @@
   "contract": "imp_ring_deck",
   "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
   "input": { "seed": "ABC-DEF-GHI", "numeric": 8687205886 },
-  "spawn": { "depth": 18, "ring_dropped_before": 4, "ring_dropped_after": 5 }
+  "spawn": {
+    "depth": 18,
+    "ring_dropped_before": 4,
+    "ring_dropped_after": 5,
+    "artifact_dropped_before": 3,
+    "artifact_dropped_after": 4,
+    "wand_dropped_before": 5,
+    "wand_dropped_after": 6,
+    "wep_t4_dropped_before": 5,
+    "wep_t4_dropped_after": 6,
+    "wep_t5_dropped_before": 0,
+    "wep_t5_dropped_after": 0,
+    "mis_t4_dropped_before": 1,
+    "mis_t4_dropped_after": 1,
+    "mis_t5_dropped_before": 0,
+    "mis_t5_dropped_after": 1,
+    "reward_options": [
+      { "class": "MasterThievesArmband", "level": 5, "cursed": false },
+      { "class": "RingOfElements", "level": 3, "cursed": false },
+      { "class": "Trident", "level": 3, "cursed": false },
+      { "class": "BattleAxe", "level": 3, "cursed": false },
+      { "class": "PlateArmor", "level": 3, "cursed": false },
+      { "class": "WandOfFrost", "level": 3, "cursed": false }
+    ]
+  }
 }

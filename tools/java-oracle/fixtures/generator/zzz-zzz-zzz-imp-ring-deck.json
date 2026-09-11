@@ -3,5 +3,29 @@
   "contract": "imp_ring_deck",
   "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
   "input": { "seed": "ZZZ-ZZZ-ZZZ", "numeric": 5429503678975 },
-  "spawn": { "depth": 18, "ring_dropped_before": 3, "ring_dropped_after": 4 }
+  "spawn": {
+    "depth": 18,
+    "ring_dropped_before": 3,
+    "ring_dropped_after": 4,
+    "artifact_dropped_before": 3,
+    "artifact_dropped_after": 4,
+    "wand_dropped_before": 4,
+    "wand_dropped_after": 5,
+    "wep_t4_dropped_before": 3,
+    "wep_t4_dropped_after": 3,
+    "wep_t5_dropped_before": 2,
+    "wep_t5_dropped_after": 3,
+    "mis_t4_dropped_before": 3,
+    "mis_t4_dropped_after": 4,
+    "mis_t5_dropped_before": 0,
+    "mis_t5_dropped_after": 0,
+    "reward_options": [
+      { "class": "TalismanOfForesight", "level": 5, "cursed": false },
+      { "class": "RingOfForce", "level": 4, "cursed": false },
+      { "class": "Greatshield", "level": 2, "cursed": false },
+      { "class": "HeavyBoomerang", "level": 3, "cursed": false },
+      { "class": "PlateArmor", "level": 2, "cursed": false },
+      { "class": "WandOfPrismaticLight", "level": 3, "cursed": false }
+    ]
+  }
 }

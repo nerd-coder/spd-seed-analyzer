@@ -33,7 +33,7 @@ public final class JavaOracle {
 	public static void main(String[] args) {
 		if (args.length < 1 || args.length > 4) {
 			System.err.println(
-					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH | mining-level DEPTH crystal|gnoll | generator-deck-rollover | generator-lifecycle | shop-bag-selection]");
+					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH | mining-level DEPTH crystal|gnoll | vault-level DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection]");
 			System.exit(2);
 		}
 
@@ -61,9 +61,15 @@ public final class JavaOracle {
 		boolean cavesBossPatch = args.length == 2 && "caves-boss-patch".equals(args[1]);
 		boolean hallsPaintTrace = args.length == 3 && "halls-paint-trace".equals(args[1]);
 		boolean miningLevel = args.length == 4 && "mining-level".equals(args[1]);
+		boolean vaultLevel = args.length == 3 && "vault-level".equals(args[1]);
 		if (miningLevel) {
 			System.out.print(MiningLevelOracle.generateJson(
 					inputSeed, numericSeed, Integer.parseInt(args[2]), args[3]));
+			return;
+		}
+		if (vaultLevel) {
+			System.out.print(VaultLevelOracle.generateJson(
+					inputSeed, numericSeed, Integer.parseInt(args[2])));
 			return;
 		}
 		if (args.length == 4) {

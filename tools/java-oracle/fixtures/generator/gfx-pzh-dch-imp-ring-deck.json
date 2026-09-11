@@ -3,5 +3,29 @@
   "contract": "imp_ring_deck",
   "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
   "input": { "seed": "GFX-PZH-DCH", "numeric": 1300416271343 },
-  "spawn": { "depth": 17, "ring_dropped_before": 1, "ring_dropped_after": 2 }
+  "spawn": {
+    "depth": 17,
+    "ring_dropped_before": 1,
+    "ring_dropped_after": 2,
+    "artifact_dropped_before": 2,
+    "artifact_dropped_after": 3,
+    "wand_dropped_before": 5,
+    "wand_dropped_after": 6,
+    "wep_t4_dropped_before": 3,
+    "wep_t4_dropped_after": 3,
+    "wep_t5_dropped_before": 2,
+    "wep_t5_dropped_after": 3,
+    "mis_t4_dropped_before": 1,
+    "mis_t4_dropped_after": 2,
+    "mis_t5_dropped_before": 1,
+    "mis_t5_dropped_after": 1,
+    "reward_options": [
+      { "class": "TimekeepersHourglass", "level": 3, "cursed": false },
+      { "class": "RingOfArcana", "level": 2, "cursed": false },
+      { "class": "WarHammer", "level": 4, "cursed": false },
+      { "class": "HeavyBoomerang", "level": 4, "cursed": false },
+      { "class": "PlateArmor", "level": 2, "cursed": false },
+      { "class": "WandOfLightning", "level": 4, "cursed": false }
+    ]
+  }
 }

@@ -5,6 +5,9 @@ use crate::random::Random;
 #[path = "tests/lifecycle.rs"]
 mod lifecycle;
 
+#[path = "tests/vault_using_defaults.rs"]
+mod vault_using_defaults;
+
 #[test]
 fn full_reset_and_random_deterministic() {
     Random::reset_generators();

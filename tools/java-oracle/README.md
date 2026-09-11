@@ -62,6 +62,7 @@ From the analyzer repository root:
 ./tools/java-oracle/run --generator-deck-rollover AAA-AAA-AAA
 ./tools/java-oracle/run --generator-lifecycle AAA-AAA-AAA
 ./tools/java-oracle/run --imp-ring-deck AAA-AAA-AAA
+./tools/java-oracle/run --vault-level 17 AAA-AAA-AAA
 ./tools/java-oracle/run --shop-bag-selection AAA-AAA-AAA
 ./tools/java-oracle/run --secret-library-order AAA-AAA-AAA
 ```
@@ -146,6 +147,9 @@ these commands (stdout is the default when `--output` is omitted):
 ./tools/java-oracle/run --imp-ring-deck \
   --output tools/java-oracle/fixtures/generator/aaa-aaa-aaa-imp-ring-deck.json \
   AAA-AAA-AAA
+./tools/java-oracle/run --vault-level 17 \
+  --output tools/java-oracle/fixtures/vault/aaa-aaa-aaa-floor-17.json \
+  AAA-AAA-AAA
 ./tools/java-oracle/run --quest-npc-placement \
   --output tools/java-oracle/fixtures/generator/aaa-aaa-aac-quest-npc-placement.json \
   AAA-AAA-AAC
@@ -168,6 +172,12 @@ directly forces the requested Blacksmith objective, constructs the canonical
 `MiningLevel`, and stops at `createMobs`. These fixtures compare objective-specific
 painter output; they do not represent the Blacksmith objective naturally rolled
 by a main-branch run.
+
+`--vault-level` supports depths 17-19 in branch 1. It initializes a fresh run,
+sets the minimum Imp quest flags (`spawned`/`given`), constructs `VaultLevel`,
+and records `RING`/`WAND`/`ARTIFACT.dropped` around `create()`. Vault equipment
+uses `randomUsingDefaults` only, so `RING.dropped` stays flat. This is not a
+natural Imp-quest entry.
 
 `--final-heaps-depth` accepts every depth from 1 through 26 and always emits
 the additive render fields. The AAA-AAA-AAA,

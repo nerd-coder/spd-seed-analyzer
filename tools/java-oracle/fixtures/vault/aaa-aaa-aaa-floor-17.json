@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "contract": "vault_level_using_defaults",
+  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
+  "input": { "seed": "AAA-AAA-AAA", "numeric": 0 },
+  "depth": 17,
+  "branch": 1,
+  "imp_quest_forced": true,
+  "dropped": {
+    "RING": { "before": 0, "after": 0 },
+    "WAND": { "before": 0, "after": 0 },
+    "ARTIFACT": { "before": 0, "after": 0 }
+  }
+}
