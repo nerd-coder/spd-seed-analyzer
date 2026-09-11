@@ -361,6 +361,9 @@ public final class JavaOracle {
 		json.append("      \"custom_tiles\": [\n");
 		appendCustomTiles(json, floor.customTiles);
 		json.append("      ],\n");
+		json.append("      \"custom_terrain\": [\n");
+		appendCustomTiles(json, floor.customTerrain);
+		json.append("      ],\n");
 		json.append("      \"custom_walls\": [\n");
 		appendCustomTiles(json, floor.customWalls);
 		json.append("      ],\n");
@@ -449,7 +452,7 @@ public final class JavaOracle {
 		}
 	}
 
-	private static void appendCustomTiles(
+	static void appendCustomTiles(
 			StringBuilder json, List<FloorVisualFacts.CustomTileFact> tiles) {
 		for (int index = 0; index < tiles.size(); index++) {
 			FloorVisualFacts.CustomTileFact tile = tiles.get(index);

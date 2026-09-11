@@ -97,6 +97,9 @@ final class MiningLevelOracle {
 		JavaOracle.appendBlobs(json, visual.blobs);
 		json.append("  ],\n");
 		appendLayers(json, "custom_tiles", level.customTiles);
+		json.append("  \"custom_terrain\": [\n");
+		JavaOracle.appendCustomTiles(json, visual.customTerrain);
+		json.append("  ],\n");
 		appendLayers(json, "custom_walls", level.customWalls);
 		json.setLength(json.length() - 2);
 		return json.append("\n}\n").toString();

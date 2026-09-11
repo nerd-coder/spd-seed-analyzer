@@ -131,6 +131,9 @@ mod tests {
         tile_variance: Vec<u8>,
         #[serde(default)]
         custom_tiles: Vec<OracleCustomTile>,
+        #[allow(dead_code)] // parse-only until layout equality is asserted
+        #[serde(default)]
+        custom_terrain: Vec<OracleCustomTile>,
         #[serde(default)]
         custom_walls: Vec<OracleCustomTile>,
         transitions: Vec<MapTransition>,

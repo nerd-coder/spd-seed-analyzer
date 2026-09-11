@@ -32,6 +32,7 @@ final class FloorVisualFacts {
 	final List<PlantFact> plants;
 	final List<BlobFact> blobs;
 	final List<CustomTileFact> customTiles;
+	final List<CustomTileFact> customTerrain;
 	final List<CustomTileFact> customWalls;
 
 	private FloorVisualFacts(
@@ -43,6 +44,7 @@ final class FloorVisualFacts {
 			List<PlantFact> plants,
 			List<BlobFact> blobs,
 			List<CustomTileFact> customTiles,
+			List<CustomTileFact> customTerrain,
 			List<CustomTileFact> customWalls) {
 		this.terrain = terrain;
 		this.discoverable = discoverable;
@@ -52,6 +54,7 @@ final class FloorVisualFacts {
 		this.plants = plants;
 		this.blobs = blobs;
 		this.customTiles = customTiles;
+		this.customTerrain = customTerrain;
 		this.customWalls = customWalls;
 	}
 
@@ -125,11 +128,12 @@ final class FloorVisualFacts {
 		blobs.sort(Comparator.comparing(blob -> blob.blobClass));
 
 		List<CustomTileFact> customTiles = customTiles(level.customTiles);
+		List<CustomTileFact> customTerrain = customTiles(level.customTerrain);
 		List<CustomTileFact> customWalls = customTiles(level.customWalls);
 
 		return new FloorVisualFacts(
 				terrain, discoverable, tileVariance, transitions, traps, plants, blobs,
-				customTiles, customWalls);
+				customTiles, customTerrain, customWalls);
 	}
 
 	private static List<CustomTileFact> customTiles(List<CustomTilemap> tiles) {

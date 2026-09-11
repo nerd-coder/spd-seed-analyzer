@@ -355,6 +355,7 @@ final class FloorOracle {
 		final List<FloorVisualFacts.PlantFact> plants;
 		final List<FloorVisualFacts.BlobFact> blobs;
 		final List<FloorVisualFacts.CustomTileFact> customTiles;
+		final List<FloorVisualFacts.CustomTileFact> customTerrain;
 		final List<FloorVisualFacts.CustomTileFact> customWalls;
 
 		FinalFloorFacts(
@@ -396,6 +397,7 @@ final class FloorOracle {
 			this.plants = layoutFacts.plants;
 			this.blobs = layoutFacts.blobs;
 			this.customTiles = layoutFacts.customTiles;
+			this.customTerrain = layoutFacts.customTerrain;
 			this.customWalls = layoutFacts.customWalls;
 		}
 	}
