@@ -6,10 +6,9 @@ use crate::level::TerrainMap;
 use crate::quests;
 use crate::report::{
     AmbitiousImpQuestBaseline, AmbitiousImpQuestContract, BlacksmithObjective, GhostTarget,
-    GhostTargetRule, ImpTarget, ImpTargetRule, OldWandmakerQuestBaseline,
-    OldWandmakerQuestContract, QuestDepthRange, QuestReport, QuestRewardSelection,
-    SadGhostQuestBaseline, SadGhostQuestContract, TrollBlacksmithQuestBaseline,
-    TrollBlacksmithQuestContract, WandmakerObjective,
+    GhostTargetRule, OldWandmakerQuestBaseline, OldWandmakerQuestContract, QuestDepthRange,
+    QuestReport, QuestRewardSelection, SadGhostQuestBaseline, SadGhostQuestContract,
+    TrollBlacksmithQuestBaseline, TrollBlacksmithQuestContract, WandmakerObjective,
 };
 use crate::rooms::room::Room;
 
@@ -40,10 +39,8 @@ pub(super) fn take_pending(dungeon: &mut DungeonState) -> InitQuestRewards {
     }
 
     if let Some(imp) = quests::take_imp_pending(&mut dungeon.imp) {
-        result
-            .quests
-            .push(imp_report(imp.target, imp.required_tokens));
-        result.items.push(imp.reward);
+        result.quests.push(imp_report(dungeon.imp.depth));
+        result.items.extend(imp.options);
     }
     result
 }
@@ -163,41 +160,14 @@ fn blacksmith_report(quest_type: quests::BlacksmithQuestType) -> QuestReport {
     }
 }
 
-fn imp_report(target: quests::ImpQuestTarget, required_tokens: u8) -> QuestReport {
-    let target = match target {
-        quests::ImpQuestTarget::Monks => ImpTarget::Monk,
-        quests::ImpQuestTarget::Golems => ImpTarget::Golem,
-    };
+fn imp_report(spawn_depth: i32) -> QuestReport {
     QuestReport::AmbitiousImp {
         contract: AmbitiousImpQuestContract {
             spawn_depth_range: QuestDepthRange { min: 17, max: 19 },
-            target_rules: vec![
-                ImpTargetRule {
-                    spawn_depth: 17,
-                    target: ImpTarget::Monk,
-                    required_tokens: 5,
-                },
-                ImpTargetRule {
-                    spawn_depth: 18,
-                    target: ImpTarget::Monk,
-                    required_tokens: 5,
-                },
-                ImpTargetRule {
-                    spawn_depth: 18,
-                    target: ImpTarget::Golem,
-                    required_tokens: 4,
-                },
-                ImpTargetRule {
-                    spawn_depth: 19,
-                    target: ImpTarget::Golem,
-                    required_tokens: 4,
-                },
-            ],
-            rewards: reward_selection("Imp.Quest", 1, 1, None),
+            rewards: reward_selection("Imp.Quest", 6, 1, None),
         },
         baseline: AmbitiousImpQuestBaseline {
-            target,
-            required_tokens: required_tokens.into(),
+            spawn_depth: spawn_depth as u32,
         },
     }
 }

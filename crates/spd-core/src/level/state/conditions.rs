@@ -37,11 +37,8 @@ pub(super) fn legacy_item_notes(
         notes.push("One of four mutually exclusive options, available after spending 2,000 favor on Smith.".into());
         notes.push("All four options share one +0…+3 level roll. A weapon enchantment and armor glyph are retained together; Parchment Scrap +1 guarantees both when held before this floor is generated.".into());
     }
-    if quest_role == Some(QuestRewardRole::ImpRing) {
-        notes.push(
-            "Conditional on accepting and completing the quest: 5 Monk tokens or 4 Golem tokens."
-                .into(),
-        );
+    if matches!(quest_role, Some(QuestRewardRole::ImpVaultOption { .. })) {
+        notes.push("One of six vault take-out options; the player keeps at most one.".into());
     }
     if imp_shop_conditional {
         notes.push(
@@ -83,9 +80,11 @@ pub(super) fn item_conditions_typed(
             selected_count: 1,
             favor_requirement: Some(2000),
         }),
-        Some(QuestRewardRole::ImpRing) => conditions.push(ItemCondition::Quest {
-            quest_id: "ambitious_imp".into(),
-            depth: None,
+        Some(QuestRewardRole::ImpVaultOption { .. }) => conditions.push(ItemCondition::Choice {
+            group_id: "imp_vault_reward".into(),
+            option_count: 6,
+            selected_count: 1,
+            favor_requirement: None,
         }),
         _ => {}
     }
@@ -135,9 +134,9 @@ mod tests {
         );
         assert_eq!(blacksmith.len(), 1);
 
-        let imp = item_conditions_typed(Some(QuestRewardRole::ImpRing), false);
+        let imp = item_conditions_typed(Some(QuestRewardRole::ImpVaultOption { slot: 0 }), false);
         assert!(
-            matches!(&imp[0], ItemCondition::Quest { quest_id, depth: None } if quest_id == "ambitious_imp")
+            matches!(&imp[0], ItemCondition::Choice { group_id, option_count: 6, selected_count: 1, favor_requirement: None } if group_id == "imp_vault_reward")
         );
     }
 }

@@ -26,10 +26,10 @@ pub use random::Random;
 pub use report::{
     AmbitiousImpQuestBaseline, AmbitiousImpQuestContract, AnalyzeError, BlacksmithObjective,
     BranchAccessReport, BranchFloorId, BranchFloorKind, BranchFloorReport, FloorReport,
-    GhostTarget, GuaranteedAppearance, GuaranteedAppearanceKind, ImpTarget, ImpTargetRule,
-    ItemCondition, ItemDependencyCondition, ItemEnchantment, ItemSpawnCondition,
-    OldWandmakerQuestBaseline, OldWandmakerQuestContract, QuestDepthRange, QuestReport,
-    QuestRewardSelection, SadGhostQuestBaseline, SadGhostQuestContract, SeedInfo, SeedReport,
+    GhostTarget, GuaranteedAppearance, GuaranteedAppearanceKind, ItemCondition,
+    ItemDependencyCondition, ItemEnchantment, ItemSpawnCondition, OldWandmakerQuestBaseline,
+    OldWandmakerQuestContract, QuestDepthRange, QuestReport, QuestRewardSelection,
+    SadGhostQuestBaseline, SadGhostQuestContract, SeedInfo, SeedReport,
     TrollBlacksmithQuestBaseline, TrollBlacksmithQuestContract, WandmakerObjective,
 };
 pub use run::{dungeon_from_run, init_run, RunState};

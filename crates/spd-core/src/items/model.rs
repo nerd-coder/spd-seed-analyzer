@@ -97,7 +97,9 @@ pub enum QuestRewardRole {
     BlacksmithRoomArmor {
         tier: i32,
     },
-    ImpRing,
+    ImpVaultOption {
+        slot: u8,
+    },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

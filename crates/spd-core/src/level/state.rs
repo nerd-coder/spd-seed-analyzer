@@ -1,6 +1,8 @@
 //! Internal per-floor state and its public report projection.
 
-use crate::items::model::{GeneratedItem, ItemProvenance, QuestRewardRole, ShopStockRole};
+use crate::items::model::{
+    GeneratedItem, ItemCategory, ItemProvenance, QuestRewardRole, ShopStockRole,
+};
 use crate::report::{
     group_item_entries, FloorMap, FloorReport, ItemCondition, ItemDependencyCondition,
     ItemEnchantment, ItemEntry, ItemPredictionKind, ItemSpawnCondition, NumericRange, QuestReport,
@@ -46,7 +48,7 @@ fn prediction_kind(item: &GeneratedItem) -> ItemPredictionKind {
         ItemProvenance::Quest(
             QuestRewardRole::GhostWeapon { .. }
             | QuestRewardRole::WandmakerWand
-            | QuestRewardRole::ImpRing
+            | QuestRewardRole::ImpVaultOption { .. }
             | QuestRewardRole::BlacksmithWeapon { .. }
             | QuestRewardRole::BlacksmithMissile { .. }
             | QuestRewardRole::BlacksmithArmor { .. }
@@ -58,6 +60,25 @@ fn prediction_kind(item: &GeneratedItem) -> ItemPredictionKind {
         ) => ItemPredictionKind::Exact,
         ItemProvenance::Room(_) | ItemProvenance::Forced(_) => ItemPredictionKind::Constrained,
         _ => ItemPredictionKind::Exact,
+    }
+}
+
+fn imp_constrained_name(slot: u8, category: ItemCategory) -> &'static str {
+    match slot {
+        0 => "artifact or ring",
+        1 => "ring reward",
+        4 => "plate armor",
+        5 => "wand reward",
+        _ if category == ItemCategory::Missile => "missile weapon reward",
+        _ => "weapon reward",
+    }
+}
+
+fn imp_option_level_range(slot: u8, category: ItemCategory) -> Option<NumericRange> {
+    match slot {
+        0 if category == ItemCategory::Artifact => None,
+        2 | 3 => Some(NumericRange { min: 2, max: 5 }),
+        _ => Some(NumericRange { min: 2, max: 4 }),
     }
 }
 
@@ -428,7 +449,9 @@ impl LevelState {
                     "Blacksmith room missile weapon"
                 }
                 (_, Some(QuestRewardRole::BlacksmithRoomArmor { .. })) => "Blacksmith room armor",
-                (_, Some(QuestRewardRole::ImpRing)) => "ring reward",
+                (_, Some(QuestRewardRole::ImpVaultOption { slot })) => {
+                    imp_constrained_name(slot, item.category)
+                }
                 _ => "weapon reward",
             };
             let ghost_weapon = match quest_role {
@@ -522,15 +545,15 @@ impl LevelState {
                         | QuestRewardRole::BlacksmithMissile { .. }
                         | QuestRewardRole::BlacksmithArmor { .. },
                     ) => None,
-                    Some(QuestRewardRole::ImpRing) => None,
+                    Some(QuestRewardRole::ImpVaultOption { .. }) => None,
                     Some(_) => Some(item.level),
                     None if artifact_conditional => Some(item.level),
                     None => reported_level(item, constrained, shop_role),
                 },
                 level_range: if quest_role == Some(QuestRewardRole::WandmakerWand) {
                     Some(NumericRange { min: 1, max: 3 })
-                } else if quest_role == Some(QuestRewardRole::ImpRing) {
-                    Some(NumericRange { min: 2, max: 4 })
+                } else if let Some(QuestRewardRole::ImpVaultOption { slot }) = quest_role {
+                    imp_option_level_range(slot, item.category)
                 } else {
                     blacksmith_smith_option.then_some(NumericRange { min: 0, max: 3 })
                 },
@@ -557,7 +580,13 @@ impl LevelState {
                             .collect(),
                     }),
                 prediction,
-                spawn_conditions: item_conditions(artifact_conditional),
+                spawn_conditions: item_conditions(
+                    artifact_conditional
+                        || matches!(
+                            quest_role,
+                            Some(QuestRewardRole::ImpVaultOption { slot: 0 })
+                        ),
+                ),
                 conditions,
                 notes: legacy_item_notes(
                     quest_role,

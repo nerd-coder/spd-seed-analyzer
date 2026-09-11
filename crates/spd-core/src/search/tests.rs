@@ -16,7 +16,15 @@ fn category_for(class_name: &str) -> &'static str {
         || class_name == "Greatshield"
     {
         "weapon"
-    } else if class_name == "Tomahawk" || class_name == "Dart" || class_name == "Boomerang" {
+    } else if class_name == "Tomahawk"
+        || class_name == "Dart"
+        || class_name == "Boomerang"
+        || class_name == "Javelin"
+        || class_name == "HeavyBoomerang"
+        || class_name == "Trident"
+        || class_name == "ThrowingHammer"
+        || class_name == "ForceCube"
+    {
         "missile"
     } else if class_name.ends_with("Armor") {
         "armor"
@@ -28,6 +36,24 @@ fn category_for(class_name: &str) -> &'static str {
         "scroll"
     } else if class_name.starts_with("Wand") {
         "wand"
+    } else if [
+        "AlchemistsToolkit",
+        "ChaliceOfBlood",
+        "CloakOfShadows",
+        "DriedRose",
+        "EtherealChains",
+        "HolyTome",
+        "HornOfPlenty",
+        "MasterThievesArmband",
+        "SandalsOfNature",
+        "SkeletonKey",
+        "TalismanOfForesight",
+        "TimekeepersHourglass",
+        "UnstableSpellbook",
+    ]
+    .contains(&class_name)
+    {
+        "artifact"
     } else if class_name.ends_with("Seed") {
         "seed"
     } else {
@@ -309,7 +335,7 @@ fn category_only_imp_ring_never_matches_an_exact_ring_search() {
             tier_range: None,
             level: None,
             level_range: Some(crate::report::NumericRange { min: 2, max: 4 }),
-            cursed: Some(true),
+            cursed: Some(false),
             enchantment: None,
             prediction: ItemPredictionKind::Constrained,
             spawn_conditions: Vec::new(),

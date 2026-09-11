@@ -107,28 +107,12 @@ pub struct TrollBlacksmithQuestBaseline {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AmbitiousImpQuestContract {
     pub spawn_depth_range: QuestDepthRange,
-    pub target_rules: Vec<ImpTargetRule>,
     pub rewards: QuestRewardSelection,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-pub struct ImpTargetRule {
-    pub spawn_depth: u32,
-    pub target: ImpTarget,
-    pub required_tokens: u32,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "snake_case")]
-pub enum ImpTarget {
-    Monk,
-    Golem,
-}
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AmbitiousImpQuestBaseline {
-    pub target: ImpTarget,
-    pub required_tokens: u32,
+    pub spawn_depth: u32,
 }
 
 #[cfg(test)]
@@ -181,13 +165,9 @@ mod tests {
             QuestReport::AmbitiousImp {
                 contract: AmbitiousImpQuestContract {
                     spawn_depth_range: depth_range,
-                    target_rules: vec![],
                     rewards: rewards(),
                 },
-                baseline: AmbitiousImpQuestBaseline {
-                    target: ImpTarget::Monk,
-                    required_tokens: 5,
-                },
+                baseline: AmbitiousImpQuestBaseline { spawn_depth: 17 },
             },
         ];
 

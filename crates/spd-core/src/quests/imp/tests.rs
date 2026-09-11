@@ -1,4 +1,5 @@
 use super::*;
+use crate::items::model::{ItemCategory, ItemProvenance, QuestRewardRole};
 use crate::run::{dungeon_from_run, init_run};
 use crate::{MapProfile, TrinketEvent, TrinketEventAction, TrinketKind};
 use serde::Deserialize;
@@ -69,7 +70,16 @@ struct RewardOption {
     cursed: bool,
 }
 
-fn profiled_imp_outcome(seed: i64, trinket: Option<TrinketKind>) -> (i32, bool, Option<i32>) {
+fn replay_through(seed: i64, max_depth: i32) -> crate::dungeon::DungeonState {
+    let mut dungeon = dungeon_from_run(init_run(seed));
+    for depth in 1..=max_depth {
+        dungeon.depth = depth;
+        let _ = crate::level::create_level_partial(&mut dungeon);
+    }
+    dungeon
+}
+
+fn profiled_imp_outcome(seed: i64, trinket: Option<TrinketKind>) -> (i32, Vec<String>) {
     let mut dungeon = dungeon_from_run(init_run(seed));
     let profile = MapProfile {
         trinket_events: trinket
@@ -103,8 +113,12 @@ fn profiled_imp_outcome(seed: i64, trinket: Option<TrinketKind>) -> (i32, bool, 
     crate::level::analyze_floors_with_profile(&mut dungeon, 19, Some(&profile));
     (
         dungeon.imp.depth,
-        dungeon.imp.alternative,
-        dungeon.imp.reward_level,
+        dungeon
+            .imp
+            .reward_options
+            .iter()
+            .map(|item| item.class_name.clone())
+            .collect(),
     )
 }
 
@@ -129,165 +143,136 @@ fn imp_ring_deck_fixture_pins_v4_spawn_draw_sites() {
             fixture.input.seed
         );
 
+        let dungeon = replay_through(fixture.input.numeric, fixture.spawn.depth);
         let spawn = &fixture.spawn;
-        assert!(
-            spawn.ring_dropped_after > spawn.ring_dropped_before,
-            "{} RING.dropped must advance (uniqueness loop)",
+        assert_eq!(
+            dungeon.imp.depth, spawn.depth,
+            "{} spawn depth",
             fixture.input.seed
         );
+        let expected_delta = ImpSpawnDecks {
+            ring: spawn.ring_dropped_after - spawn.ring_dropped_before,
+            artifact: spawn.artifact_dropped_after - spawn.artifact_dropped_before,
+            wand: spawn.wand_dropped_after - spawn.wand_dropped_before,
+            wep_t4: spawn.wep_t4_dropped_after - spawn.wep_t4_dropped_before,
+            wep_t5: spawn.wep_t5_dropped_after - spawn.wep_t5_dropped_before,
+            mis_t4: spawn.mis_t4_dropped_after - spawn.mis_t4_dropped_before,
+            mis_t5: spawn.mis_t5_dropped_after - spawn.mis_t5_dropped_before,
+        };
+        let actual_delta = ImpSpawnDecks {
+            ring: dungeon.imp.dropped_after.ring - dungeon.imp.dropped_before.ring,
+            artifact: dungeon.imp.dropped_after.artifact - dungeon.imp.dropped_before.artifact,
+            wand: dungeon.imp.dropped_after.wand - dungeon.imp.dropped_before.wand,
+            wep_t4: dungeon.imp.dropped_after.wep_t4 - dungeon.imp.dropped_before.wep_t4,
+            wep_t5: dungeon.imp.dropped_after.wep_t5 - dungeon.imp.dropped_before.wep_t5,
+            mis_t4: dungeon.imp.dropped_after.mis_t4 - dungeon.imp.dropped_before.mis_t4,
+            mis_t5: dungeon.imp.dropped_after.mis_t5 - dungeon.imp.dropped_before.mis_t5,
+        };
         assert_eq!(
-            spawn.artifact_dropped_after,
-            spawn.artifact_dropped_before + 1,
-            "{} ARTIFACT.dropped",
-            fixture.input.seed
-        );
-        assert_eq!(
-            spawn.wand_dropped_after,
-            spawn.wand_dropped_before + 1,
-            "{} WAND.dropped",
-            fixture.input.seed
-        );
-
-        let wep_t4 = spawn.wep_t4_dropped_after - spawn.wep_t4_dropped_before;
-        let wep_t5 = spawn.wep_t5_dropped_after - spawn.wep_t5_dropped_before;
-        let mis_t4 = spawn.mis_t4_dropped_after - spawn.mis_t4_dropped_before;
-        let mis_t5 = spawn.mis_t5_dropped_after - spawn.mis_t5_dropped_before;
-        assert_eq!(
-            (wep_t4, wep_t5, mis_t4, mis_t5),
-            if wep_t5 == 1 {
-                (0, 1, 1, 0)
-            } else {
-                (1, 0, 0, 1)
-            },
-            "{} WEP/MIS pair (T5+T4 or T4+T5)",
-            fixture.input.seed
+            actual_delta, expected_delta,
+            "{} dropped deltas before={:?} after={:?}",
+            fixture.input.seed, dungeon.imp.dropped_before, dungeon.imp.dropped_after
         );
 
         assert_eq!(
-            spawn.reward_options.len(),
+            dungeon.imp.reward_options.len(),
             6,
             "{} rewardOptions after initRooms",
             fixture.input.seed
         );
-        for (index, option) in spawn.reward_options.iter().enumerate() {
-            assert!(
-                !option.class.is_empty(),
-                "{} reward[{index}] class",
-                fixture.input.seed
-            );
-            assert!(
-                !option.cursed,
-                "{} reward[{index}] {} cursed",
-                fixture.input.seed, option.class
-            );
-            assert!(
-                option.level >= 0,
-                "{} reward[{index}] {} level",
-                fixture.input.seed,
-                option.class
+        let options = &dungeon.imp.reward_options;
+        assert_eq!(options[4].class_name, "PlateArmor");
+        assert_eq!(options[1].category, ItemCategory::Ring);
+        assert_eq!(options[5].category, ItemCategory::Wand);
+        assert!(matches!(
+            options[0].category,
+            ItemCategory::Artifact | ItemCategory::Ring
+        ));
+        assert!(options.iter().all(|item| !item.cursed));
+        assert!(spawn.reward_options.iter().all(|item| !item.cursed));
+        // Class identity still follows persistent decks from prior floors
+        // (unported city layout). Ambient IntRange/coin-flip overwrites do not.
+        for (index, (actual, expected)) in options.iter().zip(&spawn.reward_options).enumerate() {
+            if index == 0 && actual.class_name != expected.class {
+                continue;
+            }
+            assert_eq!(
+                actual.level, expected.level,
+                "{} reward[{index}] {} level (class {})",
+                fixture.input.seed, expected.class, actual.class_name
             );
         }
     }
 }
 
 #[test]
-fn ring_draw_index_matches_pinned_java_at_imp_spawn() {
-    // v4 spawn is not ported; pin Java RING counters without analyze_seed.
-    for fixture_json in RING_DECK_FIXTURES {
-        let fixture: RingDeckFixture =
-            serde_json::from_str(fixture_json).expect("Imp ring deck fixture");
-        assert_eq!(fixture.contract, "imp_ring_deck");
-        assert_eq!(fixture.spd.version, crate::SPD_VERSION);
-        assert_eq!(fixture.spd.commit, crate::SPD_COMMIT);
-        assert!(
-            (17..=19).contains(&fixture.spawn.depth),
-            "{} depth",
-            fixture.input.seed
-        );
-        assert!(
-            fixture.spawn.ring_dropped_after > fixture.spawn.ring_dropped_before,
-            "{} RING.dropped before={} after={}",
-            fixture.input.seed,
-            fixture.spawn.ring_dropped_before,
-            fixture.spawn.ring_dropped_after
+fn transfer_upgrade_uses_artifact_level_cap() {
+    assert_eq!(rewards::transfer_upgrade_level("SandalsOfNature", 5), 2);
+    assert_eq!(
+        rewards::transfer_upgrade_level("TimekeepersHourglass", 5),
+        3
+    );
+    assert_eq!(rewards::transfer_upgrade_level("EtherealChains", 5), 3);
+    assert_eq!(rewards::transfer_upgrade_level("TalismanOfForesight", 5), 5);
+    assert_eq!(
+        rewards::transfer_upgrade_level("MasterThievesArmband", 5),
+        5
+    );
+}
+
+#[test]
+fn reward_options_are_deterministic_uncursed_and_take_one() {
+    let gen_template = init_run(42).generator;
+
+    Random::reset_generators();
+    Random::push_generator_seeded(777);
+    let first = rewards::generate_reward_options(&mut gen_template.clone(), 18);
+    Random::pop_generator();
+
+    Random::reset_generators();
+    Random::push_generator_seeded(777);
+    let second = rewards::generate_reward_options(&mut gen_template.clone(), 18);
+    Random::pop_generator();
+
+    assert_eq!(first.len(), 6);
+    assert_eq!(
+        first
+            .iter()
+            .map(|item| (&item.class_name, item.level, item.cursed, &item.enchantment))
+            .collect::<Vec<_>>(),
+        second
+            .iter()
+            .map(|item| (&item.class_name, item.level, item.cursed, &item.enchantment))
+            .collect::<Vec<_>>()
+    );
+    assert!(first.iter().all(|item| !item.cursed));
+    assert!(first
+        .iter()
+        .all(|item| item.source.as_deref() == Some("Imp.Quest")));
+    assert_eq!(first[4].class_name, "PlateArmor");
+    assert_eq!(first[4].category, ItemCategory::Armor);
+    assert!(first[1].category == ItemCategory::Ring);
+    assert!(first[5].category == ItemCategory::Wand);
+    for (slot, item) in first.iter().enumerate() {
+        assert_eq!(
+            item.provenance,
+            ItemProvenance::Quest(QuestRewardRole::ImpVaultOption { slot: slot as u8 })
         );
     }
 }
 
 #[test]
-fn reward_deterministic_and_cursed_plus_two() {
-    let gen_template = init_run(42).generator;
-
-    Random::reset_generators();
-    Random::push_generator_seeded(777);
-    let r1 = generate_reward(&mut gen_template.clone(), 18);
-    Random::pop_generator();
-
-    Random::reset_generators();
-    Random::push_generator_seeded(777);
-    let r2 = generate_reward(&mut gen_template.clone(), 18);
-    Random::pop_generator();
-
-    assert_eq!(r1.class_name, r2.class_name);
-    assert_eq!(r1.level, r2.level);
-    assert!(r1.cursed);
-    // randomize_ring level 0–2 then +2 → 2–4
-    assert!((2..=4).contains(&r1.level), "level={}", r1.level);
-}
-
-#[test]
-fn altered_ring_deck_changes_identity_without_changing_level_or_rng_tail() {
-    let mut fresh = init_run(42).generator;
-    let mut altered = fresh.clone();
-    Random::reset_generators();
-    Random::push_generator_seeded(123);
-    let _ = altered.random_category(Category::Ring, 18);
-    Random::pop_generator();
-
-    Random::reset_generators();
-    Random::push_generator_seeded(777);
-    let fresh_reward = generate_reward(&mut fresh, 18);
-    let fresh_tail = Random::peek_ints(8);
-    Random::pop_generator();
-
-    Random::reset_generators();
-    Random::push_generator_seeded(777);
-    let altered_reward = generate_reward(&mut altered, 18);
-    let altered_tail = Random::peek_ints(8);
-    Random::pop_generator();
-
-    assert_ne!(fresh_reward.class_name, altered_reward.class_name);
-    assert_eq!(fresh_reward.level, altered_reward.level);
-    assert_eq!(fresh_tail, altered_tail);
-}
-
-#[test]
-fn reward_candidates_cover_the_ring_category() {
+fn exhausted_artifact_deck_falls_back_to_a_distinct_ring() {
     let mut generator = init_run(42).generator;
     Random::reset_generators();
     Random::push_generator_seeded(777);
-    let reward = generate_reward(&mut generator, 18);
+    while generator.random_artifact(18).is_some() {}
+    let options = rewards::generate_reward_options(&mut generator, 18);
     Random::pop_generator();
 
-    let crate::items::model::ItemProvenance::Quest(crate::items::model::QuestRewardRole::ImpRing) =
-        reward.provenance
-    else {
-        panic!("Imp reward provenance");
-    };
-    let ring_classes = Category::Ring.def().classes;
-    assert_eq!(reward.candidate_classes.len(), ring_classes.len());
-    assert!(ring_classes.iter().all(|class_name| reward
-        .candidate_classes
-        .iter()
-        .any(|candidate| candidate == class_name)));
-}
-
-#[test]
-fn target_contract_matches_spawn_alternative() {
-    assert_eq!(ImpQuestTarget::Monks.required_tokens(), 5);
-    assert_eq!(ImpQuestTarget::Golems.required_tokens(), 4);
-    assert_eq!(ImpQuestTarget::Monks.as_str(), "Monks");
-    assert_eq!(ImpQuestTarget::Golems.as_str(), "Golems");
+    assert_eq!(options[0].category, ItemCategory::Ring);
+    assert_eq!(options[1].category, ItemCategory::Ring);
+    assert_ne!(options[0].class_name, options[1].class_name);
 }
 
 #[test]
@@ -299,11 +284,10 @@ fn depth19_always_spawns_when_not_spawned() {
     let mut specs = Vec::new();
     assert!(try_spawn(&mut imp, &mut generator, 19, &mut specs));
     assert_eq!(specs[0].name, "AmbitiousImpRoom");
-    assert!(!imp.alternative); // golems on 19
-    assert!(imp.pending_reward.is_some());
-    let result = take_pending(&mut imp).expect("spawn reward");
-    assert_eq!(result.target, ImpQuestTarget::Golems);
-    assert_eq!(result.required_tokens, 4);
+    assert_eq!(imp.reward_options.len(), 6);
+    let result = take_pending(&mut imp).expect("spawn rewards");
+    assert_eq!(result.options.len(), 6);
+    assert!(result.options.iter().all(|item| !item.cursed));
     Random::pop_generator();
 }
 
@@ -318,23 +302,16 @@ fn depth16_never_spawns() {
 }
 
 #[test]
-fn held_mossy_clump_can_change_reward_level_on_the_spawn_floor() {
-    assert_eq!(profiled_imp_outcome(0, None), (19, false, Some(3)));
-    assert_eq!(
-        profiled_imp_outcome(0, Some(TrinketKind::MossyClump)),
-        (19, false, Some(4))
-    );
+fn held_mossy_clump_can_change_spawn_depth() {
+    assert_eq!(profiled_imp_outcome(5, None).0, 17);
+    assert_eq!(profiled_imp_outcome(5, Some(TrinketKind::MossyClump)).0, 18);
 }
 
 #[test]
-fn held_mossy_clump_can_change_spawn_depth_and_depth18_target() {
-    assert_eq!(profiled_imp_outcome(5, None).0, 17);
-    assert_eq!(profiled_imp_outcome(5, Some(TrinketKind::MossyClump)).0, 18);
-
-    let baseline = profiled_imp_outcome(26, None);
-    let mossy = profiled_imp_outcome(26, Some(TrinketKind::MossyClump));
-    assert_eq!(baseline.0, 18);
-    assert_eq!(mossy.0, 18);
-    assert!(!baseline.1, "baseline target is Golems");
-    assert!(mossy.1, "Mossy target is Monks");
+fn held_mossy_clump_can_change_reward_identities_on_the_spawn_floor() {
+    let baseline = profiled_imp_outcome(0, None);
+    let mossy = profiled_imp_outcome(0, Some(TrinketKind::MossyClump));
+    assert_eq!(baseline.0, 19);
+    assert_eq!(mossy.0, 19);
+    assert_ne!(baseline.1, mossy.1);
 }

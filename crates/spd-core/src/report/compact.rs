@@ -210,16 +210,7 @@ fn compact_source(source: Option<&str>, floor: &FloorReport) -> Option<String> {
             _ => None,
         })?,
         "Blacksmith.Quest" => "Blacksmith".into(),
-        "Imp.Quest" => floor.quests.iter().find_map(|quest| match quest {
-            QuestReport::AmbitiousImp { baseline, .. } => Some(format!(
-                "Imp/{}",
-                match baseline.target {
-                    ImpTarget::Monk => "Monks",
-                    ImpTarget::Golem => "Golems",
-                }
-            )),
-            _ => None,
-        })?,
+        "Imp.Quest" => "Imp".into(),
         _ => return None,
     };
     Some(label)

@@ -48,7 +48,7 @@ function targetSummary(quest: QuestReport) {
     case 'troll_blacksmith':
       return `Target: ${label(quest.baseline.objective)}`
     case 'ambitious_imp':
-      return `Baseline target: ${label(quest.baseline.target)} (${quest.baseline.required_tokens} tokens)`
+      return `Spawned on depth ${quest.baseline.spawn_depth}`
   }
 }
 
@@ -57,7 +57,7 @@ function baselineContract(quest: QuestReport) {
     case 'old_wandmaker':
       return 'Reward contract: two distinct uncursed +1…+3 wands; complete the quest and choose one.'
     case 'ambitious_imp':
-      return 'Reward contract: one cursed +2…+4 ring after completing the quest.'
+      return 'Reward contract: six vault take-out options; the player keeps one.'
     default:
       return null
   }

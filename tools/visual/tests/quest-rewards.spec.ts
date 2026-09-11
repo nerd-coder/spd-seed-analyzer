@@ -49,11 +49,10 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
           source: 'Imp.Quest',
           variants: [
             {
-              name: 'ring reward',
+              name: 'artifact or ring',
               quantity: 1,
-              category: 'ring',
-              level_range: { min: 2, max: 4 },
-              cursed: true,
+              category: 'artifact',
+              cursed: false,
               prediction: 'constrained',
             },
           ],
@@ -94,12 +93,12 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
           source: 'Imp.Quest',
           variants: [
             {
-              name: 'ring of haste +3',
+              name: 'sandals of nature +2',
               quantity: 1,
-              class_name: 'RingOfHaste',
-              category: 'ring',
-              level: 3,
-              cursed: true,
+              class_name: 'SandalsOfNature',
+              category: 'artifact',
+              level: 2,
+              cursed: false,
               prediction: 'baseline',
             },
           ],
@@ -158,20 +157,13 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
                 type: 'ambitious_imp',
                 contract: {
                   spawn_depth_range: { min: 17, max: 19 },
-                  target_rules: [
-                    {
-                      spawn_depth: 19,
-                      target: 'golem',
-                      required_tokens: 4,
-                    },
-                  ],
                   rewards: {
                     item_source: 'Imp.Quest',
-                    option_count: 1,
+                    option_count: 6,
                     selected_count: 1,
                   },
                 },
-                baseline: { target: 'golem', required_tokens: 4 },
+                baseline: { spawn_depth: 19 },
               },
             ],
           },
@@ -243,13 +235,15 @@ test('quest cards prefer concrete baselines and keep the universal warning visib
 
   await page.getByRole('tab', { name: /^City/ }).click()
   const imp = page.locator('[data-quest-type="ambitious_imp"]')
-  await expect(imp).toContainText('Baseline target: Golem (4 tokens)')
+  await expect(imp).toContainText('Spawned on depth 19')
   await expect(imp).toContainText(
-    'Reward contract: one cursed +2…+4 ring after completing the quest.'
+    'Reward contract: six vault take-out options; the player keeps one.'
   )
   await expect(imp.getByText('Baseline rewards')).toBeVisible()
   await expect(imp.getByRole('listitem')).toHaveCount(1)
-  await expect(imp.getByText('ring reward', { exact: true })).toHaveCount(0)
+  await expect(imp.getByText('artifact or ring', { exact: true })).toHaveCount(
+    0
+  )
   await expect(imp.getByText('OR', { exact: true })).toHaveCount(0)
   expect(browserErrors).toEqual([])
 })

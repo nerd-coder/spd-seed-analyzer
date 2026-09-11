@@ -35,17 +35,21 @@ pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
     // sample's exact level, which is not a sound cross-profile claim.
     let candidate_classes = if matches!(
         quest_role,
-        Some(QuestRewardRole::WandmakerWand | QuestRewardRole::ImpRing)
+        Some(QuestRewardRole::WandmakerWand | QuestRewardRole::ImpVaultOption { .. })
     ) {
         Vec::new()
     } else {
         item.candidate_classes.clone()
     };
-    let artifact_conditional = item.artifact_conditional
+    let artifact_conditional = (item.artifact_conditional
         && item
             .source
             .as_deref()
-            .is_some_and(|source| source.rsplit(':').next() == Some("heap"));
+            .is_some_and(|source| source.rsplit(':').next() == Some("heap")))
+        || matches!(
+            quest_role,
+            Some(QuestRewardRole::ImpVaultOption { slot: 0 })
+        );
     let notes = vec![
         "Fresh/no-history baseline replay; player-controlled generation history can change this result."
             .into(),

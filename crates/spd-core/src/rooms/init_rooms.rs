@@ -138,7 +138,7 @@ fn room_from_spec(id: usize, spec: RoomSpec) -> Room {
 /// Region quest rooms are added after base rooms and **before** shuffle:
 /// - Prison: `Wandmaker.Quest.spawnRoom`
 /// - Caves: `Blacksmith.Quest.spawn` (also generates smithRewards immediately)
-/// - City: `Imp.Quest.spawn` (also generates the ring reward immediately)
+/// - City: `Imp.Quest.spawn` (also generates rewardOptions immediately)
 #[allow(clippy::too_many_arguments)] // mirrors SPD RegularLevel.initRooms parameter surface
 pub fn init_rooms_regular(
     depth: i32,
@@ -223,7 +223,7 @@ pub fn init_rooms_regular(
     let _ = quests::try_spawn_wandmaker_room(wandmaker, depth, &mut specs);
     // CavesLevel.initRooms: Blacksmith.Quest.spawn — generates smithRewards now
     let _ = quests::try_spawn_blacksmith(blacksmith, generator, depth, &mut specs);
-    // CityLevel.initRooms: Imp.Quest.spawn(super.initRooms()) — generates ring now
+    // CityLevel.initRooms: Imp.Quest.spawn(super.initRooms()) — generates rewardOptions now
     let _ = quests::try_spawn_imp(imp, generator, depth, &mut specs);
     // HallsLevel.initRooms appends one mandatory demon spawner before build shuffle.
     if (21..=24).contains(&depth) {

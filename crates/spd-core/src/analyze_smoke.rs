@@ -315,7 +315,7 @@ fn compact_report_promotes_exact_floor_one_room_rewards() {
         "4 Rose",
         "4 Transmutation GYFU",
         "7 Disintegration +2 , Magic Missile +1 Wandmaker - Dust",
-        "17 (cursed) Sharpshooting +4 Imp/Monks",
+        "17 Horn Of Plenty +5 , Sharpshooting +4 , Elastic Greatshield +2 , Corrupting Heavy Boomerang +5 , Thorns Plate Armor +3 , Warding +3 Imp",
     ] {
         assert!(
             compact.contains(expected),
@@ -854,38 +854,35 @@ fn imp_quest_spawns_within_city() {
                     .any(|i| i.source.as_deref() == Some("Imp.Quest"))
             {
                 saw = true;
-                let ring = f.items.iter().find(|item| {
-                    item.source.as_deref() == Some("Imp.Quest")
-                        && item.prediction != report::ItemPredictionKind::Baseline
-                });
-                if let Some(ring) = ring {
-                    assert_eq!(ring.name, "ring reward");
-                    assert_eq!(ring.prediction, report::ItemPredictionKind::Constrained);
-                    assert!(ring.class_name.is_none());
-                    assert!(ring.candidate_classes.is_empty());
-                    assert!(ring.level.is_none());
-                    assert_eq!(
-                        ring.level_range,
-                        Some(report::NumericRange { min: 2, max: 4 })
-                    );
-                    assert_eq!(ring.cursed, Some(true));
-                    assert!(ring.notes.iter().any(|note| {
-                        note.contains("5 Monk tokens") && note.contains("4 Golem tokens")
-                    }));
-                    assert!(f.quests.iter().any(|quest| matches!(
-                        quest,
-                        report::QuestReport::AmbitiousImp { contract, baseline }
-                            if contract.spawn_depth_range == report::QuestDepthRange { min: 17, max: 19 }
-                                && contract.rewards.item_source == "Imp.Quest"
-                                && contract.rewards.option_count == 1
-                                && contract.rewards.selected_count == 1
-                                && contract.target_rules.iter().any(|rule| {
-                                    rule.target == baseline.target
-                                        && rule.required_tokens == baseline.required_tokens
-                                })
-                    )));
-                }
-                let baseline_rings: Vec<_> = f
+                let options: Vec<_> = f
+                    .items
+                    .iter()
+                    .filter(|item| {
+                        item.source.as_deref() == Some("Imp.Quest")
+                            && item.prediction != report::ItemPredictionKind::Baseline
+                    })
+                    .collect();
+                assert_eq!(options.len(), 6);
+                assert!(options.iter().all(|item| {
+                    item.prediction == report::ItemPredictionKind::Constrained
+                        && item.class_name.is_none()
+                        && item.cursed == Some(false)
+                        && item
+                            .notes
+                            .iter()
+                            .any(|note| note.contains("six vault take-out"))
+                }));
+                assert_eq!(options[0].name, "artifact or ring");
+                assert!(f.quests.iter().any(|quest| matches!(
+                    quest,
+                    report::QuestReport::AmbitiousImp { contract, baseline }
+                        if contract.spawn_depth_range == report::QuestDepthRange { min: 17, max: 19 }
+                            && contract.rewards.item_source == "Imp.Quest"
+                            && contract.rewards.option_count == 6
+                            && contract.rewards.selected_count == 1
+                            && (17..=19).contains(&baseline.spawn_depth)
+                )));
+                let baseline_options: Vec<_> = f
                     .items
                     .iter()
                     .filter(|item| {
@@ -893,11 +890,11 @@ fn imp_quest_spawns_within_city() {
                             && item.prediction == report::ItemPredictionKind::Baseline
                     })
                     .collect();
-                assert_eq!(baseline_rings.len(), 1);
-                assert!(baseline_rings.iter().all(|item| {
+                assert_eq!(baseline_options.len(), 6);
+                assert!(baseline_options.iter().all(|item| {
                     item.class_name.is_some()
                         && item.level.is_some()
-                        && item.cursed == Some(true)
+                        && item.cursed == Some(false)
                         && item.candidate_classes.is_empty()
                 }));
                 break;

@@ -262,8 +262,6 @@ export type GhostTarget = 'fetid_rat' | 'gnoll_trickster' | 'great_crab'
 export type WandmakerObjective = 'corpse_dust' | 'elemental_embers' | 'rotberry'
 
 export type BlacksmithObjective = 'crystal' | 'gnoll'
-export type ImpTarget = 'monk' | 'golem'
-
 export type QuestReport =
   | {
       type: 'sad_ghost'
@@ -296,14 +294,9 @@ export type QuestReport =
       type: 'ambitious_imp'
       contract: {
         spawn_depth_range: QuestDepthRange
-        target_rules: {
-          spawn_depth: number
-          target: ImpTarget
-          required_tokens: number
-        }[]
         rewards: QuestRewardSelection
       }
-      baseline: { target: ImpTarget; required_tokens: number }
+      baseline: { spawn_depth: number }
     }
 
 export type GuaranteedAppearance = {

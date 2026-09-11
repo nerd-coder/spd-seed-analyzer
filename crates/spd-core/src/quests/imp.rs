@@ -1,75 +1,48 @@
 //! Port of `Imp.Quest` (Ambitious Imp, city floors 17–19).
 //!
 //! `Imp.Quest.spawn` runs at the end of `CityLevel.initRooms` (before shuffle)
-//! and generates the cursed +2…+4 ring reward immediately (unlike Wandmaker,
-//! which generates wands in `createMobs`).
+//! and immediately fills `rewardOptions` (six take-one items). v4 does not
+//! roll monks/golems on a fresh run.
 
 use crate::generator::{Category, GeneratorState};
 use crate::items::model::GeneratedItem;
 use crate::random::Random;
 use crate::rooms::types::{RoomKind, RoomSpec};
 
+#[path = "imp/rewards.rs"]
+mod rewards;
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct ImpSpawnDecks {
+    pub ring: i32,
+    pub artifact: i32,
+    pub wand: i32,
+    pub wep_t4: i32,
+    pub wep_t5: i32,
+    pub mis_t4: i32,
+    pub mis_t5: i32,
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct ImpQuestState {
     pub spawned: bool,
-    /// `true` = monks (alternative), `false` = golems.
-    pub alternative: bool,
     pub depth: i32,
-    /// Ring category draw index immediately before reward generation.
-    pub reward_ring_draw_index: Option<i32>,
-    /// Ring category draw index immediately after the curse-reroll loop.
-    pub reward_ring_draw_end: Option<i32>,
-    /// Fixed-profile reward level retained after the report drains the item.
-    pub reward_level: Option<i32>,
-    /// Ring generated at spawn; drained once into the floor report.
-    pub pending_reward: Option<GeneratedItem>,
+    /// Retained after the floor report drains `pending_options`.
+    pub reward_options: Vec<GeneratedItem>,
+    pub pending_options: Vec<GeneratedItem>,
+    pub dropped_before: ImpSpawnDecks,
+    pub dropped_after: ImpSpawnDecks,
 }
 
 #[derive(Debug, Clone)]
 pub struct ImpSpawnResult {
-    pub alternative: bool,
-    /// The fixed target class for this spawn depth (Monk or Golem).
-    pub target: ImpQuestTarget,
-    /// Dwarf tokens required by `WndImp` before the reward can be claimed.
-    pub required_tokens: u8,
-    pub reward: GeneratedItem,
-}
-
-/// Target and token contract used by `Imp.Quest.process` / `WndImp`.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ImpQuestTarget {
-    Monks,
-    Golems,
-}
-
-impl ImpQuestTarget {
-    fn from_alternative(alternative: bool) -> Self {
-        if alternative {
-            Self::Monks
-        } else {
-            Self::Golems
-        }
-    }
-
-    pub fn required_tokens(self) -> u8 {
-        match self {
-            Self::Monks => 5,
-            Self::Golems => 4,
-        }
-    }
-
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Monks => "Monks",
-            Self::Golems => "Golems",
-        }
-    }
+    pub options: Vec<GeneratedItem>,
 }
 
 /// `Imp.Quest.spawn(rooms)` — city only; call before room shuffle.
 ///
 /// SPD: `!spawned && depth > 16 && Random.Int(20 - depth) == 0`.
-/// Depth 19 always succeeds if not yet spawned.
+/// Depth 19 always succeeds if not yet spawned. v4 does not roll `alternative`.
 pub fn try_spawn(
     imp: &mut ImpQuestState,
     generator: &mut GeneratorState,
@@ -96,63 +69,34 @@ pub fn try_spawn(
 
     imp.spawned = true;
     imp.depth = depth;
-    imp.alternative = match depth {
-        17 => true,  // monks
-        19 => false, // golems
-        // 18: 50/50
-        _ => Random::int_max(2) == 0,
-    };
-
-    imp.reward_ring_draw_index = Some(generator.deck_dropped(Category::Ring));
-    let reward = generate_reward(generator, depth);
-    imp.reward_ring_draw_end = Some(generator.deck_dropped(Category::Ring));
-    imp.reward_level = Some(reward.level);
-    imp.pending_reward = Some(reward);
+    imp.dropped_before = snapshot_decks(generator);
+    let options = rewards::generate_reward_options(generator, depth);
+    imp.dropped_after = snapshot_decks(generator);
+    imp.reward_options = options.clone();
+    imp.pending_options = options;
     true
 }
 
-/// Take the reward produced on the floor where the Imp room was just added.
+/// Take the pool produced on the floor where the Imp room was just added.
 pub fn take_pending(imp: &mut ImpQuestState) -> Option<ImpSpawnResult> {
-    let reward = imp.pending_reward.take()?;
-    let target = ImpQuestTarget::from_alternative(imp.alternative);
+    if !imp.spawned || imp.pending_options.is_empty() {
+        return None;
+    }
     Some(ImpSpawnResult {
-        alternative: imp.alternative,
-        target,
-        required_tokens: target.required_tokens(),
-        reward,
+        options: std::mem::take(&mut imp.pending_options),
     })
 }
 
-fn generate_reward(generator: &mut GeneratorState, depth: i32) -> GeneratedItem {
-    // do { reward = random(RING) } while (reward.cursed);
-    let mut reward = loop {
-        let r = generator.random_category(Category::Ring, depth);
-        if !r.cursed {
-            break r;
-        }
-    };
-    // reward.upgrade(2) — Ring.upgrade: level++, Random.Int(3)==0 curse clear
-    for _ in 0..2 {
-        reward.level += 1;
-        if Random::int_max(3) == 0 {
-            reward.cursed = false;
-        }
+fn snapshot_decks(generator: &GeneratorState) -> ImpSpawnDecks {
+    ImpSpawnDecks {
+        ring: generator.deck_dropped(Category::Ring),
+        artifact: generator.deck_dropped(Category::Artifact),
+        wand: generator.deck_dropped(Category::Wand),
+        wep_t4: generator.deck_dropped(Category::WepT4),
+        wep_t5: generator.deck_dropped(Category::WepT5),
+        mis_t4: generator.deck_dropped(Category::MisT4),
+        mis_t5: generator.deck_dropped(Category::MisT5),
     }
-    reward.cursed = true;
-    reward.source = Some("Imp.Quest".into());
-    let ring_classes = Category::Ring.def().classes;
-    // Runtime history can move the ring deck an unbounded number of draws
-    // before the quest (player-state-dependent levelgen mimic prizes and the
-    // ring fallback after runtime sources exhaust the artifact deck). Keep
-    // every ring class in internal candidate metadata. Public projection keeps
-    // only the ring category because the set cannot rule out a concrete class.
-    reward.candidate_classes = ring_classes
-        .iter()
-        .map(|name| (*name).to_string())
-        .collect();
-    reward.provenance =
-        crate::items::model::ItemProvenance::Quest(crate::items::model::QuestRewardRole::ImpRing);
-    reward
 }
 
 #[cfg(test)]
