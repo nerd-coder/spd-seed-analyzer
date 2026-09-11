@@ -302,16 +302,16 @@ fn depth16_never_spawns() {
 }
 
 #[test]
-fn held_mossy_clump_can_change_spawn_depth() {
+fn held_mossy_clump_does_not_shift_imp_spawn_depth() {
+    // Both default-branch floats are consumed; GRASS/WATER do not change initRooms.
     assert_eq!(profiled_imp_outcome(5, None).0, 17);
-    assert_eq!(profiled_imp_outcome(5, Some(TrinketKind::MossyClump)).0, 18);
+    assert_eq!(profiled_imp_outcome(5, Some(TrinketKind::MossyClump)).0, 17);
 }
 
 #[test]
-fn held_mossy_clump_can_change_reward_identities_on_the_spawn_floor() {
+fn held_mossy_clump_does_not_shift_imp_reward_identities() {
     let baseline = profiled_imp_outcome(0, None);
     let mossy = profiled_imp_outcome(0, Some(TrinketKind::MossyClump));
     assert_eq!(baseline.0, 19);
-    assert_eq!(mossy.0, 19);
-    assert_ne!(baseline.1, mossy.1);
+    assert_eq!(mossy, baseline);
 }

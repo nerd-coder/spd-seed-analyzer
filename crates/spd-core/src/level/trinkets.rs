@@ -82,12 +82,16 @@ fn override_chance(level: Option<u8>) -> f32 {
     level.map_or(0.0, |level| 0.25 + 0.25 * f32::from(level))
 }
 
-/// Pinned `Level.create` default-feeling branch, including short-circuit RNG.
+/// Pinned `Level.create` default-feeling branch (both floats, then mossy/trap).
 pub fn override_default_feeling() -> Feeling {
     STATE.with(|state| {
         let mut state = state.borrow_mut();
         let mossy_level = level(state.held, TrinketKind::MossyClump);
-        if Random::float() < override_chance(mossy_level) {
+        let trap_level = level(state.held, TrinketKind::TrapMechanism);
+        // Java pre-generates both floats so a mossy hit still consumes the trap roll.
+        let mossy_chance = Random::float();
+        let trap_mech_chance = Random::float();
+        if mossy_chance < override_chance(mossy_level) {
             let seed = state.seed;
             return if state
                 .mossy
@@ -99,8 +103,7 @@ pub fn override_default_feeling() -> Feeling {
             };
         }
 
-        let trap_level = level(state.held, TrinketKind::TrapMechanism);
-        if Random::float() < override_chance(trap_level) {
+        if trap_mech_chance < override_chance(trap_level) {
             let seed = state.seed;
             return if state
                 .trap
@@ -180,6 +183,46 @@ mod tests {
                 .count(),
             4
         );
+        Random::pop_generator();
+    }
+
+    #[test]
+    fn max_level_mossy_override_still_consumes_trap_mechanism_float() {
+        Random::reset_generators();
+        Random::push_generator_seeded(91);
+        reset(456);
+        set_held(Some(ActiveTrinket {
+            trinket: TrinketKind::MossyClump,
+            level: 3,
+            instance: 1,
+        }));
+        let feeling = override_default_feeling();
+        let after = Random::int();
+        Random::pop_generator();
+
+        Random::push_generator_seeded(91);
+        let _ = Random::float();
+        let _ = Random::float();
+        Random::push_generator_seeded(456i64.wrapping_add(1));
+        let mut deck = [true, true, false, false, false, false];
+        Random::shuffle_list(&mut deck);
+        Random::pop_generator();
+        let expected = if deck[0] {
+            Feeling::Grass
+        } else {
+            Feeling::Water
+        };
+        assert_eq!(feeling, expected);
+        assert_eq!(after, Random::int());
+        Random::pop_generator();
+
+        Random::push_generator_seeded(91);
+        let _ = Random::float();
+        Random::push_generator_seeded(456i64.wrapping_add(1));
+        let mut skipped = [true, true, false, false, false, false];
+        Random::shuffle_list(&mut skipped);
+        Random::pop_generator();
+        assert_ne!(after, Random::int());
         Random::pop_generator();
     }
 
