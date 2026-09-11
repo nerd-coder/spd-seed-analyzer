@@ -17,6 +17,7 @@ mod special_loot;
 mod state;
 mod terrain;
 mod trinkets;
+mod vault;
 
 use crate::dungeon::DungeonState;
 use crate::generator::Category;

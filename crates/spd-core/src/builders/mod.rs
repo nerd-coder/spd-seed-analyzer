@@ -1,7 +1,9 @@
-//! Level builders (Loop / Figure-Eight).
+//! Level builders (Loop / Figure-Eight / Grid).
 
 mod connection;
 mod figure_eight;
+mod grid;
+mod int_map;
 mod loop_builder;
 mod place;
 mod regular;
@@ -41,6 +43,13 @@ thread_local! {
     static LAST_LOOP_TRACE: std::cell::RefCell<Vec<LoopAttemptTrace>> = const {
         std::cell::RefCell::new(Vec::new())
     };
+}
+
+/// `VaultLevel.builder()` — one GridBuilder attempt. Caller retries like
+/// `RegularLevel.build` when this returns false.
+#[allow(dead_code)] // analyze wiring is PR 4; vault tests call this now
+pub(crate) fn build_grid_rooms(rooms: &mut [Room]) -> bool {
+    grid::build(rooms)
 }
 
 /// Place rooms with one Java builder instance. Failed inner attempts retain

@@ -22,6 +22,13 @@ pub fn dims_for_kind(kind: RoomKind, size_factor: i32, name: &str) -> (i32, i32,
         "MassGraveRoom" => return (7, 10, 7, 10),
         "RotGardenRoom" => return (10, 10, 10, 10),
         "AmbitiousImpRoom" => return (9, 9, 9, 9),
+        "VaultFinalRoom" => return (21, 21, 21, 21),
+        "VaultHallwayRoom" | "VaultLongRingsRoom" | "VaultTokensRoom" => {
+            // Orientation is rolled at construction; GridBuilder forceSize
+            // uses the stored min/max pair, not this helper.
+            return (11, 21, 11, 21);
+        }
+        name if name.starts_with("Vault") => return (11, 11, 11, 11),
         "BlacksmithRoom" => {
             let (mw, xw, mh, xh) = dims_for_size_factor(size_factor);
             return (mw.max(6), xw, mh.max(6), xh);
@@ -202,6 +209,9 @@ mod tests {
                 "RitualEntranceRoom",
                 (10, 14, 10, 14),
             ),
+            (RoomKind::Entrance, 1, "VaultEntranceRoom", (11, 11, 11, 11)),
+            (RoomKind::Exit, 1, "VaultFinalRoom", (21, 21, 21, 21)),
+            (RoomKind::Standard, 1, "VaultRingRoom", (11, 11, 11, 11)),
         ];
         for (kind, size, name, expected) in cases {
             assert_eq!(dims_for_kind(kind, size, name), expected, "{name}");

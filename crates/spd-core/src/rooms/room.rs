@@ -180,6 +180,11 @@ impl Room {
         self.set_size_range(self.min_w, self.max_w, self.min_h, self.max_h)
     }
 
+    /// SPD `Room.forceSize` — still consumes `NormalIntRange` when min==max.
+    pub fn force_size(&mut self, w: i32, h: i32) -> bool {
+        self.set_size_range(w, w, h, h)
+    }
+
     pub fn set_size_range(&mut self, min_w: i32, max_w: i32, min_h: i32, max_h: i32) -> bool {
         if min_w < self.min_w
             || max_w > self.max_w
@@ -262,8 +267,26 @@ impl Room {
     }
 
     pub fn can_connect_point(&self, p: Point) -> bool {
+        if self.name == "VaultEntranceRoom" {
+            return (p.x > self.left + 1 && p.x < self.right - 1)
+                || (p.y > self.top + 1 && p.y < self.bottom - 1);
+        }
+        if self.name == "VaultFinalRoom" {
+            let c = self.as_rect().center_room();
+            return (p.x - c.x).abs() <= 5 || (p.y - c.y).abs() <= 5;
+        }
         let on_one_edge =
             (p.x == self.left || p.x == self.right) != (p.y == self.top || p.y == self.bottom);
+        if self.name == "VaultTokensRoom" {
+            if !on_one_edge {
+                return false;
+            }
+            return if self.width() > self.height() {
+                p.x < self.left + 5 || p.x > self.right - 5
+            } else {
+                p.y < self.top + 5 || p.y > self.bottom - 5
+            };
+        }
         if self.name == "CrystalPathRoom" {
             let mid_x = (self.left + self.right) as f32 / 2.0;
             let mid_y = (self.top + self.bottom) as f32 / 2.0;
@@ -338,7 +361,7 @@ pub fn can_connect_rooms(a: &Room, b: &Room, rooms: &[Room]) -> bool {
     {
         return false;
     }
-    if a.name == "MassGraveRoom" {
+    if a.name == "MassGraveRoom" || a.name == "VaultFinalRoom" {
         if b.is_entrance() {
             return false;
         }
@@ -354,6 +377,21 @@ pub fn can_connect_rooms(a: &Room, b: &Room, rooms: &[Room]) -> bool {
                     if rooms[r3].is_entrance() {
                         return false;
                     }
+                }
+            }
+        }
+    }
+    if a.name == "VaultTokensRoom" {
+        if b.is_entrance() {
+            return false;
+        }
+        for &r1 in &b.connected {
+            if rooms[r1].is_entrance() {
+                return false;
+            }
+            for &r2 in &rooms[r1].connected {
+                if rooms[r2].is_entrance() {
+                    return false;
                 }
             }
         }

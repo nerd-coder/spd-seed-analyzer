@@ -11,9 +11,12 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.Actor;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Imp;
 import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
 import com.shatteredpixel.shatteredpixeldungeon.levels.VaultLevel;
+import com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room;
 import com.watabou.utils.Random;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Forces a branch-1 VaultLevel and records RING/WAND/ARTIFACT.dropped around create().
@@ -42,12 +45,17 @@ final class VaultLevelOracle {
 		Dungeon.level = null;
 		Actor.clear();
 		DroppedCounters after;
+		List<Room> rooms = new ArrayList<>();
 		try {
 			level.create();
 			after = DroppedCounters.capture();
+			rooms.addAll(level.rooms());
 		} catch (FloorOracle.SnapshotComplete expected) {
-			// Painter-complete: VaultLevel.build() already queued usingDefaults equipment.
+			// createMobs boundary: GridBuilder has placed rooms; paint has
+			// shifted bounds. Room identities and bounds are stable either side
+			// of paint (PR 2 records the list; PR 3 will add terrain).
 			after = DroppedCounters.capture();
+			rooms.addAll(level.rooms());
 		} finally {
 			Random.resetGenerators();
 		}
@@ -65,7 +73,7 @@ final class VaultLevelOracle {
 					"VaultLevel moved WAND.dropped: " + before.wand + " -> " + after.wand);
 		}
 
-		return toJson(inputSeed, numericSeed, depth, before, after);
+		return toJson(inputSeed, numericSeed, depth, before, after, rooms);
 	}
 
 	private static String toJson(
@@ -73,23 +81,43 @@ final class VaultLevelOracle {
 			long numericSeed,
 			int depth,
 			DroppedCounters before,
-			DroppedCounters after) {
-		return "{\n"
-				+ "  \"schema_version\": 1,\n"
-				+ "  \"contract\": \"vault_level_using_defaults\",\n"
-				+ "  \"spd\": " + JavaOracle.spdJson() + ",\n"
-				+ "  \"input\": { \"seed\": \"" + JavaOracle.escape(inputSeed)
-				+ "\", \"numeric\": " + numericSeed + " },\n"
-				+ "  \"depth\": " + depth + ",\n"
-				+ "  \"branch\": 1,\n"
-				+ "  \"imp_quest_forced\": true,\n"
-				+ "  \"dropped\": {\n"
-				+ "    \"RING\": { \"before\": " + before.ring + ", \"after\": " + after.ring + " },\n"
-				+ "    \"WAND\": { \"before\": " + before.wand + ", \"after\": " + after.wand + " },\n"
-				+ "    \"ARTIFACT\": { \"before\": " + before.artifact
-				+ ", \"after\": " + after.artifact + " }\n"
-				+ "  }\n"
-				+ "}\n";
+			DroppedCounters after,
+			List<Room> rooms) {
+		StringBuilder json = new StringBuilder();
+		json.append("{\n")
+				.append("  \"schema_version\": 1,\n")
+				.append("  \"contract\": \"vault_level_using_defaults\",\n")
+				.append("  \"spd\": ").append(JavaOracle.spdJson()).append(",\n")
+				.append("  \"input\": { \"seed\": \"").append(JavaOracle.escape(inputSeed))
+				.append("\", \"numeric\": ").append(numericSeed).append(" },\n")
+				.append("  \"depth\": ").append(depth).append(",\n")
+				.append("  \"branch\": 1,\n")
+				.append("  \"imp_quest_forced\": true,\n")
+				.append("  \"dropped\": {\n")
+				.append("    \"RING\": { \"before\": ").append(before.ring)
+				.append(", \"after\": ").append(after.ring).append(" },\n")
+				.append("    \"WAND\": { \"before\": ").append(before.wand)
+				.append(", \"after\": ").append(after.wand).append(" },\n")
+				.append("    \"ARTIFACT\": { \"before\": ").append(before.artifact)
+				.append(", \"after\": ").append(after.artifact).append(" }\n")
+				.append("  },\n");
+		appendRooms(json, rooms);
+		return json.append("}\n").toString();
+	}
+
+	private static void appendRooms(StringBuilder json, List<Room> rooms) {
+		json.append("  \"rooms\": [\n");
+		for (int index = 0; index < rooms.size(); index++) {
+			Room room = rooms.get(index);
+			json.append("    { \"class\": \"").append(room.getClass().getSimpleName())
+					.append("\", \"left\": ").append(room.left)
+					.append(", \"top\": ").append(room.top)
+					.append(", \"right\": ").append(room.right)
+					.append(", \"bottom\": ").append(room.bottom).append(" }");
+			if (index + 1 < rooms.size()) json.append(',');
+			json.append('\n');
+		}
+		json.append("  ]\n");
 	}
 
 	/** Minimum flags so VaultLevel.create can run; no combat or score. */

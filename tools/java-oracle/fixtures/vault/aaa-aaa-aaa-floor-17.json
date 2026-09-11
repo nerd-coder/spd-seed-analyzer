@@ -10,5 +10,25 @@
     "RING": { "before": 0, "after": 0 },
     "WAND": { "before": 0, "after": 0 },
     "ARTIFACT": { "before": 0, "after": 0 }
-  }
+  },
+  "rooms": [
+    { "class": "VaultManyScansRoom", "left": 41, "top": 31, "right": 51, "bottom": 41 },
+    { "class": "VaultTokensRoom", "left": 11, "top": 11, "right": 31, "bottom": 21 },
+    { "class": "VaultBookcaseTreasureRoom", "left": 11, "top": 31, "right": 21, "bottom": 41 },
+    { "class": "VaultLasersRoom", "left": 21, "top": 31, "right": 31, "bottom": 41 },
+    { "class": "VaultLongRingsRoom", "left": 1, "top": 51, "right": 21, "bottom": 61 },
+    { "class": "VaultAlternatingFireRoom", "left": 31, "top": 11, "right": 41, "bottom": 21 },
+    { "class": "VaultFlamePathRoom", "left": 41, "top": 41, "right": 51, "bottom": 51 },
+    { "class": "VaultFinalRoom", "left": 41, "top": 1, "right": 61, "bottom": 21 },
+    { "class": "VaultEnemyCenterRoom", "left": 21, "top": 41, "right": 31, "bottom": 51 },
+    { "class": "VaultHallwayRoom", "left": 31, "top": 31, "right": 41, "bottom": 51 },
+    { "class": "VaultEntranceRoom", "left": 21, "top": 51, "right": 31, "bottom": 61 },
+    { "class": "VaultSimpleEnemyTreasureRoom", "left": 31, "top": 21, "right": 41, "bottom": 31 },
+    { "class": "VaultMultipleEnemyTreasureRoom", "left": 11, "top": 41, "right": 21, "bottom": 51 },
+    { "class": "VaultCircleScanTreasureRoom", "left": 41, "top": 51, "right": 51, "bottom": 61 },
+    { "class": "VaultCircleRoom", "left": 21, "top": 21, "right": 31, "bottom": 31 },
+    { "class": "VaultFlamesTreasureRoom", "left": 41, "top": 21, "right": 51, "bottom": 31 },
+    { "class": "VaultRingRoom", "left": 31, "top": 51, "right": 41, "bottom": 61 },
+    { "class": "VaultLaserTreasureRoom", "left": 11, "top": 21, "right": 21, "bottom": 31 }
+  ]
 }
