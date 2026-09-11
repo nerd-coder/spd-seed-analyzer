@@ -1,6 +1,6 @@
 # 02 — Imp quest and vault branch
 
-Status: **open**
+Status: **closed**
 
 Replace the v3.3.8 Ambitious Imp (monks/golems, one cursed +2 ring) with the v4 vault raid. Nest the vault under the Imp spawn floor the same way MiningLevel is nested under the Blacksmith floor.
 
