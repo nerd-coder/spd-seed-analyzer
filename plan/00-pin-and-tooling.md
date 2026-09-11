@@ -1,6 +1,6 @@
 # 00 — Pin and tooling
 
-Status: **open**
+Status: **closed**
 
 No generation logic. After this workstream the clone, constants, oracle runner, and fixture *pin strings* all name v4.0.0. Rust still implements v3.3.8; tests against regenerated v4 goldens are expected red until 01–06 land.
 

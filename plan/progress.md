@@ -4,17 +4,16 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 
 ## Done
 
-- 00 PR 1 — pin bump to v4.0.0 @ `2bb34a4e9`, Daily `2026-04-01` / epoch `20544`. Ref [00-pin-and-tooling.md](00-pin-and-tooling.md) PR 1. `1ae8dd7`.
-- 00 PR 2 — java-oracle compiles on v4; captures `custom_terrain`. Ref [00-pin-and-tooling.md](00-pin-and-tooling.md) PR 2. `acc9fb0`. Generation still v3.3.8.
+- **00 closed.** Pin v4.0.0 @ `2bb34a4e9`, Daily `2026-04-01` / `20544`, java-oracle compiles + captures `custom_terrain`, fixtures regenerated. Refs [00-pin-and-tooling.md](00-pin-and-tooling.md). Commits `1ae8dd7`, `acc9fb0`, `073d423`. Generation still v3.3.8; goldens red by design.
 
 ## Now
 
-00 PR 3 — regenerate v4 java-oracle fixtures. Ref [00-pin-and-tooling.md](00-pin-and-tooling.md) PR 3 and `tools/java-oracle/README.md` command list. Leave Rust goldens red.
+01 PR 1 — artifact exhaustion uses ring defaults (`RING.dropped` unchanged). Ref [01-generator-decks.md](01-generator-decks.md) PR 1 (+ fold PR 2 WEP_T3 pin). Parallel: 01 PR 3 enchant tables.
 
 ## Next
 
-00 PR 4 (oracle README pin) → 01.
+01 remaining (Imp/vault draw-site oracles, decks.md re-verify) → 02.
 
 ## Remaining
 
-00 PR 3–4, then 01–06. 07 is a deny-list. Do not claim v4 analyzer completeness.
+01–06. 07 is a deny-list. Do not claim v4 analyzer completeness.

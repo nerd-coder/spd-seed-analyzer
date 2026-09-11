@@ -4,7 +4,7 @@ Status of this index: **open**. Do not claim the analyzer already handles v4.
 
 | | |
 |--|--|
-| Current pin | SPD **v3.3.8** @ `7b8b845a76fe76c6b7c031ae9e570852411f56db` |
+| Current pin | SPD **v4.0.0** @ `2bb34a4e91d29c8785a9363cad6ddfe5122b1d4f` |
 | Target pin | SPD **v4.0.0** @ `2bb34a4e91d29c8785a9363cad6ddfe5122b1d4f` |
 | Java clone | `/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon` (HEAD is the target) |
 | Analyzer | `/Users/toan/code/NerdCoder/spd-seed-analyzer` |
