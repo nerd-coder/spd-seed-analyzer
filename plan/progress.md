@@ -6,18 +6,15 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 
 - **00 closed.** Ref [00-pin-and-tooling.md](00-pin-and-tooling.md).
 - **01 closed.** Ref [01-generator-decks.md](01-generator-decks.md).
-- 02 PR 1 — Imp `rewardOptions` at city spawn. `8e60d18`.
-- 02 PR 2 — GridBuilder + initRooms. `c4b0c8a`.
-- 02 PR 3 — vault paint vs AAA-AAA-AAA d17 oracle at createMobs (terrain, carpets, flame blobs). No public-map mobs. `e59e426`. Ref [02-imp-vault-quest.md](02-imp-vault-quest.md).
-- 02 PR 4 — nest Imp vault `BranchFloorReport` like MiningLevel. Reciprocal transitions, `analyze_seed` wiring, shop score gate as condition.
+- 02 PR 1–4 — Imp `rewardOptions`, GridBuilder, vault paint (AAA d17 oracle), nested `ImpVault` branch reports. Refs [02-imp-vault-quest.md](02-imp-vault-quest.md). `8e60d18`, `c4b0c8a`, `e59e426`, `c33e3c1`.
 
 ## Now
 
-02 PR 5 — Imp vault QuestCard, FloorDetail, finder 6-choose-1. Ref [02-imp-vault-quest.md](02-imp-vault-quest.md) PR 5.
+02 PR 5 — QuestCard, FloorDetail, finder 6-choose-1, nested vault map. Ref [02-imp-vault-quest.md](02-imp-vault-quest.md) PR 5.
 
 ## Next
 
-03.
+03 (city 17–19 spawn RNG is in). Then 04–06.
 
 ## Remaining
 
