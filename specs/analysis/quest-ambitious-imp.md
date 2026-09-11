@@ -1,261 +1,267 @@
-# Ambitious Imp reward — verified audit
+# Ambitious Imp quest — verified audit
 
-Target: **Shattered Pixel Dungeon v3.3.8 @ `7b8b845a7`**. This note separates
-the fixed quest contract from player/run state that is not encoded by the
-dungeon seed. The public projection should promise only the intersection
-of all reachable routes unless the analyzer replays and labels a complete
-condition.
+Target: **Shattered Pixel Dungeon v4.0.0 @ `2bb34a4e9`**.
+
+This note is the source of trust for the city Imp, the pre-rolled reward
+pool, vault entry, score, and the depth-20 Imp shop. Vault layout and
+in-vault loot live in `vault-level.md`.
 
 ### Verdict
 
-The Ambitious Imp always pre-rolls one ring when the quest room is selected,
-but the concrete baseline ring is **not** a universal seed-only result. The
-strongest unprofiled contract is:
+The strongest unprofiled seed-only contract is:
 
-- the Imp first attempts to spawn on depth 17, retries on 18, and is guaranteed
-  to spawn by depth 19 (`Imp.java:212-241`);
-- the target is Monks on depth 17, Golems on depth 19, and a 50/50 roll on
-  depth 18 (`Imp.java:218-229`);
-- exactly one ring is stored as the reward; generation retries while the ring
-  is cursed, upgrades the accepted ring twice, and then forcibly curses it
-  (`Imp.java:231-238`);
-- therefore every possible reward is a cursed ring at **+2 through +4**. Its
-  concrete class and concrete level require a fixed run-history/profile;
-- the Monk route requires five Dwarf Tokens and the Golem route requires four
-  (`Imp.java:112-126`);
-- the reward is not guaranteed to become obtainable merely because its object
-  was pre-rolled. The player must accept the quest, kill enough matching
-  targets, return, and confirm the reward (`Imp.java:104-137`,
-  `WndImp.java:57-86`);
-- completing the quest is the condition for the depth-20 Imp shop to appear,
-  but the stock is generated during depth-20 construction regardless of
-  whether the quest is already complete (`CityBossLevel.java:190-201`,
-  `ImpShopRoom.java:63-69`).
+- the Imp first attempts to spawn on depth 17, retries on 18, and is
+  guaranteed on depth 19 (`Imp.java:306`);
+- a successful spawn inserts `AmbitiousImpRoom` at the end of
+  `CityLevel.initRooms`, then immediately fills `rewardOptions` with six
+  items (`Imp.java:308-353`, `CityLevel.java:191-194`);
+- that pool is created on the city floor even if the player never enters
+  the vault;
+- every option is forcibly uncursed (`Imp.java:351-353`);
+- the player keeps **at most one** item, chosen when leaving the vault
+  with `EscapeCrystal`, and only if score is at least 500
+  (`EscapeCrystal.java:165-236`);
+- the depth-20 Imp shop is an access condition (`earnedShop()`), not a
+  guarantee that shop stock exists in the world
+  (`Imp.java:397-399`, `CityBossLevel.java:377-379`).
 
-The analyzer may show a concrete baseline continuation for parity evidence. It
-must not expose that class, level, spawn depth, or target as universal
-seed-only fact without fixing the state routes below.
+Concrete classes, exact `+N` values, which city depth hosts the Imp, and
+the WEP/MIS coin flip are **not** universal seed-only results. They
+require a fixed generation profile (deck indices, artifact exhaustion,
+challenges, trinkets, and current-floor RNG before `initRooms`).
 
-### Spawn and reward call order
+### Spawn site and RNG test
 
-`Level.create()` pushes the per-depth generator, evaluates forced-drop and
-feeling state, then calls `build()` (`Level.java:215-316`).
-`RegularLevel.build()` calls `builder()` and then `initRooms()` before room
-shuffle, construction, and painting (`RegularLevel.java:104-121`). Finally,
-`CityLevel.initRooms()` calls `Imp.Quest.spawn(super.initRooms())`
-(`CityLevel.java:201-204`). The Imp reward is consequently created:
+`Level.create()` pushes `Dungeon.seedCurDepth()`, evaluates limited
+drops and feeling (branch 0 only), then `build()`
+(`Level.java:219-316`). `RegularLevel.build()` selects the builder and
+calls `initRooms()` **before** the room shuffle
+(`RegularLevel.java:105-110`). `CityLevel.initRooms()` is
 
-1. after the current floor's forced-drop/feeling checks, builder selection,
-   standard/special/secret room selection, and room constructors;
-2. before room shuffle, layout construction, painting, mob generation, and
-   ordinary item generation.
+```
+return Imp.Quest.spawn(super.initRooms());
+```
 
-The spawn condition is short-circuited as
-`!spawned && depth > 16 && Random.Int(20-depth) == 0`
-(`Imp.java:212-214`). Thus depth 17 uses `Int(3)`, depth 18 uses `Int(2)`, and
-depth 19 uses `Int(1) == 0`. A successful depth-18 attempt consumes one further
-`Int(2)` for the target; depths 17 and 19 do not (`Imp.java:218-229`). Failed
-attempts create neither room nor reward.
+(`CityLevel.java:191-194`). The Imp room is therefore an extra special
+room added after ordinary standard/special/secret selection, and before
+shuffle, layout, painting, mobs, and ordinary items.
 
-For each reward attempt, `Generator.random(RING)` chooses the class from the
-seeded category deck and calls the new ring's `random()` method
-(`Generator.java:698-739`). `Ring.random()` rolls an initial +0/+1/+2 level and
-then a 30% curse chance (`Ring.java:259-277`). Cursed attempts are discarded but
-still permanently advance `RING.dropped` and consume their floor-stream rolls.
+The spawn test is `!spawned && depth > 16 && Random.Int(20 - depth) == 0`
+(`Imp.java:306`). Depth 17 uses `Int(3)`, depth 18 uses `Int(2)`, depth
+19 uses `Int(1)` and always succeeds if still unspawned. Failed attempts
+create neither room nor `rewardOptions`. There is no Monk/Golem roll on
+a fresh run (`spawn` sets `oldQuest = false`, `Imp.java:311`).
 
-The first uncursed ring is upgraded twice. `Item.upgrade(2)` dispatches two
-individual upgrades (`Item.java:401-415`); each `Ring.upgrade()` increments the
-level and consumes `Random.Int(3)` for curse clearing (`Ring.java:227-235`). The
-quest then sets `cursed = true` unconditionally (`Imp.java:233-238`). No ring
-subclass in the pinned tree overrides `random()` or `upgrade()`, so changing
-only the deck index changes the class but not the reward call shape.
+`AmbitiousImpRoom` is a fixed 9×9 `SpecialRoom`. Its painter places the
+Imp NPC, a `BRANCH_EXIT` at the room center (same depth, `branch + 1`),
+and city-quest décor (`AmbitiousImpRoom.java:45-117`). NPC offset uses
+`Random.IntRange(-1, 1)` during paint, after the reward pool already
+exists (`AmbitiousImpRoom.java:73-79`).
 
-### Acceptance, tokens, and claim are player-controlled
+### Pre-rolled `rewardOptions`
 
-The first hero interaction has no yes/no reward choice: it sets `given = true`
-and `completed = false` after showing the relevant target text
-(`Imp.java:104-137`). The player can still choose whether and when to interact.
-Kills made before that interaction do not grant quest tokens.
+On a successful spawn, `rewardOptions` is cleared and six items are
+appended in this order (`Imp.java:318-353`).
 
-`Imp.Quest.process` grants one Dwarf Token only while the quest is spawned,
-given, incomplete, and the current depth is not 20; the killed mob must match
-the selected Monk/Golem target (`Imp.java:247-255`). Monk and Golem loot hooks
-invoke that method before their ordinary loot (`Monk.java:74-79`,
-`Golem.java:83-87`). Matching ambient mobs are present in the city spawn tables:
-Monks from depth 17 and Golems from depth 18, with both on later city floors
-(`MobSpawner.java:157-185`). Their ordinary combat loot is runtime RNG and is
-not part of the quest reward.
+1. **Artifact, or ring fallback.** `Generator.randomArtifact()` draws
+   from the seeded ARTIFACT deck (`Generator.java:856-878`). Cloak of
+   Shadows and Holy Tome have weight 0, leaving eleven draw-able classes
+   (`Generator.java:560-576`). A hit is `identify(false)` then
+   `transferUpgrade(5)` (`Imp.java:321-322`, `Artifact.java:139-141`).
+   Displayed upgrade is `round(level * 10 / levelCap)`
+   (`Artifact.java:123-125`): **+5** at `levelCap` 10, **+6** at 5 (Ethereal
+   Chains, Timekeeper's Hourglass), **+7** at 3 (Sandals of Nature). If
+   the deck is empty, `randomArtifact` returns null (and still increments
+   `ARTIFACT.dropped`, `Generator.java:867-875`); the code then draws
+   `Generator.random(RING)` — the **RING deck**, not defaults — and sets
+   `level(Random.IntRange(2, 4))` without identifying
+   (`Imp.java:323-327`).
+2. **Ring.** `do { ring = Generator.random(RING) } while (ring.getClass()
+   == artif.getClass())`, then `level(Random.IntRange(2, 4))`, still
+   unidentified (`Imp.java:330-336`). The class check can fire only when
+   slot 1 was already a ring. Each rejected draw still consumes the RING
+   deck and `Ring.random()` (`Ring.java:259-277`).
+3. **WEP/MIS coin flip.** `Random.Int(2) == 0` chooses
+   `WEP_T5` at `IntRange(2, 4)` plus `MIS_T4` at `IntRange(3, 5)`;
+   otherwise `MIS_T5` at `IntRange(2, 4)` plus `WEP_T4` at
+   `IntRange(3, 5)` (`Imp.java:338-344`). Each call is
+   `Generator.random(category)` (tier **decks**, `Generator.java:698-741`),
+   then `.enchant().identify(false).level(...)`. `Weapon.random()` /
+   `MissileWeapon.random()` still run inside `Generator.random` and
+   consume ambient rolls plus a pushed effect stream
+   (`Weapon.java:422-451`, `MissileWeapon.java:365-394`); the later
+   `.enchant()` overwrites that effect on the ambient stream
+   (`Weapon.java:466-471`, `Enchantment.random` at `Weapon.java:611-620`,
+   type weights 50 / 40 / 10).
+4. **Plate armor.** `new PlateArmor().inscribe().identify(false).level(
+   IntRange(2, 4))` (`Imp.java:345`). No ARMOR deck. `inscribe()` always
+   applies `Glyph.random` (50 / 40 / 10, `Armor.java:742-747,863-871`).
+5. **Wand.** `Generator.random(WAND)` (WAND deck), `identify(false)`,
+   `level(IntRange(2, 4))`, `curCharges = maxCharges` (`Imp.java:346-349`,
+   `Wand.random` at `Wand.java:547-566`).
 
-The reward window opens at five tokens for Monks or four for Golems
-(`Imp.java:112-126`). Confirming it removes **all** Dwarf Tokens, identifies the
-single pre-rolled ring, and either picks it up or drops it at the Imp when the
-backpack is full. Only then does the Imp flee and `Quest.complete()` clear the
-stored reward and mark completion (`WndImp.java:69-86`, `Imp.java:257-267`).
-Closing/never confirming the window, never killing enough targets, or never
-returning leaves the reward unclaimed. If the quest is postponed until ascent,
-the quest Imp destroys itself while Ascension Challenge is active
-(`Imp.java:65-80`).
+Every option then gets `cursed = false` (`Imp.java:351-353`). `item.random()`
+curse rolls are discarded.
 
-There is no alternate reward and no reward reroll at claim time.
+`Generator.random(cat)` for RING / WEP_T4 / WEP_T5 / MIS_T4 / MIS_T5 /
+WAND uses the category's isolated `cat.seed` stream for the class, then
+`item.random()` on the **city-floor ambient** stream
+(`Generator.java:712-740`). Artifact class selection is the same pattern
+(`Generator.java:860-878`). `UnstableSpellbook`'s constructor then burns
+a full `SCROLL.defaultProbsTotal` chances loop on ambient
+(`UnstableSpellbook.java:84-104`), so drawing that artifact shifts every
+later slot on this floor.
 
-### Current-floor state can change spawn, target, and level
+T4/T5 melee classes (equal weight 2): Longsword, Battle Axe, Flail, Runic
+Blade, Assassin's Blade, Crossbow, Katana / Greatsword, War Hammer,
+Glaive, Greataxe, Greatshield, Gauntlet, War Scythe
+(`Generator.java:452-474`). T4/T5 missiles (equal weight 3): Javelin,
+Tomahawk, Heavy Boomerang / Trident, Throwing Hammer, Force Cube
+(`Generator.java:521-535`). WAND is thirteen classes at weight 3
+(`Generator.java:397-412`). RING is twelve classes at weight 3
+(`Generator.java:544-558`).
 
-The depth seed isolates ambient floor RNG between floors, but it does not erase
-player state consulted before `Imp.Quest.spawn` on the current floor.
+### Pool exists without entering the vault
 
-**Mossy Clump is a concrete pre-Imp divergence.** On a normal-feeling roll,
-`Level.create()` evaluates the Mossy chance first and evaluates the Trap
-Mechanism chance only if Mossy fails (`Level.java:278-290`). A successful Mossy
-roll therefore removes one ambient `Random.Float()` relative to the no-Mossy
-route. The chosen Grass/Water feeling comes from the Clump's persistent seeded
-six-card state (`MossyClump.java:54-92`), but that pushed generator does not put
-the missing ambient call back.
+`rewardOptions` is filled during city `initRooms`. The vault is a later
+branch level. If the player never uses the `BRANCH_EXIT`, the six items
+remain on the quest object and are not world heaps. `VaultFinalRoom.paint`
+is what drops them onto pedestals and `rewardOptions.clear()`
+(`VaultFinalRoom.java:228-236`). The city Imp has no reward window on a
+fresh run (`Imp.java:153-181`).
 
-Because `builder()` and all of `super.initRooms()` occur after that short
-circuit and before the Imp callback, the offset can change:
+### Claiming one item
 
-- whether the quest spawns on depth 17 or 18, and hence its eventual spawn
-  depth;
-- the depth-18 Monk/Golem roll;
-- which ring attempts are rejected as cursed;
-- the accepted ring's initial level and both upgrade rolls.
+Vault entry (below) strips gear. Inside the vault the six options sit on
+`VaultFinalRoom` pedestals with a unique `ImpStatue` on the center
+pedestal (`VaultFinalRoom.java:228-229`). The locked door opens only after
+the boss fight (`VaultFinalRoom.java:329-340`). Leaving uses
+`EscapeCrystal`:
 
-Consequently the unprofiled public level is **+2…+4**, not one exact `+N`, and
-the public target is the depth-to-target rule rather than the baseline target.
-The held Clump, its upgrade level, when it was first held, and its saved feeling
-deck are player-state inputs (`MossyClump.java:66-119`).
+- score **< 50**: flavour only; the hero does not leave
+  (`EscapeCrystal.java:144-147`);
+- score **50–499**: leave with no preserved item
+  (`EscapeCrystal.java:234-236`);
+- score **≥ 500**: pick exactly one non-crystal item, with level / unique
+  filters that tighten below 4000 (`EscapeCrystal.java:165-198`).
+  Quantity > 1 consumables keep a single copy (`EscapeCrystal.java:211-213`).
+  The six pre-rolled options are equipment or a wand at +2…+5, so they fail
+  the ≤1000 consumable-only filter and the <4000 `level() ≤ 0 or 1` filter.
+  Taking one of those six out requires statue score (≥ 4000). Lower scores
+  can still preserve vault T0/T1 loot or a consumable.
 
-This is also covered by a fixed Rust regression: numeric seed 0 with no map
-trinket and with Mossy Clump +3 first held on depth 17 spawns the same depth-19
-Golem quest, but pre-rolls +3 and +4 rewards respectively. The comparison uses
-the full floor analyzer and reads the quest's retained internal reward level
-(`crates/spd-core/src/quests/imp/tests.rs`). Companion regressions show depth 17
-versus 18 for seed 5, and opposite depth-18 targets for seed 26 under the same
-two profiles.
+`leaveVault` restores stored belongings, then collects that one item (or
+stashes it as `Imp.Quest.reward` if the backpack is full, and the city Imp
+drops it on its turn) (`EscapeCrystal.java:258-346`, `Imp.java:77-82`).
+Everything else held in the vault is discarded. `ImpStatue` is unique, so
+it cannot be the preserved item (`ImpStatue.java:32-33`).
 
-Trap Mechanism alone does not offset the current pre-Imp stream: both the
-tooth-free baseline and a Trap Mechanism route evaluate the Mossy float and the
-Trap float, and its feeling deck runs under a pushed generator
-(`Level.java:283-290`, `TrapMechanism.java:78-104`). TRAPS/CHASM do not alter
-`RegularLevel.builder()` or the pre-Imp room-count conditions
-(`RegularLevel.java:104-165`). Its painter and trap-reveal effects occur after
-the reward, although prior Trap-affected floors can still move the persistent
-ring deck as described next.
+### Vault entry
 
-The limited Strength Potion, Upgrade Scroll, Stylus, and Enchantment Stone
-checks also occur before the callback (`Level.java:222-249`,
-`Dungeon.java:529-576`). Their counters are generation counters in the pinned
-main-path lifecycle, not inventory/pickup choices. `NO_SCROLLS` skips placement
-without changing the current pre-Imp call count (`Level.java:228-236`), so its
-Imp effect is through earlier floor history rather than a new current-floor
-reward call.
+`CityLevel.activateTransition` on `BRANCH_EXIT` refuses the door when the
+quest is old, already complete, not yet given, or the hero has
+`AscensionChallenge` or `LostInventory` (`CityLevel.java:141-147`).
+Otherwise a yes/no prompt runs. Accepting: `hero.live()` (non-persistent
+buffs cleared, hunger/regen reset), full HP, belongings / gold / energy /
+quickslots stored on an `EscapeCrystal`, inventory cleared, `ClothArmor`
+equipped (`CityLevel.java:160-178`, `EscapeCrystal.java:301-319`). Walking
+onto the tile does not travel; the crystal is the only way out of the
+vault (`VaultLevel.java:206-209`).
 
-### Every ring class remains possible without a fixed history
+Giving the quest is the first Imp interaction; it sets `given = true`
+with no reward choice (`Imp.java:154-167`). The player can refuse to talk
+or refuse the door.
 
-The fixed-path class is a pure function of `(seed, RING draw index)`, but the
-draw index is persistent across floors. It is not a pure function of the seed
-across every playable route.
+### Score, `earnedShop`, depth-20 shop
 
-1. **Mimic Tooth.** Level-generated mimics immediately create an extra prize;
-   their ring branch uses `Generator.random(RING)` and advances the seeded deck
-   (`Mimic.java:294-353`). Tooth changes mimic chances in ordinary chests,
-   golden chests, Suspicious Chest, Treasury, and Crystal Vault, and adds a
-   further defaults-based item (`RegularLevel.java:397-439`,
-   `SuspiciousChestRoom.java:55-70`, `TreasuryRoom.java:46-62`,
-   `CrystalVaultRoom.java:74-82`, `Mimic.java:355-358`). Which offered trinket
-   the player chooses, whether it is transmuted, its level, and when it is held
-   are direct choices. The four Catalyst offers are drawn only when its window
-   is opened (`TrinketCatalyst.java:161-189`), and trinket transmutation makes
-   later TRINKET draws (`ScrollOfTransmutation.java:322-333`); checking only the
-   first four offers cannot rule Tooth out.
+`EscapeCrystal` scores a vault leave (`EscapeCrystal.java:93-140`):
 
-2. **Rat Skull.** Crystal Vault chooses its second prize before rolling an
-   alternate Crystal Mimic. Rat Skull raises that mimic chance, and the spawned
-   mimic generates a deck-using prize whose 1/5 ring branch advances RING
-   (`CrystalVaultRoom.java:60-82`, `Mimic.java:322-353`). This is a direct ring
-   route, not merely a main-stream effect. Rat Skull also changes Statue
-   variants (`Statue.java:198-212`), which can shift later floor RNG and other
-   decks.
+| Source | Points |
+|---|---|
+| `ImpStatue` in belongings | 4000, skips the rest |
+| Explore | `1000 * levelExplorePercent` (80% discoverable tiles seen = 1.0, `VaultLevel.java:174-181`) |
+| Token door destroyed | 1250 |
+| Door still present | `min(1000, 100 * token quantity)` |
+| Boss summoned and still on the level | `(int)(750 * HP/HT)` |
+| Boss summoned and gone | 750 |
 
-3. **Map-trinket and challenge history.** Mossy Clump and Trap Mechanism change
-   earlier painters before ordinary items and mimic generation. `NO_SCROLLS`
-   can change whether an earlier room consumes a queued item or generates a
-   fallback, as established in `specs/analysis/quest-sad-ghost.md`. Those changes
-   can alter earlier general-category outcomes, mimic branches, and therefore
-   the RING draw count even though each later floor receives a fresh ambient
-   seed.
+The total is then rounded down to a multiple of 50. Hazard hits spend two
+freebies, then subtract 100 from `Statistics.questScores[3]` (not from
+`Imp.Quest.score`) (`VaultLaser.java:105-109`, `VaultSentry.java:143-147`,
+`VaultFlameTraps.java:93-97`). `complete(score)` sets `Imp.Quest.score`,
+adds that unpenalized value to `Statistics.questScores[3]`, and removes
+the landmark (`Imp.java:385-391`).
 
-4. **The ARTIFACT deck is runtime-movable.** Runtime artifact sources include
-   Ring of Wealth equipment drops (`RingOfWealth.java:270-292`), mob loot via
-   `randomUsingDefaults` (`Mob.java:989-1008`), artifact transmutation
-   (`ScrollOfTransmutation.java:295-319`), and Cursed Wand transmogrification
-   (`CursedWand.java:1141-1181`). Artifact class history can also change whether
-   an `UnstableSpellbook` constructor burns its variable setup tail on a prior
-   floor (`UnstableSpellbook.java:84-103`), moving subsequent level-generation
-   draws on that floor.
+`earnedShop()` is `completed && (oldQuest || score > 2000)`
+(`Imp.java:397-399`). A statue run or a high partial (> 2000) unlocks the
+shop; leaving with ≤ 2000 completes the quest without a shop. After
+completion the city Imp uses score-band text and flees once `score > 2000`
+and the hero is out of FOV (`Imp.java:84-86,174-180`). Ascension destroys
+the Imp (`Imp.java:72-75`).
 
-   After the eleven available artifacts are exhausted, every
-   `Generator.random(ARTIFACT)` falls through to `Generator.random(RING)`
-   (`Generator.java:698-709`, `:854-878`). Ring of Wealth procs are driven from
-   ordinary mob deaths (`Mob.java:963-972`), equipment drops repeat over time
-   (`RingOfWealth.java:111-164`), and regular levels respawn mobs
-   (`Level.java:709-763`). There is therefore no sound two-extra-draw or other
-   small finite bound before depth 17.
+`CityBossLevel.build` always constructs `ImpShopRoom` and calls `paint()`,
+which generates and stores stock without placing it
+(`CityBossLevel.java:193-203`, `ImpShopRoom.java:63-69`). Depth 20 stock
+uses `ShopRoom.generateItems` (`ShopRoom.java:222-266`), including deck
+draws `Generator.random(wepTiers[4])` and `misTiers[4]` (WEP_T5 / MIS_T5).
+Placement happens when Dwarf King is defeated if `earnedShop()` is already
+true, or on a later load (`CityBossLevel.java:128-130,377-379`,
+`ImpShopRoom.java:154-159`). Completing the quest does not reroll stored
+stock. Inventory-sensitive shop decisions use the hero state present when
+depth 20 is first generated.
 
-The ring deck has twelve classes with equal positive weights and resets when
-its probabilities are empty (`Generator.java:544-558`, `:711-727`). With
-repeatable post-exhaustion artifact requests, the pre-Imp index can traverse a
-complete reset deck. **All twelve ring classes must remain candidates** for an
-unprofiled seed. The sound public projection is category-only “cursed +2…+4
-ring reward,” not the baseline class or a three-class list.
+### `oldQuest` / `WndImpOld` — legacy saves only
 
-Runtime ring generation that directly calls `randomUsingDefaults(RING)` does
-not itself advance the seeded ring deck (`Generator.java:743-760`). It still
-matters when it produces Ring of Wealth or otherwise enables one of the
-stateful routes above. Side-level generation uses defaults and does not add a
-separate direct RING-deck route; the persistent state acquired or used there can
-still matter later.
+A missing `OLD_QUEST` bundle key restores `oldQuest = true`
+(`Imp.java:280-284`). Fresh `spawn` always sets `oldQuest = false`
+(`Imp.java:311`). The old interaction is token turn-in via `WndImpOld`
+against a single stored `reward` (`Imp.java:128-152`, `WndImpOld.java:42-86`).
+`oldProcess` drops `DwarfToken` from Monks or Golems
+(`Imp.java:367-375`); `oldComplete` grants 4000 ranking points and shop
+access via the `oldQuest` flag (`Imp.java:377-383,397-399`). This is
+save-compat, not a custom-seed generation path.
 
-### Depth-20 Imp shop contract
+### Deck-counter effects on later floors
 
-The city boss level always constructs an `ImpShopRoom` and calls its `paint()`
-during `build()` (`CityBossLevel.java:190-201`). That paint call only generates
-and stores shop stock; it does not place the items or shopkeeper
-(`ImpShopRoom.java:63-69`). Thus:
+A successful Imp spawn, on the city floor, consumes:
 
-- completing the quest before entering depth 20 does not make stock generation
-  happen earlier;
-- completing it after depth 20 was generated does not reroll the stored stock;
-- the stock's inventory-sensitive bag and Hourglass sand decisions use the
-  player state present when depth 20 was first generated
-  (`ShopRoom.java:268-275`, `:310-329`);
-- the shop is placed when Dwarf King is defeated if the quest is already
-  complete (`CityBossLevel.java:352-385`), or on a later load after completion
-  (`CityBossLevel.java:123-129`, `ImpShopRoom.java:154-160`);
-- if the quest is never completed, neither the shopkeeper nor for-sale heaps
-  appear, despite the internally stored stock.
+| Draw | Deck? |
+|---|---|
+| `randomArtifact()` | ARTIFACT yes (or `dropped++` on exhaustion) |
+| RING fallback and the always-present ring (plus duplicate rejects) | RING yes |
+| one of WEP_T5 or WEP_T4 | that tier deck |
+| one of MIS_T4 or MIS_T5 | that tier deck |
+| WAND | WAND yes |
+| Plate armor | no |
 
-Quest completion is therefore an access condition, not a seed guarantee about
-spawned shop items. The Imp reward was generated on depth 17–19, so depth-20
-stock generation cannot feed back into that reward.
+Those counters persist into later city generation on the same floor, depth
+20 shop WEP_T5/MIS_T5 draws, and Halls. Vault generation itself does **not**
+use these decks (`vault-level.md`).
 
-### Analyzer status after this phase
+### Inputs that change the pre-rolled pool
 
-The Rust quest port matches the pinned fixed-path spawn condition, depth target,
-curse-retry loop, two upgrade calls, forced final curse, and Java-oracle ring
-deck indices. It records the target/token contract and retains all twelve ring
-classes in quest-local metadata (`crates/spd-core/src/quests/imp.rs`). Fixed
-Mossy regressions cover reward-level, spawn-depth, and depth-18 target
-divergence.
+Seed-isolated per floor, but **not** independent of run state:
 
-The public report keeps the route-independent contract: a conditional cursed
-+2…+4 ring, the depth-to-target rule, and the 5-Monk / 4-Golem token
-requirements. It may also carry the concrete ring as an explicitly labelled
-fresh/no-history baseline, but it exposes no candidate-class expansion and
-exact ring searches cannot treat that sample as evidence. The depth-20 shop
-remains explicitly conditional on quest completion. `specs/generator-decks.md`
-records Rat Skull and the unbounded artifact-exhaustion route as settled deck
-facts.
-
-Overall analysis remains partial for the broader reasons; this Imp phase does not claim complete run-history or
-floor-reset coverage.
+- **Current-floor RNG before `initRooms`.** Limited-drop checks and the
+  feeling roll run before `Imp.Quest.spawn` (`Level.java:224-299`).
+  `Int(14)` cases LARGE / SECRETS / extra FOOD change room counts or add
+  a FOOD-deck draw before the Imp. In the default branch both Mossy and
+  Trap-Mechanism floats are always consumed (`Level.java:289-297`);
+  `getNextFeeling` is an isolated `Dungeon.seed+1` generator
+  (`MossyClump.java:71-91`, `TrapMechanism.java:83-103`), and
+  GRASS/WATER/TRAPS/CHASM do not change `initRooms` counts, so those
+  overrides do not shift this floor's Imp stream.
+- **Persistent decks.** Any earlier RING / ARTIFACT / WEP_T4 / WEP_T5 /
+  MIS_T4 / MIS_T5 / WAND draw (mimics, shops, crystal vault, general
+  category, …) changes slot identity. After eleven artifacts are gone,
+  slot 1 is a deck ring and the duplicate loop can consume extra RING
+  draws.
+- **Challenges and trinkets.** `NO_SCROLLS` does not add a new pre-Imp
+  ambient call on the current floor (`Level.java:234-240`) but can change
+  earlier-floor deck counts. Parchment Scrap does not affect the visible
+  Imp enchants (those use ambient `.enchant()` / `inscribe()` after a
+  pushed `item.random()` effect stream). Thirteen-leaf Clover rewrites
+  `Random` globally. Mimic Tooth, Rat Skull, and other trinkets that add
+  or skip deck-using sites on earlier floors still move the counters.
+- **Hero class** does not feed `rewardOptions`. It does feed the vault
+  mirror (`vault-level.md`).

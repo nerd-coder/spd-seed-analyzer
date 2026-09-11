@@ -1,344 +1,170 @@
-# Floor layout certainty — verified audit
+# Floor layout certainty
 
-Target: **Shattered Pixel Dungeon v3.3.8 @ `7b8b845a7`**. This audit asks
-which facts in a painter-complete main-path floor are fixed by the seed, which
-are fixed only after choosing a run condition, and which condition inputs are
-still missing. Java citations refer to the pinned clone. Rust and web citations
-refer to this repository on 2026-07-30.
+Target: **Shattered Pixel Dungeon v4.0.0 @ `2bb34a4e9`**. Public maps follow
+`MAP-LAYOUT-GOAL`: painter-complete rooms, connections, doors, transitions,
+terrain, traps, plants, and blobs, captured before NPC, mob, heap, forced-item,
+or Guide Page population. A later floor can still depend on that hidden
+population when it mutates persistent generator state.
 
-The public analyzer has no Run settings. It shows a passive fresh-run baseline,
-automatically discovers its finite supported routes, and places only changed
-facets beneath affected floors. This is not a claim to enumerate arbitrary
-gameplay histories.
-
-The public map scope follows `MAP-LAYOUT-GOAL`: room geometry, connections,
-doors, transitions, terrain, traps, plants, and blobs after painting, but before
-ordinary NPC, mob, heap, and forced-item population. A population step can
-still matter to a **later** floor when it mutates persistent generator state.
+This note is Java generation fact. A declared run profile is a player-facing
+description of challenges, held trinkets, and artifact events. It is not an
+analyzer floor list.
 
 ## Verdict
 
-- The baseline assumes no challenges, no crafted/held trinket, no upgrades or
-  Transmutation Scroll use, and no external artifact history. Supported “If
-  you…” routes use the seed's actual Catalyst offers and exact Transmutation
-  Scrolls from completed floors.
-- Forbidden Runes and chronological Mossy Clump, Trap Mechanism, and Mimic
-  Tooth levels are replayed automatically. Unchanged floors are omitted and
-  identical public deltas are grouped. The separate finder projection remains
-  conservative and seed-only.
-- Rat Skull, Cracked Spyglass, Barren Land, Badder Bosses, map-relevant
-  artifact history, and arbitrary acquire/upgrade/transmute timing still need
-  lifecycle replay. They must remain explicitly conditional rather than being
-  silently folded into a displayed map.
-- Each route now snapshots its public painter-complete map and then continues
-  NPC, mob, and item population on the same dungeon lifecycle, retaining the
-  persistent state needed by the next floor.
-- Exact room **selection** can be recovered earlier than exact painted maps.
-  The current single `runtime_sensitive_layout` flag unnecessarily hides room
-  lists, room bounds, and connections together with later painter uncertainty.
+- Depth 1 of a fresh custom-seeded main-path descent has no feeling roll and no
+  prior player-controlled generation history. Its painter-complete map is
+  seed-only once the challenge mask is known.
+- From depth 2, feeling, room counts, and painted terrain still come from the
+  per-depth stream (`Dungeon.seedCurDepth()`), but several run-profile inputs
+  can change that stream's interpretation or consume extra generator state.
+- Same seed plus the same Mossy Clump instance and level produce the same
+  builder/room graph on the default feeling branch. GRASS/WATER still change
+  water and grass fill. Trap Mechanism CHASM still changes padding and default
+  fill. See `level-feelings.md`.
+- Arbitrary play, sealed-floor Ankh regeneration, and undeclared trinket or
+  artifact history remain labelled conditional.
 
-For the bounded scope “first generation of each main-path floor in a custom
-seeded descent,” the missing inputs are finite and can be represented at floor
-boundaries. “Every map reachable after arbitrary play,” including sealed-floor
-Ankh regeneration, needs generation-attempt history as well.
+## Seed-only versus declared profile
 
-## What the current conditional routes actually narrow
+Each `Level.create` pushes `Dungeon.seedForDepth(depth, branch)` before queued
+drops, feeling, `build`, `createMobs`, and `createItems`
+(`Level.java:218-325`, `Dungeon.java:414-431`). Combat on an already generated
+floor cannot advance the next floor's ambient stream.
 
-`MapProfile` is now an internal replay descriptor, not a user-facing setting.
-It represents challenge and chronological trinket/artifact events without
-exposing generator counters (`crates/spd-core/src/trinkets.rs`). A trinket
-acquire or transmute event starts a new internal instance while an upgrade
-preserves its current instance; the Catalyst/pot calculation prevents events
-from starting before that seed can first be affected.
-
-Each internal route uses `create_level_internal` once per depth. It captures
-`layout_map` after room painting and isolated decoration, then continues quest
-NPC, ambient mob, and item population before moving to the next depth
-(`crates/spd-core/src/level/mod.rs`).
-
-The public projection exposes a map, room list, and builder only while the one
-coarse `runtime_sensitive_layout` flag is false; otherwise it moves the map to
-`assumed_map` and suppresses all room facts
-(`crates/spd-core/src/level/state.rs:529-554`). In the current generated WASM,
-AAA-AAA-AAA, GFX-PZH-DCH, and numeric seed 42 all produced the same certainty
-pattern under an explicit fresh profile:
-
-```text
-exact:   1, 5, 10, 15, 20, 25, 26
-assumed: 2–4, 6–9, 11–14, 16–19, 21–24
-```
-
-### Pre-migration analyzer sensitivity measurement
-
-Method: the former fixed-profile generated WASM, numeric seeds 0…19, floors
-1…24. Each +3
-trinket was first held on that seed's reported earliest effective floor. For
-each regular floor, the complete serialized `map ?? assumed_map` was compared
-with the explicit fresh baseline. This measures present analyzer behavior; it
-is **not** Java parity evidence.
-
-| Internal comparison condition | Eligible regular floors | Different maps | Seeds with any difference |
-|---|---:|---:|---:|
-| Forbidden Runes | 400 | 13 (3.3%) | 7 / 20 |
-| Mossy Clump +3 | 336 | 302 (89.9%) | 20 / 20 |
-| Trap Mechanism +3 | 336 | 292 (86.9%) | 20 / 20 |
-| Mimic Tooth +3 | 336 | 69 (20.5%) | 17 / 20 |
-
-The modeled conditions therefore narrow the displayed continuation substantially. They
-do not change its certainty label after floor 1 because unresolved state is
-still inherited across floors (`crates/spd-core/src/level/mod.rs:83-96,206-221`).
-
-## Generation boundaries and their inputs
-
-`Level.create` pushes the depth-specific RNG, queues guaranteed items, chooses
-the feeling, retries `build`, then calls `createMobs` and `createItems`
-(`Level.java:215-317`). `RegularLevel.build` chooses the builder, creates and
-shuffles rooms, builds the room graph, and finally paints it
-(`RegularLevel.java:104-165,176-187`). This creates three useful certainty
-boundaries.
-
-| Boundary | Facts fixed there | Player/run inputs that can still matter |
+| Painter-complete fact | Seed-only? | Extra input |
 |---|---|---|
-| After `initRooms` | Builder kind; room multiset and shuffled room objects | Mossy Clump's short-circuit and persistent feeling instance; generated room/quest deck state |
-| After builder | Room bounds and graph connections | Shop-floor artifact state can move builder RNG while lazy stock is generated |
-| After painter | Doors, stairs, terrain, traps, plants, blobs, decoration | Forbidden Runes queue, Mossy/Trap feeling, Mimic Tooth, Rat Skull, artifact state, Barren Land; Badder Bosses on floor 15 |
+| Forced-drop queue before build (food, SoS, SoU, stylus, stones, catalyst) | Yes, given challenges and limited-drop counters | Forbidden Runes omits every second SoU (`Level.java:232-240`) |
+| Feeling on depths 2+ of branch 0 non-boss floors | Yes if no feeling trinket is held | Mossy Clump / Trap Mechanism instance and `buffedLvl()` (`Level.java:259-298`) |
+| Builder kind (loop vs figure-eight) and loop shape | Yes, given feeling | Shop-floor lazy stock can still move this stream (depths 6, 11, 16) |
+| Standard / special / secret room multiset | Yes, given feeling | LARGE and SECRETS change counts; secret/special run decks persist across floors |
+| Room bounds and connections | Yes, given the room list and no shop-stock RNG | Shop `spacesNeeded` generates stock while the builder sizes the room (`ShopRoom.java:72-97`) |
+| Doors, stairs, painted terrain | Yes only if no paint-time item/mob RNG depends on player state | Forbidden Runes queue, Mimic Tooth, Rat Skull, prize `findPrizeItem`, Barren Land plants |
+| Water, grass, traps, region deco | Yes, given feeling and Trap Mechanism reveal level | Isolated by one ambient `Random.Long()` (`RegularPainter.java:135-153`) |
 
-The painter shuffles rooms, then alternates `placeDoors(room)` and
-`room.paint(level)` before its final door pass
-(`RegularPainter.java:122-133`). A player-sensitive item or mob generated while
-painting one room can therefore move the RNG used by a later room's door,
-stairs, or terrain. Water, grass, ordinary traps, and regional decoration are
-then isolated behind one ambient `Random.Long()`
-(`RegularPainter.java:135-153`), which limits but does not erase earlier drift.
+`RegularLevel.build` chooses the builder, then `initRooms`, shuffles, places,
+and paints (`RegularLevel.java:105-121`). `initRooms` uses LARGE to force max
+standard/special counts and scale them, and SECRETS to add one secret
+(`RegularLevel.java:124-166`). WATER, GRASS, DARK, TRAPS, and CHASM do not
+change those counts.
 
-### Room facts can be stronger than map facts
+Region standard/special rolls (non-LARGE):
 
-The current profile can support a more useful intermediate claim:
+| Region | Standard | Special |
+|---|---|---|
+| Sewers | 4–6 | 1–2 |
+| Prison | 5–6 | 1–3 |
+| Caves | 6–7 | 2–3 |
+| City | 6–8 | 2–3 |
+| Halls | 8–9 | 2–3 |
 
-- Mossy Clump is the direct current-floor structural trinket. On a normal
-  feeling branch, success skips the Trap Mechanism float before builder and
-  room selection (`Level.java:255-291`, `MossyClump.java:54-91`).
-- Trap Mechanism alone consumes the same Mossy-fail and Trap-check floats as
-  the no-trinket route. Its Trap/Chasm result comes from an isolated persistent
-  deck and does not trigger the Large/Secrets room-count rules. It changes
-  painted terrain and trap visibility, but not that current floor's room
-  selection (`Level.java:283-290`, `RegularLevel.java:129-163`,
-  `TrapMechanism.java:54-103`).
-- Forbidden Runes changes the queued Upgrade Scroll without an RNG call before
-  build (`Level.java:228-236`). Mimic Tooth and Rat Skull are consulted during
-  room paint or later. They do not change the current room multiset.
-- Shop stock is generated lazily from a room-size callback. Artifact
-  construction can move the builder stream, so bounds and connections on
-  floors 6, 11, and 16 need artifact state even though the already selected
-  room list does not (`ShopRoom.java:71-97,332-350`;
-  `crates/spd-core/src/level/build.rs:34-53`).
+(`SewerLevel.java:88-99`, `PrisonLevel.java:95-106`, `CavesLevel.java:95-106`,
+`CityLevel.java:93-104`, `HallsLevel.java:97-108`). Secrets come from the
+run-shuffled secret deck (`SecretRoom.java:66-87`). Specials come from the
+run queue plus a laboratory on depth 3 or 4 of each chapter
+(`SpecialRoom.java:131-138`, `Dungeon.java:589-598`).
 
-This justifies separate certainty fields such as `room_selection_exact`,
-`room_graph_exact`, and `paint_exact`. An unknown paint tail should not erase a
-known room multiset.
+`Builder.findFreeSpace` picks the closest overlapping room by Euclidean
+`Point.length()` (`Builder.java:72-107`, `Point.java:80-82`). `GridBuilder` is
+only `VaultLevel` (`VaultLevel.java:185-187`) and is not on the main path.
 
-## Existing inputs that are necessary
+City hallway entrance/exit rooms place a fixed center tile and do not consume
+the `Random.Int(2)` statue-versus-pedestal roll that ordinary hallway rooms
+consume (`HallwayRoom.java:107-122`). Statues rooms still use `Random.Int(2)`
+for even-dimension centers (`StatuesRoom.java:85-94`). Those are paint-stream
+facts, not room-selection facts.
 
-### Forbidden Runes
+## Feeling order (summary)
 
-The challenge omits every second guaranteed Scroll of Upgrade but retains the
-limited-drop counter (`Level.java:228-236`). A room's `findPrizeItem` either
-removes a queued object, consumes a random queue entry, or returns null
-(`Level.java:799-826`). Empty-queue fallbacks can generate another item and
-move the painter stream. The current toggle is therefore necessary for exact
-paint, even though the sensitivity scan found relatively few map differences.
+On branch 0, non-boss, `depth > 1`: `Random.Int(14)` then, on cases 7–13, two
+pre-rolled floats and optional Mossy/Trap override (`Level.java:259-298`).
+LARGE also queues a second food from `Generator` before build. Full chances,
+decks, and same-seed rules: `level-feelings.md`.
 
-### Mossy Clump and Trap Mechanism
+CHASM uses padding 2 and fills unset cells with chasm
+(`RegularPainter.java:79-81`, `Level.java:334`). WATER/GRASS change region
+fill percents (for example sewers 0.85/0.80 versus 0.30/0.20,
+`SewerLevel.java:102-107`). TRAPS paints `5 * nTraps` traps with extras
+visible (`RegularPainter.java:473-474`). SECRETS pulls hidden-door chance
+toward 50% (`RegularPainter.java:187-197`). DARK only shortens `viewDistance`.
 
-Both class, upgrade level, and effective starting floor are necessary. Their
-six-card feeling decks are fields on the concrete trinket object and are saved
-with the object (`MossyClump.java:66-119`, `TrapMechanism.java:78-124`). Trap
-Mechanism also changes which generated traps are revealed
-(`RegularPainter.java:465-493`).
+## Challenges that touch painter-complete maps
 
-### Mimic Tooth
+Nine bits exist (`Challenges.java:30-38`). Only these alter initial layout:
 
-The Tooth changes room-paint Mimic decisions. A spawned Mimic immediately
-generates an additional reward and a held Tooth adds another defaults-based
-reward (`Mimic.java:294-358`). Those calls can move the current paint stream
-and persistent item decks. This branch belongs in the automatic outcome matrix.
+- **Forbidden Runes** (`NO_SCROLLS`): every second queued SoU is omitted
+  (`Level.java:232-240`). `findPrizeItem` may then take a different queued
+  item or return null (`Level.java:827-855`).
+- **Barren Land** (`NO_HERBALISM`): `Level.plant` still does the grass/RNG
+  work, then returns null (`Level.java:1049-1068`). Plants are part of the
+  public layout.
+- **Badder Bosses** (`STRONGER_BOSSES`): depth 15 inactive-trap chance is 1/4
+  instead of 1/8 (`CavesBossLevel.java:126-133`).
+- **Darkness**: `viewDistance` 2 (`Level.java:158`). Extra torches are isolated
+  item drops, not terrain (`RegularLevel.java:472-490`).
 
-## Recorded inputs not yet replayed
+On Hunger, Faith Is My Armor, Pharmacophobia, Swarm Intelligence, and Champion
+Enemies have no initial painter-complete terrain hook.
 
-### 1. Rat Skull — direct current-floor paint input
+## Trinkets and artifacts
 
-Rat Skull changes Statue versus Armored Statue construction
-(`Statue.java:198-212`) and the Crystal Vault's chest versus Crystal Mimic
-branch (`CrystalVaultRoom.java:53-82`). The alternate mob construction and
-immediate Mimic reward consume a different painter tail before later rooms and
-doors. An internal replay descriptor can represent its chronological
-acquire/upgrade/transmute history.
-Its paint behavior still needs to be ported before an affected map is exact.
+Layout-affecting trinkets, given class, `buffedLvl()`, and instance identity:
 
-### 2. Cracked Spyglass — deterministic later-floor state input
+- **Mossy Clump** — GRASS/WATER override; does not change room counts.
+- **Trap Mechanism** — TRAPS/CHASM override plus reveal chance during
+  `paintTraps` (`TrapMechanism.java:66-76`, `RegularPainter.java:470-498`).
+- **Mimic Tooth** — mimic chance and extra `generatePrize` during paint
+  (`Mimic.java:306-358`). That can move the paint stream and item decks.
+- **Rat Skull** — Armored Statue versus Statue (`Statue.java:202-216`) and
+  Crystal Vault chest versus Crystal Mimic (`CrystalVaultRoom.java:75-82`).
+- **Cracked Spyglass** — extra hidden loot after ordinary `createItems`, under
+  an isolated `Random.Long()` (`RegularLevel.java:679-690`). The isolated
+  stream protects ambient RNG; `Generator.randomUsingDefaults()` can still
+  select ARTIFACT and mutate the artifact deck for later floors.
 
-After ordinary item population, Cracked Spyglass generates extra hidden loot
-under an isolated floor RNG (`RegularLevel.java:679-689`). Its count is 0.375 ×
-`(level + 1)` before the final integer roll (`CrackedSpyglass.java:52-61`). The
-isolated RNG protects the ambient floor tail, but `Generator.randomUsingDefaults()`
-can still select ARTIFACT, and artifact deck mutation survives the pop. That
-can change later special-room paint, shop-floor builder RNG, and floor-20 City
-decoration. Cracked Spyglass can be represented as a held trinket event, but its
-post-population artifact mutation still needs lifecycle replay.
+A transmute constructs a new trinket and copies level, not `levelFeels` /
+`shuffles` (`ScrollOfTransmutation.java:322-334`). Upgrade of the same object
+preserves the decks.
 
-This new deck fact is also recorded in `specs/generator-decks.md`, where
-persistent deck behavior is canonical.
+Runtime artifact requests always use the ARTIFACT deck; exhaustion falls back
+to `randomUsingDefaults(RING)` (`Generator.java:706-710,744-752`). Artifact
+state matters for special-room prizes during paint, lazy shop stock on 6/11/16,
+and the depth-20 Imp shop before City decoration.
 
-### 3. Artifact-deck history — cross-floor and shop-floor input
+## Must stay labelled conditional
 
-This is already established in `specs/generator-decks.md`, §11. Runtime
-artifact requests always use the ARTIFACT deck
-(`Generator.java:743-751,854-878`). A different remaining class can introduce
-the Unstable Spellbook constructor tail (`UnstableSpellbook.java:84-103`), and
-deck exhaustion falls through to a Ring with a different ambient randomization
-shape (`Generator.java:698-709`; `Artifact.java:217-225`; `Ring.java:258-277`).
+- Rat Skull, Cracked Spyglass, and Barren Land when those profile fields are
+  unset.
+- Any undeclared acquire / upgrade / transmute timing.
+- Floor 1 tutorial hidden entrance doors (`SPDSettings.intro()`) and floor 2
+  guidebook hiding (`RegularPainter.java:268-275`).
+- Sealed-floor Ankh resurrection, which calls `Dungeon.newLevel()` again
+  (`InterlevelScene.java:749-759`). `InterlevelScene.Mode.RESET` has no
+  assignment site.
+- Talent Cached Rations and Dried Rose petals (isolated item drops, not
+  layout).
 
-Artifact state affects maps in three places:
+Custom seeded and challenged runs do not import prior-run Bones loot
+(`Bones.java:198-201`). No Bones setting is required for that scope.
 
-1. special/secret room prizes generated between painted rooms;
-2. lazy regular-shop stock generated while the builder is placing rooms;
-3. `ImpShopRoom.paint` before the floor-20 `CityPainter` consumes its isolated
-   decoration seed (`CityBossLevel.java:190-201`, `ShopRoom.java:332-350`,
-   `RegularPainter.java:135-153`).
+## Finite inputs at a floor boundary
 
-A custom seeded/challenged run excludes prior-run Bones loot
-(`Bones.java:198-205`), so no Bones setting is needed for the analyzer's normal
-seeded scope. Runtime artifact draws, artifact transmutation, and automatic
-level-generation draws still need to be replayed.
-
-The internal branch descriptor uses chronological events, not deck counters:
-“artifact generated/obtained or transmuted before first generating floor N.”
-The profile now records them; the lifecycle must still derive and apply the
-resulting deck state from the seed.
-
-### 4. Trinket instance identity/reset
-
-SPD owns each feeling deck on the trinket instance. Transmutation constructs a
-new trinket and transfers level and knowledge, not the old instance's
-`levelFeels`/`shuffles`
-(`ScrollOfTransmutation.java:322-333`).
-
-Therefore Mossy → another trinket → a newly acquired Mossy must restart the
-Mossy deck, while upgrading the same Mossy must preserve it. The internal
-descriptor derives that identity from acquire/transmute actions and the Rust Mossy and Trap
-state resets on a new instance (`crates/spd-core/src/trinkets.rs`,
-`crates/spd-core/src/level/trinkets.rs`). Full lifecycle replay remains needed
-before those persistent decks can make later maps exact.
-
-### 5. Barren Land and Badder Bosses
-
-Only three of the nine challenge bits alter the initial public map in this
-pinned version:
-
-- Forbidden Runes (`NO_SCROLLS`) is already supported.
-- Barren Land (`NO_HERBALISM`) makes `Level.plant` stop before creating the
-  plant object, after preserving the terrain/RNG work (`Challenges.java:29-38`;
-  `Level.java:1021-1044`). Plants remain part of `FloorMap.into_layout_only`,
-  which removes markers/heaps/mobs but deliberately retains traps, plants, and
-  blobs (`crates/spd-core/src/report.rs:25-58,84-91`).
-- Badder Bosses (`STRONGER_BOSSES`) changes floor 15's initial inactive-trap
-  roll from 1/8 to 1/4 (`CavesBossLevel.java:116-140`). The Rust boss builder
-  currently hard-codes 1/8 (`crates/spd-core/src/level/boss_layouts/caves.rs:24-42`).
-
-The source audit found no initial painter-complete terrain hook for the other
-six challenges. Darkness changes view distance, while the remaining hooks are
-combat, mob, item-use, or post-generation behavior. Barren Land and Badder
-Bosses still need their pinned map
-behavior before an affected projection is exact.
-
-### 6. Generation attempts, only if regenerated boss floors are in scope
-
-Using an unblessed Ankh while a floor is sealed calls `Dungeon.newLevel()` and
-regenerates it (`InterlevelScene.java:749-765`). A regenerated floor 20 reaches
-shop generation again with already-mutated persistent decks, so its decoration
-need not match the first attempt. The dormant `InterlevelScene.Mode.RESET` has
-no call site in the pinned tree and should not be presented as a normal regular-
-floor route.
-
-The clean product boundary is to claim **first generation of each main-path
-floor**. If post-death boss maps are desired, add a per-depth generation-attempt
-history instead of silently folding them into the first-generation profile.
-
-## Inputs without a direct initial map effect
-
-- Parchment Scrap changes equipment effects inside an isolated item generator;
-  an internal branch can record its claim-only level, while the ambient stream pays the
-  same one `Random.Long()` either way
-  (`Weapon.java:432-446`, `Armor.java:667-681`).
-- Exotic Crystals keeps the potion/scroll conversion roll in both the absent
-  and held cases (`Generator.java:729-767`). Its branch event changes excluded
-  item identity, not the painter call count or terrain.
-- Petrified Seed, Eye of Newt, Ferret Tuft, Salt Cube, Vial of Blood, Wondrous
-  Resin, Shard of Oblivion, Thirteen-leaf Clover, Chaotic Censer, and
-  Dimensional Sundial have no direct initial painter hook. Runtime consequences
-  that eventually request artifacts are captured by artifact events.
-- Shop bag identity and Hourglass sand quantity do not change regular shop
-  room size. `spacesNeeded` removes actual sandbags and adds four fixed slots
-  (`ShopRoom.java:81-97`). In the once-generated main path, four bag types cover
-  the three regular shops plus the fixed-size Imp shop.
-- Quest acceptance, completion, and reward choice occur after the room was
-  selected. The floor-20 Imp shop stock is generated during build regardless
-  of whether it is later placed (`CityBossLevel.java:190-201`).
-- Ascension reloads already generated main-path floors; it does not generate a
-  second ordinary layout for the same descent.
-
-## Recommended profile and replay design
-
-### Profile scope
-
-Make the supported claim explicit:
+For first generation of each main-path floor, the missing inputs are finite:
 
 ```text
-scope = first_generation_main_path
-meta = no_runtime_artifact_events | chronological_artifact_events
-challenges = forbidden_runes + barren_land + badder_bosses
-held_trinket_instances = floor-boundary class/level/instance history
+challenges          = 9-bit mask
+trinket_instances   = class, buffed level, instance id, first effective depth
+artifact_events     = obtained or transmuted outside levelgen before depth N
+limited_drops       = counters from prior generated floors under that profile
+special/secret decks
+mossy/trap          = remaining cards + shuffles on the current instance
 ```
 
-Add Rat Skull and Cracked Spyglass to the directly modeled trinkets. Preserve a
-generic “other trinket” state only after source-auditing it as having no direct
-or automatic cross-floor map effect.
+Condition inputs that still exist in the game, and that a seed analyzer can
+represent as a declared profile, are exactly those rows. Java does not make
+later regular floors seed-only in the absence of that profile.
 
-### Replay
-
-Use one faithful lifecycle. At the painter-complete boundary, clone/snapshot
-the layout-only public map, then continue hidden NPC/mob/item generation solely
-to preserve persistent state for the next floor. Apply modeled artifact events
-at their floor boundary. Do not replace a full replay's maps with a second replay
-that skips population.
-
-### Certainty projection
-
-Track at least:
-
-1. room selection exactness;
-2. room bounds/connection exactness;
-3. painter-complete map exactness;
-4. later population/loot exactness, independently.
-
-This lets the UI publish exact room names and possibly the room graph on many
-floors where only doors, stairs, or terrain remain conditional. When an input
-is unknown, show the invariant intersection and label each map variant with its
-condition rather than suppressing every structural fact.
-
-### Verification required before promotion
-
-Extend the Java oracle with paired fixtures for:
-
-- each held trinket at +0 and +3 from a fixed effective floor;
-- Mossy/Trap upgrade versus transmute-away-and-reacquire instance histories;
-- Forbidden Runes and Barren Land regular floors;
-- normal versus Badder Bosses floor 15;
-- Rat Skull Crystal Vault/Statue paths;
-- Cracked Spyglass followed by a later artifact-sensitive floor;
-- artifact events before a special room, regular shop, and floor-20 shop;
-- first versus sealed-floor regenerated floor 20 if regeneration enters scope.
-
-Only after those paths match room selection, bounds, connections, doors,
-terrain, transitions, traps, plants, blobs, and post-snapshot persistent state
-should later regular floors move from “assumed continuation” to exact.
+The truthful product claim is **first generation of each main-path floor under
+a declared profile**. Room selection can be exact while painted doors or
+terrain remain conditional; an unknown paint tail must not erase a known room
+multiset.
