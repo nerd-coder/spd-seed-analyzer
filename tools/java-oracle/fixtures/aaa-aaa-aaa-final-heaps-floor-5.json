@@ -1,15 +1,8 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": {
-    "version": "v3.3.8",
-    "commit": "7b8b845a7"
-  },
-  "input": {
-    "seed": "AAA-AAA-AAA",
-    "numeric": 0,
-    "depths": [5]
-  },
+  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
+  "input": { "seed": "AAA-AAA-AAA", "numeric": 0, "depths": [5] },
   "identities": {
     "potions": [
       { "item": "PotionOfStrength", "appearance": "crimson" },
@@ -58,7 +51,7 @@
     {
       "depth": 5,
       "width": 32,
-      "height": 33,
+      "height": 34,
       "rooms": [
         "RatKingRoom",
         "SewerBossEntranceRoom",
@@ -70,16 +63,15 @@
         "TunnelRoom",
         "TunnelRoom",
         "TunnelRoom",
-        "TunnelRoom",
         "WaterBridgeRoom"
       ],
       "room_bounds": [
         {
           "class": "RatKingRoom",
           "left": 20,
-          "top": 27,
-          "right": 25,
-          "bottom": 31
+          "top": 19,
+          "right": 26,
+          "bottom": 25
         },
         {
           "class": "SewerBossEntranceRoom",
@@ -97,10 +89,10 @@
         },
         {
           "class": "SewerPipeRoom",
-          "left": 17,
-          "top": 19,
-          "right": 26,
-          "bottom": 27
+          "left": 10,
+          "top": 25,
+          "right": 17,
+          "bottom": 32
         },
         {
           "class": "SewerPipeRoom",
@@ -126,13 +118,6 @@
         {
           "class": "TunnelRoom",
           "left": 10,
-          "top": 10,
-          "right": 12,
-          "bottom": 16
-        },
-        {
-          "class": "TunnelRoom",
-          "left": 10,
           "top": 19,
           "right": 17,
           "bottom": 25
@@ -153,25 +138,25 @@
         },
         {
           "class": "WaterBridgeRoom",
-          "left": 1,
+          "left": 3,
           "top": 10,
-          "right": 10,
+          "right": 12,
           "bottom": 16
         }
       ],
       "pre_paint_rng": [],
       "pre_doors_rng": [
-        -1150858582, 1410397512, 487897282, -1811928925, 533209819, -1995613709,
-        949027209, -256527429
+        -537253648, -789697698, -964887254, 1000345620, 1889909504, 491176254,
+        959967617, -277159616
       ],
       "post_doors_rng": [
-        1170006809, -1566936363, 1924677448, -138141862, 1610843236, 1194668212,
-        1231195513, 1211501533
+        -2050840332, -1429880795, 943290936, 463119027, 996743026, -1597538736,
+        1053926520, 385863922
       ],
       "pre_mobs_rng": [],
       "pre_items_rng": [
-        1924677448, -138141862, 1610843236, 1194668212, 1231195513, 1211501533,
-        365159233, -968008788
+        943290936, 463119027, 996743026, -1597538736, 1053926520, 385863922,
+        665820018, 1540915888
       ],
       "terrain": [
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
@@ -180,48 +165,49 @@
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 12, 12, 12, 12, 12, 12, 12,
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
         4, 29, 29, 29, 29, 29, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 29, 29, 29, 1, 29, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 29, 7,
-        29, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 4, 1, 1, 29, 29, 29, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 5, 1, 1, 29, 29, 29, 29, 29,
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 12, 12, 12, 12, 4, 12,
-        4, 16, 4, 4, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-        4, 29, 29, 29, 29, 29, 29, 29, 29, 14, 4, 20, 1, 20, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 12, 12, 4, 4, 4, 4, 4, 4, 4, 29, 29, 29, 29, 29, 29, 29, 29,
-        14, 16, 1, 29, 1, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 29, 29, 29, 1, 1, 1, 4,
-        4, 4, 29, 29, 29, 4, 4, 4, 29, 29, 14, 4, 1, 29, 1, 1, 20, 4, 4, 4, 4,
-        4, 4, 1, 1, 29, 29, 29, 1, 1, 1, 4, 4, 4, 29, 29, 29, 29, 29, 29, 29,
-        29, 14, 4, 1, 29, 29, 29, 1, 4, 4, 4, 4, 4, 4, 1, 1, 14, 14, 14, 1, 1,
-        1, 4, 12, 4, 29, 4, 29, 29, 29, 29, 29, 4, 14, 4, 2, 15, 2, 1, 1, 4, 4,
-        4, 4, 4, 4, 1, 1, 29, 29, 29, 1, 1, 1, 5, 29, 5, 14, 4, 29, 29, 29, 29,
-        29, 12, 14, 4, 4, 4, 4, 5, 4, 4, 4, 4, 4, 4, 4, 20, 1, 29, 29, 29, 1, 1,
-        20, 4, 4, 4, 14, 29, 29, 29, 29, 29, 29, 29, 14, 4, 4, 12, 12, 29, 4, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 16, 4, 4, 4, 4, 4, 14, 29, 29, 4, 4, 4,
-        29, 29, 14, 4, 4, 29, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 4,
-        4, 4, 4, 4, 14, 29, 29, 29, 29, 29, 29, 29, 14, 4, 12, 29, 4, 4, 4, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 4, 4, 4, 4, 4, 14, 14, 14, 14, 14, 14,
-        14, 14, 14, 5, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 20, 4,
-        4, 4, 4, 4, 4, 4, 4, 5, 4, 4, 4, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 4, 4, 1, 4, 4, 4, 4, 4, 12, 12, 4, 29, 4, 4, 2, 15, 15, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 4, 4, 4, 4, 4, 29,
-        29, 29, 15, 4, 4, 20, 29, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 29, 4, 4, 4, 4, 4, 29, 4, 4, 4, 4, 4, 1, 29, 1, 1, 1, 1, 4, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 12, 12, 4, 12, 4, 29, 4, 4, 4, 4,
-        4, 1, 29, 29, 29, 29, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 29, 29,
-        29, 29, 5, 29, 29, 20, 4, 4, 4, 4, 4, 1, 1, 1, 1, 29, 1, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 1, 1, 15, 29, 29, 29, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-        4, 4, 1, 29, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 2, 15, 4, 4, 4, 29, 1, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1,
-        2, 29, 4, 21, 4, 29, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 16, 4, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 29, 2, 29, 14, 14, 14, 29, 15, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 4, 14, 14, 14, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 29,
-        29, 29, 29, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 14, 14, 14, 14, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 29, 29, 29, 29, 29, 15, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 4, 4, 14, 14, 14, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 29, 29, 29, 1, 1, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29,
+        29, 7, 29, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 12, 4, 29, 29, 29, 29, 29, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 5, 29, 29, 29, 29, 1,
+        1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 12,
+        12, 4, 5, 4, 4, 4, 4, 4, 16, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 29, 29, 29, 29, 29, 29, 29, 29, 14, 4, 4, 4, 4, 2, 15, 15, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 12, 12, 12, 4, 4, 29, 29, 29, 29, 29, 29,
+        29, 29, 14, 4, 15, 15, 15, 2, 29, 2, 4, 4, 4, 4, 4, 4, 4, 20, 1, 1, 1,
+        29, 29, 29, 1, 4, 29, 29, 29, 4, 4, 4, 29, 29, 14, 5, 15, 29, 15, 15,
+        29, 2, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 1, 29, 29, 29, 1, 4, 29, 29, 29,
+        29, 29, 29, 29, 29, 14, 4, 15, 29, 29, 29, 29, 15, 4, 4, 4, 4, 4, 4, 4,
+        1, 1, 1, 1, 14, 14, 14, 1, 4, 29, 4, 29, 29, 29, 29, 29, 4, 14, 4, 15,
+        15, 15, 2, 15, 2, 4, 4, 4, 4, 4, 4, 4, 15, 2, 1, 1, 29, 29, 29, 1, 4,
+        29, 4, 29, 29, 29, 29, 29, 4, 14, 4, 4, 4, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 2, 2, 1, 1, 29, 29, 29, 1, 5, 14, 29, 29, 29, 29, 29, 29, 29, 14, 4,
+        1, 20, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 16, 4, 4, 4, 4, 4, 14,
+        29, 29, 4, 4, 4, 29, 29, 14, 4, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 1, 4, 4, 4, 4, 4, 14, 29, 29, 29, 29, 29, 29, 29, 14, 5, 1, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 4, 4, 4, 4, 4, 14, 14, 14,
+        14, 14, 14, 14, 14, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 1, 4, 4, 4, 4, 4, 4, 5, 4, 4, 4, 4, 4, 4, 16, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 4, 4, 4, 4, 4, 4, 1, 4, 4, 4, 4, 4, 4, 1,
+        1, 23, 1, 23, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 4, 4, 4, 4, 4,
+        4, 29, 4, 4, 4, 4, 4, 4, 1, 14, 14, 14, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 29, 4, 4, 4, 4, 1, 1, 29, 4, 4, 4, 4, 4, 4, 23, 14, 14, 14, 23,
+        4, 4, 4, 4, 4, 4, 4, 4, 12, 4, 12, 12, 12, 5, 4, 4, 4, 4, 1, 4, 4, 4, 4,
+        4, 4, 4, 4, 1, 14, 14, 14, 1, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 29, 29,
+        29, 2, 1, 1, 5, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 23, 1, 23, 1, 23, 4, 4, 4,
+        4, 4, 4, 4, 4, 29, 1, 2, 29, 29, 1, 1, 29, 4, 4, 5, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 4, 4, 4, 1, 1, 1, 4, 1,
+        15, 2, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1,
+        4, 21, 4, 1, 1, 15, 4, 2, 29, 2, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 29, 1, 14, 14, 14, 1, 1, 15, 4, 15, 29, 15, 2, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 29, 29,
+        29, 1, 1, 15, 4, 15, 29, 29, 15, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 29, 29, 29, 29, 29, 1, 1, 1, 4, 15, 15, 15, 2, 4, 4,
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4
       ],
       "discoverable": [
         false,
@@ -539,7 +525,9 @@
         true,
         true,
         true,
-        false,
+        true,
+        true,
+        true,
         false,
         false,
         false,
@@ -555,7 +543,6 @@
         true,
         true,
         true,
-        false,
         true,
         true,
         true,
@@ -577,6 +564,7 @@
         false,
         false,
         false,
+        false,
         true,
         true,
         true,
@@ -587,7 +575,6 @@
         true,
         true,
         true,
-        false,
         true,
         true,
         true,
@@ -605,6 +592,7 @@
         true,
         true,
         true,
+        false,
         false,
         false,
         false,
@@ -619,7 +607,6 @@
         true,
         true,
         true,
-        false,
         true,
         true,
         true,
@@ -641,7 +628,7 @@
         false,
         false,
         false,
-        true,
+        false,
         true,
         true,
         true,
@@ -673,7 +660,7 @@
         false,
         false,
         false,
-        true,
+        false,
         true,
         true,
         true,
@@ -705,9 +692,7 @@
         false,
         false,
         false,
-        true,
-        true,
-        true,
+        false,
         true,
         true,
         true,
@@ -737,8 +722,9 @@
         false,
         false,
         false,
-        true,
-        true,
+        false,
+        false,
+        false,
         true,
         true,
         true,
@@ -747,7 +733,6 @@
         true,
         true,
         true,
-        false,
         true,
         true,
         true,
@@ -764,6 +749,7 @@
         true,
         true,
         true,
+        false,
         false,
         false,
         false,
@@ -780,9 +766,6 @@
         false,
         false,
         false,
-        true,
-        true,
-        true,
         true,
         true,
         true,
@@ -806,6 +789,9 @@
         false,
         false,
         false,
+        false,
+        false,
+        false,
         true,
         true,
         true,
@@ -825,7 +811,6 @@
         true,
         true,
         true,
-        true,
         false,
         false,
         false,
@@ -838,6 +823,7 @@
         false,
         false,
         false,
+        false,
         true,
         true,
         true,
@@ -858,7 +844,7 @@
         true,
         true,
         true,
-        false,
+        true,
         false,
         false,
         false,
@@ -876,10 +862,14 @@
         false,
         false,
         false,
-        true,
+        false,
         true,
         true,
         true,
+        false,
+        false,
+        false,
+        false,
         true,
         true,
         true,
@@ -887,10 +877,6 @@
         true,
         true,
         true,
-        false,
-        false,
-        false,
-        false,
         false,
         false,
         false,
@@ -907,14 +893,15 @@
         true,
         false,
         false,
-        false,
-        true,
         true,
         true,
         true,
         true,
         true,
-        true,
+        false,
+        false,
+        false,
+        false,
         true,
         true,
         true,
@@ -922,7 +909,6 @@
         true,
         true,
         true,
-        false,
         false,
         false,
         false,
@@ -939,14 +925,15 @@
         true,
         false,
         false,
-        false,
-        true,
-        true,
         true,
         true,
         true,
         true,
         true,
+        false,
+        false,
+        false,
+        false,
         true,
         true,
         true,
@@ -954,7 +941,6 @@
         true,
         true,
         true,
-        false,
         false,
         false,
         false,
@@ -975,10 +961,11 @@
         true,
         true,
         true,
+        true,
         false,
         false,
         false,
-        true,
+        false,
         true,
         true,
         true,
@@ -992,7 +979,6 @@
         false,
         false,
         false,
-        false,
         true,
         true,
         true,
@@ -1006,11 +992,12 @@
         true,
         true,
         true,
-        true,
         false,
         false,
         false,
-        true,
+        false,
+        false,
+        false,
         true,
         true,
         true,
@@ -1024,7 +1011,6 @@
         false,
         false,
         false,
-        false,
         true,
         true,
         true,
@@ -1042,7 +1028,8 @@
         false,
         false,
         false,
-        true,
+        false,
+        false,
         true,
         true,
         true,
@@ -1050,13 +1037,15 @@
         true,
         true,
         true,
-        false,
         false,
         false,
         false,
         false,
         false,
         false,
+        true,
+        true,
+        true,
         true,
         true,
         true,
@@ -1067,6 +1056,7 @@
         true,
         true,
         true,
+        true,
         false,
         false,
         false,
@@ -1077,11 +1067,6 @@
         false,
         false,
         false,
-        true,
-        true,
-        true,
-        true,
-        true,
         false,
         false,
         false,
@@ -1089,6 +1074,11 @@
         false,
         false,
         false,
+        false,
+        true,
+        true,
+        true,
+        true,
         true,
         true,
         true,
@@ -1099,6 +1089,7 @@
         true,
         true,
         true,
+        true,
         false,
         false,
         false,
@@ -1108,12 +1099,7 @@
         false,
         false,
         false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
+        false,
         false,
         false,
         false,
@@ -1121,6 +1107,9 @@
         false,
         false,
         false,
+        true,
+        true,
+        true,
         true,
         true,
         true,
@@ -1131,6 +1120,8 @@
         true,
         true,
         true,
+        true,
+        true,
         false,
         false,
         false,
@@ -1140,12 +1131,6 @@
         false,
         false,
         false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
         false,
         false,
         false,
@@ -1153,6 +1138,9 @@
         false,
         false,
         false,
+        false,
+        true,
+        true,
         true,
         true,
         true,
@@ -1163,6 +1151,9 @@
         true,
         true,
         true,
+        true,
+        true,
+        true,
         false,
         false,
         false,
@@ -1172,12 +1163,6 @@
         false,
         false,
         false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
         false,
         false,
         false,
@@ -1185,6 +1170,8 @@
         false,
         false,
         false,
+        false,
+        true,
         true,
         true,
         true,
@@ -1195,6 +1182,10 @@
         true,
         true,
         true,
+        true,
+        true,
+        true,
+        true,
         false,
         false,
         false,
@@ -1204,12 +1195,7 @@
         false,
         false,
         false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
+        false,
         false,
         false,
         false,
@@ -1227,6 +1213,11 @@
         true,
         true,
         true,
+        true,
+        true,
+        true,
+        true,
+        true,
         false,
         false,
         false,
@@ -1236,12 +1227,39 @@
         false,
         false,
         false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
         false,
         false,
         false,
@@ -1339,7 +1357,9 @@
         48, 43, 22, 57, 68, 19, 95, 84, 34, 45, 98, 89, 49, 77, 62, 6, 36, 12,
         34, 99, 54, 97, 71, 25, 33, 5, 39, 97, 51, 55, 50, 71, 96, 78, 23, 29,
         61, 4, 61, 28, 89, 98, 56, 47, 69, 34, 79, 96, 86, 29, 55, 35, 55, 81,
-        69, 96, 71, 50, 71, 37, 64, 97, 44, 42, 14, 25, 39
+        69, 96, 71, 50, 71, 37, 64, 97, 44, 42, 14, 25, 39, 62, 55, 24, 1, 3,
+        51, 15, 62, 33, 33, 38, 87, 32, 84, 67, 94, 29, 68, 5, 21, 16, 45, 9, 0,
+        43, 47, 20, 69, 54, 89, 4, 33
       ],
       "transitions": [
         {
@@ -1354,11 +1374,11 @@
           "dest_type": "REGULAR_EXIT"
         },
         {
-          "cell": 870,
+          "cell": 869,
           "type": "REGULAR_EXIT",
-          "left": 5,
+          "left": 4,
           "top": 26,
-          "right": 7,
+          "right": 6,
           "bottom": 27,
           "dest_depth": 6,
           "dest_branch": 0,
@@ -1368,74 +1388,199 @@
       "traps": [],
       "plants": [],
       "blobs": [],
+      "custom_tiles": [
+        {
+          "class": "Carpet",
+          "x": 22,
+          "y": 21,
+          "width": 3,
+          "height": 3,
+          "texture": null,
+          "static_data": []
+        },
+        {
+          "class": "GooNest",
+          "x": 15,
+          "y": 12,
+          "width": 5,
+          "height": 4,
+          "texture": null,
+          "static_data": []
+        },
+        {
+          "class": "RatKingRoomDeco",
+          "x": 21,
+          "y": 20,
+          "width": 5,
+          "height": 5,
+          "texture": null,
+          "static_data": []
+        },
+        {
+          "class": "SewerExit",
+          "x": 4,
+          "y": 27,
+          "width": 3,
+          "height": 3,
+          "texture": null,
+          "static_data": [21, -1, 22, 23, 23, 23, 24, 24, 24]
+        }
+      ],
+      "custom_terrain": [
+        {
+          "class": "RatKingStatues",
+          "x": 21,
+          "y": 19,
+          "width": 5,
+          "height": 7,
+          "texture": null,
+          "static_data": []
+        }
+      ],
+      "custom_walls": [
+        {
+          "class": "SewerExitOverhang",
+          "x": 4,
+          "y": 25,
+          "width": 3,
+          "height": 2,
+          "texture": null,
+          "static_data": [16, 17, 18, 19, -1, 20]
+        },
+        {
+          "class": "StatueOverhang",
+          "x": 21,
+          "y": 19,
+          "width": 5,
+          "height": 7,
+          "texture": null,
+          "static_data": []
+        }
+      ],
       "final_heaps": [
         {
-          "cell": 917,
-          "heap_type": "chest",
+          "cell": 661,
+          "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 16, "level": 0, "cursed": false }
+            { "class": "Gold", "quantity": 17, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 918,
-          "heap_type": "chest",
+          "cell": 662,
+          "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 13, "level": 0, "cursed": false }
+            { "class": "Gold", "quantity": 10, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 920,
-          "heap_type": "chest",
+          "cell": 664,
+          "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 22, "level": 0, "cursed": false }
+            { "class": "Gold", "quantity": 11, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 949,
-          "heap_type": "chest",
+          "cell": 693,
+          "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 13, "level": 0, "cursed": false }
+            { "class": "Gold", "quantity": 15, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 952,
-          "heap_type": "chest",
+          "cell": 694,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Gold", "quantity": 5, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 695,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Gold", "quantity": 7, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 696,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Gold", "quantity": 7, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 697,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Gold", "quantity": 10, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 726,
+          "heap_type": "heap",
           "items": [
             { "class": "Gold", "quantity": 20, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 981,
-          "heap_type": "chest",
+          "cell": 728,
+          "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 10, "level": 0, "cursed": false }
+            { "class": "Gold", "quantity": 18, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 982,
-          "heap_type": "chest",
+          "cell": 757,
+          "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 10, "level": 0, "cursed": false }
+            { "class": "Gold", "quantity": 18, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 983,
-          "heap_type": "chest",
+          "cell": 758,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Gold", "quantity": 17, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 759,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Gold", "quantity": 14, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 760,
+          "heap_type": "heap",
           "items": [
             { "class": "Gold", "quantity": 19, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 984,
-          "heap_type": "chest",
+          "cell": 761,
+          "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 25, "level": 0, "cursed": false }
+            { "class": "Gold", "quantity": 12, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 790,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Gold", "quantity": 5, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 792,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Gold", "quantity": 19, "level": 0, "cursed": false }
           ]
         }
       ],
       "final_mobs": [
         { "cell": 465, "class": "Goo" },
-        { "cell": 950, "class": "RatKing" }
+        { "cell": 727, "class": "RatKing" }
       ],
       "quest_rewards": []
     }

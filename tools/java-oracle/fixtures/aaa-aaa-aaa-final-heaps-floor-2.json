@@ -1,15 +1,8 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": {
-    "version": "v3.3.8",
-    "commit": "7b8b845a7"
-  },
-  "input": {
-    "seed": "AAA-AAA-AAA",
-    "numeric": 0,
-    "depths": [2]
-  },
+  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
+  "input": { "seed": "AAA-AAA-AAA", "numeric": 0, "depths": [2] },
   "identities": {
     "potions": [
       { "item": "PotionOfStrength", "appearance": "crimson" },
@@ -57,13 +50,15 @@
   "floors": [
     {
       "depth": 2,
-      "width": 37,
+      "width": 35,
       "height": 48,
       "rooms": [
+        "BridgeRoom",
         "CryptRoom",
         "GrassyGraveRoom",
         "MagicalFireRoom",
         "PlatformRoom",
+        "RingBridgeRoom",
         "RingExitRoom",
         "SecretChestChasmRoom",
         "SewerPipeRoom",
@@ -71,200 +66,210 @@
         "TunnelRoom",
         "TunnelRoom",
         "TunnelRoom",
-        "WalkwayRoom",
         "WaterBridgeEntranceRoom",
         "WaterBridgeRoom"
       ],
       "room_bounds": [
         {
+          "class": "BridgeRoom",
+          "left": 9,
+          "top": 33,
+          "right": 12,
+          "bottom": 38
+        },
+        {
           "class": "CryptRoom",
-          "left": 11,
-          "top": 8,
-          "right": 16,
-          "bottom": 17
+          "left": 2,
+          "top": 33,
+          "right": 9,
+          "bottom": 41
         },
         {
           "class": "GrassyGraveRoom",
-          "left": 19,
-          "top": 21,
-          "right": 26,
-          "bottom": 28
+          "left": 4,
+          "top": 26,
+          "right": 11,
+          "bottom": 33
         },
         {
           "class": "MagicalFireRoom",
-          "left": 20,
+          "left": 24,
           "top": 37,
-          "right": 27,
+          "right": 32,
           "bottom": 45
         },
         {
           "class": "PlatformRoom",
-          "left": 5,
-          "top": 6,
-          "right": 11,
-          "bottom": 11
-        },
-        {
-          "class": "RingExitRoom",
-          "left": 23,
-          "top": 9,
-          "right": 34,
-          "bottom": 21
-        },
-        {
-          "class": "SecretChestChasmRoom",
-          "left": 16,
-          "top": 8,
-          "right": 23,
-          "bottom": 15
-        },
-        {
-          "class": "SewerPipeRoom",
-          "left": 9,
-          "top": 25,
-          "right": 19,
-          "bottom": 35
-        },
-        {
-          "class": "TunnelRoom",
-          "left": 2,
-          "top": 11,
-          "right": 8,
-          "bottom": 16
-        },
-        {
-          "class": "TunnelRoom",
-          "left": 2,
-          "top": 16,
-          "right": 8,
-          "bottom": 20
-        },
-        {
-          "class": "TunnelRoom",
           "left": 11,
-          "top": 2,
+          "top": 19,
           "right": 18,
-          "bottom": 8
-        },
-        {
-          "class": "TunnelRoom",
-          "left": 11,
-          "top": 35,
-          "right": 20,
-          "bottom": 42
-        },
-        {
-          "class": "WalkwayRoom",
-          "left": 23,
-          "top": 3,
-          "right": 29,
-          "bottom": 9
-        },
-        {
-          "class": "WaterBridgeEntranceRoom",
-          "left": 8,
-          "top": 18,
-          "right": 17,
           "bottom": 25
         },
         {
-          "class": "WaterBridgeRoom",
-          "left": 18,
+          "class": "RingBridgeRoom",
+          "left": 3,
+          "top": 19,
+          "right": 11,
+          "bottom": 26
+        },
+        {
+          "class": "RingExitRoom",
+          "left": 4,
+          "top": 9,
+          "right": 17,
+          "bottom": 19
+        },
+        {
+          "class": "SecretChestChasmRoom",
+          "left": 9,
           "top": 2,
-          "right": 23,
-          "bottom": 6
+          "right": 17,
+          "bottom": 9
+        },
+        {
+          "class": "SewerPipeRoom",
+          "left": 19,
+          "top": 20,
+          "right": 28,
+          "bottom": 33
+        },
+        {
+          "class": "TunnelRoom",
+          "left": 12,
+          "top": 25,
+          "right": 19,
+          "bottom": 30
+        },
+        {
+          "class": "TunnelRoom",
+          "left": 17,
+          "top": 7,
+          "right": 21,
+          "bottom": 11
+        },
+        {
+          "class": "TunnelRoom",
+          "left": 20,
+          "top": 33,
+          "right": 26,
+          "bottom": 37
+        },
+        {
+          "class": "TunnelRoom",
+          "left": 21,
+          "top": 9,
+          "right": 26,
+          "bottom": 13
+        },
+        {
+          "class": "WaterBridgeEntranceRoom",
+          "left": 12,
+          "top": 30,
+          "right": 18,
+          "bottom": 38
+        },
+        {
+          "class": "WaterBridgeRoom",
+          "left": 22,
+          "top": 13,
+          "right": 29,
+          "bottom": 20
         }
       ],
       "pre_paint_rng": [
-        437916709, 669572232, -123940252, -1248314532, 1284715328, 1915655975,
-        -963308941, 777389352
+        622854049, 157838540, 1171166418, -410870118, 1215888366, -1550143879,
+        -1425431748, 2104349663
+      ],
+      "pre_doors_rng": [
+        1958060752, 718593849, -1189507561, 1304423460, 794763410, 795055047,
+        -1962869618, 976615883
+      ],
+      "post_doors_rng": [
+        1506647271, 1614955557, 809443958, 1504660058, -1043758554, 685282968,
+        -1508482880, -153205263
       ],
       "pre_mobs_rng": [
-        -558160639, 1191244552, -2027357232, -1745280743, -632758747,
-        -1531024408, 1052903541, 1206660226
+        809443958, 1504660058, -1043758554, 685282968, -1508482880, -153205263,
+        883863192, -1307399279
       ],
       "pre_items_rng": [
-        -1093590614, -1139900320, 1109283955, 525248703, -1260074447,
-        -855325998, -101038164, 1615043901
+        331435359, 1050114842, 1056958096, -158019734, 1888792188, -120127960,
+        1773156028, 2066932357
       ],
       "terrain": [
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4,
-        4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 1, 29, 29, 20, 4, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4,
-        1, 14, 14, 1, 5, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 14, 14, 14, 5, 1, 29, 29, 20, 4, 14, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 0,
-        0, 14, 0, 0, 0, 4, 4, 4, 4, 4, 4, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 14, 14, 5, 14, 14, 14, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0,
-        14, 14, 14, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 14, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 14, 14, 14, 14, 14, 10, 29, 29,
-        1, 25, 4, 14, 0, 0, 0, 0, 14, 4, 5, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0,
-        0, 0, 0, 0, 0, 4, 14, 0, 0, 0, 0, 4, 1, 1, 1, 1, 4, 0, 0, 0, 0, 0, 0, 4,
-        29, 29, 29, 1, 20, 1, 1, 1, 29, 29, 4, 0, 0, 0, 0, 0, 0, 0, 4, 5, 4, 4,
-        4, 4, 4, 20, 1, 1, 1, 4, 0, 0, 14, 14, 0, 0, 16, 29, 29, 1, 1, 1, 1, 1,
-        1, 29, 29, 4, 0, 0, 0, 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 4, 1, 1, 1, 1, 4,
-        0, 0, 14, 14, 0, 0, 4, 29, 29, 1, 1, 1, 1, 1, 1, 1, 1, 4, 0, 0, 0, 0, 0,
-        0, 14, 14, 14, 0, 0, 0, 0, 4, 1, 1, 1, 1, 4, 0, 0, 0, 0, 0, 0, 4, 29,
-        29, 1, 4, 4, 4, 4, 1, 1, 1, 4, 0, 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0,
-        4, 1, 1, 1, 1, 4, 14, 0, 0, 0, 0, 14, 4, 29, 1, 1, 4, 14, 14, 4, 1, 1,
-        1, 4, 0, 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 4, 20, 1, 1, 1, 4, 4, 4,
-        4, 4, 4, 4, 4, 1, 1, 1, 5, 14, 8, 4, 1, 1, 1, 4, 0, 0, 0, 0, 0, 0, 14,
-        0, 0, 0, 0, 0, 0, 4, 1, 1, 1, 25, 4, 0, 0, 0, 0, 0, 0, 4, 1, 1, 1, 4,
-        14, 14, 4, 1, 1, 1, 4, 0, 0, 0, 0, 0, 0, 14, 14, 14, 0, 0, 0, 0, 4, 4,
-        4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 4, 1, 1, 1, 4, 4, 4, 4, 1, 1, 20, 4, 0, 0,
-        0, 0, 0, 0, 0, 0, 14, 0, 4, 4, 4, 4, 12, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0,
-        4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 0, 0, 0, 0, 0, 0, 0, 0, 14, 14, 16,
-        1, 29, 29, 29, 20, 1, 1, 1, 4, 0, 0, 0, 0, 0, 4, 1, 1, 1, 1, 1, 1, 1, 1,
-        1, 1, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 1, 29, 29, 29, 1, 1, 1, 1, 4,
-        0, 0, 0, 0, 0, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 4, 1, 29, 29, 29, 1, 1, 7, 1, 4, 0, 4, 4, 4, 4, 4, 17, 1, 4, 4,
-        4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 1, 14, 14, 14, 1,
-        1, 1, 1, 4, 0, 4, 2, 2, 2, 2, 2, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 4, 1, 29, 29, 29, 1, 1, 1, 1, 4, 0, 4, 2, 2, 2, 2,
-        2, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 20,
-        29, 29, 29, 1, 1, 1, 1, 4, 0, 4, 2, 2, 2, 2, 2, 2, 4, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 16, 4, 4, 4, 4,
-        2, 2, 2, 2, 2, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 4, 4, 4, 4, 4, 1, 1, 1, 1, 1, 4, 2, 2, 2, 2, 2, 2, 4, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 1, 29, 29,
-        29, 1, 5, 2, 2, 2, 2, 2, 2, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 1, 1, 1, 29, 1, 4, 4, 4, 4, 4, 4, 4, 4, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4,
-        4, 1, 29, 1, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 1, 29, 1, 4, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4,
-        4, 4, 4, 1, 29, 20, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 1, 1, 1, 1, 1, 1, 29, 1, 4, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4,
-        4, 1, 29, 29, 29, 29, 29, 29, 1, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1,
+        0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 14, 0, 0, 0, 0,
+        0, 14, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 14, 0, 14, 0,
+        0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 4, 0, 0, 14, 0, 14, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0,
         4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 4, 4, 4, 5, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 14, 14, 14, 14, 14, 0, 0, 0, 4, 4, 4, 4, 4, 4,
-        4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 14, 0, 0, 0, 4, 29, 29, 14, 14, 14, 14, 4, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 0, 0, 0, 4,
-        29, 29, 14, 14, 14, 14, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 14, 14, 14, 5, 1, 1, 14, 14, 14, 14,
+        0, 0, 0, 4, 14, 0, 0, 0, 0, 0, 14, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 16, 4,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 29,
+        29, 29, 29, 29, 1, 1, 1, 1, 1, 1, 1, 5, 14, 14, 14, 14, 14, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 29, 29, 29, 29, 1, 1, 1, 1, 1, 1,
+        1, 1, 4, 0, 0, 0, 0, 14, 14, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 4, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 20, 1, 4, 0, 0, 0, 0, 0, 0, 14, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 29, 29, 4, 14, 14, 14, 14, 14,
+        14, 4, 1, 1, 4, 0, 0, 0, 0, 4, 4, 5, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 4, 29, 29, 4, 14, 14, 8, 14, 14, 14, 4, 1, 1, 4, 0, 0, 0, 0, 4, 1,
+        1, 20, 1, 1, 1, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 29, 29, 4, 14, 14, 14,
+        14, 14, 14, 4, 1, 1, 4, 0, 0, 0, 0, 4, 1, 1, 1, 1, 1, 1, 4, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 4, 29, 29, 4, 4, 4, 5, 4, 4, 4, 4, 1, 1, 4, 0, 0, 0, 0,
+        4, 29, 29, 14, 29, 29, 29, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 1, 1, 1, 1,
+        1, 1, 17, 1, 1, 1, 1, 20, 4, 0, 0, 0, 0, 4, 29, 29, 14, 29, 29, 29, 4,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 29, 29, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4,
+        0, 0, 0, 0, 4, 29, 29, 14, 29, 29, 29, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4,
+        4, 4, 5, 4, 4, 4, 4, 20, 1, 1, 1, 1, 4, 4, 0, 0, 0, 4, 1, 1, 1, 1, 1, 1,
+        4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 0, 0, 0, 4, 0, 0, 0, 14, 0,
+        0, 4, 4, 4, 4, 4, 4, 5, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 14, 14, 14, 0, 4, 0, 14, 14, 14, 14, 0, 4, 4, 1, 1, 1, 1, 1, 20, 4,
+        4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 4, 14, 0, 4, 0, 14, 14,
+        14, 14, 0, 4, 4, 1, 29, 29, 29, 29, 1, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 14, 14, 14, 0, 4, 0, 14, 14, 14, 14, 0, 4, 4, 1, 29, 1,
+        1, 1, 1, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 14, 0, 4,
+        0, 0, 0, 0, 0, 0, 4, 4, 1, 29, 1, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 14, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 29, 1, 4,
+        4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 5, 4, 4, 0,
+        0, 0, 0, 0, 0, 0, 4, 1, 29, 1, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 4, 2, 2, 2, 2, 2, 2, 4, 0, 0, 0, 0, 0, 0, 0, 4, 1, 29, 1, 4, 4, 4,
+        4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 2, 2, 2, 2, 2, 2, 4, 0, 0, 0,
+        0, 0, 0, 0, 4, 1, 29, 1, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        4, 2, 2, 2, 2, 2, 2, 4, 0, 0, 0, 14, 14, 14, 14, 5, 1, 29, 1, 4, 4, 4,
+        4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 2, 2, 2, 2, 2, 2, 4, 4, 4, 4,
+        16, 4, 4, 4, 4, 1, 29, 1, 1, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 4, 2, 2, 2, 2, 2, 2, 4, 4, 20, 1, 1, 1, 20, 4, 4, 1, 29, 29, 1, 4, 4,
+        4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 2, 2, 2, 2, 2, 2, 4, 4, 29,
+        14, 29, 29, 29, 4, 4, 1, 1, 1, 1, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0,
+        4, 4, 4, 10, 4, 4, 4, 4, 5, 4, 4, 29, 14, 29, 29, 29, 4, 4, 4, 4, 5, 4,
+        4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 4, 1, 1, 1, 1, 1, 17, 4, 14, 14,
+        4, 29, 14, 29, 29, 29, 4, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 4, 1, 1, 1, 1, 1, 1, 4, 0, 14, 16, 1, 1, 1, 1, 1, 4, 0, 0, 0,
+        14, 14, 14, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 1, 1, 1, 1, 1, 1, 4,
+        0, 0, 4, 1, 1, 7, 15, 2, 4, 0, 0, 0, 0, 0, 0, 14, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 4, 1, 1, 1, 1, 1, 2, 4, 0, 0, 4, 1, 1, 15, 2, 15, 4, 0, 0,
+        0, 0, 0, 4, 5, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 4, 1, 1, 1, 1, 2, 15, 4,
+        0, 0, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 4, 1, 1, 1, 1, 1, 1, 20, 4, 0,
+        0, 0, 0, 4, 1, 1, 1, 1, 15, 15, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 4, 1, 1, 1, 1, 1, 1, 1, 4, 0, 0, 0, 0, 4, 25, 1, 20, 1, 15, 25, 4,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 1, 1, 1, 1, 1, 1, 1, 4, 0,
+        0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 4, 14, 14, 14, 14, 14, 14, 14, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 14, 14, 14, 14, 14, 14, 14,
         4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 4, 1, 17, 14, 14, 14, 14, 4, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 1, 1,
-        14, 14, 14, 14, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 1, 1, 14, 14, 14, 14, 4, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 4, 1, 1, 14, 14, 14, 14, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 4, 0,
+        0, 0, 0, 4, 14, 14, 14, 14, 14, 14, 14, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 14, 14, 14, 14, 14,
+        14, 14, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
       ],
       "discoverable": [
         true,
@@ -1029,6 +1034,7 @@
         true,
         true,
         true,
+        false,
         true,
         true,
         true,
@@ -1063,6 +1069,7 @@
         true,
         true,
         true,
+        false,
         true,
         true,
         true,
@@ -1097,6 +1104,7 @@
         true,
         true,
         true,
+        false,
         true,
         true,
         true,
@@ -1131,6 +1139,7 @@
         true,
         true,
         true,
+        false,
         true,
         true,
         true,
@@ -1162,6 +1171,10 @@
         true,
         true,
         true,
+        false,
+        false,
+        false,
+        false,
         true,
         true,
         true,
@@ -1193,6 +1206,10 @@
         true,
         true,
         true,
+        false,
+        false,
+        false,
+        false,
         true,
         true,
         true,
@@ -1207,6 +1224,62 @@
         true,
         true,
         true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
         true,
         true,
         true,
@@ -1274,50 +1347,9 @@
         true,
         true,
         true,
-        true,
-        true,
         false,
         false,
         false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        false,
-        false,
-        false,
-        true,
-        true,
         true,
         true,
         true,
@@ -1385,132 +1417,9 @@
         true,
         true,
         true,
-        true,
-        true,
         false,
         false,
         false,
-        false,
-        false,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
-        true,
         true,
         true,
         true,
@@ -2136,32 +2045,27 @@
         22, 81, 13, 11, 26, 28, 96, 43, 58, 69, 1, 32, 60, 60, 14, 72, 16, 36,
         94, 44, 38, 69, 10, 20, 41, 43, 81, 54, 57, 25, 76, 37, 47, 99, 64, 82,
         35, 75, 29, 22, 94, 41, 1, 56, 5, 82, 99, 79, 81, 44, 54, 83, 66, 52,
-        37, 40, 60, 14, 1, 51, 1, 0, 25, 65, 33, 10, 74, 51, 27, 58, 9, 92, 29,
-        44, 50, 43, 47, 35, 50, 1, 25, 15, 12, 63, 87, 10, 1, 41, 39, 93, 7, 53,
-        15, 84, 44, 55, 76, 66, 1, 47, 98, 92, 38, 25, 38, 33, 3, 98, 58, 15,
-        22, 47, 68, 85, 63, 59, 7, 32, 57, 39, 95, 33, 76, 49, 72, 9, 0, 39, 41,
-        68, 78, 85, 46, 31, 81, 17, 25, 9, 49, 24, 42, 62, 96, 54, 43, 51, 53,
-        32, 20, 18, 61, 70, 38, 33, 40, 31, 91, 50, 18, 53, 63, 90, 56, 30, 38
+        37, 40, 60, 14, 1, 51, 1, 0, 25, 65, 33, 10, 74, 51, 27
       ],
       "transitions": [
         {
-          "cell": 584,
+          "cell": 500,
           "type": "REGULAR_EXIT",
-          "left": 29,
-          "top": 15,
-          "right": 29,
-          "bottom": 15,
+          "left": 10,
+          "top": 14,
+          "right": 10,
+          "bottom": 14,
           "dest_depth": 3,
           "dest_branch": 0,
           "dest_type": "REGULAR_ENTRANCE"
         },
         {
-          "cell": 792,
+          "cell": 1275,
           "type": "REGULAR_ENTRANCE",
           "left": 15,
-          "top": 21,
+          "top": 36,
           "right": 15,
-          "bottom": 21,
+          "bottom": 36,
           "dest_depth": 1,
           "dest_branch": 0,
           "dest_type": "REGULAR_EXIT"
@@ -2169,20 +2073,20 @@
       ],
       "traps": [
         {
-          "cell": 801,
-          "class": "GatewayTrap",
+          "cell": 606,
+          "class": "TeleportationTrap",
           "visible": false,
           "active": true,
           "color": 4,
-          "shape": 5
+          "shape": 0
         },
         {
-          "cell": 1539,
-          "class": "SummoningTrap",
+          "cell": 1198,
+          "class": "ChillingTrap",
           "visible": false,
           "active": true,
-          "color": 4,
-          "shape": 1
+          "color": 6,
+          "shape": 0
         }
       ],
       "plants": [],
@@ -2192,82 +2096,61 @@
           "volume": 7,
           "always_visible": false,
           "cells": [
-            { "cell": 1429, "value": 1 },
-            { "cell": 1466, "value": 1 },
-            { "cell": 1503, "value": 1 },
-            { "cell": 1540, "value": 1 },
-            { "cell": 1577, "value": 1 },
-            { "cell": 1614, "value": 1 },
-            { "cell": 1651, "value": 1 }
+            { "cell": 1460, "value": 1 },
+            { "cell": 1461, "value": 1 },
+            { "cell": 1462, "value": 1 },
+            { "cell": 1463, "value": 1 },
+            { "cell": 1464, "value": 1 },
+            { "cell": 1465, "value": 1 },
+            { "cell": 1466, "value": 1 }
           ]
         }
       ],
+      "custom_tiles": [],
+      "custom_terrain": [],
+      "custom_walls": [],
       "final_heaps": [
         {
-          "cell": 167,
-          "heap_type": "chest",
-          "items": [
-            {
-              "class": "PotionOfLiquidFlame",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
-          ]
-        },
-        {
-          "cell": 204,
-          "heap_type": "chest",
-          "items": [
-            { "class": "Gold", "quantity": 82, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 268,
-          "heap_type": "chest",
-          "items": [
-            {
-              "class": "PotionOfHealing",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
-          ]
-        },
-        {
-          "cell": 303,
-          "heap_type": "heap",
-          "items": [
-            { "class": "GuidePage", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 350,
+          "cell": 115,
           "heap_type": "heap",
           "items": [
             { "class": "GoldenKey", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 355,
+          "cell": 121,
           "heap_type": "heap",
           "items": [
             { "class": "GoldenKey", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 426,
+          "cell": 187,
           "heap_type": "locked_chest",
           "items": [
-            { "class": "Gold", "quantity": 98, "level": 0, "cursed": false }
+            { "class": "Gold", "quantity": 92, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 427,
+          "cell": 189,
+          "heap_type": "locked_chest",
+          "items": [
+            { "class": "Seed", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 222,
+          "heap_type": "locked_chest",
+          "items": [
+            { "class": "Kunai", "quantity": 3, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 224,
           "heap_type": "locked_chest",
           "items": [
             {
-              "class": "PotionOfInvisibility",
+              "class": "PotionOfMindVision",
               "quantity": 1,
               "level": 0,
               "cursed": false
@@ -2275,26 +2158,35 @@
           ]
         },
         {
-          "cell": 463,
-          "heap_type": "locked_chest",
+          "cell": 290,
+          "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 80, "level": 0, "cursed": false }
+            { "class": "GoldenKey", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 464,
-          "heap_type": "locked_chest",
+          "cell": 296,
+          "heap_type": "heap",
           "items": [
-            {
-              "class": "LeatherArmor",
-              "quantity": 1,
-              "level": 1,
-              "cursed": false
-            }
+            { "class": "GoldenKey", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 473,
+          "cell": 390,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Pasty", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 533,
+          "heap_type": "skeleton",
+          "items": [
+            { "class": "Spear", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 604,
           "heap_type": "heap",
           "items": [
             {
@@ -2306,11 +2198,11 @@
           ]
         },
         {
-          "cell": 474,
+          "cell": 691,
           "heap_type": "heap",
           "items": [
             {
-              "class": "ScrollOfUpgrade",
+              "class": "ScrollOfIdentify",
               "quantity": 1,
               "level": 0,
               "cursed": false
@@ -2318,106 +2210,21 @@
           ]
         },
         {
-          "cell": 495,
-          "heap_type": "tomb",
-          "items": [
-            { "class": "MailArmor", "quantity": 1, "level": 2, "cursed": true }
-          ]
-        },
-        {
-          "cell": 535,
-          "heap_type": "heap",
-          "items": [
-            { "class": "GoldenKey", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 540,
-          "heap_type": "heap",
-          "items": [
-            { "class": "GoldenKey", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 767,
-          "heap_type": "heap",
-          "items": [
-            {
-              "class": "PotionOfStrength",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
-          ]
-        },
-        {
-          "cell": 862,
-          "heap_type": "heap",
-          "items": [
-            { "class": "GuidePage", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 875,
-          "heap_type": "tomb",
-          "items": [
-            { "class": "Gold", "quantity": 89, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 946,
-          "heap_type": "tomb",
-          "items": [
-            { "class": "Gold", "quantity": 98, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 980,
-          "heap_type": "skeleton",
-          "items": [
-            { "class": "Gold", "quantity": 54, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 1020,
+          "cell": 750,
           "heap_type": "heap",
           "items": [
             { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 1023,
-          "heap_type": "tomb",
-          "items": [
-            {
-              "class": "PotionOfToxicGas",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
-          ]
-        },
-        {
-          "cell": 1163,
+          "cell": 952,
           "heap_type": "heap",
           "items": [
-            {
-              "class": "PotionOfFrost",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
+            { "class": "GuidePage", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 1504,
-          "heap_type": "heap",
-          "items": [
-            { "class": "Gold", "quantity": 54, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 1506,
+          "cell": 987,
           "heap_type": "heap",
           "items": [
             {
@@ -2429,21 +2236,127 @@
           ]
         },
         {
-          "cell": 1542,
+          "cell": 988,
+          "heap_type": "tomb",
+          "items": [
+            { "class": "Gold", "quantity": 74, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 1057,
           "heap_type": "heap",
           "items": [
-            { "class": "Pasty", "quantity": 1, "level": 0, "cursed": false }
+            {
+              "class": "PotionOfStrength",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 1058,
+          "heap_type": "tomb",
+          "items": [
+            { "class": "Gold", "quantity": 62, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 1092,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "PotionOfFrost",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 1127,
+          "heap_type": "tomb",
+          "items": [
+            {
+              "class": "ScrollOfRecharging",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 1143,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "PotionOfToxicGas",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 1203,
+          "heap_type": "heap",
+          "items": [
+            { "class": "GuidePage", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 1370,
+          "heap_type": "tomb",
+          "items": [
+            { "class": "MailArmor", "quantity": 1, "level": 1, "cursed": true }
+          ]
+        },
+        {
+          "cell": 1500,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "PotionOfHealing",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 1566,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Food", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 1567,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Gold", "quantity": 70, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 1571,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "ScrollOfUpgrade",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
           ]
         }
       ],
       "final_mobs": [
-        { "cell": 130, "class": "Gnoll" },
-        { "cell": 376, "class": "Rat" },
-        { "cell": 400, "class": "Rat" },
-        { "cell": 505, "class": "Rat" },
-        { "cell": 587, "class": "Snake" },
-        { "cell": 912, "class": "Gnoll" },
-        { "cell": 1017, "class": "Gnoll" }
+        { "cell": 436, "class": "Snake" },
+        { "cell": 506, "class": "Rat" },
+        { "cell": 514, "class": "Gnoll" },
+        { "cell": 688, "class": "Rat" },
+        { "cell": 1056, "class": "Rat" },
+        { "cell": 1093, "class": "Gnoll" }
       ],
       "quest_rewards": []
     }

@@ -1,11 +1,16 @@
 {
   "schema_version": 1,
   "contract": "generator_lifecycle",
-  "spd": { "version": "v3.3.8", "commit": "7b8b845a7" },
+  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
   "input": { "seed": "AAA-AAA-AAA", "numeric": 0 },
   "boundaries": [
     {
-      "boundary": "floor_2_complete",
+      "boundary": "floor_1_complete",
+      "scroll": {
+        "seed": 8129270787689514689,
+        "dropped": 1,
+        "probabilities": [0, 3, 2, 1, 2, 1, 1, 1, 0, 1, 1, 1]
+      },
       "wep_t2": {
         "seed": 7210592536021473452,
         "dropped": 0,
@@ -18,7 +23,12 @@
       }
     },
     {
-      "boundary": "floor_3_after_sacrifice_room",
+      "boundary": "floor_2_complete",
+      "scroll": {
+        "seed": 8129270787689514689,
+        "dropped": 3,
+        "probabilities": [0, 2, 2, 1, 1, 1, 1, 1, 0, 1, 1, 1]
+      },
       "wep_t2": {
         "seed": 7210592536021473452,
         "dropped": 1,
@@ -28,10 +38,33 @@
         "seed": 7287648844454157976,
         "dropped": 0,
         "probabilities": [2, 2, 2, 2, 2, 2, 2]
+      }
+    },
+    {
+      "boundary": "floor_3_after_sacrifice_room",
+      "scroll": {
+        "seed": 8129270787689514689,
+        "dropped": 3,
+        "probabilities": [0, 2, 2, 1, 1, 1, 1, 1, 0, 1, 1, 1]
+      },
+      "wep_t2": {
+        "seed": 7210592536021473452,
+        "dropped": 1,
+        "probabilities": [2, 2, 1, 2, 2, 2, 0]
+      },
+      "wep_t4": {
+        "seed": 7287648844454157976,
+        "dropped": 1,
+        "probabilities": [2, 2, 2, 2, 2, 1, 2]
       }
     },
     {
       "boundary": "floor_3_create_items_complete",
+      "scroll": {
+        "seed": 8129270787689514689,
+        "dropped": 3,
+        "probabilities": [0, 2, 2, 1, 1, 1, 1, 1, 0, 1, 1, 1]
+      },
       "wep_t2": {
         "seed": 7210592536021473452,
         "dropped": 1,
@@ -39,12 +72,17 @@
       },
       "wep_t4": {
         "seed": 7287648844454157976,
-        "dropped": 0,
-        "probabilities": [2, 2, 2, 2, 2, 2, 2]
+        "dropped": 1,
+        "probabilities": [2, 2, 2, 2, 2, 1, 2]
       }
     },
     {
       "boundary": "floor_4_create_items_complete",
+      "scroll": {
+        "seed": 8129270787689514689,
+        "dropped": 5,
+        "probabilities": [0, 2, 2, 1, 1, 1, 0, 1, 0, 1, 1, 0]
+      },
       "wep_t2": {
         "seed": 7210592536021473452,
         "dropped": 1,
@@ -52,21 +90,62 @@
       },
       "wep_t4": {
         "seed": 7287648844454157976,
-        "dropped": 0,
-        "probabilities": [2, 2, 2, 2, 2, 2, 2]
+        "dropped": 1,
+        "probabilities": [2, 2, 2, 2, 2, 1, 2]
+      }
+    },
+    {
+      "boundary": "floor_5_complete",
+      "scroll": {
+        "seed": 8129270787689514689,
+        "dropped": 5,
+        "probabilities": [0, 2, 2, 1, 1, 1, 0, 1, 0, 1, 1, 0]
+      },
+      "wep_t2": {
+        "seed": 7210592536021473452,
+        "dropped": 1,
+        "probabilities": [2, 2, 1, 2, 2, 2, 0]
+      },
+      "wep_t4": {
+        "seed": 7287648844454157976,
+        "dropped": 1,
+        "probabilities": [2, 2, 2, 2, 2, 1, 2]
       }
     },
     {
       "boundary": "floor_6_create_items_complete",
+      "scroll": {
+        "seed": 8129270787689514689,
+        "dropped": 6,
+        "probabilities": [0, 2, 1, 1, 1, 1, 0, 1, 0, 1, 1, 0]
+      },
       "wep_t2": {
         "seed": 7210592536021473452,
-        "dropped": 2,
-        "probabilities": [2, 2, 1, 1, 2, 2, 0]
+        "dropped": 3,
+        "probabilities": [2, 1, 1, 1, 2, 2, 0]
       },
       "wep_t4": {
         "seed": 7287648844454157976,
         "dropped": 2,
         "probabilities": [2, 2, 2, 2, 2, 1, 1]
+      }
+    },
+    {
+      "boundary": "floor_19_create_items_complete",
+      "scroll": {
+        "seed": 8129270787689514689,
+        "dropped": 23,
+        "probabilities": [0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0]
+      },
+      "wep_t2": {
+        "seed": 7210592536021473452,
+        "dropped": 4,
+        "probabilities": [2, 1, 1, 1, 2, 1, 0]
+      },
+      "wep_t4": {
+        "seed": 7287648844454157976,
+        "dropped": 5,
+        "probabilities": [1, 2, 2, 2, 1, 1, 0]
       }
     }
   ]

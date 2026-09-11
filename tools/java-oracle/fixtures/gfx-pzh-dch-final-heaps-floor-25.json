@@ -1,15 +1,8 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": {
-    "version": "v3.3.8",
-    "commit": "7b8b845a7"
-  },
-  "input": {
-    "seed": "GFX-PZH-DCH",
-    "numeric": 1300416271343,
-    "depths": [25]
-  },
+  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
+  "input": { "seed": "GFX-PZH-DCH", "numeric": 1300416271343, "depths": [25] },
   "identities": {
     "potions": [
       { "item": "PotionOfStrength", "appearance": "charcoal" },
@@ -1229,17 +1222,52 @@
       "traps": [],
       "plants": [],
       "blobs": [],
+      "custom_tiles": [
+        {
+          "class": "CenterPieceVisuals",
+          "x": 12,
+          "y": 9,
+          "width": 9,
+          "height": 8,
+          "texture": "halls_special",
+          "static_data": [
+            8, 9, 10, 11, 11, 11, 12, 13, 14, 16, 17, 18, 27, 19, 27, 20, 21,
+            22, 24, 25, 26, 19, 19, 19, 28, 29, 30, 24, 25, 26, 19, 19, 19, 28,
+            29, 30, 24, 25, 26, 19, 19, 19, 28, 29, 30, 24, 25, 34, 35, 35, 35,
+            34, 29, 30, 40, 41, 36, 36, 36, 36, 36, 40, 41, 48, 49, 36, 36, 36,
+            36, 36, 48, 49
+          ]
+        }
+      ],
+      "custom_terrain": [],
+      "custom_walls": [
+        {
+          "class": "CenterPieceWalls",
+          "x": 12,
+          "y": 8,
+          "width": 9,
+          "height": 9,
+          "texture": "halls_special",
+          "static_data": [
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+            -1, -1, -1, 32, 33, -1, -1, -1, -1, -1, 32, 33, 40, 41, -1, -1, -1,
+            -1, -1, 40, 41
+          ]
+        }
+      ],
       "final_heaps": [],
       "final_mobs": [],
       "quest_rewards": [
         {
           "class": "WandOfLightning",
           "quantity": 1,
-          "level": 3,
+          "level": 2,
           "cursed": false
         },
         {
-          "class": "WandOfBlastWave",
+          "class": "WandOfRegrowth",
           "quantity": 1,
           "level": 1,
           "cursed": false

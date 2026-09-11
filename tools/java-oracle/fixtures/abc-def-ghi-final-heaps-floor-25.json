@@ -1,15 +1,8 @@
 {
   "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": {
-    "version": "v3.3.8",
-    "commit": "7b8b845a7"
-  },
-  "input": {
-    "seed": "ABC-DEF-GHI",
-    "numeric": 8687205886,
-    "depths": [25]
-  },
+  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
+  "input": { "seed": "ABC-DEF-GHI", "numeric": 8687205886, "depths": [25] },
   "identities": {
     "potions": [
       { "item": "PotionOfStrength", "appearance": "silver" },
@@ -1232,11 +1225,11 @@
       "custom_tiles": [
         {
           "class": "CenterPieceVisuals",
-          "texture": "halls_special",
           "x": 12,
           "y": 9,
           "width": 9,
           "height": 8,
+          "texture": "halls_special",
           "static_data": [
             8, 9, 10, 11, 11, 11, 12, 13, 14, 16, 17, 18, 27, 19, 27, 20, 21,
             22, 24, 25, 26, 19, 19, 19, 28, 29, 30, 24, 25, 26, 19, 19, 19, 28,
@@ -1246,14 +1239,15 @@
           ]
         }
       ],
+      "custom_terrain": [],
       "custom_walls": [
         {
           "class": "CenterPieceWalls",
-          "texture": "halls_special",
           "x": 12,
           "y": 8,
           "width": 9,
           "height": 9,
+          "texture": "halls_special",
           "static_data": [
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -1275,7 +1269,7 @@
         {
           "class": "WandOfTransfusion",
           "quantity": 1,
-          "level": 1,
+          "level": 2,
           "cursed": false
         }
       ]

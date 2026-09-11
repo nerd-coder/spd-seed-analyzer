@@ -1,15 +1,8 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": {
-    "version": "v3.3.8",
-    "commit": "7b8b845a7"
-  },
-  "input": {
-    "seed": "AAA-AAA-AFO",
-    "numeric": 144,
-    "depths": [1]
-  },
+  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
+  "input": { "seed": "AAA-AAA-AFO", "numeric": 144, "depths": [1] },
   "identities": {
     "potions": [
       { "item": "PotionOfStrength", "appearance": "jade" },
@@ -68,9 +61,68 @@
         "WalkwayRoom",
         "WaterBridgeEntranceRoom"
       ],
+      "room_bounds": [
+        {
+          "class": "CryptRoom",
+          "left": 1,
+          "top": 19,
+          "right": 9,
+          "bottom": 24
+        },
+        {
+          "class": "RegionDecoPatchExitRoom",
+          "left": 5,
+          "top": 1,
+          "right": 13,
+          "bottom": 8
+        },
+        {
+          "class": "RingRoom",
+          "left": 22,
+          "top": 12,
+          "right": 33,
+          "bottom": 24
+        },
+        {
+          "class": "SewerPipeRoom",
+          "left": 9,
+          "top": 8,
+          "right": 22,
+          "bottom": 24
+        },
+        {
+          "class": "TunnelRoom",
+          "left": 12,
+          "top": 24,
+          "right": 18,
+          "bottom": 28
+        },
+        {
+          "class": "WalkwayRoom",
+          "left": 13,
+          "top": 3,
+          "right": 18,
+          "bottom": 8
+        },
+        {
+          "class": "WaterBridgeEntranceRoom",
+          "left": 18,
+          "top": 24,
+          "right": 25,
+          "bottom": 31
+        }
+      ],
       "pre_paint_rng": [
         -13218164, -1145204402, -1312374430, -1337627405, -1079105239, 76872567,
         -1693272541, -1146367424
+      ],
+      "pre_doors_rng": [
+        412286751, 232580871, -1645994295, 2108969804, -731991545, 816355368,
+        -273494079, 243345052
+      ],
+      "post_doors_rng": [
+        243345052, 470144695, -1458982739, 177706965, 1852441564, 1480843754,
+        2023994210, 1184242552
       ],
       "pre_mobs_rng": [
         -1458982739, 177706965, 1852441564, 1480843754, 2023994210, 1184242552,
@@ -1407,6 +1459,9 @@
       ],
       "plants": [],
       "blobs": [],
+      "custom_tiles": [],
+      "custom_terrain": [],
+      "custom_walls": [],
       "final_heaps": [
         {
           "cell": 152,

@@ -1,15 +1,8 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": {
-    "version": "v3.3.8",
-    "commit": "7b8b845a7"
-  },
-  "input": {
-    "seed": "AAA-AAA-AAA",
-    "numeric": 0,
-    "depths": [1]
-  },
+  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
+  "input": { "seed": "AAA-AAA-AAA", "numeric": 0, "depths": [1] },
   "identities": {
     "potions": [
       { "item": "PotionOfStrength", "appearance": "crimson" },
@@ -57,12 +50,14 @@
   "floors": [
     {
       "depth": 1,
-      "width": 40,
-      "height": 30,
+      "width": 37,
+      "height": 43,
       "rooms": [
         "PoolRoom",
         "RegionDecoPatchEntranceRoom",
         "RegionDecoPatchRoom",
+        "RingBridgeRoom",
+        "RingTunnelRoom",
         "RunestoneRoom",
         "SewerPipeRoom",
         "SewerPipeRoom",
@@ -70,56 +65,137 @@
         "TunnelRoom",
         "TunnelRoom",
         "TunnelRoom",
-        "TunnelRoom",
         "WaterBridgeExitRoom"
       ],
+      "room_bounds": [
+        {
+          "class": "PoolRoom",
+          "left": 22,
+          "top": 8,
+          "right": 27,
+          "bottom": 15
+        },
+        {
+          "class": "RegionDecoPatchEntranceRoom",
+          "left": 14,
+          "top": 4,
+          "right": 21,
+          "bottom": 11
+        },
+        {
+          "class": "RegionDecoPatchRoom",
+          "left": 1,
+          "top": 21,
+          "right": 8,
+          "bottom": 27
+        },
+        {
+          "class": "RingBridgeRoom",
+          "left": 22,
+          "top": 15,
+          "right": 27,
+          "bottom": 23
+        },
+        {
+          "class": "RingTunnelRoom",
+          "left": 27,
+          "top": 11,
+          "right": 33,
+          "bottom": 17
+        },
+        {
+          "class": "RunestoneRoom",
+          "left": 20,
+          "top": 23,
+          "right": 25,
+          "bottom": 28
+        },
+        {
+          "class": "SewerPipeRoom",
+          "left": 2,
+          "top": 34,
+          "right": 10,
+          "bottom": 41
+        },
+        {
+          "class": "SewerPipeRoom",
+          "left": 11,
+          "top": 11,
+          "right": 22,
+          "bottom": 23
+        },
+        {
+          "class": "SewerPipeRoom",
+          "left": 27,
+          "top": 3,
+          "right": 35,
+          "bottom": 11
+        },
+        {
+          "class": "TunnelRoom",
+          "left": 1,
+          "top": 27,
+          "right": 10,
+          "bottom": 34
+        },
+        {
+          "class": "TunnelRoom",
+          "left": 5,
+          "top": 13,
+          "right": 11,
+          "bottom": 21
+        },
+        {
+          "class": "TunnelRoom",
+          "left": 21,
+          "top": 1,
+          "right": 27,
+          "bottom": 6
+        },
+        {
+          "class": "WaterBridgeExitRoom",
+          "left": 10,
+          "top": 23,
+          "right": 19,
+          "bottom": 30
+        }
+      ],
       "pre_paint_rng": [
-        1993374861, -149591753, -1380055091, 368556635, 1163123780, 1118396506,
-        798076888, -791762655
+        1459841223, 1282046973, 1055011864, 216862386, 121351211, -362970802,
+        1820407283, -3706175
+      ],
+      "pre_doors_rng": [
+        169078533, 1928243399, -596871079, -1593662776, 126128870, -1290330124,
+        1763498425, -134381699
+      ],
+      "post_doors_rng": [
+        84134096, -666136360, -1426460673, -807891281, 665209985, 677175261,
+        1720207545, -1983590811
       ],
       "pre_mobs_rng": [
-        1726373121, -188171336, 1867201434, -2048184778, 717498613, -493803451,
-        -1465937696, 689471909
+        -1426460673, -807891281, 665209985, 677175261, 1720207545, -1983590811,
+        119331014, -581402180
       ],
       "pre_items_rng": [
-        -339886649, -1704611306, -1853649770, -1054644975, 1614102425,
-        -1139121137, -821014263, -184470637
+        47355518, 587703880, 2034509109, -10648742, 1447740089, -1597746792,
+        -1686882738, -722846019
       ],
       "final_heaps": [
         {
-          "cell": 173,
-          "heap_type": "heap",
-          "items": [
-            {
-              "class": "ScrollOfRecharging",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
-          ]
-        },
-        {
-          "cell": 293,
-          "heap_type": "heap",
-          "items": [
-            { "class": "Food", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 315,
+          "cell": 358,
           "heap_type": "chest",
           "items": [
             {
-              "class": "ScaleArmor",
-              "quantity": 1,
-              "level": 0,
+              "class": "ThrowingSpear",
+              "quantity": 3,
+              "level": 2,
               "cursed": false
             }
           ]
         },
         {
-          "cell": 444,
-          "heap_type": "heap",
+          "cell": 854,
+          "heap_type": "chest",
           "items": [
             {
               "class": "ScrollOfRage",
@@ -130,7 +206,14 @@
           ]
         },
         {
-          "cell": 454,
+          "cell": 857,
+          "heap_type": "heap",
+          "items": [
+            { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 891,
           "heap_type": "heap",
           "items": [
             {
@@ -142,11 +225,18 @@
           ]
         },
         {
-          "cell": 565,
+          "cell": 942,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Shuriken", "quantity": 3, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 947,
           "heap_type": "heap",
           "items": [
             {
-              "class": "PotionOfHealing",
+              "class": "StoneOfDeepSleep",
               "quantity": 1,
               "level": 0,
               "cursed": false
@@ -154,19 +244,7 @@
           ]
         },
         {
-          "cell": 807,
-          "heap_type": "heap",
-          "items": [
-            {
-              "class": "StoneOfBlink",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
-          ]
-        },
-        {
-          "cell": 847,
+          "cell": 948,
           "heap_type": "heap",
           "items": [
             {
@@ -178,40 +256,51 @@
           ]
         },
         {
-          "cell": 903,
+          "cell": 985,
           "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 43, "level": 0, "cursed": false }
+            {
+              "class": "StoneOfBlink",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
           ]
         },
         {
-          "cell": 939,
+          "cell": 1016,
           "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 57, "level": 0, "cursed": false }
+            { "class": "Food", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 941,
+          "cell": 1303,
           "heap_type": "heap",
           "items": [
-            { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
+            {
+              "class": "WandOfFrost",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
           ]
         }
       ],
       "final_mobs": [
-        { "cell": 175, "class": "Rat" },
-        { "cell": 314, "class": "Piranha" },
-        { "cell": 404, "class": "Snake" },
-        { "cell": 432, "class": "Piranha" },
-        { "cell": 436, "class": "Piranha" },
-        { "cell": 497, "class": "Rat" },
-        { "cell": 524, "class": "Rat" },
-        { "cell": 738, "class": "Rat" },
-        { "cell": 752, "class": "Rat" },
-        { "cell": 778, "class": "Snake" },
-        { "cell": 902, "class": "Rat" }
-      ]
+        { "cell": 289, "class": "Rat" },
+        { "cell": 394, "class": "Piranha" },
+        { "cell": 465, "class": "Rat" },
+        { "cell": 505, "class": "Piranha" },
+        { "cell": 507, "class": "Piranha" },
+        { "cell": 534, "class": "Rat" },
+        { "cell": 574, "class": "Albino" },
+        { "cell": 818, "class": "Snake" },
+        { "cell": 834, "class": "Rat" },
+        { "cell": 1090, "class": "Snake" },
+        { "cell": 1376, "class": "Rat" }
+      ],
+      "quest_rewards": []
     }
   ]
 }

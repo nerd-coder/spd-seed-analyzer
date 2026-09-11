@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract": "shop_bag_selection",
-  "spd": { "version": "v3.3.8", "commit": "7b8b845a7" },
+  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
   "input": { "seed": "AAA-AAA-AAA", "numeric": 0 },
   "scenarios": [
     {

@@ -123,9 +123,11 @@ public final class JavaOracle {
 				? null
 				: Integer.valueOf(args[finalHeaps ? 2 : 1]);
 		if (depth != null
-				&& (!finalHeaps || depth < 1 || depth > 26)) {
+				&& (finalHeaps ? (depth < 1 || depth > 26) : depth != 1)) {
 			System.err.println(
-					"The final-heaps oracle supports depths 1 through 26");
+					finalHeaps
+							? "The final-heaps oracle supports depths 1 through 26"
+							: "The floor oracle currently supports only --depth 1");
 			System.exit(2);
 		}
 

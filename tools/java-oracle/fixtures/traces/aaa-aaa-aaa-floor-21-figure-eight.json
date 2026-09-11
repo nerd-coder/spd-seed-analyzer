@@ -67,8 +67,8 @@
         -1718249634, 137460704
       ],
       "end_rng": [
-        -1420086879, -869334089, 1830028298, 1789541391, 49840001, -704551720,
-        -499241945, 1437454582
+        -992169837, 974872802, 1301052070, -1376510444, -1992656794, 621380169,
+        237138058, 2009246779
       ],
       "failure_stage": null,
       "success": true,
@@ -77,17 +77,17 @@
         { "class": "CrystalVaultRoom", "bounds": [14, 1, 20, 7] },
         { "class": "ArmoryRoom", "bounds": [-6, 12, 0, 20] },
         { "class": "StripedRoom", "bounds": [-8, 6, 0, 12] },
-        { "class": "DemonSpawnerRoom", "bounds": [0, 14, 8, 22] },
+        { "class": "DemonSpawnerRoom", "bounds": [0, 14, 7, 20] },
         { "class": "RegionDecoPatchRoom", "bounds": [9, 24, 16, 29] },
         { "class": "ChasmRoom", "bounds": [0, 0, 14, 14] },
         { "class": "RegionDecoPatchEntranceRoom", "bounds": [-12, -6, -4, 2] },
         { "class": "RitualRoom", "bounds": [17, 24, 33, 41] },
-        { "class": "RitualRoom", "bounds": [0, -8, 9, 0] },
+        { "class": "RitualRoom", "bounds": [1, -8, 10, 0] },
         { "class": "TunnelRoom", "bounds": [-6, 2, 0, 6] },
-        { "class": "TunnelRoom", "bounds": [-4, -7, 0, 2] },
+        { "class": "TunnelRoom", "bounds": [-4, -9, 1, 0] },
         { "class": "TunnelRoom", "bounds": [14, 18, 18, 24] },
-        { "class": "TunnelRoom", "bounds": [9, 18, 14, 24] },
-        { "class": "TunnelRoom", "bounds": [8, 14, 12, 18] },
+        { "class": "TunnelRoom", "bounds": [9, 16, 14, 22] },
+        { "class": "TunnelRoom", "bounds": [8, 14, 12, 16] },
         { "class": "TunnelRoom", "bounds": [21, 18, 24, 24] }
       ]
     }

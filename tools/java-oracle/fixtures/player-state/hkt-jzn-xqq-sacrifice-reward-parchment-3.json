@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract": "sacrifice_reward_player_state",
-  "spd": { "version": "v3.3.8", "commit": "7b8b845a7" },
+  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
   "input": {
     "seed": "HKT-JZN-XQQ",
     "numeric": 1548095554788,
@@ -10,10 +10,10 @@
   },
   "lifecycle": "created_during_room_paint_and_stored_in_blob",
   "reward": {
-    "class": "Sword",
+    "class": "RunicBlade",
     "quantity": 1,
-    "level": 2,
+    "level": 1,
     "cursed": true,
-    "enchantment": "Corrupting"
+    "enchantment": "Projecting"
   }
 }

@@ -1,15 +1,8 @@
 {
   "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": {
-    "version": "v3.3.8",
-    "commit": "7b8b845a7"
-  },
-  "input": {
-    "seed": "AAA-AAA-AAA",
-    "numeric": 0,
-    "depths": [26]
-  },
+  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
+  "input": { "seed": "AAA-AAA-AAA", "numeric": 0, "depths": [26] },
   "identities": {
     "potions": [
       { "item": "PotionOfStrength", "appearance": "crimson" },
@@ -993,10 +986,6 @@
         true,
         true,
         true,
-        false,
-        false,
-        false,
-        false,
         true,
         true,
         true,
@@ -1006,9 +995,13 @@
         true,
         true,
         true,
-        false,
-        false,
-        false,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
         false,
         false,
         false,
@@ -1246,6 +1239,7 @@
           ]
         }
       ],
+      "custom_terrain": [],
       "custom_walls": [
         {
           "class": "CenterPieceWalls",
@@ -1283,7 +1277,7 @@
           "level": 1,
           "cursed": false
         },
-        { "class": "WandOfFrost", "quantity": 1, "level": 2, "cursed": false }
+        { "class": "WandOfFrost", "quantity": 1, "level": 1, "cursed": false }
       ]
     }
   ]

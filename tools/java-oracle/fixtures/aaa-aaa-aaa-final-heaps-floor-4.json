@@ -1,15 +1,8 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": {
-    "version": "v3.3.8",
-    "commit": "7b8b845a7"
-  },
-  "input": {
-    "seed": "AAA-AAA-AAA",
-    "numeric": 0,
-    "depths": [4]
-  },
+  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
+  "input": { "seed": "AAA-AAA-AAA", "numeric": 0, "depths": [4] },
   "identities": {
     "potions": [
       { "item": "PotionOfStrength", "appearance": "crimson" },
@@ -171,13 +164,21 @@
         1195211981, -232637323, -866470432, 875746384, -968086745, -1130552532,
         808018207, -30112376
       ],
+      "pre_doors_rng": [
+        1097751376, -212250781, 385559738, 63242657, -1005472172, -1730198078,
+        1653399326, 1029652030
+      ],
+      "post_doors_rng": [
+        497325153, 1141942998, 1548796554, -786298934, 1242643710, -2147072875,
+        -1147742676, -1922390961
+      ],
       "pre_mobs_rng": [
         1548796554, -786298934, 1242643710, -2147072875, -1147742676,
         -1922390961, -1830184005, 1944274883
       ],
       "pre_items_rng": [
-        1947487189, 1746226149, 1665828695, 1550973192, 1859014523, 2013971934,
-        -148043401, 714641771
+        861647622, 2020866327, -1107467265, 1894106412, -684252177, 1969286133,
+        -1256903105, -694747553
       ],
       "terrain": [
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
@@ -2312,7 +2313,7 @@
         {
           "class": "Alchemy",
           "volume": 1,
-          "always_visible": false,
+          "always_visible": true,
           "cells": [{ "cell": 109, "value": 1 }]
         },
         {
@@ -2341,6 +2342,9 @@
           ]
         }
       ],
+      "custom_tiles": [],
+      "custom_terrain": [],
+      "custom_walls": [],
       "final_heaps": [
         {
           "cell": 107,
@@ -2391,18 +2395,6 @@
           ]
         },
         {
-          "cell": 485,
-          "heap_type": "heap",
-          "items": [
-            {
-              "class": "PotionOfLiquidFlame",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
-          ]
-        },
-        {
           "cell": 729,
           "heap_type": "heap",
           "items": [
@@ -2415,25 +2407,23 @@
           ]
         },
         {
-          "cell": 783,
-          "heap_type": "heap",
-          "items": [
-            { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 1020,
-          "heap_type": "heap",
-          "items": [
-            { "class": "GuidePage", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 1072,
+          "cell": 864,
           "heap_type": "heap",
           "items": [
             {
-              "class": "PotionOfFrost",
+              "class": "PotionOfLiquidFlame",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 991,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "ScrollOfTransmutation",
               "quantity": 1,
               "level": 0,
               "cursed": false
@@ -2448,15 +2438,22 @@
           ]
         },
         {
-          "cell": 1180,
+          "cell": 1133,
           "heap_type": "heap",
           "items": [
             {
-              "class": "PotionOfHaste",
+              "class": "ScrollOfLullaby",
               "quantity": 1,
               "level": 0,
               "cursed": false
             }
+          ]
+        },
+        {
+          "cell": 1179,
+          "heap_type": "heap",
+          "items": [
+            { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
@@ -2483,7 +2480,7 @@
           "heap_type": "heap",
           "items": [
             {
-              "class": "PotionOfExperience",
+              "class": "PotionOfLiquidFlame",
               "quantity": 1,
               "level": 0,
               "cursed": false
@@ -2495,32 +2492,23 @@
           "heap_type": "heap",
           "items": [
             {
-              "class": "PotionOfParalyticGas",
+              "class": "PotionOfHealing",
               "quantity": 1,
               "level": 0,
               "cursed": false
             }
           ]
-        },
-        {
-          "cell": 1557,
-          "heap_type": "heap",
-          "items": [
-            { "class": "Gold", "quantity": 93, "level": 0, "cursed": false }
-          ]
         }
       ],
       "final_mobs": [
         { "cell": 484, "class": "Gnoll" },
-        { "cell": 537, "class": "Crab" },
-        { "cell": 687, "class": "Swarm" },
-        { "cell": 689, "class": "Gnoll" },
-        { "cell": 833, "class": "Ghost" },
-        { "cell": 974, "class": "Slime" },
-        { "cell": 1017, "class": "Crab" },
-        { "cell": 1131, "class": "Slime" },
-        { "cell": 1509, "class": "Swarm" },
-        { "cell": 1605, "class": "Slime" }
+        { "cell": 542, "class": "Mimic" },
+        { "cell": 593, "class": "Swarm" },
+        { "cell": 724, "class": "Crab" },
+        { "cell": 961, "class": "Slime" },
+        { "cell": 965, "class": "Slime" },
+        { "cell": 1037, "class": "Crab" },
+        { "cell": 1114, "class": "Crab" }
       ],
       "quest_rewards": []
     }

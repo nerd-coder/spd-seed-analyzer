@@ -1,177 +1,401 @@
 {
   "depth": 24,
-  "build_attempts": [],
-  "pre_shuffle_rooms": [
-    { "class": "DemonSpawnerRoom", "bounds": [22, 15, 26, 19] },
-    { "class": "ChasmEntranceRoom", "bounds": [13, 23, 22, 31] },
-    { "class": "RegionDecoPatchRoom", "bounds": [22, 31, 28, 35] },
-    { "class": "RuinsRoom", "bounds": [20, 12, 26, 15] },
-    { "class": "SacrificeRoom", "bounds": [21, 1, 29, 8] },
-    { "class": "RuinsRoom", "bounds": [1, 12, 13, 21] },
-    { "class": "CrystalPathRoom", "bounds": [6, 5, 13, 12] },
-    { "class": "SecretChestChasmRoom", "bounds": [14, 31, 21, 38] },
-    { "class": "StripedRoom", "bounds": [26, 8, 37, 19] },
-    { "class": "FissureRoom", "bounds": [15, 15, 22, 20] },
-    { "class": "MinefieldRoom", "bounds": [22, 19, 28, 23] },
-    { "class": "RuinsExitRoom", "bounds": [13, 8, 20, 14] },
-    { "class": "TunnelRoom", "bounds": [6, 21, 13, 26] },
-    { "class": "TunnelRoom", "bounds": [20, 8, 26, 12] },
-    { "class": "RingBridgeRoom", "bounds": [31, 19, 37, 25] },
-    { "class": "TunnelRoom", "bounds": [28, 23, 31, 29] },
-    { "class": "TunnelRoom", "bounds": [22, 25, 28, 31] },
-    { "class": "TunnelRoom", "bounds": [19, 20, 22, 23] }
+  "build_attempts": [
+    {
+      "attempt": 0,
+      "start_rng": [
+        -1305519441, -824629414, 149375398, -225594582, 1048972823, 42161882,
+        1440080800, -665096210
+      ],
+      "end_rng": [
+        412435074, 600414290, -975530482, -519615443, -717607169, -1679519914,
+        -156179955, -1083995277
+      ],
+      "success": false,
+      "rooms": [
+        { "class": "DemonSpawnerRoom", "bounds": [0, 0, 0, 0] },
+        { "class": "ChasmEntranceRoom", "bounds": [0, 0, 9, 8] },
+        { "class": "RegionDecoPatchRoom", "bounds": [0, 0, 0, 0] },
+        { "class": "RuinsRoom", "bounds": [0, 0, 0, 0] },
+        { "class": "SacrificeRoom", "bounds": [0, 0, 0, 0] },
+        { "class": "RuinsRoom", "bounds": [-11, -11, 1, -2] },
+        { "class": "CrystalPathRoom", "bounds": [0, 0, 0, 0] },
+        { "class": "SecretChestChasmRoom", "bounds": [0, 0, 0, 0] },
+        { "class": "StripedRoom", "bounds": [14, -15, 25, -4] },
+        { "class": "FissureRoom", "bounds": [0, 0, 0, 0] },
+        { "class": "MinefieldRoom", "bounds": [0, 0, 0, 0] },
+        { "class": "RuinsExitRoom", "bounds": [1, -15, 8, -9] },
+        { "class": "TunnelRoom", "bounds": [-7, -2, 0, 3] },
+        { "class": "TunnelRoom", "bounds": [8, -15, 14, -11] },
+        { "class": "RingBridgeRoom", "bounds": [19, -4, 25, 2] },
+        { "class": "TunnelRoom", "bounds": [16, 0, 19, 6] },
+        { "class": "TunnelRoom", "bounds": [10, 0, 16, 6] }
+      ]
+    },
+    {
+      "attempt": 1,
+      "start_rng": [
+        412435074, 600414290, -975530482, -519615443, -717607169, -1679519914,
+        -156179955, -1083995277
+      ],
+      "end_rng": [
+        1723263907, -2057542904, 1086581629, 1629415672, 590890345, -1230432065,
+        -2015252058, -1927727807
+      ],
+      "success": true,
+      "rooms": [
+        { "class": "DemonSpawnerRoom", "bounds": [5, 29, 10, 37] },
+        { "class": "ChasmEntranceRoom", "bounds": [0, 0, 8, 8] },
+        { "class": "RegionDecoPatchRoom", "bounds": [13, 0, 20, 7] },
+        { "class": "RuinsRoom", "bounds": [6, 13, 11, 18] },
+        { "class": "SacrificeRoom", "bounds": [-13, 18, -5, 27] },
+        { "class": "RuinsRoom", "bounds": [-11, 8, 1, 18] },
+        { "class": "CrystalPathRoom", "bounds": [-1, 29, 5, 37] },
+        { "class": "SecretChestChasmRoom", "bounds": [13, -7, 21, 0] },
+        { "class": "StripedRoom", "bounds": [-3, 18, 7, 29] },
+        { "class": "FissureRoom", "bounds": [4, 8, 8, 13] },
+        { "class": "MinefieldRoom", "bounds": [8, 4, 13, 13] },
+        { "class": "RuinsExitRoom", "bounds": [14, 7, 22, 15] },
+        { "class": "TunnelRoom", "bounds": [8, -1, 13, 4] },
+        { "class": "RingTunnelRoom", "bounds": [11, 15, 18, 22] },
+        { "class": "BridgeRoom", "bounds": [7, 20, 11, 25] },
+        { "class": "RingBridgeRoom", "bounds": [-8, 3, 0, 8] },
+        { "class": "TunnelRoom", "bounds": [1, 8, 4, 12] },
+        { "class": "BridgeRoom", "bounds": [3, 13, 6, 18] }
+      ]
+    }
   ],
+  "builder_kind": "LoopBuilder",
+  "pre_shuffle_rooms": [
+    { "class": "DemonSpawnerRoom", "bounds": [19, 37, 24, 45] },
+    { "class": "ChasmEntranceRoom", "bounds": [14, 8, 22, 16] },
+    { "class": "RegionDecoPatchRoom", "bounds": [27, 8, 34, 15] },
+    { "class": "RuinsRoom", "bounds": [20, 21, 25, 26] },
+    { "class": "SacrificeRoom", "bounds": [1, 26, 9, 35] },
+    { "class": "RuinsRoom", "bounds": [3, 16, 15, 26] },
+    { "class": "CrystalPathRoom", "bounds": [13, 37, 19, 45] },
+    { "class": "SecretChestChasmRoom", "bounds": [27, 1, 35, 8] },
+    { "class": "StripedRoom", "bounds": [11, 26, 21, 37] },
+    { "class": "FissureRoom", "bounds": [18, 16, 22, 21] },
+    { "class": "MinefieldRoom", "bounds": [22, 12, 27, 21] },
+    { "class": "RuinsExitRoom", "bounds": [28, 15, 36, 23] },
+    { "class": "TunnelRoom", "bounds": [22, 7, 27, 12] },
+    { "class": "RingTunnelRoom", "bounds": [25, 23, 32, 30] },
+    { "class": "BridgeRoom", "bounds": [21, 28, 25, 33] },
+    { "class": "RingBridgeRoom", "bounds": [6, 11, 14, 16] },
+    { "class": "TunnelRoom", "bounds": [15, 16, 18, 20] },
+    { "class": "BridgeRoom", "bounds": [17, 21, 20, 26] }
+  ],
+  "pre_mobs_rng": [
+    -1109226116, -327789344, 548071689, 1872317133, 1607469169, -838868277,
+    -1844763262, 1000369167
+  ],
+  "pre_items_rng": [
+    -615789793, -1600192432, 1431078983, -44034819, 911306407, 1565488742,
+    -383071325, 47321086
+  ],
+  "crystal_vaults": [],
+  "drops": [],
+  "blacksmith_state": {
+    "rewards": [
+      { "class": "BattleAxe", "level": 2, "quantity": 1 },
+      { "class": "Greatshield", "level": 2, "quantity": 1 },
+      { "class": "Tomahawk", "level": 2, "quantity": 3 },
+      { "class": "ScaleArmor", "level": 2, "quantity": 1 }
+    ],
+    "enchant": null,
+    "glyph": null
+  },
+  "generator_state": {
+    "using_first_deck": true,
+    "category_probs": [
+      0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 6.0, 1.0, 6.0, 0.0, 9.0
+    ],
+    "categories": [
+      {
+        "probs": [
+          1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+          1.0, 1.0, 1.0
+        ],
+        "using_2nd_probs": false,
+        "seed": -706187311302787595,
+        "dropped": 0
+      },
+      { "probs": [], "using_2nd_probs": false, "seed": null, "dropped": 0 },
+      {
+        "probs": [2.0, 0.0, 2.0, 2.0, 2.0, 2.0],
+        "using_2nd_probs": false,
+        "seed": -9157418590036535744,
+        "dropped": 0
+      },
+      {
+        "probs": [2.0, 1.0, 1.0, 1.0, 2.0, 1.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": 7210592536021473452,
+        "dropped": 4
+      },
+      {
+        "probs": [1.0, 1.0, 0.0, 2.0, 0.0, 1.0],
+        "using_2nd_probs": false,
+        "seed": -8558639645654909497,
+        "dropped": 7
+      },
+      {
+        "probs": [1.0, 2.0, 2.0, 2.0, 1.0, 1.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": 7287648844454157976,
+        "dropped": 5
+      },
+      {
+        "probs": [1.0, 1.0, 1.0, 1.0, 0.0, 2.0, 2.0],
+        "using_2nd_probs": false,
+        "seed": 5545526166384806630,
+        "dropped": 6
+      },
+      {
+        "probs": [1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": null,
+        "dropped": 0
+      },
+      { "probs": [], "using_2nd_probs": false, "seed": null, "dropped": 0 },
+      {
+        "probs": [3.0, 3.0, 3.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": 6067550764897131296,
+        "dropped": 0
+      },
+      {
+        "probs": [3.0, 2.0, 2.0],
+        "using_2nd_probs": false,
+        "seed": 153280031027095530,
+        "dropped": 2
+      },
+      {
+        "probs": [1.0, 3.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": 8917439813178074983,
+        "dropped": 5
+      },
+      {
+        "probs": [0.0, 2.0, 3.0],
+        "using_2nd_probs": false,
+        "seed": -3092601792747417431,
+        "dropped": 4
+      },
+      {
+        "probs": [3.0, 0.0, 3.0],
+        "using_2nd_probs": false,
+        "seed": 6293778580530110453,
+        "dropped": 3
+      },
+      {
+        "probs": [
+          2.0, 3.0, 3.0, 3.0, 2.0, 2.0, 3.0, 1.0, 2.0, 3.0, 2.0, 3.0, 2.0
+        ],
+        "using_2nd_probs": false,
+        "seed": 5138086418287852227,
+        "dropped": 8
+      },
+      {
+        "probs": [3.0, 3.0, 3.0, 2.0, 2.0, 3.0, 3.0, 2.0, 3.0, 2.0, 1.0, 3.0],
+        "using_2nd_probs": false,
+        "seed": -1755326261207887722,
+        "dropped": 6
+      },
+      {
+        "probs": [
+          0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0
+        ],
+        "using_2nd_probs": false,
+        "seed": 8379211455241420330,
+        "dropped": 4
+      },
+      {
+        "probs": [1.0, 0.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": -3882107205175592318,
+        "dropped": 24
+      },
+      {
+        "probs": [0.0, 3.0, 2.0, 0.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+        "using_2nd_probs": false,
+        "seed": -8037445516927618605,
+        "dropped": 31
+      },
+      {
+        "probs": [0.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 1.0],
+        "using_2nd_probs": false,
+        "seed": 524978035985969737,
+        "dropped": 0
+      },
+      {
+        "probs": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "using_2nd_probs": true,
+        "seed": 8129270787689514689,
+        "dropped": 30
+      },
+      {
+        "probs": [0.0, 0.0, 2.0, 2.0, 1.0, 0.0, 0.0, 2.0, 0.0, 1.0, 0.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": -3594098423630316510,
+        "dropped": 12
+      },
+      { "probs": [1.0], "using_2nd_probs": false, "seed": null, "dropped": 0 }
+    ]
+  },
   "checkpoints": [
     {
       "stage": "room",
-      "room": "MinefieldRoom",
+      "room": "ChasmEntranceRoom",
       "rng": [
-        833613913, -628826456, -152536844, -914256771, 1074505404, -1891477042,
-        -778759827, -967323419
-      ]
-    },
-    {
-      "stage": "room",
-      "room": "RingBridgeRoom",
-      "rng": [
-        1074505404, -1891477042, -778759827, -967323419, 2130475411, 2131426162,
-        786041900, -1946115059
-      ]
-    },
-    {
-      "stage": "room",
-      "room": "RegionDecoPatchRoom",
-      "rng": [
-        2115611798, -1902234560, 1800195012, 595475470, 1865969376, 1573853411,
-        1997000255, -588981304
-      ]
-    },
-    {
-      "stage": "room",
-      "room": "TunnelRoom",
-      "rng": [
-        1865969376, 1573853411, 1997000255, -588981304, 377749945, -1399932176,
-        -1324258795, -1225038241
-      ]
-    },
-    {
-      "stage": "room",
-      "room": "TunnelRoom",
-      "rng": [
-        377749945, -1399932176, -1324258795, -1225038241, 663370873, 814359364,
-        1258283156, 1591518011
-      ]
-    },
-    {
-      "stage": "room",
-      "room": "CrystalPathRoom",
-      "rng": [
-        1785794972, -1631935437, -1072439716, -2133648049, 1026446743,
-        422117026, -608855374, -592820440
-      ]
-    },
-    {
-      "stage": "room",
-      "room": "RuinsExitRoom",
-      "rng": [
-        1206362445, -1535699460, -1831633164, -42029278, -1203730068,
-        1490463279, 1962530601, -1219576782
-      ]
-    },
-    {
-      "stage": "room",
-      "room": "TunnelRoom",
-      "rng": [
-        -1203730068, 1490463279, 1962530601, -1219576782, 694508697, 514075560,
-        -2143987709, -1989626562
+        -1569816530, -1258111224, -1775745890, 1822528073, 1418007411,
+        1996026689, 108785933, 752962557
       ]
     },
     {
       "stage": "room",
       "room": "FissureRoom",
       "rng": [
-        -1973295856, -300261729, -1522711850, 291906152, 1118575007, 1022526433,
-        -1200506874, 657391430
-      ]
-    },
-    {
-      "stage": "room",
-      "room": "SecretChestChasmRoom",
-      "rng": [
-        -1955135794, -1671348337, 668577908, 1802224421, 814278652, -2065305727,
-        -1810111912, -1262142339
-      ]
-    },
-    {
-      "stage": "room",
-      "room": "StripedRoom",
-      "rng": [
-        -1671348337, 668577908, 1802224421, 814278652, -2065305727, -1810111912,
-        -1262142339, 2136420752
-      ]
-    },
-    {
-      "stage": "room",
-      "room": "DemonSpawnerRoom",
-      "rng": [
-        -1671348337, 668577908, 1802224421, 814278652, -2065305727, -1810111912,
-        -1262142339, 2136420752
+        1418007411, 1996026689, 108785933, 752962557, 2100886948, 1865457786,
+        -2029588038, 1909311191
       ]
     },
     {
       "stage": "room",
       "room": "SacrificeRoom",
       "rng": [
-        -1262142339, 2136420752, -715540280, 1507182706, 189087881, -1266715905,
-        -1589706283, -1184850518
+        1455104308, -912208880, 114172936, 1280790612, -895773585, 1478868576,
+        1298212337, 439137168
       ]
     },
     {
       "stage": "room",
       "room": "TunnelRoom",
       "rng": [
-        1507182706, 189087881, -1266715905, -1589706283, -1184850518,
-        -770851714, 710897834, -106582845
+        1280790612, -895773585, 1478868576, 1298212337, 439137168, 1645313485,
+        1719487114, 107936898
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "RuinsExitRoom",
+      "rng": [
+        20325754, 1753691134, -1424120062, 481360828, 1942600512, 219001622,
+        -202558629, 1664136914
       ]
     },
     {
       "stage": "room",
       "room": "RuinsRoom",
       "rng": [
-        1810497466, -1987388256, 694609570, -2069955894, -1311821928,
-        2024508595, -869123022, 294300653
+        -708157560, 2060001284, 698199858, 1353149619, 1952814390, -1501711788,
+        -621951416, 698765725
       ]
     },
     {
       "stage": "room",
-      "room": "ChasmEntranceRoom",
+      "room": "SecretChestChasmRoom",
       "rng": [
-        -919024616, 2026939094, 1796569631, 882863490, -1828867571, 791297787,
-        1824236462, 1057203283
+        -1686205621, 694876848, 839497358, -868968336, 1240868194, 1311045603,
+        103792577, 1728361696
       ]
     },
     {
       "stage": "room",
-      "room": "RuinsRoom",
+      "room": "BridgeRoom",
       "rng": [
-        -1479253097, 289571974, 1322939597, 151453145, -818227213, -1693657366,
-        -1821639661, 878852655
+        -868968336, 1240868194, 1311045603, 103792577, 1728361696, -1612609837,
+        1481343874, -1624293487
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "RingTunnelRoom",
+      "rng": [
+        103792577, 1728361696, -1612609837, 1481343874, -1624293487, -873837395,
+        1043506507, 990504204
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "MinefieldRoom",
+      "rng": [
+        168870444, -594133585, 145546235, -2129375033, -1786168440, 2093273163,
+        -2002006259, -1039913281
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "RingBridgeRoom",
+      "rng": [
+        -2129375033, -1786168440, 2093273163, -2002006259, -1039913281,
+        1692202293, -1984609793, 235871816
       ]
     },
     {
       "stage": "room",
       "room": "TunnelRoom",
       "rng": [
-        1322939597, 151453145, -818227213, -1693657366, -1821639661, 878852655,
-        49868724, 1598074268
+        -2002006259, -1039913281, 1692202293, -1984609793, 235871816,
+        -2146272517, 2003281340, 1362576583
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "StripedRoom",
+      "rng": [
+        235871816, -2146272517, 2003281340, 1362576583, -2030332534,
+        -1969585092, 114894580, -1164622150
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "BridgeRoom",
+      "rng": [
+        2003281340, 1362576583, -2030332534, -1969585092, 114894580,
+        -1164622150, -2007932761, -1952455225
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "RuinsRoom",
+      "rng": [
+        -1158193760, 387215142, 1971402117, -1473967201, 1863731189, 1442528049,
+        -1178779205, -1003726035
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "RegionDecoPatchRoom",
+      "rng": [
+        -1220000170, -218102340, 1250704488, 1257360435, -236300604, 1247396924,
+        264027737, 1259093531
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "CrystalPathRoom",
+      "rng": [
+        602765010, 451472327, -441147879, 1192208738, 1281444500, 1673427161,
+        -1812493754, 246551374
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "DemonSpawnerRoom",
+      "rng": [
+        451472327, -441147879, 1192208738, 1281444500, 1673427161, -1812493754,
+        246551374, -1997623408
       ]
     },
     {
       "stage": "doors",
       "room": "paintDoors",
       "rng": [
-        1996333131, -17371627, -1834497472, -1559671881, -1794754566, 38252138,
-        -3894350, -187981088
+        -1054227978, -29117208, -1109226116, -327789344, 548071689, 1872317133,
+        1607469169, -838868277
       ]
     }
   ]

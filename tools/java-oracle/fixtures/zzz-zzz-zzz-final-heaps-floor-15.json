@@ -1,15 +1,8 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": {
-    "version": "v3.3.8",
-    "commit": "7b8b845a7"
-  },
-  "input": {
-    "seed": "ZZZ-ZZZ-ZZZ",
-    "numeric": 5429503678975,
-    "depths": [15]
-  },
+  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
+  "input": { "seed": "ZZZ-ZZZ-ZZZ", "numeric": 5429503678975, "depths": [15] },
   "identities": {
     "potions": [
       { "item": "PotionOfStrength", "appearance": "charcoal" },
@@ -1626,6 +1619,48 @@
       "traps": [],
       "plants": [],
       "blobs": [],
+      "custom_tiles": [
+        {
+          "class": "ArenaVisuals",
+          "x": 0,
+          "y": 12,
+          "width": 33,
+          "height": 27,
+          "texture": null,
+          "static_data": []
+        },
+        {
+          "class": "CityEntrance",
+          "x": 0,
+          "y": 0,
+          "width": 33,
+          "height": 11,
+          "texture": null,
+          "static_data": []
+        }
+      ],
+      "custom_terrain": [
+        {
+          "class": "EntranceTerrain",
+          "x": 14,
+          "y": 0,
+          "width": 5,
+          "height": 11,
+          "texture": null,
+          "static_data": []
+        }
+      ],
+      "custom_walls": [
+        {
+          "class": "EntranceOverhang",
+          "x": 0,
+          "y": 0,
+          "width": 33,
+          "height": 11,
+          "texture": null,
+          "static_data": []
+        }
+      ],
       "final_heaps": [],
       "final_mobs": [
         { "cell": 433, "class": "Pylon" },
@@ -1635,13 +1670,13 @@
       ],
       "quest_rewards": [
         {
-          "class": "WandOfDisintegration",
+          "class": "WandOfCorruption",
           "quantity": 1,
-          "level": 1,
+          "level": 2,
           "cursed": false
         },
         {
-          "class": "WandOfLivingEarth",
+          "class": "WandOfDisintegration",
           "quantity": 1,
           "level": 1,
           "cursed": false

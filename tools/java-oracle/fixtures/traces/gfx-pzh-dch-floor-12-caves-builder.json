@@ -8,8 +8,8 @@
         1963883753, -1055860366
       ],
       "end_rng": [
-        1863658891, 618900942, 1583595587, 1860028868, 845629870, -89203941,
-        -1714218643, -2086029410
+        -315087853, 1863658891, 618900942, 1583595587, 1860028868, 845629870,
+        -89203941, -1714218643
       ],
       "success": false,
       "rooms": [
@@ -22,46 +22,78 @@
         { "class": "RegionDecoBridgeRoom", "bounds": [0, 0, 0, 0] },
         { "class": "RegionDecoBridgeEntranceRoom", "bounds": [0, 0, 7, 8] },
         { "class": "SecretLaboratoryRoom", "bounds": [0, 0, 0, 0] },
-        { "class": "BlacksmithRoom", "bounds": [0, 19, 6, 25] },
+        { "class": "BlacksmithRoom", "bounds": [0, 18, 7, 25] },
         { "class": "WalkwayRoom", "bounds": [7, -2, 14, 3] },
         { "class": "RingTunnelRoom", "bounds": [7, 27, 12, 33] },
-        { "class": "RingTunnelRoom", "bounds": [1, 25, 7, 30] },
-        { "class": "TunnelRoom", "bounds": [2, 11, 5, 19] }
+        { "class": "RingTunnelRoom", "bounds": [1, 25, 7, 30] }
       ]
     },
     {
       "attempt": 1,
       "start_rng": [
-        1863658891, 618900942, 1583595587, 1860028868, 845629870, -89203941,
-        -1714218643, -2086029410
+        -315087853, 1863658891, 618900942, 1583595587, 1860028868, 845629870,
+        -89203941, -1714218643
       ],
       "end_rng": [
-        142031719, 1055833084, -1037680365, -817916346, 581957354, -1571857365,
-        -1316900916, -81804637
+        -1327106737, -1565646728, 229705122, 1113307484, 628654599, -2646153,
+        1566477248, 2130181504
+      ],
+      "success": false,
+      "rooms": [
+        { "class": "FissureRoom", "bounds": [-19, -14, -12, -6] },
+        { "class": "MinefieldRoom", "bounds": [0, 0, 0, 0] },
+        { "class": "CaveRoom", "bounds": [-3, -14, 12, 0] },
+        { "class": "StorageRoom", "bounds": [0, 0, 0, 0] },
+        { "class": "CaveExitRoom", "bounds": [-18, 8, -9, 15] },
+        { "class": "CryptRoom", "bounds": [0, 0, 0, 0] },
+        { "class": "RegionDecoBridgeRoom", "bounds": [-9, 7, 3, 20] },
+        { "class": "RegionDecoBridgeEntranceRoom", "bounds": [0, 0, 8, 7] },
+        { "class": "SecretLaboratoryRoom", "bounds": [0, 0, 0, 0] },
+        { "class": "BlacksmithRoom", "bounds": [0, 0, 0, 0] },
+        { "class": "RingTunnelRoom", "bounds": [-20, 0, -16, 8] },
+        { "class": "WalkwayRoom", "bounds": [-22, -6, -15, 0] },
+        { "class": "RingTunnelRoom", "bounds": [-12, -18, -3, -12] }
+      ]
+    },
+    {
+      "attempt": 2,
+      "start_rng": [
+        -1327106737, -1565646728, 229705122, 1113307484, 628654599, -2646153,
+        1566477248, 2130181504
+      ],
+      "end_rng": [
+        607278647, -1838285359, -1267140126, 1927267248, 1320214185, 142031719,
+        1055833084, -1037680365
       ],
       "success": true,
       "rooms": [
-        { "class": "FissureRoom", "bounds": [5, -5, 12, 0] },
-        { "class": "MinefieldRoom", "bounds": [-8, 5, 0, 12] },
-        { "class": "CaveRoom", "bounds": [-27, 1, -11, 17] },
-        { "class": "StorageRoom", "bounds": [8, 3, 17, 8] },
-        { "class": "CaveExitRoom", "bounds": [-6, 18, 0, 26] },
-        { "class": "CryptRoom", "bounds": [4, 23, 10, 30] },
-        { "class": "RegionDecoBridgeRoom", "bounds": [-26, -10, -15, 1] },
-        { "class": "RegionDecoBridgeEntranceRoom", "bounds": [0, 0, 8, 8] },
-        { "class": "SecretLaboratoryRoom", "bounds": [-7, -13, -1, -5] },
-        { "class": "BlacksmithRoom", "bounds": [6, 8, 14, 17] },
-        { "class": "RingTunnelRoom", "bounds": [0, 17, 9, 23] },
-        { "class": "TunnelRoom", "bounds": [-13, 17, -6, 23] },
-        { "class": "WalkwayRoom", "bounds": [-15, -4, -7, 1] },
-        { "class": "WalkwayRoom", "bounds": [-7, -5, -1, -1] },
-        { "class": "RingTunnelRoom", "bounds": [-1, -5, 5, 0] },
-        { "class": "WalkwayRoom", "bounds": [-11, 12, -5, 17] },
-        { "class": "MazeConnectionRoom", "bounds": [-15, -9, -7, -4] }
+        { "class": "FissureRoom", "bounds": [14, 12, 18, 18] },
+        { "class": "MinefieldRoom", "bounds": [17, 19, 20, 23] },
+        { "class": "CaveRoom", "bounds": [13, -4, 26, 12] },
+        { "class": "StorageRoom", "bounds": [2, 26, 11, 33] },
+        { "class": "CaveExitRoom", "bounds": [19, 12, 27, 19] },
+        { "class": "CryptRoom", "bounds": [8, -13, 13, -6] },
+        { "class": "RegionDecoBridgeRoom", "bounds": [-11, -5, 0, 5] },
+        { "class": "RegionDecoBridgeEntranceRoom", "bounds": [0, 0, 8, 9] },
+        { "class": "SecretLaboratoryRoom", "bounds": [8, 4, 13, 9] },
+        { "class": "BlacksmithRoom", "bounds": [9, 18, 17, 26] },
+        { "class": "RingTunnelRoom", "bounds": [6, -5, 13, 0] },
+        { "class": "TunnelRoom", "bounds": [20, 19, 25, 23] },
+        { "class": "TunnelRoom", "bounds": [17, 23, 22, 29] },
+        { "class": "WalkwayRoom", "bounds": [9, 12, 12, 18] },
+        { "class": "WalkwayRoom", "bounds": [8, 9, 13, 12] },
+        { "class": "TunnelRoom", "bounds": [3, 9, 8, 14] },
+        { "class": "RingTunnelRoom", "bounds": [0, -6, 6, 0] },
+        { "class": "WalkwayRoom", "bounds": [11, 26, 17, 31] },
+        { "class": "TunnelRoom", "bounds": [13, -10, 17, -4] }
       ]
     }
   ],
+  "builder_kind": null,
   "pre_shuffle_rooms": null,
+  "pre_mobs_rng": null,
+  "pre_items_rng": null,
+  "crystal_vaults": [],
   "drops": [],
   "blacksmith_state": {
     "rewards": [
@@ -76,8 +108,8 @@
   "generator_state": {
     "using_first_deck": true,
     "category_probs": [
-      0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0
+      0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0
     ],
     "categories": [
       {
@@ -103,16 +135,16 @@
         "dropped": 3
       },
       {
-        "probs": [2.0, 2.0, 0.0, 1.0, 1.0, 2.0],
+        "probs": [2.0, 2.0, 2.0, 1.0, 1.0, 2.0],
         "using_2nd_probs": false,
         "seed": -7243016205079533422,
-        "dropped": 4
+        "dropped": 2
       },
       {
-        "probs": [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0],
+        "probs": [2.0, 2.0, 2.0, 1.0, 2.0, 2.0, 1.0],
         "using_2nd_probs": false,
         "seed": -3713498913475024867,
-        "dropped": 0
+        "dropped": 2
       },
       {
         "probs": [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0],
@@ -134,16 +166,16 @@
         "dropped": 0
       },
       {
-        "probs": [2.0, 3.0, 2.0],
-        "using_2nd_probs": false,
-        "seed": 760040897669438048,
-        "dropped": 2
-      },
-      {
         "probs": [2.0, 3.0, 3.0],
         "using_2nd_probs": false,
-        "seed": 5479209157312539551,
+        "seed": 760040897669438048,
         "dropped": 1
+      },
+      {
+        "probs": [2.0, 2.0, 3.0],
+        "using_2nd_probs": false,
+        "seed": 5479209157312539551,
+        "dropped": 2
       },
       {
         "probs": [3.0, 3.0, 3.0],
@@ -152,32 +184,32 @@
         "dropped": 0
       },
       {
-        "probs": [3.0, 3.0, 3.0],
+        "probs": [2.0, 3.0, 3.0],
         "using_2nd_probs": false,
         "seed": 5523863500681974804,
-        "dropped": 0
+        "dropped": 1
       },
       {
         "probs": [
-          3.0, 2.0, 3.0, 3.0, 3.0, 2.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0
+          3.0, 1.0, 3.0, 3.0, 3.0, 2.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 2.0
         ],
         "using_2nd_probs": false,
         "seed": -5135241931996733240,
-        "dropped": 2
+        "dropped": 4
       },
       {
-        "probs": [3.0, 2.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 2.0],
+        "probs": [3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 2.0],
         "using_2nd_probs": false,
         "seed": 3463647073178929225,
-        "dropped": 2
+        "dropped": 1
       },
       {
         "probs": [
-          0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0
+          0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
         ],
         "using_2nd_probs": false,
         "seed": 7835455387716222217,
-        "dropped": 3
+        "dropped": 2
       },
       {
         "probs": [1.0, 0.0, 0.0],
@@ -186,10 +218,10 @@
         "dropped": 9
       },
       {
-        "probs": [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "probs": [0.0, 1.0, 2.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         "using_2nd_probs": false,
         "seed": 6274051388366741291,
-        "dropped": 14
+        "dropped": 11
       },
       {
         "probs": [0.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 1.0],
@@ -198,16 +230,16 @@
         "dropped": 0
       },
       {
-        "probs": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "probs": [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
         "using_2nd_probs": false,
         "seed": -6198305397357196810,
-        "dropped": 15
+        "dropped": 13
       },
       {
-        "probs": [0.0, 2.0, 1.0, 2.0, 2.0, 1.0, 1.0, 1.0, 2.0, 2.0, 1.0, 0.0],
+        "probs": [0.0, 1.0, 1.0, 2.0, 2.0, 1.0, 1.0, 0.0, 2.0, 2.0, 1.0, 0.0],
         "using_2nd_probs": false,
         "seed": -1320899939598838849,
-        "dropped": 5
+        "dropped": 7
       },
       { "probs": [1.0], "using_2nd_probs": false, "seed": null, "dropped": 0 }
     ]

@@ -1,15 +1,8 @@
 {
   "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": {
-    "version": "v3.3.8",
-    "commit": "7b8b845a7"
-  },
-  "input": {
-    "seed": "GFX-PZH-DCH",
-    "numeric": 1300416271343,
-    "depths": [10]
-  },
+  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
+  "input": { "seed": "GFX-PZH-DCH", "numeric": 1300416271343, "depths": [10] },
   "identities": {
     "potions": [
       { "item": "PotionOfStrength", "appearance": "charcoal" },
@@ -1223,6 +1216,7 @@
       "plants": [],
       "blobs": [],
       "custom_tiles": [],
+      "custom_terrain": [],
       "custom_walls": [],
       "final_heaps": [
         {
@@ -1238,11 +1232,11 @@
         {
           "class": "WandOfLightning",
           "quantity": 1,
-          "level": 3,
+          "level": 2,
           "cursed": false
         },
         {
-          "class": "WandOfBlastWave",
+          "class": "WandOfRegrowth",
           "quantity": 1,
           "level": 1,
           "cursed": false
