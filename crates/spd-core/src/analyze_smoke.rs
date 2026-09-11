@@ -556,7 +556,7 @@ fn pub_cli_vnw_groups_the_depth_four_sacrifice_reward() {
     assert_eq!(variants[0].cursed, Some(true));
     assert!(variants[0].spawn_conditions.is_empty());
 
-    assert_eq!(variants[1].name, "friendly sickle +2");
+    assert_eq!(variants[1].name, "wondrous sickle +2");
     assert_eq!(variants[1].class_name.as_deref(), Some("Sickle"));
     assert_eq!(variants[1].level, Some(2));
     assert_eq!(variants[1].cursed, Some(true));

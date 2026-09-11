@@ -242,10 +242,12 @@ fn is_good_weapon_enchant(item: &GeneratedItem) -> bool {
                 | "Displacing"
                 | "Dazzling"
                 | "Explosive"
+                | "Friendly"
+                | "Polarized"
+                | "Pressurized"
                 | "Sacrificial"
                 | "Wayward"
-                | "Polarized"
-                | "Friendly"
+                | "Wondrous"
         ),
         None => false,
     }
