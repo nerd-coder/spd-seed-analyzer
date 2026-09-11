@@ -68,9 +68,16 @@ function conditionDescription(condition: ItemCondition): string {
     return dependencyDescription(condition)
   }
   if (condition.type === 'quest') {
+    if (condition.quest_id === 'ambitious_imp') {
+      const when = condition.depth ? ` before floor ${condition.depth}` : ''
+      return `Ambitious Imp vault is completed with score > 2000${when}`
+    }
     return `${humanize(condition.quest_id)} is completed${condition.depth ? ` before floor ${condition.depth}` : ''}`
   }
   if (condition.type === 'choice') {
+    if (condition.group_id === 'imp_vault_reward') {
+      return `choose ${condition.selected_count} of ${condition.option_count} Imp vault take-out options`
+    }
     return `choose ${condition.selected_count} of ${condition.option_count} ${humanize(condition.group_id)} options${condition.favor_requirement ? ` with ${condition.favor_requirement} favor` : ''}`
   }
   if (condition.type === 'inventory') {

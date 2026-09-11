@@ -63,6 +63,19 @@ function baselineContract(quest: QuestReport) {
   }
 }
 
+function shopGateCopy(quest: QuestReport) {
+  if (quest.type !== 'ambitious_imp') return null
+  return 'The floor 20/21 Imp shop is not guaranteed. It appears only after completing the vault with score > 2000.'
+}
+
+function rewardsHeading(quest: QuestReport, isBaseline: boolean) {
+  if (quest.type === 'ambitious_imp' && !isBaseline) {
+    const { option_count, selected_count } = quest.contract.rewards
+    return `Take-out options (choose ${selected_count} of ${option_count})`
+  }
+  return isBaseline ? 'Baseline rewards' : 'Rewards'
+}
+
 export function QuestCard({
   quest,
   rewards,
@@ -76,6 +89,7 @@ export function QuestCard({
 }) {
   const styles = QUEST_STYLES[quest.type]
   const contract = baselineContract(quest)
+  const shopGate = shopGateCopy(quest)
   const baselineRewards = contract
     ? groupsWithPrediction(rewards, 'baseline')
     : []
@@ -100,6 +114,11 @@ export function QuestCard({
       <p className="text-muted-foreground text-xs leading-relaxed">
         {targetSummary(quest)}
       </p>
+      {shopGate ? (
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          {shopGate}
+        </p>
+      ) : null}
       {contract ? (
         <Alert variant="warning">
           <AlertTitle>Fresh/no-history baseline</AlertTitle>
@@ -112,7 +131,7 @@ export function QuestCard({
       {displayedRewards.length > 0 ? (
         <div className="flex flex-col gap-1 border-t pt-2">
           <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            {baselineRewards.length ? 'Baseline rewards' : 'Rewards'}
+            {rewardsHeading(quest, baselineRewards.length > 0)}
           </p>
           <FloorItemList
             items={displayedRewards}

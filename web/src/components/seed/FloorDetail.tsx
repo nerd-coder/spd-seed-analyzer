@@ -39,7 +39,25 @@ function branchAccessText(branch: BranchFloorReport) {
     : 'No additional access condition'
 }
 
-function BlacksmithMineBranch({
+function branchTitle(kind: BranchFloorReport['kind']) {
+  switch (kind) {
+    case 'blacksmith_mine':
+      return 'Blacksmith Mine'
+    case 'imp_vault':
+      return 'Imp Vault'
+  }
+}
+
+function branchBorderClass(kind: BranchFloorReport['kind']) {
+  switch (kind) {
+    case 'blacksmith_mine':
+      return 'border-amber-700/40'
+    case 'imp_vault':
+      return 'border-rose-700/40'
+  }
+}
+
+function NestedBranchFloor({
   branch,
   identities,
 }: {
@@ -48,13 +66,17 @@ function BlacksmithMineBranch({
 }) {
   const showAssumedMap = !branch.map && !!branch.assumed_map
   const displayedMap = branch.map ?? branch.assumed_map ?? null
+  const title = branchTitle(branch.kind)
   const identity = `Floor ${branch.id.depth}, branch ${branch.id.branch}`
-  const mapLabel = `Blacksmith Mine ${identity.toLowerCase()} map`
+  const mapLabel = `${title} ${identity.toLowerCase()} map`
 
   return (
-    <section className="space-y-3 border-l-2 border-amber-700/40 bg-muted/25 px-3 py-3">
+    <section
+      data-branch-kind={branch.kind}
+      className={`space-y-3 border-l-2 bg-muted/25 px-3 py-3 ${branchBorderClass(branch.kind)}`}
+    >
       <div className="flex flex-wrap items-center gap-2">
-        <h4 className="font-heading text-sm font-medium">Blacksmith Mine</h4>
+        <h4 className="font-heading text-sm font-medium">{title}</h4>
         <Badge variant="secondary">Objective: {branch.objective}</Badge>
         <Badge variant="outline" className="font-mono text-xs">
           {identity}
@@ -83,7 +105,7 @@ function BlacksmithMineBranch({
             identities={identities}
             depth={branch.id.depth}
             mapLabel={mapLabel}
-            dialogTitle={`Blacksmith Mine - ${identity}`}
+            dialogTitle={`${title} - ${identity}`}
           />
         )}
       </div>
@@ -217,7 +239,7 @@ export function FloorDetail({
       {floor.branches && floor.branches.length > 0 && (
         <div className="space-y-2 pt-1">
           {floor.branches.map((branch) => (
-            <BlacksmithMineBranch
+            <NestedBranchFloor
               key={`${branch.id.depth}-${branch.id.branch}`}
               branch={branch}
               identities={identities}

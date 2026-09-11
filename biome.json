@@ -15,6 +15,7 @@
       "!bun.lock",
       "!**/web/src/wasm",
       "!**/web/public/assets",
+      "!**/tools/java-oracle/fixtures/vault",
       "!**/*.tsbuildinfo",
       "!**/*.wasm"
     ]

@@ -37,7 +37,7 @@ import {
 } from '@/components/ui/item'
 import { Progress } from '@/components/ui/progress'
 import { formatElapsed, useElapsedTime } from '@/hooks/useElapsedTime'
-import { formatItemSource } from '@/lib/labels'
+import { formatItemSource, isImpVaultPool } from '@/lib/labels'
 import type { SeedSearchMatch } from '@/lib/spd-wasm'
 import type { FinderRunState } from './finder-types'
 
@@ -156,6 +156,9 @@ function ResultCard({
                   <ItemActions>
                     {evidence.prediction === 'baseline' ? (
                       <Badge variant="secondary">Fresh baseline</Badge>
+                    ) : null}
+                    {isImpVaultPool(evidence.source) ? (
+                      <Badge variant="outline">choose 1 of 6</Badge>
                     ) : null}
                     <Badge variant="outline">
                       Item {evidence.constraintIndex + 1}

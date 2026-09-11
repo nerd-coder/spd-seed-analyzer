@@ -25,6 +25,7 @@ const SOURCE_LABELS: Record<string, string> = {
 
   // Shops & special rooms
   ShopRoom: 'Shop',
+  ImpShopRoom: 'Imp shop',
   CryptRoom: 'Crypt',
   ArmoryRoom: 'Armory',
   LibraryRoom: 'Library',
@@ -80,7 +81,7 @@ const SOURCE_LABELS: Record<string, string> = {
   'Ghost.Quest': 'Ghost quest',
   'Wandmaker.Quest': 'Wandmaker quest',
   'Blacksmith.Quest': 'Blacksmith rewards',
-  'Imp.Quest': 'Imp quest',
+  'Imp.Quest': 'Imp vault pool',
 }
 
 /** Title-case snake/camel fragments when no explicit map entry. */
@@ -131,6 +132,11 @@ export function formatItemSource(
   }
 
   return unique.join(' · ')
+}
+
+/** Imp vault take-out items are a 6-choose-1 pool, not a guaranteed take-home. */
+export function isImpVaultPool(source: string | null | undefined): boolean {
+  return source === 'Imp.Quest'
 }
 
 /** Whether a source is high-value for seed finding (quests / crystal / shop / etc.). */

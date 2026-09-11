@@ -330,20 +330,34 @@ export function FloorItemSections({
   trinketSelection?: TrinketSelectionReport
 }) {
   const groups = partitionFloorItems(visibleItemGroups(floor.items))
+  const isImpShop = groups.shop.some((item) => item.source === 'ImpShopRoom')
   const sections = [
-    { key: 'guaranteed', label: 'Guaranteed spawns', items: groups.guaranteed },
-    { key: 'loot', label: 'Floor loot', items: groups.loot },
-    { key: 'general', label: 'Other items', items: groups.general },
+    {
+      key: 'guaranteed',
+      label: 'Guaranteed spawns',
+      caption: null,
+      items: groups.guaranteed,
+    },
+    { key: 'loot', label: 'Floor loot', caption: null, items: groups.loot },
+    {
+      key: 'general',
+      label: 'Other items',
+      caption: null,
+      items: groups.general,
+    },
     {
       key: 'shop',
-      label: 'Shop',
+      label: isImpShop ? 'Imp shop' : 'Shop',
+      caption: isImpShop
+        ? 'Not guaranteed. Appears only after completing the Imp vault with score > 2000.'
+        : null,
       items: groups.shop,
     },
   ].filter(({ items }) => items.length > 0)
 
   return (
     <>
-      {sections.map(({ key, label, items }) => (
+      {sections.map(({ key, label, caption, items }) => (
         <div key={key} className="flex flex-col gap-1">
           <div className="flex items-center gap-1">
             <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
@@ -358,6 +372,9 @@ export function FloorItemSections({
               <BaselineItemsPopover />
             ) : null}
           </div>
+          {caption ? (
+            <p className="text-muted-foreground text-xs">{caption}</p>
+          ) : null}
           <FloorItemList
             items={items}
             identities={identities}

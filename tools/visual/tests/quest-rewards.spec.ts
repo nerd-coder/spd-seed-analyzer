@@ -239,6 +239,10 @@ test('quest cards prefer concrete baselines and keep the universal warning visib
   await expect(imp).toContainText(
     'Reward contract: six vault take-out options; the player keeps one.'
   )
+  await expect(imp).toContainText(
+    'The floor 20/21 Imp shop is not guaranteed. It appears only after completing the vault with score > 2000.'
+  )
+  await expect(imp).not.toContainText(/monk|golem|token|cursed \+2/i)
   await expect(imp.getByText('Baseline rewards')).toBeVisible()
   await expect(imp.getByRole('listitem')).toHaveCount(1)
   await expect(imp.getByText('artifact or ring', { exact: true })).toHaveCount(
@@ -260,5 +264,15 @@ test('quest cards fall back to the universal reward entries without a baseline',
   await expect(wandmaker.getByText('wand reward', { exact: true })).toHaveCount(
     2
   )
+
+  await page.getByRole('tab', { name: /^City/ }).click()
+  const imp = page.locator('[data-quest-type="ambitious_imp"]')
+  await expect(
+    imp.getByText('Take-out options (choose 1 of 6)', { exact: true })
+  ).toBeVisible()
+  await expect(imp).toContainText(
+    'The floor 20/21 Imp shop is not guaranteed. It appears only after completing the vault with score > 2000.'
+  )
+  await expect(imp).not.toContainText(/monk|golem|token|cursed \+2/i)
   expect(browserErrors).toEqual([])
 })
