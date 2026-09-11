@@ -1,10 +1,4 @@
-//! `VaultLevel.build` pre-queues T0 equipment and consumables before `initRooms`.
-//!
-//! `setupEquipment` fills every tier on the first call, so T1–T3 rolls happen
-//! even though only T0 items are taken here. Those draws must land before
-//! room chances or GridBuilder sees the wrong stream.
-
-#![allow(dead_code)] // generate is test-only until PR 4
+//! `VaultLevel` equipment, consumable, prize, and wandering-mob streams.
 
 use std::collections::HashSet;
 
@@ -17,6 +11,75 @@ use crate::random::Random;
 const BANNED_WANDS: &[&str] = &["WandOfRegrowth", "WandOfTransfusion", "WandOfCorruption"];
 const BANNED_RINGS: &[&str] = &["RingOfWealth", "RingOfMight", "RingOfForce"];
 
+const T1_MOBS: [VaultMob; 2] = [VaultMob::Skeleton, VaultMob::Dm100];
+const T2_MOBS: [VaultMob; 3] = [VaultMob::Shaman, VaultMob::Dm200, VaultMob::Ghoul];
+const T3_MOBS: [VaultMob; 2] = [VaultMob::Elemental, VaultMob::Golem];
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) enum VaultMob {
+    Skeleton,
+    Dm100,
+    Shaman,
+    Dm200,
+    Ghoul,
+    /// Queued `VaultElemental.class` before `VaultElemental.random()`.
+    Elemental,
+    FireElemental,
+    FrostElemental,
+    ShockElemental,
+    Golem,
+}
+
+impl VaultMob {
+    pub(super) fn large(self) -> bool {
+        matches!(self, Self::Golem | Self::Dm200)
+    }
+
+    pub(super) fn tier(self) -> usize {
+        match self {
+            Self::Skeleton | Self::Dm100 => 1,
+            Self::Shaman | Self::Dm200 | Self::Ghoul => 2,
+            Self::Elemental
+            | Self::FireElemental
+            | Self::FrostElemental
+            | Self::ShockElemental
+            | Self::Golem => 3,
+        }
+    }
+
+    fn ctor_rng(self) {
+        match self {
+            Self::Golem | Self::Dm200 => {
+                let _ = Random::int_max(2);
+            }
+            Self::Shaman => {
+                let _ = Random::int_max(5);
+            }
+            Self::FireElemental | Self::FrostElemental | Self::ShockElemental => {
+                let _ = Random::normal_int_range(3, 5);
+            }
+            _ => {}
+        }
+    }
+
+    fn resolve(self) -> Self {
+        let resolved = if self == Self::Elemental {
+            let roll = Random::float();
+            if roll < 0.4 {
+                Self::FireElemental
+            } else if roll < 0.8 {
+                Self::FrostElemental
+            } else {
+                Self::ShockElemental
+            }
+        } else {
+            self
+        };
+        resolved.ctor_rng();
+        resolved
+    }
+}
+
 struct EquipmentPool {
     by_tier: [Vec<Option<GeneratedItem>>; 4],
     generated: HashSet<String>,
@@ -24,34 +87,160 @@ struct EquipmentPool {
     lower_idx: usize,
 }
 
-pub(super) fn queue_floor_loot(dungeon: &mut DungeonState) {
+pub(super) struct VaultGen {
+    pool: EquipmentPool,
+    consumables: [Vec<GeneratedItem>; 4],
+    mobs: Vec<VaultMob>,
+    t2_solve: [&'static str; 2],
+    t3_solve: [&'static str; 2],
+}
+
+impl VaultGen {
+    fn new() -> Self {
+        Self {
+            pool: EquipmentPool {
+                by_tier: [Vec::new(), Vec::new(), Vec::new(), Vec::new()],
+                generated: HashSet::new(),
+                higher_idx: 0,
+                lower_idx: 0,
+            },
+            consumables: [Vec::new(), Vec::new(), Vec::new(), Vec::new()],
+            mobs: Vec::new(),
+            t2_solve: ["StoneOfBlink", "PotionOfInvisibility"],
+            t3_solve: ["StoneOfBlink", "PotionOfInvisibility"],
+        }
+    }
+
+    pub(super) fn create_equipment(
+        &mut self,
+        dungeon: &mut DungeonState,
+        loot_tier: usize,
+    ) -> GeneratedItem {
+        setup_equipment(&mut self.pool, dungeon);
+        take_equipment(&mut self.pool, loot_tier)
+    }
+
+    pub(super) fn create_consumable(&mut self, tier: usize) -> GeneratedItem {
+        if self.consumables[tier].is_empty() {
+            setup_consumables(&mut self.consumables);
+        }
+        self.consumables[tier].remove(0)
+    }
+
+    pub(super) fn create_mob(&mut self) -> VaultMob {
+        if self.mobs.is_empty() {
+            self.mobs.extend_from_slice(&T1_MOBS);
+            self.mobs.push(*Random::one_of(&T1_MOBS));
+            self.mobs.extend_from_slice(&T2_MOBS);
+            self.mobs.extend_from_slice(&T3_MOBS);
+            self.mobs.push(*Random::one_of(&T3_MOBS));
+            Random::shuffle_list(&mut self.mobs);
+        }
+        let mob = self.mobs.remove(0);
+        mob.resolve()
+    }
+
+    pub(super) fn return_mob(&mut self, mob: VaultMob) {
+        self.mobs.insert(0, mob);
+    }
+
+    /// `VaultSingleEnemyTreasureRoom` uses `Random.oneOf(T2Mobs)`, not `createMob`.
+    pub(super) fn create_t2_mob(&mut self) -> VaultMob {
+        Random::one_of(&T2_MOBS).resolve()
+    }
+
+    pub(super) fn find_t3_solve(
+        &mut self,
+        items: &mut Vec<GeneratedItem>,
+    ) -> Option<GeneratedItem> {
+        Random::shuffle(&mut self.t3_solve);
+        for class in self.t3_solve {
+            if let Some(item) = find_prize_class(items, class) {
+                return Some(item);
+            }
+        }
+        None
+    }
+
+    pub(super) fn find_t2_solve(
+        &mut self,
+        items: &mut Vec<GeneratedItem>,
+    ) -> Option<GeneratedItem> {
+        Random::shuffle(&mut self.t2_solve);
+        for class in self.t2_solve {
+            if let Some(item) = find_prize_class(items, class) {
+                return Some(item);
+            }
+        }
+        self.find_t3_solve(items)
+    }
+}
+
+pub(super) fn queue_floor_loot(dungeon: &mut DungeonState) -> VaultGen {
     dungeon.items_to_spawn.clear();
-    let mut pool = EquipmentPool {
-        by_tier: [Vec::new(), Vec::new(), Vec::new(), Vec::new()],
-        generated: HashSet::new(),
-        higher_idx: 0,
-        lower_idx: 0,
-    };
+    let mut gen = VaultGen::new();
     for _ in 0..4 {
-        let _ = create_equipment(&mut pool, dungeon, 0);
+        let loot = gen.create_equipment(dungeon, 0);
+        dungeon.items_to_spawn.push(loot);
     }
     dungeon
         .items_to_spawn
         .push(GeneratedItem::new("Dart", ItemCategory::Missile));
-    setup_consumables();
-    for _ in 0..3 {
-        let _ = dungeon
-            .generator
-            .random_using_defaults(Category::Food, dungeon.depth);
+    setup_consumables(&mut gen.consumables);
+    for _ in 0..5 {
+        dungeon.items_to_spawn.push(gen.create_consumable(0));
     }
+    for _ in 0..3 {
+        dungeon.items_to_spawn.push(
+            dungeon
+                .generator
+                .random_using_defaults(Category::Food, dungeon.depth),
+        );
+    }
+    gen
 }
 
-fn create_equipment(
-    pool: &mut EquipmentPool,
-    dungeon: &mut DungeonState,
-    loot_tier: usize,
-) -> GeneratedItem {
-    setup_equipment(pool, dungeon);
+pub(super) fn find_prize_any(items: &mut Vec<GeneratedItem>) -> Option<GeneratedItem> {
+    if items.is_empty() {
+        return None;
+    }
+    if let Some(i) = items
+        .iter()
+        .position(|it| it.class_name == "TrinketCatalyst")
+    {
+        return Some(items.remove(i));
+    }
+    let idx = Random::int_max(items.len() as i32) as usize;
+    Some(items.remove(idx))
+}
+
+pub(super) fn find_prize_class(
+    items: &mut Vec<GeneratedItem>,
+    class_name: &str,
+) -> Option<GeneratedItem> {
+    items
+        .iter()
+        .position(|it| it.class_name == class_name)
+        .map(|i| items.remove(i))
+}
+
+pub(super) fn find_prize_equipable(items: &mut Vec<GeneratedItem>) -> Option<GeneratedItem> {
+    items
+        .iter()
+        .position(|it| {
+            matches!(
+                it.category,
+                ItemCategory::Weapon
+                    | ItemCategory::Armor
+                    | ItemCategory::Missile
+                    | ItemCategory::Ring
+                    | ItemCategory::Artifact
+            )
+        })
+        .map(|i| items.remove(i))
+}
+
+fn take_equipment(pool: &mut EquipmentPool, loot_tier: usize) -> GeneratedItem {
     let list = &mut pool.by_tier[loot_tier];
     let idx = if loot_tier >= 2 {
         let idx = pool.higher_idx;
@@ -207,26 +396,106 @@ fn finish_weapon(mut loot: GeneratedItem, level: i32, loot_tier: usize) -> Gener
     loot
 }
 
-fn setup_consumables() {
-    // `Random.oneOf` is watabou; `Collections.shuffle` in setupConsumables is
-    // the JDK's unseeded Random and must not touch this stream.
-    let _ = Random::int_max(2);
-    let _ = Random::int_max(3);
-    let _ = Random::int_max(2);
-    let _ = Random::int_max(3);
+fn setup_consumables(consumables: &mut [Vec<GeneratedItem>; 4]) {
+    if consumables.iter().all(Vec::is_empty) {
+        // lists exist; fill empty tiers below
+    }
+    if consumables[0].is_empty() {
+        consumables[0] = vec![
+            named(
+                one_of(&["PotionOfFrost", "PotionOfLevitation"]),
+                ItemCategory::Potion,
+            ),
+            named(
+                one_of(&["Mageroyal$Seed", "Icecap$Seed", "Stormvine$Seed"]),
+                ItemCategory::Seed,
+            ),
+            named(
+                one_of(&["ScrollOfMirrorImage", "ScrollOfTeleportation"]),
+                ItemCategory::Scroll,
+            ),
+            named(
+                one_of(&["StoneOfFlock", "StoneOfShock", "StoneOfFear"]),
+                ItemCategory::Stone,
+            ),
+        ];
+        // JDK `Collections.shuffle` is unseeded; do not touch the watabou stream.
+        consumables[0].insert(0, named("PotionOfHealing", ItemCategory::Potion));
+    }
+    if consumables[1].is_empty() {
+        consumables[1] = vec![
+            named(
+                one_of(&["PotionOfToxicGas", "PotionOfParalyticGas"]),
+                ItemCategory::Potion,
+            ),
+            named(
+                one_of(&["Firebloom$Seed", "Sorrowmoss$Seed", "Blindweed$Seed"]),
+                ItemCategory::Seed,
+            ),
+            named(
+                one_of(&["ScrollOfRecharging", "ScrollOfTerror"]),
+                ItemCategory::Scroll,
+            ),
+            named(
+                one_of(&[
+                    "StoneOfDeepSleep",
+                    "StoneOfClairvoyance",
+                    "StoneOfAggression",
+                ]),
+                ItemCategory::Stone,
+            ),
+        ];
+        consumables[1].insert(0, named("PotionOfHealing", ItemCategory::Potion));
+    }
+    if consumables[2].is_empty() {
+        consumables[2] = vec![
+            named(
+                one_of(&["PotionOfMindVision", "PotionOfLiquidFlame"]),
+                ItemCategory::Potion,
+            ),
+            named(
+                one_of(&["Swiftthistle$Seed", "Sungrass$Seed"]),
+                ItemCategory::Seed,
+            ),
+            named(
+                one_of(&["ScrollOfLullaby", "ScrollOfMagicMapping"]),
+                ItemCategory::Scroll,
+            ),
+            named(
+                one_of(&["StoneOfBlast", "StoneOfBlink"]),
+                ItemCategory::Stone,
+            ),
+        ];
+        consumables[2].insert(0, named("PotionOfHealing", ItemCategory::Potion));
+    }
+    if consumables[3].is_empty() {
+        consumables[3] = vec![
+            named(
+                one_of(&["PotionOfExperience", "PotionOfInvisibility"]),
+                ItemCategory::Potion,
+            ),
+            named(
+                one_of(&["Earthroot$Seed", "Starflower$Seed"]),
+                ItemCategory::Seed,
+            ),
+            named(
+                one_of(&["ScrollOfRetribution", "ScrollOfTransmutation"]),
+                ItemCategory::Scroll,
+            ),
+            named(
+                one_of(&["StoneOfEnchantment", "StoneOfAugmentation"]),
+                ItemCategory::Stone,
+            ),
+            named("PotionOfHealing", ItemCategory::Potion),
+        ];
+        // JDK shuffle of T3; watabou stream already consumed by oneOf.
+    }
+}
 
-    let _ = Random::int_max(2);
-    let _ = Random::int_max(3);
-    let _ = Random::int_max(2);
-    let _ = Random::int_max(3);
+fn one_of(names: &[&str]) -> String {
+    Random::one_of(names).to_string()
+}
 
-    let _ = Random::int_max(2);
-    let _ = Random::int_max(2);
-    let _ = Random::int_max(2);
-    let _ = Random::int_max(2);
-
-    let _ = Random::int_max(2);
-    let _ = Random::int_max(2);
-    let _ = Random::int_max(2);
-    let _ = Random::int_max(2);
+fn named(class_name: impl Into<String>, category: ItemCategory) -> GeneratedItem {
+    GeneratedItem::new(class_name, category)
 }

@@ -19,6 +19,7 @@ use crate::rooms::room::Room;
 
 pub(crate) use connection_rooms::paint as paint_connection_room;
 pub(crate) use doors::merge_rooms_with_terrain;
+pub(crate) use doors::paint_doors_with_hidden_chance;
 pub use doors::{apply_room_door_types, paint_doors, place_doors_for_room, DoorMap, DoorType};
 pub use params::n_traps;
 pub(crate) use params::trap_metadata;
@@ -68,6 +69,31 @@ pub(crate) fn paint_sewer_boss_environment(
         0,
         (0.50, 5),
         (0.20, 4),
+    );
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn paint_environment_with(
+    map: &mut TerrainMap,
+    rooms: &[Room],
+    paint_order: &[usize],
+    doors: &DoorMap,
+    depth: i32,
+    feeling: Feeling,
+    n_traps: i32,
+    water: (f32, i32),
+    grass: (f32, i32),
+) {
+    paint_environment(
+        map,
+        rooms,
+        paint_order,
+        doors,
+        depth,
+        feeling,
+        n_traps,
+        water,
+        grass,
     );
 }
 
@@ -254,11 +280,16 @@ fn room_environment_allowed(room: &Room, x: i32, y: i32, environment: Environmen
             false
         }
         // These rooms only override the grass predicate.
-        "PitRoom" | "MagicalFireRoom" | "VaultSingleEnemyTreasureRoom"
+        "PitRoom"
+        | "MagicalFireRoom"
+        | "VaultSingleEnemyTreasureRoom"
+        | "VaultCircleScanTreasureRoom"
+        | "VaultFlamesTreasureRoom"
             if matches!(environment, Environment::Grass) =>
         {
             false
         }
+        "VaultFinalRoom" => false,
         "AmbitiousImpRoom" => imp_room_environment_allowed(room, x, y),
         _ => true,
     }

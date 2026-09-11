@@ -50,6 +50,7 @@ pub(super) fn build(
         plants: Vec::new(),
         blobs: Vec::new(),
         custom_tiles: custom_tiles(),
+        custom_terrain: Vec::new(),
         custom_walls: custom_walls(),
         runtime_sensitive_loot_cells: Vec::new(),
         constrained_equipment_cells: Vec::new(),

@@ -1,28 +1,46 @@
-//! Pinned Imp `VaultLevel` side-branch generation (rooms + GridBuilder only).
+//! Pinned Imp `VaultLevel` side-branch generation (GridBuilder + painter-complete layout).
 
 #![allow(dead_code)] // nested BranchFloorReport is PR 4; tests call generate now
 
+mod combat;
+mod doors;
+mod entrance;
+mod environment;
+mod final_room;
+mod geometry;
+mod hallway;
+mod hazards;
 mod loot;
+mod paint;
 mod rooms;
+mod tokens;
+mod treasure;
 
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
+use crate::level::map_facts::MapFacts;
+use crate::level::painter::DoorMap;
+use crate::level::terrain::{TerrainMap, WALL};
 use crate::random::Random;
+use crate::report::FloorMap;
 use crate::rooms::room::{clear_all_connections, Room};
 
 use super::state::LevelRoomFact;
 
 const BUILD_RETRY_LIMIT: u32 = 10_000;
+const PAINT_PADDING: i32 = 1;
 
 #[derive(Debug, Clone)]
 pub(crate) struct VaultLayout {
     pub rooms: Vec<LevelRoomFact>,
     pub dropped_before: [i32; 3],
     pub dropped_after: [i32; 3],
+    pub map: FloorMap,
 }
 
-/// Forced branch-1 vault at `dungeon.depth`. Does not paint and does not emit
-/// a public `BranchFloorReport` (those land in later PRs).
+/// Forced branch-1 vault at `dungeon.depth`. Painter-complete layout only;
+/// nested `BranchFloorReport` is PR 4. Occupancy RNG still runs for stream
+/// parity; mobs/heaps are stripped from the public map.
 pub(crate) fn generate(dungeon: &mut DungeonState) -> Option<VaultLayout> {
     let depth = dungeon.depth;
     if !(17..=19).contains(&depth) {
@@ -32,7 +50,7 @@ pub(crate) fn generate(dungeon: &mut DungeonState) -> Option<VaultLayout> {
     Random::push_generator_seeded(depth_seed);
     let dropped_before = dropped_triple(&dungeon.generator);
 
-    loot::queue_floor_loot(dungeon);
+    let mut gen = loot::queue_floor_loot(dungeon);
     let mut room_list = rooms::init();
     Random::shuffle_list(&mut room_list);
     for (id, room) in room_list.iter_mut().enumerate() {
@@ -52,25 +70,35 @@ pub(crate) fn generate(dungeon: &mut DungeonState) -> Option<VaultLayout> {
         return None;
     }
 
-    // RegularPainter padding is 1 (vault is never CHASM). Bounds after this
-    // shift match createMobs; paint itself is PR 3.
-    shift_rooms(&mut room_list, 1);
+    shift_rooms(&mut room_list, PAINT_PADDING);
+    let mut map = blank_map(&room_list, PAINT_PADDING)?;
+    let mut doors = DoorMap::new();
+    let order = paint::paint_rooms(&mut map, &room_list, &mut doors, dungeon, &mut gen);
+    doors::paint(&mut map, &room_list, &order, &mut doors, depth);
+    environment::paint(&mut map, &room_list, &order, &doors, depth);
+    map.recompute_passable();
+
     let dropped_after = dropped_triple(&dungeon.generator);
+    let rooms: Vec<_> = room_list
+        .iter()
+        .map(|room| LevelRoomFact {
+            class_name: room.name.clone(),
+            left: room.left,
+            top: room.top,
+            right: room.right,
+            bottom: room.bottom,
+        })
+        .collect();
+    let floor_map = MapFacts::from_room_paint(&map)
+        .into_floor_map(&map, depth, 1, depth_seed)
+        .into_layout_only();
     Random::pop_generator();
 
     Some(VaultLayout {
-        rooms: room_list
-            .into_iter()
-            .map(|room| LevelRoomFact {
-                class_name: room.name,
-                left: room.left,
-                top: room.top,
-                right: room.right,
-                bottom: room.bottom,
-            })
-            .collect(),
+        rooms,
         dropped_before,
         dropped_after,
+        map: floor_map,
     })
 }
 
@@ -90,6 +118,41 @@ fn shift_rooms(rooms: &mut [Room], padding: i32) {
     }
 }
 
+fn blank_map(rooms: &[Room], padding: i32) -> Option<TerrainMap> {
+    let right = rooms.iter().map(|room| room.right).max()? + padding;
+    let bottom = rooms.iter().map(|room| room.bottom).max()? + padding;
+    let width = right + 1;
+    let height = bottom + 1;
+    let len = (width * height) as usize;
+    Some(TerrainMap {
+        width,
+        height,
+        origin_x: 0,
+        origin_y: 0,
+        map: vec![WALL; len],
+        passable: vec![false; len],
+        water_allowed: vec![true; len],
+        grass_allowed: vec![true; len],
+        trap_allowed: vec![true; len],
+        item_allowed: vec![true; len],
+        character_allowed: vec![true; len],
+        mob_occupied: vec![false; len],
+        plant_occupied: vec![false; len],
+        known_plants: vec![None; len],
+        known_mobs: vec![None; len],
+        heap_occupied: vec![false; len],
+        known_heaps: vec![None; len],
+        known_blobs: Vec::new(),
+        trap_destroys_items: vec![false; len],
+        trap_names: vec![None; len],
+        branch_exits: Vec::new(),
+        branch_entrances: Vec::new(),
+        custom_tiles: Vec::new(),
+        custom_terrain: Vec::new(),
+        custom_walls: Vec::new(),
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use serde::Deserialize;
@@ -101,8 +164,54 @@ mod tests {
     struct Fixture {
         schema_version: u32,
         contract: String,
+        width: u32,
+        height: u32,
         dropped: Dropped,
         rooms: Vec<FixtureRoom>,
+        terrain: Vec<u16>,
+        discoverable: Vec<bool>,
+        traps: Vec<FixtureTrap>,
+        blobs: Vec<FixtureBlob>,
+        custom_tiles: Vec<FixtureLayer>,
+        custom_terrain: Vec<FixtureLayer>,
+    }
+
+    #[derive(Deserialize)]
+    struct FixtureTrap {
+        cell: u32,
+        #[serde(rename = "class")]
+        class_name: String,
+        visible: bool,
+        active: bool,
+        color: u8,
+        shape: u8,
+    }
+
+    #[derive(Deserialize)]
+    struct FixtureBlob {
+        #[serde(rename = "class")]
+        class_name: String,
+        volume: u32,
+        always_visible: bool,
+        cells: Vec<FixtureBlobCell>,
+    }
+
+    #[derive(Deserialize)]
+    struct FixtureBlobCell {
+        cell: u32,
+        value: u32,
+    }
+
+    #[derive(Deserialize)]
+    struct FixtureLayer {
+        #[serde(rename = "class")]
+        class_name: String,
+        texture: String,
+        x: u32,
+        y: u32,
+        width: u32,
+        height: u32,
+        static_data: Vec<i16>,
     }
 
     #[derive(Deserialize)]
@@ -188,5 +297,127 @@ mod tests {
         actual.sort();
         expected_rooms.sort();
         assert_eq!(actual, expected_rooms, "vault room-name multiset + bounds");
+
+        assert_eq!(generated.map.width, expected.width);
+        assert_eq!(generated.map.height, expected.height);
+        assert_eq!(
+            generated.map.mobs,
+            Vec::new(),
+            "public vault map has no mobs"
+        );
+        assert_eq!(
+            generated.map.heaps,
+            Vec::new(),
+            "public vault map has no heaps"
+        );
+        assert_terrain(&generated.map.tiles, &expected.terrain);
+        assert_eq!(generated.map.discoverable, expected.discoverable);
+        assert_eq!(
+            generated
+                .map
+                .traps
+                .iter()
+                .map(|trap| (
+                    trap.cell,
+                    trap.class_name.as_str(),
+                    trap.visible,
+                    trap.active,
+                    trap.color,
+                    trap.shape
+                ))
+                .collect::<Vec<_>>(),
+            expected
+                .traps
+                .iter()
+                .map(|trap| (
+                    trap.cell,
+                    trap.class_name.as_str(),
+                    trap.visible,
+                    trap.active,
+                    trap.color,
+                    trap.shape
+                ))
+                .collect::<Vec<_>>()
+        );
+        assert_eq!(
+            generated
+                .map
+                .blobs
+                .iter()
+                .map(|blob| (
+                    blob.class_name.as_str(),
+                    blob.volume,
+                    blob.always_visible,
+                    blob.cells
+                        .iter()
+                        .map(|cell| (cell.cell, cell.value))
+                        .collect::<Vec<_>>()
+                ))
+                .collect::<Vec<_>>(),
+            expected
+                .blobs
+                .iter()
+                .map(|blob| (
+                    blob.class_name.as_str(),
+                    blob.volume,
+                    blob.always_visible,
+                    blob.cells
+                        .iter()
+                        .map(|cell| (cell.cell, cell.value))
+                        .collect::<Vec<_>>()
+                ))
+                .collect::<Vec<_>>()
+        );
+        assert_layers(&generated.map.custom_tiles, &expected.custom_tiles);
+        assert_layers(&generated.map.custom_terrain, &expected.custom_terrain);
+    }
+
+    fn assert_terrain(actual: &[u16], expected: &[u16]) {
+        if actual != expected {
+            let first = actual
+                .iter()
+                .zip(expected)
+                .position(|(a, e)| a != e)
+                .unwrap_or(actual.len().min(expected.len()));
+            panic!(
+                "terrain mismatch at {first}: actual {:?}, expected {:?}; lengths {} vs {}",
+                actual.get(first),
+                expected.get(first),
+                actual.len(),
+                expected.len()
+            );
+        }
+    }
+
+    fn assert_layers(actual: &[crate::report::MapCustomTile], expected: &[FixtureLayer]) {
+        let actual = actual
+            .iter()
+            .map(|layer| {
+                (
+                    layer.class_name.as_str(),
+                    layer.texture.as_str(),
+                    layer.x,
+                    layer.y,
+                    layer.width,
+                    layer.height,
+                    layer.static_data.as_slice(),
+                )
+            })
+            .collect::<Vec<_>>();
+        let expected = expected
+            .iter()
+            .map(|layer| {
+                (
+                    layer.class_name.as_str(),
+                    layer.texture.as_str(),
+                    layer.x,
+                    layer.y,
+                    layer.width,
+                    layer.height,
+                    layer.static_data.as_slice(),
+                )
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(actual, expected);
     }
 }

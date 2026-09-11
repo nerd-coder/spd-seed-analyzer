@@ -23,6 +23,18 @@ pub use model::{apply_room_door_types, place_doors_for_room, DoorMap, DoorType};
 pub(crate) use merge::merge_rooms_with_terrain;
 use merge::{is_mergeable_standard, is_normal_size, merge_rooms};
 
+fn hidden_door_chance_for(depth: i32, feeling: Feeling) -> f32 {
+    let mut hidden_door_chance = if depth > 1 {
+        (depth as f32 / 20.0).min(1.0)
+    } else {
+        0.0
+    };
+    if feeling == Feeling::Secrets {
+        hidden_door_chance = (0.5 + hidden_door_chance) / 2.0;
+    }
+    hidden_door_chance
+}
+
 /// Graph edge: non-blocked door types (SPD `Room.edges`).
 fn is_graph_edge(t: DoorType) -> bool {
     matches!(
@@ -78,15 +90,27 @@ pub fn paint_doors(
     feeling: Feeling,
     doors: &mut DoorMap,
 ) {
-    let mut hidden_door_chance = if depth > 1 {
-        (depth as f32 / 20.0).min(1.0)
-    } else {
-        0.0
-    };
-    if feeling == Feeling::Secrets {
-        hidden_door_chance = (0.5 + hidden_door_chance) / 2.0;
-    }
+    paint_doors_with_hidden_chance(
+        map,
+        rooms,
+        paint_order,
+        depth,
+        feeling,
+        doors,
+        hidden_door_chance_for(depth, feeling),
+    );
+}
 
+/// Same as [`paint_doors`] with an explicit `hiddenDoorChance` (vault uses 0).
+pub(crate) fn paint_doors_with_hidden_chance(
+    map: &mut TerrainMap,
+    rooms: &[Room],
+    paint_order: &[usize],
+    depth: i32,
+    feeling: Feeling,
+    doors: &mut DoorMap,
+    hidden_door_chance: f32,
+) {
     // room index → partner when a NORMAL-sized standard room has merged once.
     let mut room_merges: HashMap<usize, usize> = HashMap::new();
 

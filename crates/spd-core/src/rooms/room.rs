@@ -287,6 +287,31 @@ impl Room {
                 p.y < self.top + 5 || p.y > self.bottom - 5
             };
         }
+        // Vault rooms are odd-sided; center() does not consume Int(2).
+        let vault_c = Point::new((self.left + self.right) / 2, (self.top + self.bottom) / 2);
+        let vault_dx = (vault_c.x - p.x).abs();
+        let vault_dy = (vault_c.y - p.y).abs();
+        if self.name == "VaultCrossRoom" {
+            return (vault_dx <= 1 || vault_dy <= 1) && on_one_edge;
+        }
+        if self.name == "VaultQuadrantsRoom" {
+            return vault_c.x != p.x && vault_c.y != p.y && on_one_edge;
+        }
+        if matches!(
+            self.name.as_str(),
+            "VaultFlamePathRoom" | "VaultCircleScanTreasureRoom"
+        ) {
+            return vault_dx > 1 && vault_dy > 1 && on_one_edge;
+        }
+        if matches!(
+            self.name.as_str(),
+            "VaultSingleEnemyTreasureRoom" | "VaultFlamesTreasureRoom"
+        ) {
+            return (vault_dx <= 2 || vault_dy <= 2) && on_one_edge;
+        }
+        if self.name == "VaultMultipleEnemyTreasureRoom" {
+            return (vault_dx <= 3 || vault_dy <= 3) && on_one_edge;
+        }
         if self.name == "CrystalPathRoom" {
             let mid_x = (self.left + self.right) as f32 / 2.0;
             let mid_y = (self.top + self.bottom) as f32 / 2.0;

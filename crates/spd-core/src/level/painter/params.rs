@@ -52,6 +52,7 @@ pub fn trap_metadata(name: &str) -> Option<TrapMetadata> {
         "WarpingTrap" => (4, 3),
         "WeakeningTrap" => (3, 1),
         "WornDartTrap" => (7, 5),
+        "VaultFlameTrap" => (8, 0),
         _ => return None,
     };
     Some(TrapMetadata {

@@ -63,6 +63,9 @@ pub struct FloorMap {
     /// Pinned custom terrain overlays, ordered by their visual layer.
     #[serde(default)]
     pub custom_tiles: Vec<MapCustomTile>,
+    /// Pinned `Level.customTerrain` overlays (banners, etc.).
+    #[serde(default)]
+    pub custom_terrain: Vec<MapCustomTile>,
     /// Pinned custom wall overlays, ordered by their visual layer.
     #[serde(default)]
     pub custom_walls: Vec<MapCustomTile>,

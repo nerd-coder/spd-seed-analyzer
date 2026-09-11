@@ -7,6 +7,9 @@ use crate::rooms::room::{intersect, Room};
 use crate::rooms::types::RoomKind;
 
 pub(super) fn is_mergeable_standard(room: &Room) -> bool {
+    if room.name.starts_with("Vault") {
+        return false;
+    }
     if matches!(
         room.name.as_str(),
         "SewerPipeRoom"

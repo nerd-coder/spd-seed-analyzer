@@ -190,11 +190,7 @@ impl MapFacts {
         FloorMap {
             width: map.width as u32,
             height: map.height as u32,
-            tileset: if branch == 1 {
-                "mining".to_string()
-            } else {
-                terrain::tileset_for_depth(depth).to_string()
-            },
+            tileset: terrain::tileset_for_depth(depth).to_string(),
             tiles: map.map.iter().map(|&tile| tile as u16).collect(),
             tile_variance: tile_variance(map.len(), depth_seed),
             discoverable: discoverable(&map.map, map.width),
@@ -206,6 +202,7 @@ impl MapFacts {
             plants: plants(map),
             blobs: blobs(map),
             custom_tiles: custom_tiles(map, depth),
+            custom_terrain: map.custom_terrain.clone(),
             custom_walls: map.custom_walls.clone(),
             runtime_sensitive_loot_cells: self.runtime_sensitive_loot_cells,
             constrained_equipment_cells: self.constrained_equipment_cells,
@@ -332,6 +329,18 @@ fn transitions(map: &TerrainMap, depth: i32, branch: i32) -> Vec<MapTransition> 
                 branch,
                 Some("REGULAR_EXIT".to_string()),
             ),
+            _ if map.branch_entrances.contains(&cell) => (
+                "BRANCH_ENTRANCE",
+                depth,
+                branch - 1,
+                Some("BRANCH_EXIT".to_string()),
+            ),
+            _ if map.branch_exits.contains(&cell) => (
+                "BRANCH_EXIT",
+                depth,
+                branch + 1,
+                Some("BRANCH_ENTRANCE".to_string()),
+            ),
             _ => continue,
         };
         let x = cell as u32 % map.width as u32;
@@ -366,8 +375,10 @@ fn traps(map: &TerrainMap) -> Vec<MapTrap> {
                     class_name: class_name.to_string(),
                     // Toxic vents are revealed, permanently inactive traps
                     // painted on `Terrain.INACTIVE_TRAP`.
-                    visible: map.map[cell] == terrain::TRAP || class_name == "ToxicVent",
-                    active: class_name != "ToxicVent",
+                    visible: map.map[cell] == terrain::TRAP
+                        || class_name == "ToxicVent"
+                        || class_name == "VaultFlameTrap",
+                    active: class_name != "ToxicVent" && class_name != "VaultFlameTrap",
                     color: metadata.map(|metadata| metadata.color).unwrap_or_default(),
                     shape: metadata.map(|metadata| metadata.shape).unwrap_or_default(),
                 }

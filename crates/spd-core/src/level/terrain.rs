@@ -119,6 +119,8 @@ pub struct TerrainMap {
     pub branch_entrances: Vec<usize>,
     /// Painter-complete custom ground overlays, in Java insertion order.
     pub custom_tiles: Vec<MapCustomTile>,
+    /// Painter-complete `Level.customTerrain` overlays, in Java insertion order.
+    pub custom_terrain: Vec<MapCustomTile>,
     /// Painter-complete custom wall overlays, in Java insertion order.
     pub custom_walls: Vec<MapCustomTile>,
 }
@@ -157,8 +159,28 @@ impl TerrainMap {
         static_data: Vec<i16>,
     ) {
         let (x, y, width, height) = rect;
-        debug_assert_eq!(static_data.len(), (width * height) as usize);
+        debug_assert!(static_data.is_empty() || static_data.len() == (width * height) as usize);
         self.custom_tiles.push(MapCustomTile {
+            class_name: class_name.into(),
+            texture: texture.into(),
+            x: x as u32,
+            y: y as u32,
+            width: width as u32,
+            height: height as u32,
+            static_data,
+        });
+    }
+
+    pub(crate) fn record_custom_terrain(
+        &mut self,
+        class_name: &str,
+        texture: &str,
+        rect: (i32, i32, i32, i32),
+        static_data: Vec<i16>,
+    ) {
+        let (x, y, width, height) = rect;
+        debug_assert!(static_data.is_empty() || static_data.len() == (width * height) as usize);
+        self.custom_terrain.push(MapCustomTile {
             class_name: class_name.into(),
             texture: texture.into(),
             x: x as u32,
@@ -176,6 +198,28 @@ impl TerrainMap {
         cell: usize,
         value: u32,
     ) {
+        self.record_blob_cell_inner(class_name, always_visible, cell, value, true);
+    }
+
+    /// Last-write-wins, matching `VaultFlameTrap.setupTrap` cooldown arrays.
+    pub(crate) fn record_blob_cell_set(
+        &mut self,
+        class_name: &'static str,
+        always_visible: bool,
+        cell: usize,
+        value: u32,
+    ) {
+        self.record_blob_cell_inner(class_name, always_visible, cell, value, false);
+    }
+
+    fn record_blob_cell_inner(
+        &mut self,
+        class_name: &'static str,
+        always_visible: bool,
+        cell: usize,
+        value: u32,
+        add: bool,
+    ) {
         assert!(cell < self.len(), "blob cell must be inside the map");
         if let Some(blob) = self
             .known_blobs
@@ -188,9 +232,12 @@ impl TerrainMap {
                 .iter_mut()
                 .find(|(known_cell, _)| *known_cell == cell)
             {
-                // `Blob.seed` adds to the cell's current concentration and
-                // volume when a class is seeded into the same cell again.
-                *concentration += value;
+                if add {
+                    // `Blob.seed` adds concentration when the same cell is reseeded.
+                    *concentration += value;
+                } else {
+                    *concentration = value;
+                }
             } else {
                 blob.cells.push((cell, value));
             }
@@ -464,6 +511,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
         branch_exits,
         branch_entrances,
         custom_tiles: Vec::new(),
+        custom_terrain: Vec::new(),
         custom_walls: Vec::new(),
     })
 }

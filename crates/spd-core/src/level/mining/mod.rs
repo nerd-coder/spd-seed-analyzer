@@ -209,6 +209,7 @@ fn blank_map(rooms: &[Room], padding: i32) -> Option<TerrainMap> {
         branch_exits: Vec::new(),
         branch_entrances: Vec::new(),
         custom_tiles: Vec::new(),
+        custom_terrain: Vec::new(),
         custom_walls: Vec::new(),
     })
 }

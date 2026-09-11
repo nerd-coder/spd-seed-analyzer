@@ -1,7 +1,5 @@
 //! `VaultLevel.initRooms`, `VaultRoom.createRoom`, treasure round-robin.
 
-#![allow(dead_code)] // generate is test-only until PR 4
-
 use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;

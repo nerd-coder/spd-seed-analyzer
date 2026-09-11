@@ -135,6 +135,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
             plants: vec![],
             blobs: vec![],
             custom_tiles: vec![],
+            custom_terrain: vec![],
             custom_walls: vec![],
             runtime_sensitive_loot_cells: runtime_cells,
             constrained_equipment_cells: vec![],
