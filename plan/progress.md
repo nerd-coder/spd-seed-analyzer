@@ -4,17 +4,17 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 
 ## Done
 
-- **00–04 closed.**
-- 04 ports + golden refresh: MassGrave 11×10, RitualSite cages, Blacksmith pedestals/`CUSTOM_DECO_WTR`, Mining in-room gold/`ENTRANCE_SP`. `d9ccdbe`, `dc49063`, `a2618ea`, `e83306f`, `80b8a12`.
+- **00–05 closed.**
+- 05 Exotic Crystals conversion, Ghost/Imp v4 enchant pins, Spyglass/Censer non-generation note. `c1f4215`, `07de0a9`, `70c602d`.
 
 ## Now
 
-05 PR 3 Ghost/Imp enchant name pins and PR 4 Spyglass/Censer non-generation note. Ref [05-items-trinkets-challenges.md](05-items-trinkets-challenges.md). Exotic Crystals conversion is on main (`c1f4215`).
+06 PR 1 sync v4 tilesheets/carpets/occlusion/items.png. Ref [06-assets-and-ui.md](06-assets-and-ui.md).
 
 ## Next
 
-06 assets and UI.
+06 renderer (carpets, custom_terrain, occlusion), item-icons, Playwright snapshots.
 
 ## Remaining
 
-05 PR 3–4, 06. 07 deny-list. Analyzer still `partial`. Leftover lib red vs v4 Java: SacrificeRoom `Sai` vs Crossbow, some blob `always_visible`, a few halls/city heaps, smoke tests with no fixture. Carpet pixels wait for 06.
+06. 07 deny-list. Analyzer still `partial`. Leftover lib red vs v4 Java: SacrificeRoom `Sai` vs Crossbow, some blob `always_visible`, a few halls/city heaps, smoke tests with no fixture.

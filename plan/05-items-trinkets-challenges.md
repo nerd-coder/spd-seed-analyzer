@@ -1,6 +1,6 @@
 # 05 — Enchants, trinkets, challenges
 
-Status: **open**
+Status: **closed**
 
 Generation-facing item identity changes after the v4 tables and Exotic Crystals chance. Combat, energy-cost comments, and Swarm Intelligence stay out.
 
