@@ -4,17 +4,17 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 
 ## Done
 
-- **00–05 closed.**
-- 05 Exotic Crystals conversion, Ghost/Imp v4 enchant pins, Spyglass/Censer non-generation note. `c1f4215`, `07de0a9`, `70c602d`.
+- **00–06 closed.**
+- 06 assets, carpets/occlusion renderer, item-icons, Playwright snapshots (city F16 + mining). `3da0b77`, `78362c1`, `1213c66`, `e45639b`.
 
 ## Now
 
-06 PR 2 carpets/custom_terrain/occlusion renderer and PR 3 item-icons (parallel). Assets copied (`3da0b77`). Ref [06-assets-and-ui.md](06-assets-and-ui.md).
+Nothing in the v4 close-out sequence. 07 is a deny-list, not a PR.
 
 ## Next
 
-06 Playwright snapshot refresh. Skip vault branch-map UI (02 already).
+Leftover analyzer≠Java lib reds if you want them (SacrificeRoom `Sai` vs Crossbow, blob `always_visible`, some halls/city heaps, smoke tests with no fixture). Imp vault has no Playwright map fixture (harness is Crystal/Gnoll/Fungi only).
 
 ## Remaining
 
-06. 07 deny-list. Analyzer still `partial`. Leftover lib red vs v4 Java: SacrificeRoom `Sai` vs Crossbow, some blob `always_visible`, a few halls/city heaps, smoke tests with no fixture.
+07 deny-list. Analyzer still `partial`.

@@ -1,6 +1,6 @@
 # 06 — Assets, map renderer, Playwright snapshots
 
-Status: **open**
+Status: **closed**
 
 Copy v4 pixel art into the flat asset tree and teach the map renderer carpets, wall-floor shadows, new terrain, and consumable icons. Refresh visual snapshots last, after layout workstreams have landed.
 
