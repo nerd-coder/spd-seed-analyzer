@@ -74,23 +74,40 @@ fn aaa_caves_replay_matches_complete_pre_items_visual_facts() {
             *expected.blobs.as_ref().expect("Caves blobs"),
             "{context} blobs"
         );
-        assert!(
-            expected.custom_tiles.is_empty(),
-            "{context} oracle custom tiles"
+        assert_eq!(
+            map.custom_tiles.len(),
+            expected.custom_tiles.len(),
+            "{context} custom tiles"
         );
-        assert!(
-            expected.custom_walls.is_empty(),
-            "{context} oracle custom walls"
+        assert_eq!(
+            map.custom_walls.len(),
+            expected.custom_walls.len(),
+            "{context} custom walls"
         );
-        if depth == 13 {
-            assert_eq!(map.custom_tiles.len(), 1, "{context} custom tiles");
-            assert_eq!(map.custom_tiles[0].class_name, "QuestEntrance");
-            assert_eq!(map.custom_tiles[0].texture, "caves_quest");
-            assert_eq!(map.custom_tiles[0].static_data, [0]);
-        } else {
-            assert!(map.custom_tiles.is_empty(), "{context} custom tiles");
+        for (actual, expected) in map.custom_tiles.iter().zip(&expected.custom_tiles) {
+            assert_eq!(actual.class_name, expected.class_name, "{context}");
+            assert_eq!(actual.texture, "caves_quest", "{context}");
+            assert_eq!(
+                (actual.x, actual.y, actual.width, actual.height),
+                (expected.x, expected.y, expected.width, expected.height),
+                "{context}"
+            );
+            assert_eq!(
+                actual.static_data.len(),
+                (actual.width * actual.height) as usize,
+                "{context}"
+            );
         }
-        assert!(map.custom_walls.is_empty(), "{context} custom walls");
+        for (actual, expected) in map.custom_walls.iter().zip(&expected.custom_walls) {
+            assert_eq!(actual.class_name, expected.class_name, "{context}");
+            assert_eq!(actual.texture, "caves_quest", "{context}");
+            assert_eq!(
+                (actual.x, actual.y, actual.width, actual.height),
+                (expected.x, expected.y, expected.width, expected.height),
+                "{context}"
+            );
+            assert_eq!(actual.static_data, [3], "{context}");
+        }
     }
 }
 

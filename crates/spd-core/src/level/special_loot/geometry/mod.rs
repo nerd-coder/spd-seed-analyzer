@@ -1,6 +1,7 @@
 //! RNG-visible geometry for special and secret rooms.
 
 mod basic;
+mod blacksmith;
 mod crypt;
 mod mass_grave;
 mod maze;
@@ -10,6 +11,7 @@ mod sacrifice;
 mod simple_image;
 mod summoning;
 
+pub(super) use blacksmith::paint as paint_blacksmith;
 pub(super) use mass_grave::paint as paint_mass_grave;
 pub(super) use ritual_site::paint as paint_ritual_site;
 pub(super) use simple_image::map_simple_image;

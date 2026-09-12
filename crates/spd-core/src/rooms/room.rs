@@ -224,7 +224,9 @@ impl Room {
     }
 
     pub fn max_connections(&self, direction: i32) -> i32 {
-        if direction == DIR_ALL
+        if self.name == "BlacksmithRoom" && direction == DIR_TOP {
+            1
+        } else if direction == DIR_ALL
             || matches!(
                 self.kind,
                 RoomKind::Special | RoomKind::Secret | RoomKind::Shop
@@ -267,6 +269,14 @@ impl Room {
     }
 
     pub fn can_connect_point(&self, p: Point) -> bool {
+        if self.name == "BlacksmithRoom" {
+            if p.y == self.top && p.x != self.left + 1 && p.x != self.right - 1 {
+                return false;
+            }
+            if p.y == self.top + 1 {
+                return false;
+            }
+        }
         if self.name == "MassGraveRoom" {
             return (p.x - self.random_center().x).abs() <= 2;
         }
@@ -410,6 +420,9 @@ pub fn can_connect_rooms(a: &Room, b: &Room, rooms: &[Room]) -> bool {
     if (a.name == "DemonSpawnerRoom" && b.is_exit())
         || (b.name == "DemonSpawnerRoom" && a.is_exit())
     {
+        return false;
+    }
+    if (a.name == "BlacksmithRoom" && b.is_exit()) || (b.name == "BlacksmithRoom" && a.is_exit()) {
         return false;
     }
     // RatKingRoom never connects directly to SewerBossEntranceRoom.

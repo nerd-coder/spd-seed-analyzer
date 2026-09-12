@@ -1,7 +1,9 @@
 use super::super::quest_rooms::blacksmith_room_prizes;
 use crate::geom::Point;
 use crate::level::painter::DoorMap;
-use crate::level::terrain::{paint_minimal, EMPTY, EMPTY_SP, EXIT, TRAP};
+use crate::level::terrain::{
+    paint_minimal, CUSTOM_DECO_WTR, EMPTY, EMPTY_SP, EXIT, PEDESTAL, TRAP,
+};
 use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
@@ -40,17 +42,49 @@ fn blacksmith_paints_heap_cells_and_npc_before_ambient_mobs() {
     assert_eq!(map.map[first_corridor], EMPTY);
     assert_eq!(map.map[second_corridor], EMPTY_SP);
     assert_eq!(loot.len(), 2);
-    assert_eq!(
-        map.mob_occupied
-            .iter()
-            .filter(|&&occupied| occupied)
-            .count(),
-        1
-    );
+    assert!(!map.map.contains(&TRAP));
+
+    let npc = map.point_to_cell(3, 3).expect("NPC cell");
+    assert!(map.mob_occupied[npc]);
+    assert_eq!(map.known_mobs[npc], Some("Blacksmith"));
     assert_eq!(
         map.known_mobs.iter().flatten().copied().collect::<Vec<_>>(),
         ["Blacksmith"]
     );
-    assert!(map.map.contains(&EXIT));
-    assert!(map.map.contains(&TRAP));
+
+    let furnace = map.point_to_cell(4, 3).expect("furnace cell");
+    assert_eq!(map.map[furnace], CUSTOM_DECO_WTR);
+    let left_pedestal = map.point_to_cell(3, 5).expect("left pedestal");
+    let right_pedestal = map.point_to_cell(4, 5).expect("right pedestal");
+    assert_eq!(map.map[left_pedestal], PEDESTAL);
+    assert_eq!(map.map[right_pedestal], PEDESTAL);
+    assert!(map.heap_occupied[left_pedestal] && map.heap_occupied[right_pedestal]);
+
+    let left_exit = map.point_to_cell(1, 1).expect("left entrance");
+    let right_exit = map.point_to_cell(6, 1).expect("right entrance");
+    assert!(map.map[left_exit] == EXIT || map.map[right_exit] == EXIT);
+    assert_eq!(map.branch_exits.len(), 1);
+
+    assert_eq!(
+        map.custom_tiles
+            .iter()
+            .map(|tile| tile.class_name.as_str())
+            .collect::<Vec<_>>(),
+        ["QuestEntrance", "SmithyVisuals"]
+    );
+    assert_eq!(
+        map.custom_tiles[1].static_data,
+        [7, 16, 17, 10, 8, -1, 18, 10, 8, -1, -1, 10, 12, 20, 20, 14]
+    );
+    assert_eq!(map.custom_walls.len(), 1);
+    assert_eq!(map.custom_walls[0].class_name, "FurnaceOverhang");
+    assert_eq!(map.custom_walls[0].static_data, [3]);
+
+    for y in 0..=7 {
+        for x in 0..=7 {
+            let cell = map.point_to_cell(x, y).expect("room cell");
+            assert!(!map.character_allowed[cell]);
+            assert_eq!(map.item_allowed[cell], map.map[cell] == EMPTY);
+        }
+    }
 }

@@ -43,6 +43,7 @@ export const Terrain = {
   MINE_BOULDER: 36,
   ENTRANCE_SP: 37,
   HERO_LKD_DR: 38,
+  CUSTOM_DECO_WTR: 39,
 } as const
 
 const xy = (x: number, y: number) => x - 1 + SHEET_COLS * (y - 1)
@@ -98,6 +99,7 @@ const direct = new Map<number, number>([
   [Terrain.INACTIVE_TRAP, FLOOR],
   [Terrain.CUSTOM_DECO, FLOOR],
   [Terrain.CUSTOM_DECO_EMPTY, FLOOR],
+  [Terrain.CUSTOM_DECO_WTR, WATER],
   [Terrain.EMPTY_DECO, FLOOR + 1],
   [Terrain.LOCKED_EXIT, xy(1, 4) + 13],
   [Terrain.UNLOCKED_EXIT, xy(1, 4) + 12],

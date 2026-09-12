@@ -17,6 +17,7 @@ pub(super) fn is_mergeable_standard(room: &Room) -> bool {
             | "WalledGooRoom"
             | "ThinPillarsGooRoom"
             | "ThickPillarsGooRoom"
+            | "BlacksmithRoom"
     ) {
         return false;
     }

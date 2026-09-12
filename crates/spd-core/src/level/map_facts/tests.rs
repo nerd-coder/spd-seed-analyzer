@@ -42,10 +42,65 @@ fn blob_projection_merges_seeded_cells_and_sorts_the_contract() {
     );
 }
 
+fn replay_overlays(seed: &str, depth: i32) -> crate::report::FloorMap {
+    let numeric = crate::parse_seed(seed).unwrap().numeric;
+    let mut dungeon = crate::dungeon_from_run(crate::init_run(numeric));
+    let mut level = None;
+    for replay_depth in 1..=depth {
+        dungeon.depth = replay_depth;
+        level = Some(crate::level::create_level_partial(&mut dungeon));
+    }
+    level.unwrap().map.expect("regular floor map")
+}
+
+fn overlay_rects(map: &crate::report::FloorMap) -> Vec<(&str, u32, u32, u32, u32)> {
+    map.custom_tiles
+        .iter()
+        .filter(|layer| layer.class_name != "Carpet")
+        .map(|layer| {
+            (
+                layer.class_name.as_str(),
+                layer.x,
+                layer.y,
+                layer.width,
+                layer.height,
+            )
+        })
+        .collect()
+}
+
+#[test]
+fn caves_blacksmith_overlays_match_java_fixture_geometry() {
+    let map = replay_overlays("GFX-PZH-DCH", 12);
+    assert_eq!(
+        overlay_rects(&map),
+        [
+            ("QuestEntrance", 22, 33, 1, 1),
+            ("SmithyVisuals", 23, 34, 5, 5),
+        ]
+    );
+    assert_eq!(
+        map.custom_walls
+            .iter()
+            .map(|layer| (
+                layer.class_name.as_str(),
+                layer.x,
+                layer.y,
+                layer.width,
+                layer.height
+            ))
+            .collect::<Vec<_>>(),
+        [("FurnaceOverhang", 23, 33, 1, 1)]
+    );
+    assert!(map
+        .custom_tiles
+        .iter()
+        .all(|layer| layer.static_data.len() == (layer.width * layer.height) as usize));
+}
+
 #[test]
 fn regular_floor_overlays_match_java_fixture_geometry() {
     for (seed, depth, expected) in [
-        ("GFX-PZH-DCH", 12, vec![("QuestEntrance", 39, 28, 1, 1)]),
         (
             "GFX-PZH-DCH",
             17,
@@ -60,29 +115,8 @@ fn regular_floor_overlays_match_java_fixture_geometry() {
             vec![("CustomFloor", 20, 34, 5, 4), ("HiddenWell", 18, 35, 1, 1)],
         ),
     ] {
-        let numeric = crate::parse_seed(seed).unwrap().numeric;
-        let mut dungeon = crate::dungeon_from_run(crate::init_run(numeric));
-        let mut level = None;
-        for replay_depth in 1..=depth {
-            dungeon.depth = replay_depth;
-            level = Some(crate::level::create_level_partial(&mut dungeon));
-        }
-        let map = level.unwrap().map.expect("regular floor map");
-        let actual: Vec<_> = map
-            .custom_tiles
-            .iter()
-            .filter(|layer| layer.class_name != "Carpet")
-            .map(|layer| {
-                (
-                    layer.class_name.as_str(),
-                    layer.x,
-                    layer.y,
-                    layer.width,
-                    layer.height,
-                )
-            })
-            .collect();
-        assert_eq!(actual, expected, "{seed} depth {depth}");
+        let map = replay_overlays(seed, depth);
+        assert_eq!(overlay_rects(&map), expected, "{seed} depth {depth}");
         if depth == 17 {
             assert!(
                 map.custom_tiles

@@ -50,10 +50,12 @@ fn fill_room_corners(map: &mut TerrainMap, rooms: &[Room], paint_order: &[usize]
         let Some(room) = rooms.get(room_index).filter(|r| !r.is_empty()) else {
             continue;
         };
-        if !matches!(
-            room.kind,
-            RoomKind::Standard | RoomKind::Entrance | RoomKind::Exit
-        ) || room.width() <= 4
+        if room.name == "BlacksmithRoom"
+            || !matches!(
+                room.kind,
+                RoomKind::Standard | RoomKind::Entrance | RoomKind::Exit
+            )
+            || room.width() <= 4
             || room.height() <= 4
         {
             continue;
@@ -179,6 +181,42 @@ mod tests {
         room.right = right;
         room.bottom = 10;
         room
+    }
+
+    fn placed(name: &str) -> Room {
+        let mut room = Room::new(0, name, RoomKind::Standard, 1, 16, 8, 10, 8, 10);
+        room.left = 1;
+        room.top = 1;
+        room.right = 10;
+        room.bottom = 10;
+        room
+    }
+
+    #[test]
+    fn blacksmith_skips_corner_wall_rolls() {
+        let smith = placed("BlacksmithRoom");
+        let cave = placed("CircleWallRoom");
+        let mut smith_map =
+            crate::level::terrain::paint_minimal(std::slice::from_ref(&smith)).expect("map");
+        let mut cave_map =
+            crate::level::terrain::paint_minimal(std::slice::from_ref(&cave)).expect("map");
+        let doors = DoorMap::new();
+
+        Random::push_generator_seeded(0xC0FFEE);
+        fill_room_corners(&mut smith_map, std::slice::from_ref(&smith), &[0], &doors);
+        let smith_tail = Random::peek_ints(8);
+        Random::pop_generator();
+
+        Random::push_generator_seeded(0xC0FFEE);
+        let unused_tail = Random::peek_ints(8);
+        Random::pop_generator();
+        assert_eq!(smith_tail, unused_tail);
+
+        Random::push_generator_seeded(0xC0FFEE);
+        fill_room_corners(&mut cave_map, std::slice::from_ref(&cave), &[0], &doors);
+        let cave_tail = Random::peek_ints(8);
+        Random::pop_generator();
+        assert_ne!(cave_tail, unused_tail);
     }
 
     #[test]

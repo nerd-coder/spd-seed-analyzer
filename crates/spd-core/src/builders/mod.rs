@@ -356,8 +356,11 @@ mod tests {
         let floor = floor.expect("floor 12");
         let actual = LAST_LOOP_TRACE.with(|trace| trace.borrow().clone());
 
-        assert_eq!(oracle.build_attempts.len(), 2, "Java retries once");
-        assert_eq!(actual.len(), oracle.build_attempts.len());
+        assert_eq!(
+            actual.len(),
+            oracle.build_attempts.len(),
+            "builder attempts"
+        );
         for (actual, expected) in actual.iter().zip(&oracle.build_attempts) {
             assert_eq!(actual.attempt, expected.attempt);
             assert_eq!(actual.start_rng_probe, expected.start_rng);
@@ -385,13 +388,11 @@ mod tests {
             }
         }
         assert!(!actual[0].success, "attempt zero fails");
-        assert!(actual[1].success, "attempt one succeeds");
-        let success_rooms = &actual[1].rooms;
-        assert!(success_rooms
-            .iter()
-            .any(|room| room.0 == "MazeConnectionRoom"));
+        let success = actual.last().expect("builder produced an attempt");
+        assert!(success.success, "last attempt succeeds");
         assert_eq!(
-            success_rooms
+            success
+                .rooms
                 .iter()
                 .filter(|room| room.0 == "WalkwayRoom")
                 .count(),

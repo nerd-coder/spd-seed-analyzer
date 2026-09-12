@@ -46,6 +46,8 @@ pub const REGION_DECO_ALT: i32 = 34;
 pub const MINE_CRYSTAL: i32 = 35;
 pub const MINE_BOULDER: i32 = 36;
 pub const ENTRANCE_SP: i32 = 37;
+/// SPD `Terrain.CUSTOM_DECO_WTR` — solid invisible deco that draws as water.
+pub const CUSTOM_DECO_WTR: i32 = 39;
 const NULL_TILE: i32 = -1;
 
 /// Pinned `DungeonTileSheet.wallStitcheable` terrain subset.
@@ -304,6 +306,7 @@ impl TerrainMap {
                 | REGION_DECO
                 | REGION_DECO_ALT
                 | CUSTOM_DECO
+                | CUSTOM_DECO_WTR
                 | MINE_CRYSTAL
                 | MINE_BOULDER
         )
@@ -561,6 +564,20 @@ mod tests {
         for tile in [EMPTY, EMPTY_SP, STATUE, REGION_DECO] {
             assert!(!wall_stitchable(tile), "terrain {tile}");
         }
+    }
+
+    #[test]
+    fn custom_deco_wtr_is_solid_like_custom_deco() {
+        let mut room = Room::new(0, "EmptyRoom", RoomKind::Standard, 1, 4, 4, 10, 4, 10);
+        room.left = 0;
+        room.top = 0;
+        room.right = 4;
+        room.bottom = 4;
+        let mut map = paint_minimal(&[room]).expect("map");
+        let cell = map.point_to_cell(2, 2).expect("cell");
+        map.map[cell] = CUSTOM_DECO_WTR;
+        assert!(map.is_solid(cell));
+        assert!(!is_passable_tile(CUSTOM_DECO_WTR));
     }
 
     #[test]
