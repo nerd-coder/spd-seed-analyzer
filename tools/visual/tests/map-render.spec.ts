@@ -616,7 +616,7 @@ test('analyzer displays baseline items in their ordinary item group', async ({
 }) => {
   const browserErrors = await openAnalyzer(page, 'RZN-LKU-EFS')
   const baselineItem = page.getByRole('listitem').filter({
-    has: page.getByRole('img', { name: 'Ring of Wealth +2' }),
+    has: page.getByRole('img', { name: 'dried Rose' }),
   })
   const otherItems = page
     .getByText(/^Other items/)
@@ -624,8 +624,8 @@ test('analyzer displays baseline items in their ordinary item group', async ({
     .locator('../..')
 
   await expect(page.getByText(/^Fresh baseline highlights/)).toHaveCount(0)
-  await expect(otherItems).toContainText('Ring of Wealth +2')
-  await expect(baselineItem).toContainText('Ring of Wealth +2')
+  await expect(otherItems).toContainText('dried Rose')
+  await expect(baselineItem).toContainText('dried Rose')
   await expect(baselineItem).toContainText('Crystal choice')
   await expect(baselineItem).toContainText('cursed')
   await expect(page.getByText('planning only', { exact: true })).toHaveCount(0)
@@ -658,7 +658,7 @@ test('finder result displays only matched constraints', async ({ page }) => {
   await page.getByRole('spinbutton', { name: 'Candidates' }).fill('10')
   await page.getByRole('combobox', { name: 'Depth' }).selectOption('17')
   await page.getByRole('spinbutton', { name: 'Results' }).fill('1')
-  await page.getByLabel('Item 1 name').selectOption('RingOfSharpshooting')
+  await page.getByLabel('Item 1 name').selectOption('RingOfForce')
   await page.getByLabel('Item 1 upgrade level').selectOption('4')
   await page.getByRole('button', { name: 'Find' }).click()
 
@@ -670,7 +670,7 @@ test('finder result displays only matched constraints', async ({ page }) => {
   ).toBeVisible()
   const resultItem = page
     .locator('[data-slot="item"]')
-    .filter({ hasText: /ring of sharpshooting/i })
+    .filter({ hasText: /ring of force/i })
   await expect(resultItem).toBeVisible()
   await expect(
     page.getByText('Fresh baseline highlights', { exact: true })
@@ -706,7 +706,7 @@ test('finder includes Wandmaker fresh-baseline items by default', async ({
   await page.getByRole('spinbutton', { name: 'Results' }).fill('1')
   await page.getByLabel('Item 1 category').selectOption('Wands')
   await page.getByLabel('Item 1 name').selectOption('WandOfDisintegration')
-  await page.getByLabel('Item 1 upgrade level').selectOption('2')
+  await page.getByLabel('Item 1 upgrade level').selectOption('1')
   await expect(
     page.getByRole('switch', { name: 'Include fresh-baseline matches' })
   ).toHaveCount(0)

@@ -23,6 +23,7 @@ describe('structural map-render snapshots', () => {
     expect(snapshotNames).toEqual([
       'CXG-FJT-BFQ-F1.png',
       'HKT-JZN-XQQ-F1.png',
+      'GFX-PZH-DCH-F16.png',
       'AAA-AAA-AAA-F13-B1-Crystal.png',
       'AAA-AAA-AAB-F13-B1-Gnoll.png',
     ])

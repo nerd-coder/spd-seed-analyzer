@@ -61,7 +61,7 @@ test('finder keeps its form and reuses only result-less search tabs', async ({
     .getByRole('spinbutton', { name: 'Start seed' })
     .fill('3293380032588')
   await page.getByRole('combobox', { name: 'Depth' }).selectOption('4')
-  await page.getByLabel('Item 1 name').selectOption('RingOfWealth')
+  await page.getByLabel('Item 1 name').selectOption('RingOfElements')
   await page.getByLabel('Item 1 upgrade level').selectOption('any')
   await startAndWait(page)
   await expect(
@@ -111,7 +111,7 @@ test('finder searches successfully when item name is set to any', async ({
   ).toBeVisible()
   const result = page
     .locator('[data-slot="item"]')
-    .filter({ hasText: 'Ring of Wealth' })
+    .filter({ hasText: 'Ring of Elements' })
   await expect(result).toBeVisible()
 
   expect(consoleErrors, 'browser console errors').toEqual([])
@@ -220,7 +220,7 @@ test('finder search results survive page reload', async ({ page }) => {
   await page.getByRole('spinbutton', { name: 'Candidates' }).fill('10')
   await page.getByRole('combobox', { name: 'Depth' }).selectOption('4')
   await page.getByRole('spinbutton', { name: 'Results' }).fill('1')
-  await page.getByLabel('Item 1 name').selectOption('RingOfWealth')
+  await page.getByLabel('Item 1 name').selectOption('RingOfElements')
   await page.getByLabel('Item 1 upgrade level').selectOption('any')
 
   await startAndWait(page)
@@ -235,7 +235,7 @@ test('finder search results survive page reload', async ({ page }) => {
   ).toBeVisible()
   const result = page
     .locator('[data-slot="item"]')
-    .filter({ hasText: 'Ring of Wealth' })
+    .filter({ hasText: 'Ring of Elements' })
   await expect(result).toBeVisible()
 
   expect(consoleErrors, 'browser console errors').toEqual([])

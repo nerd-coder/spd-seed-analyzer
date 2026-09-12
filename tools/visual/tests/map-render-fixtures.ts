@@ -30,6 +30,10 @@ export const MAP_RENDER_FIXTURES = [
     level: { kind: 'main', depth: 1 },
   },
   {
+    seed: 'GFX-PZH-DCH',
+    level: { kind: 'main', depth: 16 },
+  },
+  {
     seed: 'AAA-AAA-AAA',
     level: { kind: 'branch', depth: 13, branch: 1, objective: 'Crystal' },
   },
