@@ -9,11 +9,11 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 
 ## Now
 
-06 PR 1 sync v4 tilesheets/carpets/occlusion/items.png. Ref [06-assets-and-ui.md](06-assets-and-ui.md).
+06 PR 2 carpets/custom_terrain/occlusion renderer and PR 3 item-icons (parallel). Assets copied (`3da0b77`). Ref [06-assets-and-ui.md](06-assets-and-ui.md).
 
 ## Next
 
-06 renderer (carpets, custom_terrain, occlusion), item-icons, Playwright snapshots.
+06 Playwright snapshot refresh. Skip vault branch-map UI (02 already).
 
 ## Remaining
 
