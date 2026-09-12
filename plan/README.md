@@ -24,7 +24,7 @@ The analyzer today is a v3.3.8 port. v4 Java is a different game for Imp, city l
 - **MAP-LAYOUT-GOAL** — public maps are painter-complete layout: rooms, terrain, doors, transitions, traps, plants, blobs, carpets/custom terrain. No NPC/mob/heap/forced-item on the public map.
 - **CORE-FIRST** — generation in `spd-core`; `spd-wasm` stays a façade; UI does not reimplement RNG.
 - **SMALL-FILES** — vault/GridBuilder/new rooms are new modules, not append-only growth of `quests/imp.rs` or `level/special_loot/quest_rooms.rs`.
-- **CI-BEFORE-DONE** — `bun run check:rust` + `bun run test:rust` on every Rust PR; add `bun run check` + `bun run build` if TS/wasm changed; add `bun run test:visual:only` after renderer/snapshot PRs.
+- **CI-BEFORE-DONE** — `bun run check:rust` + `bun run test:rust` on every Rust PR; add `bun run check` + `bun run build` if TS/wasm changed; add `bun run test:visual:only` after renderer/snapshot PRs; add a live browser pass when UI/layout/rendering changed (start `bun run dev` if needed; stop it if you started it). See `AGENTS.md`.
 - **NO-CLAIM** — analyzer remains `partial` until a workstream’s acceptance is green.
 
 ## Changelog classification (v4.0 in-game list)
