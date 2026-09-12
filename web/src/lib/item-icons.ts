@@ -1,4 +1,4 @@
-/** SPD ItemSpriteSheet indices for items.png (16x16 cells, 16 cols, 256x512). */
+/** Pinned SPD v4.0.0 ItemSpriteSheet indices for items.png (16x16 cells, 16 cols, 256x512). */
 export const ITEM_SHEET = {
   url: '/assets/sprites/items.png',
   size: 16,
@@ -117,7 +117,7 @@ export const CLASS_ICON: Record<string, number> = {
   WandOfWarding: 218,
 
   // Consumables / misc (shop + rooms)
-  Alchemize: 423,
+  Alchemize: 422,
   AlchemyPage: 497,
   Ankh: 48,
   Bomb: 80,
