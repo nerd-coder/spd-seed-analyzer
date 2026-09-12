@@ -3,11 +3,13 @@ export type MainLevelIdentity = {
   depth: number
 }
 
+export type BranchObjective = 'Crystal' | 'Gnoll' | 'Fungi' | 'Vault'
+
 export type BranchLevelIdentity = {
   kind: 'branch'
   depth: number
   branch: number
-  objective: 'Crystal' | 'Gnoll' | 'Fungi'
+  objective: BranchObjective
 }
 
 export type MapRenderLevelIdentity = MainLevelIdentity | BranchLevelIdentity
@@ -41,6 +43,10 @@ export const MAP_RENDER_FIXTURES = [
     seed: 'AAA-AAA-AAB',
     level: { kind: 'branch', depth: 13, branch: 1, objective: 'Gnoll' },
   },
+  {
+    seed: 'AAA-AAA-AAA',
+    level: { kind: 'branch', depth: 19, branch: 1, objective: 'Vault' },
+  },
 ] as const satisfies readonly MapRenderFixture[]
 
 export function mapRenderIdentityKey(level: MapRenderLevelIdentity) {
@@ -61,4 +67,8 @@ export function mapRenderTestName(fixture: MapRenderFixture) {
   return level.kind === 'main'
     ? `${seed} floor ${level.depth} structural layout`
     : `${seed} floor ${level.depth} branch ${level.branch} ${level.objective} structural layout`
+}
+
+export function mapRenderBranchTitle(objective: BranchObjective) {
+  return objective === 'Vault' ? 'Imp Vault' : 'Blacksmith Mine'
 }

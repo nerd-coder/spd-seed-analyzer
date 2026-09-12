@@ -2,6 +2,7 @@ import { expect, type Locator, type Page, test } from '@playwright/test'
 import {
   MAP_RENDER_FIXTURES,
   type MapRenderLevelIdentity,
+  mapRenderBranchTitle,
   mapRenderSnapshotName,
   mapRenderTestName,
 } from './map-render-fixtures'
@@ -384,15 +385,16 @@ async function captureLevel(
   const mapLabel =
     level.kind === 'main'
       ? `floor ${floor} map`
-      : `Blacksmith Mine floor ${floor}, branch ${level.branch} map`
+      : `${mapRenderBranchTitle(level.objective)} floor ${floor}, branch ${level.branch} map`
   const dialogTitle =
     level.kind === 'main'
       ? `Floor ${floor}`
-      : `Blacksmith Mine - Floor ${floor}, branch ${level.branch}`
+      : `${mapRenderBranchTitle(level.objective)} - Floor ${floor}, branch ${level.branch}`
 
   if (level.kind === 'branch') {
+    const branchTitle = mapRenderBranchTitle(level.objective)
     const branchSection = page
-      .getByRole('heading', { name: 'Blacksmith Mine', exact: true })
+      .getByRole('heading', { name: branchTitle, exact: true })
       .locator('..')
       .locator('..')
     await expect(branchSection).toContainText(`Objective: ${level.objective}`)

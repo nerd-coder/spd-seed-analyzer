@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import {
   MAP_RENDER_FIXTURES,
+  mapRenderBranchTitle,
   mapRenderIdentityKey,
   mapRenderSnapshotName,
 } from './map-render-fixtures'
@@ -12,7 +13,9 @@ describe('structural map-render snapshots', () => {
       expect(level.depth).toBeGreaterThan(0)
       if (level.kind === 'branch') {
         expect(level.branch).toBeGreaterThan(0)
-        expect(['Crystal', 'Gnoll', 'Fungi']).toContain(level.objective)
+        expect(['Crystal', 'Gnoll', 'Fungi', 'Vault']).toContain(
+          level.objective
+        )
       }
       return `${seed}:${mapRenderIdentityKey(level)}`
     })
@@ -26,6 +29,14 @@ describe('structural map-render snapshots', () => {
       'GFX-PZH-DCH-F16.png',
       'AAA-AAA-AAA-F13-B1-Crystal.png',
       'AAA-AAA-AAB-F13-B1-Gnoll.png',
+      'AAA-AAA-AAA-F19-B1-Vault.png',
     ])
+  })
+
+  test('branch titles follow live UI labels', () => {
+    expect(mapRenderBranchTitle('Vault')).toBe('Imp Vault')
+    expect(mapRenderBranchTitle('Crystal')).toBe('Blacksmith Mine')
+    expect(mapRenderBranchTitle('Gnoll')).toBe('Blacksmith Mine')
+    expect(mapRenderBranchTitle('Fungi')).toBe('Blacksmith Mine')
   })
 })
