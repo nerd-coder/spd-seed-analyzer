@@ -270,6 +270,12 @@ impl Room {
         if self.name == "MassGraveRoom" {
             return (p.x - self.random_center().x).abs() <= 2;
         }
+        if self.name == "RitualSiteRoom"
+            && p.y == self.top
+            && (p.x == self.left + 3 || p.x == self.left + 6)
+        {
+            return false;
+        }
         if self.name == "VaultEntranceRoom" {
             return (p.x > self.left + 1 && p.x < self.right - 1)
                 || (p.y > self.top + 1 && p.y < self.bottom - 1);

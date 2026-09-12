@@ -8,6 +8,8 @@ use crate::level::terrain::{TerrainMap, CUSTOM_DECO_EMPTY, STATUE, WALL, WALL_DE
 use crate::random::Random;
 use crate::rooms::room::Room;
 
+use super::map_simple_image;
+
 const PRISON_QUEST: &str = "prison_quest";
 #[rustfmt::skip]
 const DECO_RENDER: [u8; 81] = [
@@ -143,22 +145,6 @@ fn deco_data(tile_w: i32, tile_h: i32) -> Vec<i16> {
     for (i, slot) in data.iter_mut().enumerate() {
         if DECO_RENDER.get(i).copied() == Some(0) {
             *slot = -1;
-        }
-    }
-    data
-}
-
-fn map_simple_image(tile_w: i32, tile_h: i32, tx: i32, ty: i32, tex_w: i32) -> Vec<i16> {
-    let tex_tile_width = tex_w / 16;
-    let mut data = Vec::with_capacity((tile_w * tile_h) as usize);
-    let mut x = tx;
-    let mut y = ty;
-    for _ in 0..tile_w * tile_h {
-        data.push((x + tex_tile_width * y) as i16);
-        x += 1;
-        if x - tx == tile_w {
-            x = tx;
-            y += 1;
         }
     }
     data

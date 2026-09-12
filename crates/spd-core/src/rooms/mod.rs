@@ -8,6 +8,9 @@ pub mod special;
 pub mod standard;
 pub mod types;
 
+#[cfg(test)]
+mod quest_connect;
+
 use secret::init_for_run as secret_init;
 use special::init_for_run as special_init;
 

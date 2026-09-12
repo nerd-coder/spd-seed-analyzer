@@ -30,7 +30,7 @@ use crate::MapProfile;
 pub use create_items::PlacedLoot;
 pub use state::LevelState;
 pub use terrain::TerrainMap;
-pub(crate) use terrain::{CUSTOM_DECO_EMPTY, DOOR, EMPTY_SP, ENTRANCE, ENTRANCE_SP, EXIT};
+pub(crate) use terrain::{DOOR, EMPTY_SP, ENTRANCE, ENTRANCE_SP, EXIT};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Feeling {

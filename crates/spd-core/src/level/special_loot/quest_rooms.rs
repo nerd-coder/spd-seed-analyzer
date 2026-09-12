@@ -20,35 +20,15 @@ pub(super) fn mass_grave_prizes(
     super::geometry::paint_mass_grave(dungeon, room, map, items_to_spawn)
 }
 
-/// `RitualSiteRoom.paint` — paint its ritual marker and enqueue four candles.
+/// `RitualSiteRoom.paint` — cages, ritual marker, and four ceremonial candles.
 pub(super) fn ritual_site_setup(
-    room: &Room,
+    rooms: &[Room],
+    room_index: usize,
     map: &mut TerrainMap,
+    doors: &DoorMap,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
-    fill_room(map, room, 0, WALL);
-    fill_room(map, room, 1, EMPTY);
-
-    let center = room.as_rect().center_room();
-    map.record_custom_tile(
-        "RitualMarker",
-        "prison_quest",
-        (center.x - 1, center.y - 1, 3, 3),
-        (0..9).collect(),
-    );
-    for y in (center.y - 1)..=(center.y + 1) {
-        for x in (center.x - 1)..=(center.x + 1) {
-            if let Some(cell) = map.point_to_cell(x, y) {
-                map.map[cell] = crate::level::CUSTOM_DECO_EMPTY;
-                map.item_allowed[cell] = false;
-                map.character_allowed[cell] = false;
-            }
-        }
-    }
-    for _ in 0..4 {
-        items_to_spawn.push(GeneratedItem::new("CeremonialCandle", ItemCategory::Other));
-    }
-    Vec::new()
+    super::geometry::paint_ritual_site(&rooms[room_index], room_index, map, doors, items_to_spawn)
 }
 
 /// `RotGardenRoom.paint` key. Geometry, heart, and lasher RNG are painted by
