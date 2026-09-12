@@ -31,7 +31,7 @@ fn aaa_replay_pins_floors_six_through_eleven_across_the_tengu_lifecycle() {
         let expected = fixture.floors.first().expect("replay oracle floor");
         let context = format!("AAA floor-{depth}");
         assert_eq!(
-            fixture.schema_version, FINAL_HEAPS_SCHEMA_VERSION,
+            fixture.schema_version, EXTENDED_FINAL_HEAPS_SCHEMA_VERSION,
             "{context} schema"
         );
         assert_eq!(

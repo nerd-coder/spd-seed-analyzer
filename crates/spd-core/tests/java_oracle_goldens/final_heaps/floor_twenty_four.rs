@@ -7,9 +7,9 @@ fn aaa_floor_twenty_four_halls_paint_trace_matches_preserved_run() {
         "AAA-AAA-AAA",
         "aaa-aaa-aaa-floor-24-halls-paint.json",
         24,
-        0,
+        2,
         18,
-        None,
+        Some(BuilderKind::Loop),
     );
 }
 
@@ -19,9 +19,9 @@ fn abc_floor_twenty_four_halls_paint_trace_matches_preserved_run() {
         "ABC-DEF-GHI",
         "abc-def-ghi-floor-24-halls-paint.json",
         24,
-        0,
-        15,
-        None,
+        2,
+        17,
+        Some(BuilderKind::Loop),
     );
 }
 
@@ -31,8 +31,8 @@ fn gfx_floor_twenty_four_halls_paint_trace_matches_loop_builder_history() {
         "GFX-PZH-DCH",
         "gfx-pzh-dch-floor-24-halls-paint.json",
         24,
-        0,
-        20,
+        1,
+        21,
         Some(BuilderKind::Loop),
     );
 }
@@ -43,8 +43,8 @@ fn afu_floor_twenty_four_halls_paint_trace_matches_retry_history() {
         "AAA-AAA-AFU",
         "aaa-aaa-afu-floor-24-halls-paint.json",
         24,
-        8,
-        18,
+        1,
+        17,
         Some(BuilderKind::FigureEight),
     );
 }

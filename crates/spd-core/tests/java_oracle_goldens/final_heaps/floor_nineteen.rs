@@ -62,7 +62,7 @@ fn aaa_floor_nineteen_matches_through_tile_variance() {
             OracleItem {
                 class_name: "WandOfFrost".into(),
                 quantity: 1,
-                level: 2,
+                level: 1,
                 cursed: false,
             },
         ],

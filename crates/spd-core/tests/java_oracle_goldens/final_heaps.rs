@@ -161,54 +161,54 @@ fn assert_aaa_regression_facts(
 
     assert_eq!(
         (floor.width, floor.height),
-        (40, 30),
+        (37, 43),
         "pinned AAA Java map bounds in {context}"
     );
     assert_eq!(
         floor.final_mobs,
         [
             OracleMob {
-                cell: 175,
+                cell: 289,
                 class_name: "Rat".into()
             },
             OracleMob {
-                cell: 314,
+                cell: 394,
                 class_name: "Piranha".into()
             },
             OracleMob {
-                cell: 404,
+                cell: 465,
+                class_name: "Rat".into()
+            },
+            OracleMob {
+                cell: 505,
+                class_name: "Piranha".into()
+            },
+            OracleMob {
+                cell: 507,
+                class_name: "Piranha".into()
+            },
+            OracleMob {
+                cell: 534,
+                class_name: "Rat".into()
+            },
+            OracleMob {
+                cell: 574,
+                class_name: "Albino".into()
+            },
+            OracleMob {
+                cell: 818,
                 class_name: "Snake".into()
             },
             OracleMob {
-                cell: 432,
-                class_name: "Piranha".into()
-            },
-            OracleMob {
-                cell: 436,
-                class_name: "Piranha".into()
-            },
-            OracleMob {
-                cell: 497,
+                cell: 834,
                 class_name: "Rat".into()
             },
             OracleMob {
-                cell: 524,
-                class_name: "Rat".into()
-            },
-            OracleMob {
-                cell: 738,
-                class_name: "Rat".into()
-            },
-            OracleMob {
-                cell: 752,
-                class_name: "Rat".into()
-            },
-            OracleMob {
-                cell: 778,
+                cell: 1090,
                 class_name: "Snake".into()
             },
             OracleMob {
-                cell: 902,
+                cell: 1376,
                 class_name: "Rat".into()
             },
         ],
@@ -218,13 +218,14 @@ fn assert_aaa_regression_facts(
         signatures(projection),
         [
             "Food",
-            "PotionOfHealing",
             "PotionOfInvisibility",
-            "ScaleArmor",
             "ScrollOfRage",
-            "ScrollOfRecharging",
+            "Shuriken",
             "StoneOfAggression",
             "StoneOfBlink",
+            "StoneOfDeepSleep",
+            "ThrowingSpear",
+            "WandOfFrost",
         ],
         "pinned AAA Java report-visible projection in {context}"
     );
@@ -261,7 +262,10 @@ fn depth_one_final_heaps_match_report_projection() {
     let mut compared = 0;
     for path in fixture_paths() {
         let fixture = read_fixture(&path);
-        if fixture.schema_version != FINAL_HEAPS_SCHEMA_VERSION {
+        if !matches!(
+            fixture.schema_version,
+            FINAL_HEAPS_SCHEMA_VERSION | EXTENDED_FINAL_HEAPS_SCHEMA_VERSION
+        ) {
             continue;
         }
         if fixture.input.depths != [1] {
@@ -589,7 +593,7 @@ fn depth_one_final_heaps_match_report_projection() {
     }
     assert!(
         compared >= 8,
-        "expected at least eight schema v3 depth-one fixtures, compared {compared}"
+        "expected at least eight depth-one final-heaps fixtures, compared {compared}"
     );
 }
 

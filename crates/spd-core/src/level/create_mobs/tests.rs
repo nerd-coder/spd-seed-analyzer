@@ -60,46 +60,54 @@ fn depth_one_builder_painter_and_mob_boundaries_match_java() {
     let rust_pre = recover_state_after_first_int(&level.pre_mobs_rng_probe);
     let rust_post = recover_state_after_first_int(&level.pre_items_rng_probe);
 
-    let java_paint = recover_state_after_first_int(&[
-        1993374861,
-        -149591753,
-        -1380055091,
-        368556635,
-        1163123780,
-        1118396506,
-        798076888,
-        -791762655,
-    ]);
-    let java_pre = recover_state_after_first_int(&[
-        1726373121,
-        -188171336,
-        1867201434,
-        -2048184778,
-        717498613,
-        -493803451,
-        -1465937696,
-        689471909,
-    ]);
-    let java_post = recover_state_after_first_int(&[
-        -339886649,
-        -1704611306,
-        -1853649770,
-        -1054644975,
-        1614102425,
-        -1139121137,
-        -821014263,
-        -184470637,
-    ]);
+    // tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-1.json
+    let java_paint_probe = [
+        1_459_841_223,
+        1_282_046_973,
+        1_055_011_864,
+        216_862_386,
+        121_351_211,
+        -362_970_802,
+        1_820_407_283,
+        -3_706_175,
+    ];
+    let java_pre_probe = [
+        -1_426_460_673,
+        -807_891_281,
+        665_209_985,
+        677_175_261,
+        1_720_207_545,
+        -1_983_590_811,
+        119_331_014,
+        -581_402_180,
+    ];
+    let java_post_probe = [
+        47_355_518,
+        587_703_880,
+        2_034_509_109,
+        -10_648_742,
+        1_447_740_089,
+        -1_597_746_792,
+        -1_686_882_738,
+        -722_846_019,
+    ];
+    let java_paint = recover_state_after_first_int(&java_paint_probe);
+    let java_pre = recover_state_after_first_int(&java_pre_probe);
+    let java_post = recover_state_after_first_int(&java_post_probe);
 
-    // Builder placement must arrive at the exact Java painter boundary.
+    assert_eq!(level.pre_paint_rng_probe, java_paint_probe);
+    assert_eq!(level.pre_mobs_rng_probe, java_pre_probe);
+    assert_eq!(level.pre_items_rng_probe, java_post_probe);
     assert_eq!(rust_paint, java_paint);
-    assert_eq!(raw_lcg_steps(java_paint, java_pre, 512), Some(190));
-    assert_eq!(raw_lcg_steps(rust_paint, rust_pre, 512), Some(190));
+    assert_eq!(
+        raw_lcg_steps(rust_paint, rust_pre, 512),
+        raw_lcg_steps(java_paint, java_pre, 512)
+    );
     assert_eq!(rust_pre, java_pre);
-
-    // The new depth-one createMobs pass itself has the exact Java draw shape.
-    assert_eq!(raw_lcg_steps(rust_pre, rust_post, 512), Some(116));
-    assert_eq!(raw_lcg_steps(java_pre, java_post, 512), Some(116));
+    assert_eq!(
+        raw_lcg_steps(rust_pre, rust_post, 512),
+        raw_lcg_steps(java_pre, java_post, 512)
+    );
     assert_eq!(rust_post, java_post);
 }
 

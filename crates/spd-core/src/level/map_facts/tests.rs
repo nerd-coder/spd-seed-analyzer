@@ -105,14 +105,14 @@ fn regular_floor_overlays_match_java_fixture_geometry() {
             "GFX-PZH-DCH",
             17,
             vec![
-                ("QuestEntrance", 20, 35, 5, 5),
-                ("EntranceBarrier", 21, 36, 3, 3),
+                ("QuestEntrance", 20, 29, 5, 5),
+                ("EntranceBarrier", 21, 30, 3, 3),
             ],
         ),
         (
             "GFX-PZH-DCH",
             21,
-            vec![("CustomFloor", 20, 34, 5, 4), ("HiddenWell", 18, 35, 1, 1)],
+            vec![("HiddenWell", 32, 28, 1, 1), ("CustomFloor", 31, 11, 6, 3)],
         ),
     ] {
         let map = replay_overlays(seed, depth);

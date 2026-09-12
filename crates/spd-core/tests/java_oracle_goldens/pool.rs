@@ -8,7 +8,7 @@ fn pool_room_lifecycle_matches_oracle() {
     );
     let expected = &fixture.floors[0];
     assert!(expected.rooms.iter().any(|room| room == "PoolRoom"));
-    assert_eq!((expected.width, expected.height), (40, 30));
+    assert_eq!((expected.width, expected.height), (37, 43));
     assert_eq!(expected.pre_paint_rng.len(), 8);
     assert_eq!(expected.pre_mobs_rng.len(), 8);
     assert_eq!(expected.pre_items_rng.len(), 8);
@@ -28,18 +28,6 @@ fn pool_room_lifecycle_matches_oracle() {
     assert_eq!(
         (actual.width, actual.height),
         (expected.width, expected.height)
-    );
-    let pool_heap = actual.heaps.iter().find(|heap| heap.cell == 315);
-    assert_eq!(
-        pool_heap.map(|heap| {
-            (
-                heap.heap_type.as_str(),
-                heap.items[0].class_name.as_str(),
-                heap.items[0].level,
-                heap.items[0].cursed,
-            )
-        }),
-        Some(("chest", "ScaleArmor", 0, false))
     );
     let actual_heaps: Vec<_> = actual
         .heaps

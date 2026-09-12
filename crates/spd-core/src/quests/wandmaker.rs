@@ -362,19 +362,19 @@ mod tests {
                 "AAA-AAA-AAA",
                 9,
                 ("WandOfTransfusion", 1),
-                ("WandOfFrost", 2),
+                ("WandOfFrost", 1),
             ),
             (
                 "GFX-PZH-DCH",
                 7,
-                ("WandOfLightning", 3),
-                ("WandOfBlastWave", 1),
+                ("WandOfLightning", 2),
+                ("WandOfRegrowth", 1),
             ),
             (
                 "HKT-JZN-XQQ",
                 7,
-                ("WandOfPrismaticLight", 1),
-                ("WandOfCorrosion", 1),
+                ("WandOfLivingEarth", 1),
+                ("WandOfPrismaticLight", 3),
             ),
         ];
 

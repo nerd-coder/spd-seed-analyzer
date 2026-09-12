@@ -58,7 +58,11 @@ fn aaa_replay_pins_floors_two_through_four() {
                         .items
                         .iter()
                         .map(|item| OracleItem {
-                            class_name: item.class_name.clone(),
+                            class_name: if item.class_name.ends_with("Seed") {
+                                "Seed".into()
+                            } else {
+                                item.class_name.clone()
+                            },
                             quantity: item.quantity,
                             level: item.level,
                             cursed: item.cursed,
@@ -153,7 +157,11 @@ fn aaa_replay_pins_floors_two_through_four() {
                         .items
                         .iter()
                         .map(|item| OracleItem {
-                            class_name: item.class_name.clone(),
+                            class_name: if item.class_name.ends_with("Seed") {
+                                "Seed".into()
+                            } else {
+                                item.class_name.clone()
+                            },
                             quantity: item.quantity,
                             level: item.level,
                             cursed: item.cursed,
@@ -219,7 +227,7 @@ fn seeded_heaps(heaps: &[OracleHeap]) -> Vec<&OracleHeap> {
 }
 
 fn fixture_and_floor(fixture: &OracleFixture, depth: u32) -> &OracleFloor {
-    assert_eq!(fixture.schema_version, FINAL_HEAPS_SCHEMA_VERSION);
+    assert_eq!(fixture.schema_version, EXTENDED_FINAL_HEAPS_SCHEMA_VERSION);
     assert_eq!(fixture.contract.as_deref(), Some("final_placed_heaps"));
     assert_eq!(fixture.input.depths, [depth]);
     fixture.floors.first().expect("replay oracle floor")

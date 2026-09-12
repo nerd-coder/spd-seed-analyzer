@@ -44,17 +44,17 @@ fn secret_library_hash_map_order_is_pinned_by_java_oracle() {
     assert_eq!(fixture.input.seed, "GFX-PZH-DCH");
     assert_eq!(fixture.input.numeric, 1_300_416_271_343);
     let expected = [
+        ("ScrollOfRecharging", 3.0),
         ("ScrollOfTerror", 4.0),
         ("ScrollOfMirrorImage", 3.0),
-        ("ScrollOfRemoveCurse", 2.0),
-        ("ScrollOfIdentify", 1.0),
         ("ScrollOfRetribution", 4.0),
         ("ScrollOfTeleportation", 3.0),
-        ("ScrollOfTransmutation", 6.0),
         ("ScrollOfLullaby", 4.0),
-        ("ScrollOfRecharging", 3.0),
+        ("ScrollOfTransmutation", 6.0),
         ("ScrollOfMagicMapping", 4.0),
+        ("ScrollOfIdentify", 1.0),
         ("ScrollOfRage", 4.0),
+        ("ScrollOfRemoveCurse", 2.0),
     ];
     let actual: Vec<_> = fixture
         .entries

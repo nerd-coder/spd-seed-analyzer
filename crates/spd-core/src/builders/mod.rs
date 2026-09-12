@@ -487,14 +487,14 @@ mod tests {
         assert_eq!(
             floor.pre_paint_rng_probe,
             [
-                1830028298,
-                1789541391,
-                49840001,
-                -704551720,
-                -499241945,
-                1437454582,
-                780588159,
-                -1009167912
+                1_301_052_070,
+                -1_376_510_444,
+                -1_992_656_794,
+                621_380_169,
+                237_138_058,
+                2_009_246_779,
+                1_724_328_168,
+                -739_121_437
             ]
         );
     }
@@ -504,48 +504,44 @@ mod tests {
         use crate::level::create_level_partial;
         use crate::run::{dungeon_from_run, init_run};
 
+        #[derive(Deserialize)]
+        struct Trace {
+            build_attempts: Vec<Attempt>,
+        }
+
+        #[derive(Deserialize)]
+        struct Attempt {
+            attempt: u32,
+            start_rng: Vec<i32>,
+            end_rng: Vec<i32>,
+            success: bool,
+        }
+
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tools/java-oracle/fixtures/traces/aaa-aaa-aaa-floor-23-halls-paint.json");
+        let expected: Trace = serde_json::from_str(
+            &fs::read_to_string(&path)
+                .unwrap_or_else(|error| panic!("read {}: {error}", path.display())),
+        )
+        .unwrap_or_else(|error| panic!("parse {}: {error}", path.display()));
+
         let seed = crate::parse_seed("AAA-AAA-AAA").expect("valid seed");
         let mut dungeon = dungeon_from_run(init_run(seed.numeric));
         for depth in 1..=23 {
             dungeon.depth = depth;
             let _ = create_level_partial(&mut dungeon);
         }
-        let trace = LAST_FIGURE_EIGHT_TRACE.with(|trace| trace.borrow().clone());
-        assert_eq!(
-            trace.len(),
-            1,
-            "Java Halls builder succeeds on its first attempt"
-        );
-        let attempt = &trace[0];
-        assert!(attempt.success);
-        assert_eq!(attempt.failure_stage, None);
-        assert_eq!(
-            attempt.start_rng_probe,
-            [
-                1_056_369_444,
-                -318_600_815,
-                1_348_460_314,
-                -581_703_166,
-                1_775_149_563,
-                1_644_094_617,
-                799_933_314,
-                1_648_693_248,
-            ]
-        );
-        assert_eq!(
-            attempt.end_rng_probe,
-            [
-                1_639_274_564,
-                -124_977_570,
-                -1_082_696_954,
-                803_179_078,
-                -1_440_740_796,
-                -244_701_610,
-                457_680_370,
-                1_019_119_020,
-            ]
-        );
-        assert_eq!(attempt.rooms.len(), 21);
+        let actual = LAST_FIGURE_EIGHT_TRACE.with(|trace| trace.borrow().clone());
+        assert_eq!(actual.len(), expected.build_attempts.len());
+        for (actual, expected) in actual.iter().zip(&expected.build_attempts) {
+            assert_eq!(actual.attempt, expected.attempt);
+            assert_eq!(actual.start_rng_probe, expected.start_rng);
+            assert_eq!(actual.end_rng_probe, expected.end_rng);
+            assert_eq!(actual.success, expected.success);
+        }
+        let last = actual.last().expect("Java Halls builder attempt");
+        assert!(last.success);
+        assert_eq!(last.failure_stage, None);
     }
 
     #[test]

@@ -245,8 +245,8 @@ fn aaa_floor_twenty_three_halls_trace_matches_preserved_run() {
         "AAA-AAA-AAA",
         "aaa-aaa-aaa-floor-23-halls-paint.json",
         23,
-        1,
-        21,
+        2,
+        19,
         Some(BuilderKind::FigureEight),
     );
 }
@@ -258,7 +258,7 @@ fn abc_floor_twenty_three_halls_paint_trace_matches_preserved_run() {
         "abc-def-ghi-floor-23-halls-paint.json",
         23,
         1,
-        26,
+        25,
         Some(BuilderKind::FigureEight),
     );
 }
@@ -269,7 +269,7 @@ fn gfx_floor_twenty_three_halls_paint_trace_matches_loop_builder_history() {
         "GFX-PZH-DCH",
         "gfx-pzh-dch-floor-23-halls-paint.json",
         23,
-        0,
+        1,
         21,
         Some(BuilderKind::Loop),
     );
@@ -282,7 +282,7 @@ fn afu_floor_twenty_three_halls_paint_trace_matches_retry_history() {
         "aaa-aaa-afu-floor-23-halls-paint.json",
         23,
         3,
-        24,
+        25,
         Some(BuilderKind::FigureEight),
     );
 }

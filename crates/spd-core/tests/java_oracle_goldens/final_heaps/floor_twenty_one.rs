@@ -11,8 +11,8 @@ fn gfx_floor_twenty_one_halls_paint_trace_matches_loop_builder_history() {
         "GFX-PZH-DCH",
         "gfx-pzh-dch-floor-21-halls-paint.json",
         21,
-        0,
-        20,
+        3,
+        21,
         Some(BuilderKind::Loop),
     );
 }
@@ -23,8 +23,8 @@ fn afu_floor_twenty_one_halls_paint_trace_matches_retry_history() {
         "AAA-AAA-AFU",
         "aaa-aaa-afu-floor-21-halls-paint.json",
         21,
-        5,
-        19,
+        2,
+        21,
         Some(BuilderKind::Loop),
     );
 }

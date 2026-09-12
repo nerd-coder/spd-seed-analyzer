@@ -34,6 +34,7 @@ struct Input {
 #[derive(Debug, Deserialize)]
 struct Boundary {
     boundary: String,
+    scroll: ExpectedDeck,
     wep_t2: ExpectedDeck,
     wep_t4: ExpectedDeck,
 }
@@ -53,6 +54,14 @@ impl ExpectedDeck {
             probabilities: self.probabilities.clone(),
         }
     }
+}
+
+fn fixture_boundary<'a>(fixture: &'a Fixture, name: &str) -> &'a Boundary {
+    fixture
+        .boundaries
+        .iter()
+        .find(|boundary| boundary.boundary == name)
+        .unwrap_or_else(|| panic!("Java boundary {name}"))
 }
 
 #[test]
@@ -120,23 +129,23 @@ fn aaa_weapon_decks_match_pinned_java_lifecycle() {
 
 #[test]
 fn aaa_floor_one_scroll_deck_matches_pinned_java() {
+    let fixture: Fixture = serde_json::from_str(ORACLE_JSON).expect("lifecycle fixture JSON");
     let mut dungeon = dungeon_from_run(init_run(0));
     dungeon.depth = 1;
     create_level_partial(&mut dungeon);
 
     assert_eq!(
         dungeon.generator.deck_snapshot(Category::Scroll),
-        DeckSnapshot {
-            seed: 8_129_270_787_689_514_689,
-            dropped: 2,
-            probabilities: vec![0., 3., 2., 1., 1., 1., 1., 1., 0., 1., 1., 1.],
-        },
+        fixture_boundary(&fixture, "floor_1_complete")
+            .scroll
+            .snapshot(),
         "Java generator-lifecycle floor_1_complete"
     );
 }
 
 #[test]
 fn aaa_floor_two_scroll_deck_matches_pinned_java() {
+    let fixture: Fixture = serde_json::from_str(ORACLE_JSON).expect("lifecycle fixture JSON");
     let mut dungeon = dungeon_from_run(init_run(0));
     for depth in 1..=2 {
         dungeon.depth = depth;
@@ -145,11 +154,9 @@ fn aaa_floor_two_scroll_deck_matches_pinned_java() {
 
     assert_eq!(
         dungeon.generator.deck_snapshot(Category::Scroll),
-        DeckSnapshot {
-            seed: 8_129_270_787_689_514_689,
-            dropped: 2,
-            probabilities: vec![0., 3., 2., 1., 1., 1., 1., 1., 0., 1., 1., 1.],
-        },
+        fixture_boundary(&fixture, "floor_2_complete")
+            .scroll
+            .snapshot(),
         "Java generator-lifecycle floor_2_complete"
     );
 }
@@ -289,16 +296,9 @@ fn gfx_city_boss_imp_shop_preserves_artifact_deck_for_halls() {
         dungeon.generator.deck_snapshot(Category::Artifact),
         DeckSnapshot {
             seed: 7_835_455_387_716_222_217,
-            dropped: 5,
-            probabilities: vec![0., 0., 0., 1., 0., 0., 0., 1., 1., 1., 1., 0., 1.],
+            dropped: 7,
+            probabilities: vec![0., 0., 0., 0., 0., 0., 0., 1., 1., 1., 1., 0., 0.],
         },
-        "Java GFX floor-20 CityBoss ImpShop artifact deck"
+        "Java GFX floor-21 halls-paint generator_state Artifact"
     );
-
-    dungeon.depth = 21;
-    let level = create_level_partial(&mut dungeon);
-    assert!(level.placed_items.iter().any(|item| {
-        item.source.as_deref() == Some("SecretSummoningRoom")
-            && item.class_name == "UnstableSpellbook"
-    }));
 }

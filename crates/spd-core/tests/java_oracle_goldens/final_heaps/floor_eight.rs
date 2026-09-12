@@ -14,16 +14,19 @@ fn hkt_floor_eight_lifecycle_matches_oracle() {
         .expect("HKT floor-8 schema-v3 fixture");
     let fixture = read_fixture(&path);
     let expected = fixture.floors.first().expect("floor-8 oracle facts");
-    assert_eq!(fixture.schema_version, FINAL_HEAPS_SCHEMA_VERSION);
+    assert_eq!(fixture.schema_version, EXTENDED_FINAL_HEAPS_SCHEMA_VERSION);
     assert_eq!(fixture.contract.as_deref(), Some("final_placed_heaps"));
     assert_eq!(fixture.input.depths, [8]);
     assert_eq!(fixture.floors.len(), 1);
     assert_eq!(expected.depth, 8);
-    assert_eq!((expected.width, expected.height), (30, 42));
+    assert_eq!((expected.width, expected.height), (33, 47));
     assert_eq!(
         expected.rooms,
         [
             "LaboratoryRoom",
+            "MazeConnectionRoom",
+            "PerimeterRoom",
+            "PerimeterRoom",
             "PerimeterRoom",
             "PerimeterRoom",
             "PerimeterRoom",
@@ -37,53 +40,52 @@ fn hkt_floor_eight_lifecycle_matches_oracle() {
             "SegmentedRoom",
             "SegmentedRoom",
             "SegmentedRoom",
-            "WalkwayRoom",
         ]
     );
     assert_eq!(
         expected.pre_paint_rng,
         [
-            1_459_946_731,
-            372_555_040,
-            1_670_478_137,
-            1_388_842_747,
-            -939_261_660,
-            347_828_306,
-            -2_091_316_954,
-            1_081_201_683,
+            -801_880_017,
+            1_279_339_595,
+            -1_981_559_586,
+            1_886_819_143,
+            -1_351_769_589,
+            -171_529_757,
+            907_911_222,
+            807_719_556,
         ]
     );
     assert_eq!(
         expected.pre_mobs_rng,
         [
-            645_369_548,
-            1_479_742_776,
-            -924_382_995,
-            597_987_058,
-            -995_259_156,
-            -725_190_451,
-            -1_975_660_786,
-            397_556_436,
+            -1_556_813_937,
+            476_307_848,
+            -108_868_643,
+            -63_914_992,
+            -992_236_198,
+            -93_947_353,
+            432_800_423,
+            -1_972_956_674,
         ]
     );
     assert_eq!(
         expected.pre_items_rng,
         [
-            827_105_069,
-            338_948_646,
-            -947_330_788,
-            2_046_911_624,
-            1_476_440_778,
-            -1_424_626_728,
-            2_004_907_284,
-            -1_895_014_390,
+            -701_498_439,
+            1_236_075_099,
+            1_145_481_979,
+            -700_827_306,
+            -903_100_383,
+            -100_902_382,
+            -2_078_450_022,
+            321_399_050,
         ]
     );
-    assert_eq!(expected.terrain.as_ref().map(Vec::len), Some(30 * 42));
-    assert_eq!(expected.discoverable.as_ref().map(Vec::len), Some(30 * 42));
-    assert_eq!(expected.tile_variance.as_ref().map(Vec::len), Some(30 * 42));
+    assert_eq!(expected.terrain.as_ref().map(Vec::len), Some(33 * 47));
+    assert_eq!(expected.discoverable.as_ref().map(Vec::len), Some(33 * 47));
+    assert_eq!(expected.tile_variance.as_ref().map(Vec::len), Some(33 * 47));
     assert!(expected.forced_items.is_empty());
-    assert_eq!(expected.final_heaps.len(), 11);
+    assert_eq!(expected.final_heaps.len(), 14);
     assert!(expected
         .final_heaps
         .windows(2)
@@ -110,20 +112,23 @@ fn hkt_floor_eight_lifecycle_matches_oracle() {
     assert_eq!(
         heap_facts,
         [
-            (69, "heap", "EnergyCrystal", 5, 0, false),
-            (155, "heap", "PotionOfStrength", 1, 0, false),
-            (160, "heap", "AlchemyPage", 1, 0, false),
-            (161, "heap", "AlchemyPage", 1, 0, false),
-            (164, "heap", "ScrollOfIdentify", 1, 0, false),
-            (198, "chest", "ScrollOfLullaby", 1, 0, false),
-            (431, "heap", "Crossbow", 1, 0, false),
-            (700, "skeleton", "PotionOfExperience", 1, 0, false),
-            (802, "heap", "IronKey", 1, 0, false),
-            (872, "heap", "GuidePage", 1, 0, false),
-            (936, "heap", "Food", 1, 0, false),
+            (367, "heap", "ScrollOfTerror", 1, 0, false),
+            (382, "heap", "GuidePage", 1, 0, false),
+            (431, "heap", "Gold", 210, 0, false),
+            (877, "heap", "StoneOfFlock", 1, 0, false),
+            (901, "heap", "Food", 1, 0, false),
+            (908, "heap", "PotionOfStrength", 1, 0, false),
+            (910, "heap", "AlchemyPage", 1, 0, false),
+            (937, "heap", "IronKey", 1, 0, false),
+            (938, "heap", "Gold", 219, 0, false),
+            (975, "heap", "AlchemyPage", 1, 0, false),
+            (1007, "heap", "EnergyCrystal", 5, 0, false),
+            (1038, "locked_chest", "WandOfCorrosion", 1, 2, false),
+            (1070, "heap", "GoldenKey", 1, 0, false),
+            (1443, "skeleton", "Gold", 172, 0, false),
         ]
     );
-    assert_eq!(expected.final_mobs.len(), 7);
+    assert_eq!(expected.final_mobs.len(), 6);
     assert!(expected
         .final_mobs
         .windows(2)
@@ -136,17 +141,16 @@ fn hkt_floor_eight_lifecycle_matches_oracle() {
     assert_eq!(
         mob_facts,
         [
-            (226, "Guard"),
-            (376, "Skeleton"),
-            (460, "Skeleton"),
-            (464, "DM100"),
-            (578, "SpectralNecromancer"),
-            (754, "Thief"),
-            (847, "Guard"),
+            (181, "DM100"),
+            (336, "DM100"),
+            (745, "Thief"),
+            (868, "Skeleton"),
+            (1080, "Guard"),
+            (1178, "Necromancer"),
         ]
     );
     assert_eq!(expected.transitions.as_ref().map(Vec::len), Some(2));
-    assert_eq!(expected.traps.as_ref().map(Vec::len), Some(14));
+    assert_eq!(expected.traps.as_ref().map(Vec::len), Some(17));
     assert_eq!(expected.plants.as_ref().map(Vec::len), Some(0));
     assert_eq!(expected.blobs.as_ref().map(Vec::len), Some(1));
     for cells in [

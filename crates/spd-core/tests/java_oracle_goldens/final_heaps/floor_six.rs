@@ -66,11 +66,7 @@ fn gfx_floor_six_secret_library_restores_preserved_run_lifecycle() {
         .collect::<Vec<_>>();
     assert_eq!(
         secret_library_drops,
-        [
-            (1380, "ScrollOfTransmutation"),
-            (1428, "ScrollOfMagicMapping"),
-            (1527, "ScrollOfLullaby"),
-        ],
+        [(1380, "ScrollOfTransmutation")],
         "GFX floor-6 SecretLibrary private weighted draws"
     );
 }
@@ -79,19 +75,19 @@ fn gfx_floor_six_secret_library_restores_preserved_run_lifecycle() {
 fn hkt_floor_six_lifecycle_matches_oracle() {
     let fixture = fixture();
     let expected = fixture.floors.first().expect("floor-6 oracle facts");
-    assert_eq!(fixture.schema_version, FINAL_HEAPS_SCHEMA_VERSION);
+    assert_eq!(fixture.schema_version, EXTENDED_FINAL_HEAPS_SCHEMA_VERSION);
     assert_eq!(fixture.contract.as_deref(), Some("final_placed_heaps"));
     assert_eq!(fixture.input.depths, [6]);
     assert_eq!(fixture.floors.len(), 1);
     assert_eq!(expected.depth, 6);
-    assert_eq!((expected.width, expected.height), (48, 48));
+    assert_eq!((expected.width, expected.height), (55, 48));
     assert_eq!(expected.pre_paint_rng.len(), 8);
     assert_eq!(expected.pre_mobs_rng.len(), 8);
     assert_eq!(expected.pre_items_rng.len(), 8);
-    assert_eq!(expected.terrain.as_ref().map(Vec::len), Some(48 * 48));
-    assert_eq!(expected.discoverable.as_ref().map(Vec::len), Some(48 * 48));
-    assert_eq!(expected.tile_variance.as_ref().map(Vec::len), Some(48 * 48));
-    assert_eq!(expected.final_heaps.len(), 36);
+    assert_eq!(expected.terrain.as_ref().map(Vec::len), Some(55 * 48));
+    assert_eq!(expected.discoverable.as_ref().map(Vec::len), Some(55 * 48));
+    assert_eq!(expected.tile_variance.as_ref().map(Vec::len), Some(55 * 48));
+    assert_eq!(expected.final_heaps.len(), 34);
     assert_eq!(
         expected
             .final_heaps
@@ -100,9 +96,9 @@ fn hkt_floor_six_lifecycle_matches_oracle() {
             .count(),
         20
     );
-    assert_eq!(expected.final_mobs.len(), 7);
+    assert_eq!(expected.final_mobs.len(), 6);
     assert_eq!(expected.transitions.as_ref().map(Vec::len), Some(2));
-    assert_eq!(expected.traps.as_ref().map(Vec::len), Some(3));
+    assert_eq!(expected.traps.as_ref().map(Vec::len), Some(2));
     assert_eq!(expected.plants.as_ref().map(Vec::len), Some(0));
     assert_eq!(expected.blobs.as_ref().map(Vec::len), Some(0));
 

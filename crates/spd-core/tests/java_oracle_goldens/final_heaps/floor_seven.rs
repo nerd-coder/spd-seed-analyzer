@@ -16,20 +16,20 @@ fn hkt_floor_seven_lifecycle_matches_oracle() {
     assert_eq!(fixture.floors.len(), 1);
     let expected = fixture.floors.first().expect("floor-7 oracle facts");
 
-    assert_eq!(fixture.schema_version, FINAL_HEAPS_SCHEMA_VERSION);
+    assert_eq!(fixture.schema_version, EXTENDED_FINAL_HEAPS_SCHEMA_VERSION);
     assert_eq!(fixture.contract.as_deref(), Some("final_placed_heaps"));
     assert_eq!(fixture.input.depths, [7]);
     assert_eq!(expected.depth, 7);
-    assert_eq!((expected.width, expected.height), (41, 35));
+    assert_eq!((expected.width, expected.height), (36, 48));
     assert_eq!(expected.pre_paint_rng.len(), 8);
     assert_eq!(expected.pre_mobs_rng.len(), 8);
     assert_eq!(expected.pre_items_rng.len(), 8);
-    assert_eq!(expected.terrain.as_ref().map(Vec::len), Some(41 * 35));
-    assert_eq!(expected.discoverable.as_ref().map(Vec::len), Some(41 * 35));
-    assert_eq!(expected.tile_variance.as_ref().map(Vec::len), Some(41 * 35));
+    assert_eq!(expected.terrain.as_ref().map(Vec::len), Some(36 * 48));
+    assert_eq!(expected.discoverable.as_ref().map(Vec::len), Some(36 * 48));
+    assert_eq!(expected.tile_variance.as_ref().map(Vec::len), Some(36 * 48));
     assert!(expected.forced_items.is_empty());
-    assert_eq!(expected.final_heaps.len(), 15);
-    assert_eq!(expected.final_mobs.len(), 8);
+    assert_eq!(expected.final_heaps.len(), 14);
+    assert_eq!(expected.final_mobs.len(), 7);
     assert_eq!(expected.transitions.as_ref().map(Vec::len), Some(2));
     assert_eq!(expected.traps.as_ref().map(Vec::len), Some(2));
     assert_eq!(expected.plants.as_ref().map(Vec::len), Some(0));
@@ -38,15 +38,15 @@ fn hkt_floor_seven_lifecycle_matches_oracle() {
         expected.quest_rewards,
         [
             OracleItem {
-                class_name: "WandOfPrismaticLight".into(),
+                class_name: "WandOfLivingEarth".into(),
                 quantity: 1,
                 level: 1,
                 cursed: false,
             },
             OracleItem {
-                class_name: "WandOfCorrosion".into(),
+                class_name: "WandOfPrismaticLight".into(),
                 quantity: 1,
-                level: 1,
+                level: 3,
                 cursed: false,
             },
         ],

@@ -8,7 +8,7 @@ fn crystal_path_room_lifecycle_matches_oracle() {
     );
     let expected = &fixture.floors[0];
     assert!(expected.rooms.iter().any(|room| room == "CrystalPathRoom"));
-    assert_eq!((expected.width, expected.height), (41, 34));
+    assert_eq!((expected.width, expected.height), (33, 40));
     assert_eq!(expected.pre_paint_rng.len(), 8);
     assert_eq!(expected.pre_mobs_rng.len(), 8);
     assert_eq!(expected.pre_items_rng.len(), 8);
