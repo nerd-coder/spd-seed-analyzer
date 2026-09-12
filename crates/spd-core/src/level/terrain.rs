@@ -204,6 +204,17 @@ impl TerrainMap {
             .push(custom_tile(class_name, texture, rect, static_data));
     }
 
+    pub(crate) fn record_custom_wall(
+        &mut self,
+        class_name: &str,
+        texture: &str,
+        rect: (i32, i32, i32, i32),
+        static_data: Vec<i16>,
+    ) {
+        self.custom_walls
+            .push(custom_tile(class_name, texture, rect, static_data));
+    }
+
     pub(crate) fn record_blob_cell(
         &mut self,
         class_name: &'static str,
@@ -292,6 +303,7 @@ impl TerrainMap {
                 | SECRET_DOOR
                 | REGION_DECO
                 | REGION_DECO_ALT
+                | CUSTOM_DECO
                 | MINE_CRYSTAL
                 | MINE_BOULDER
         )

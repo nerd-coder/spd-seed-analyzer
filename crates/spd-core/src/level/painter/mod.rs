@@ -264,9 +264,9 @@ enum Environment {
 /// globally suppress a point another room is allowed to contribute.
 fn room_environment_allowed(room: &Room, x: i32, y: i32, environment: Environment) -> bool {
     match room.name.as_str() {
-        // `SecretRunestoneRoom`, `DemonSpawnerRoom`, and `CrystalPathRoom`
-        // reject both terrain passes everywhere.
-        "SecretRunestoneRoom" | "DemonSpawnerRoom" | "CrystalPathRoom" => false,
+        // `SecretRunestoneRoom`, `DemonSpawnerRoom`, `CrystalPathRoom`, and
+        // `RatKingRoom` reject both terrain passes everywhere.
+        "SecretRunestoneRoom" | "DemonSpawnerRoom" | "CrystalPathRoom" | "RatKingRoom" => false,
         // `WaterBridgeRoom` subclasses and `SewerPipeRoom` inherit an
         // everywhere-false `canPlaceWater` implementation.
         "WaterBridgeRoom"
@@ -314,6 +314,7 @@ fn room_trap_allowed(room: &Room) -> bool {
             | "CrystalPathRoom"
             | "DemonSpawnerRoom"
             | "PitRoom"
+            | "RatKingRoom"
             | "SecretHoardRoom"
             | "ToxicGasRoom"
     )
@@ -492,6 +493,7 @@ mod tests {
             "CrystalPathRoom",
             "DemonSpawnerRoom",
             "PitRoom",
+            "RatKingRoom",
             "SecretHoardRoom",
             "ToxicGasRoom",
         ] {

@@ -132,7 +132,6 @@ mod tests {
         tile_variance: Vec<u8>,
         #[serde(default)]
         custom_tiles: Vec<OracleCustomTile>,
-        #[allow(dead_code)] // parse-only until layout equality is asserted
         #[serde(default)]
         custom_terrain: Vec<OracleCustomTile>,
         #[serde(default)]
@@ -170,6 +169,47 @@ mod tests {
                 static_data: tile.static_data.clone(),
             }
         }
+    }
+
+    trait LayerRect {
+        fn class_name(&self) -> &str;
+        fn rect(&self) -> (u32, u32, u32, u32);
+    }
+
+    impl LayerRect for MapCustomTile {
+        fn class_name(&self) -> &str {
+            &self.class_name
+        }
+        fn rect(&self) -> (u32, u32, u32, u32) {
+            (self.x, self.y, self.width, self.height)
+        }
+    }
+
+    impl LayerRect for OracleCustomTile {
+        fn class_name(&self) -> &str {
+            &self.class_name
+        }
+        fn rect(&self) -> (u32, u32, u32, u32) {
+            (self.x, self.y, self.width, self.height)
+        }
+    }
+
+    fn rat_king_layer_rects<T: LayerRect>(tiles: &[T]) -> Vec<(String, u32, u32, u32, u32)> {
+        let mut out: Vec<_> = tiles
+            .iter()
+            .filter(|tile| {
+                matches!(
+                    tile.class_name(),
+                    "Carpet" | "RatKingRoomDeco" | "RatKingStatues" | "StatueOverhang"
+                )
+            })
+            .map(|tile| {
+                let (x, y, width, height) = tile.rect();
+                (tile.class_name().to_string(), x, y, width, height)
+            })
+            .collect();
+        out.sort();
+        out
     }
 
     #[test]
@@ -293,6 +333,21 @@ mod tests {
             );
             assert_eq!(actual.transitions, oracle.transitions, "{seed} transitions");
             assert!(actual.markers.is_empty() && actual.heaps.is_empty() && actual.mobs.is_empty());
+            assert_eq!(
+                rat_king_layer_rects(&actual.custom_tiles),
+                rat_king_layer_rects(&oracle.custom_tiles),
+                "{seed} RatKing custom tiles"
+            );
+            assert_eq!(
+                rat_king_layer_rects(&actual.custom_terrain),
+                rat_king_layer_rects(&oracle.custom_terrain),
+                "{seed} RatKing custom terrain"
+            );
+            assert_eq!(
+                rat_king_layer_rects(&actual.custom_walls),
+                rat_king_layer_rects(&oracle.custom_walls),
+                "{seed} RatKing custom walls"
+            );
         }
     }
 

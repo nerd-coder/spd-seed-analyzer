@@ -1,11 +1,12 @@
-//! Pinned SPD v3.3.8 SewerBoss room painters.
+//! Pinned SPD SewerBoss room painters.
 //!
-//! Mob and cache heap placement is deliberately omitted from the public map,
-//! but their paint-time random calls are retained for downstream parity.
+//! Mob and heap placement is omitted from the public map, but paint-time
+//! random calls (RatKing gold) stay on the stream.
 
 use crate::geom::Point;
+use crate::level::carpet;
 use crate::level::terrain::{
-    TerrainMap, EMPTY, EMPTY_SP, ENTRANCE, LOCKED_EXIT, WALL, WALL_DECO, WATER,
+    TerrainMap, CUSTOM_DECO, EMPTY, EMPTY_SP, ENTRANCE, LOCKED_EXIT, WALL, WALL_DECO, WATER,
 };
 use crate::random::Random;
 use crate::rooms::room::Room;
@@ -161,44 +162,123 @@ fn paint_thick_pillars(map: &mut TerrainMap, room: &Room, ri: usize, doors: &Doo
     let _boss_position = room.as_rect().center_room();
 }
 
+const RAT_KING_TEX: &str = "rat_king_room";
+
 fn paint_rat_king(map: &mut TerrainMap, room: &Room, ri: usize, doors: &DoorMap) {
     fill_room(map, room, WALL);
-    fill_margin(map, room, 1, EMPTY_SP);
-    let door_points = door_points(room, ri, doors);
-    let Some(&door) = door_points.first() else {
+    fill_margin(map, room, 1, EMPTY);
+    fill_margin(map, room, 2, EMPTY_SP);
+
+    let Some(&door) = door_points(room, ri, doors).first() else {
         return;
     };
-    let door_cell = map
-        .point_to_cell(door.x, door.y)
-        .map(|v| v as i32)
-        .unwrap_or(-1);
-    let width = map.width;
-    let mut chest_cells = Vec::new();
-    for x in room.left + 1..room.right {
-        chest_cells.push((top_cell(map, room, x), door_cell));
-        chest_cells.push((bottom_cell(map, room, x), door_cell));
-    }
-    for y in room.top + 2..room.bottom - 1 {
-        chest_cells.push((cell(map, room.left + 1, y), door_cell));
-        chest_cells.push((cell(map, room.right - 1, y), door_cell));
-    }
-    for (pos, door) in chest_cells {
-        if pos == door - 1 || pos == door + 1 || pos == door - width || pos == door + width {
-            continue;
+    // 7×7: Room.center() has no Int(2) jitter.
+    let center = Point::new((room.left + room.right) / 2, (room.top + room.bottom) / 2);
+    let center_cell = map.point_to_cell(center.x, center.y);
+    for statue in [
+        Point::new(center.x - 2, center.y - 2),
+        Point::new(center.x, center.y - 2),
+        Point::new(center.x + 2, center.y - 2),
+        Point::new(center.x + 2, center.y),
+        Point::new(center.x + 2, center.y + 2),
+        Point::new(center.x, center.y + 2),
+        Point::new(center.x - 2, center.y + 2),
+        Point::new(center.x - 2, center.y),
+    ] {
+        if (door.x - statue.x).abs().max((door.y - statue.y).abs()) >= 2 {
+            set(map, statue.x, statue.y, CUSTOM_DECO);
         }
-        let _gold_quantity = Random::int_range_inclusive(10, 25);
     }
-    let _king_position = room.random_margin(2);
+
+    carpet::add_city(
+        map,
+        room.left + 2,
+        room.top + 2,
+        room.width() - 4,
+        room.height() - 4,
+        5,
+        &[],
+    );
+    record_rat_king_overlays(map, room);
+
+    if let Some(cell) = center_cell {
+        map.mob_occupied[cell] = true;
+    }
+
+    // Java Rect.getPoints is column-major. Heaps stay off the public map.
+    for x in room.left..=room.right {
+        for y in room.top..=room.bottom {
+            let Some(cell) = map.point_to_cell(x, y) else {
+                continue;
+            };
+            if Some(cell) != center_cell && matches!(map.map[cell], EMPTY | EMPTY_SP) {
+                let _gold = Random::int_range_inclusive(5, 20);
+            }
+        }
+    }
 }
 
-fn top_cell(map: &TerrainMap, room: &Room, x: i32) -> i32 {
-    cell(map, x, room.top + 1)
+fn record_rat_king_overlays(map: &mut TerrainMap, room: &Room) {
+    let deco = (
+        room.left + 1,
+        room.top + 1,
+        room.width() - 2,
+        room.height() - 2,
+    );
+    let statues = (room.left + 1, room.top, room.width() - 2, room.height());
+    map.record_custom_tile(
+        "RatKingRoomDeco",
+        RAT_KING_TEX,
+        deco,
+        rat_king_deco_data(map, deco),
+    );
+    map.record_custom_terrain(
+        "RatKingStatues",
+        RAT_KING_TEX,
+        statues,
+        statue_overlay_data(map, statues, 1, 0),
+    );
+    map.record_custom_wall(
+        "StatueOverhang",
+        RAT_KING_TEX,
+        statues,
+        statue_overlay_data(map, statues, 2, 1),
+    );
 }
-fn bottom_cell(map: &TerrainMap, room: &Room, x: i32) -> i32 {
-    cell(map, x, room.bottom - 1)
+
+fn rat_king_deco_data(map: &TerrainMap, (x, y, w, h): (i32, i32, i32, i32)) -> Vec<i16> {
+    let mut data = vec![-1; (w * h) as usize];
+    let mut i = 0;
+    for row in 0..h {
+        for col in 0..w {
+            if col == 2 && row == 2 {
+                data[i] = 3;
+            } else if terrain_at(map, x + col, y + row) == Some(CUSTOM_DECO) {
+                data[i] = 0;
+            }
+            i += 1;
+        }
+    }
+    data
 }
-fn cell(map: &TerrainMap, x: i32, y: i32) -> i32 {
-    (x - map.origin_x) + (y - map.origin_y) * map.width
+
+fn statue_overlay_data(
+    map: &TerrainMap,
+    (x, y, w, h): (i32, i32, i32, i32),
+    value: i16,
+    look_dy: i32,
+) -> Vec<i16> {
+    let mut data = vec![-1; (w * h) as usize];
+    let mut i = 0;
+    for row in 0..h {
+        for col in 0..w {
+            if terrain_at(map, x + col, y + row + look_dy) == Some(CUSTOM_DECO) {
+                data[i] = value;
+            }
+            i += 1;
+        }
+    }
+    data
 }
 
 fn paint_cross_water(map: &mut TerrainMap, room: &Room) {
