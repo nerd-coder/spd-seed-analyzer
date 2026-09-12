@@ -6,6 +6,10 @@ use crate::rooms::room::{
     add_neighbour, connect, intersect, Room, DIR_BOTTOM, DIR_LEFT, DIR_RIGHT, DIR_TOP,
 };
 
+#[cfg(test)]
+#[path = "free_space_trace.rs"]
+pub(super) mod free_space_trace;
+
 const A: f64 = 180.0 / std::f64::consts::PI;
 
 pub fn gate(min: f32, value: f32, max: f32) -> f32 {
@@ -67,39 +71,43 @@ pub fn find_free_space(start: Point, collision: &[Room], max_size: i32) -> Rect 
         }
 
         let mut closest_room: Option<usize> = None;
-        let mut closest_diff = i32::MAX;
-
-        // Pinned Builder.findFreeSpace declares these outside the room loop.
-        // `inside` therefore stays false after the first room that does not
-        // contain the start point, and `curDiff` accumulates across rooms.
-        let mut inside = true;
-        let mut cur_diff = 0;
+        let mut closest_diff = i32::MAX as f32;
+        #[cfg(test)]
+        let mut step_candidates = Vec::new();
         for &idx in &colliding {
             let cur = &collision[idx];
+            let mut cur_diff = Point::new(0, 0);
+            let mut inside = true;
             if start.x <= cur.left {
                 inside = false;
-                cur_diff += cur.left - start.x;
+                cur_diff.x = cur.left - start.x;
             } else if start.x >= cur.right {
                 inside = false;
-                cur_diff += start.x - cur.right;
+                cur_diff.x = start.x - cur.right;
             }
             if start.y <= cur.top {
                 inside = false;
-                cur_diff += cur.top - start.y;
+                cur_diff.y = cur.top - start.y;
             } else if start.y >= cur.bottom {
                 inside = false;
-                cur_diff += start.y - cur.bottom;
+                cur_diff.y = start.y - cur.bottom;
             }
+            let length = cur_diff.length();
+            #[cfg(test)]
+            step_candidates.push(free_space_trace::candidate(cur, length, inside));
             if inside {
-                return Rect {
+                let empty = Rect {
                     left: start.x,
                     top: start.y,
                     right: start.x,
                     bottom: start.y,
                 };
+                #[cfg(test)]
+                free_space_trace::finish_call(start);
+                return empty;
             }
-            if cur_diff < closest_diff {
-                closest_diff = cur_diff;
+            if length < closest_diff {
+                closest_diff = length;
                 closest_room = Some(idx);
             }
         }
@@ -119,7 +127,32 @@ pub fn find_free_space(start: Point, collision: &[Room], max_size: i32) -> Rect 
                 h_diff = (closest.bottom - space.top) * (space.raw_width() + 1);
             }
 
-            if w_diff < h_diff || (w_diff == h_diff && Random::int_max(2) == 0) {
+            #[cfg(test)]
+            let mut tie_draw = None;
+            let width_axis = if w_diff < h_diff {
+                true
+            } else if w_diff == h_diff {
+                let draw = Random::int_max(2);
+                #[cfg(test)]
+                {
+                    tie_draw = Some(draw);
+                    free_space_trace::record_tie(start, closest, w_diff, h_diff, draw);
+                }
+                draw == 0
+            } else {
+                false
+            };
+            #[cfg(test)]
+            free_space_trace::record_step(
+                closest,
+                closest_diff,
+                step_candidates,
+                w_diff,
+                h_diff,
+                tie_draw,
+                width_axis,
+            );
+            if width_axis {
                 if closest.left >= start.x && closest.left < space.right {
                     space.right = closest.left;
                 }
@@ -139,6 +172,8 @@ pub fn find_free_space(start: Point, collision: &[Room], max_size: i32) -> Rect 
             colliding.clear();
         }
     }
+    #[cfg(test)]
+    free_space_trace::finish_call(start);
     space
 }
 
@@ -258,6 +293,8 @@ fn place_room_impl(
     let max_dim = rooms[next].max_width().max(rooms[next].max_height());
     // Most Java callers pass the full room list; LoopBuilder's closing stitch
     // deliberately passes only the rooms already belonging to its loop.
+    #[cfg(test)]
+    free_space_trace::before_find(&rooms[prev], &rooms[next]);
     let space = find_free_space(start, collision.unwrap_or(rooms), max_dim);
     prepare(&mut rooms[next]);
     if !rooms[next].set_size_with_limit(space.raw_width() + 1, space.raw_height() + 1) {

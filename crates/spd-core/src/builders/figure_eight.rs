@@ -107,7 +107,8 @@ fn place_loop(
 /// does not append them to the returned `rooms` list until each loop has been
 /// placed. Consequently, a closing stitch created while placing the first loop
 /// precedes every connection belonging to the second loop. This must happen
-/// before `createBranches`: pinned `findFreeSpace` is collision-order-sensitive.
+/// before `createBranches`: v4 `findFreeSpace` still walks that collision list
+/// (equal Euclidean distances keep the earlier room).
 fn restore_java_room_order(
     rooms: &mut Vec<Room>,
     base_len: usize,
@@ -393,7 +394,7 @@ mod tests {
     }
 
     #[test]
-    fn incremental_loop_collision_order_changes_order_sensitive_placement() {
+    fn incremental_loop_collision_list_excludes_unplaced_rooms() {
         use crate::builders::place::{place_room, place_room_with_collision_ids};
         let mut base = vec![
             room(0, "Prev", RoomKind::Standard),
@@ -404,34 +405,54 @@ mod tests {
         base[0].resize(5, 5);
         base[0].set_pos(0, 0);
         base[1].resize(5, 5);
-        base[1].set_pos(-8, -8);
+        // Sit this unplaced tunnel on the 315° approach so omitting it from
+        // the collision list changes the Euclidean closest room.
+        base[1].set_pos(-4, -6);
         base[2].resize(5, 5);
         base[2].set_pos(-8, -3);
 
-        let mut java = base.clone();
+        // v4 compares Euclidean length per room, so reordering already-listed
+        // colliders does not change this geometry.
+        let mut reordered = base.clone();
         Random::reset_generators();
         Random::push_generator_seeded(7);
-        let java_angle = place_room_with_collision_ids(&mut java, &[0, 2, 1], 0, 3, 315.0);
+        let reordered_angle =
+            place_room_with_collision_ids(&mut reordered, &[0, 2, 1], 0, 3, 315.0);
         Random::pop_generator();
 
-        let mut old_full_vector = base;
+        let mut full = base.clone();
         Random::push_generator_seeded(7);
-        let old_angle = place_room(&mut old_full_vector, 0, 3, 315.0);
+        let full_angle = place_room(&mut full, 0, 3, 315.0);
         Random::pop_generator();
 
-        assert_eq!(
-            (java[3].left, java[3].top, java[3].right, java[3].bottom),
-            (-3, -4, 0, 2)
-        );
         assert_eq!(
             (
-                old_full_vector[3].left,
-                old_full_vector[3].top,
-                old_full_vector[3].right,
-                old_full_vector[3].bottom
+                reordered[3].left,
+                reordered[3].top,
+                reordered[3].right,
+                reordered[3].bottom
             ),
-            (-3, -3, 0, 3)
+            (full[3].left, full[3].top, full[3].right, full[3].bottom)
         );
-        assert_ne!(java_angle, old_angle);
+        assert_eq!(reordered_angle, full_angle);
+
+        // Java still omits rooms that have not been appended to the collision
+        // list. That membership change can pick a different closest room.
+        let mut incremental = base;
+        Random::push_generator_seeded(7);
+        let incremental_angle =
+            place_room_with_collision_ids(&mut incremental, &[0, 2], 0, 3, 315.0);
+        Random::pop_generator();
+
+        assert_ne!(
+            (
+                incremental[3].left,
+                incremental[3].top,
+                incremental[3].right,
+                incremental[3].bottom
+            ),
+            (full[3].left, full[3].top, full[3].right, full[3].bottom)
+        );
+        assert_ne!(incremental_angle, full_angle);
     }
 }

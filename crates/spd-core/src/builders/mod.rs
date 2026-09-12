@@ -75,6 +75,8 @@ pub fn build_rooms(
     LAST_FIGURE_EIGHT_TRACE.with(|trace| trace.borrow_mut().clear());
     #[cfg(test)]
     LAST_LOOP_TRACE.with(|trace| trace.borrow_mut().clear());
+    #[cfg(test)]
+    place::free_space_trace::clear_build();
     for _attempt in 0..max_tries {
         clear_all_connections(rooms);
         for r in rooms.iter_mut() {
@@ -90,7 +92,15 @@ pub fn build_rooms(
             BuilderKind::Loop => {
                 #[cfg(test)]
                 let start_rng_probe = crate::random::Random::peek_ints(8);
+                #[cfg(test)]
+                place::free_space_trace::begin_attempt();
                 let result = loop_builder::build(rooms, &params, depth, prepare_shop);
+                #[cfg(test)]
+                place::free_space_trace::push_attempt(
+                    start_rng_probe.clone(),
+                    crate::random::Random::peek_ints(8),
+                    result.is_some(),
+                );
                 #[cfg(test)]
                 LAST_LOOP_TRACE.with(|trace| {
                     trace.borrow_mut().push(LoopAttemptTrace {
@@ -117,8 +127,16 @@ pub fn build_rooms(
             BuilderKind::FigureEight => {
                 #[cfg(test)]
                 let start_rng_probe = crate::random::Random::peek_ints(8);
+                #[cfg(test)]
+                place::free_space_trace::begin_attempt();
                 let result =
                     figure_eight::build(rooms, &params, depth, &mut figure_state, prepare_shop);
+                #[cfg(test)]
+                place::free_space_trace::push_attempt(
+                    start_rng_probe.clone(),
+                    crate::random::Random::peek_ints(8),
+                    result.is_ok(),
+                );
                 #[cfg(test)]
                 LAST_FIGURE_EIGHT_TRACE.with(|trace| {
                     trace.borrow_mut().push(FigureEightAttemptTrace {
@@ -626,7 +644,7 @@ mod tests {
         let vertices = rooms.iter().filter(|room| !room.is_empty()).count();
         let edges = rooms.iter().map(|room| room.connected.len()).sum::<usize>() / 2;
         assert!(edges + 1 >= vertices + 2, "expected two independent loops");
-        assert_eq!(rng_tail, 1_953_852_014);
+        assert_eq!(rng_tail, 505_889_709);
     }
 
     #[test]

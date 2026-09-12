@@ -84,8 +84,9 @@ pub(super) fn build(
             let angle = Random::float_max(360.0);
             // LoopBuilder collides the shop against its loop only, not every
             // room. The surviving rooms are the same, but `findFreeSpace`
-            // picks the closest collision by list order and can burn a
-            // tie-break draw, so the narrower list must be preserved.
+            // picks the Euclidean-closest collision (list order on ties) and
+            // can burn an equal-area axis draw, so the narrower list must
+            // be preserved.
             if place_room_with_collision_ids_and_prepare(
                 rooms,
                 &loop_ids,

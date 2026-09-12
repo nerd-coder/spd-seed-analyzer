@@ -12,6 +12,15 @@ impl Point {
     pub fn new(x: i32, y: i32) -> Self {
         Self { x, y }
     }
+
+    /// watabou `Point.length()`: `(float)Math.sqrt(x*x + y*y)` with 32-bit multiply.
+    pub fn length(self) -> f32 {
+        let sum = self
+            .x
+            .wrapping_mul(self.x)
+            .wrapping_add(self.y.wrapping_mul(self.y));
+        f64::from(sum).sqrt() as f32
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

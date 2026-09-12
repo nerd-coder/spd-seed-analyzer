@@ -1,0 +1,110 @@
+{
+  "depth": 23,
+  "attempts": [
+    {
+      "attempt": 0,
+      "start_rng": [
+        -1896553370, 1285647153, 1368488166, 640629684, 1966678695, -1849844936,
+        -1469445860, -909850890
+      ],
+      "end_rng": [
+        -1062721269, -308313931, -469579786, 398928685, -1490787376,
+        -1872954744, -608563190, -1475021637
+      ],
+      "target_free_space": {
+        "start": [2, -32],
+        "steps": [
+          {
+            "room": "RingTunnelRoom",
+            "bounds": [2, -36, 9, -29],
+            "closest_diff": 0.0,
+            "candidates": [
+              {
+                "class": "RuinsRoom",
+                "bounds": [9, -32, 23, -16],
+                "cur_diff": 7.0,
+                "inside": false
+              },
+              {
+                "class": "RuinsExitRoom",
+                "bounds": [-3, -25, 9, -16],
+                "cur_diff": 7.0,
+                "inside": false
+              },
+              {
+                "class": "RingTunnelRoom",
+                "bounds": [2, -36, 9, -29],
+                "cur_diff": 0.0,
+                "inside": false
+              }
+            ],
+            "w_diff": 210,
+            "h_diff": 2147483647,
+            "tie_draw": null,
+            "axis": "width"
+          },
+          {
+            "room": "RuinsExitRoom",
+            "bounds": [-3, -25, 9, -16],
+            "closest_diff": 7.0,
+            "candidates": [
+              {
+                "class": "RuinsExitRoom",
+                "bounds": [-3, -25, 9, -16],
+                "cur_diff": 7.0,
+                "inside": false
+              }
+            ],
+            "w_diff": 2147483647,
+            "h_diff": 33,
+            "tie_draw": null,
+            "axis": "height"
+          }
+        ]
+      },
+      "equal_axis_ties": [
+        {
+          "placement": 32,
+          "prev": { "class": "TunnelRoom", "bounds": [-1, -13, 7, -9] },
+          "next_class": "RuinsRoom",
+          "start": [7, -10],
+          "closest": { "class": "RuinsRoom", "bounds": [7, -16, 12, -10] },
+          "w_diff": 666,
+          "h_diff": 666,
+          "draw": 1
+        },
+        {
+          "placement": 35,
+          "prev": { "class": "TunnelRoom", "bounds": [-1, -13, 7, -9] },
+          "next_class": "RuinsRoom",
+          "start": [7, -10],
+          "closest": { "class": "RuinsRoom", "bounds": [7, -16, 12, -10] },
+          "w_diff": 666,
+          "h_diff": 666,
+          "draw": 0
+        },
+        {
+          "placement": 48,
+          "prev": { "class": "TunnelRoom", "bounds": [6, 6, 12, 12] },
+          "next_class": "RuinsRoom",
+          "start": [9, 6],
+          "closest": { "class": "WalkwayRoom", "bounds": [9, -2, 12, 6] },
+          "w_diff": 666,
+          "h_diff": 666,
+          "draw": 1
+        },
+        {
+          "placement": 55,
+          "prev": { "class": "TunnelRoom", "bounds": [6, 6, 12, 12] },
+          "next_class": "RuinsRoom",
+          "start": [6, 8],
+          "closest": { "class": "PlatformRoom", "bounds": [0, 0, 6, 8] },
+          "w_diff": 666,
+          "h_diff": 666,
+          "draw": 1
+        }
+      ],
+      "success": true
+    }
+  ]
+}

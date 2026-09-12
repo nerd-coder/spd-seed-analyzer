@@ -31,10 +31,6 @@ import java.util.List;
 final class FreeSpaceTraceBuilder extends FigureEightBuilder {
 
 	static final List<String> attempts = new ArrayList<>();
-	private static final int TARGET_LEFT = 3;
-	private static final int TARGET_TOP = 22;
-	private static final int TARGET_RIGHT = 8;
-	private static final int TARGET_BOTTOM = 29;
 	private final float curveIntensity;
 	private String targetTrace = "null";
 	private final List<String> tieEvents = new ArrayList<>();
@@ -273,27 +269,107 @@ final class FreeSpaceTraceBuilder extends FigureEightBuilder {
 	}
 
 	private boolean isTarget(Room prev, Room next) {
-		return prev.left == TARGET_LEFT && prev.top == TARGET_TOP && prev.right == TARGET_RIGHT && prev.bottom == TARGET_BOTTOM && next.getClass().getSimpleName().equals("SentryRoom");
+		return next.getClass().getSimpleName().equals("SentryRoom") && prev != null;
 	}
 
 	private Rect free(Point start, ArrayList<Room> collision, int max, boolean trace,
 			int placement, Room prev, Room next) {
-		Rect space = new Rect(start.x - max, start.y - max, start.x + max, start.y + max); ArrayList<Room> colliding = new ArrayList<>(collision); StringBuilder log = trace ? new StringBuilder("{\"start\":[").append(start.x).append(',').append(start.y).append("],\"steps\":[") : null;
+		Rect space = new Rect(start.x - max, start.y - max, start.x + max, start.y + max);
+		ArrayList<Room> colliding = new ArrayList<>(collision);
+		StringBuilder log = trace
+				? new StringBuilder("{\"start\":[").append(start.x).append(',').append(start.y)
+						.append("],\"steps\":[")
+				: null;
 		boolean firstStep = true;
 		do {
-			Iterator<Room> it = colliding.iterator(); while (it.hasNext()) { Room room = it.next(); if (room.isEmpty() || Math.max(space.left, room.left) >= Math.min(space.right, room.right) || Math.max(space.top, room.top) >= Math.min(space.bottom, room.bottom)) it.remove(); }
-			Room closest = null; int closestDiff = Integer.MAX_VALUE; boolean inside = true; int curDiff = 0;
-			StringBuilder candidates = trace ? new StringBuilder("[") : null; boolean firstCandidate = true;
-			for (Room room : colliding) {
-				if (start.x <= room.left) { inside = false; curDiff += room.left - start.x; } else if (start.x >= room.right) { inside = false; curDiff += start.x - room.right; }
-				if (start.y <= room.top) { inside = false; curDiff += room.top - start.y; } else if (start.y >= room.bottom) { inside = false; curDiff += start.y - room.bottom; }
-				if (trace) { if (!firstCandidate) candidates.append(','); firstCandidate = false; candidates.append("{\"class\":\"").append(room.getClass().getSimpleName()).append("\",\"bounds\":[").append(room.left).append(',').append(room.top).append(',').append(room.right).append(',').append(room.bottom).append("],\"cur_diff\":").append(curDiff).append(",\"inside\":").append(inside).append('}'); }
-				if (inside) { space.set(start.x, start.y, start.x, start.y); if (trace) targetTrace = log.append("]}").toString(); return space; }
-				if (curDiff < closestDiff) { closestDiff = curDiff; closest = room; }
+			Iterator<Room> it = colliding.iterator();
+			while (it.hasNext()) {
+				Room room = it.next();
+				if (room.isEmpty()
+						|| Math.max(space.left, room.left) >= Math.min(space.right, room.right)
+						|| Math.max(space.top, room.top) >= Math.min(space.bottom, room.bottom)) {
+					it.remove();
+				}
 			}
-			if (closest != null) { int w = Integer.MAX_VALUE, h = Integer.MAX_VALUE; if (closest.left >= start.x) w = (space.right - closest.left) * (space.height() + 1); else if (closest.right <= start.x) w = (closest.right - space.left) * (space.height() + 1); if (closest.top >= start.y) h = (space.bottom - closest.top) * (space.width() + 1); else if (closest.bottom <= start.y) h = (closest.bottom - space.top) * (space.width() + 1); Integer tie = null; boolean width = w < h; if (w == h) { tie = Random.Int(2); width = tie == 0; recordTie(placement, prev, next, start, closest, w, h, tie); } if (trace) { if (!firstStep) log.append(','); firstStep = false; log.append("{\"room\":\"").append(closest.getClass().getSimpleName()).append("\",\"bounds\":[").append(closest.left).append(',').append(closest.top).append(',').append(closest.right).append(',').append(closest.bottom).append("],\"closest_diff\":").append(closestDiff).append(",\"candidates\":").append(candidates.append(']')).append(",\"w_diff\":").append(w).append(",\"h_diff\":").append(h).append(",\"tie_draw\":").append(tie == null ? "null" : tie).append(",\"axis\":\"").append(width ? "width" : "height").append("\"}"); } if (width) { if (closest.left >= start.x && closest.left < space.right) space.right = closest.left; if (closest.right <= start.x && closest.right > space.left) space.left = closest.right; } else { if (closest.top >= start.y && closest.top < space.bottom) space.bottom = closest.top; if (closest.bottom <= start.y && closest.bottom > space.top) space.top = closest.bottom; } colliding.remove(closest); } else colliding.clear();
+			Room closest = null;
+			float closestDiff = Integer.MAX_VALUE;
+			StringBuilder candidates = trace ? new StringBuilder("[") : null;
+			boolean firstCandidate = true;
+			for (Room room : colliding) {
+				Point curDiff = new Point();
+				boolean inside = true;
+				if (start.x <= room.left) {
+					inside = false;
+					curDiff.x = room.left - start.x;
+				} else if (start.x >= room.right) {
+					inside = false;
+					curDiff.x = start.x - room.right;
+				}
+				if (start.y <= room.top) {
+					inside = false;
+					curDiff.y = room.top - start.y;
+				} else if (start.y >= room.bottom) {
+					inside = false;
+					curDiff.y = start.y - room.bottom;
+				}
+				if (trace) {
+					if (!firstCandidate) candidates.append(',');
+					firstCandidate = false;
+					candidates.append("{\"class\":\"").append(room.getClass().getSimpleName())
+							.append("\",\"bounds\":[").append(room.left).append(',')
+							.append(room.top).append(',').append(room.right).append(',')
+							.append(room.bottom).append("],\"cur_diff\":").append(curDiff.length())
+							.append(",\"inside\":").append(inside).append('}');
+				}
+				if (inside) {
+					space.set(start.x, start.y, start.x, start.y);
+					if (trace) targetTrace = log.append("]}").toString();
+					return space;
+				}
+				if (curDiff.length() < closestDiff) {
+					closestDiff = curDiff.length();
+					closest = room;
+				}
+			}
+			if (closest != null) {
+				int w = Integer.MAX_VALUE, h = Integer.MAX_VALUE;
+				if (closest.left >= start.x) w = (space.right - closest.left) * (space.height() + 1);
+				else if (closest.right <= start.x) w = (closest.right - space.left) * (space.height() + 1);
+				if (closest.top >= start.y) h = (space.bottom - closest.top) * (space.width() + 1);
+				else if (closest.bottom <= start.y) h = (closest.bottom - space.top) * (space.width() + 1);
+				Integer tie = null;
+				boolean width = w < h;
+				if (w == h) {
+					tie = Random.Int(2);
+					width = tie == 0;
+					recordTie(placement, prev, next, start, closest, w, h, tie);
+				}
+				if (trace) {
+					if (!firstStep) log.append(',');
+					firstStep = false;
+					log.append("{\"room\":\"").append(closest.getClass().getSimpleName())
+							.append("\",\"bounds\":[").append(closest.left).append(',')
+							.append(closest.top).append(',').append(closest.right).append(',')
+							.append(closest.bottom).append("],\"closest_diff\":").append(closestDiff)
+							.append(",\"candidates\":").append(candidates.append(']'))
+							.append(",\"w_diff\":").append(w).append(",\"h_diff\":").append(h)
+							.append(",\"tie_draw\":").append(tie == null ? "null" : tie)
+							.append(",\"axis\":\"").append(width ? "width" : "height").append("\"}");
+				}
+				if (width) {
+					if (closest.left >= start.x && closest.left < space.right) space.right = closest.left;
+					if (closest.right <= start.x && closest.right > space.left) space.left = closest.right;
+				} else {
+					if (closest.top >= start.y && closest.top < space.bottom) space.bottom = closest.top;
+					if (closest.bottom <= start.y && closest.bottom > space.top) space.top = closest.bottom;
+				}
+				colliding.remove(closest);
+			} else {
+				colliding.clear();
+			}
 		} while (!colliding.isEmpty());
-		if (trace) targetTrace = log.append("]}").toString(); return space;
+		if (trace) targetTrace = log.append("]}").toString();
+		return space;
 	}
 
 	private void recordTie(int placement, Room prev, Room next, Point start, Room closest,
