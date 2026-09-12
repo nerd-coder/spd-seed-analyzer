@@ -9,12 +9,12 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 
 ## Now
 
-05 Exotic Crystals conversion (enchant tables already in 01). Ref [05-items-trinkets-challenges.md](05-items-trinkets-challenges.md).
+05 PR 3 Ghost/Imp enchant name pins and PR 4 Spyglass/Censer non-generation note. Ref [05-items-trinkets-challenges.md](05-items-trinkets-challenges.md). Exotic Crystals conversion is on main (`c1f4215`).
 
 ## Next
 
-05 Ghost/Imp enchant name pins if still needed, then 06 assets/UI.
+06 assets and UI.
 
 ## Remaining
 
-05–06. 07 deny-list. Analyzer still `partial`. Leftover lib red vs v4 Java: SacrificeRoom `Sai` vs Crossbow, some blob `always_visible`, a few halls/city heaps, smoke tests with no fixture. Carpet pixels wait for 06.
+05 PR 3–4, 06. 07 deny-list. Analyzer still `partial`. Leftover lib red vs v4 Java: SacrificeRoom `Sai` vs Crossbow, some blob `always_visible`, a few halls/city heaps, smoke tests with no fixture. Carpet pixels wait for 06.
