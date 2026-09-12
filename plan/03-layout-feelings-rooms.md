@@ -1,6 +1,6 @@
 # 03 — Feelings, builder, city rooms, carpets
 
-Status: **open**
+Status: **closed**
 
 Layout RNG and painter-complete city/sewer visuals that v4 actually changed. Quest-room size changes for Wandmaker/Blacksmith live in 04 even though they move prison/caves layouts.
 
