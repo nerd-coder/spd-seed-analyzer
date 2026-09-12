@@ -6,8 +6,8 @@ use crate::geom::Point;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::level::painter::{self, clean_diagonal_edges, setup_patch, DoorMap, DoorType};
 use crate::level::terrain::{
-    TerrainMap, BARRICADE, EMPTY, EMPTY_DECO, EMPTY_SP, ENTRANCE, MINE_BOULDER, MINE_CRYSTAL, TRAP,
-    WALL, WALL_DECO,
+    TerrainMap, BARRICADE, EMPTY, EMPTY_DECO, EMPTY_SP, MINE_BOULDER, MINE_CRYSTAL, TRAP, WALL,
+    WALL_DECO,
 };
 use crate::quests::BlacksmithQuestType;
 use crate::random::Random;
@@ -120,7 +120,7 @@ pub(super) fn paint(
 
     paint_cave_base(map, room, room_index, doors, fill_for(room));
     if room.name == "MineEntrance" {
-        paint_entrance(map, room, depth);
+        super::entrance::paint(map, room, depth);
     }
     match objective {
         BlacksmithQuestType::Crystal => paint_crystal(map, room, room_index),
@@ -196,34 +196,6 @@ fn paint_crystal(map: &mut TerrainMap, room: &Room, room_index: usize) {
         _ => {}
     }
     let _ = room_index;
-}
-
-fn paint_entrance(map: &mut TerrainMap, room: &Room, depth: i32) {
-    let entrance = loop {
-        let point = room.random_margin(3);
-        let cell = map.point_to_cell(point.x, point.y).unwrap();
-        let w = map.width as isize;
-        let valid = [-w - 1, -w, -w + 1, -1, 0, 1, w - 1, w, w + 1]
-            .iter()
-            .any(|offset| map.map[(cell as isize + offset) as usize] != WALL);
-        if valid || (room.height() == 7 && room.width() == 7) {
-            break point;
-        }
-    };
-    let cell = map.point_to_cell(entrance.x, entrance.y).unwrap();
-    map.map[cell] = ENTRANCE;
-    let w = map.width as isize;
-    for offset in [-w - 1, -w, -w + 1, -1, 1, w - 1, w, w + 1] {
-        map.map[(cell as isize + offset) as usize] = EMPTY;
-    }
-    map.branch_entrances.push(cell);
-    map.record_custom_tile(
-        "QuestExit",
-        "environment/custom_tiles/caves_quest.png",
-        (entrance.x - 1, entrance.y - 1, 3, 3),
-        vec![8, 9, 10, 16, 17, 18, 24, 25, 26],
-    );
-    let _ = depth;
 }
 
 fn scatter_entrance_crystal(map: &mut TerrainMap, room: &Room) {

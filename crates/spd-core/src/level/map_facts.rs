@@ -304,7 +304,7 @@ fn transitions(map: &TerrainMap, depth: i32, branch: i32) -> Vec<MapTransition> 
     let mut transitions = Vec::new();
     for (cell, &tile) in map.map.iter().enumerate() {
         let (transition_type, dest_depth, dest_branch, dest_type) = match tile {
-            terrain::ENTRANCE if map.branch_entrances.contains(&cell) => (
+            terrain::ENTRANCE | terrain::ENTRANCE_SP if map.branch_entrances.contains(&cell) => (
                 "BRANCH_ENTRANCE",
                 depth,
                 branch - 1,

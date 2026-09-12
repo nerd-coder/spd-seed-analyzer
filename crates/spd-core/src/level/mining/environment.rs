@@ -1,5 +1,6 @@
 //! Mining painter's isolated water, grass, caves decoration, and dark-gold walls.
 
+use crate::geom::Point;
 use crate::level::painter::{merge_rooms_with_terrain, DoorMap};
 use crate::level::patch;
 use crate::level::terrain::{
@@ -164,18 +165,7 @@ fn generate_gold(map: &mut TerrainMap, rooms: &[Room], order: &mut [usize], gold
                 continue;
             }
             let room = &rooms[room_index];
-            let mut candidates = Vec::new();
-            for x in room.left..=room.right {
-                for y in room.top..=room.bottom {
-                    let cell = map.point_to_cell(x, y).unwrap();
-                    if *gold > 0
-                        && map.map[cell] == WALL
-                        && cardinal_neighbour_is_not_wall(map, cell)
-                    {
-                        candidates.push(cell);
-                    }
-                }
-            }
+            let candidates = gold_pos_candidates(map, room, *gold);
             let Some(&cell) = Random::element(&candidates) else {
                 continue;
             };
@@ -183,15 +173,15 @@ fn generate_gold(map: &mut TerrainMap, rooms: &[Room], order: &mut [usize], gold
             *gold -= 1;
             if *gold > 0 {
                 let offsets = [-map.width as isize, -1, 1, map.width as isize];
-                let next = (cell as isize + offsets[Random::int_max(4) as usize]) as usize;
-                if map.map[next] == WALL {
-                    map.map[next] = WALL_DECO;
+                let next = cell as isize + offsets[Random::int_max(4) as usize];
+                if inside_map(map, next) && map.map[next as usize] == WALL {
+                    map.map[next as usize] = WALL_DECO;
                     *gold -= 1;
                 }
                 if Random::int_max(2) == 0 {
-                    let next = (cell as isize + offsets[Random::int_max(4) as usize]) as usize;
-                    if map.map[next] == WALL {
-                        map.map[next] = WALL_DECO;
+                    let next = cell as isize + offsets[Random::int_max(4) as usize];
+                    if inside_map(map, next) && map.map[next as usize] == WALL {
+                        map.map[next as usize] = WALL_DECO;
                         *gold -= 1;
                     }
                 }
@@ -200,9 +190,194 @@ fn generate_gold(map: &mut TerrainMap, rooms: &[Room], order: &mut [usize], gold
     }
 }
 
-fn cardinal_neighbour_is_not_wall(map: &TerrainMap, cell: usize) -> bool {
+fn gold_pos_candidates(map: &TerrainMap, room: &Room, gold: i32) -> Vec<usize> {
+    let mut candidates = Vec::new();
+    for x in room.left..=room.right {
+        for y in room.top..=room.bottom {
+            let cell = map.point_to_cell(x, y).unwrap();
+            if gold > 0
+                && inside_map(map, cell as isize)
+                && map.map[cell] == WALL
+                && cardinal_open_neighbour_inside_room(map, room, cell)
+            {
+                candidates.push(cell);
+            }
+        }
+    }
+    candidates
+}
+
+fn cardinal_open_neighbour_inside_room(map: &TerrainMap, room: &Room, cell: usize) -> bool {
     let w = map.width as isize;
-    [-1, -w, 1, w]
-        .iter()
-        .any(|offset| map.map[(cell as isize + offset) as usize] != WALL)
+    for offset in [-w, -1, 1, w] {
+        let next = cell as isize + offset;
+        if inside_map(map, next) && map.map[next as usize] != WALL {
+            let point = cell_point(map, next as usize);
+            // SPD `Room.inside` excludes the 1-tile perimeter.
+            if point.x > room.left
+                && point.y > room.top
+                && point.x < room.right
+                && point.y < room.bottom
+            {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+fn inside_map(map: &TerrainMap, cell: isize) -> bool {
+    let w = map.width as isize;
+    let len = map.len() as isize;
+    !(cell < w || cell >= len - w || cell % w == 0 || cell % w == w - 1)
+}
+
+fn cell_point(map: &TerrainMap, cell: usize) -> Point {
+    let w = map.width as usize;
+    Point::new(
+        (cell % w) as i32 + map.origin_x,
+        (cell / w) as i32 + map.origin_y,
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn blank_map(width: i32, height: i32) -> TerrainMap {
+        let len = (width * height) as usize;
+        TerrainMap {
+            width,
+            height,
+            origin_x: 0,
+            origin_y: 0,
+            map: vec![WALL; len],
+            passable: vec![false; len],
+            water_allowed: vec![true; len],
+            grass_allowed: vec![true; len],
+            trap_allowed: vec![true; len],
+            item_allowed: vec![true; len],
+            character_allowed: vec![true; len],
+            mob_occupied: vec![false; len],
+            plant_occupied: vec![false; len],
+            known_plants: vec![None; len],
+            known_mobs: vec![None; len],
+            heap_occupied: vec![false; len],
+            known_heaps: vec![None; len],
+            known_blobs: Vec::new(),
+            trap_destroys_items: vec![false; len],
+            trap_names: vec![None; len],
+            branch_exits: Vec::new(),
+            branch_entrances: Vec::new(),
+            custom_tiles: Vec::new(),
+            custom_terrain: Vec::new(),
+            custom_walls: Vec::new(),
+        }
+    }
+
+    fn placed_room(
+        name: &str,
+        kind: RoomKind,
+        left: i32,
+        top: i32,
+        right: i32,
+        bottom: i32,
+    ) -> Room {
+        let mut room = Room::new(0, name, kind, 1, 16, 4, 14, 4, 14);
+        room.left = left;
+        room.top = top;
+        room.right = right;
+        room.bottom = bottom;
+        room
+    }
+
+    fn set_tile(map: &mut TerrainMap, x: i32, y: i32, terrain: i32) {
+        let cell = map.point_to_cell(x, y).unwrap();
+        map.map[cell] = terrain;
+    }
+
+    fn fill_interior(map: &mut TerrainMap, room: &Room, terrain: i32) {
+        for x in room.left + 1..room.right {
+            for y in room.top + 1..room.bottom {
+                set_tile(map, x, y, terrain);
+            }
+        }
+    }
+
+    fn wall_deco_cells(map: &TerrainMap) -> Vec<usize> {
+        map.map
+            .iter()
+            .enumerate()
+            .filter(|(_, &tile)| tile == WALL_DECO)
+            .map(|(cell, _)| cell)
+            .collect()
+    }
+
+    #[test]
+    fn gold_candidates_need_an_open_neighbour_inside_the_room() {
+        let mut map = blank_map(12, 12);
+        let room = placed_room("MineSmallRoom", RoomKind::Standard, 3, 3, 9, 9);
+        fill_interior(&mut map, &room, EMPTY);
+        // Left perimeter wall whose only opening faces out of the room.
+        set_tile(&mut map, 4, 6, WALL);
+        set_tile(&mut map, 2, 6, EMPTY);
+
+        let candidates = gold_pos_candidates(&map, &room, 1);
+        let outward = map.point_to_cell(3, 6).unwrap();
+        let inward = map.point_to_cell(3, 5).unwrap();
+        assert!(
+            !candidates.contains(&outward),
+            "wall that only faces out-of-room empty must not be a candidate"
+        );
+        assert!(candidates.contains(&inward));
+    }
+
+    #[test]
+    fn generate_gold_places_only_on_walls_with_in_room_open_neighbours() {
+        let mut map = blank_map(12, 12);
+        let room = placed_room("MineSmallRoom", RoomKind::Standard, 3, 3, 9, 9);
+        fill_interior(&mut map, &room, EMPTY);
+        set_tile(&mut map, 4, 6, WALL);
+        set_tile(&mut map, 2, 6, EMPTY);
+        let outward = map.point_to_cell(3, 6).unwrap();
+
+        Random::push_generator_seeded(1);
+        let mut gold = 1;
+        generate_gold(&mut map, std::slice::from_ref(&room), &mut [0], &mut gold);
+        Random::pop_generator();
+
+        assert_eq!(gold, 0);
+        assert_ne!(map.map[outward], WALL_DECO);
+        let placed = wall_deco_cells(&map);
+        assert_eq!(placed.len(), 1);
+        assert!(cardinal_open_neighbour_inside_room(&map, &room, placed[0]));
+    }
+
+    #[test]
+    fn generate_gold_skips_secret_rooms() {
+        let mut map = blank_map(12, 18);
+        let mut standard = placed_room("MineSmallRoom", RoomKind::Standard, 3, 3, 9, 9);
+        let mut secret = placed_room("MineSecretRoom", RoomKind::Secret, 3, 11, 9, 16);
+        standard.id = 0;
+        secret.id = 1;
+        fill_interior(&mut map, &standard, EMPTY);
+        fill_interior(&mut map, &secret, EMPTY);
+        let rooms = vec![standard, secret];
+
+        Random::push_generator_seeded(2);
+        let mut gold = 1;
+        generate_gold(&mut map, &rooms, &mut [0, 1], &mut gold);
+        Random::pop_generator();
+
+        let secret = &rooms[1];
+        for x in secret.left..=secret.right {
+            for y in secret.top..=secret.bottom {
+                let cell = map.point_to_cell(x, y).unwrap();
+                assert_ne!(map.map[cell], WALL_DECO);
+            }
+        }
+        assert!(wall_deco_cells(&map)
+            .iter()
+            .any(|&cell| cardinal_open_neighbour_inside_room(&map, &rooms[0], cell)));
+    }
 }

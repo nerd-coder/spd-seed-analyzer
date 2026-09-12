@@ -1,6 +1,7 @@
 //! Pinned Blacksmith `MiningLevel` side-branch generation.
 
 mod doors;
+mod entrance;
 mod environment;
 mod geometry;
 mod rooms;
