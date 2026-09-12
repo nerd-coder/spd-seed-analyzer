@@ -4,17 +4,16 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 
 ## Done
 
-- **00–06 closed.**
-- 06 assets, carpets/occlusion renderer, item-icons, Playwright snapshots (city F16 + mining). `3da0b77`, `78362c1`, `1213c66`, `e45639b`.
+- **00–07 closed.** 07 is a deny-list; 00–06 shipped without porting it.
 
 ## Now
 
-Nothing in the v4 close-out sequence. 07 is a deny-list, not a PR.
+Leftover AAA sewer item/deck parity (SacrificeRoom `Sai` vs Java `Crossbow`) and Imp vault Playwright map fixture.
 
 ## Next
 
-Leftover analyzer≠Java lib reds if you want them (SacrificeRoom `Sai` vs Crossbow, blob `always_visible`, some halls/city heaps, smoke tests with no fixture). Imp vault has no Playwright map fixture (harness is Crystal/Gnoll/Fungi only).
+Those two. Analyzer still `partial`.
 
 ## Remaining
 
-07 deny-list. Analyzer still `partial`.
+Analyzer≠Java lib reds (SacrificeRoom class, blob `always_visible`, halls/city heaps, smoke tests with no fixture). Vault visual fixture.

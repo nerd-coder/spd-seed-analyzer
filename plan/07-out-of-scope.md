@@ -1,6 +1,6 @@
 # 07 — Out of scope for the v4 close-out
 
-Status: **open** (deny-list; not a delivery workstream)
+Status: **closed** (deny-list honored: 00–06 shipped without porting this list)
 
 These v4 changes are real and appear in `v4_X_Changes.java` / the Java diff. They do not belong in seed analysis, public maps, or the finder unless a later project explicitly expands scope.
 
