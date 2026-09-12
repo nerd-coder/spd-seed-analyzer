@@ -183,7 +183,8 @@ pub(super) fn magic_well(
     // Well water is a blob, not a heap item, but its class selection is seeded.
     let water = *Random::one_of(&["WaterOfAwareness", "WaterOfHealth"]);
     if let Some(cell) = well_cell {
-        map.record_blob_cell(water, false, cell, 1);
+        // Java `WellWater` instance initializer sets `alwaysVisible = true`.
+        map.record_blob_cell(water, true, cell, 1);
     }
     items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
     Vec::new()

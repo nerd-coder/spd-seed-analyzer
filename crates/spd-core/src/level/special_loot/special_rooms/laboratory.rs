@@ -68,7 +68,8 @@ pub(in crate::level::special_loot) fn paint(
         .point_to_cell(pot.x, pot.y)
         .expect("LaboratoryRoom pot is inside the map");
     map.map[pot_cell] = ALCHEMY;
-    map.record_blob_cell("Alchemy", false, pot_cell, 1);
+    // Java `Alchemy` instance initializer sets `alwaysVisible = true`.
+    map.record_blob_cell("Alchemy", true, pot_cell, 1);
 
     let mut out = Vec::new();
     let mut crystal = GeneratedItem::new("EnergyCrystal", ItemCategory::Other);
