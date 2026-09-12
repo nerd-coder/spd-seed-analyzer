@@ -125,6 +125,25 @@ pub struct TerrainMap {
     pub custom_walls: Vec<MapCustomTile>,
 }
 
+fn custom_tile(
+    class_name: &str,
+    texture: &str,
+    rect: (i32, i32, i32, i32),
+    static_data: Vec<i16>,
+) -> MapCustomTile {
+    let (x, y, width, height) = rect;
+    debug_assert!(static_data.is_empty() || static_data.len() == (width * height) as usize);
+    MapCustomTile {
+        class_name: class_name.into(),
+        texture: texture.into(),
+        x: x as u32,
+        y: y as u32,
+        width: width as u32,
+        height: height as u32,
+        static_data,
+    }
+}
+
 impl TerrainMap {
     pub fn len(&self) -> usize {
         self.map.len()
@@ -158,17 +177,20 @@ impl TerrainMap {
         rect: (i32, i32, i32, i32),
         static_data: Vec<i16>,
     ) {
-        let (x, y, width, height) = rect;
-        debug_assert!(static_data.is_empty() || static_data.len() == (width * height) as usize);
-        self.custom_tiles.push(MapCustomTile {
-            class_name: class_name.into(),
-            texture: texture.into(),
-            x: x as u32,
-            y: y as u32,
-            width: width as u32,
-            height: height as u32,
-            static_data,
-        });
+        self.custom_tiles
+            .push(custom_tile(class_name, texture, rect, static_data));
+    }
+
+    /// `Level.customTiles.add(0, tile)` so later carpets stack on top.
+    pub(crate) fn record_custom_tile_front(
+        &mut self,
+        class_name: &str,
+        texture: &str,
+        rect: (i32, i32, i32, i32),
+        static_data: Vec<i16>,
+    ) {
+        self.custom_tiles
+            .insert(0, custom_tile(class_name, texture, rect, static_data));
     }
 
     pub(crate) fn record_custom_terrain(
@@ -178,17 +200,8 @@ impl TerrainMap {
         rect: (i32, i32, i32, i32),
         static_data: Vec<i16>,
     ) {
-        let (x, y, width, height) = rect;
-        debug_assert!(static_data.is_empty() || static_data.len() == (width * height) as usize);
-        self.custom_terrain.push(MapCustomTile {
-            class_name: class_name.into(),
-            texture: texture.into(),
-            x: x as u32,
-            y: y as u32,
-            width: width as u32,
-            height: height as u32,
-            static_data,
-        });
+        self.custom_terrain
+            .push(custom_tile(class_name, texture, rect, static_data));
     }
 
     pub(crate) fn record_blob_cell(

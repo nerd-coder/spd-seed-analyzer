@@ -1,6 +1,7 @@
 //! City `HallwayRoom` and its entrance/exit variants.
 
 use crate::geom::Point;
+use crate::level::carpet::{self, CITY_ENTRANCE, CITY_PEDESTAL, CITY_STATUE, SKIP};
 use crate::level::terrain::{
     TerrainMap, EMPTY, EMPTY_SP, ENTRANCE_SP, EXIT, REGION_DECO_ALT, STATUE_SP, WALL,
 };
@@ -11,7 +12,13 @@ use crate::rooms::types::RoomKind;
 use super::super::super::DoorMap;
 use super::{center, door_points, draw_line, fill_margin, fill_rect, fill_room, set};
 
-pub(super) fn paint(map: &mut TerrainMap, room: &Room, room_index: usize, doors: &DoorMap) {
+pub(super) fn paint(
+    map: &mut TerrainMap,
+    room: &Room,
+    room_index: usize,
+    doors: &DoorMap,
+    depth: i32,
+) {
     fill_room(map, room, WALL);
     fill_margin(map, room, 1, EMPTY);
 
@@ -65,36 +72,29 @@ pub(super) fn paint(map: &mut TerrainMap, room: &Room, room_index: usize, doors:
         connection_center.y + 1,
         EMPTY_SP,
     );
-    let detail = if Random::int_max(2) == 0 {
-        STATUE_SP
+    // Entrance/exit skip the statue-vs-pedestal roll so the city stream stays aligned.
+    let (detail, overlay) = if room.kind == RoomKind::Entrance {
+        (ENTRANCE_SP, CITY_ENTRANCE)
+    } else if room.kind == RoomKind::Exit {
+        (EXIT, SKIP)
+    } else if Random::int_max(2) == 0 {
+        (STATUE_SP, CITY_STATUE)
     } else {
-        REGION_DECO_ALT
+        (REGION_DECO_ALT, CITY_PEDESTAL)
     };
     set(map, connection_center.x, connection_center.y, detail);
-    paint_transition(map, room);
-}
-
-fn paint_transition(map: &mut TerrainMap, room: &Room) {
-    let terrain = match room.kind {
-        RoomKind::Entrance => ENTRANCE_SP,
-        RoomKind::Exit => EXIT,
-        _ => return,
-    };
-    // `getPoints()` is x-major, then y-major. There is exactly one detail tile.
-    for x in room.left..=room.right {
-        for y in room.top..=room.bottom {
-            if matches!(
-                super::terrain_at(map, x, y),
-                Some(STATUE_SP) | Some(REGION_DECO_ALT)
-            ) {
-                set(map, x, y, terrain);
-                if room.kind == RoomKind::Exit {
-                    if let Some(cell) = map.point_to_cell(x, y) {
-                        map.character_allowed[cell] = false;
-                    }
-                }
-                return;
-            }
+    carpet::add_city(
+        map,
+        connection_center.x - 1,
+        connection_center.y - 1,
+        3,
+        3,
+        depth,
+        &[(1, 1, overlay)],
+    );
+    if room.kind == RoomKind::Exit {
+        if let Some(cell) = map.point_to_cell(connection_center.x, connection_center.y) {
+            map.character_allowed[cell] = false;
         }
     }
 }

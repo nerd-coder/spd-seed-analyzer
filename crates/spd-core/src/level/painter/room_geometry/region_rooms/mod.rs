@@ -78,16 +78,18 @@ pub(super) fn paint(
             cell_block::paint(map, room)
         }
         "HallwayRoom" | "HallwayEntranceRoom" | "HallwayExitRoom" => {
-            hallway::paint(map, room, room_index, doors)
+            hallway::paint(map, room, room_index, doors, depth)
         }
         "LibraryHallRoom" | "LibraryHallEntranceRoom" | "LibraryHallExitRoom" => {
             library_hall::paint(map, room, room_index, doors)
         }
         "LibraryRingRoom" | "LibraryRingEntranceRoom" | "LibraryRingExitRoom" => {
-            library_ring::paint(map, room, room_index, doors)
+            library_ring::paint(map, room, room_index, doors, depth)
         }
-        "StatuesRoom" | "StatuesEntranceRoom" | "StatuesExitRoom" => statues::paint(map, room),
-        "SegmentedLibraryRoom" => segmented_library::paint(map, room, room_index, doors),
+        "StatuesRoom" | "StatuesEntranceRoom" | "StatuesExitRoom" => {
+            statues::paint(map, room, depth)
+        }
+        "SegmentedLibraryRoom" => segmented_library::paint(map, room, room_index, doors, depth),
         "SkullsRoom" | "RitualRoom" | "RitualEntranceRoom" | "RitualExitRoom" => {
             return Some(StandardPaintResult {
                 center_loot: halls::paint(map, room, room_index, doors),

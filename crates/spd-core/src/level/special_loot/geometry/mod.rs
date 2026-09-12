@@ -79,7 +79,7 @@ pub(super) fn paint_at_depth(
             None
         }
         "AmbitiousImpRoom" => {
-            basic::paint_ambitious_imp(map, room, room_index, doors);
+            basic::paint_ambitious_imp(map, room, room_index, doors, depth);
             None
         }
         _ => None,

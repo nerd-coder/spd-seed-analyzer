@@ -3,8 +3,8 @@
 use crate::geom::Point;
 use crate::level::painter::DoorMap;
 use crate::level::terrain::{
-    TerrainMap, BOOKSHELF, CHASM, EMPTY, EMPTY_SP, EMPTY_WELL, GRASS, HIGH_GRASS, PEDESTAL, WALL,
-    WATER,
+    TerrainMap, BOOKSHELF, CHASM, CUSTOM_DECO_EMPTY, EMPTY, EMPTY_SP, EMPTY_WELL, GRASS,
+    HIGH_GRASS, PEDESTAL, WALL, WATER,
 };
 use crate::random::Random;
 use crate::rooms::room::Room;
@@ -325,26 +325,11 @@ pub(super) fn paint_ambitious_imp(
     room: &Room,
     room_index: usize,
     doors: &DoorMap,
+    depth: i32,
 ) {
     fill_room(map, room, crate::level::terrain::WALL_DECO);
     fill_margin(map, room, 1, crate::level::terrain::EMPTY);
     let center = room.as_rect().center_room();
-    map.record_custom_tile(
-        "QuestEntrance",
-        "city_quest",
-        (center.x - 2, center.y - 2, 5, 5),
-        (0..25)
-            .map(|index| (index % 5 + (index / 5) * 8) as i16)
-            .collect(),
-    );
-    map.record_custom_tile(
-        "EntranceBarrier",
-        "city_quest",
-        (center.x - 1, center.y - 1, 3, 3),
-        (0..9)
-            .map(|index| (5 + index % 3 + (1 + index / 3) * 8) as i16)
-            .collect(),
-    );
     for (dx, dy) in [(-2, -2), (2, -2), (-2, 2), (2, 2)] {
         set(
             map,
@@ -362,6 +347,26 @@ pub(super) fn paint_ambitious_imp(
     if let Some(door) = entrance(room, room_index, doors) {
         draw_inside(map, room, door, 1, crate::level::terrain::EMPTY);
     }
+    fill_wh(map, room.left + 1, room.top + 3, 7, 3, CUSTOM_DECO_EMPTY);
+    fill_wh(map, room.left + 3, room.top + 1, 3, 7, CUSTOM_DECO_EMPTY);
+    crate::level::carpet::add_city(map, room.left + 1, room.top + 3, 7, 3, depth, &[]);
+    crate::level::carpet::add_city(map, room.left + 3, room.top + 1, 3, 7, depth, &[]);
+    map.record_custom_tile(
+        "QuestEntrance",
+        "city_quest",
+        (center.x - 2, center.y - 2, 5, 5),
+        (0..25)
+            .map(|index| (index % 5 + (index / 5) * 8) as i16)
+            .collect(),
+    );
+    map.record_custom_tile(
+        "EntranceBarrier",
+        "city_quest",
+        (center.x - 1, center.y - 1, 3, 3),
+        (0..9)
+            .map(|index| (5 + index % 3 + (1 + index / 3) * 8) as i16)
+            .collect(),
+    );
     set(map, center, crate::level::terrain::EXIT);
     if let Some(cell) = map.point_to_cell(center.x, center.y) {
         map.branch_exits.push(cell);
@@ -404,6 +409,14 @@ fn fill_margin(map: &mut TerrainMap, room: &Room, margin: i32, terrain: i32) {
     for y in (room.top + margin)..=(room.bottom - margin) {
         for x in (room.left + margin)..=(room.right - margin) {
             set(map, Point::new(x, y), terrain);
+        }
+    }
+}
+
+fn fill_wh(map: &mut TerrainMap, x: i32, y: i32, w: i32, h: i32, terrain: i32) {
+    for row in y..y + h {
+        for col in x..x + w {
+            set(map, Point::new(col, row), terrain);
         }
     }
 }

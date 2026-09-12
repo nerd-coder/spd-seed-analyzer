@@ -2,6 +2,7 @@
 
 mod boss_layouts;
 mod build;
+pub(crate) mod carpet;
 mod create_items;
 mod create_mobs;
 mod forced_drops;

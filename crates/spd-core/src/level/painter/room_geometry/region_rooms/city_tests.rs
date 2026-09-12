@@ -1,8 +1,11 @@
+use crate::level::carpet::{CITY_ENTRANCE, CITY_PEDESTAL, CITY_STATUE, SKIP};
 use crate::level::painter::{place_doors_for_room, DoorMap};
 use crate::level::terrain::{
-    self, BOOKSHELF, EMPTY, EMPTY_SP, ENTRANCE_SP, EXIT, REGION_DECO, REGION_DECO_ALT, STATUE_SP,
+    self, BOOKSHELF, EMPTY, EMPTY_SP, ENTRANCE, ENTRANCE_SP, EXIT, REGION_DECO, REGION_DECO_ALT,
+    STATUE, STATUE_SP,
 };
 use crate::random::Random;
+use crate::report::MapCustomTile;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
 
@@ -33,21 +36,65 @@ fn with_east_connection(mut room: Room) -> (Vec<Room>, DoorMap) {
     (rooms, doors)
 }
 
-#[test]
-fn hallway_entrance_replaces_center_detail_without_extra_center_rolls() {
-    Random::push_generator_seeded(0xC17_11A11);
-    let entrance = room("HallwayEntranceRoom", RoomKind::Entrance, 1, 10, 8);
-    let (rooms, doors) = with_east_connection(entrance);
+fn paint_named(
+    name: &str,
+    kind: RoomKind,
+    seed: i64,
+    width: i32,
+    height: i32,
+) -> (terrain::TerrainMap, i32) {
+    Random::push_generator_seeded(seed);
+    let variant = room(name, kind, 1, width, height);
+    let (rooms, doors) = with_east_connection(variant);
     let mut map = terrain::paint_minimal(&rooms).expect("map");
     assert!(paint(&mut map, &rooms, &rooms[0], 0, &doors, 18).is_some());
     let next = Random::int();
     Random::pop_generator();
+    (map, next)
+}
 
-    assert_eq!(next, -702_599_100);
-    assert!(map.map.contains(&ENTRANCE_SP));
-    assert!(!map.map.contains(&STATUE_SP));
-    assert!(!map.map.contains(&REGION_DECO_ALT));
-    assert!(map.map.iter().filter(|&&tile| tile == EMPTY_SP).count() >= 9);
+fn carpets(map: &terrain::TerrainMap) -> Vec<&MapCustomTile> {
+    map.custom_tiles
+        .iter()
+        .filter(|tile| tile.class_name == "Carpet")
+        .collect()
+}
+
+#[test]
+fn hallway_entrance_and_exit_skip_statue_pedestal_roll() {
+    const SEED: i64 = 0xC17_11A11;
+    let (ordinary, ordinary_next) = paint_named("HallwayRoom", RoomKind::Standard, SEED, 10, 8);
+    let (entrance, entrance_next) =
+        paint_named("HallwayEntranceRoom", RoomKind::Entrance, SEED, 10, 8);
+    let (exit, exit_next) = paint_named("HallwayExitRoom", RoomKind::Exit, SEED, 10, 8);
+
+    Random::push_generator_seeded(SEED);
+    let entrance_room = room("HallwayEntranceRoom", RoomKind::Entrance, 1, 10, 8);
+    let (rooms, doors) = with_east_connection(entrance_room);
+    let mut skipped = terrain::paint_minimal(&rooms).expect("map");
+    assert!(paint(&mut skipped, &rooms, &rooms[0], 0, &doors, 18).is_some());
+    let _ = Random::int_max(2);
+    let after_skipped_roll = Random::int();
+    Random::pop_generator();
+
+    assert_ne!(ordinary_next, entrance_next);
+    assert_eq!(entrance_next, exit_next);
+    assert_eq!(after_skipped_roll, ordinary_next);
+    assert!(entrance.map.contains(&ENTRANCE_SP));
+    assert!(exit.map.contains(&EXIT));
+    assert!(!entrance.map.contains(&STATUE_SP));
+    assert!(!entrance.map.contains(&REGION_DECO_ALT));
+    assert!(ordinary.map.contains(&STATUE_SP) || ordinary.map.contains(&REGION_DECO_ALT));
+    assert_eq!(carpets(&entrance).len(), 1);
+    assert_eq!(carpets(&entrance)[0].texture, "carpet");
+    assert_eq!(carpets(&entrance)[0].width, 3);
+    assert_eq!(carpets(&entrance)[0].height, 3);
+    assert!(carpets(&entrance)[0].static_data.contains(&CITY_ENTRANCE));
+    assert!(carpets(&exit)[0].static_data.contains(&SKIP));
+    assert!(carpets(&ordinary)[0]
+        .static_data
+        .iter()
+        .any(|&tile| tile == CITY_STATUE || tile == CITY_PEDESTAL));
 }
 
 #[test]
@@ -81,6 +128,9 @@ fn library_ring_entrance_carves_from_center_to_outer_empty_ring() {
     assert!(map.map.contains(&BOOKSHELF));
     assert!(map.map.contains(&ENTRANCE_SP));
     assert!(map.map.contains(&EMPTY_SP));
+    assert_eq!(carpets(&map).len(), 1);
+    assert_eq!(carpets(&map)[0].texture, "carpet");
+    assert!(carpets(&map)[0].static_data.contains(&CITY_ENTRANCE));
     let transition = map
         .map
         .iter()
@@ -125,15 +175,19 @@ fn statues_exit_burns_transition_center_rolls_and_blocks_exit() {
     Random::pop_generator();
 
     assert_eq!(next, 943_703_656);
-    assert!(map.map.contains(&STATUE_SP));
+    assert!(map.map.contains(&STATUE));
+    assert!(!map.map.contains(&STATUE_SP));
     let exit_cell = map.map.iter().position(|&tile| tile == EXIT).expect("exit");
     assert!(!map.character_allowed[exit_cell]);
     assert!(map.is_solid(
         map.map
             .iter()
-            .position(|&tile| tile == STATUE_SP)
+            .position(|&tile| tile == STATUE)
             .expect("statue")
     ));
+    assert!(carpets(&map)
+        .iter()
+        .any(|tile| tile.static_data.contains(&SKIP)));
 }
 
 #[test]
@@ -147,7 +201,11 @@ fn statues_even_pedestal_coordinates_burn_separate_rolls() {
     Random::pop_generator();
 
     assert_eq!(next, 943_703_656);
-    assert!(map.map.contains(&REGION_DECO_ALT));
+    assert!(map.map.contains(&REGION_DECO));
+    assert!(!map.map.contains(&REGION_DECO_ALT));
+    assert!(carpets(&map)
+        .iter()
+        .any(|tile| tile.static_data.contains(&CITY_PEDESTAL)));
 }
 
 #[test]
@@ -163,14 +221,7 @@ fn city_variant_families_paint_entrances_and_protect_exits() {
             crate::level::terrain::ENTRANCE,
         ),
         ("LibraryRingExitRoom", RoomKind::Exit, 2, 14, 13, EXIT),
-        (
-            "StatuesEntranceRoom",
-            RoomKind::Entrance,
-            1,
-            9,
-            9,
-            ENTRANCE_SP,
-        ),
+        ("StatuesEntranceRoom", RoomKind::Entrance, 1, 9, 9, ENTRANCE),
     ];
     for (index, (name, kind, size, width, height, transition)) in cases.into_iter().enumerate() {
         Random::push_generator_seeded(0xC17_000 + index as i64);
@@ -205,6 +256,8 @@ fn segmented_library_uses_bookshelf_walls_and_single_cell_gaps() {
     assert_eq!(next, 1_386_148_211);
     assert!(map.map.contains(&BOOKSHELF));
     assert!(map.map.contains(&EMPTY_SP));
+    assert!(!carpets(&map).is_empty());
+    assert!(carpets(&map).iter().all(|tile| tile.texture == "carpet"));
     let first_inside = if door.x == rooms[0].right {
         (door.x - 1, door.y)
     } else {

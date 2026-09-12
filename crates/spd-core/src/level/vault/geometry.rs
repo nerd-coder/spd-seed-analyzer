@@ -5,11 +5,8 @@ use crate::level::painter::DoorMap;
 use crate::level::terrain::{TerrainMap, INACTIVE_TRAP, WALL, WALL_DECO};
 use crate::rooms::room::Room;
 
-pub(super) const CARPET_TEX: &str = "environment/custom_tiles/carpet.png";
 pub(super) const CITY_QUEST_TEX: &str = "environment/custom_tiles/city_quest.png";
-pub(super) const CITY_PEDESTAL: i16 = 81;
-pub(super) const CITY_PEDESTAL_TR: i16 = 87;
-pub(super) const CITY_PEDESTAL_TL: i16 = 88;
+pub(super) use crate::level::carpet::{CITY_PEDESTAL, CITY_PEDESTAL_TL, CITY_PEDESTAL_TR};
 
 pub(super) fn cell(map: &TerrainMap, x: i32, y: i32) -> usize {
     map.point_to_cell(x, y).expect("vault cell")
@@ -308,39 +305,6 @@ pub(super) fn map_simple_image(tile_w: i32, tile_h: i32, tx: i32, ty: i32, tex_w
     data
 }
 
-pub(super) fn carpet_map(
-    tile_w: i32,
-    tile_h: i32,
-    depth: i32,
-    overrides: &[(i32, i32, i16)],
-) -> Vec<i16> {
-    let region = 16 * ((depth - 1) / 5);
-    let mut data = vec![0i16; (tile_w * tile_h) as usize];
-    let mut i = 0;
-    for y in 0..tile_h {
-        for x in 0..tile_w {
-            data[i] = region as i16;
-            if y == 0 {
-                data[i] += 1;
-            }
-            if x == tile_w - 1 {
-                data[i] += 2;
-            }
-            if y == tile_h - 1 {
-                data[i] += 4;
-            }
-            if x == 0 {
-                data[i] += 8;
-            }
-            i += 1;
-        }
-    }
-    for &(x, y, value) in overrides {
-        data[(x + tile_w * y) as usize] = value;
-    }
-    data
-}
-
 pub(super) fn add_carpet(
     map: &mut TerrainMap,
     x: i32,
@@ -350,11 +314,15 @@ pub(super) fn add_carpet(
     depth: i32,
     overrides: &[(i32, i32, i16)],
 ) {
-    map.record_custom_tile(
-        "Carpet",
-        CARPET_TEX,
-        (x, y, w, h),
-        carpet_map(w, h, depth, overrides),
+    crate::level::carpet::add(
+        map,
+        crate::level::carpet::VAULT_TEXTURE,
+        x,
+        y,
+        w,
+        h,
+        depth,
+        overrides,
     );
 }
 

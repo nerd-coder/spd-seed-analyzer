@@ -300,7 +300,8 @@ fn imp_room_environment_allowed(room: &Room, x: i32, y: i32) -> bool {
     let center_y = (room.top + room.bottom) / 2;
     let dx = x - center_x;
     let dy = y - center_y;
-    dx * dx + dy * dy >= 9
+    // Java `Point.distance(p, center()) >= 5` (Euclidean).
+    dx * dx + dy * dy >= 25
 }
 
 /// Pinned room-local `canPlaceTrap` overrides that reject every point.
@@ -499,6 +500,17 @@ mod tests {
             assert!(!room_trap_allowed(&room), "{name}");
         }
         assert!(room_trap_allowed(&box_room(0, 1, 1, 2, 2)));
+    }
+
+    #[test]
+    fn ambitious_imp_environment_uses_euclidean_distance_five() {
+        let mut room = box_room(0, 0, 0, 8, 8);
+        room.name = "AmbitiousImpRoom".into();
+        assert!(!imp_room_environment_allowed(&room, 4, 4));
+        assert!(!imp_room_environment_allowed(&room, 8, 4));
+        assert!(!imp_room_environment_allowed(&room, 8, 6));
+        assert!(imp_room_environment_allowed(&room, 8, 7));
+        assert!(imp_room_environment_allowed(&room, 0, 0));
     }
 
     #[test]

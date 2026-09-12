@@ -1,5 +1,6 @@
 //! City `LibraryRingRoom` and its entrance/exit variants.
 
+use crate::level::carpet::{self, CITY_ENTRANCE, SKIP};
 use crate::level::terrain::{TerrainMap, BOOKSHELF, EMPTY, EMPTY_SP, ENTRANCE_SP, EXIT, WALL};
 use crate::random::Random;
 use crate::rooms::room::Room;
@@ -8,7 +9,13 @@ use crate::rooms::types::RoomKind;
 use super::super::super::DoorMap;
 use super::{center, door_points, draw_inside, fill_margin, fill_rect, fill_room, set, terrain_at};
 
-pub(super) fn paint(map: &mut TerrainMap, room: &Room, room_index: usize, doors: &DoorMap) {
+pub(super) fn paint(
+    map: &mut TerrainMap,
+    room: &Room,
+    room_index: usize,
+    doors: &DoorMap,
+    depth: i32,
+) {
     fill_room(map, room, WALL);
     fill_margin(map, room, 1, BOOKSHELF);
     fill_margin(map, room, 2, EMPTY);
@@ -37,13 +44,13 @@ pub(super) fn paint(map: &mut TerrainMap, room: &Room, room_index: usize, doors:
     for door in door_points(room, room_index, doors) {
         draw_inside(map, room, door, 2, EMPTY);
     }
-    paint_transition(map, room);
+    paint_transition(map, room, depth);
 }
 
-fn paint_transition(map: &mut TerrainMap, room: &Room) {
-    let transition = match room.kind {
-        RoomKind::Entrance => ENTRANCE_SP,
-        RoomKind::Exit => EXIT,
+fn paint_transition(map: &mut TerrainMap, room: &Room, depth: i32) {
+    let (transition, overlay) = match room.kind {
+        RoomKind::Entrance => (ENTRANCE_SP, CITY_ENTRANCE),
+        RoomKind::Exit => (EXIT, SKIP),
         _ => return,
     };
     fill_margin(map, room, 5, EMPTY_SP);
@@ -55,6 +62,17 @@ fn paint_transition(map: &mut TerrainMap, room: &Room) {
             map.character_allowed[cell] = false;
         }
     }
+    let left = room.left + 5;
+    let top = room.top + 5;
+    carpet::add_city(
+        map,
+        left,
+        top,
+        room.width() - 10,
+        room.height() - 10,
+        depth,
+        &[(point.x - left, point.y - top, overlay)],
+    );
 
     let (dx, dy) = if Random::int_max(2) == 0 {
         (if Random::int_max(2) == 0 { 1 } else { -1 }, 0)

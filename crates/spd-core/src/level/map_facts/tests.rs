@@ -71,6 +71,7 @@ fn regular_floor_overlays_match_java_fixture_geometry() {
         let actual: Vec<_> = map
             .custom_tiles
             .iter()
+            .filter(|layer| layer.class_name != "Carpet")
             .map(|layer| {
                 (
                     layer.class_name.as_str(),
@@ -82,6 +83,14 @@ fn regular_floor_overlays_match_java_fixture_geometry() {
             })
             .collect();
         assert_eq!(actual, expected, "{seed} depth {depth}");
+        if depth == 17 {
+            assert!(
+                map.custom_tiles
+                    .iter()
+                    .any(|layer| layer.class_name == "Carpet" && layer.texture == "carpet"),
+                "{seed} depth {depth} city carpets"
+            );
+        }
         assert!(map
             .custom_tiles
             .iter()
