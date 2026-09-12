@@ -157,6 +157,27 @@ Not having the trinket costs no RNG: `RegularLevel.java:406` evaluates
 `Random.Float()` before applying `MimicTooth.mimicChanceMultiplier()`, so the
 tooth-free stream is the baseline stream.
 
+### Spyglass opacity, Censer gases, Exotic Crystals
+
+Cracked Spyglass extra hidden items are generation (§11). Hidden-heap sprite
+alpha (`sprites/ItemSprite.java:236`, `heap.hidden ? 0.1f`) is renderer, not
+generation; public maps omit heaps.
+
+Chaotic Censer `GAS_CAT_CHANCES` and the common/uncommon/rare gas tables
+(`ChaoticCenser.java:300-328`; Stench common, Regrowth uncommon) are chosen in
+`produceGas` (`:151-232`) from `CenserGasTracker.act` — runtime spew, not
+`Generator`, `Level.create`, or quest spawn. Trinket `upgradeEnergyCost`
+comments are not generation.
+
+Held Exotic Crystals convert generated potions and scrolls at
+`consumableExoticChance` `0.2 + 0.2*level` (`ExoticCrystals.java:52-58`).
+Levelgen sites: `Generator.random` (`Generator.java:730-737`),
+`randomUsingDefaults` (`:758-766`), Secret Laboratory
+(`SecretLaboratoryRoom.java:101`), Secret Library (`SecretLibraryRoom.java:100`),
+and Crystal Path (`CrystalPathRoom.java:173-176`). Ring of Wealth
+(`RingOfWealth.java:264-266`) and mob loot (`Mob.java:1111-1115`) stay
+runtime. Method: pinned-source call-site audit.
+
 ## 7. Measurements at the Ambitious Imp spawn (five oracle seeds)
 
 `Imp.Quest.spawn` fills six `rewardOptions` during `CityLevel.initRooms` on
