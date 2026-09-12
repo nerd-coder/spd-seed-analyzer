@@ -2,7 +2,6 @@ import {
   featureVisual,
   lowerVisual,
   raisedTerrainVisual,
-  SHEET_COLS,
   TILE_PX,
   wallVisual,
 } from '@/lib/dungeon-tile-visuals'
@@ -12,12 +11,12 @@ import {
   drawVisibleTraps,
   exactEntityCells,
 } from '@/lib/map-entities'
-import type {
-  FloorMap,
-  IdentityMaps,
-  MapCustomTile,
-  MapMarkerKind,
-} from '@/lib/spd-wasm'
+import type { FloorMap, IdentityMaps, MapMarkerKind } from '@/lib/spd-wasm'
+import {
+  drawCustomTiles,
+  drawSheetTile,
+  drawWallOcclusion,
+} from '@/lib/tiles-overlays'
 
 export { TILE_PX } from '@/lib/dungeon-tile-visuals'
 export type { MapAssets } from '@/lib/map-assets'
@@ -63,79 +62,6 @@ export function mapViewport(map: FloorMap): MapViewport {
         width: right - left + 1,
         height: bottom - top + 1,
       }
-}
-
-function drawSheetTile(
-  ctx: CanvasRenderingContext2D,
-  image: HTMLImageElement,
-  visual: number,
-  cell: number,
-  width: number,
-  scale: number
-) {
-  const size = TILE_PX * scale
-  ctx.drawImage(
-    image,
-    (visual % SHEET_COLS) * TILE_PX,
-    Math.floor(visual / SHEET_COLS) * TILE_PX,
-    TILE_PX,
-    TILE_PX,
-    (cell % width) * size,
-    Math.floor(cell / width) * size,
-    size,
-    size
-  )
-}
-
-function customTileImage(assets: MapAssets, texture: string) {
-  const images: Record<string, HTMLImageElement> = {
-    prison_quest: assets.customTiles.prisonQuest,
-    caves_quest: assets.customTiles.cavesQuest,
-    city_quest: assets.customTiles.cityQuest,
-    city_boss: assets.customTiles.cityBoss,
-    weak_floor: assets.customTiles.weakFloor,
-    halls_special: assets.customTiles.hallsSpecial,
-  }
-  return images[texture] ?? null
-}
-
-function drawCustomTiles(
-  ctx: CanvasRenderingContext2D,
-  assets: MapAssets,
-  map: FloorMap,
-  layers: MapCustomTile[] | undefined,
-  scale: number
-) {
-  for (const layer of layers ?? []) {
-    const image = customTileImage(assets, layer.texture)
-    if (!image || layer.width <= 0) continue
-    for (let index = 0; index < layer.static_data.length; index++) {
-      const visual = layer.static_data[index]
-      if (visual == null || visual < 0) continue
-      const x = layer.x + (index % layer.width)
-      const y = layer.y + Math.floor(index / layer.width)
-      if (x < 0 || y < 0 || x >= map.width || y >= map.height) continue
-      const cell = y * map.width + x
-      if (
-        map.discoverable.length === map.tiles.length &&
-        !map.discoverable[cell]
-      )
-        continue
-      const size = TILE_PX * scale
-      const sheetColumns = image.naturalWidth / TILE_PX
-      ctx.drawImage(
-        image,
-        (visual % sheetColumns) * TILE_PX,
-        Math.floor(visual / sheetColumns) * TILE_PX,
-        TILE_PX,
-        TILE_PX,
-        x * size,
-        y * size,
-        size,
-        size
-      )
-    }
-  }
 }
 
 function drawMarkers(
@@ -229,15 +155,26 @@ export function renderStaticMap(
   drawCustomTiles(ctx, assets, map, map.custom_tiles, scale)
   drawVisibleTraps(ctx, assets, map, scale)
   drawKnownEntities(ctx, assets, map, identities, scale, visibility)
+  drawCustomTiles(ctx, assets, map, map.custom_terrain, scale)
   for (let cell = 0; cell < map.tiles.length; cell++) {
     if (hasDiscoverability && !map.discoverable[cell]) continue
-    const raised = raisedTerrainVisual(map.tiles[cell], variance, cell)
-    if (raised != null)
-      drawSheetTile(ctx, assets.tiles, raised, cell, map.width, scale)
+    const raised = raisedTerrainVisual(
+      map.tiles[cell],
+      variance,
+      cell,
+      map.tileset
+    )
+    if (raised != null) {
+      drawSheetTile(ctx, assets.raisedTerrain, raised, cell, map.width, scale)
+    }
+  }
+  for (let cell = 0; cell < map.tiles.length; cell++) {
+    if (hasDiscoverability && !map.discoverable[cell]) continue
     const wall = wallVisual(map.tiles, variance, map.width, map.tileset, cell)
     if (wall != null)
       drawSheetTile(ctx, assets.tiles, wall, cell, map.width, scale)
   }
+  drawWallOcclusion(ctx, assets, map, scale)
   drawCustomTiles(ctx, assets, map, map.custom_walls, scale)
   drawMarkers(ctx, map, scale, visibility)
   return canvas

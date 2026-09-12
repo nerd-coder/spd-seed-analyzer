@@ -116,6 +116,7 @@ export type FloorMap = {
   plants: MapPlant[]
   blobs: MapBlob[]
   custom_tiles: MapCustomTile[]
+  custom_terrain?: MapCustomTile[]
   custom_walls: MapCustomTile[]
 }
 

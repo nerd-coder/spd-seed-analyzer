@@ -106,29 +106,59 @@ const direct = new Map<number, number>([
   [Terrain.WELL, FLOOR + 18],
 ])
 
-const commonAlts = new Map<number, number>([
-  [FLOOR, FLOOR + 6],
-  [FLOOR + 2, FLOOR + 8],
-  [FLOOR + 3, FLOOR + 9],
-  [FLOOR + 4, FLOOR + 10],
-  [FLOOR + 1, FLOOR + 7],
-  [RAISED_WALL, RAISED_WALL + 16],
-  [RAISED_WALL_DECO, RAISED_WALL_DECO + 16],
-  [RAISED_WALL_BOOKSHELF, RAISED_WALL_BOOKSHELF + 16],
-  [RAISED_OTHER + 2, RAISED_OTHER + 5],
-  [RAISED_OTHER + 3, RAISED_OTHER + 6],
-  [RAISED_OTHER + 12, RAISED_OTHER + 13],
-  [OTHER_OVERHANG + 2, OTHER_OVERHANG + 5],
-  [OTHER_OVERHANG + 3, OTHER_OVERHANG + 6],
-  [OTHER_OVERHANG + 18, OTHER_OVERHANG + 21],
-  [OTHER_OVERHANG + 19, OTHER_OVERHANG + 22],
-  [OTHER_OVERHANG + 12, OTHER_OVERHANG + 13],
+type TileAlt = { chances: number[]; alts: number[] }
+
+const tileAlt = (chances: number[], ...alts: number[]): TileAlt => ({
+  chances,
+  alts,
+})
+
+/** Pinned `DungeonTileSheet.tileAltVisuals` default table. */
+const tileAltVisuals = new Map<number, TileAlt>([
+  [FLOOR, tileAlt([52.5, 5], FLOOR + 6, FLOOR + 12)],
+  [FLOOR + 2, tileAlt([50], FLOOR + 8)],
+  [FLOOR + 3, tileAlt([50], FLOOR + 9)],
+  [FLOOR + 4, tileAlt([50], FLOOR + 10)],
+  [FLOOR + 1, tileAlt([50], FLOOR + 7)],
+  [RAISED_WALL, tileAlt([50], RAISED_WALL + 16)],
+  [RAISED_WALL_DECO, tileAlt([50], RAISED_WALL_DECO + 16)],
+  [RAISED_WALL_BOOKSHELF, tileAlt([50], RAISED_WALL_BOOKSHELF + 16)],
+  [RAISED_OTHER + 2, tileAlt([50], RAISED_OTHER + 5)],
+  [RAISED_OTHER + 3, tileAlt([50], RAISED_OTHER + 6)],
+  [OTHER_OVERHANG + 2, tileAlt([50], OTHER_OVERHANG + 5)],
+  [OTHER_OVERHANG + 3, tileAlt([50], OTHER_OVERHANG + 6)],
 ])
 
-const rareAlts = new Map<number, number>([
-  [FLOOR, FLOOR + 12],
-  [RAISED_OTHER + 12, RAISED_OTHER + 14],
-  [OTHER_OVERHANG + 12, OTHER_OVERHANG + 14],
+/** `updateAltVariants` when the tileset is `caves_crystal`. */
+const crystalAlts = new Map<number, TileAlt>([
+  [
+    RAISED_OTHER + 12,
+    tileAlt(
+      [83.3, 66.7, 50, 33.3, 16.7],
+      RAISED_OTHER + 13,
+      RAISED_OTHER + 14,
+      RAISED_OTHER + 15,
+      RAISED_OTHER + 16,
+      RAISED_OTHER + 17
+    ),
+  ],
+  [
+    OTHER_OVERHANG + 12,
+    tileAlt([66.7, 33.3], OTHER_OVERHANG + 13, OTHER_OVERHANG + 14),
+  ],
+])
+
+/** `updateAltVariants` when the tileset is `caves_gnoll`. */
+const gnollAlts = new Map<number, TileAlt>([
+  [FLOOR + 5, tileAlt([50], FLOOR + 11)],
+  [
+    RAISED_OTHER + 12,
+    tileAlt([66.7, 33.3], RAISED_OTHER + 13, RAISED_OTHER + 14),
+  ],
+  [
+    OTHER_OVERHANG + 12,
+    tileAlt([66.7, 33.3], OTHER_OVERHANG + 13, OTHER_OVERHANG + 14),
+  ],
 ])
 
 const waterStitchable = new Set<number>([
@@ -202,7 +232,7 @@ export const wallStitchable = (tile: number) =>
   tile === Terrain.UNLOCKED_EXIT ||
   tile === Terrain.BOOKSHELF
 
-const doorTile = (tile: number) =>
+export const doorTile = (tile: number) =>
   tile === Terrain.DOOR ||
   tile === Terrain.LOCKED_DOOR ||
   tile === Terrain.HERO_LKD_DR ||
@@ -223,12 +253,32 @@ const tileAt = (
   return tiles[x + y * width] ?? -1
 }
 
-const withAlt = (visual: number, cell: number, variance: number[]) => {
+function altEntry(visual: number, tileset: string) {
+  if (tileset === 'caves_crystal') {
+    const crystal = crystalAlts.get(visual)
+    if (crystal) return crystal
+  } else if (tileset === 'caves_gnoll') {
+    const gnoll = gnollAlts.get(visual)
+    if (gnoll) return gnoll
+  }
+  return tileAltVisuals.get(visual)
+}
+
+/** Pinned `DungeonTileSheet.getVisualWithAlts`: last matching `variance < chance` wins. */
+const withAlt = (
+  visual: number,
+  cell: number,
+  variance: number[],
+  tileset: string
+) => {
+  const entry = altEntry(visual, tileset)
+  if (!entry) return visual
   const value = variance[cell] ?? 0
-  if (value >= 95)
-    return rareAlts.get(visual) ?? commonAlts.get(visual) ?? visual
-  if (value >= 50) return commonAlts.get(visual) ?? visual
-  return visual
+  let result = visual
+  for (let i = 0; i < entry.chances.length; i++) {
+    if (value < entry.chances[i]) result = entry.alts[i]
+  }
+  return result
 }
 
 const waterCanStitch = (tile: number, tileset: string) =>
@@ -243,8 +293,17 @@ export function lowerVisual(
   cell: number
 ): number | null {
   const tile = tiles[cell] ?? Terrain.WALL
+  if (tile === Terrain.EMPTY_DECO && isMiningTileset(tileset)) {
+    const heavy =
+      tileAt(tiles, width, cell, 0, -1) === Terrain.MINE_BOULDER ||
+      tileAt(tiles, width, cell, 1, 0) === Terrain.MINE_BOULDER ||
+      tileAt(tiles, width, cell, 0, 1) === Terrain.MINE_BOULDER ||
+      tileAt(tiles, width, cell, -1, 0) === Terrain.MINE_BOULDER
+    return withAlt(heavy ? FLOOR + 5 : FLOOR + 1, cell, variance, tileset)
+  }
   const directVisual = direct.get(tile)
-  if (directVisual != null) return withAlt(directVisual, cell, variance)
+  if (directVisual != null)
+    return withAlt(directVisual, cell, variance, tileset)
 
   if (tile === Terrain.WATER) {
     let visual = WATER
@@ -291,7 +350,7 @@ export function lowerVisual(
             ? RAISED_WALL_BOOKSHELF
             : -1
     if (visual < 0) return null
-    visual = withAlt(visual, cell, variance)
+    visual = withAlt(visual, cell, variance, tileset)
     if (!wallStitchable(tileAt(tiles, width, cell, 1, 0))) visual += 1
     if (!wallStitchable(tileAt(tiles, width, cell, -1, 0))) visual += 2
     return visual
@@ -301,25 +360,36 @@ export function lowerVisual(
   if (tile === Terrain.REGION_DECO) return RAISED_OTHER + 10
   if (tile === Terrain.REGION_DECO_ALT) return RAISED_OTHER + 11
   if (tile === Terrain.MINE_CRYSTAL || tile === Terrain.MINE_BOULDER)
-    return withAlt(RAISED_OTHER + 12, cell, variance)
+    return withAlt(RAISED_OTHER + 12, cell, variance, tileset)
   if (tile === Terrain.ALCHEMY) return RAISED_OTHER
   if (tile === Terrain.BARRICADE) return RAISED_OTHER + 1
   if (tile === Terrain.HIGH_GRASS)
-    return withAlt(RAISED_OTHER + 2, cell, variance)
+    return withAlt(RAISED_OTHER + 2, cell, variance, tileset)
   if (tile === Terrain.FURROWED_GRASS)
-    return withAlt(RAISED_OTHER + 3, cell, variance)
+    return withAlt(RAISED_OTHER + 3, cell, variance, tileset)
   return null
 }
 
+/** Indices into `raised_terrain.png` (`RaisedTerrainTilemap`, 4 columns). */
 export function raisedTerrainVisual(
   tile: number,
   variance: number[],
-  cell: number
+  cell: number,
+  tileset: string
 ) {
-  if (tile === Terrain.HIGH_GRASS)
-    return withAlt(OTHER_OVERHANG + 18, cell, variance)
-  if (tile === Terrain.FURROWED_GRASS)
-    return withAlt(OTHER_OVERHANG + 19, cell, variance)
+  const regionOffset = tilesetRegion(tileset) * 4
+  if (tile === Terrain.HIGH_GRASS) {
+    return withAlt(RAISED_OTHER + 2, cell, variance, tileset) ===
+      RAISED_OTHER + 5
+      ? regionOffset + 2
+      : regionOffset
+  }
+  if (tile === Terrain.FURROWED_GRASS) {
+    return withAlt(RAISED_OTHER + 3, cell, variance, tileset) ===
+      RAISED_OTHER + 6
+      ? regionOffset + 3
+      : regionOffset + 1
+  }
   return null
 }
 
@@ -382,22 +452,22 @@ export function wallVisual(
   if (below === Terrain.REGION_DECO) return OTHER_OVERHANG + 10
   if (below === Terrain.REGION_DECO_ALT) return OTHER_OVERHANG + 11
   if (below === Terrain.MINE_CRYSTAL || below === Terrain.MINE_BOULDER)
-    return withAlt(OTHER_OVERHANG + 12, cell + width, variance)
+    return withAlt(OTHER_OVERHANG + 12, cell + width, variance, tileset)
   if (below === Terrain.ALCHEMY) return OTHER_OVERHANG
   if (below === Terrain.BARRICADE) return OTHER_OVERHANG + 1
   if (below === Terrain.HIGH_GRASS)
-    return withAlt(OTHER_OVERHANG + 2, cell + width, variance)
+    return withAlt(OTHER_OVERHANG + 2, cell + width, variance, tileset)
   if (below === Terrain.FURROWED_GRASS)
-    return withAlt(OTHER_OVERHANG + 3, cell + width, variance)
+    return withAlt(OTHER_OVERHANG + 3, cell + width, variance, tileset)
   return null
 }
 
 export function featureVisual(tile: number, tileset: string, variance: number) {
   const stage = tilesetRegion(tileset)
-  const alt = variance >= 50 ? 1 : 0
-  if (tile === Terrain.HIGH_GRASS) return 9 + 16 * stage + alt
-  if (tile === Terrain.FURROWED_GRASS) return 11 + 16 * stage + alt
-  if (tile === Terrain.GRASS) return 13 + 16 * stage + alt
-  if (tile === Terrain.EMBERS) return 9 + 16 * 5 + alt
+  const alt = variance < 50 ? 1 : 0
+  if (tile === Terrain.HIGH_GRASS) return 128 + 16 * stage + alt
+  if (tile === Terrain.FURROWED_GRASS) return 130 + 16 * stage + alt
+  if (tile === Terrain.GRASS) return 132 + 16 * stage + alt
+  if (tile === Terrain.EMBERS) return 208 + alt
   return null
 }

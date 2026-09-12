@@ -24,6 +24,8 @@ export type MapEntityAssets = MobAssets & {
 export type MapAssets = MapEntityAssets & {
   tiles: HTMLImageElement
   water: HTMLImageElement
+  raisedTerrain: HTMLImageElement
+  occlusionShadows: HTMLImageElement
   customTiles: {
     prisonQuest: HTMLImageElement
     cavesQuest: HTMLImageElement
@@ -31,6 +33,8 @@ export type MapAssets = MapEntityAssets & {
     cityBoss: HTMLImageElement
     weakFloor: HTMLImageElement
     hallsSpecial: HTMLImageElement
+    carpet: HTMLImageElement
+    ratKingRoom: HTMLImageElement
   }
 }
 
@@ -68,30 +72,40 @@ export async function loadMapAssets(tileset: string): Promise<MapAssets> {
     water,
     items,
     mobs,
+    raisedTerrain,
+    occlusionShadows,
     prisonQuest,
     cavesQuest,
     cityQuest,
     cityBoss,
     weakFloor,
     hallsSpecial,
+    carpet,
+    ratKingRoom,
   ] = await Promise.all([
     loadImage(`/assets/environment/tiles_${tileset}.png`),
     loadImage('/assets/environment/terrain_features.png'),
     loadImage(`/assets/environment/water${region}.png`),
     loadImage('/assets/sprites/items.png'),
     loadMobAssets(),
+    loadImage('/assets/environment/raised_terrain.png'),
+    loadImage('/assets/environment/occlusion_shadows.png'),
     loadImage('/assets/environment/custom_tiles/prison_quest.png'),
     loadImage('/assets/environment/custom_tiles/caves_quest.png'),
     loadImage('/assets/environment/custom_tiles/city_quest.png'),
     loadImage('/assets/environment/custom_tiles/city_boss.png'),
     loadImage('/assets/environment/custom_tiles/weak_floor.png'),
     loadImage('/assets/environment/custom_tiles/halls_special.png'),
+    loadImage('/assets/environment/custom_tiles/carpet.png'),
+    loadImage('/assets/environment/custom_tiles/rat_king_room.png'),
   ])
   return {
     tiles,
     terrainFeatures,
     water,
     items,
+    raisedTerrain,
+    occlusionShadows,
     ...mobs,
     customTiles: {
       prisonQuest,
@@ -100,6 +114,8 @@ export async function loadMapAssets(tileset: string): Promise<MapAssets> {
       cityBoss,
       weakFloor,
       hallsSpecial,
+      carpet,
+      ratKingRoom,
     },
   }
 }
