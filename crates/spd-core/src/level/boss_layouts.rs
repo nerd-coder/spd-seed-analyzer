@@ -44,7 +44,8 @@ pub(super) fn fixed_layout(depth: i32) -> Option<FloorMap> {
         constrained_equipment_cells: Vec::new(),
     };
     if depth == 20 {
-        (floor.custom_tiles, floor.custom_walls) = city_overlays::layers(&floor.tiles);
+        (floor.custom_tiles, floor.custom_terrain, floor.custom_walls) =
+            city_overlays::layers(&floor.tiles);
     }
     Some(floor)
 }

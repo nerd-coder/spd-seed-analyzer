@@ -1,4 +1,4 @@
-//! Pinned `CityBossLevel` custom ground and wall tilemaps.
+//! Pinned `CityBossLevel` custom ground, terrain, and wall tilemaps.
 
 use crate::level::terrain;
 use crate::report::MapCustomTile;
@@ -6,9 +6,10 @@ use crate::report::MapCustomTile;
 const WIDTH: usize = 15;
 const HEIGHT: usize = 48;
 
-pub(super) fn layers(map: &[u16]) -> (Vec<MapCustomTile>, Vec<MapCustomTile>) {
+pub(super) fn layers(map: &[u16]) -> (Vec<MapCustomTile>, Vec<MapCustomTile>, Vec<MapCustomTile>) {
     (
         vec![layer("CustomGroundVisuals", ground(map))],
+        vec![layer("CustomTerrainVisuals", terrain_visuals(map))],
         vec![layer("CustomWallVisuals", walls(map))],
     )
 }
@@ -23,6 +24,15 @@ fn layer(class_name: &str, static_data: Vec<i16>) -> MapCustomTile {
         height: HEIGHT as u32,
         static_data,
     }
+}
+
+fn carpet(tile: u16) -> bool {
+    matches!(tile as i32, terrain::CUSTOM_DECO_EMPTY | terrain::EMPTY_SP)
+}
+
+fn pair_carpet(a: u16, b: u16) -> bool {
+    (a == terrain::CUSTOM_DECO_EMPTY as u16 && b == terrain::CUSTOM_DECO_EMPTY as u16)
+        || (a == terrain::EMPTY_SP as u16 && b == terrain::EMPTY_SP as u16)
 }
 
 fn ground(map: &[u16]) -> Vec<i16> {
@@ -89,38 +99,94 @@ fn ground(map: &[u16]) -> Vec<i16> {
         }
         stairs_top += WIDTH;
     }
-    i = WIDTH * 22;
+    paint_lower_ground(map, &mut data);
+    data
+}
+
+fn paint_lower_ground(map: &[u16], data: &mut [i16]) {
+    let mut i = WIDTH * 22;
     while i < WIDTH * HEIGHT {
         if map[i] == terrain::PEDESTAL as u16 {
             data[i] = 108;
-        } else if map[i] == terrain::STATUE as u16 && i % WIDTH > 7 {
-            data[i] = 124;
-        } else if map[i] == terrain::EMPTY_SP as u16 {
-            if map[i + 1] == terrain::EMPTY_SP as u16 && map[i + WIDTH] == terrain::EMPTY_SP as u16
-            {
-                data[i] = 105;
-                data[i + 1] = 106;
-                data[i + 2] = 107;
-                i += 2;
-            } else if map[i + 1] == terrain::CUSTOM_DECO as u16 {
-                data[i] = 113;
-                data[i + 1] = 114;
-                data[i + 2] = 115;
-                i += 2;
-            } else if map[i + 1] == terrain::EMPTY_SP as u16
-                && map[i - WIDTH] == terrain::EMPTY_SP as u16
-            {
-                data[i] = 121;
-                data[i + 1] = 122;
-                data[i + 2] = 123;
-                i += 2;
-            } else if map[i - WIDTH] != terrain::EMPTY_SP as u16 {
-                data[i] = 104;
-            } else if map[i + WIDTH] != terrain::EMPTY_SP as u16 {
-                data[i] = 120;
-            } else {
-                data[i] = 112;
-            }
+        } else if map[i] == terrain::STATUE as u16 {
+            i = paint_statue(data, i);
+        } else if carpet(map[i]) {
+            i = paint_carpet(map, data, i);
+        } else {
+            data[i] = -1;
+        }
+        i += 1;
+    }
+}
+
+fn paint_statue(data: &mut [i16], mut i: usize) -> usize {
+    if i < WIDTH * 32 {
+        if i % WIDTH > 7 {
+            data[i] = 87;
+            i += 1;
+            data[i] = 95;
+        } else {
+            data[i] = 71;
+            i += 1;
+            data[i] = 79;
+        }
+    } else if i % WIDTH > 7 {
+        data[i] = 124;
+    } else {
+        data[i] = -1;
+    }
+    i
+}
+
+fn paint_carpet(map: &[u16], data: &mut [i16], mut i: usize) -> usize {
+    if pair_carpet(map[i + 1], map[i + WIDTH]) {
+        data[i] = 105;
+        data[i + 1] = 106;
+        data[i + 2] = 107;
+        i += 2;
+    } else if map[i + 1] == terrain::CUSTOM_DECO as u16 {
+        data[i] = 113;
+        data[i + 1] = 114;
+        data[i + 2] = 115;
+        i += 2;
+    } else if pair_carpet(map[i + 1], map[i - WIDTH]) {
+        data[i] = 121;
+        data[i + 1] = 122;
+        data[i + 2] = 123;
+        i += 2;
+    } else if !carpet(map[i - WIDTH]) || map[i - 2 * WIDTH] == terrain::CUSTOM_DECO as u16 {
+        data[i] = 104;
+    } else if !carpet(map[i + WIDTH]) {
+        data[i] = 120;
+    } else {
+        data[i] = 112;
+    }
+    i
+}
+
+fn terrain_visuals(map: &[u16]) -> Vec<i16> {
+    let mut data = vec![0; WIDTH * HEIGHT];
+    for i in WIDTH..WIDTH * 22 {
+        data[i] = if map[i] == terrain::STATUE as u16 {
+            125
+        } else {
+            -1
+        };
+    }
+    let mut i = WIDTH * 22;
+    while i < WIDTH * HEIGHT {
+        if map[i] == terrain::STATUE as u16 {
+            i = paint_statue(&mut data, i);
+        } else if i < WIDTH * 32
+            && map[i] == terrain::WALL_DECO as u16
+            && map[i + WIDTH] != terrain::WALL as u16
+        {
+            data[i] = 55;
+        } else if i < WIDTH * 32
+            && matches!(map[i] as i32, terrain::EMPTY | terrain::EMPTY_DECO)
+            && map[i - WIDTH] == terrain::WALL_DECO as u16
+        {
+            data[i] = 63;
         } else {
             data[i] = -1;
         }
@@ -174,4 +240,35 @@ fn walls(map: &[u16]) -> Vec<i16> {
         data[i] = -1;
     }
     data
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn city_boss_layers_include_terrain_visuals() {
+        let floor = super::super::fixed_layout(20).expect("city boss");
+        assert_eq!(floor.custom_tiles[0].class_name, "CustomGroundVisuals");
+        assert_eq!(floor.custom_terrain[0].class_name, "CustomTerrainVisuals");
+        assert_eq!(floor.custom_walls[0].class_name, "CustomWallVisuals");
+        assert_eq!(floor.custom_tiles[0].static_data.len(), WIDTH * HEIGHT);
+        assert_eq!(floor.custom_terrain[0].static_data.len(), WIDTH * HEIGHT);
+        let cell = |x: usize, y: usize| y * WIDTH + x;
+        let ground = &floor.custom_tiles[0].static_data;
+        let overlay = &floor.custom_terrain[0].static_data;
+        assert_eq!(floor.tiles[cell(7, 30)], terrain::CUSTOM_DECO_EMPTY as u16);
+        assert_eq!(floor.tiles[cell(7, 36)], terrain::CUSTOM_DECO_EMPTY as u16);
+        assert_eq!(ground[cell(6, 30)], 105);
+        assert_eq!(ground[cell(6, 31)], 113);
+        assert_eq!(ground[cell(6, 32)], 121);
+        assert_eq!(ground[cell(7, 33)], 104);
+        assert_eq!(ground[cell(7, 36)], 120);
+        assert_eq!(ground[cell(7, 38)], 104);
+        assert_eq!((ground[cell(3, 31)], ground[cell(4, 31)]), (71, 79));
+        assert_eq!((ground[cell(10, 31)], ground[cell(11, 31)]), (87, 95));
+        assert_eq!((overlay[cell(3, 31)], overlay[cell(4, 31)]), (71, 79));
+        assert_eq!(ground[cell(8, 40)], 124);
+        assert_eq!(ground[cell(6, 40)], -1);
+    }
 }

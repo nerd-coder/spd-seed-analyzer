@@ -1,4 +1,4 @@
-//! Pinned SPD v3.3.8 `LastLevel` structural generation.
+//! Pinned SPD v4.0.0 `LastLevel` structural generation.
 
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
@@ -41,6 +41,8 @@ pub(super) fn build(
         tileset: terrain::tileset_for_depth(26).to_string(),
         tile_variance: map_facts::tile_variance(WIDTH * HEIGHT, depth_seed),
         tiles,
+        // v4 `LastLevel.cleanWalls` starts at `(height-ROOM_TOP+2)*width`, so the
+        // entrance wall row stays on ordinary `Level.cleanWalls` discoverability.
         discoverable,
         markers: Vec::new(),
         heaps: Vec::new(),
@@ -126,4 +128,25 @@ fn custom_walls() -> Vec<MapCustomTile> {
             data
         },
     }]
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn last_level_entrance_wall_row_stays_discoverable() {
+        let floor = super::super::fixed_layout(26).expect("last level");
+        let width = super::WIDTH;
+        for x in 0..width {
+            assert!(
+                floor.discoverable[55 * width + x],
+                "v4 cleanWalls leaves row 55 discoverable at x={x}"
+            );
+        }
+        for x in 0..4 {
+            assert!(
+                !floor.discoverable[56 * width + x],
+                "lower chamber edge x={x}"
+            );
+        }
+    }
 }

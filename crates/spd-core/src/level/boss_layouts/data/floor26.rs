@@ -101,10 +101,8 @@ pub(crate) const T26: &[(u16, usize)] = &[
 ];
 
 pub(crate) const D26: &[(bool, usize)] = &[
-    (true, 880),
+    (true, 896),
     (false, 4),
-    (true, 9),
-    (false, 7),
     (true, 9),
     (false, 7),
     (true, 9),
