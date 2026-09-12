@@ -46,6 +46,18 @@ fn aaa_replay_pins_floors_two_through_four() {
             actual.pre_paint_rng_probe, expected.pre_paint_rng,
             "{context} pre-paint RNG"
         );
+        assert_eq!(
+            actual
+                .room_paint_rng_checkpoints
+                .last()
+                .map(|checkpoint| checkpoint.rng.as_slice()),
+            Some(expected.pre_doors_rng.as_slice()),
+            "{context} pre-doors RNG"
+        );
+        assert_eq!(
+            actual.post_doors_rng_probe, expected.post_doors_rng,
+            "{context} post-doors RNG"
+        );
         if depth == 2 {
             let map = actual.map.as_ref().expect("regular floor map");
             let actual_heaps: Vec<_> = map
@@ -100,34 +112,6 @@ fn aaa_replay_pins_floors_two_through_four() {
             assert_eq!(
                 actual_exit.cell, java_exit.cell,
                 "{context} exact regular exit"
-            );
-            assert_eq!(
-                expected.pre_doors_rng,
-                [
-                    -1107632305,
-                    1945287652,
-                    -1328999995,
-                    -1387751388,
-                    -1694303545,
-                    -1627736540,
-                    2119338483,
-                    1053549476
-                ],
-                "{context} pinned post-room-paint boundary"
-            );
-            assert_eq!(
-                expected.post_doors_rng,
-                [
-                    -700035324,
-                    -240926920,
-                    -1024974318,
-                    -2119231834,
-                    1908727426,
-                    344618962,
-                    -1144966623,
-                    1333384002
-                ],
-                "{context} pinned post-paintDoors boundary"
             );
             assert_eq!(
                 actual.pre_mobs_rng_probe, expected.pre_mobs_rng,

@@ -109,7 +109,18 @@ fn aaa_weapon_decks_match_pinned_java_lifecycle() {
                 .iter()
                 .find(|item| item.source.as_deref() == Some("SacrificeRoom"))
                 .expect("floor-3 SacrificeRoom prize");
-            assert_eq!(sacrifice.class_name, "Spear");
+            // Java SacrificialFire blob is Sai+1 cursed Annoying. Cell 1141
+            // Crossbow is TrapsRoom's later WEP_T4 draw on the same floor.
+            assert_eq!(sacrifice.class_name, "Sai");
+            assert_eq!(sacrifice.level, 1);
+            assert!(sacrifice.cursed);
+            assert_eq!(sacrifice.enchantment.as_deref(), Some("Annoying"));
+            let traps = level
+                .placed_items
+                .iter()
+                .find(|item| item.source.as_deref() == Some("TrapsRoom"))
+                .expect("floor-3 TrapsRoom prize");
+            assert_eq!(traps.class_name, "Crossbow");
             let after_sacrifice = fixture
                 .boundaries
                 .iter()
@@ -122,6 +133,11 @@ fn aaa_weapon_decks_match_pinned_java_lifecycle() {
             assert_eq!(
                 expected.wep_t4.probabilities,
                 after_sacrifice.wep_t4.probabilities
+            );
+            assert_eq!(after_sacrifice.wep_t4.dropped, 1);
+            assert_eq!(
+                after_sacrifice.wep_t4.probabilities,
+                vec![2., 2., 2., 2., 2., 1., 2.]
             );
         }
     }
@@ -173,18 +189,18 @@ fn aaa_floor_two_first_room_paint_checkpoint_matches_pinned_java() {
         .room_paint_rng_checkpoints
         .first()
         .expect("room paint checkpoint");
-    assert_eq!(checkpoint.room, "TunnelRoom");
+    assert_eq!(checkpoint.room, "MagicalFireRoom");
     assert_eq!(
         checkpoint.rng,
         [
-            -2_022_754_854,
-            -1_193_363_130,
-            358_873_738,
-            -359_658_178,
-            1_355_833_733,
-            -1_061_310_071,
-            324_958_254,
-            -1_556_605_399,
+            691_650_651,
+            -947_914_709,
+            -12_163_201,
+            -424_256_626,
+            1_923_968_460,
+            -1_167_849_459,
+            1_705_888_397,
+            1_228_621_943,
         ],
         "Java AAA floor-2 room-paint trace"
     );
@@ -199,8 +215,8 @@ fn aaa_floor_two_general_category_deck_matches_pinned_java() {
     assert_eq!(
         dungeon.generator.category_probabilities(),
         [
-            0., 2., 0., 0., 0., 0., 0., 2., 1., 0., 0., 0., 0., 0., 1., 1., 0., 0., 7., 1., 6., 1.,
-            8.,
+            0., 2., 0., 0., 0., 0., 0., 2., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 8., 1., 7., 1.,
+            10.,
         ],
         "Java AAA floor-2 room-paint trace generator_state"
     );
@@ -213,20 +229,23 @@ fn aaa_floor_two_grassy_grave_checkpoint_matches_pinned_java() {
     create_level_partial(&mut dungeon);
     dungeon.depth = 2;
     let level = create_level_partial(&mut dungeon);
-    let checkpoint = &level.room_paint_rng_checkpoints[2];
+    let checkpoint = level
+        .room_paint_rng_checkpoints
+        .iter()
+        .find(|checkpoint| checkpoint.room == "GrassyGraveRoom")
+        .expect("GrassyGraveRoom paint checkpoint");
 
-    assert_eq!(checkpoint.room, "GrassyGraveRoom");
     assert_eq!(
         checkpoint.rng,
         [
-            604_339_503,
-            -1_654_704_636,
-            -1_112_609_082,
-            -344_892_419,
-            -1_630_717_669,
-            547_809_567,
-            -1_366_229_536,
-            1_830_230_578,
+            1_914_914_922,
+            -2_039_303_538,
+            -405_885_823,
+            106_467_898,
+            1_958_060_752,
+            718_593_849,
+            -1_189_507_561,
+            1_304_423_460,
         ],
         "Java AAA floor-2 room-paint trace"
     );
