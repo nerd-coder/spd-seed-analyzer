@@ -10,7 +10,7 @@ use super::test_room;
 use crate::geom::Point;
 use crate::items::model::ItemCategory;
 use crate::level::painter::DoorMap;
-use crate::level::terrain::{paint_minimal, EMPTY, EMPTY_SP};
+use crate::level::terrain::{paint_minimal, EMPTY, EMPTY_SP, STATUE, WALL, WALL_DECO};
 use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
@@ -257,20 +257,57 @@ fn mass_grave_rerolls_the_skeleton_loop_bound() {
     Random::push_generator_seeded(108);
     let mut d = dungeon_from_run(run);
     d.depth = 8;
-    let room = test_room("MassGraveRoom", 8, 8);
+    let mut room = test_room("MassGraveRoom", 11, 10);
+    room.right = room.left + 10;
+    room.bottom = room.top + 9;
     let mut spawn = Vec::new();
     let mut map = paint_minimal(std::slice::from_ref(&room)).expect("map");
 
     let loot = mass_grave_prizes(&mut d, &room, &mut map, &mut spawn);
-    assert_eq!(
-        Random::peek_ints(4),
-        [-1_774_819_476, -1_793_331_878, -454_523_015, -431_360_774],
-        "pinned MassGraveRoom skeleton-loop and loot boundary"
-    );
+    let tail = Random::peek_ints(4);
     Random::pop_generator();
 
     assert_eq!(spawn[0].class_name, "PotionOfLiquidFlame");
     assert!(!loot.is_empty());
+    let skeletons: Vec<_> = map
+        .known_mobs
+        .iter()
+        .enumerate()
+        .filter_map(|(cell, mob)| (*mob == Some("Skeleton")).then_some(cell))
+        .collect();
+    assert!(
+        (1..=2).contains(&skeletons.len()),
+        "Java re-evaluates Int(2) as the skeleton loop bound"
+    );
+    for &cell in &skeletons {
+        let y = map.origin_y + (cell as i32 / map.width);
+        assert!(y <= room.top + 3);
+    }
+    for (cell, heap) in map.known_heaps.iter().enumerate() {
+        if heap.is_some() {
+            let y = map.origin_y + (cell as i32 / map.width);
+            assert!(y <= room.top + 5);
+        }
+    }
+    let cell = |x, y| map.point_to_cell(x, y).expect("cell");
+    assert_eq!(map.map[cell(room.left + 5, room.top)], WALL_DECO);
+    assert_eq!(map.map[cell(room.left + 3, room.top + 2)], STATUE);
+    assert_eq!(map.map[cell(room.right - 3, room.top + 2)], STATUE);
+    assert_eq!(map.map[cell(room.left + 1, room.top + 1)], WALL);
+    assert_eq!(map.custom_tiles.len(), 1);
+    assert_eq!(map.custom_tiles[0].class_name, "MassGraveDeco");
+    assert_eq!(map.custom_tiles[0].width, 9);
+    assert_eq!(map.custom_tiles[0].height, 9);
+    assert_eq!(map.custom_terrain.len(), 2);
+    assert!(map
+        .custom_terrain
+        .iter()
+        .all(|layer| layer.class_name == "StatueRaised" && layer.static_data == [4]));
+    assert_eq!(
+        tail,
+        [1_604_420_154, 1_430_481_976, -639_515_360, -416_095_344],
+        "pinned MassGraveRoom skeleton-loop and loot boundary"
+    );
 }
 
 #[test]

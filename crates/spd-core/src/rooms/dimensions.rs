@@ -19,7 +19,7 @@ pub fn dims_for_kind(kind: RoomKind, size_factor: i32, name: &str) -> (i32, i32,
             return (10, 14, 10, 14);
         }
         "RatKingRoom" => return (7, 7, 7, 7),
-        "MassGraveRoom" => return (7, 10, 7, 10),
+        "MassGraveRoom" => return (11, 11, 10, 10),
         "RotGardenRoom" => return (10, 10, 10, 10),
         "AmbitiousImpRoom" => return (9, 9, 9, 9),
         "VaultFinalRoom" => return (21, 21, 21, 21),
@@ -196,6 +196,7 @@ mod tests {
             (RoomKind::Standard, 1, "SkullsRoom", (7, 10, 7, 10)),
             (RoomKind::Standard, 1, "RitualRoom", (9, 10, 9, 10)),
             (RoomKind::Secret, 1, "RatKingRoom", (7, 7, 7, 7)),
+            (RoomKind::Special, 1, "MassGraveRoom", (11, 11, 10, 10)),
             (RoomKind::Secret, 1, "SecretLarderRoom", (6, 10, 6, 10)),
             (RoomKind::Secret, 1, "SecretLibraryRoom", (7, 10, 7, 10)),
             (RoomKind::Special, 1, "PoolRoom", (6, 10, 6, 10)),

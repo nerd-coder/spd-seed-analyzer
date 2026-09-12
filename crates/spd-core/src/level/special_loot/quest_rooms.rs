@@ -1,10 +1,8 @@
 //! Quest-related room prizes (wandmaker, blacksmith).
 
-use super::placement::burn_drop_pos;
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
-use crate::items::randomize::randomize_item;
 use crate::level::create_items::PlacedLoot;
 use crate::level::painter::DoorMap;
 use crate::level::terrain::{EMPTY, EMPTY_SP, EXIT, TRAP, WALL};
@@ -19,90 +17,7 @@ pub(super) fn mass_grave_prizes(
     map: &mut TerrainMap,
     items_to_spawn: &mut Vec<GeneratedItem>,
 ) -> Vec<PlacedLoot> {
-    // Barricade entrance → PotionOfLiquidFlame into itemsToSpawn
-    items_to_spawn.push(GeneratedItem::new(
-        "PotionOfLiquidFlame",
-        ItemCategory::Potion,
-    ));
-
-    // `MassGraveRoom.paint` replaces the whole interior before placing actors.
-    for y in room.top..=room.bottom {
-        for x in room.left..=room.right {
-            if let Some(cell) = map.point_to_cell(x, y) {
-                map.map[cell] =
-                    if x == room.left || x == room.right || y == room.top || y == room.bottom {
-                        WALL
-                    } else {
-                        crate::level::CUSTOM_DECO_EMPTY
-                    };
-            }
-        }
-    }
-
-    // 50% 1 skeleton, 50% 2. These room-painted mobs must occupy their cells
-    // before the later ambient pass calls `findMob`.
-    let mut mob_positions = Vec::new();
-    // Java's `for (i = 0; i <= Random.Int(2); i++)` re-evaluates the random
-    // upper bound on every condition check, including the terminating check.
-    let mut i = 0;
-    while i <= Random::int_max(2) {
-        burn_drop_pos(room, &mut mob_positions);
-        if let Some(&(x, y)) = mob_positions.last() {
-            if let Some(cell) = map.point_to_cell(x, y) {
-                map.mob_occupied[cell] = true;
-                map.known_mobs[cell] = Some("Skeleton");
-            }
-        }
-        i += 1;
-    }
-
-    let mut out = Vec::new();
-    // 100% corpse dust, 2x gold(1), 2x30% gold, 1x60% random, 1x30% armor
-    let mut items: Vec<GeneratedItem> = Vec::new();
-    items.push(GeneratedItem::new("CorpseDust", ItemCategory::Other));
-    {
-        let mut g = GeneratedItem::new("Gold", ItemCategory::Gold);
-        g.quantity = 1;
-        items.push(g);
-    }
-    {
-        let mut g = GeneratedItem::new("Gold", ItemCategory::Gold);
-        g.quantity = 1;
-        items.push(g);
-    }
-    if Random::float() <= 0.3 {
-        let mut g = GeneratedItem::new("Gold", ItemCategory::Gold);
-        randomize_item(&mut g, dungeon.depth);
-        items.push(g);
-    }
-    if Random::float() <= 0.3 {
-        let mut g = GeneratedItem::new("Gold", ItemCategory::Gold);
-        randomize_item(&mut g, dungeon.depth);
-        items.push(g);
-    }
-    if Random::float() <= 0.6 {
-        items.push(dungeon.generator.random(dungeon.depth));
-    }
-    if Random::float() <= 0.3 {
-        items.push(
-            dungeon
-                .generator
-                .random_armor(dungeon.depth / 5, dungeon.depth),
-        );
-    }
-
-    // Java only rejects existing heaps here; mobs do not exclude an item cell.
-    let mut heap_positions = Vec::new();
-    for mut item in items {
-        burn_drop_pos(room, &mut heap_positions);
-        // Haunted-if-cursed: no extra RNG for analysis
-        item.source = Some("MassGraveRoom".into());
-        out.push(PlacedLoot {
-            item,
-            heap_type: "skeleton",
-        });
-    }
-    out
+    super::geometry::paint_mass_grave(dungeon, room, map, items_to_spawn)
 }
 
 /// `RitualSiteRoom.paint` — paint its ritual marker and enqueue four candles.

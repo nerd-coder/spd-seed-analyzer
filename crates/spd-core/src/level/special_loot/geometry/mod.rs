@@ -2,10 +2,13 @@
 
 mod basic;
 mod crypt;
+mod mass_grave;
 mod maze;
 mod rot_garden;
 mod sacrifice;
 mod summoning;
+
+pub(super) use mass_grave::paint as paint_mass_grave;
 
 #[cfg(test)]
 mod tests;

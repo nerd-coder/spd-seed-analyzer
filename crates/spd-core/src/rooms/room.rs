@@ -267,6 +267,9 @@ impl Room {
     }
 
     pub fn can_connect_point(&self, p: Point) -> bool {
+        if self.name == "MassGraveRoom" {
+            return (p.x - self.random_center().x).abs() <= 2;
+        }
         if self.name == "VaultEntranceRoom" {
             return (p.x > self.left + 1 && p.x < self.right - 1)
                 || (p.y > self.top + 1 && p.y < self.bottom - 1);
@@ -358,6 +361,7 @@ impl Room {
 
     pub fn can_connect_dir(&self, direction: i32, rooms: &[Room]) -> bool {
         self.rem_connections(direction, rooms) > 0
+            && (self.name != "MassGraveRoom" || direction == DIR_BOTTOM)
     }
 }
 
@@ -368,6 +372,28 @@ pub fn intersect(a: &Room, b: &Room) -> Rect {
         top: a.top.max(b.top),
         bottom: a.bottom.min(b.bottom),
     }
+}
+
+fn entrance_within_three_hops(candidate: &Room, rooms: &[Room]) -> bool {
+    if candidate.is_entrance() {
+        return true;
+    }
+    for &r1 in &candidate.connected {
+        if rooms[r1].is_entrance() {
+            return true;
+        }
+        for &r2 in &rooms[r1].connected {
+            if rooms[r2].is_entrance() {
+                return true;
+            }
+            for &r3 in &rooms[r2].connected {
+                if rooms[r3].is_entrance() {
+                    return true;
+                }
+            }
+        }
+    }
+    false
 }
 
 pub fn can_connect_rooms(a: &Room, b: &Room, rooms: &[Room]) -> bool {
@@ -386,25 +412,14 @@ pub fn can_connect_rooms(a: &Room, b: &Room, rooms: &[Room]) -> bool {
     {
         return false;
     }
-    if a.name == "MassGraveRoom" || a.name == "VaultFinalRoom" {
-        if b.is_entrance() {
-            return false;
-        }
-        for &r1 in &b.connected {
-            if rooms[r1].is_entrance() {
-                return false;
-            }
-            for &r2 in &rooms[r1].connected {
-                if rooms[r2].is_entrance() {
-                    return false;
-                }
-                for &r3 in &rooms[r2].connected {
-                    if rooms[r3].is_entrance() {
-                        return false;
-                    }
-                }
-            }
-        }
+    if a.name == "MassGraveRoom" && entrance_within_three_hops(b, rooms) {
+        return false;
+    }
+    if b.name == "MassGraveRoom" && entrance_within_three_hops(a, rooms) {
+        return false;
+    }
+    if a.name == "VaultFinalRoom" && entrance_within_three_hops(b, rooms) {
+        return false;
     }
     if a.name == "VaultTokensRoom" {
         if b.is_entrance() {
@@ -595,23 +610,58 @@ mod tests {
         ));
     }
 
+    fn mass_grave_11x10() -> Room {
+        let mut grave = Room::new(0, "MassGraveRoom", RoomKind::Special, 1, 1, 11, 11, 10, 10);
+        grave.left = 1;
+        grave.top = 1;
+        grave.right = 11;
+        grave.bottom = 10;
+        grave
+    }
+
+    fn hop(id: usize) -> Room {
+        Room::new(id, "StandardRoom", RoomKind::Standard, 1, 16, 5, 5, 5, 5)
+    }
+
+    fn bottom_candidate() -> Room {
+        let mut candidate = hop(1);
+        candidate.left = 1;
+        candidate.top = 10;
+        candidate.right = 11;
+        candidate.bottom = 16;
+        candidate
+    }
+
+    #[test]
+    fn mass_grave_connects_only_on_the_bottom_x_band() {
+        Random::reset_generators();
+        let grave = mass_grave_11x10();
+        assert!(grave.can_connect_point(Point::new(4, 10)));
+        assert!(grave.can_connect_point(Point::new(6, 10)));
+        assert!(grave.can_connect_point(Point::new(8, 10)));
+        assert!(!grave.can_connect_point(Point::new(3, 10)));
+        assert!(!grave.can_connect_point(Point::new(9, 10)));
+        assert!(!grave.can_connect_dir(DIR_LEFT, &[]));
+        assert!(!grave.can_connect_dir(DIR_TOP, &[]));
+        assert!(!grave.can_connect_dir(DIR_RIGHT, &[]));
+        assert!(grave.can_connect_dir(DIR_BOTTOM, &[]));
+
+        Random::push_generator_seeded(23);
+        let before = Random::peek_ints(3);
+        let _ = grave.can_connect_point(Point::new(6, 10));
+        assert_eq!(Random::peek_ints(2), before[1..3]);
+        Random::pop_generator();
+    }
+
     #[test]
     fn mass_grave_stays_more_than_three_connections_from_entrance() {
-        fn room(id: usize, name: &'static str, kind: RoomKind) -> Room {
-            let mut room = Room::new(id, name, kind, 1, 16, 5, 5, 5, 5);
-            room.left = if id == 1 { 5 } else { 1 };
-            room.top = 1;
-            room.right = if id == 0 { 5 } else { 9 };
-            room.bottom = 6;
-            room
-        }
-
-        let grave = room(0, "MassGraveRoom", RoomKind::Special);
-        let mut candidate = room(1, "StandardRoom", RoomKind::Standard);
-        let mut first = room(2, "StandardRoom", RoomKind::Standard);
-        let mut second = room(3, "StandardRoom", RoomKind::Standard);
-        let mut third = room(4, "StandardRoom", RoomKind::Standard);
-        let entrance = room(5, "EntranceRoom", RoomKind::Entrance);
+        Random::reset_generators();
+        let grave = mass_grave_11x10();
+        let mut candidate = bottom_candidate();
+        let mut first = hop(2);
+        let mut second = hop(3);
+        let mut third = hop(4);
+        let entrance = Room::new(5, "EntranceRoom", RoomKind::Entrance, 1, 16, 5, 5, 5, 5);
 
         candidate.connected = vec![2];
         first.connected = vec![1, 3];
@@ -625,14 +675,45 @@ mod tests {
             entrance.clone(),
         ];
         assert!(!can_connect_rooms(&too_close[0], &too_close[1], &too_close));
+        assert!(!can_connect_rooms(&too_close[1], &too_close[0], &too_close));
 
         second.connected = vec![2, 4];
         third.connected = vec![3, 5];
-        let far_enough = vec![grave, candidate, first, second, third, entrance];
+        let far_enough = vec![
+            grave.clone(),
+            candidate,
+            first.clone(),
+            second.clone(),
+            third.clone(),
+            entrance.clone(),
+        ];
         assert!(can_connect_rooms(
             &far_enough[0],
             &far_enough[1],
             &far_enough
+        ));
+        assert!(can_connect_rooms(
+            &far_enough[1],
+            &far_enough[0],
+            &far_enough
+        ));
+
+        let mut right = hop(1);
+        right.left = 11;
+        right.top = 1;
+        right.right = 21;
+        right.bottom = 10;
+        right.connected = vec![2];
+        let right_side = vec![grave, right, first, second, third, entrance];
+        assert!(!can_connect_rooms(
+            &right_side[0],
+            &right_side[1],
+            &right_side
+        ));
+        assert!(!can_connect_rooms(
+            &right_side[1],
+            &right_side[0],
+            &right_side
         ));
     }
 }
