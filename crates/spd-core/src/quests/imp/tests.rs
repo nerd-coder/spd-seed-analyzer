@@ -3,6 +3,7 @@ use crate::items::model::{ItemCategory, ItemProvenance, QuestRewardRole};
 use crate::run::{dungeon_from_run, init_run};
 use crate::{MapProfile, TrinketEvent, TrinketEventAction, TrinketKind};
 use serde::Deserialize;
+use std::collections::BTreeSet;
 
 const RING_DECK_FIXTURES: [&str; 5] = [
     include_str!(
@@ -120,6 +121,32 @@ fn profiled_imp_outcome(seed: i64, trinket: Option<TrinketKind>) -> (i32, Vec<St
             .map(|item| item.class_name.clone())
             .collect(),
     )
+}
+
+const V4_WEAPON_ENCHANTS: [&str; 4] = ["Venomous", "Eldritch", "Vorpal", "Crystal"];
+const ARMOR_GLYPHS: [&str; 13] = [
+    "Obfuscation",
+    "Swiftness",
+    "Viscosity",
+    "Potential",
+    "Brimstone",
+    "Stone",
+    "Entanglement",
+    "Repulsion",
+    "Camouflage",
+    "Flow",
+    "Affection",
+    "AntiMagic",
+    "Thorns",
+];
+
+fn generate_reward_options_at(seed: i64) -> Vec<GeneratedItem> {
+    let mut generator = init_run(seed).generator;
+    Random::reset_generators();
+    Random::push_generator_seeded(seed);
+    let options = rewards::generate_reward_options(&mut generator, 18);
+    Random::pop_generator();
+    options
 }
 
 #[test]
@@ -314,4 +341,47 @@ fn held_mossy_clump_does_not_shift_imp_reward_identities() {
     let mossy = profiled_imp_outcome(0, Some(TrinketKind::MossyClump));
     assert_eq!(baseline.0, 19);
     assert_eq!(mossy, baseline);
+}
+
+#[test]
+fn imp_weapon_enchants_intersect_v4_names() {
+    let mut weapons = BTreeSet::new();
+    let mut glyphs = BTreeSet::new();
+    for seed in 0..200 {
+        let options = generate_reward_options_at(seed);
+        for item in &options[2..=3] {
+            weapons.insert(
+                item.enchantment
+                    .clone()
+                    .expect("Imp weapon slots always overwrite enchantment"),
+            );
+        }
+        glyphs.insert(
+            options[4]
+                .enchantment
+                .clone()
+                .expect("Imp plate always overwrites glyph"),
+        );
+    }
+    assert!(
+        V4_WEAPON_ENCHANTS
+            .iter()
+            .copied()
+            .any(|name| weapons.contains(name)),
+        "expected a v4 weapon enchant in Imp slots 2–3, got {weapons:?}"
+    );
+    assert!(
+        glyphs
+            .iter()
+            .all(|name| ARMOR_GLYPHS.contains(&name.as_str())),
+        "Imp plate glyphs should stay on the v3 set, got {glyphs:?}"
+    );
+}
+
+#[test]
+fn imp_reward_enchant_pin() {
+    let options = generate_reward_options_at(2);
+    assert_eq!(options[2].enchantment.as_deref(), Some("Unstable"));
+    assert_eq!(options[3].enchantment.as_deref(), Some("Eldritch"));
+    assert_eq!(options[4].enchantment.as_deref(), Some("Swiftness"));
 }

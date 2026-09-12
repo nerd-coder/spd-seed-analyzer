@@ -228,57 +228,6 @@ fn exit_center_cell(room: &Room, map: &TerrainMap) -> Option<usize> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::run::{dungeon_from_run, init_run};
-
-    #[test]
-    fn ghost_rewards_deterministic() {
-        Random::reset_generators();
-        let run = init_run(42);
-        Random::push_generator_seeded(999);
-        let (w1, a1) = {
-            let mut d = dungeon_from_run(run.clone());
-            d.depth = 4;
-            generate_rewards(&mut d)
-        };
-        Random::pop_generator();
-
-        Random::reset_generators();
-        Random::push_generator_seeded(999);
-        let (w2, a2) = {
-            let mut d = dungeon_from_run(run);
-            d.depth = 4;
-            generate_rewards(&mut d)
-        };
-        Random::pop_generator();
-
-        assert_eq!(w1.class_name, w2.class_name);
-        assert_eq!(w1.level, w2.level);
-        assert_eq!(a1.class_name, a2.class_name);
-        assert_eq!(a1.level, a2.level);
-        assert!(w1.potential_enchantment.is_some());
-        assert!(a1.potential_enchantment.is_some());
-        let ItemProvenance::Quest(QuestRewardRole::GhostWeapon { .. }) = w1.provenance else {
-            panic!("Ghost weapon provenance");
-        };
-        assert_eq!(
-            w1.candidate_classes.last().map(String::as_str),
-            Some(w1.class_name.as_str())
-        );
-    }
-
-    #[test]
-    fn depth4_always_attempts_when_not_spawned() {
-        // int_max(1) is always 0
-        Random::reset_generators();
-        for _ in 0..20 {
-            assert_eq!(Random::int_max(1), 0);
-        }
-    }
-}
-
-#[cfg(test)]
 type PlacementTrace = (i32, i32, usize, Vec<i32>);
 
 #[cfg(test)]
@@ -291,3 +240,7 @@ thread_local! {
 pub(super) fn take_placement_trace() -> Option<PlacementTrace> {
     LAST_PLACEMENT_TRACE.with(|trace| trace.borrow_mut().take())
 }
+
+#[cfg(test)]
+#[path = "ghost/tests.rs"]
+mod tests;
