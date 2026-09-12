@@ -1,6 +1,6 @@
 # 04 — Existing quests (Ghost, Wandmaker, Blacksmith, Mining)
 
-Status: **open**
+Status: **closed**
 
 Only v4 deltas that change generation, layout RNG, or painter-complete visuals. Quest contracts (Ghost targets, Wandmaker objective, Blacksmith Crystal/Gnoll) are unchanged in Java NPC classes.
 
