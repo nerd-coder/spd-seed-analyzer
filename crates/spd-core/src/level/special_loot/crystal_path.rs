@@ -4,8 +4,9 @@ mod layout;
 
 use super::DoorMap;
 use crate::dungeon::DungeonState;
-use crate::generator::Category;
+use crate::generator::{maybe_convert_exotic_consumable, Category};
 use crate::geom::{Point, Rect};
+use crate::items::exotic::regular_consumable_class;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::level::create_items::PlacedLoot;
 use crate::level::terrain::{TerrainMap, CRYSTAL_DOOR, EMPTY_SP, PEDESTAL, WALL};
@@ -75,16 +76,13 @@ pub(super) fn paint(
 
     if Random::int_max(2) == 0 {
         add_reward_item(dungeon, Category::Potion, &mut potions, &mut duplicates);
-        // ExoticCrystals chance is zero, but Java still evaluates Float().
-        let _ = Random::float();
         scrolls.push(GeneratedItem::new(
-            "ScrollOfTransmutation",
+            maybe_convert_exotic_consumable("ScrollOfTransmutation"),
             ItemCategory::Scroll,
         ));
     } else {
-        let _ = Random::float();
         potions.push(GeneratedItem::new(
-            "PotionOfExperience",
+            maybe_convert_exotic_consumable("PotionOfExperience"),
             ItemCategory::Potion,
         ));
         add_reward_item(dungeon, Category::Scroll, &mut scrolls, &mut duplicates);
@@ -146,9 +144,10 @@ fn add_reward_item(
 ) {
     loop {
         let reward = dungeon.generator.random_category(category, dungeon.depth);
+        let reward_base = regular_consumable_class(&reward.class_name);
         if items
             .iter()
-            .any(|item| item.class_name == reward.class_name)
+            .any(|item| regular_consumable_class(&item.class_name) == reward_base)
         {
             duplicates.push(reward);
         } else {
@@ -162,10 +161,10 @@ fn sort_by_default_value(dungeon: &DungeonState, category: Category, items: &mut
     items.sort_by(|a, b| {
         let av = dungeon
             .generator
-            .default_prob_total(category, &a.class_name);
+            .default_prob_total(category, regular_consumable_class(&a.class_name));
         let bv = dungeon
             .generator
-            .default_prob_total(category, &b.class_name);
+            .default_prob_total(category, regular_consumable_class(&b.class_name));
         bv.partial_cmp(&av).unwrap_or(std::cmp::Ordering::Equal)
     });
 }

@@ -1,6 +1,7 @@
 //! Port of `com.shatteredpixel.shatteredpixeldungeon.items.Generator`.
 
 mod categories;
+mod exotic;
 mod state;
 
 #[cfg(test)]
@@ -13,6 +14,7 @@ mod rollover_tests;
 pub(crate) use categories::equipment_tier_for_class;
 pub(crate) use categories::weapon_tier_for_class;
 pub use categories::{FLOOR_SET_TIER_PROBS, MIS_TIERS, WEP_TIERS};
+pub(crate) use exotic::maybe_convert_exotic_consumable;
 pub use state::{full_reset, GeneratorState};
 
 /// Categories in `Generator.Category.values()` declaration order.

@@ -1,6 +1,41 @@
 use super::*;
+use crate::items::exotic::{exotic_to_regular, regular_to_exotic};
 use crate::items::model::ItemCategory;
+use crate::level::trinkets::{self, set_held};
 use crate::random::Random;
+use crate::trinkets::{MapProfile, TrinketEvent, TrinketEventAction, TrinketKind};
+
+struct ClearHeldOnDrop;
+
+impl Drop for ClearHeldOnDrop {
+    fn drop(&mut self) {
+        set_held(None);
+    }
+}
+
+fn hold_exotic_crystals(level: Option<u8>) -> ClearHeldOnDrop {
+    match level {
+        None => {
+            trinkets::reset(1);
+            set_held(None);
+        }
+        Some(level) => {
+            let profile = MapProfile {
+                trinket_events: vec![TrinketEvent {
+                    before_depth: 1,
+                    action: TrinketEventAction::Acquired {
+                        trinket: TrinketKind::ExoticCrystals,
+                        min_upgrades: Some(level),
+                    },
+                }],
+                ..MapProfile::default()
+            };
+            trinkets::reset(1);
+            set_held(profile.held_at(1));
+        }
+    }
+    ClearHeldOnDrop
+}
 
 #[path = "tests/lifecycle.rs"]
 mod lifecycle;
@@ -74,6 +109,68 @@ fn consumable_decks_advance_level_stream_for_exotic_conversion_check() {
     assert_eq!(Random::int(), before_stone[0]);
 
     Random::pop_generator();
+}
+
+#[test]
+fn no_held_trinket_leaves_deck_consumables_regular() {
+    let _guard = hold_exotic_crystals(None);
+    Random::reset_generators();
+    Random::push_generator_seeded(0xC0A1);
+    let mut generator = GeneratorState::full_reset_ordered();
+    for _ in 0..40 {
+        let potion = generator.random_category(Category::Potion, 1);
+        assert!(
+            regular_to_exotic(&potion.class_name).is_some(),
+            "unconverted potion {}",
+            potion.class_name
+        );
+        let scroll = generator.random_category(Category::Scroll, 1);
+        assert!(
+            regular_to_exotic(&scroll.class_name).is_some(),
+            "unconverted scroll {}",
+            scroll.class_name
+        );
+    }
+    Random::pop_generator();
+}
+
+#[test]
+fn held_exotic_crystals_convert_deck_consumables_to_counterparts() {
+    let _none = hold_exotic_crystals(None);
+    Random::reset_generators();
+    Random::push_generator_seeded(0xE401);
+    let mut regular_gen = GeneratorState::full_reset_ordered();
+    let regular: Vec<_> = (0..30)
+        .map(|_| regular_gen.random_category(Category::Potion, 1).class_name)
+        .collect();
+    Random::pop_generator();
+    drop(_none);
+
+    let _held = hold_exotic_crystals(Some(3));
+    Random::reset_generators();
+    Random::push_generator_seeded(0xE401);
+    let mut converted_gen = GeneratorState::full_reset_ordered();
+    let converted: Vec<_> = (0..30)
+        .map(|_| {
+            converted_gen
+                .random_category(Category::Potion, 1)
+                .class_name
+        })
+        .collect();
+    Random::pop_generator();
+
+    let mut swapped = 0;
+    for (base, actual) in regular.iter().zip(&converted) {
+        if actual == base {
+            continue;
+        }
+        assert_eq!(exotic_to_regular(actual), Some(base.as_str()));
+        swapped += 1;
+    }
+    assert!(
+        swapped > 0,
+        "plus-three Exotic Crystals should convert some deck potions"
+    );
 }
 
 #[test]

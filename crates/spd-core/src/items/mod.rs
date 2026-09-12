@@ -2,6 +2,7 @@
 
 pub mod catalog;
 pub mod enchants;
+pub(crate) mod exotic;
 pub mod identities;
 pub mod model;
 pub mod randomize;

@@ -78,6 +78,21 @@ fn level(held: Option<ActiveTrinket>, trinket: TrinketKind) -> Option<u8> {
         .map(|held| held.level)
 }
 
+/// Java `Trinket.trinketLevel`; missing held instance → -1.
+pub fn trinket_level(trinket: TrinketKind) -> i32 {
+    STATE.with(|state| level(state.borrow().held, trinket).map_or(-1, i32::from))
+}
+
+/// `ExoticCrystals.consumableExoticChance()`.
+pub fn consumable_exotic_chance() -> f32 {
+    let level = trinket_level(TrinketKind::ExoticCrystals);
+    if level == -1 {
+        0.0
+    } else {
+        0.2 + 0.2 * level as f32
+    }
+}
+
 fn override_chance(level: Option<u8>) -> f32 {
     level.map_or(0.0, |level| 0.25 + 0.25 * f32::from(level))
 }
@@ -267,6 +282,39 @@ mod tests {
             instance: 1,
         }));
         assert!((trap_reveal_chance() - 0.4).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn exotic_crystals_level_controls_consumable_chance() {
+        reset(1);
+        set_held(None);
+        assert_eq!(trinket_level(TrinketKind::ExoticCrystals), -1);
+        assert_eq!(consumable_exotic_chance(), 0.0);
+        set_held(Some(ActiveTrinket {
+            trinket: TrinketKind::MossyClump,
+            level: 3,
+            instance: 1,
+        }));
+        assert_eq!(consumable_exotic_chance(), 0.0);
+        set_held(Some(ActiveTrinket {
+            trinket: TrinketKind::ExoticCrystals,
+            level: 0,
+            instance: 1,
+        }));
+        assert!((consumable_exotic_chance() - 0.2).abs() < f32::EPSILON);
+        set_held(Some(ActiveTrinket {
+            trinket: TrinketKind::ExoticCrystals,
+            level: 1,
+            instance: 1,
+        }));
+        assert!((consumable_exotic_chance() - 0.4).abs() < f32::EPSILON);
+        set_held(Some(ActiveTrinket {
+            trinket: TrinketKind::ExoticCrystals,
+            level: 3,
+            instance: 1,
+        }));
+        assert!((consumable_exotic_chance() - 0.8).abs() < f32::EPSILON);
+        set_held(None);
     }
 
     #[test]

@@ -17,6 +17,7 @@ use crate::rooms::types::RoomKind;
 use crate::run::{dungeon_from_run, init_run};
 
 mod depth_one_parity;
+mod exotic_crystals;
 mod forced_items;
 mod placement_masks;
 mod quest_npcs;

@@ -17,7 +17,7 @@ mod shop;
 mod special_loot;
 mod state;
 mod terrain;
-mod trinkets;
+pub(crate) mod trinkets;
 mod vault;
 
 use crate::dungeon::DungeonState;

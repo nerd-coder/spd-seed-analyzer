@@ -1,7 +1,7 @@
 //! Secret room prize painters.
 
 use crate::dungeon::DungeonState;
-use crate::generator::Category;
+use crate::generator::{maybe_convert_exotic_consumable, Category};
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::items::randomize::randomize_item;
 use crate::level::create_items::PlacedLoot;
@@ -41,10 +41,10 @@ pub(super) fn secret_library(room: &Room, map: &mut TerrainMap) -> Vec<PlacedLoo
         };
         let choice = Random::chances(&weights) as usize;
         weights[choice] = 0.0;
-        // Every listed regular scroll has an exotic mapping. Conversion is
-        // absent in the baseline model, but Java always consumes this roll.
-        let _ = Random::float();
-        let mut item = GeneratedItem::new(classes[choice], ItemCategory::Scroll);
+        let mut item = GeneratedItem::new(
+            maybe_convert_exotic_consumable(classes[choice]),
+            ItemCategory::Scroll,
+        );
         item.source = Some("SecretLibraryRoom".into());
         map.record_heap(cell, "heap", item.clone());
         out.push(PlacedLoot {
@@ -209,10 +209,10 @@ pub(super) fn secret_laboratory(room: &Room, map: &mut TerrainMap) -> Vec<Placed
         let cell = empty_sp_heap_cell(room, map);
         let choice = Random::chances(&chances) as usize;
         chances[choice] = 0.0;
-        // Every listed regular potion has an ExoticPotion mapping. With no
-        // ExoticCrystals trinket the conversion cannot win, but still rolls.
-        let _ = Random::float();
-        let mut item = GeneratedItem::new(classes[choice], ItemCategory::Potion);
+        let mut item = GeneratedItem::new(
+            maybe_convert_exotic_consumable(classes[choice]),
+            ItemCategory::Potion,
+        );
         item.source = Some("SecretLaboratoryRoom".into());
         map.record_heap(cell, "heap", item.clone());
         out.push(PlacedLoot {
