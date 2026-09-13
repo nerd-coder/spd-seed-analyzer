@@ -432,6 +432,37 @@ mod tests {
     }
 
     #[test]
+    fn ruins_room_family_merges_through_patch_walls() {
+        for (name, kind) in [
+            ("RuinsRoom", RoomKind::Standard),
+            ("RuinsEntranceRoom", RoomKind::Entrance),
+            ("RuinsExitRoom", RoomKind::Exit),
+        ] {
+            let left = named_room(0, name, 1, 1, 8, 8);
+            let right = named_room(1, "EmptyRoom", 8, 1, 15, 8);
+            let mut rooms = vec![left, right];
+            rooms[0].kind = kind;
+
+            let mut map = terrain::paint_minimal(&rooms).expect("map");
+            // PatchRoom can leave solid cells along the shared edge. The
+            // RuinsRoom.canMerge override must still open that edge for all
+            // subclasses inheriting the method.
+            for y in 1..=8 {
+                let cell = map.point_to_cell(7, y).expect("ruins interior edge");
+                map.map[cell] = terrain::WALL;
+            }
+
+            assert!(merge_rooms(
+                &mut map,
+                &rooms[0],
+                &rooms[1],
+                Some(Point::new(8, 4)),
+                18,
+            ));
+        }
+    }
+
+    #[test]
     fn minefield_and_burned_only_merge_through_empty_interior() {
         for room_name in ["MinefieldRoom", "BurnedRoom"] {
             let left = named_room(0, room_name, 1, 1, 8, 8);

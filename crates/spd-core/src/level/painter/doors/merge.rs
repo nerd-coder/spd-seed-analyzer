@@ -73,9 +73,18 @@ fn can_merge_at(
     match map.point_to_cell(inside.x, inside.y) {
         Some(_) if room.name == "SewerPipeRoom" => false,
         // RuinsRoom intentionally opens its entire shared edge, including
-        // cells which its patch painter left solid. This overrides the
-        // StandardRoom solid-terrain check in the pinned source.
-        Some(_) if room.name == "RuinsRoom" => true,
+        // cells which its patch painter left solid. RuinsEntranceRoom and
+        // RuinsExitRoom inherit this override (RuinsRoom.java:39-41;
+        // RuinsEntranceRoom.java:31 and RuinsExitRoom.java:32), so keep the
+        // class-family check aligned with Java dispatch.
+        Some(_)
+            if matches!(
+                room.name.as_str(),
+                "RuinsRoom" | "RuinsEntranceRoom" | "RuinsExitRoom"
+            ) =>
+        {
+            true
+        }
         Some(_)
             if matches!(
                 room.name.as_str(),

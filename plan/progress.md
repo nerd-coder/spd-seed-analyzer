@@ -15,11 +15,11 @@ Fix reproducible v4 Java-oracle parity failures, one verified slice per commit.
 
 ## Next
 
-1. Fix the inherited-Ruins door merge draw in Halls painter traces.
-2. Isolate the separate RuinsExit callback draw and the AAA floor-21 mob-cell eligibility difference.
+1. Fix the AAA floor-24 Halls callback offset exposed after source-correct Ruins merging.
+2. Isolate the AAA floor-21 mob-cell eligibility difference.
 3. Fix AAA floor 6 CrystalVault replay and AAA-AAZ floor 1 SentryRoom placement.
 4. Resolve city floors 16–19 and main-loop heap parity.
 
 ## Remaining
 
-`java_oracle_goldens`: 34 pass, 11 real failures remain across the work above. Analyzer still `partial`.
+`java_oracle_goldens`: 35 pass, 10 real failures remain across the work above. Analyzer still `partial`.
