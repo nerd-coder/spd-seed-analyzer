@@ -933,6 +933,77 @@ fn aaa_floor_three_forbidden_runes_suppresses_even_upgrade_scroll() {
     assert_eq!(heaps, expected.final_heaps);
 }
 
+#[test]
+fn aaa_floor_fifteen_badder_bosses_matches_caves_layout_and_rng() {
+    let path = fixture_paths()
+        .into_iter()
+        .find(|path| {
+            path.file_name()
+                .is_some_and(|name| name == "aaa-aaa-aaa-final-heaps-floor-15-badder-bosses.json")
+        })
+        .expect("AAA floor-15 Badder Bosses fixture");
+    let fixture = read_fixture(&path);
+    assert_eq!(fixture.input.challenge.as_deref(), Some("badder-bosses"));
+    let expected = fixture.floors.first().expect("Badder Bosses floor");
+    let profile = spd_core::MapProfile {
+        challenges: vec![spd_core::Challenge::BadderBosses],
+        ..spd_core::MapProfile::default()
+    };
+    let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
+    let mut actual = None;
+    for depth in 1..=expected.depth {
+        dungeon.depth = depth as i32;
+        actual = Some(spd_core::level::create_level_partial_for_profile(
+            &mut dungeon,
+            &profile,
+        ));
+    }
+    let actual = actual.expect("profiled boss floor");
+    assert!(
+        !actual.runtime_sensitive_layout,
+        "Badder Bosses layout is modeled"
+    );
+    assert_eq!(actual.pre_items_rng_probe, expected.pre_items_rng);
+    let map = actual.layout_map.as_ref().expect("Caves layout map");
+    let terrain = expected.terrain.as_ref().expect("Caves terrain");
+    let normalized = terrain
+        .iter()
+        .map(|&tile| match i32::from(tile) {
+            20 | 33 | 34 => 1,
+            12 => 4,
+            tile => tile as u16,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(map.tiles, normalized, "Badder Bosses Caves terrain");
+    assert_eq!(
+        map.discoverable,
+        *expected
+            .discoverable
+            .as_ref()
+            .expect("Caves discoverability")
+    );
+    let actual_transitions: Vec<_> = map
+        .transitions
+        .iter()
+        .map(|transition| OracleTransition {
+            cell: transition.cell,
+            transition_type: transition.transition_type.clone(),
+            left: transition.left,
+            top: transition.top,
+            right: transition.right,
+            bottom: transition.bottom,
+            dest_depth: transition.dest_depth,
+            dest_branch: transition.dest_branch,
+            dest_type: transition.dest_type.clone(),
+        })
+        .collect();
+    assert_eq!(
+        actual_transitions,
+        *expected.transitions.as_ref().expect("Caves transitions")
+    );
+    assert!(map.mobs.is_empty(), "public boss layout omits runtime mobs");
+}
+
 #[path = "final_heaps/runestone.rs"]
 mod runestone;
 

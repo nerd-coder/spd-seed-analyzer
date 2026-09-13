@@ -33,7 +33,7 @@ pub(super) fn build(dungeon: &mut DungeonState, depth_seed: i64) -> Option<Floor
         if map.map[cell] == terrain::EMPTY {
             map.map[cell] = if water[cell - (14 * WIDTH) as usize] {
                 terrain::WATER
-            } else if Random::int_max(8) == 0 {
+            } else if Random::int_max(if dungeon.badder_bosses() { 4 } else { 8 }) == 0 {
                 terrain::INACTIVE_TRAP
             } else {
                 terrain::EMPTY

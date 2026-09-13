@@ -33,7 +33,7 @@ rat_skull_before_depth=""
 usage() {
 	cat >&2 <<'EOF'
 Usage: tools/java-oracle/run [--source PATH] [--output FILE]
-                             [--depth 1 | --final-heaps-depth 1..26 [--challenge barren-land|forbidden-runes] |
+                             [--depth 1 | --final-heaps-depth 1..26 [--challenge barren-land|forbidden-runes|badder-bosses] |
                              --rat-skull-final-heaps-depth DEPTH LEVEL BEFORE_DEPTH |
                              --figure-eight-trace DEPTH | --free-space-trace DEPTH | --halls-paint-trace DEPTH |
                              --caves-boss-patch | --mining-level DEPTH crystal|gnoll | --vault-level DEPTH |
@@ -190,8 +190,8 @@ if [[ -n "$depth" && -n "$final_heaps_depth" ]]; then
 	echo "--depth and --final-heaps-depth are separate contracts and cannot be combined" >&2
 	exit 2
 fi
-if [[ -n "$challenge" && "$challenge" != "barren-land" && "$challenge" != "forbidden-runes" ]]; then
-	echo "Supported challenges are barren-land and forbidden-runes" >&2
+if [[ -n "$challenge" && "$challenge" != "barren-land" && "$challenge" != "forbidden-runes" && "$challenge" != "badder-bosses" ]]; then
+	echo "Supported challenges are barren-land, forbidden-runes, and badder-bosses" >&2
 	exit 2
 fi
 if [[ -n "$challenge" && -z "$final_heaps_depth" ]]; then

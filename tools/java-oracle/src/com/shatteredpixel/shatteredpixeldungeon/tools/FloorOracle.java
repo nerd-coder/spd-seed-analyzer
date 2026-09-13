@@ -95,6 +95,8 @@ final class FloorOracle {
 			Dungeon.challenges = Challenges.NO_HERBALISM;
 		} else if ("forbidden-runes".equals(challenge)) {
 			Dungeon.challenges = Challenges.NO_SCROLLS;
+		} else if ("badder-bosses".equals(challenge)) {
+			Dungeon.challenges = Challenges.STRONGER_BOSSES;
 		}
 		generatePriorFloors(depth);
 		equipRatSkull(depth);

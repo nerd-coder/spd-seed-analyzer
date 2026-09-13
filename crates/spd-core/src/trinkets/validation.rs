@@ -66,9 +66,10 @@ impl MapProfile {
     /// replay phases. Their public projection remains conservative meanwhile.
     pub(crate) fn has_unmodeled_generation_inputs(&self) -> bool {
         !self.artifact_events.is_empty()
-            || self.challenges.iter().any(|challenge| {
-                matches!(challenge, Challenge::BarrenLand | Challenge::BadderBosses)
-            })
+            || self
+                .challenges
+                .iter()
+                .any(|challenge| matches!(challenge, Challenge::BarrenLand))
             || self.trinket_events.iter().any(|event| {
                 matches!(
                     event.action,

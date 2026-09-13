@@ -252,6 +252,9 @@ fn create_level_internal(
 
     if !dungeon.regular_level() {
         layout_map = boss_layouts::generated_layout(dungeon, depth_seed);
+        if dungeon.depth == 15 && layout_map.is_some() {
+            pre_items_rng_probe = Random::peek_ints(8);
+        }
         // `CityBossLevel.build` creates and paints its ImpShopRoom before it
         // enters CityPainter's isolated decoration generator. The shop is not
         // placed until the Imp quest completes, but `generateItems` mutates

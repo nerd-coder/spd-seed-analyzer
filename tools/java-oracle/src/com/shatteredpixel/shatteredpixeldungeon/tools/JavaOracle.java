@@ -33,7 +33,7 @@ public final class JavaOracle {
 	public static void main(String[] args) {
 		if (args.length < 1 || args.length > 6) {
 			System.err.println(
-					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH [challenge barren-land|forbidden-runes | rat-skull LEVEL BEFORE_DEPTH] | mining-level DEPTH crystal|gnoll | vault-level DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection | secret-library-order | secret-laboratory-order]");
+					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH [challenge barren-land|forbidden-runes|badder-bosses | rat-skull LEVEL BEFORE_DEPTH] | mining-level DEPTH crystal|gnoll | vault-level DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection | secret-library-order | secret-laboratory-order]");
 			System.exit(2);
 		}
 
@@ -48,6 +48,10 @@ public final class JavaOracle {
 				&& args.length == 5
 				&& "challenge".equals(args[3])
 				&& "forbidden-runes".equals(args[4]);
+		boolean badderBosses = finalHeaps
+				&& args.length == 5
+				&& "challenge".equals(args[3])
+				&& "badder-bosses".equals(args[4]);
 		boolean ratSkullFinalHeaps = args.length == 6 && "rat-skull".equals(args[3]);
 		boolean generatorDeckRollover =
 				args.length == 2 && "generator-deck-rollover".equals(args[1]);
@@ -83,7 +87,7 @@ public final class JavaOracle {
 					inputSeed, numericSeed, Integer.parseInt(args[2])));
 			return;
 		}
-		if (args.length == 4 || (args.length == 5 && !barrenLand && !forbiddenRunes)) {
+		if (args.length == 4 || (args.length == 5 && !barrenLand && !forbiddenRunes && !badderBosses)) {
 			System.err.println("Unknown oracle contract: " + args[1]);
 			System.exit(2);
 		}
@@ -182,7 +186,7 @@ public final class JavaOracle {
 						? FloorOracle.generateFinalHeaps(numericSeed, depth, false,
 								Integer.parseInt(args[4]), Integer.parseInt(args[5]))
 					: FloorOracle.generateFinalHeaps(numericSeed, depth,
-							(barrenLand ? "barren-land" : forbiddenRunes ? "forbidden-runes" : null),
+							(barrenLand ? "barren-land" : forbiddenRunes ? "forbidden-runes" : badderBosses ? "badder-bosses" : null),
 							-1, Integer.MAX_VALUE);
 			} else {
 				floor = FloorOracle.generate(numericSeed);

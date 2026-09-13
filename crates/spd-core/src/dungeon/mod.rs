@@ -16,6 +16,9 @@ use crate::rooms::RoomRunState;
 /// SPD's internal `Challenges.NO_SCROLLS` bit, presented to players as
 /// Forbidden Runes. It suppresses every second guaranteed Upgrade Scroll.
 pub const FORBIDDEN_RUNES_CHALLENGE: i32 = 64;
+/// SPD's internal `Challenges.STRONGER_BOSSES` bit, presented to players as
+/// Badder Bosses. It changes boss-level generation and boss runtime stats.
+pub const BADDER_BOSSES_CHALLENGE: i32 = 256;
 
 #[derive(Debug, Clone)]
 pub struct DungeonState {
@@ -49,6 +52,10 @@ pub struct DungeonState {
 impl DungeonState {
     pub fn forbidden_runes(&self) -> bool {
         self.challenges & FORBIDDEN_RUNES_CHALLENGE != 0
+    }
+
+    pub fn badder_bosses(&self) -> bool {
+        self.challenges & BADDER_BOSSES_CHALLENGE != 0
     }
 
     pub fn seed_cur_depth(&self) -> i64 {
