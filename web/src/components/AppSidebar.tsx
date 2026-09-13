@@ -8,6 +8,7 @@ import { useStore } from '@tanstack/react-store'
 import type { FormEvent } from 'react'
 import { AppFloatingAction } from '@/components/AppFloatingAction'
 import { FinderForm } from '@/components/finder/FinderForm'
+import { SupportedVersionAlert } from '@/components/SupportedVersionAlert'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import {
@@ -70,6 +71,8 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
           />
           <AppFloatingAction />
         </div>
+
+        <SupportedVersionAlert />
 
         <TabsList
           className="grid w-full grid-cols-2"

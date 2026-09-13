@@ -4,7 +4,7 @@ import {
   randomStartSeed,
 } from '@/components/finder/finder-types'
 import type { SeedSearchMatchMode } from '@/lib/spd-wasm'
-import { AppStore } from './store-utils'
+import { AppStore, persistentStore } from './store-utils'
 
 export type FinderFormState = {
   attempted: boolean
@@ -73,3 +73,18 @@ export function setIdentitiesTab(tab: ReportNavigationState['identitiesTab']) {
 }
 
 export const $elapsedNow = new AppStore(Date.now())
+
+const VERSION_ALERT_KEY = 'spd-analyzer-version-alert-dismissed'
+
+export const $dismissedVersionAlert = persistentStore<string | null>(
+  VERSION_ALERT_KEY,
+  null,
+  {
+    encode: (value) => value ?? '',
+    decode: (value) => (value.length > 0 ? value : null),
+  }
+)
+
+export function dismissVersionAlert(version: string) {
+  $dismissedVersionAlert.set(version)
+}
