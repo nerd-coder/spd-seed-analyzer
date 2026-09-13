@@ -26,7 +26,7 @@ fn direct_routes_use_only_actual_supported_offers() {
         &["MossyClump", "RatSkull", "SaltCube", "MimicTooth"],
         &[],
     ));
-    assert_eq!(routes.len(), 2);
+    assert_eq!(routes.len(), 3);
     assert!(matches!(
         routes[0].events[0].action,
         TrinketEventAction::Acquired {
@@ -36,6 +36,13 @@ fn direct_routes_use_only_actual_supported_offers() {
     ));
     assert!(matches!(
         routes[1].events[0].action,
+        TrinketEventAction::Acquired {
+            trinket: TrinketKind::RatSkull,
+            ..
+        }
+    ));
+    assert!(matches!(
+        routes[2].events[0].action,
         TrinketEventAction::Acquired {
             trinket: TrinketKind::MimicTooth,
             ..

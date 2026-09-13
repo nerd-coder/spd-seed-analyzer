@@ -148,6 +148,24 @@ pub fn mimic_chance_multiplier() -> f32 {
     })
 }
 
+/// `RatSkull.exoticChanceMultiplier()` for the currently held profile.
+pub fn exotic_chance_multiplier() -> f32 {
+    STATE.with(|state| {
+        level(state.borrow().held, TrinketKind::RatSkull)
+            .map_or(1.0, |level| 2.0 + f32::from(level))
+    })
+}
+
+/// Rat Skull's half-effective multiplier for rare floor-generation branches.
+pub fn exotic_chance(base: f32) -> f32 {
+    let chance = base * exotic_chance_multiplier();
+    if chance > base {
+        (chance + base) / 2.0
+    } else {
+        chance
+    }
+}
+
 pub fn has_mimic_tooth() -> bool {
     STATE.with(|state| level(state.borrow().held, TrinketKind::MimicTooth).is_some())
 }
@@ -155,6 +173,26 @@ pub fn has_mimic_tooth() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn rat_skull_uses_full_and_half_effective_java_chances() {
+        reset(1);
+        set_held(None);
+        assert_eq!(exotic_chance_multiplier(), 1.0);
+        assert_eq!(exotic_chance(0.1), 0.1);
+
+        for (level, multiplier, blended) in
+            [(0, 2.0, 0.15), (1, 3.0, 0.2), (2, 4.0, 0.25), (3, 5.0, 0.3)]
+        {
+            set_held(Some(ActiveTrinket {
+                trinket: TrinketKind::RatSkull,
+                level,
+                instance: 1,
+            }));
+            assert_eq!(exotic_chance_multiplier(), multiplier);
+            assert!((exotic_chance(0.1) - blended).abs() < f32::EPSILON);
+        }
+    }
 
     #[test]
     fn absent_trinkets_preserve_both_default_branch_float_calls() {

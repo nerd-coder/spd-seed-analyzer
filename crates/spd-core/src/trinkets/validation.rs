@@ -73,10 +73,10 @@ impl MapProfile {
                 matches!(
                     event.action,
                     TrinketEventAction::Acquired {
-                        trinket: TrinketKind::RatSkull | TrinketKind::CrackedSpyglass,
+                        trinket: TrinketKind::CrackedSpyglass,
                         ..
                     } | TrinketEventAction::Transmuted {
-                        trinket: TrinketKind::RatSkull | TrinketKind::CrackedSpyglass
+                        trinket: TrinketKind::CrackedSpyglass
                     }
                 )
             })

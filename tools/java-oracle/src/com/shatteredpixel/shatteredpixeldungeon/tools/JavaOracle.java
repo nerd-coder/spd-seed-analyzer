@@ -31,9 +31,9 @@ public final class JavaOracle {
 	}
 
 	public static void main(String[] args) {
-		if (args.length < 1 || args.length > 5) {
+		if (args.length < 1 || args.length > 6) {
 			System.err.println(
-					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH [challenge barren-land] | mining-level DEPTH crystal|gnoll | vault-level DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection | secret-library-order | secret-laboratory-order]");
+					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH [challenge barren-land | rat-skull LEVEL BEFORE_DEPTH] | mining-level DEPTH crystal|gnoll | vault-level DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection | secret-library-order | secret-laboratory-order]");
 			System.exit(2);
 		}
 
@@ -44,6 +44,7 @@ public final class JavaOracle {
 				&& args.length == 5
 				&& "challenge".equals(args[3])
 				&& "barren-land".equals(args[4]);
+		boolean ratSkullFinalHeaps = args.length == 6 && "rat-skull".equals(args[3]);
 		boolean generatorDeckRollover =
 				args.length == 2 && "generator-deck-rollover".equals(args[1]);
 		boolean generatorLifecycle =
@@ -173,7 +174,10 @@ public final class JavaOracle {
 				Potion.initColors();
 				Ring.initGems();
 			} else if (finalHeaps) {
-				finalFloor = FloorOracle.generateFinalHeaps(numericSeed, depth, barrenLand);
+				finalFloor = ratSkullFinalHeaps
+						? FloorOracle.generateFinalHeaps(numericSeed, depth, false,
+								Integer.parseInt(args[4]), Integer.parseInt(args[5]))
+						: FloorOracle.generateFinalHeaps(numericSeed, depth, barrenLand);
 			} else {
 				floor = FloorOracle.generate(numericSeed);
 			}
@@ -297,6 +301,11 @@ public final class JavaOracle {
 		if (floor.challenge != null) {
 			json.append(",\n    \"challenge\": \"")
 					.append(escape(floor.challenge)).append("\"");
+		}
+		if (floor.trinket != null) {
+			json.append(",\n    \"trinket\": \"").append(escape(floor.trinket)).append("\",");
+			json.append("\n    \"trinket_level\": ").append(floor.trinketLevel).append(',');
+			json.append("\n    \"trinket_before_depth\": ").append(floor.trinketBeforeDepth);
 		}
 		json.append("\n");
 		json.append("  },\n");

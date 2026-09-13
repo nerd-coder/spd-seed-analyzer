@@ -104,7 +104,7 @@ pub(super) fn next_mob(depth: i32, rotation: &mut Vec<MobKind>) -> MobKind {
         // alternate. Keeping that apparently redundant draw is required before
         // the list shuffle.
         for mob in &mut *rotation {
-            if Random::float() < 1.0 / 50.0 {
+            if Random::float() < (1.0 / 50.0) * crate::level::trinkets::exotic_chance_multiplier() {
                 *mob = rare_alt(*mob);
             }
         }
@@ -212,7 +212,7 @@ fn random_shaman() -> MobKind {
 
 fn random_elemental() -> MobKind {
     // `Elemental.random` has a short-circuit: Chaos consumes no subtype roll.
-    if Random::float() < 1.0 / 50.0 {
+    if Random::float() < (1.0 / 50.0) * crate::level::trinkets::exotic_chance_multiplier() {
         return MobKind::ChaosElemental;
     }
     let roll = Random::float();

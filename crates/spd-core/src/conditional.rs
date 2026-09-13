@@ -198,15 +198,15 @@ fn exact_transmutation_scroll_depths(floors: &[FloorReport]) -> Vec<u32> {
 fn is_replayed(trinket: TrinketKind) -> bool {
     matches!(
         trinket,
-        TrinketKind::MossyClump | TrinketKind::TrapMechanism | TrinketKind::MimicTooth
+        TrinketKind::MossyClump
+            | TrinketKind::TrapMechanism
+            | TrinketKind::MimicTooth
+            | TrinketKind::RatSkull
     )
 }
 
 fn is_unsupported_stateful(trinket: TrinketKind) -> bool {
-    matches!(
-        trinket,
-        TrinketKind::RatSkull | TrinketKind::CrackedSpyglass
-    )
+    matches!(trinket, TrinketKind::CrackedSpyglass)
 }
 
 fn nondecreasing_levels(first_depth: u32, last_depth: u32) -> Vec<Vec<u8>> {

@@ -27,6 +27,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.RatSkull;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel;
@@ -51,6 +52,8 @@ import java.lang.reflect.Field;
 
 /** Runs the pinned depth-one SewerLevel and records stable item facts. */
 final class FloorOracle {
+	private static int ratSkullLevel = -1;
+	private static int ratSkullBeforeDepth = Integer.MAX_VALUE;
 
 	private FloorOracle() {
 	}
@@ -73,11 +76,19 @@ final class FloorOracle {
 	}
 
 	static FinalFloorFacts generateFinalHeaps(long seed, int depth, boolean barrenLand) {
+		return generateFinalHeaps(seed, depth, barrenLand, -1, Integer.MAX_VALUE);
+	}
+
+	static FinalFloorFacts generateFinalHeaps(long seed, int depth, boolean barrenLand,
+			int ratLevel, int ratBeforeDepth) {
+		ratSkullLevel = ratLevel;
+		ratSkullBeforeDepth = ratBeforeDepth;
 		initializeFreshRun(seed);
 		if (barrenLand) {
 			Dungeon.challenges = Challenges.NO_HERBALISM;
 		}
 		generatePriorFloors(depth);
+		equipRatSkull(depth);
 		// A committed seed fixture must not depend on the user's bones.dat. At
 		// this pin, Dungeon.daily is consulted during generation only by Bones.
 		Dungeon.daily = true;
@@ -252,16 +263,28 @@ final class FloorOracle {
 		try {
 			for (int depth = 1; depth < targetDepth; depth++) {
 				Dungeon.depth = depth;
+				equipRatSkull(depth);
 				Dungeon.level = Dungeon.newLevel();
 			}
 		} finally {
 			Dungeon.daily = false;
 		}
 		Dungeon.depth = targetDepth;
+		equipRatSkull(targetDepth);
 		// Dungeon.newLevel clears the previous floor before target creation. Probe
 		// subclasses call Level.create directly, so mirror that boundary here.
 		Dungeon.level = null;
 		Actor.clear();
+	}
+
+	private static void equipRatSkull(int depth) {
+		if (ratSkullLevel >= 0 && depth >= ratSkullBeforeDepth
+				&& Dungeon.hero.belongings.getItem(RatSkull.class) == null) {
+			RatSkull skull = new RatSkull();
+			skull.level(ratSkullLevel);
+			skull.identify();
+			Dungeon.hero.belongings.backpack.items.add(skull);
+		}
 	}
 
 	static void markTargetFloorGenerated(int depth) {
@@ -367,6 +390,9 @@ final class FloorOracle {
 		final List<FloorVisualFacts.CustomTileFact> customTerrain;
 		final List<FloorVisualFacts.CustomTileFact> customWalls;
 		final String challenge;
+		final String trinket;
+		final Integer trinketLevel;
+		final Integer trinketBeforeDepth;
 
 		FinalFloorFacts(
 				int depth,
@@ -411,6 +437,9 @@ final class FloorOracle {
 			this.customTerrain = layoutFacts.customTerrain;
 			this.customWalls = layoutFacts.customWalls;
 			this.challenge = challenge;
+			this.trinket = ratSkullLevel >= 0 ? "rat-skull" : null;
+			this.trinketLevel = ratSkullLevel >= 0 ? ratSkullLevel : null;
+			this.trinketBeforeDepth = ratSkullLevel >= 0 ? ratSkullBeforeDepth : null;
 		}
 	}
 

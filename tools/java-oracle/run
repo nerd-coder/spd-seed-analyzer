@@ -26,11 +26,15 @@ halls_paint_trace=""
 mining_level_depth=""
 mining_level_objective=""
 vault_level_depth=""
+rat_skull_depth=""
+rat_skull_level=""
+rat_skull_before_depth=""
 
 usage() {
 	cat >&2 <<'EOF'
 Usage: tools/java-oracle/run [--source PATH] [--output FILE]
                              [--depth 1 | --final-heaps-depth 1..26 [--challenge barren-land] |
+                             --rat-skull-final-heaps-depth DEPTH LEVEL BEFORE_DEPTH |
                              --figure-eight-trace DEPTH | --free-space-trace DEPTH | --halls-paint-trace DEPTH |
                              --caves-boss-patch | --mining-level DEPTH crystal|gnoll | --vault-level DEPTH |
                              --generator-deck-rollover | --generator-lifecycle | --imp-ring-deck | --quest-npc-placement |
@@ -150,6 +154,13 @@ while (($# > 0)); do
 			vault_level_depth="$2"
 			shift 2
 			;;
+		--rat-skull-final-heaps-depth)
+			[[ $# -ge 4 ]] || { usage; exit 2; }
+			rat_skull_depth="$2"
+			rat_skull_level="$3"
+			rat_skull_before_depth="$4"
+			shift 4
+			;;
 		-h|--help)
 			usage
 			exit 0
@@ -199,6 +210,18 @@ if [[ -n "$vault_level_depth" && (! "$vault_level_depth" =~ ^(17|18|19)$) ]]; th
 	echo "The vault-level oracle supports depths 17 through 19" >&2
 	exit 2
 fi
+if [[ -n "$rat_skull_depth" && (! "$rat_skull_depth" =~ ^[0-9]+$ || "$rat_skull_depth" -lt 1 || "$rat_skull_depth" -gt 26) ]]; then
+	echo "The Rat Skull oracle supports depths 1 through 26" >&2
+	exit 2
+fi
+if [[ -n "$rat_skull_level" && (! "$rat_skull_level" =~ ^[0-3]$) ]]; then
+	echo "Rat Skull level must be 0 through 3" >&2
+	exit 2
+fi
+if [[ -n "$rat_skull_before_depth" && (! "$rat_skull_before_depth" =~ ^[0-9]+$ || "$rat_skull_before_depth" -lt 1 || "$rat_skull_before_depth" -gt 26) ]]; then
+	echo "Rat Skull before depth must be 1 through 26" >&2
+	exit 2
+fi
 selected_contracts=0
 [[ -n "$depth" ]] && ((selected_contracts += 1))
 [[ -n "$final_heaps_depth" ]] && ((selected_contracts += 1))
@@ -215,6 +238,7 @@ selected_contracts=0
 [[ -n "$halls_paint_trace" ]] && ((selected_contracts += 1))
 [[ -n "$mining_level_depth" ]] && ((selected_contracts += 1))
 [[ -n "$vault_level_depth" ]] && ((selected_contracts += 1))
+[[ -n "$rat_skull_depth" ]] && ((selected_contracts += 1))
 if ((selected_contracts > 1)); then
 	echo "Choose only one oracle contract" >&2
 	exit 2
@@ -311,6 +335,11 @@ if [[ -n "$mining_level_depth" ]]; then
 fi
 if [[ -n "$vault_level_depth" ]]; then
 	gradle_args+=(-PoracleVaultLevelDepth="$vault_level_depth")
+fi
+if [[ -n "$rat_skull_depth" ]]; then
+	gradle_args+=(-PoracleRatSkullDepth="$rat_skull_depth")
+	gradle_args+=(-PoracleRatSkullLevel="$rat_skull_level")
+	gradle_args+=(-PoracleRatSkullBeforeDepth="$rat_skull_before_depth")
 fi
 gradle_args+=(:core:javaOracleDump)
 

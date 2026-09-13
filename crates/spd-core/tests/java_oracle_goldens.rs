@@ -52,6 +52,12 @@ struct OracleInput {
     depths: Vec<u32>,
     #[serde(default)]
     challenge: Option<String>,
+    #[serde(default)]
+    trinket: Option<String>,
+    #[serde(default)]
+    trinket_level: Option<u8>,
+    #[serde(default)]
+    trinket_before_depth: Option<u32>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -122,7 +128,7 @@ struct OracleRoomFact {
     bottom: i32,
 }
 
-#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 struct OracleItem {
     #[serde(rename = "class")]
     class_name: String,
@@ -131,7 +137,7 @@ struct OracleItem {
     cursed: bool,
 }
 
-#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize, PartialEq, Eq, Clone)]
 struct OracleHeap {
     cell: u32,
     heap_type: String,

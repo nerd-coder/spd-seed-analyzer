@@ -28,6 +28,7 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 - VaultLevel's forced branch-1 contract now has a second pinned fixture (`GFX-PZH-DCH`, depth 17); Rust compares the seed/depth-specific room graph, painter layout, hazards, blobs, transitions, and custom layers alongside the existing AAA fixture.
 - Floor detail now exposes the backend's modeled `possible_rooms` alternatives, including room counts and their trinket/challenge conditions; a focused quest-report browser fixture covers the disclosure.
 - Barren Land/NO_HERBALISM is pinned as a separate depth-4 `SecretGardenRoom` fixture; seed/position RNG and terrain conversion remain intact while plant objects, occupancy, and synthetic plant loot are suppressed exactly like Java.
+- Rat Skull level-3 profile replay is pinned at AAA floors 6 and 7; its full 1/50 mob/elemental/Piranha multiplier and half-effective CrystalVault/Statue branch match the Java oracle without changing RNG probes.
 
 ## Now
 
@@ -40,4 +41,4 @@ All checked-in v4 Java-oracle parity cases pass; the analyzer remains intentiona
 
 ## Remaining
 
-`java_oracle_goldens`: 48 pass, 0 failures. `spd-core --lib`: 412 pass. Analyzer remains `partial`.
+`java_oracle_goldens`: 51 pass, 0 failures. `spd-core --lib`: 413 pass. Analyzer remains `partial`.

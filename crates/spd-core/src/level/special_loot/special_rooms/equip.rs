@@ -179,7 +179,8 @@ pub fn pool_prize_on_map(
     let prize = pool_prize_without_piranhas(dungeon, items_to_spawn);
     for _ in 0..3 {
         // Piranha.random always rolls the rare PhantomPiranha replacement.
-        let phantom = Random::float() < 1.0 / 50.0;
+        let phantom =
+            Random::float() < (1.0 / 50.0) * crate::level::trinkets::exotic_chance_multiplier();
         loop {
             let point = room.random();
             let Some(cell) = map.point_to_cell(point.x, point.y) else {
@@ -271,8 +272,8 @@ pub fn statue_weapon(
         .expect("placed StatueRoom center is inside map bounds");
     map.mob_occupied[cell] = true;
     map.known_mobs[cell] = Some("Statue");
-    // Statue.random: 10% armored (rat skull default)
-    let armored = Random::float() < 0.1;
+    // Statue.random: Rat Skull's rare-alt chance is half-effective above base.
+    let armored = Random::float() < crate::level::trinkets::exotic_chance(0.1);
     let mut weapon = dungeon
         .generator
         .random_category(Category::Weapon, dungeon.depth);

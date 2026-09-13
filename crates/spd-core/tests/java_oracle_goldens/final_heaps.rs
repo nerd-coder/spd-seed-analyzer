@@ -118,7 +118,7 @@ fn every_covered_main_loop_spawn_matches_java_final_heaps() {
         {
             continue;
         }
-        if fixture.input.challenge.is_some() {
+        if fixture.input.challenge.is_some() || fixture.input.trinket.is_some() {
             continue;
         }
         let depth = fixture.input.depths[0];
@@ -634,6 +634,160 @@ fn barren_land_fixture_declares_its_challenge_profile() {
     let fixture = read_fixture(&path);
     assert_eq!(fixture.input.depths, [4]);
     assert_eq!(fixture.input.challenge.as_deref(), Some("barren-land"));
+}
+
+#[test]
+fn rat_skull_fixtures_declare_profile_state() {
+    let mut found = 0;
+    for path in fixture_paths() {
+        let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
+            continue;
+        };
+        if !name.contains("rat-skull") {
+            continue;
+        }
+        let fixture = read_fixture(&path);
+        assert_eq!(fixture.input.trinket.as_deref(), Some("rat-skull"));
+        assert_eq!(fixture.input.trinket_level, Some(3));
+        assert_eq!(fixture.input.trinket_before_depth, Some(6));
+        assert_eq!(fixture.input.challenge, None);
+        found += 1;
+    }
+    assert_eq!(found, 2, "Rat Skull CrystalVault and Statue fixtures");
+}
+
+#[test]
+fn rat_skull_fixtures_cover_crystal_vault_and_statue_boundaries() {
+    let mut depths = Vec::new();
+    for path in fixture_paths() {
+        let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
+            continue;
+        };
+        if !name.contains("rat-skull") {
+            continue;
+        }
+        let fixture = read_fixture(&path);
+        let floor = fixture.floors.first().expect("Rat Skull floor");
+        assert_eq!(floor.pre_paint_rng.len(), 8);
+        assert_eq!(floor.pre_mobs_rng.len(), 8);
+        assert_eq!(floor.pre_items_rng.len(), 8);
+        assert!(!floor.final_heaps.is_empty());
+        assert!(!floor.final_mobs.is_empty());
+        assert!(floor.rooms.iter().any(|room| {
+            (floor.depth == 6 && room == "CrystalVaultRoom")
+                || (floor.depth == 7 && room == "StatueRoom")
+        }));
+        depths.push(floor.depth);
+    }
+    depths.sort_unstable();
+    assert_eq!(depths, [6, 7]);
+}
+
+#[test]
+fn rat_skull_fixtures_replay_exact_profiled_floor_state() {
+    fn normalize(mut heaps: Vec<OracleHeap>) -> Vec<OracleHeap> {
+        for heap in &mut heaps {
+            heap.items.sort_by_key(|item| {
+                (
+                    item.class_name.clone(),
+                    item.level,
+                    item.cursed,
+                    item.quantity,
+                )
+            });
+            let mut merged: Vec<OracleItem> = Vec::new();
+            for item in heap.items.drain(..) {
+                if let Some(last) = merged.last_mut() {
+                    if last.class_name == item.class_name
+                        && last.level == item.level
+                        && last.cursed == item.cursed
+                    {
+                        last.quantity += item.quantity;
+                        continue;
+                    }
+                }
+                merged.push(item);
+            }
+            heap.items = merged;
+        }
+        heaps
+    }
+
+    for path in fixture_paths() {
+        let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
+            continue;
+        };
+        if !name.contains("rat-skull") {
+            continue;
+        }
+        let fixture = read_fixture(&path);
+        let expected = fixture.floors.first().expect("Rat Skull floor");
+        let profile = spd_core::MapProfile {
+            trinket_events: vec![spd_core::TrinketEvent {
+                before_depth: fixture.input.trinket_before_depth.expect("before depth"),
+                action: spd_core::TrinketEventAction::Acquired {
+                    trinket: spd_core::TrinketKind::RatSkull,
+                    min_upgrades: fixture.input.trinket_level,
+                },
+            }],
+            ..spd_core::MapProfile::default()
+        };
+        let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
+        let mut actual = None;
+        for depth in 1..=expected.depth {
+            dungeon.depth = depth as i32;
+            actual = Some(spd_core::level::create_level_partial_for_profile(
+                &mut dungeon,
+                &profile,
+            ));
+        }
+        let actual = actual.expect("profiled floor");
+        assert_eq!(
+            actual.pre_paint_rng_probe, expected.pre_paint_rng,
+            "{name} pre-paint"
+        );
+        assert_eq!(
+            actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
+            "{name} pre-mobs"
+        );
+        assert_eq!(
+            actual.pre_items_rng_probe, expected.pre_items_rng,
+            "{name} pre-items"
+        );
+        let map = actual.map.as_ref().expect("profiled map");
+        let mobs: Vec<_> = map
+            .mobs
+            .iter()
+            .map(|mob| OracleMob {
+                cell: mob.cell,
+                class_name: mob.class_name.clone(),
+            })
+            .collect();
+        assert_eq!(mobs, expected.final_mobs, "{name} mobs");
+        let heaps: Vec<_> = map
+            .heaps
+            .iter()
+            .map(|heap| OracleHeap {
+                cell: heap.cell,
+                heap_type: heap.heap_type.clone(),
+                items: heap
+                    .items
+                    .iter()
+                    .map(|item| OracleItem {
+                        class_name: item.class_name.clone(),
+                        quantity: item.quantity,
+                        level: item.level,
+                        cursed: item.cursed,
+                    })
+                    .collect(),
+            })
+            .collect();
+        assert_eq!(
+            normalize(heaps),
+            normalize(expected.final_heaps.clone()),
+            "{name} heaps"
+        );
+    }
 }
 
 #[test]

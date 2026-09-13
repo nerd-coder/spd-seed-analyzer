@@ -64,6 +64,21 @@ pub fn create_level_partial(dungeon: &mut DungeonState) -> LevelState {
     create_level_partial_with_profile(dungeon, false)
 }
 
+/// Replays one floor with an explicit first-generation player profile.
+///
+/// This is a Rust-side parity hook; the WASM facade does not expose mutable
+/// player state. Callers should replay floors in ascending depth order.
+pub fn create_level_partial_for_profile(
+    dungeon: &mut DungeonState,
+    profile: &MapProfile,
+) -> LevelState {
+    if dungeon.depth == 1 {
+        trinkets::reset(dungeon.seed);
+    }
+    trinkets::set_held(profile.held_at(dungeon.depth as u32));
+    create_level_partial_with_profile(dungeon, false)
+}
+
 pub(crate) fn create_level_partial_with_profile(
     dungeon: &mut DungeonState,
     configured_profile: bool,

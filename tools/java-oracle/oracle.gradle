@@ -43,6 +43,9 @@ gradle.beforeProject { project ->
 				gradle.startParameter.projectProperties['oracleMiningLevelObjective']
 		def vaultLevelDepth =
 				gradle.startParameter.projectProperties['oracleVaultLevelDepth']
+		def ratSkullDepth = gradle.startParameter.projectProperties['oracleRatSkullDepth']
+		def ratSkullLevel = gradle.startParameter.projectProperties['oracleRatSkullLevel']
+		def ratSkullBeforeDepth = gradle.startParameter.projectProperties['oracleRatSkullBeforeDepth']
         if (sourceDir == null || seed == null) {
             throw new GradleException('javaOracleDump requires oracleSourceDir and oracleSeed')
         }
@@ -120,6 +123,9 @@ gradle.beforeProject { project ->
 			}
 			if (vaultLevelDepth != null) {
 				args('vault-level', vaultLevelDepth)
+			}
+			if (ratSkullDepth != null) {
+				args('final-heaps', ratSkullDepth, 'rat-skull', ratSkullLevel, ratSkullBeforeDepth)
 			}
         }
     }

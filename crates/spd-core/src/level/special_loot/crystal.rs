@@ -52,8 +52,9 @@ pub(super) fn crystal_vault(
         .expect("placed CrystalVaultRoom has an entrance");
     let (p1, p2) = crystal_vault_positions(room, entrance);
 
-    // Rat Skull is not modeled in this profile; Mimic Tooth has full effect.
-    let mimic_chance = 0.1 * crate::level::trinkets::mimic_chance_multiplier();
+    // Rat Skull is half-effective here; Mimic Tooth has full effect.
+    let mimic_chance = crate::level::trinkets::exotic_chance(0.1)
+        * crate::level::trinkets::mimic_chance_multiplier();
     let second_heap = if Random::float() < mimic_chance {
         // Keep the established tooth-free baseline lifecycle unchanged. A
         // held Tooth makes this branch profile-relevant, so replay the mimic's
