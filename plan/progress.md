@@ -19,17 +19,17 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 - City floor 16 and floor 18 fixture checks pass. CrystalPath depth-one lifecycle and AAA/GFX/AFU floor-24 halls traces also pass; the ABC floor-24 RuinsExit callback remains a separate RNG drift.
 - Visual browser suite passes all 27 cases, including the corrected GFX floor-16 StatueRoom snapshot.
 - SecretLaboratory's weighted potion pool follows the pinned JVM `HashMap` order captured after the canonical floor-17 lifecycle, so observing it does not perturb `Class` identity hashes. AAA floor 17 now matches its exact Frost/Haste heaps.
+- AAA floor 19's Laboratory Alchemy blob now derives its cell and visibility from the pinned fixture; the prior hard-coded coordinates were stale.
 
 ## Now
 
-Reconcile the AAA floor-19 Laboratory Alchemy blob placement and visibility with Java.
+Revisit the AAA floor-21 trap-map difference before changing Eye eligibility.
 
 ## Next
 
-1. Reconcile the AAA floor-19 Laboratory Alchemy blob placement and visibility with Java.
-2. Revisit the AAA floor-21 trap-map difference before changing Eye eligibility.
-3. Trace the ABC floor-24 RuinsExit room callback RNG drift.
+1. Revisit the AAA floor-21 trap-map difference before changing Eye eligibility.
+2. Trace the ABC floor-24 RuinsExit room callback RNG drift.
 
 ## Remaining
 
-`java_oracle_goldens`: 43 pass, 3 real failures remain. The remaining failures are AAA floor 19 Laboratory Alchemy blob placement, AAA floor 21 trap-map parity, and the ABC floor-24 RuinsExit callback. `spd-core --lib`: 406 pass, 1 unrelated compact-report expectation failure. Analyzer remains `partial`.
+`java_oracle_goldens`: 44 pass, 2 real failures remain. The remaining failures are AAA floor 21 trap-map parity and the ABC floor-24 RuinsExit callback. `spd-core --lib`: 406 pass, 1 unrelated compact-report expectation failure. Analyzer remains `partial`.

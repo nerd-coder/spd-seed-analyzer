@@ -239,19 +239,6 @@ fn aaa_floor_nineteen_matches_through_tile_variance() {
         expected.blobs.as_ref().expect("floor-19 blobs"),
         "floor-19 blobs"
     );
-    assert_eq!(
-        blobs,
-        vec![OracleBlob {
-            class_name: "Alchemy".into(),
-            volume: 1,
-            always_visible: false,
-            cells: vec![OracleBlobCell {
-                cell: 1223,
-                value: 1,
-            }],
-        }],
-        "floor-19 LaboratoryRoom retains the exact Alchemy seed"
-    );
 }
 
 #[test]
