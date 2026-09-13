@@ -155,13 +155,13 @@ fn effective_merge_terrain(room: &Room, other: &Room, merge_terrain: i32) -> i32
         "PlatformRoom"
             if merge_terrain != CHASM
                 && room.connected.contains(&other.id)
-                && matches!(other.name.as_str(), "PlatformRoom" | "ChasmRoom") =>
+                && (is_platform_room(&other.name) || is_chasm_room(&other.name)) =>
         {
             CHASM
         }
-        "ChasmRoom"
-            if merge_terrain == EMPTY
-                && matches!(other.name.as_str(), "ChasmRoom" | "PlatformRoom") =>
+        name if is_chasm_room(name)
+            && merge_terrain == EMPTY
+            && (is_chasm_room(&other.name) || is_platform_room(&other.name)) =>
         {
             CHASM
         }
@@ -297,14 +297,14 @@ fn paint_merge_connector(
         }
         return;
     }
-    if !matches!(other.name.as_str(), "PlatformRoom" | "ChasmRoom") {
+    if !is_platform_room(&other.name) && !is_chasm_room(&other.name) {
         return;
     }
     let connector = match room.name.as_str() {
         "PlatformRoom" if requested_terrain != CHASM && room.connected.contains(&other.id) => {
             EMPTY_SP
         }
-        "ChasmRoom" if requested_terrain == EMPTY => EMPTY,
+        name if is_chasm_room(name) && requested_terrain == EMPTY => EMPTY,
         _ => return,
     };
     if let Some(door) = door {
@@ -312,4 +312,15 @@ fn paint_merge_connector(
             map.map[cell] = connector;
         }
     }
+}
+
+/// Java's `ChasmRoom` merge/paint implementation is inherited by its
+/// entrance and exit subclasses. Keep the family check explicit so dynamic
+/// dispatch in the oracle is preserved by the Rust room-name model.
+fn is_chasm_room(name: &str) -> bool {
+    matches!(name, "ChasmRoom" | "ChasmEntranceRoom" | "ChasmExitRoom")
+}
+
+fn is_platform_room(name: &str) -> bool {
+    name == "PlatformRoom"
 }

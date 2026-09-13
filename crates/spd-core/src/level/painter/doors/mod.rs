@@ -414,6 +414,15 @@ mod tests {
             ),
             ("ChasmRoom", "PlatformRoom", terrain::CHASM, terrain::EMPTY),
             ("ChasmRoom", "ChasmRoom", terrain::CHASM, terrain::EMPTY),
+            // ChasmEntranceRoom/ChasmExitRoom inherit ChasmRoom.merge in
+            // Java, so they retain the CHASM strip + EMPTY connector override.
+            ("ChasmRoom", "ChasmExitRoom", terrain::CHASM, terrain::EMPTY),
+            (
+                "ChasmExitRoom",
+                "PlatformRoom",
+                terrain::CHASM,
+                terrain::EMPTY,
+            ),
         ];
         for (left_name, right_name, merge_terrain, connector_terrain) in cases {
             let mut left = named_room(0, left_name, 1, 1, 8, 8);
