@@ -35,14 +35,10 @@ fn aaa_floor_twenty_one_trap_candidate_order_matches_java() {
     assert_eq!(oracle.pre_trap_rng, oracle.post_trap_capture_rng);
     assert_eq!(actual.pre_capture_rng, actual.post_capture_rng);
     assert_eq!(actual.pre_capture_rng, oracle.pre_trap_rng);
-    assert_eq!(
-        (oracle.trap_candidates.len(), actual.valid.len()),
-        (379, 379)
-    );
-    assert_eq!(
-        (oracle.trap_non_hall_cells.len(), actual.non_hall.len()),
-        (302, 302)
-    );
+    assert_eq!(oracle.trap_candidates.len(), 379, "Java valid count");
+    assert_eq!(actual.valid.len(), 379, "Rust valid count");
+    assert_eq!(oracle.trap_non_hall_cells.len(), 302, "Java non-hall count");
+    assert_eq!(actual.non_hall.len(), 302, "Rust non-hall count");
     let actual_valid = actual
         .valid
         .iter()
