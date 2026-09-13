@@ -193,12 +193,28 @@ fn aaa_replay_pins_floors_six_through_eleven_across_the_tengu_lifecycle() {
                 pit_heaps, expected_pit_heaps,
                 "{context} exact PitRoom heap"
             );
+            let statue_room = expected
+                .room_bounds
+                .iter()
+                .find(|room| room.class_name == "StatueRoom")
+                .unwrap_or_else(|| panic!("{context} fixture StatueRoom bounds"));
+            let statue = expected
+                .final_mobs
+                .iter()
+                .find(|mob| mob.class_name == "Statue")
+                .unwrap_or_else(|| panic!("{context} fixture StatueRoom mob"));
+            let statue_x = (statue.cell % expected.width) as i32;
+            let statue_y = (statue.cell / expected.width) as i32;
             assert!(
-                actual_mobs.contains(&OracleMob {
-                    cell: 2138,
-                    class_name: "Statue".into(),
-                }),
-                "{context} pinned StatueRoom mob"
+                statue_x > statue_room.left
+                    && statue_x < statue_room.right
+                    && statue_y > statue_room.top
+                    && statue_y < statue_room.bottom,
+                "{context} fixture StatueRoom mob is inside its room"
+            );
+            assert!(
+                actual_mobs.contains(statue),
+                "{context} pinned StatueRoom mob from fixture"
             );
         }
 

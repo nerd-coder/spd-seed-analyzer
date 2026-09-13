@@ -1,7 +1,7 @@
 use super::*;
 use crate::geom::Point;
 use crate::level::terrain::{
-    self, CHASM, EMPTY, EMPTY_SP, EMPTY_WELL, GRASS, HIGH_GRASS, LOCKED_DOOR, WALL,
+    self, CHASM, EMPTY, EMPTY_SP, EMPTY_WELL, GRASS, HIGH_GRASS, LOCKED_DOOR, STATUE, WALL,
 };
 use crate::random::Random;
 use crate::rooms::types::RoomKind;
@@ -74,6 +74,31 @@ fn pit_repaints_special_floor_and_places_one_well() {
         .iter()
         .all(|&cell| matches!(map.map[cell], EMPTY | EMPTY_WELL)));
     assert!(inset.iter().all(|&cell| map.water_allowed[cell]));
+}
+
+#[test]
+fn statue_room_repaints_empty_inset_and_statue_strip_without_rng() {
+    let (rooms, doors) = connected_room("StatueRoom", 7, 7);
+    let mut map = terrain::paint_minimal(&rooms).expect("map");
+    Random::reset_generators();
+    Random::push_generator_seeded(0x57A7);
+    let before = Random::peek_ints(4);
+    let _ = paint(&mut map, &rooms[0], 0, &doors);
+    let after = Random::peek_ints(4);
+    Random::pop_generator();
+
+    assert_eq!(before, after, "StatueRoom terrain paint is RNG-free");
+    for x in (rooms[0].left + 1)..rooms[0].right {
+        for y in (rooms[0].top + 1)..rooms[0].bottom {
+            let cell = map.point_to_cell(x, y).expect("inset cell");
+            let expected = if x == rooms[0].left + 1 {
+                STATUE
+            } else {
+                EMPTY
+            };
+            assert_eq!(map.map[cell], expected, "terrain at ({x},{y})");
+        }
+    }
 }
 
 #[test]

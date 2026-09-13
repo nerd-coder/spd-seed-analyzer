@@ -4,7 +4,7 @@ use crate::geom::Point;
 use crate::level::painter::DoorMap;
 use crate::level::terrain::{
     TerrainMap, BOOKSHELF, CHASM, CUSTOM_DECO_EMPTY, EMPTY, EMPTY_SP, EMPTY_WELL, GRASS,
-    HIGH_GRASS, PEDESTAL, WALL, WATER,
+    HIGH_GRASS, PEDESTAL, STATUE, WALL, WATER,
 };
 use crate::random::Random;
 use crate::rooms::room::Room;
@@ -101,6 +101,33 @@ pub(super) fn paint_garden(map: &mut TerrainMap, room: &Room) {
     fill_room(map, room, WALL);
     fill_margin(map, room, 1, HIGH_GRASS);
     fill_margin(map, room, 2, GRASS);
+}
+
+/// Pinned `StatueRoom.paint` canvas and statue wall strip. The statue mob's
+/// center jitter and weapon rolls remain in `special_rooms::statue_weapon`.
+pub(super) fn paint_statue(map: &mut TerrainMap, room: &Room, room_index: usize, doors: &DoorMap) {
+    fill_room(map, room, WALL);
+    fill_margin(map, room, 1, EMPTY);
+    let Some(door) = entrance(room, room_index, doors) else {
+        return;
+    };
+    if door.x == room.left {
+        for y in (room.top + 1)..room.bottom {
+            set(map, Point::new(room.right - 1, y), STATUE);
+        }
+    } else if door.x == room.right {
+        for y in (room.top + 1)..room.bottom {
+            set(map, Point::new(room.left + 1, y), STATUE);
+        }
+    } else if door.y == room.top {
+        for x in (room.left + 1)..room.right {
+            set(map, Point::new(x, room.bottom - 1), STATUE);
+        }
+    } else if door.y == room.bottom {
+        for x in (room.left + 1)..room.right {
+            set(map, Point::new(x, room.top + 1), STATUE);
+        }
+    }
 }
 
 /// Pinned `LibraryRoom.paint` canvas, including the bookshelf interrupted by

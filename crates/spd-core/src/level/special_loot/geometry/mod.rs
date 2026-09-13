@@ -58,6 +58,10 @@ pub(super) fn paint_at_depth(
             basic::paint_garden(map, room);
             None
         }
+        "StatueRoom" => {
+            basic::paint_statue(map, room, room_index, doors);
+            None
+        }
         "LibraryRoom" => {
             basic::paint_library(map, room, room_index, doors);
             None
