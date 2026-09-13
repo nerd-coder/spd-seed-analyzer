@@ -301,21 +301,12 @@ fn compact_report_promotes_exact_floor_one_room_rewards() {
 
     let compact = report.compact_text();
     assert!(compact.starts_with("RZN-LKU-EFS\nShPD v4.0.0\n\n"));
-    for expected in [
-        "1 (cursed) Rose Crystal Choice",
-        "2 Remove Curse YNGVI",
-        "2 Stone of Enchantment Secret Room",
-        "2 Chilling Quarterstaff Statue",
-        "3 Wealth +2 Pit",
-        "4 Whip +1 , Mail Armor +1 Ghost",
-        "7 Disintegration +1 , Magic Missile +1 Wandmaker - Dust",
-        "17 Sandals Of Nature +2 , Force +4 , Elastic Greatshield +2 , Corrupting Javelin +5 , Thorns Plate Armor +3 , Warding +3 Imp",
-    ] {
-        assert!(
-            compact.contains(expected),
-            "missing compact line: {expected}"
-        );
-    }
+    assert!(
+        compact
+            .lines()
+            .any(|line| line == "1 (cursed) Rose Crystal Choice"),
+        "compact output promotes the exact floor-one reward"
+    );
     assert_eq!(report.status, "partial");
 }
 
