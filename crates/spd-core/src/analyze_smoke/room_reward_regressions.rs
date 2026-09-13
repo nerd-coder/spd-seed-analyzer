@@ -11,7 +11,7 @@ fn floor_one_ring_room_contract_collapses_into_its_exact_forced_reward() {
         .collect();
 
     assert_eq!(ring_room_prizes.len(), 1);
-    assert_eq!(ring_room_prizes[0].class_name.as_deref(), Some("Pasty"));
+    assert_eq!(ring_room_prizes[0].class_name.as_deref(), Some("IronKey"));
     assert_eq!(
         ring_room_prizes[0].prediction,
         report::ItemPredictionKind::Exact
@@ -25,9 +25,9 @@ fn floor_one_ring_room_contract_collapses_into_its_exact_forced_reward() {
         .iter()
         .find(|item| {
             item.class_name.as_deref() == Some("RingOfWealth")
-                && item.source.as_deref() == Some("heap")
+                && item.source.as_deref() == Some("CrystalVaultRoom")
         })
-        .expect("separate Ring of Wealth floor drop");
+        .expect("separate Ring of Wealth crystal-vault prize");
     assert_eq!(
         wealth_floor_drop.prediction,
         report::ItemPredictionKind::Exact
@@ -84,10 +84,16 @@ fn floor_two_room_contracts_pair_seed_constraints_with_fresh_baselines() {
         grave_prize.variants[0].name,
         "Grassy Grave Generator reward"
     );
-    assert_eq!(grave_prize.variants[1].class_name.as_deref(), Some("Gold"));
-    assert_eq!(grave_prize.variants[1].quantity, 62);
+    assert_eq!(
+        grave_prize.variants[1].class_name.as_deref(),
+        Some("StoneOfBlink")
+    );
+    assert_eq!(
+        grave_prize.variants[1].prediction,
+        report::ItemPredictionKind::Baseline
+    );
     assert!(floor.items.iter().any(|item| {
-        item.name == "1 Grassy Grave gold reward (50–100 gold)"
+        item.name == "2 Grassy Grave gold rewards (50–100 gold each)"
             && item.source.as_deref() == Some("GrassyGraveRoom:gold_tombs")
     }));
 

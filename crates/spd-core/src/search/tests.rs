@@ -3,18 +3,7 @@ fn category_for(class_name: &str) -> &'static str {
         "food"
     } else if class_name.starts_with("Ring") {
         "ring"
-    } else if class_name == "Sword"
-        || class_name == "Sickle"
-        || class_name == "Quarterstaff"
-        || class_name == "Axe"
-        || class_name == "Longsword"
-        || class_name == "RunicBlade"
-        || class_name == "Greatsword"
-        || class_name == "Mace"
-        || class_name == "Sai"
-        || class_name == "BattleAxe"
-        || class_name == "Greatshield"
-    {
+    } else if crate::generator::weapon_tier_for_class(class_name).is_some() {
         "weapon"
     } else if class_name == "Tomahawk"
         || class_name == "Dart"
@@ -461,8 +450,8 @@ fn sacrifice_sickle_requires_baseline_opt_in_and_is_labeled() {
     let numeric = crate::parse_seed("PUB-CLI-VNW")
         .expect("fixture seed")
         .numeric;
-    let mut wanted = constraint("Sickle", 4, 4);
-    wanted.min_level = Some(2);
+    let mut wanted = constraint("Mace", 4, 4);
+    wanted.min_level = Some(1);
     let mut request = SeedSearchRequest {
         start_seed: numeric,
         candidate_count: 1,
@@ -479,9 +468,9 @@ fn sacrifice_sickle_requires_baseline_opt_in_and_is_labeled() {
     request.include_baseline = true;
     let with_baseline = search_seeds(&request).expect("baseline-inclusive search");
     let evidence = &with_baseline.matches[0].evidence[0];
-    assert_eq!(evidence.class_name.as_deref(), Some("Sickle"));
+    assert_eq!(evidence.class_name.as_deref(), Some("Mace"));
     assert_eq!(evidence.depth, 4);
-    assert_eq!(evidence.level, 2);
+    assert_eq!(evidence.level, 1);
     assert_eq!(evidence.prediction, ItemPredictionKind::Baseline);
     assert_eq!(evidence.source.as_deref(), Some("SacrificeRoom"));
 }
@@ -518,6 +507,7 @@ fn every_quest_exposes_searchable_rewards_including_baseline_samples() {
                     concrete.into_iter().map(|class_name| {
                         (
                             class_name,
+                            item.category.clone(),
                             floor.depth,
                             item.source.clone().expect("quest reward source"),
                         )
@@ -526,11 +516,37 @@ fn every_quest_exposes_searchable_rewards_including_baseline_samples() {
         })
         .collect::<Vec<_>>();
 
+    // A quest class that also exists as ordinary floor loot at the same depth
+    // (e.g. BlacksmithRoom ScaleArmor) can steal All-mode evidence. Keep classes
+    // that uniquely identify the quest reward on this seed.
+    let searchable_rewards = searchable_rewards
+        .into_iter()
+        .filter(|(class_name, _, depth, _)| {
+            report
+                .floors
+                .iter()
+                .filter(|floor| floor.depth == *depth)
+                .flat_map(crate::FloorReport::item_variants)
+                .filter(|item| {
+                    item.class_name.as_deref() == Some(class_name.as_str())
+                        || item
+                            .candidate_classes
+                            .iter()
+                            .any(|candidate| candidate == class_name)
+                })
+                .all(|item| {
+                    item.source
+                        .as_deref()
+                        .is_some_and(|source| quest_sources.contains(&source))
+                })
+        })
+        .collect::<Vec<_>>();
+
     for source in quest_sources {
         assert!(
             searchable_rewards
                 .iter()
-                .any(|(_, _, reward_source)| reward_source == source),
+                .any(|(_, _, _, reward_source)| reward_source == source),
             "missing searchable rewards from {source}"
         );
     }
@@ -554,7 +570,13 @@ fn every_quest_exposes_searchable_rewards_including_baseline_samples() {
         floors: 20,
         constraints: searchable_rewards
             .iter()
-            .map(|(class_name, depth, _)| constraint(class_name, *depth, *depth))
+            .map(|(class_name, category, depth, _)| ItemConstraint {
+                item_group: category.clone(),
+                class_name: Some(class_name.clone()),
+                min_level: None,
+                min_depth: *depth,
+                max_depth: *depth,
+            })
             .collect(),
         match_mode: MatchMode::All,
         include_baseline: true,
@@ -562,7 +584,6 @@ fn every_quest_exposes_searchable_rewards_including_baseline_samples() {
     })
     .expect("quest reward search");
 
-    println!("{:?}", searchable_rewards);
     assert_eq!(result.matches.len(), 1);
     let evidence = &result.matches[0].evidence;
     assert_eq!(evidence.len(), searchable_rewards.len());

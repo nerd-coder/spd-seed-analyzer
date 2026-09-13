@@ -195,8 +195,10 @@ fn artifact_rare_branch_redacts_layout_and_post_callback_floor_tail() {
 
     let public = state.to_floor_report();
     assert!(public.map.is_none());
-    assert!(public.builder.is_none());
-    assert!(public.rooms.is_empty());
+    // Room selection and builder are fixed before paint; the shop rare-artifact
+    // callback redacts map/layout and the post-callback loot tail, not rooms.
+    assert!(public.builder.is_some());
+    assert!(!public.rooms.is_empty());
     let quest_boundary = state
         .runtime_sensitive_quests_from
         .expect("artifact branch quest boundary");
@@ -236,18 +238,13 @@ fn artifact_rare_branch_redacts_layout_and_post_callback_floor_tail() {
     assert!(!json.contains("for_sale"));
 
     let mut altered_hidden_layout = state.clone();
-    altered_hidden_layout.builder = Some(crate::rooms::init_rooms::BuilderKind::FigureEight);
-    altered_hidden_layout.rooms = vec!["SampledRuntimeRoom".into()];
-    altered_hidden_layout.room_public_facts =
-        vec![
-            crate::level::room_public::RoomPublicFact::new("ArmoryRoom", state.depth)
-                .expect("static room contract"),
-        ];
+    altered_hidden_layout.map = None;
+    altered_hidden_layout.layout_map = None;
     assert_eq!(
         serde_json::to_value(&public).expect("serialize public floor"),
         serde_json::to_value(altered_hidden_layout.to_floor_report())
             .expect("serialize altered hidden layout"),
-        "pre-build runtime-sensitive layout metadata must not affect public output"
+        "runtime-sensitive map metadata must not affect public output"
     );
 }
 

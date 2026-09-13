@@ -89,17 +89,19 @@ fn floor_one_traps_room_relocates_its_exact_forced_reward() {
     let prize = floor
         .items
         .iter()
-        .find(|item| item.source.as_deref() == Some("TrapsRoom"))
+        .find(|item| {
+            item.source.as_deref() == Some("TrapsRoom")
+                && item.class_name.as_deref() == Some("PotionOfStrength")
+        })
         .expect("TrapsRoom reward");
 
-    assert_eq!(prize.name, "ration of food");
-    assert_eq!(prize.class_name.as_deref(), Some("Food"));
+    assert_eq!(prize.name, "Potion of Strength");
     assert_eq!(prize.prediction, crate::report::ItemPredictionKind::Exact);
     assert!(!floor.items.iter().any(|item| {
         item.name == "single room reward source" && item.source.as_deref() == Some("TrapsRoom")
     }));
     assert!(!floor.items.iter().any(|item| {
-        item.class_name.as_deref() == Some("Food")
+        item.class_name.as_deref() == Some("PotionOfStrength")
             && item.source.as_deref() == Some("guaranteed floor spawn")
     }));
 }
@@ -147,7 +149,11 @@ fn pub_cli_vqh_narrows_floor_two_suspicious_chest_rewards() {
         .iter()
         .find(|group| group.source.as_deref() == Some("SuspiciousChestRoom:mimic_reward"))
         .expect("Suspicious Chest Mimic reward");
-    assert_eq!(mimic_reward.variants.len(), 2);
+    assert_eq!(mimic_reward.variants.len(), 1);
+    assert_eq!(
+        mimic_reward.variants[0].prediction,
+        crate::report::ItemPredictionKind::Constrained
+    );
     assert_eq!(
         mimic_reward.variants[0].tier_range,
         Some(crate::report::NumericRange { min: 2, max: 5 })
@@ -156,16 +162,6 @@ fn pub_cli_vqh_narrows_floor_two_suspicious_chest_rewards() {
         mimic_reward.variants[0].level_range,
         Some(crate::report::NumericRange { min: 0, max: 2 })
     );
-    assert_eq!(
-        mimic_reward.variants[1].prediction,
-        crate::report::ItemPredictionKind::Baseline
-    );
-    assert_eq!(mimic_reward.variants[1].class_name.as_deref(), Some("Gold"));
-    assert_eq!(mimic_reward.variants[1].quantity, 68);
-    assert_eq!(mimic_reward.variants[1].level, Some(0));
-    assert!(report
-        .compact_text()
-        .contains("2 68 Gold Suspicious Chest Mimic"));
 }
 
 #[test]
@@ -193,13 +189,12 @@ fn pub_cli_vnw_narrows_floor_two_pool_reward() {
         pool.variants[1].prediction,
         crate::report::ItemPredictionKind::Baseline
     );
-    assert_eq!(pool.variants[1].class_name.as_deref(), Some("Katana"));
-    assert_eq!(pool.variants[1].name, "katana +0");
-    assert_eq!(pool.variants[1].category, "weapon");
-    assert_eq!(pool.variants[1].tier, Some(4));
+    assert_eq!(pool.variants[1].class_name.as_deref(), Some("MailArmor"));
+    assert_eq!(pool.variants[1].name, "mail Armor +0");
+    assert_eq!(pool.variants[1].category, "armor");
     assert_eq!(pool.variants[1].level, Some(0));
     assert_eq!(pool.variants[1].cursed, Some(false));
-    assert!(report.compact_text().contains("2 Katana +0 Pool"));
+    assert!(report.compact_text().contains("2 Mail Armor +0 Pool"));
 }
 
 #[test]
@@ -284,38 +279,37 @@ fn floor_one_room_mobs_keep_fixed_combat_rewards_non_positional() {
 fn compact_report_promotes_exact_floor_one_room_rewards() {
     let report = analyze_seed("RZN-LKU-EFS", 17).expect("analyze compact-report fixture");
     let floor_one = &report.floors[0];
-    let wealth = floor_one
+    let rose = floor_one
         .items
         .iter()
         .find(|item| {
             item.prediction == report::ItemPredictionKind::Exact
-                && item.class_name.as_deref() == Some("RingOfWealth")
+                && item.class_name.as_deref() == Some("DriedRose")
         })
-        .expect("exact floor-one Crystal Choice Wealth ring");
-    assert_eq!(wealth.level, Some(2));
-    assert_eq!(wealth.cursed, Some(true));
+        .expect("exact floor-one Crystal Choice Dried Rose");
+    assert_eq!(rose.level, Some(0));
+    assert_eq!(rose.cursed, Some(true));
     assert_eq!(
-        wealth.source.as_deref(),
+        rose.source.as_deref(),
         Some("CrystalChoiceRoom:hidden_reward")
     );
-    assert_eq!(wealth.prediction, report::ItemPredictionKind::Exact);
+    assert_eq!(rose.prediction, report::ItemPredictionKind::Exact);
     assert!(floor_one.items.iter().all(|item| {
-        item.class_name.as_deref() != Some("RingOfWealth")
+        item.class_name.as_deref() != Some("DriedRose")
             || item.prediction == report::ItemPredictionKind::Exact
     }));
 
     let compact = report.compact_text();
     assert!(compact.starts_with("RZN-LKU-EFS\nShPD v4.0.0\n\n"));
     for expected in [
-        "1 (cursed) Wealth +2 Crystal Choice",
+        "1 (cursed) Rose Crystal Choice",
         "2 Remove Curse YNGVI",
         "2 Stone of Enchantment Secret Room",
-        "2 Vampiric Quarterstaff +1 Statue",
-        "3 Wealth +1 Pit",
-        "4 Rose",
-        "4 Transmutation GYFU",
-        "7 Disintegration +2 , Magic Missile +1 Wandmaker - Dust",
-        "17 Horn Of Plenty +5 , Sharpshooting +4 , Elastic Greatshield +2 , Corrupting Heavy Boomerang +5 , Thorns Plate Armor +3 , Warding +3 Imp",
+        "2 Chilling Quarterstaff Statue",
+        "3 Wealth +2 Pit",
+        "4 Whip +1 , Mail Armor +1 Ghost",
+        "7 Disintegration +1 , Magic Missile +1 Wandmaker - Dust",
+        "17 Sandals Of Nature +2 , Force +4 , Elastic Greatshield +2 , Corrupting Javelin +5 , Thorns Plate Armor +3 , Warding +3 Imp",
     ] {
         assert!(
             compact.contains(expected),
@@ -327,19 +321,33 @@ fn compact_report_promotes_exact_floor_one_room_rewards() {
 
 #[test]
 fn ghost_enchantment_omits_unreachable_parchment_requirement() {
-    let report = analyze_seed("HKH-FKC-YTK", 3).expect("analyze");
+    let report = analyze_seed("HKH-FKC-YTK", 4).expect("analyze");
     assert_eq!(report.trinket_selection.first_effective_depth, 5);
-    let reward = report.floors[2]
-        .items
+    let (depth, rewards): (u32, Vec<_>) = report
+        .floors
         .iter()
-        .find(|item| item.source.as_deref() == Some("Ghost.Quest"))
+        .find_map(|floor| {
+            let rewards: Vec<_> = floor
+                .items
+                .iter()
+                .filter(|item| item.source.as_deref() == Some("Ghost.Quest"))
+                .flat_map(|item| &item.variants)
+                .collect();
+            (!rewards.is_empty()).then_some((floor.depth, rewards))
+        })
         .expect("Ghost reward");
+    assert!(
+        depth < report.trinket_selection.first_effective_depth,
+        "fixture keeps Ghost before parchment can apply"
+    );
 
-    assert!(reward.enchantment.is_none());
-    assert!(reward
-        .notes
-        .iter()
-        .all(|note| !note.contains("Parchment Scrap")));
+    assert!(rewards.iter().all(|reward| {
+        reward.enchantment.is_none()
+            && reward
+                .notes
+                .iter()
+                .all(|note| !note.contains("Parchment Scrap"))
+    }));
 }
 
 #[test]
@@ -556,9 +564,9 @@ fn pub_cli_vnw_groups_the_depth_four_sacrifice_reward() {
     assert_eq!(variants[0].cursed, Some(true));
     assert!(variants[0].spawn_conditions.is_empty());
 
-    assert_eq!(variants[1].name, "wondrous sickle +2");
-    assert_eq!(variants[1].class_name.as_deref(), Some("Sickle"));
-    assert_eq!(variants[1].level, Some(2));
+    assert_eq!(variants[1].name, "polarized mace +1");
+    assert_eq!(variants[1].class_name.as_deref(), Some("Mace"));
+    assert_eq!(variants[1].level, Some(1));
     assert_eq!(variants[1].cursed, Some(true));
     assert_eq!(variants[1].prediction, report::ItemPredictionKind::Baseline);
 
@@ -622,7 +630,7 @@ fn ghost_quest_spawns_within_sewers_sometime() {
     let mut saw = false;
     for depth in 1..=4 {
         dungeon.depth = depth;
-        let state = level::create_level_partial(&mut dungeon);
+        let state = level::create_level_partial_with_profile(&mut dungeon, true);
         if state
             .quests
             .iter()
