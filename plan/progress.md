@@ -15,6 +15,7 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 - Halls trap selection is fully diagnosed for AAA floor 21: class order, RNG boundaries, candidate counts, and predicates match Java; only upstream painted-map candidate ordering differs, so no safe trap or mob edit is justified.
 - The AAA-AFU floor-1 Runestone heap check now derives its cells and classes from the pinned v4 fixture instead of stale coordinates.
 - The floor-one MagicalFire and hello TrapsRoom checks are also fixture-gated: the pinned v4 fixtures no longer contain the old hard-coded prize facts, so those assertions no longer report stale v3 failures.
+- AAA floor-7 replay's planted-cell, Armory, and Library checks now derive from the pinned v4 terrain/heaps; the replay reaches a genuine one-draw `pre_items_rng` shift after the quest hook and mob creation.
 
 ## Now
 
@@ -27,4 +28,4 @@ Fix reproducible v4 Java-oracle parity failures, one verified slice per commit.
 
 ## Remaining
 
-`java_oracle_goldens`: 36 pass, 9 real failures remain across the work above; the CrystalVault, Sentry, MagicalFire, TrapsRoom, and Runestone stale checks are removed or retargeted, while their enclosing replay tests still stop at earlier parity failures. Analyzer still `partial`.
+`java_oracle_goldens`: 36 pass, 9 real failures remain across the work above; the CrystalVault, Sentry, MagicalFire, TrapsRoom, Runestone, and AAA floor-7 planted/Armory/Library stale checks are removed or retargeted, while their enclosing replay tests still stop at earlier parity failures. Analyzer still `partial`.
