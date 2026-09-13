@@ -20,6 +20,10 @@ fn uses_private_distinct_scroll_pool_without_queue_access() {
             && drop.item.source.as_deref() == Some("SecretLibraryRoom")
     }));
     let mut classes: Vec<_> = loot.iter().map(|drop| &drop.item.class_name).collect();
+    assert_eq!(
+        classes.iter().map(|name| name.as_str()).collect::<Vec<_>>(),
+        vec!["ScrollOfRage", "ScrollOfRetribution", "ScrollOfRecharging"]
+    );
     classes.sort();
     classes.dedup();
     assert_eq!(classes.len(), loot.len());

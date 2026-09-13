@@ -12,22 +12,24 @@ use crate::rooms::room::Room;
 pub(super) fn secret_library(room: &Room, map: &mut TerrainMap) -> Vec<PlacedLoot> {
     // Private weighted map in pinned JVM HashMap iteration order after the
     // complete run-init class-loading sequence. This room does not access
-    // itemsToSpawn or Generator.
+    // itemsToSpawn or Generator. The key order and weights mirror the v4
+    // source initializer (SecretLibraryRoom.java:58-70); the copied-HashMap
+    // order is pinned by tools/java-oracle/fixtures/secret/secret-library-order.json.
     let n = Random::int_range_inclusive(2, 3);
     let classes = [
+        "ScrollOfRecharging",
         "ScrollOfTerror",
         "ScrollOfMirrorImage",
-        "ScrollOfRemoveCurse",
-        "ScrollOfIdentify",
         "ScrollOfRetribution",
         "ScrollOfTeleportation",
-        "ScrollOfTransmutation",
         "ScrollOfLullaby",
-        "ScrollOfRecharging",
+        "ScrollOfTransmutation",
         "ScrollOfMagicMapping",
+        "ScrollOfIdentify",
         "ScrollOfRage",
+        "ScrollOfRemoveCurse",
     ];
-    let mut weights = vec![4.0, 3.0, 2.0, 1.0, 4.0, 3.0, 6.0, 4.0, 3.0, 4.0, 4.0];
+    let mut weights = vec![3.0, 4.0, 3.0, 4.0, 3.0, 4.0, 6.0, 4.0, 1.0, 4.0, 2.0];
     let mut out = Vec::new();
     for _ in 0..n {
         let cell = loop {
