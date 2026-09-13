@@ -15,16 +15,16 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 - Halls trap selection is fully diagnosed for AAA floor 21: class order, RNG boundaries, candidate counts, and predicates match Java; only upstream painted-map candidate ordering differs, so no safe trap or mob edit is justified.
 - The AAA-AFU floor-1 Runestone heap check now derives its cells and classes from the pinned v4 fixture instead of stale coordinates.
 - The floor-one MagicalFire and hello TrapsRoom checks are also fixture-gated: the pinned v4 fixtures no longer contain the old hard-coded prize facts, so those assertions no longer report stale v3 failures.
-- AAA floor-7 replay's planted-cell, Armory, and Library checks now derive from the pinned v4 terrain/heaps. Its first real divergence is SegmentedRoom terrain, which changes ambient mob placements/count before `pre_items_rng`.
+- AAA floor-7 replay's planted-cell, Armory, and Library checks now derive from the pinned v4 terrain/heaps. The one-draw `pre_items_rng` shift occurs during ambient mob creation after an identical `pre_mobs_rng` boundary; SegmentedRoom geometry/RNG matches Java, and its remaining tile differences are decoration variants with no safe painter fix.
 - City replay enters floor 16 with the general category deck one GOLD weight behind Java while the STONE deck matches. Floor 16 consequently consumes StoneOfAggression and later heap generation drifts.
 
 ## Now
 
-Fix the AAA floor-7 SegmentedRoom painter and locate the first pre-floor-16 GOLD category divergence.
+Locate the first ambient mob-placement divergence on AAA floor 7 and the first pre-floor-16 GOLD category divergence.
 
 ## Next
 
-1. Align SegmentedRoom painted terrain, then rerun the AAA floor-7 replay through mobs and heaps.
+1. Trace AAA floor-7 ambient mob placement against Java after the matching `pre_mobs_rng` boundary; do not compensate for decoration-only tile differences.
 2. Trace the general category deck across prior floors to find the first missing GOLD consumption before city floor 16.
 3. Recheck city floors 16–19 and CrystalPath after their incoming Generator state matches Java.
 
