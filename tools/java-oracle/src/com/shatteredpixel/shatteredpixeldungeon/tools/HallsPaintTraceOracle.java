@@ -27,6 +27,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Generator;
 import com.shatteredpixel.shatteredpixeldungeon.items.Heap;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.watabou.noosa.Game;
+import com.watabou.utils.PathFinder;
 import com.watabou.utils.Point;
 import com.watabou.utils.Random;
 import com.watabou.utils.Rect;
@@ -61,6 +62,10 @@ final class HallsPaintTraceOracle {
 		TracePainter.crystalVaults.clear();
 		TracePopulationHallsLevel.preMobsRng = null;
 		TracePopulationHallsLevel.preItemsRng = null;
+		TrapTracePainter.validCells = "[]";
+		TrapTracePainter.validNonHallways = "[]";
+		TrapTracePainter.preCaptureRng = "[]";
+		TrapTracePainter.postCaptureRng = "[]";
 		TraceBuilder.attempts.clear();
 		TraceLoopBuilder.attempts.clear();
 		TraceHallsLevel.builderKind = null;
@@ -103,6 +108,10 @@ final class HallsPaintTraceOracle {
 				.append(",\n  \"pre_shuffle_rooms\": ").append(TracePainter.preShuffleRooms)
 				.append(",\n  \"pre_mobs_rng\": ").append(TracePopulationHallsLevel.preMobsRng)
 				.append(",\n  \"pre_items_rng\": ").append(TracePopulationHallsLevel.preItemsRng)
+				.append(",\n  \"pre_trap_rng\": ").append(TrapTracePainter.preCaptureRng)
+				.append(",\n  \"post_trap_capture_rng\": ").append(TrapTracePainter.postCaptureRng)
+				.append(",\n  \"trap_candidates\": ").append(TrapTracePainter.validCells)
+				.append(",\n  \"trap_non_hall_cells\": ").append(TrapTracePainter.validNonHallways)
 				.append(",\n  \"crystal_vaults\": ").append(TracePainter.crystalVaults)
 				.append(",\n  \"drops\": ").append(TracePrisonLevel.drops)
 				.append(",\n  \"blacksmith_state\": ").append(blacksmithState())
@@ -233,6 +242,58 @@ final class HallsPaintTraceOracle {
 		@Override protected void createItems() {
 			preItemsRng = probe().toString();
 			throw new FloorOracle.SnapshotComplete();
+		}
+
+		@Override protected com.shatteredpixel.shatteredpixeldungeon.levels.painters.Painter painter() {
+			return new TrapTracePainter()
+					.setWater(feeling == Level.Feeling.WATER ? 0.70f : 0.15f, 6)
+					.setGrass(feeling == Level.Feeling.GRASS ? 0.65f : 0.10f, 3)
+					.setTraps(nTraps(), trapClasses(), trapChances());
+		}
+	}
+
+	/** Captures the exact pre-selection lists, then delegates to the pinned trap painter. */
+	private static final class TrapTracePainter extends HallsPainter {
+		static String validCells = "[]";
+		static String validNonHallways = "[]";
+		static String preCaptureRng = "[]";
+		static String postCaptureRng = "[]";
+
+		@Override protected void paintTraps(Level level, ArrayList<Room> rooms) {
+			preCaptureRng = probe().toString();
+			ArrayList<Integer> valid = new ArrayList<>();
+			StringBuilder candidates = new StringBuilder("[");
+			for (Room room : rooms) {
+				for (Point point : room.trapPlaceablePoints()) {
+					int cell = level.pointToCell(point);
+					int terrain = level.map[cell];
+					if (terrain != Terrain.EMPTY) continue;
+					if (!valid.isEmpty()) candidates.append(',');
+					valid.add(cell);
+					candidates.append("{\"cell\":").append(cell)
+							.append(",\"room\":\"").append(room.getClass().getSimpleName())
+							.append("\",\"terrain\":").append(terrain).append('}');
+				}
+			}
+			validCells = candidates.append(']').toString();
+
+			boolean[] passable = new boolean[level.length()];
+			for (int cell = 0; cell < level.length(); cell++) {
+				passable[cell] = (Terrain.flags[level.map[cell]] & Terrain.PASSABLE) != 0;
+			}
+			StringBuilder nonHallways = new StringBuilder("[");
+			boolean first = true;
+			for (int cell : valid) {
+				if ((passable[cell + PathFinder.CIRCLE4[0]] || passable[cell + PathFinder.CIRCLE4[2]])
+						&& (passable[cell + PathFinder.CIRCLE4[1]] || passable[cell + PathFinder.CIRCLE4[3]])) {
+					if (!first) nonHallways.append(',');
+					first = false;
+					nonHallways.append(cell);
+				}
+			}
+			validNonHallways = nonHallways.append(']').toString();
+			postCaptureRng = probe().toString();
+			super.paintTraps(level, rooms);
 		}
 	}
 

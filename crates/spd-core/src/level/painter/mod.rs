@@ -11,11 +11,17 @@ mod params;
 mod room_geometry;
 mod sewer_boss_rooms;
 
+#[cfg(test)]
+mod trap_trace_tests;
+
 use crate::level::patch;
 use crate::level::terrain::{self, TerrainMap, EMPTY, GRASS, HIGH_GRASS, SECRET_TRAP, TRAP, WATER};
 use crate::level::Feeling;
 use crate::random::Random;
 use crate::rooms::room::Room;
+
+#[cfg(test)]
+use std::cell::RefCell;
 
 pub(crate) use connection_rooms::paint as paint_connection_room;
 pub(crate) use doors::merge_rooms_with_terrain;
@@ -333,6 +339,10 @@ fn paint_traps(
     feeling: Feeling,
     mut n_traps: i32,
 ) {
+    #[cfg(test)]
+    let pre_capture_rng = Random::peek_ints(8);
+    #[cfg(test)]
+    let mut candidate_trace = Vec::new();
     let mut valid: Vec<usize> = Vec::new();
     if rooms.iter().any(|r| !r.is_empty()) {
         for &room_index in paint_order {
@@ -358,6 +368,12 @@ fn paint_traps(
                             && (room.name != "BurnedRoom" || map.trap_allowed[i])
                         {
                             valid.push(i);
+                            #[cfg(test)]
+                            candidate_trace.push(TrapCandidateTrace {
+                                cell: i,
+                                room: room.name.clone(),
+                                terrain: map.map[i],
+                            });
                         }
                     }
                 }
@@ -367,6 +383,12 @@ fn paint_traps(
         for (i, &t) in map.map.iter().enumerate() {
             if t == EMPTY && map.trap_allowed[i] {
                 valid.push(i);
+                #[cfg(test)]
+                candidate_trace.push(TrapCandidateTrace {
+                    cell: i,
+                    room: "map".into(),
+                    terrain: t,
+                });
             }
         }
     }
@@ -393,6 +415,13 @@ fn paint_traps(
             non_hall.push(i);
         }
     }
+    #[cfg(test)]
+    record_trap_candidate_snapshot(TrapCandidateSnapshot {
+        pre_capture_rng,
+        post_capture_rng: Random::peek_ints(8),
+        valid: candidate_trace,
+        non_hall: non_hall.clone(),
+    });
     n_traps = n_traps.min(valid.len() as i32 / 5);
 
     let (classes, chances) = params::trap_table(depth);
@@ -445,6 +474,38 @@ fn paint_traps(
             map.trap_names[pos] = Some(trap.name);
         }
     }
+}
+
+#[cfg(test)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct TrapCandidateTrace {
+    cell: usize,
+    room: String,
+    terrain: i32,
+}
+
+#[cfg(test)]
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct TrapCandidateSnapshot {
+    pre_capture_rng: Vec<i32>,
+    post_capture_rng: Vec<i32>,
+    valid: Vec<TrapCandidateTrace>,
+    non_hall: Vec<usize>,
+}
+
+#[cfg(test)]
+thread_local! {
+    static TRAP_CANDIDATE_SNAPSHOT: RefCell<Option<TrapCandidateSnapshot>> = const { RefCell::new(None) };
+}
+
+#[cfg(test)]
+fn record_trap_candidate_snapshot(snapshot: TrapCandidateSnapshot) {
+    TRAP_CANDIDATE_SNAPSHOT.with(|slot| *slot.borrow_mut() = Some(snapshot));
+}
+
+#[cfg(test)]
+fn take_trap_candidate_snapshot() -> Option<TrapCandidateSnapshot> {
+    TRAP_CANDIDATE_SNAPSHOT.with(|slot| slot.borrow_mut().take())
 }
 
 fn remove_first(cells: &mut Vec<usize>, target: usize) {
