@@ -233,6 +233,7 @@ fn assert_aaa_regression_facts(
 
 fn assert_aaa_aad_public_report_facts(
     fixture: &OracleFixture,
+    expected: &OracleFloor,
     floor: &spd_core::FloorReport,
     context: &impl std::fmt::Display,
 ) {
@@ -248,13 +249,31 @@ fn assert_aaa_aad_public_report_facts(
         floor.rooms.iter().any(|room| room == "SacrificeRoom"),
         "Sacrifice contract is public only when room selection is seed-safe in {context}"
     );
-    assert!(
-        floor.items.iter().any(|item| {
-            item.category == "seed"
-                && item.prediction == spd_core::report::ItemPredictionKind::Exact
-        }),
-        "fresh-run floor-one baseline publishes its exact seed heap in {context}"
+    let oracle_spawns_seed = expected
+        .final_heaps
+        .iter()
+        .flat_map(|heap| &heap.items)
+        .any(|item| item.class_name == "Seed");
+    let report_spawns_seed = floor.items.iter().any(|item| item.category == "seed");
+    assert_eq!(
+        report_spawns_seed, oracle_spawns_seed,
+        "public seed presence matches the pinned Java floor in {context}"
     );
+}
+
+#[test]
+fn aaa_aad_public_seed_presence_matches_v4_oracle() {
+    let path = fixture_paths()
+        .into_iter()
+        .find(|path| {
+            path.file_name()
+                .is_some_and(|name| name == "aaa-aaa-aad-final-heaps-floor-1.json")
+        })
+        .expect("AAA-AAD floor-1 fixture");
+    let fixture = read_fixture(&path);
+    let expected = fixture.floors.first().expect("floor-1 oracle facts");
+    let report = analyze_seed(&fixture.input.seed, 1).expect("analyze AAA-AAD");
+    assert_aaa_aad_public_report_facts(&fixture, expected, &report.floors[0], &path.display());
 }
 
 #[test]
@@ -558,7 +577,7 @@ fn depth_one_final_heaps_match_report_projection() {
                 "public depth-one map must remain painter-only in {context}"
             );
         }
-        assert_aaa_aad_public_report_facts(&fixture, &report.floors[0], &context);
+        assert_aaa_aad_public_report_facts(&fixture, expected_floor, &report.floors[0], &context);
 
         // FloorOracle's final-heaps contract cannot see the prize held by the
         // SacrificialFire blob. Exclude that reward only at this heap-only

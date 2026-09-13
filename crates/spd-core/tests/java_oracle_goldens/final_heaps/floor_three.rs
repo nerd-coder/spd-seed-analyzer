@@ -3,7 +3,7 @@ use super::*;
 use std::ffi::OsStr;
 
 #[test]
-fn gfx_floor_three_golden_mimic_preserves_same_floor_rng() {
+fn gfx_floor_three_lifecycle_matches_v4_oracle() {
     let name = OsStr::new("gfx-pzh-dch-final-heaps-floor-3.json");
     let path = fixture_paths()
         .into_iter()
@@ -11,6 +11,8 @@ fn gfx_floor_three_golden_mimic_preserves_same_floor_rng() {
         .expect("missing GFX floor-3 fixture");
     let fixture = read_fixture(&path);
     let expected = fixture.floors.first().expect("floor-3 oracle facts");
+    assert_eq!(fixture.spd.version, SPD_VERSION);
+    assert_eq!(fixture.spd.commit, SPD_COMMIT);
 
     let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
     let mut actual = None;
@@ -31,14 +33,7 @@ fn gfx_floor_three_golden_mimic_preserves_same_floor_rng() {
             class_name: mob.class_name.clone(),
         })
         .collect::<Vec<_>>();
-    assert_eq!(actual_mobs, expected.final_mobs);
-    assert!(
-        actual_mobs.contains(&OracleMob {
-            cell: 1310,
-            class_name: "GoldenMimic".into(),
-        }),
-        "pinned GoldenMimic spawn"
-    );
+    assert_eq!(actual_mobs, expected.final_mobs, "pinned v4 floor-3 mobs");
 
     let actual_heaps = map
         .heaps
@@ -62,5 +57,8 @@ fn gfx_floor_three_golden_mimic_preserves_same_floor_rng() {
                 .collect(),
         })
         .collect::<Vec<_>>();
-    assert_eq!(actual_heaps, expected.final_heaps, "post-Mimic heap RNG");
+    assert_eq!(
+        actual_heaps, expected.final_heaps,
+        "pinned v4 floor-3 heaps"
+    );
 }

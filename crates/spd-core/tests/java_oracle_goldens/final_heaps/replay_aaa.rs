@@ -288,30 +288,49 @@ fn aaa_replay_pins_floors_six_through_eleven_across_the_tengu_lifecycle() {
         }
 
         if depth == 6 {
+            let is_weapon =
+                |class_name: &str| matches!(class_name, "Quarterstaff" | "HandAxe" | "Katana");
             let weapon_heaps: Vec<_> = map
                 .heaps
                 .iter()
-                .filter_map(|heap| {
-                    let item = heap.items.first()?;
-                    matches!(
-                        item.class_name.as_str(),
-                        "Quarterstaff" | "Crossbow" | "Katana"
-                    )
-                    .then_some((
-                        heap.cell,
-                        heap.heap_type.as_str(),
-                        item.class_name.as_str(),
-                    ))
+                .filter(|heap| heap.items.iter().any(|item| is_weapon(&item.class_name)))
+                .map(|heap| OracleHeap {
+                    cell: heap.cell,
+                    heap_type: heap.heap_type.clone(),
+                    items: heap
+                        .items
+                        .iter()
+                        .map(|item| OracleItem {
+                            class_name: item.class_name.clone(),
+                            quantity: item.quantity,
+                            level: item.level,
+                            cursed: item.cursed,
+                        })
+                        .collect(),
+                })
+                .collect();
+            let expected_weapon_heaps: Vec<_> = expected
+                .final_heaps
+                .iter()
+                .filter(|heap| heap.items.iter().any(|item| is_weapon(&item.class_name)))
+                .map(|heap| OracleHeap {
+                    cell: heap.cell,
+                    heap_type: heap.heap_type.clone(),
+                    items: heap
+                        .items
+                        .iter()
+                        .map(|item| OracleItem {
+                            class_name: item.class_name.clone(),
+                            quantity: item.quantity,
+                            level: item.level,
+                            cursed: item.cursed,
+                        })
+                        .collect(),
                 })
                 .collect();
             assert_eq!(
-                weapon_heaps,
-                [
-                    (140, "for_sale", "Quarterstaff"),
-                    (669, "heap", "Crossbow"),
-                    (1647, "chest", "Katana"),
-                ],
-                "{context} exact shop, main-drop, and chest weapon classes"
+                weapon_heaps, expected_weapon_heaps,
+                "{context} v4 shop, main-drop, and chest weapon heaps"
             );
             let vault_heaps: Vec<_> = map
                 .heaps
@@ -571,18 +590,33 @@ fn aaa_floor_fourteen_matches_the_pinned_final_facts() {
         .traps
         .iter()
         .filter(|trap| trap.class_name == "ToxicVent")
-        .map(|trap| (trap.cell, trap.visible, trap.active, trap.color, trap.shape))
+        .map(|trap| OracleTrap {
+            cell: trap.cell,
+            class_name: trap.class_name.clone(),
+            visible: trap.visible,
+            active: trap.active,
+            color: trap.color,
+            shape: trap.shape,
+        })
+        .collect();
+    let expected_toxic_vents: Vec<_> = expected
+        .traps
+        .as_ref()
+        .expect("floor-14 traps")
+        .iter()
+        .filter(|trap| trap.class_name == "ToxicVent")
+        .map(|trap| OracleTrap {
+            cell: trap.cell,
+            class_name: trap.class_name.clone(),
+            visible: trap.visible,
+            active: trap.active,
+            color: trap.color,
+            shape: trap.shape,
+        })
         .collect();
     assert_eq!(
-        toxic_vents,
-        [
-            (1202, true, false, 8, 2),
-            (1203, true, false, 8, 2),
-            (1248, true, false, 8, 2),
-            (1249, true, false, 8, 2),
-            (1251, true, false, 8, 2),
-        ],
-        "floor-14 ToxicGasRoom visible inactive vents"
+        toxic_vents, expected_toxic_vents,
+        "floor-14 v4 ToxicGasRoom vents"
     );
     let actual_mobs: Vec<_> = actual
         .map
