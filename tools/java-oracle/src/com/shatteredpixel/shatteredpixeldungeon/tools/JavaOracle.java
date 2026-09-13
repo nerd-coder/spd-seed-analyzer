@@ -33,7 +33,7 @@ public final class JavaOracle {
 	public static void main(String[] args) {
 		if (args.length < 1 || args.length > 4) {
 			System.err.println(
-					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH | mining-level DEPTH crystal|gnoll | vault-level DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection]");
+					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH | mining-level DEPTH crystal|gnoll | vault-level DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection | secret-library-order | secret-laboratory-order]");
 			System.exit(2);
 		}
 
@@ -58,6 +58,8 @@ public final class JavaOracle {
 				args.length == 2 && "sacrifice-reward".equals(args[1]);
 		boolean secretLibraryOrder =
 				args.length == 2 && "secret-library-order".equals(args[1]);
+		boolean secretLaboratoryOrder =
+				args.length == 2 && "secret-laboratory-order".equals(args[1]);
 		boolean cavesBossPatch = args.length == 2 && "caves-boss-patch".equals(args[1]);
 		boolean hallsPaintTrace = args.length == 3 && "halls-paint-trace".equals(args[1]);
 		boolean miningLevel = args.length == 4 && "mining-level".equals(args[1]);
@@ -78,6 +80,13 @@ public final class JavaOracle {
 		}
 		if (secretLibraryOrder) {
 			System.out.print(FloorOracle.generateSecretLibraryOrderJson(inputSeed, numericSeed));
+			return;
+		}
+		if (secretLaboratoryOrder) {
+			// Generate before loading the observer class: extra class loading can
+			// perturb the identity hashes that define HashMap iteration order.
+			FloorOracle.FinalFloorFacts facts = FloorOracle.generateFinalHeaps(numericSeed, 17);
+			System.out.print(SecretLaboratoryOracle.generateJson(inputSeed, numericSeed, facts));
 			return;
 		}
 		if (sacrificeReward) {
@@ -120,6 +129,7 @@ public final class JavaOracle {
 				&& !shopBagSelection
 				&& !sacrificeReward
 				&& !secretLibraryOrder
+				&& !secretLaboratoryOrder
 				&& !cavesBossPatch
 				&& !args[1].matches("\\d+")) {
 			System.err.println("Unknown oracle contract: " + args[1]);

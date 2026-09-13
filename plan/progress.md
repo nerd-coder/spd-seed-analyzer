@@ -18,18 +18,18 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 - AAA floor 7 matches the pinned mob/item boundary and exact ambient-mob fixture. Its `StatueRoom.paint` canvas uses Java's wall, inset-empty, and statue-strip terrain; all 343 ambient-trap candidates, trap placement, and the downstream item count match without an RNG compensation.
 - City floor 16 and floor 18 fixture checks pass. CrystalPath depth-one lifecycle and AAA/GFX/AFU floor-24 halls traces also pass; the ABC floor-24 RuinsExit callback remains a separate RNG drift.
 - Visual browser suite passes all 27 cases, including the corrected GFX floor-16 StatueRoom snapshot.
+- SecretLaboratory's weighted potion pool follows the pinned JVM `HashMap` order captured after the canonical floor-17 lifecycle, so observing it does not perturb `Class` identity hashes. AAA floor 17 now matches its exact Frost/Haste heaps.
 
 ## Now
 
-Resolve the remaining deterministic identity and callback drifts after the repaired floor-7 population boundary.
+Reconcile the AAA floor-19 Laboratory Alchemy blob placement and visibility with Java.
 
 ## Next
 
-1. Trace the AAA floor-17 POTION deck identities (Purity/Levitation versus Frost/Haste) with the matching RNG boundaries.
-2. Reconcile the AAA floor-19 Laboratory Alchemy blob placement and visibility with Java.
-3. Revisit the AAA floor-21 trap-map difference before changing Eye eligibility.
-4. Trace the ABC floor-24 RuinsExit room callback RNG drift.
+1. Reconcile the AAA floor-19 Laboratory Alchemy blob placement and visibility with Java.
+2. Revisit the AAA floor-21 trap-map difference before changing Eye eligibility.
+3. Trace the ABC floor-24 RuinsExit room callback RNG drift.
 
 ## Remaining
 
-`java_oracle_goldens`: 41 pass, 4 real failures remain. The remaining failures are AAA floor 17 potion identities, AAA floor 19 Laboratory Alchemy blob placement, AAA floor 21 trap-map parity, and the ABC floor-24 RuinsExit callback. `spd-core --lib`: 406 pass, 1 unrelated compact-report expectation failure. Analyzer remains `partial`.
+`java_oracle_goldens`: 43 pass, 3 real failures remain. The remaining failures are AAA floor 19 Laboratory Alchemy blob placement, AAA floor 21 trap-map parity, and the ABC floor-24 RuinsExit callback. `spd-core --lib`: 406 pass, 1 unrelated compact-report expectation failure. Analyzer remains `partial`.

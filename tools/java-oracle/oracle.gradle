@@ -26,6 +26,8 @@ gradle.beforeProject { project ->
 				gradle.startParameter.projectProperties['oracleSacrificeReward']
 		def secretLibraryOrder =
 				gradle.startParameter.projectProperties['oracleSecretLibraryOrder']
+		def secretLaboratoryOrder =
+				gradle.startParameter.projectProperties['oracleSecretLaboratoryOrder']
 		def figureEightTrace =
 				gradle.startParameter.projectProperties['oracleFigureEightTrace']
 		def freeSpaceTrace =
@@ -93,6 +95,9 @@ gradle.beforeProject { project ->
 			}
 			if (secretLibraryOrder != null) {
 				args('secret-library-order')
+			}
+			if (secretLaboratoryOrder != null) {
+				args('secret-laboratory-order')
 			}
 			if (figureEightTrace != null) {
 				args('figure-eight-trace', figureEightTrace)

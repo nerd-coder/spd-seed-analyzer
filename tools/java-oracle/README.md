@@ -247,9 +247,12 @@ and quest-type combination.
 
 ## JSON contracts
 
-The Secret Library contract records the pinned JVM `HashMap` iteration order
-used by its private weighted scroll pool. Rust consumes this committed oracle
-order because declaration order does not determine the weighted selection.
+The Secret Library and Secret Laboratory contracts record the pinned JVM
+`HashMap` iteration order used by their private weighted scroll and potion
+pools. Rust consumes these committed oracle orders because declaration order
+does not determine the weighted selection. The laboratory contract generates
+the canonical floor first and records its selected potion heaps beside the
+order, so loading the observer cannot silently perturb `Class` identity hashes.
 
 ### Generator deck rollover
 

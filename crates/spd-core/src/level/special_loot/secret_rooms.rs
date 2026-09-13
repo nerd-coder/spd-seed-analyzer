@@ -190,21 +190,23 @@ pub(super) fn secret_laboratory(room: &Room, map: &mut TerrainMap) -> Vec<Placed
     }
 
     // Iteration order is the pinned JVM HashMap key order used by
-    // Random.chances(HashMap) in SecretLaboratoryRoom.
+    // Random.chances(HashMap) in SecretLaboratoryRoom. The oracle observes
+    // the copied map only after the canonical floor-17 lifecycle completes so
+    // loading the observer cannot perturb Class identity hashes.
     let classes = [
-        "PotionOfHealing",
+        "PotionOfParalyticGas",
+        "PotionOfLevitation",
+        "PotionOfInvisibility",
+        "PotionOfExperience",
         "PotionOfHaste",
-        "PotionOfToxicGas",
-        "PotionOfLiquidFlame",
+        "PotionOfPurity",
+        "PotionOfHealing",
         "PotionOfMindVision",
         "PotionOfFrost",
-        "PotionOfInvisibility",
-        "PotionOfLevitation",
-        "PotionOfParalyticGas",
-        "PotionOfPurity",
-        "PotionOfExperience",
+        "PotionOfLiquidFlame",
+        "PotionOfToxicGas",
     ];
-    let mut chances = vec![1.0, 4.0, 3.0, 3.0, 2.0, 3.0, 4.0, 4.0, 4.0, 4.0, 6.0];
+    let mut chances = vec![4.0, 4.0, 4.0, 6.0, 4.0, 4.0, 1.0, 2.0, 3.0, 3.0, 3.0];
     let n = Random::int_range_inclusive(2, 3);
     let mut out = Vec::new();
     for _ in 0..n {
