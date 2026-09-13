@@ -10,21 +10,23 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 - SecretLibrary's private weighted scroll pool follows the pinned v4 JVM HashMap order and weights; its GFX floor-6 replay now matches.
 - CrystalVault and SentryRoom golden checks now derive their floor-6/floor-1 facts from the current v4 fixtures; no generation code changed.
 - Halls inherited-Ruins merging matches Java for `RuinsRoom`, `RuinsEntranceRoom`, and `RuinsExitRoom`; AAA floor 23 and GFX floor 22 post-door traces pass.
-- AAA floor 24's remaining CrystalPath callback shift has no safe fix from geometry or constructor call counts: Java and Rust agree on the six temporary-room draws, reward branch/retry structure, exotic rolls, and four center-jitter calls. The one-draw difference therefore remains an unresolved Generator deck-state detail; no production edit is justified.
+- AAA floor 24 first diverges inside the CrystalPath callback. Its incoming POTION/SCROLL deck state already differs from Java, causing different retry/conversion consumption; a local compensating draw would be incorrect.
 - AAA floor 21's Eye cell difference is upstream trap-map parity: Java leaves cell 2198 clear while Rust places a Disintegration trap there, so changing mob eligibility would be incorrect.
 - Halls trap selection is fully diagnosed for AAA floor 21: class order, RNG boundaries, candidate counts, and predicates match Java; only upstream painted-map candidate ordering differs, so no safe trap or mob edit is justified.
 - The AAA-AFU floor-1 Runestone heap check now derives its cells and classes from the pinned v4 fixture instead of stale coordinates.
 - The floor-one MagicalFire and hello TrapsRoom checks are also fixture-gated: the pinned v4 fixtures no longer contain the old hard-coded prize facts, so those assertions no longer report stale v3 failures.
-- AAA floor-7 replay's planted-cell, Armory, and Library checks now derive from the pinned v4 terrain/heaps; the replay reaches a genuine one-draw `pre_items_rng` shift after the quest hook and mob creation.
+- AAA floor-7 replay's planted-cell, Armory, and Library checks now derive from the pinned v4 terrain/heaps. Its first real divergence is SegmentedRoom terrain, which changes ambient mob placements/count before `pre_items_rng`.
+- City replay enters floor 16 with the general category deck one GOLD weight behind Java while the STONE deck matches. Floor 16 consequently consumes StoneOfAggression and later heap generation drifts.
 
 ## Now
 
-Fix reproducible v4 Java-oracle parity failures, one verified slice per commit.
+Fix the AAA floor-7 SegmentedRoom painter and locate the first pre-floor-16 GOLD category divergence.
 
 ## Next
 
-1. Instrument Generator deck state around the CrystalPath callback and AAA floor-7 quest boundary to isolate their one-draw shifts.
-2. Resolve city floors 16–19 and main-loop heap parity by locating the first persistent Generator deck counter drift.
+1. Align SegmentedRoom painted terrain, then rerun the AAA floor-7 replay through mobs and heaps.
+2. Trace the general category deck across prior floors to find the first missing GOLD consumption before city floor 16.
+3. Recheck city floors 16–19 and CrystalPath after their incoming Generator state matches Java.
 
 ## Remaining
 
