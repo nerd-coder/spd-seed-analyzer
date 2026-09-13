@@ -76,16 +76,25 @@ final class FloorOracle {
 	}
 
 	static FinalFloorFacts generateFinalHeaps(long seed, int depth, boolean barrenLand) {
-		return generateFinalHeaps(seed, depth, barrenLand, -1, Integer.MAX_VALUE);
+		return generateFinalHeaps(seed, depth, barrenLand ? "barren-land" : null,
+				-1, Integer.MAX_VALUE);
 	}
 
 	static FinalFloorFacts generateFinalHeaps(long seed, int depth, boolean barrenLand,
 			int ratLevel, int ratBeforeDepth) {
+		return generateFinalHeaps(seed, depth, barrenLand ? "barren-land" : null,
+				ratLevel, ratBeforeDepth);
+	}
+
+	static FinalFloorFacts generateFinalHeaps(long seed, int depth, String challenge,
+			int ratLevel, int ratBeforeDepth) {
 		ratSkullLevel = ratLevel;
 		ratSkullBeforeDepth = ratBeforeDepth;
 		initializeFreshRun(seed);
-		if (barrenLand) {
+		if ("barren-land".equals(challenge)) {
 			Dungeon.challenges = Challenges.NO_HERBALISM;
+		} else if ("forbidden-runes".equals(challenge)) {
+			Dungeon.challenges = Challenges.NO_SCROLLS;
 		}
 		generatePriorFloors(depth);
 		equipRatSkull(depth);
@@ -161,7 +170,7 @@ final class FloorOracle {
 				preItemsRng,
 				visualFacts,
 				preItemsVisualFacts,
-				barrenLand ? "barren-land" : null);
+				challenge);
 	}
 
 	/** Captures the copied private map only after the canonical floor-6 lifecycle loaded it. */

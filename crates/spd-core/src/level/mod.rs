@@ -75,6 +75,7 @@ pub fn create_level_partial_for_profile(
     if dungeon.depth == 1 {
         trinkets::reset(dungeon.seed);
     }
+    dungeon.challenges = profile.challenge_mask();
     trinkets::set_held(profile.held_at(dungeon.depth as u32));
     create_level_partial_with_profile(dungeon, false)
 }

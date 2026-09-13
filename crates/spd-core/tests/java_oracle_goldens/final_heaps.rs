@@ -862,6 +862,77 @@ fn aaa_floor_four_barren_land_matches_secret_garden_oracle() {
     );
 }
 
+#[test]
+fn aaa_floor_three_forbidden_runes_suppresses_even_upgrade_scroll() {
+    let path = fixture_paths()
+        .into_iter()
+        .find(|path| {
+            path.file_name()
+                .is_some_and(|name| name == "aaa-aaa-aaa-final-heaps-floor-3-forbidden-runes.json")
+        })
+        .expect("AAA floor-3 Forbidden Runes fixture");
+    let fixture = read_fixture(&path);
+    assert_eq!(fixture.input.challenge.as_deref(), Some("forbidden-runes"));
+    let expected = fixture.floors.first().expect("Forbidden Runes floor");
+    let profile = spd_core::MapProfile {
+        challenges: vec![spd_core::Challenge::ForbiddenRunes],
+        ..spd_core::MapProfile::default()
+    };
+    let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
+    let mut actual = None;
+    let mut upgrade_counts = Vec::new();
+    for depth in 1..=expected.depth {
+        dungeon.depth = depth as i32;
+        let level = spd_core::level::create_level_partial_for_profile(&mut dungeon, &profile);
+        upgrade_counts.push(
+            level
+                .initial_forced_items
+                .iter()
+                .filter(|item| item.class_name == "ScrollOfUpgrade")
+                .count(),
+        );
+        actual = Some(level);
+    }
+    let actual = actual.expect("profiled floor");
+    assert_eq!(upgrade_counts, [0, 1, 0], "forced Upgrade Scroll queue");
+    assert_eq!(actual.pre_paint_rng_probe, expected.pre_paint_rng);
+    assert_eq!(actual.pre_mobs_rng_probe, expected.pre_mobs_rng);
+    assert_eq!(actual.pre_items_rng_probe, expected.pre_items_rng);
+    assert!(actual.initial_forced_items.iter().all(|item| {
+        item.class_name != "ScrollOfUpgrade"
+            || item.provenance
+                != spd_core::items::model::ItemProvenance::Forced(
+                    spd_core::items::model::ForcedDropRole::UpgradeScroll {
+                        forbidden_runes_sensitive: true,
+                    },
+                )
+    }));
+    let map = actual.map.as_ref().expect("internal profiled map");
+    let mut rooms = actual.rooms.clone();
+    rooms.sort();
+    assert_eq!(rooms, expected.rooms, "room classes");
+    assert_eq!((map.width, map.height), (expected.width, expected.height));
+    let heaps: Vec<_> = map
+        .heaps
+        .iter()
+        .map(|heap| OracleHeap {
+            cell: heap.cell,
+            heap_type: heap.heap_type.clone(),
+            items: heap
+                .items
+                .iter()
+                .map(|item| OracleItem {
+                    class_name: normalize_oracle_class(&item.class_name).to_string(),
+                    quantity: item.quantity,
+                    level: item.level,
+                    cursed: item.cursed,
+                })
+                .collect(),
+        })
+        .collect();
+    assert_eq!(heaps, expected.final_heaps);
+}
+
 #[path = "final_heaps/runestone.rs"]
 mod runestone;
 

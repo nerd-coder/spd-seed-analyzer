@@ -29,6 +29,7 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 - Floor detail now exposes the backend's modeled `possible_rooms` alternatives, including room counts and their trinket/challenge conditions; a focused quest-report browser fixture covers the disclosure.
 - Barren Land/NO_HERBALISM is pinned as a separate depth-4 `SecretGardenRoom` fixture; seed/position RNG and terrain conversion remain intact while plant objects, occupancy, and synthetic plant loot are suppressed exactly like Java.
 - Rat Skull level-3 profile replay is pinned at AAA floors 6 and 7; its full 1/50 mob/elemental/Piranha multiplier and half-effective CrystalVault/Statue branch match the Java oracle without changing RNG probes.
+- Forbidden Runes is pinned at AAA floor 3. The Java oracle carries the `NO_SCROLLS` challenge metadata, and the profiled Rust replay preserves room/map/RNG/heaps while omitting the second scheduled Upgrade Scroll (`[0, 1, 0]` across floors 1–3).
 
 ## Now
 
@@ -41,4 +42,4 @@ All checked-in v4 Java-oracle parity cases pass; the analyzer remains intentiona
 
 ## Remaining
 
-`java_oracle_goldens`: 51 pass, 0 failures. `spd-core --lib`: 413 pass. Analyzer remains `partial`.
+`java_oracle_goldens`: 52 pass, 0 failures. `spd-core --lib`: 413 pass. Analyzer remains `partial`.
