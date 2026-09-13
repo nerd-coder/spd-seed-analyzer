@@ -201,6 +201,8 @@ export type FloorReport = {
   feeling?: string | null
   builder?: string | null
   rooms?: string[]
+  /** Alternate room counts produced by modeled player/trinket profiles. */
+  possible_rooms?: PossibleRoom[]
   guaranteed_appearances?: GuaranteedAppearance[]
   initial_encounters?: InitialEncounter[]
   /** Includes exact, constrained, and baseline-analysis entries. */
@@ -209,6 +211,12 @@ export type FloorReport = {
   map?: FloorMap | null
   assumed_map?: FloorMap | null
   branches?: BranchFloorReport[]
+}
+
+export type PossibleRoom = {
+  class: string
+  quantity: number
+  spawn_conditions?: ItemSpawnCondition[]
 }
 
 export type BranchFloorId = {

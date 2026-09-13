@@ -6,6 +6,7 @@ import {
   FloorItemSections,
   visibleItemGroups,
 } from '@/components/seed/FloorItemSections'
+import { SpawnConditionDetails } from '@/components/seed/ItemConditionDetails'
 import { QuestCard } from '@/components/seed/QuestCard'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import {
   Popover,
   PopoverContent,
+  PopoverDescription,
   PopoverHeader,
   PopoverTitle,
   PopoverTrigger,
@@ -21,8 +23,47 @@ import type {
   BranchFloorReport,
   FloorReport,
   IdentityMaps,
+  PossibleRoom,
   TrinketSelectionReport,
 } from '@/lib/spd-wasm'
+
+function roomLabel(className: string) {
+  return className.replace(/Room$/, '').replace(/([a-z])([A-Z])/g, '$1 $2')
+}
+
+function PossibleRoomsPopover({ rooms }: { rooms: PossibleRoom[] }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="xs">
+          Possible rooms ({rooms.length})
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-80">
+        <PopoverHeader>
+          <PopoverTitle>Possible rooms</PopoverTitle>
+          <PopoverDescription>
+            Alternate room counts under modeled player and trinket profiles.
+          </PopoverDescription>
+        </PopoverHeader>
+        <ul className="flex flex-col gap-2 text-sm">
+          {rooms.map((room, index) => (
+            <li
+              key={`${room.class}-${room.quantity}-${index}`}
+              className="flex min-w-0 items-center justify-between gap-2"
+            >
+              <span>
+                {roomLabel(room.class)}
+                {room.quantity > 1 ? ` ×${room.quantity}` : ''}
+              </span>
+              <SpawnConditionDetails conditions={room.spawn_conditions} />
+            </li>
+          ))}
+        </ul>
+      </PopoverContent>
+    </Popover>
+  )
+}
 
 function branchAccessText(branch: BranchFloorReport) {
   const conditions: string[] = []
@@ -189,6 +230,9 @@ export function FloorDetail({
               </p>
             </PopoverContent>
           </Popover>
+        )}
+        {floor.possible_rooms && floor.possible_rooms.length > 0 && (
+          <PossibleRoomsPopover rooms={floor.possible_rooms} />
         )}
         {floor.feeling && floor.feeling !== 'none' && (
           <Badge variant="secondary" className="capitalize">

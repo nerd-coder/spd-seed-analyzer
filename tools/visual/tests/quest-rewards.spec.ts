@@ -128,6 +128,43 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
         floors: [
           {
             depth: 9,
+            possible_rooms: [
+              {
+                class: 'MassGraveRoom',
+                quantity: 1,
+                spawn_conditions: [
+                  {
+                    all_of: [
+                      {
+                        type: 'trinket',
+                        events: [
+                          {
+                            before_depth: 4,
+                            kind: 'acquired',
+                            trinket: 'mossy_clump',
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                class: 'RotGardenRoom',
+                quantity: 1,
+                spawn_conditions: [
+                  {
+                    all_of: [
+                      {
+                        type: 'challenge',
+                        challenge: 'forbidden_runes',
+                        enabled: true,
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
             items: wandItems,
             quests: [
               {
@@ -220,6 +257,17 @@ test('quest cards prefer concrete baselines and keep the universal warning visib
 }) => {
   const browserErrors = collectBrowserErrors(page)
   await openQuestReport(page, true)
+
+  const floorNine = page
+    .getByRole('heading', { name: 'Floor 9', exact: true })
+    .locator('xpath=ancestor::section[1]')
+  await floorNine.getByRole('button', { name: 'Possible rooms (2)' }).click()
+  const possibleRooms = page.getByRole('dialog')
+  await expect(possibleRooms).toContainText('Possible rooms')
+  await expect(possibleRooms).toContainText('Mass Grave')
+  await expect(possibleRooms).toContainText('Mossy Clump is acquired')
+  await expect(possibleRooms).toContainText('Rot Garden')
+  await expect(possibleRooms).toContainText('Forbidden Runes enabled')
 
   const wandmaker = page.locator('[data-quest-type="old_wandmaker"]')
   await expect(wandmaker).toContainText('Baseline target: Rotberry')

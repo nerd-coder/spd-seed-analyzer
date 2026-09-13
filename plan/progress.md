@@ -26,15 +26,16 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 - The compact report regression now asserts only its exact floor-one Crystal Choice reward and stable partial-report framing; stale later partial-replay identities are no longer pinned.
 - RitualRoom center prizes now record internal heaps; AAA floor 21's Pasty and IronKey center drops match the pinned oracle without changing RNG or public projection.
 - VaultLevel's forced branch-1 contract now has a second pinned fixture (`GFX-PZH-DCH`, depth 17); Rust compares the seed/depth-specific room graph, painter layout, hazards, blobs, transitions, and custom layers alongside the existing AAA fixture.
+- Floor detail now exposes the backend's modeled `possible_rooms` alternatives, including room counts and their trinket/challenge conditions; a focused quest-report browser fixture covers the disclosure.
 
 ## Now
 
-All checked-in v4 Java-oracle parity cases pass; the analyzer remains intentionally partial outside the covered generation profiles. The next bounded pass is exposing already-serialized alternate room profiles in the web floor detail.
+All checked-in v4 Java-oracle parity cases pass; the analyzer remains intentionally partial outside the covered generation profiles. The next bounded generation pass is a fresh challenge fixture before changing any partial path.
 
 ## Next
 
-1. Finish the web `possible_rooms` disclosure with a focused browser regression; preserve the existing partial status and public condition wording.
-2. Add a new fixture and focused regression before changing any partial generation path or public projection.
+1. Add a pinned Barren Land/Forbidden Runes challenge fixture and focused regression only if the Java harness can capture the challenge flag without weakening the current public projection.
+2. Preserve the existing oracle-backed boundaries and `partial` status while extending coverage.
 
 ## Remaining
 
