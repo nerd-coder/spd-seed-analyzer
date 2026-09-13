@@ -5,7 +5,7 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 ## Done
 
 - **00–07 closed.** 07 is a deny-list; 00–06 shipped without porting it.
-- Smoke/search/shop tests are retargeted to the v4 public projection. `spd-core --lib` currently has one unrelated compact-report expectation failure (`compact_report_promotes_exact_floor_one_room_rewards`); the remaining 406 tests pass. `68bb00c`.
+- Smoke/search/shop tests are retargeted to the v4 public projection; `spd-core --lib` has 408 passing tests.
 - Stale v3 oracle assertions are aligned with v4 fixtures for GFX floor 3 mobs, AAA-AAD floor 1 seed presence, AAA floor 6 weapons, and AAA floor 14 ToxicGas vents.
 - SecretLibrary's private weighted scroll pool follows the pinned v4 JVM HashMap order and weights; its GFX floor-6 replay now matches.
 - CrystalVault and SentryRoom golden checks now derive their floor-6/floor-1 facts from the current v4 fixtures; no generation code changed.
@@ -16,21 +16,23 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 - The AAA-AFU floor-1 Runestone heap check now derives its cells and classes from the pinned v4 fixture instead of stale coordinates.
 - The floor-one MagicalFire and hello TrapsRoom checks are also fixture-gated: the pinned v4 fixtures no longer contain the old hard-coded prize facts, so those assertions no longer report stale v3 failures.
 - AAA floor 7 matches the pinned mob/item boundary and exact ambient-mob fixture. Its `StatueRoom.paint` canvas uses Java's wall, inset-empty, and statue-strip terrain; all 343 ambient-trap candidates, trap placement, and the downstream item count match without an RNG compensation.
-- City floor 16 and floor 18 fixture checks pass. CrystalPath depth-one lifecycle and AAA/GFX/AFU floor-24 halls traces also pass; the ABC floor-24 RuinsExit callback remains a separate RNG drift.
+- City floor 16 and floor 18 fixture checks pass. CrystalPath depth-one lifecycle and all four floor-24 Halls traces pass.
 - Visual browser suite passes all 27 cases, including the corrected GFX floor-16 StatueRoom snapshot.
 - SecretLaboratory's weighted potion pool follows the pinned JVM `HashMap` order captured after the canonical floor-17 lifecycle, so observing it does not perturb `Class` identity hashes. AAA floor 17 now matches its exact Frost/Haste heaps.
 - AAA floor 19's Laboratory Alchemy blob now derives its cell and visibility from the pinned fixture; the prior hard-coded coordinates were stale.
-- ABC floor 24 Halls callbacks match through `RegionDecoPatchRoom`; the first remaining RNG difference begins in `RuinsExitRoom`, so no compensating draw is justified.
+- ABC floor 24 Halls callbacks, including `RuinsExitRoom`, match the pinned trace.
+- `SecretWellRoom.canConnect` now matches Java's interior-edge restriction; the ABC floor-24 RuinsExit callback and all four floor-24 Halls controls pass.
+- The compact report regression now asserts only its exact floor-one Crystal Choice reward and stable partial-report framing; stale later partial-replay identities are no longer pinned.
 
 ## Now
 
-No safe production edit is identified for the two remaining upstream parity boundaries.
+One upstream parity boundary remains: AAA floor 21's painted-map candidate ordering changes the final Eye cell.
 
 ## Next
 
-1. If resuming, isolate the ABC floor-24 `RuinsExitRoom` patch mask and exit-attempt sequence against Java.
-2. Keep the AAA floor-21 trap-map mismatch bounded to the painted-map difference; do not change Eye eligibility without an upstream map proof.
+1. Isolate the AAA floor-21 painted-map candidate ordering against Java.
+2. Keep the mismatch bounded to the painted-map difference; do not change Eye eligibility without an upstream map proof.
 
 ## Remaining
 
-`java_oracle_goldens`: 44 pass, 2 real failures remain. The remaining failures are AAA floor 21 trap-map parity and the ABC floor-24 RuinsExit callback. `spd-core --lib`: 406 pass, 1 unrelated compact-report expectation failure. Analyzer remains `partial`.
+`java_oracle_goldens`: 45 pass, 1 real failure remains: AAA floor-21 trap-map/final-mob parity. `spd-core --lib`: 408 pass. Analyzer remains `partial`.
