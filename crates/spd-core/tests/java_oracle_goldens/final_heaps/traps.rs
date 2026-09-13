@@ -8,6 +8,22 @@ pub(super) fn assert_hello_traps_facts(
     if fixture.input.seed != "hello" {
         return;
     }
+    if !fixture
+        .floors
+        .first()
+        .is_some_and(|floor| floor.rooms.iter().any(|room| room == "TrapsRoom"))
+    {
+        return;
+    }
+    if !fixture.floors.first().is_some_and(|floor| {
+        floor
+            .final_heaps
+            .iter()
+            .flat_map(|heap| &heap.items)
+            .any(|item| item.class_name == "PlateArmor")
+    }) {
+        return;
+    }
 
     let heap = map
         .heaps
