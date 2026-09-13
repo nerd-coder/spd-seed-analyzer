@@ -15,18 +15,17 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 - Halls trap selection is fully diagnosed for AAA floor 21: class order, RNG boundaries, candidate counts, and predicates match Java; only upstream painted-map candidate ordering differs, so no safe trap or mob edit is justified.
 - The AAA-AFU floor-1 Runestone heap check now derives its cells and classes from the pinned v4 fixture instead of stale coordinates.
 - The floor-one MagicalFire and hello TrapsRoom checks are also fixture-gated: the pinned v4 fixtures no longer contain the old hard-coded prize facts, so those assertions no longer report stale v3 failures.
-- AAA floor-7 replay's planted-cell, Armory, and Library checks now derive from the pinned v4 terrain/heaps. The one-draw `pre_items_rng` shift occurs during ambient mob creation after an identical `pre_mobs_rng` boundary; SegmentedRoom geometry/RNG matches Java, and its remaining tile differences are decoration variants with no safe painter fix.
-- City replay enters floor 16 with the general category deck one GOLD weight behind Java while the STONE deck matches. Floor 16 consequently consumes StoneOfAggression and later heap generation drifts.
+- AAA floor-7 replay's planted-cell, Armory, and Library checks now derive from the pinned v4 terrain/heaps. The one-draw `pre_items_rng` shift occurs during ambient mob creation after an identical `pre_mobs_rng` boundary; Rust places the same ten ambient mobs but diverges in candidate/placement consumption, with no safe compensating draw identified. SegmentedRoom geometry/RNG matches Java, and its remaining tile differences are decoration variants.
+- City replay's first persistent overall-category drift is floor 7. Java's six main-loop `Generator.random()` calls consume POTION, SCROLL, and four GOLD weights; Rust's shifted `pre_items_rng` rolls five items and consumes two POTION and three GOLD weights. The missing sixth `RegularLevel.createItems` iteration explains the one-GOLD deficit through floor 15; the STONE deck still matches before floor 16.
 
 ## Now
 
-Locate the first ambient mob-placement divergence on AAA floor 7 and the first pre-floor-16 GOLD category divergence.
+Locate the first candidate/placement RNG divergence in AAA floor-7 ambient mobs; the downstream GOLD/category and city drift are now accounted for.
 
 ## Next
 
-1. Trace AAA floor-7 ambient mob placement against Java after the matching `pre_mobs_rng` boundary; do not compensate for decoration-only tile differences.
-2. Trace the general category deck across prior floors to find the first missing GOLD consumption before city floor 16.
-3. Recheck city floors 16–19 and CrystalPath after their incoming Generator state matches Java.
+1. Trace AAA floor-7 ambient mob candidate acceptance against Java after the matching `pre_mobs_rng` boundary; do not compensate for decoration-only tile differences.
+2. Recheck the floor-7 item count, city floors 16–19, and CrystalPath after the mob boundary matches Java.
 
 ## Remaining
 
