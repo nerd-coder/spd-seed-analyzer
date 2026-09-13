@@ -20,15 +20,16 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 - Visual browser suite passes all 27 cases, including the corrected GFX floor-16 StatueRoom snapshot.
 - SecretLaboratory's weighted potion pool follows the pinned JVM `HashMap` order captured after the canonical floor-17 lifecycle, so observing it does not perturb `Class` identity hashes. AAA floor 17 now matches its exact Frost/Haste heaps.
 - AAA floor 19's Laboratory Alchemy blob now derives its cell and visibility from the pinned fixture; the prior hard-coded coordinates were stale.
+- ABC floor 24 Halls callbacks match through `RegionDecoPatchRoom`; the first remaining RNG difference begins in `RuinsExitRoom`, so no compensating draw is justified.
 
 ## Now
 
-Trace the ABC floor-24 RuinsExit room callback RNG drift.
+No safe production edit is identified for the two remaining upstream parity boundaries.
 
 ## Next
 
-1. Keep the AAA floor-21 trap-map mismatch bounded to the painted-map difference; do not change Eye eligibility without an upstream map proof.
-2. Trace the ABC floor-24 RuinsExit room callback RNG drift.
+1. If resuming, isolate the ABC floor-24 `RuinsExitRoom` patch mask and exit-attempt sequence against Java.
+2. Keep the AAA floor-21 trap-map mismatch bounded to the painted-map difference; do not change Eye eligibility without an upstream map proof.
 
 ## Remaining
 
