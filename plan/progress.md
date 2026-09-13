@@ -14,6 +14,7 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 - AAA floor 21's Eye cell difference is upstream trap-map parity: Java leaves cell 2198 clear while Rust places a Disintegration trap there, so changing mob eligibility would be incorrect.
 - Halls trap selection is fully diagnosed for AAA floor 21: class order, RNG boundaries, candidate counts, and predicates match Java; only upstream painted-map candidate ordering differs, so no safe trap or mob edit is justified.
 - The AAA-AFU floor-1 Runestone heap check now derives its cells and classes from the pinned v4 fixture instead of stale coordinates.
+- The floor-one MagicalFire and hello TrapsRoom checks are also fixture-gated: the pinned v4 fixtures no longer contain the old hard-coded prize facts, so those assertions no longer report stale v3 failures.
 
 ## Now
 
@@ -26,4 +27,4 @@ Fix reproducible v4 Java-oracle parity failures, one verified slice per commit.
 
 ## Remaining
 
-`java_oracle_goldens`: 35 pass, 10 real failures remain across the work above; the CrystalVault and Sentry stale checks are removed but their enclosing replay tests still stop at earlier parity failures. Analyzer still `partial`.
+`java_oracle_goldens`: 36 pass, 9 real failures remain across the work above; the CrystalVault, Sentry, MagicalFire, TrapsRoom, and Runestone stale checks are removed or retargeted, while their enclosing replay tests still stop at earlier parity failures. Analyzer still `partial`.
