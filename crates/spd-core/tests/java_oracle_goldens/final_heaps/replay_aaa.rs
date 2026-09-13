@@ -345,13 +345,38 @@ fn aaa_replay_pins_floors_six_through_eleven_across_the_tengu_lifecycle() {
                     )
                 })
                 .collect();
+            let expected_vault_heaps: Vec<_> = expected
+                .final_heaps
+                .iter()
+                .filter(|heap| heap.heap_type == "crystal_chest")
+                .map(|heap| {
+                    (
+                        heap.cell,
+                        heap.items[0].class_name.as_str(),
+                        heap.items[0].level,
+                        heap.items[0].cursed,
+                    )
+                })
+                .collect();
             assert_eq!(
-                vault_heaps,
-                [
-                    (736, "WandOfFrost", 1, false),
-                    (814, "RingOfTenacity", 1, true)
-                ],
+                vault_heaps, expected_vault_heaps,
                 "{context} CrystalVaultRoom chests"
+            );
+            let actual_mimics: Vec<_> = map
+                .mobs
+                .iter()
+                .filter(|mob| mob.class_name == "CrystalMimic")
+                .map(|mob| mob.cell)
+                .collect();
+            let expected_mimics: Vec<_> = expected
+                .final_mobs
+                .iter()
+                .filter(|mob| mob.class_name == "CrystalMimic")
+                .map(|mob| mob.cell)
+                .collect();
+            assert_eq!(
+                actual_mimics, expected_mimics,
+                "{context} CrystalVault mimics"
             );
             assert_crystal_vault_terrain(map, expected, &context);
         }
@@ -807,12 +832,16 @@ fn assert_crystal_vault_terrain(
     let mut oracle_cells = Vec::new();
     let mut locked = Vec::new();
     let mut pedestals = Vec::new();
+    let mut actual_pedestals = Vec::new();
     for y in vault.top..=vault.bottom {
         for x in vault.left..=vault.right {
             let cell = (y * expected.width as i32 + x) as usize;
             let tile = oracle[cell];
             actual_cells.push(map.tiles[cell]);
             oracle_cells.push(tile);
+            if map.tiles[cell] == 11 {
+                actual_pedestals.push(cell);
+            }
             if x == vault.left || x == vault.right || y == vault.top || y == vault.bottom {
                 assert!(
                     matches!(tile, 4 | 10 | 12),
@@ -834,5 +863,5 @@ fn assert_crystal_vault_terrain(
     }
     assert_eq!(actual_cells, oracle_cells, "{context} full vault terrain");
     assert_eq!(locked.len(), 1, "{context} locked vault entrance");
-    assert_eq!(pedestals, [736, 814], "{context} vault pedestals");
+    assert_eq!(actual_pedestals, pedestals, "{context} vault pedestals");
 }
