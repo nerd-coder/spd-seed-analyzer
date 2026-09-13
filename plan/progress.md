@@ -5,7 +5,7 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 ## Done
 
 - **00–07 closed.** 07 is a deny-list; 00–06 shipped without porting it.
-- Smoke/search/shop tests are retargeted to the v4 public projection; `spd-core --lib` has 409 passing tests.
+- Smoke/search/shop tests are retargeted to the v4 public projection; `spd-core --lib` has 410 passing tests.
 - Stale v3 oracle assertions are aligned with v4 fixtures for GFX floor 3 mobs, AAA-AAD floor 1 seed presence, AAA floor 6 weapons, and AAA floor 14 ToxicGas vents.
 - SecretLibrary's private weighted scroll pool follows the pinned v4 JVM HashMap order and weights; its GFX floor-6 replay now matches.
 - CrystalVault and SentryRoom golden checks now derive their floor-6/floor-1 facts from the current v4 fixtures; no generation code changed.
@@ -39,4 +39,4 @@ All checked-in v4 Java-oracle parity cases pass; the analyzer remains intentiona
 
 ## Remaining
 
-`java_oracle_goldens`: 46 pass, 0 failures. `spd-core --lib`: 409 pass. Analyzer remains `partial`.
+`java_oracle_goldens`: 46 pass, 0 failures. `spd-core --lib`: 410 pass. Analyzer remains `partial`.
