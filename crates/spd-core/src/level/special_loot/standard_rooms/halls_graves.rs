@@ -31,6 +31,7 @@ pub(super) fn ritual_prize(
     super::tag_room_item(&mut prize);
     if let Some(cell) = map.point_to_cell(center.x, center.y) {
         map.item_allowed[cell] = false;
+        map.record_heap(cell, "heap", prize.clone());
     }
     vec![PlacedLoot {
         item: prize,
@@ -140,6 +141,14 @@ mod tests {
                 .point_to_cell(center.x, center.y)
                 .expect("center")]
         );
+        let center_cell = ritual_map
+            .point_to_cell(center.x, center.y)
+            .expect("center");
+        let heap = ritual_map.known_heaps[center_cell]
+            .as_ref()
+            .expect("RitualRoom center heap");
+        assert_eq!(heap.heap_type, "heap");
+        assert_eq!(heap.items, [loot[0].item.clone()]);
 
         let variant = room("RitualEntranceRoom");
         let mut dungeon = dungeon_from_run(run);
