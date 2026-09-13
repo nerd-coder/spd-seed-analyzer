@@ -9,10 +9,25 @@ pub(super) fn assert_aaa_afu_facts(
         return;
     }
 
+    let expected = fixture
+        .floors
+        .first()
+        .expect("AAA-AFU floor-1 oracle facts")
+        .final_heaps
+        .iter()
+        .filter_map(|heap| {
+            let item = heap.items.first()?;
+            matches!(
+                item.class_name.as_str(),
+                "StoneOfBlast" | "StoneOfDeepSleep"
+            )
+            .then_some((heap.cell, heap.heap_type.as_str(), item.class_name.as_str()))
+        })
+        .collect::<Vec<_>>();
     let runestones: Vec<_> = map
         .heaps
         .iter()
-        .filter(|heap| matches!(heap.cell, 542 | 579))
+        .filter(|heap| expected.iter().any(|(cell, _, _)| *cell == heap.cell))
         .map(|heap| {
             (
                 heap.cell,
@@ -22,11 +37,7 @@ pub(super) fn assert_aaa_afu_facts(
         })
         .collect();
     assert_eq!(
-        runestones,
-        [
-            (542, "heap", "StoneOfBlast"),
-            (579, "heap", "StoneOfDeepSleep"),
-        ],
+        runestones, expected,
         "pinned RunestoneRoom heap associations in {context}"
     );
     assert!(
