@@ -1,7 +1,13 @@
 import { FloorItemList } from '@/components/seed/FloorItemSections'
+import { QuestBranchMap } from '@/components/seed/QuestBranchMap'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import type { IdentityMaps, ItemGroup, QuestReport } from '@/lib/spd-wasm'
+import type {
+  BranchFloorReport,
+  IdentityMaps,
+  ItemGroup,
+  QuestReport,
+} from '@/lib/spd-wasm'
 import { cn } from '@/lib/utils'
 
 const QUEST_STYLES: Record<
@@ -81,11 +87,13 @@ export function QuestCard({
   rewards,
   identities,
   depth,
+  branch,
 }: {
   quest: QuestReport
   rewards: ItemGroup[]
   identities: IdentityMaps
   depth: number
+  branch?: BranchFloorReport | null
 }) {
   const styles = QUEST_STYLES[quest.type]
   const contract = baselineContract(quest)
@@ -138,6 +146,11 @@ export function QuestCard({
             identities={identities}
             depth={depth}
           />
+        </div>
+      ) : null}
+      {branch ? (
+        <div className="border-t pt-2">
+          <QuestBranchMap branch={branch} identities={identities} />
         </div>
       ) : null}
     </div>

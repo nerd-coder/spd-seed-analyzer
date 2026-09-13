@@ -1,9 +1,9 @@
 # Implementation status
 
 The analyzer renders the Troll Blacksmith's Crystal and Gnoll MiningLevel
-branches for the fresh, once-generated-floor route. Branch reports are nested
-under their origin floor and include reciprocal transitions, access conditions,
-objective-specific tilesets, and painter-complete layout maps. Rust generation
+branches for the fresh, once-generated-floor route. Branch maps appear inside
+the origin floor's quest panel, with reciprocal transitions, access conditions,
+objective-specific tilesets, and painter-complete layout. Rust generation
 matches pinned Java painter fixtures exactly; browser snapshots cover both
 objectives.
 

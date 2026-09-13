@@ -7,7 +7,13 @@ import {
   visibleItemGroups,
 } from '@/components/seed/FloorItemSections'
 import { SpawnConditionDetails } from '@/components/seed/ItemConditionDetails'
+import { QuestBranchMap } from '@/components/seed/QuestBranchMap'
 import { QuestCard } from '@/components/seed/QuestCard'
+import {
+  branchTitle,
+  matchingQuestBranch,
+  unclaimedBranches,
+} from '@/components/seed/quest-branch'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -65,30 +71,6 @@ function PossibleRoomsPopover({ rooms }: { rooms: PossibleRoom[] }) {
   )
 }
 
-function branchAccessText(branch: BranchFloorReport) {
-  const conditions: string[] = []
-  if (branch.access.requires_acceptance) {
-    conditions.push(
-      `accept ${branch.access.quest_id.replaceAll('_', ' ')} quest`
-    )
-  }
-  if (branch.access.required_item) {
-    conditions.push(`carry ${branch.access.required_item.replaceAll('_', ' ')}`)
-  }
-  return conditions.length > 0
-    ? conditions.join(' and ')
-    : 'No additional access condition'
-}
-
-function branchTitle(kind: BranchFloorReport['kind']) {
-  switch (kind) {
-    case 'blacksmith_mine':
-      return 'Blacksmith Mine'
-    case 'imp_vault':
-      return 'Imp Vault'
-  }
-}
-
 function branchBorderClass(kind: BranchFloorReport['kind']) {
   switch (kind) {
     case 'blacksmith_mine':
@@ -105,51 +87,14 @@ function NestedBranchFloor({
   branch: BranchFloorReport
   identities: IdentityMaps
 }) {
-  const showAssumedMap = !branch.map && !!branch.assumed_map
-  const displayedMap = branch.map ?? branch.assumed_map ?? null
-  const title = branchTitle(branch.kind)
-  const identity = `Floor ${branch.id.depth}, branch ${branch.id.branch}`
-  const mapLabel = `${title} ${identity.toLowerCase()} map`
-
   return (
     <section
-      data-branch-kind={branch.kind}
       className={`space-y-3 border-l-2 bg-muted/25 px-3 py-3 ${branchBorderClass(branch.kind)}`}
     >
-      <div className="flex flex-wrap items-center gap-2">
-        <h4 className="font-heading text-sm font-medium">{title}</h4>
-        <Badge variant="secondary">Objective: {branch.objective}</Badge>
-        <Badge variant="outline" className="font-mono text-xs">
-          {identity}
-        </Badge>
-      </div>
-      <div className="flex items-start gap-3">
-        <div className="min-w-0 flex-1 space-y-2 text-xs">
-          <p>
-            <span className="text-muted-foreground font-medium">Access:</span>{' '}
-            <span className="capitalize">{branchAccessText(branch)}</span>
-          </p>
-          {showAssumedMap && (
-            <Alert variant="warning" className="px-2 py-1.5">
-              <AlertTitle className="text-[10px] leading-tight">
-                Assumed branch layout
-              </AlertTitle>
-              <AlertDescription className="text-[9px] leading-tight text-pretty">
-                Baseline continuation through unresolved player or meta state.
-              </AlertDescription>
-            </Alert>
-          )}
-        </div>
-        {displayedMap && (
-          <FloorMapPreview
-            map={displayedMap}
-            identities={identities}
-            depth={branch.id.depth}
-            mapLabel={mapLabel}
-            dialogTitle={`${title} - ${identity}`}
-          />
-        )}
-      </div>
+      <h4 className="font-heading text-sm font-medium">
+        {branchTitle(branch.kind)}
+      </h4>
+      <QuestBranchMap branch={branch} identities={identities} />
     </section>
   )
 }
@@ -168,6 +113,7 @@ export function FloorDetail({
   const showAssumedMap = !floor.map && !!floor.assumed_map
   const displayedMap = floor.map ?? floor.assumed_map ?? null
   const visibleItems = visibleItemGroups(floor.items)
+  const leftoverBranches = unclaimedBranches(floor.branches, floor.quests)
 
   const details = (
     <div className="min-w-0 flex-1 space-y-3">
@@ -186,6 +132,7 @@ export function FloorDetail({
                 )}
                 identities={identities}
                 depth={floor.depth}
+                branch={matchingQuestBranch(q, floor.branches)}
               />
             ))}
           </div>
@@ -280,9 +227,9 @@ export function FloorDetail({
         )}
       </div>
 
-      {floor.branches && floor.branches.length > 0 && (
+      {leftoverBranches.length > 0 && (
         <div className="space-y-2 pt-1">
-          {floor.branches.map((branch) => (
+          {leftoverBranches.map((branch) => (
             <NestedBranchFloor
               key={`${branch.id.depth}-${branch.id.branch}`}
               branch={branch}

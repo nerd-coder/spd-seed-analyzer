@@ -392,13 +392,11 @@ async function captureLevel(
       : `${mapRenderBranchTitle(level.objective)} - Floor ${floor}, branch ${level.branch}`
 
   if (level.kind === 'branch') {
-    const branchTitle = mapRenderBranchTitle(level.objective)
-    const branchSection = page
-      .getByRole('heading', { name: branchTitle, exact: true })
-      .locator('..')
-      .locator('..')
-    await expect(branchSection).toContainText(`Objective: ${level.objective}`)
-    await expect(branchSection).toContainText(
+    const questType =
+      level.objective === 'Vault' ? 'ambitious_imp' : 'troll_blacksmith'
+    const questCard = page.locator(`[data-quest-type="${questType}"]`)
+    await expect(questCard).toContainText(`Objective: ${level.objective}`)
+    await expect(questCard).toContainText(
       `Floor ${floor}, branch ${level.branch}`
     )
   }
