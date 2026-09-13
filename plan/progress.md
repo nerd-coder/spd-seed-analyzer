@@ -25,14 +25,15 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 - `SecretWellRoom.canConnect` now matches Java's interior-edge restriction; the ABC floor-24 RuinsExit callback and all four floor-24 Halls controls pass.
 - The compact report regression now asserts only its exact floor-one Crystal Choice reward and stable partial-report framing; stale later partial-replay identities are no longer pinned.
 - RitualRoom center prizes now record internal heaps; AAA floor 21's Pasty and IronKey center drops match the pinned oracle without changing RNG or public projection.
+- VaultLevel's forced branch-1 contract now has a second pinned fixture (`GFX-PZH-DCH`, depth 17); Rust compares the seed/depth-specific room graph, painter layout, hazards, blobs, transitions, and custom layers alongside the existing AAA fixture.
 
 ## Now
 
-All checked-in v4 Java-oracle parity cases pass; the analyzer remains intentionally partial outside the covered generation profiles.
+All checked-in v4 Java-oracle parity cases pass; the analyzer remains intentionally partial outside the covered generation profiles. The next bounded pass is exposing already-serialized alternate room profiles in the web floor detail.
 
 ## Next
 
-1. Preserve the current oracle-backed boundaries when extending coverage to new generation profiles.
+1. Finish the web `possible_rooms` disclosure with a focused browser regression; preserve the existing partial status and public condition wording.
 2. Add a new fixture and focused regression before changing any partial generation path or public projection.
 
 ## Remaining

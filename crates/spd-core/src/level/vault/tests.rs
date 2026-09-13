@@ -8,6 +8,8 @@ use crate::run::{dungeon_from_run, init_run};
 struct Fixture {
     schema_version: u32,
     contract: String,
+    input: FixtureInput,
+    depth: i32,
     width: u32,
     height: u32,
     dropped: Dropped,
@@ -19,6 +21,11 @@ struct Fixture {
     transitions: Vec<crate::report::MapTransition>,
     custom_tiles: Vec<FixtureLayer>,
     custom_terrain: Vec<FixtureLayer>,
+}
+
+#[derive(Deserialize)]
+struct FixtureInput {
+    numeric: i64,
 }
 
 #[derive(Deserialize)]
@@ -91,15 +98,25 @@ fn sort_key(class_name: &str, left: i32, top: i32, right: i32, bottom: i32) -> S
 
 #[test]
 fn aaa_floor_seventeen_room_multiset_matches_java() {
-    let expected: Fixture = serde_json::from_str(include_str!(
+    assert_vault_fixture(include_str!(
         "../../../../../tools/java-oracle/fixtures/vault/aaa-aaa-aaa-floor-17.json"
-    ))
-    .expect("vault fixture");
+    ));
+}
+
+#[test]
+fn gfx_floor_seventeen_room_multiset_matches_java() {
+    assert_vault_fixture(include_str!(
+        "../../../../../tools/java-oracle/fixtures/vault/gfx-pzh-dch-floor-17.json"
+    ));
+}
+
+fn assert_vault_fixture(json: &str) {
+    let expected: Fixture = serde_json::from_str(json).expect("vault fixture");
     assert_eq!(expected.schema_version, 1);
     assert_eq!(expected.contract, "vault_level_using_defaults");
 
-    let mut dungeon = dungeon_from_run(init_run(0));
-    dungeon.depth = 17;
+    let mut dungeon = dungeon_from_run(init_run(expected.input.numeric));
+    dungeon.depth = expected.depth;
     dungeon.branch = 1;
     dungeon.imp.spawned = true;
     let generated = generate(&mut dungeon, true).expect("vault rooms");
