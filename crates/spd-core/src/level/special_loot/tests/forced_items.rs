@@ -428,7 +428,7 @@ fn secret_larder_uses_pinned_food_energy_units() {
         let room = test_room("SecretLarderRoom", 8, 8);
         let mut map = paint_minimal(std::slice::from_ref(&room)).expect("secret larder map");
 
-        let loot = secret_larder(depth, &room, &mut map);
+        let loot = secret_larder(depth, &room, &mut map, false);
 
         Random::pop_generator();
         assert_eq!(

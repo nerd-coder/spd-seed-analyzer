@@ -20,6 +20,7 @@ pub(crate) struct StandardPaintResult {
 }
 
 /// Paint a supported standard-room family in RegularPainter room order.
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn paint_standard_room(
     map: &mut TerrainMap,
     rooms: &[Room],
@@ -28,12 +29,14 @@ pub(crate) fn paint_standard_room(
     doors: &DoorMap,
     generator: &mut GeneratorState,
     depth: i32,
+    no_herbalism: bool,
 ) -> StandardPaintResult {
     if patch_rooms::paint(map, room, room_index, doors) {
         StandardPaintResult::default()
     } else if let Some(result) = region_rooms::paint(map, rooms, room, room_index, doors, depth) {
         result
     } else {
-        generic_rooms::paint(map, room, room_index, doors, generator, depth).unwrap_or_default()
+        generic_rooms::paint(map, room, room_index, doors, generator, depth, no_herbalism)
+            .unwrap_or_default()
     }
 }

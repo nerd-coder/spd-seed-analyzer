@@ -12,6 +12,7 @@ gradle.beforeProject { project ->
         def seed = gradle.startParameter.projectProperties['oracleSeed']
         def depth = gradle.startParameter.projectProperties['oracleDepth']
         def finalHeapsDepth = gradle.startParameter.projectProperties['oracleFinalHeapsDepth']
+        def challenge = gradle.startParameter.projectProperties['oracleChallenge']
         def generatorDeckRollover =
                 gradle.startParameter.projectProperties['oracleGeneratorDeckRollover']
         def generatorLifecycle =
@@ -74,6 +75,9 @@ gradle.beforeProject { project ->
             }
             if (finalHeapsDepth != null) {
                 args('final-heaps', finalHeapsDepth)
+            }
+            if (challenge != null) {
+                args('challenge', challenge)
             }
             if (generatorDeckRollover != null) {
                 args('generator-deck-rollover')

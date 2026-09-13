@@ -50,6 +50,8 @@ struct OracleInput {
     numeric: i64,
     #[serde(default)]
     depths: Vec<u32>,
+    #[serde(default)]
+    challenge: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

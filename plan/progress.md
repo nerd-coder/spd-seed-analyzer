@@ -5,7 +5,7 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 ## Done
 
 - **00–07 closed.** 07 is a deny-list; 00–06 shipped without porting it.
-- Smoke/search/shop tests are retargeted to the v4 public projection; `spd-core --lib` has 410 passing tests.
+- Smoke/search/shop tests are retargeted to the v4 public projection; `spd-core --lib` has 412 passing tests.
 - Stale v3 oracle assertions are aligned with v4 fixtures for GFX floor 3 mobs, AAA-AAD floor 1 seed presence, AAA floor 6 weapons, and AAA floor 14 ToxicGas vents.
 - SecretLibrary's private weighted scroll pool follows the pinned v4 JVM HashMap order and weights; its GFX floor-6 replay now matches.
 - CrystalVault and SentryRoom golden checks now derive their floor-6/floor-1 facts from the current v4 fixtures; no generation code changed.
@@ -27,16 +27,17 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 - RitualRoom center prizes now record internal heaps; AAA floor 21's Pasty and IronKey center drops match the pinned oracle without changing RNG or public projection.
 - VaultLevel's forced branch-1 contract now has a second pinned fixture (`GFX-PZH-DCH`, depth 17); Rust compares the seed/depth-specific room graph, painter layout, hazards, blobs, transitions, and custom layers alongside the existing AAA fixture.
 - Floor detail now exposes the backend's modeled `possible_rooms` alternatives, including room counts and their trinket/challenge conditions; a focused quest-report browser fixture covers the disclosure.
+- Barren Land/NO_HERBALISM is pinned as a separate depth-4 `SecretGardenRoom` fixture; seed/position RNG and terrain conversion remain intact while plant objects, occupancy, and synthetic plant loot are suppressed exactly like Java.
 
 ## Now
 
-All checked-in v4 Java-oracle parity cases pass; the analyzer remains intentionally partial outside the covered generation profiles. The next bounded generation pass is a fresh challenge fixture before changing any partial path.
+All checked-in v4 Java-oracle parity cases pass; the analyzer remains intentionally partial outside the covered generation profiles. The next bounded generation pass must start from a fresh fixture before changing another partial path.
 
 ## Next
 
-1. Add a pinned Barren Land/Forbidden Runes challenge fixture and focused regression only if the Java harness can capture the challenge flag without weakening the current public projection.
-2. Preserve the existing oracle-backed boundaries and `partial` status while extending coverage.
+1. Preserve the existing oracle-backed boundaries and `partial` status while extending coverage.
+2. Add another challenge or trinket fixture only after its Java contract and RNG boundary are isolated.
 
 ## Remaining
 
-`java_oracle_goldens`: 46 pass, 0 failures. `spd-core --lib`: 410 pass. Analyzer remains `partial`.
+`java_oracle_goldens`: 48 pass, 0 failures. `spd-core --lib`: 412 pass. Analyzer remains `partial`.

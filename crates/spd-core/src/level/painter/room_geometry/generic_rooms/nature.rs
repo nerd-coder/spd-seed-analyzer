@@ -13,6 +13,7 @@ pub(super) fn paint_plants(
     room: &Room,
     generator: &mut GeneratorState,
     depth: i32,
+    no_herbalism: bool,
 ) {
     fill_room(map, room, WALL);
     fill_margin(map, room, 1, GRASS);
@@ -56,9 +57,15 @@ pub(super) fn paint_plants(
         if let Some(cell) = map.point_to_cell(plant.x, plant.y) {
             // Level.plant converts HIGH_GRASS/EMPTY/EMBERS to GRASS.
             map.map[cell] = GRASS;
-            map.item_allowed[cell] = false;
-            map.character_allowed[cell] = false;
-            map.record_plant(cell, class_name, image);
+            // Under Barren Land, Level.plant still performs the terrain
+            // conversion but returns before couching the seed. Consequently
+            // the plants map remains empty and later item/character placement
+            // is not blocked by these attempted plants.
+            if !no_herbalism {
+                map.item_allowed[cell] = false;
+                map.character_allowed[cell] = false;
+                map.record_plant(cell, class_name, image);
+            }
         }
     }
 }

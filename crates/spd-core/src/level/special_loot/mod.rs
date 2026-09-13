@@ -32,6 +32,7 @@ use crate::level::Feeling;
 use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
+use crate::trinkets::Challenge;
 
 /// Result of special-room paint pass (prizes + doors for `paintDoors`).
 pub struct SpecialPaintResult {
@@ -114,6 +115,7 @@ pub fn special_room_loot(
                 &doors,
                 &mut dungeon.generator,
                 dungeon.depth,
+                dungeon.challenges & Challenge::BarrenLand.mask() != 0,
             )
         };
         // `RingRoom` only calls `placeCenterDetail` when both dimensions are
@@ -246,11 +248,25 @@ fn paint_special(
         "SecretRunestoneRoom" => secret_rooms::secret_runestone(dungeon, room, map, items_to_spawn),
         "SecretArtilleryRoom" => secret_rooms::secret_artillery(dungeon, room, map),
         "SecretLaboratoryRoom" => secret_rooms::secret_laboratory(room, map),
-        "SecretLarderRoom" => secret_rooms::secret_larder(dungeon.depth, room, map),
+        "SecretLarderRoom" => secret_rooms::secret_larder(
+            dungeon.depth,
+            room,
+            map,
+            dungeon.challenges & Challenge::BarrenLand.mask() != 0,
+        ),
         "SecretHoardRoom" => secret_rooms::secret_hoard(dungeon, room, map),
         // Garden / well / pit / remaining secrets with portable prizes
-        "GardenRoom" => gardens::garden_prizes(room, map, items_to_spawn),
-        "SecretGardenRoom" => gardens::secret_garden_prizes(room, map),
+        "GardenRoom" => gardens::garden_prizes(
+            room,
+            map,
+            items_to_spawn,
+            dungeon.challenges & Challenge::BarrenLand.mask() != 0,
+        ),
+        "SecretGardenRoom" => gardens::secret_garden_prizes(
+            room,
+            map,
+            dungeon.challenges & Challenge::BarrenLand.mask() != 0,
+        ),
         "MagicWellRoom" => gardens::magic_well(room, map, items_to_spawn),
         "SecretWellRoom" => gardens::secret_well(),
         "PitRoom" => pit_secrets::pit_prizes(dungeon, room, map),

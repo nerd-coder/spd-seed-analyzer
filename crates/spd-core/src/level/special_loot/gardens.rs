@@ -12,6 +12,7 @@ pub(super) fn garden_prizes(
     room: &Room,
     map: &mut TerrainMap,
     items_to_spawn: &mut Vec<GeneratedItem>,
+    no_herbalism: bool,
 ) -> Vec<PlacedLoot> {
     items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
 
@@ -20,20 +21,28 @@ pub(super) fn garden_prizes(
     let mut occupied = Vec::new();
     match bushes {
         0 => {
-            plant_pos(room, map, &mut occupied, "Sungrass", 3);
-            out.push(plant_loot("SungrassSeed", "GardenRoom"));
+            plant_pos(room, map, &mut occupied, "Sungrass", 3, no_herbalism);
+            if !no_herbalism {
+                out.push(plant_loot("SungrassSeed", "GardenRoom"));
+            }
         }
         1 => {
-            plant_pos(room, map, &mut occupied, "BlandfruitBush", 12);
-            out.push(plant_loot("BlandfruitBushSeed", "GardenRoom"));
+            plant_pos(room, map, &mut occupied, "BlandfruitBush", 12, no_herbalism);
+            if !no_herbalism {
+                out.push(plant_loot("BlandfruitBushSeed", "GardenRoom"));
+            }
         }
         _ => {
             // 20% both seeds
             if Random::int_max(5) == 0 {
-                plant_pos(room, map, &mut occupied, "Sungrass", 3);
-                out.push(plant_loot("SungrassSeed", "GardenRoom"));
-                plant_pos(room, map, &mut occupied, "BlandfruitBush", 12);
-                out.push(plant_loot("BlandfruitBushSeed", "GardenRoom"));
+                plant_pos(room, map, &mut occupied, "Sungrass", 3, no_herbalism);
+                if !no_herbalism {
+                    out.push(plant_loot("SungrassSeed", "GardenRoom"));
+                }
+                plant_pos(room, map, &mut occupied, "BlandfruitBush", 12, no_herbalism);
+                if !no_herbalism {
+                    out.push(plant_loot("BlandfruitBushSeed", "GardenRoom"));
+                }
             }
         }
     }
@@ -56,23 +65,42 @@ fn plant_pos(
     occupied: &mut Vec<(i32, i32)>,
     class_name: &'static str,
     image: u8,
+    no_herbalism: bool,
 ) {
-    let before = occupied.len();
-    burn_drop_pos(room, occupied);
-    if let Some(&(x, y)) = occupied.get(before) {
-        if let Some(cell) = map.point_to_cell(x, y) {
+    let (x, y) = if no_herbalism {
+        // Barren Land leaves Level.plants empty, so plantPos's uniqueness
+        // loop accepts the very first Room.random() pair on every attempt.
+        (
+            Random::int_range_inclusive(room.left + 1, room.right - 1),
+            Random::int_range_inclusive(room.top + 1, room.bottom - 1),
+        )
+    } else {
+        let before = occupied.len();
+        burn_drop_pos(room, occupied);
+        occupied
+            .get(before)
+            .copied()
+            .expect("plantPos adds an unused cell")
+    };
+    if let Some(cell) = map.point_to_cell(x, y) {
+        // `Level.plant` converts HIGH_GRASS/EMPTY/EMBERS to GRASS even when
+        // Barren Land suppresses the actual plant object.
+        if map.map[cell] == crate::level::terrain::HIGH_GRASS {
+            map.map[cell] = crate::level::terrain::GRASS;
+        }
+        if !no_herbalism {
             map.record_plant(cell, class_name, image);
-            // `Level.plant` converts HIGH_GRASS under the plant to GRASS.
-            if map.map[cell] == crate::level::terrain::HIGH_GRASS {
-                map.map[cell] = crate::level::terrain::GRASS;
-            }
         }
     }
 }
 
 /// `SecretGardenRoom.paint` — grass patch plus Starflower, Seedpod, Dewcatcher,
 /// and a 50% extra Seedpod or Dewcatcher.
-pub(super) fn secret_garden_prizes(room: &Room, map: &mut TerrainMap) -> Vec<PlacedLoot> {
+pub(super) fn secret_garden_prizes(
+    room: &Room,
+    map: &mut TerrainMap,
+    no_herbalism: bool,
+) -> Vec<PlacedLoot> {
     for y in room.top..=room.bottom {
         for x in room.left..=room.right {
             if let Some(cell) = map.point_to_cell(x, y) {
@@ -107,8 +135,10 @@ pub(super) fn secret_garden_prizes(room: &Room, map: &mut TerrainMap) -> Vec<Pla
         ("SeedpodSeed", "Seedpod", 14),
         ("DewcatcherSeed", "Dewcatcher", 13),
     ] {
-        secret_garden_plant(room, map, &mut occupied, plant, image);
-        out.push(plant_loot(seed, "SecretGardenRoom"));
+        secret_garden_plant(room, map, &mut occupied, plant, image, no_herbalism);
+        if !no_herbalism {
+            out.push(plant_loot(seed, "SecretGardenRoom"));
+        }
     }
     // Java rolls the fourth seed's class before drawing its position, and a
     // repeated position costs another `Room.random` pair.
@@ -117,8 +147,17 @@ pub(super) fn secret_garden_prizes(room: &Room, map: &mut TerrainMap) -> Vec<Pla
     } else {
         ("DewcatcherSeed", "Dewcatcher", 13)
     };
-    secret_garden_plant(room, map, &mut occupied, extra_plant, extra_image);
-    out.push(plant_loot(extra_seed, "SecretGardenRoom"));
+    secret_garden_plant(
+        room,
+        map,
+        &mut occupied,
+        extra_plant,
+        extra_image,
+        no_herbalism,
+    );
+    if !no_herbalism {
+        out.push(plant_loot(extra_seed, "SecretGardenRoom"));
+    }
 
     for y in (room.top + 1)..room.bottom {
         for x in (room.left + 1)..room.right {
@@ -135,10 +174,21 @@ fn secret_garden_plant(
     occupied: &mut Vec<(i32, i32)>,
     class_name: &'static str,
     image: u8,
+    no_herbalism: bool,
 ) {
-    let before = occupied.len();
-    burn_drop_pos(room, occupied);
-    let &(x, y) = occupied.get(before).expect("plantPos adds an unused cell");
+    let (x, y) = if no_herbalism {
+        (
+            Random::int_range_inclusive(room.left + 1, room.right - 1),
+            Random::int_range_inclusive(room.top + 1, room.bottom - 1),
+        )
+    } else {
+        let before = occupied.len();
+        burn_drop_pos(room, occupied);
+        occupied
+            .get(before)
+            .copied()
+            .expect("plantPos adds an unused cell")
+    };
     let cell = map
         .point_to_cell(x, y)
         .expect("secret garden plant lies on map");
@@ -146,9 +196,11 @@ fn secret_garden_plant(
     if map.map[cell] == HIGH_GRASS {
         map.map[cell] = GRASS;
     }
-    map.item_allowed[cell] = false;
-    map.character_allowed[cell] = false;
-    map.record_plant(cell, class_name, image);
+    if !no_herbalism {
+        map.item_allowed[cell] = false;
+        map.character_allowed[cell] = false;
+        map.record_plant(cell, class_name, image);
+    }
 }
 
 fn plant_loot(class_name: &str, source: &str) -> PlacedLoot {

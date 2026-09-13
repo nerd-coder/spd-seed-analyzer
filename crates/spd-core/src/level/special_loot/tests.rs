@@ -555,7 +555,7 @@ fn garden_and_well_prizes() {
     let room = test_room("GardenRoom", 7, 7);
     let mut spawn = Vec::new();
     let mut map = paint_minimal(std::slice::from_ref(&room)).expect("garden map");
-    let garden = garden_prizes(&room, &mut map, &mut spawn);
+    let garden = garden_prizes(&room, &mut map, &mut spawn, false);
     Random::pop_generator();
     assert_eq!(spawn[0].class_name, "IronKey");
     // bushes roll may yield 0–2 plants
@@ -598,7 +598,7 @@ fn garden_and_well_prizes() {
     Random::push_generator_seeded(4);
     let room = test_room("SecretGardenRoom", 8, 8);
     let mut map = paint_minimal(std::slice::from_ref(&room)).expect("secret garden map");
-    let secret = secret_garden_prizes(&room, &mut map);
+    let secret = secret_garden_prizes(&room, &mut map, false);
     Random::pop_generator();
     assert_eq!(secret.len(), 4);
     assert_eq!(secret[0].item.class_name, "StarflowerSeed");
@@ -612,5 +612,39 @@ fn garden_and_well_prizes() {
     );
     assert_eq!(map.known_blobs.len(), 1);
     assert_eq!(map.known_blobs[0].class_name, "Foliage");
+    assert_eq!(map.known_blobs[0].cells.len(), 49);
+}
+
+#[test]
+fn barren_land_suppresses_garden_plants_but_keeps_rolls_and_foliage() {
+    Random::reset_generators();
+    Random::push_generator_seeded(2);
+    let room = test_room("GardenRoom", 7, 7);
+    let mut spawn = Vec::new();
+    let mut map = paint_minimal(std::slice::from_ref(&room)).expect("garden map");
+    let garden = garden_prizes(&room, &mut map, &mut spawn, true);
+    Random::pop_generator();
+    assert!(
+        garden.is_empty(),
+        "Barren Land does not couch or drop plants"
+    );
+    assert_eq!(spawn[0].class_name, "IronKey");
+    assert_eq!(map.known_plants.iter().flatten().count(), 0);
+    assert_eq!(map.plant_occupied.iter().filter(|&&v| v).count(), 0);
+    assert_eq!(map.known_blobs.len(), 1);
+
+    Random::reset_generators();
+    Random::push_generator_seeded(4);
+    let room = test_room("SecretGardenRoom", 8, 8);
+    let mut map = paint_minimal(std::slice::from_ref(&room)).expect("secret garden map");
+    let secret = secret_garden_prizes(&room, &mut map, true);
+    Random::pop_generator();
+    assert!(
+        secret.is_empty(),
+        "Barren Land suppresses secret garden plants"
+    );
+    assert_eq!(map.known_plants.iter().flatten().count(), 0);
+    assert_eq!(map.plant_occupied.iter().filter(|&&v| v).count(), 0);
+    assert_eq!(map.known_blobs.len(), 1);
     assert_eq!(map.known_blobs[0].cells.len(), 49);
 }

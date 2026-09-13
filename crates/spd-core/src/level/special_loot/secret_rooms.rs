@@ -239,7 +239,12 @@ fn empty_sp_heap_cell(room: &Room, map: &TerrainMap) -> usize {
     }
 }
 
-pub(super) fn secret_larder(depth: i32, room: &Room, map: &mut TerrainMap) -> Vec<PlacedLoot> {
+pub(super) fn secret_larder(
+    depth: i32,
+    room: &Room,
+    map: &mut TerrainMap,
+    no_herbalism: bool,
+) -> Vec<PlacedLoot> {
     for y in room.top..=room.bottom {
         for x in room.left..=room.right {
             if let Some(cell) = map.point_to_cell(x, y) {
@@ -274,7 +279,11 @@ pub(super) fn secret_larder(depth: i32, room: &Room, map: &mut TerrainMap) -> Ve
     }
     if let Some(cell) = map.point_to_cell(center_x, center_y) {
         map.map[cell] = crate::level::terrain::GRASS;
-        map.plant_occupied[cell] = true;
+        // Level.plant performs the terrain conversion first, then returns
+        // without couching a seed under Barren Land.
+        if !no_herbalism {
+            map.plant_occupied[cell] = true;
+        }
     }
 
     // Measure food in one ChargrilledMeat ration

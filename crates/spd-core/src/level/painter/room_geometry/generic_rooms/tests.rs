@@ -32,6 +32,16 @@ fn paint_room(
     height: i32,
     size_factor: i32,
 ) -> (TerrainMap, StandardPaintResult) {
+    paint_room_with_challenge(name, width, height, size_factor, false)
+}
+
+fn paint_room_with_challenge(
+    name: &str,
+    width: i32,
+    height: i32,
+    size_factor: i32,
+    no_herbalism: bool,
+) -> (TerrainMap, StandardPaintResult) {
     Random::reset_generators();
     let run = init_run(19);
     let mut dungeon = dungeon_from_run(run);
@@ -46,10 +56,27 @@ fn paint_room(
         &DoorMap::new(),
         &mut dungeon.generator,
         dungeon.depth,
+        no_herbalism,
     )
     .expect("supported room");
     Random::pop_generator();
     (map, result)
+}
+
+#[test]
+fn barren_land_keeps_plants_room_attempts_without_plant_occupancy() {
+    let (map, _) = paint_room_with_challenge("PlantsRoom", 9, 8, 1, true);
+    assert!(map.map.contains(&GRASS));
+    assert_eq!(map.known_plants.iter().flatten().count(), 0);
+    assert_eq!(
+        map.plant_occupied
+            .iter()
+            .filter(|&&occupied| occupied)
+            .count(),
+        0
+    );
+    assert!(map.item_allowed.iter().all(|&allowed| allowed));
+    assert!(map.character_allowed.iter().all(|&allowed| allowed));
 }
 
 #[test]

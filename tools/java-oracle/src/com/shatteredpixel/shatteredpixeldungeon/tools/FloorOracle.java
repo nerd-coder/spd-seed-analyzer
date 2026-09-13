@@ -9,6 +9,7 @@ package com.shatteredpixel.shatteredpixeldungeon.tools;
 import com.badlogic.gdx.utils.GdxNativesLoader;
 import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Challenges;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.Statistics;
@@ -68,7 +69,14 @@ final class FloorOracle {
 	}
 
 	static FinalFloorFacts generateFinalHeaps(long seed, int depth) {
+		return generateFinalHeaps(seed, depth, false);
+	}
+
+	static FinalFloorFacts generateFinalHeaps(long seed, int depth, boolean barrenLand) {
 		initializeFreshRun(seed);
+		if (barrenLand) {
+			Dungeon.challenges = Challenges.NO_HERBALISM;
+		}
 		generatePriorFloors(depth);
 		// A committed seed fixture must not depend on the user's bones.dat. At
 		// this pin, Dungeon.daily is consulted during generation only by Bones.
@@ -141,7 +149,8 @@ final class FloorOracle {
 				preMobsRng,
 				preItemsRng,
 				visualFacts,
-				preItemsVisualFacts);
+				preItemsVisualFacts,
+				barrenLand ? "barren-land" : null);
 	}
 
 	/** Captures the copied private map only after the canonical floor-6 lifecycle loaded it. */
@@ -357,6 +366,7 @@ final class FloorOracle {
 		final List<FloorVisualFacts.CustomTileFact> customTiles;
 		final List<FloorVisualFacts.CustomTileFact> customTerrain;
 		final List<FloorVisualFacts.CustomTileFact> customWalls;
+		final String challenge;
 
 		FinalFloorFacts(
 				int depth,
@@ -373,7 +383,8 @@ final class FloorOracle {
 				List<Integer> preMobsRng,
 				List<Integer> preItemsRng,
 				FloorVisualFacts visualFacts,
-				FloorVisualFacts preItemsVisualFacts) {
+				FloorVisualFacts preItemsVisualFacts,
+				String challenge) {
 			this.depth = depth;
 			this.width = width;
 			this.height = height;
@@ -399,6 +410,7 @@ final class FloorOracle {
 			this.customTiles = layoutFacts.customTiles;
 			this.customTerrain = layoutFacts.customTerrain;
 			this.customWalls = layoutFacts.customWalls;
+			this.challenge = challenge;
 		}
 	}
 

@@ -22,10 +22,11 @@ pub(super) fn paint(
     doors: &DoorMap,
     generator: &mut GeneratorState,
     depth: i32,
+    no_herbalism: bool,
 ) -> Option<StandardPaintResult> {
     match room.name.as_str() {
         "PlantsRoom" => {
-            nature::paint_plants(map, room, generator, depth);
+            nature::paint_plants(map, room, generator, depth, no_herbalism);
             Some(StandardPaintResult::default())
         }
         "AquariumRoom" => {

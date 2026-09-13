@@ -118,6 +118,9 @@ fn every_covered_main_loop_spawn_matches_java_final_heaps() {
         {
             continue;
         }
+        if fixture.input.challenge.is_some() {
+            continue;
+        }
         let depth = fixture.input.depths[0];
         if matches!(depth, 5 | 10 | 15 | 20 | 25 | 26) {
             continue;
@@ -285,6 +288,9 @@ fn depth_one_final_heaps_match_report_projection() {
             fixture.schema_version,
             FINAL_HEAPS_SCHEMA_VERSION | EXTENDED_FINAL_HEAPS_SCHEMA_VERSION
         ) {
+            continue;
+        }
+        if fixture.input.challenge.is_some() {
             continue;
         }
         if fixture.input.depths != [1] {
@@ -613,6 +619,92 @@ fn depth_one_final_heaps_match_report_projection() {
     assert!(
         compared >= 8,
         "expected at least eight depth-one final-heaps fixtures, compared {compared}"
+    );
+}
+
+#[test]
+fn barren_land_fixture_declares_its_challenge_profile() {
+    let path = fixture_paths()
+        .into_iter()
+        .find(|path| {
+            path.file_name()
+                .is_some_and(|name| name == "aaa-aaa-aaa-final-heaps-floor-4-barren-land.json")
+        })
+        .expect("AAA floor-4 Barren Land fixture");
+    let fixture = read_fixture(&path);
+    assert_eq!(fixture.input.depths, [4]);
+    assert_eq!(fixture.input.challenge.as_deref(), Some("barren-land"));
+}
+
+#[test]
+fn aaa_floor_four_barren_land_matches_secret_garden_oracle() {
+    let path = fixture_paths()
+        .into_iter()
+        .find(|path| {
+            path.file_name()
+                .is_some_and(|name| name == "aaa-aaa-aaa-final-heaps-floor-4-barren-land.json")
+        })
+        .expect("AAA floor-4 Barren Land fixture");
+    let fixture = read_fixture(&path);
+    let expected = fixture.floors.first().expect("floor-4 oracle facts");
+
+    let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
+    dungeon.challenges = spd_core::Challenge::BarrenLand.mask();
+    let mut actual = None;
+    for depth in 1..=4 {
+        dungeon.depth = depth;
+        actual = Some(create_level_partial(&mut dungeon));
+    }
+    let actual = actual.expect("barren floor");
+    let context = path.display();
+
+    let mut rooms = actual.rooms.clone();
+    rooms.sort();
+    assert_eq!(
+        rooms, expected.rooms,
+        "Barren Land room classes in {context}"
+    );
+    assert_eq!(actual.pre_paint_rng_probe, expected.pre_paint_rng);
+    assert_eq!(actual.pre_mobs_rng_probe, expected.pre_mobs_rng);
+    assert_eq!(actual.pre_items_rng_probe, expected.pre_items_rng);
+
+    let map = actual.map.as_ref().expect("barren floor map");
+    assert_eq!((map.width, map.height), (expected.width, expected.height));
+    assert_eq!(map.tiles, *expected.terrain.as_ref().expect("terrain"));
+    assert!(map.plants.is_empty(), "Barren Land must not couch plants");
+    let actual_heaps: Vec<_> = map
+        .heaps
+        .iter()
+        .map(|heap| OracleHeap {
+            cell: heap.cell,
+            heap_type: heap.heap_type.clone(),
+            items: heap
+                .items
+                .iter()
+                .map(|item| OracleItem {
+                    class_name: item.class_name.clone(),
+                    quantity: item.quantity,
+                    level: item.level,
+                    cursed: item.cursed,
+                })
+                .collect(),
+        })
+        .collect();
+    assert_eq!(
+        actual_heaps, expected.final_heaps,
+        "Barren Land heaps in {context}"
+    );
+    let actual_mobs: Vec<_> = map
+        .mobs
+        .iter()
+        .map(|mob| OracleMob {
+            cell: mob.cell,
+            class_name: mob.class_name.clone(),
+        })
+        .collect();
+    assert_eq!(
+        actual_mobs, expected.final_mobs,
+        "Barren Land mobs in {context}"
     );
 }
 

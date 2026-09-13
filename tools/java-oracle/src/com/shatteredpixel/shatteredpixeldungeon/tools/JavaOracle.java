@@ -31,15 +31,19 @@ public final class JavaOracle {
 	}
 
 	public static void main(String[] args) {
-		if (args.length < 1 || args.length > 4) {
+		if (args.length < 1 || args.length > 5) {
 			System.err.println(
-					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH | mining-level DEPTH crystal|gnoll | vault-level DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection | secret-library-order | secret-laboratory-order]");
+					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH [challenge barren-land] | mining-level DEPTH crystal|gnoll | vault-level DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection | secret-library-order | secret-laboratory-order]");
 			System.exit(2);
 		}
 
 		String inputSeed = args[0];
 		long numericSeed = DungeonSeed.convertFromText(inputSeed);
-		boolean finalHeaps = args.length == 3 && "final-heaps".equals(args[1]);
+		boolean finalHeaps = args.length >= 3 && "final-heaps".equals(args[1]);
+		boolean barrenLand = finalHeaps
+				&& args.length == 5
+				&& "challenge".equals(args[3])
+				&& "barren-land".equals(args[4]);
 		boolean generatorDeckRollover =
 				args.length == 2 && "generator-deck-rollover".equals(args[1]);
 		boolean generatorLifecycle =
@@ -74,7 +78,7 @@ public final class JavaOracle {
 					inputSeed, numericSeed, Integer.parseInt(args[2])));
 			return;
 		}
-		if (args.length == 4) {
+		if (args.length == 4 || (args.length == 5 && !barrenLand)) {
 			System.err.println("Unknown oracle contract: " + args[1]);
 			System.exit(2);
 		}
@@ -169,7 +173,7 @@ public final class JavaOracle {
 				Potion.initColors();
 				Ring.initGems();
 			} else if (finalHeaps) {
-				finalFloor = FloorOracle.generateFinalHeaps(numericSeed, depth);
+				finalFloor = FloorOracle.generateFinalHeaps(numericSeed, depth, barrenLand);
 			} else {
 				floor = FloorOracle.generate(numericSeed);
 			}
@@ -289,7 +293,12 @@ public final class JavaOracle {
 		json.append("  \"input\": {\n");
 		json.append("    \"seed\": \"").append(escape(inputSeed)).append("\",\n");
 		json.append("    \"numeric\": ").append(numericSeed).append(",\n");
-		json.append("    \"depths\": [").append(floor.depth).append("]\n");
+		json.append("    \"depths\": [").append(floor.depth).append("]");
+		if (floor.challenge != null) {
+			json.append(",\n    \"challenge\": \"")
+					.append(escape(floor.challenge)).append("\"");
+		}
+		json.append("\n");
 		json.append("  },\n");
 		json.append("  \"identities\": {\n");
 		appendIdentities(json, "potions", potions, true);
