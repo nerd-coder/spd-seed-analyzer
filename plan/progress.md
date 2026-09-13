@@ -24,16 +24,17 @@ Index: [README.md](README.md). Facts: `specs/analysis/`. Decks: `specs/generator
 - ABC floor 24 Halls callbacks, including `RuinsExitRoom`, match the pinned trace.
 - `SecretWellRoom.canConnect` now matches Java's interior-edge restriction; the ABC floor-24 RuinsExit callback and all four floor-24 Halls controls pass.
 - The compact report regression now asserts only its exact floor-one Crystal Choice reward and stable partial-report framing; stale later partial-replay identities are no longer pinned.
+- RitualRoom center prizes now record internal heaps; AAA floor 21's Pasty and IronKey center drops match the pinned oracle without changing RNG or public projection.
 
 ## Now
 
-One downstream parity boundary remains: AAA floor 21 stable heap/item placement still differs after trap and final-mob parity is restored.
+All checked-in v4 Java-oracle parity cases pass; the analyzer remains intentionally partial outside the covered generation profiles.
 
 ## Next
 
-1. Isolate the remaining AAA floor-21 stable heap/item placement difference (Rust Torch cells versus Java Pasty and IronKey facts).
-2. Keep trap and final-mob parity bounded; do not change Eye eligibility or compensate RNG without an item-placement proof.
+1. Preserve the current oracle-backed boundaries when extending coverage to new generation profiles.
+2. Add a new fixture and focused regression before changing any partial generation path or public projection.
 
 ## Remaining
 
-`java_oracle_goldens`: 45 pass, 1 real failure remains: AAA floor-21 stable heap/item parity. `spd-core --lib`: 409 pass. Analyzer remains `partial`.
+`java_oracle_goldens`: 46 pass, 0 failures. `spd-core --lib`: 409 pass. Analyzer remains `partial`.
