@@ -335,7 +335,7 @@ impl Room {
             let mid_x = (self.left + self.right) as f32 / 2.0;
             let mid_y = (self.top + self.bottom) as f32 / 2.0;
             on_one_edge && ((p.x as f32 - mid_x).abs() < 1.0 || (p.y as f32 - mid_y).abs() < 1.0)
-        } else if self.name == "SewerPipeRoom" {
+        } else if matches!(self.name.as_str(), "SewerPipeRoom" | "SecretWellRoom") {
             on_one_edge
                 && ((p.x > self.left + 1 && p.x < self.right - 1)
                     || (p.y > self.top + 1 && p.y < self.bottom - 1))
@@ -554,6 +554,24 @@ mod tests {
         pipe.resize(8, 8);
         assert!(!pipe.can_connect_point(Point::new(pipe.left, pipe.top + 1)));
         assert!(pipe.can_connect_point(Point::new(pipe.left, pipe.top + 2)));
+    }
+
+    #[test]
+    fn secret_well_connection_restricts_doors_to_interior_edges() {
+        let mut well = Room::new(0, "SecretWellRoom", RoomKind::Secret, 1, 1, 5, 9, 25, 32);
+        well.left = 4;
+        well.top = 25;
+        well.right = 9;
+        well.bottom = 32;
+
+        // SecretWellRoom.java allows only the interior span of an edge;
+        // points one tile from either corner are rejected.
+        assert!(!well.can_connect_point(Point::new(5, 25)));
+        assert!(well.can_connect_point(Point::new(6, 25)));
+        assert!(well.can_connect_point(Point::new(7, 25)));
+        assert!(!well.can_connect_point(Point::new(8, 25)));
+        assert!(well.can_connect_point(Point::new(4, 27)));
+        assert!(!well.can_connect_point(Point::new(4, 26)));
     }
 
     #[test]
