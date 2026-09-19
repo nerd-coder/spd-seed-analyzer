@@ -35,6 +35,11 @@ pub struct SeedSearchRequest {
     /// These matches are planning evidence, not seed-wide guarantees.
     #[serde(default = "baseline_search_default")]
     pub include_baseline: bool,
+    /// Widen quest-reward matching to every class a deck-index shift can reach,
+    /// not just the fresh-run draw. Off by default: it returns more seeds, and
+    /// a hit means "reachable in some run", not "present in a fresh run".
+    #[serde(default)]
+    pub deep_search: bool,
     pub max_matches: u32,
 }
 
@@ -219,8 +224,11 @@ pub fn search_seeds(request: &SeedSearchRequest) -> Result<SeedSearchResult, Sea
             break;
         }
 
-        let report = analyze_seed_seed_only(&seed.to_string(), request.generation_floors())
+        let mut report = analyze_seed_seed_only(&seed.to_string(), request.generation_floors())
             .map_err(|source| SearchError::Analyze { seed, source })?;
+        if request.deep_search {
+            widen_quest_candidates(&mut report.floors);
+        }
         candidates_scanned += 1;
 
         let evidence = matching_evidence(
@@ -447,6 +455,9 @@ fn matching_item<'a>(
                     .is_none_or(|minimum| item.level.is_some_and(|level| level >= minimum))
         })
 }
+
+mod quest_candidates;
+use quest_candidates::widen_quest_candidates;
 
 #[cfg(test)]
 mod tests;

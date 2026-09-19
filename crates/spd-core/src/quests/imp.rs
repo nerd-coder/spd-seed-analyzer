@@ -11,6 +11,13 @@ use crate::rooms::types::{RoomKind, RoomSpec};
 
 #[path = "imp/rewards.rs"]
 mod rewards;
+pub use rewards::{ImpSlotDraw, ImpSlotKind};
+
+#[path = "imp/distribution.rs"]
+mod distribution;
+pub use distribution::{
+    build_reward_slots, DEEP_DRIFT as IMP_DEEP_DRIFT, DEFAULT_DRIFT as IMP_DEFAULT_DRIFT,
+};
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct ImpSpawnDecks {
@@ -32,6 +39,8 @@ pub struct ImpQuestState {
     pub pending_options: Vec<GeneratedItem>,
     pub dropped_before: ImpSpawnDecks,
     pub dropped_after: ImpSpawnDecks,
+    /// Draw site and deck index per slot, in `rewardOptions` order.
+    pub slot_draws: Vec<ImpSlotDraw>,
 }
 
 #[derive(Debug, Clone)]
@@ -70,8 +79,9 @@ pub fn try_spawn(
     imp.spawned = true;
     imp.depth = depth;
     imp.dropped_before = snapshot_decks(generator);
-    let options = rewards::generate_reward_options(generator, depth);
+    let (options, slot_draws) = rewards::generate_reward_options(generator, depth);
     imp.dropped_after = snapshot_decks(generator);
+    imp.slot_draws = slot_draws;
     imp.reward_options = options.clone();
     imp.pending_options = options;
     true

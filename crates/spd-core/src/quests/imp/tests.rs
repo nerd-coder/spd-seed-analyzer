@@ -1,5 +1,6 @@
 use super::*;
 use crate::items::model::{ItemCategory, ItemProvenance, QuestRewardRole};
+use crate::quests::imp::ImpSlotKind;
 use crate::run::{dungeon_from_run, init_run};
 use crate::{MapProfile, TrinketEvent, TrinketEventAction, TrinketKind};
 use serde::Deserialize;
@@ -144,7 +145,7 @@ fn generate_reward_options_at(seed: i64) -> Vec<GeneratedItem> {
     let mut generator = init_run(seed).generator;
     Random::reset_generators();
     Random::push_generator_seeded(seed);
-    let options = rewards::generate_reward_options(&mut generator, 18);
+    let (options, _draws) = rewards::generate_reward_options(&mut generator, 18);
     Random::pop_generator();
     options
 }
@@ -253,12 +254,12 @@ fn reward_options_are_deterministic_uncursed_and_take_one() {
 
     Random::reset_generators();
     Random::push_generator_seeded(777);
-    let first = rewards::generate_reward_options(&mut gen_template.clone(), 18);
+    let (first, first_draws) = rewards::generate_reward_options(&mut gen_template.clone(), 18);
     Random::pop_generator();
 
     Random::reset_generators();
     Random::push_generator_seeded(777);
-    let second = rewards::generate_reward_options(&mut gen_template.clone(), 18);
+    let (second, _) = rewards::generate_reward_options(&mut gen_template.clone(), 18);
     Random::pop_generator();
 
     assert_eq!(first.len(), 6);
@@ -286,6 +287,14 @@ fn reward_options_are_deterministic_uncursed_and_take_one() {
             ItemProvenance::Quest(QuestRewardRole::ImpVaultOption { slot: slot as u8 })
         );
     }
+
+    // Draw sites are recorded once per slot, and only the plate slot skips a deck.
+    assert_eq!(first_draws.len(), 6);
+    assert_eq!(first_draws[4].category, None);
+    assert!(first_draws
+        .iter()
+        .enumerate()
+        .all(|(slot, draw)| slot == 4 || draw.category.is_some()));
 }
 
 #[test]
@@ -294,9 +303,12 @@ fn exhausted_artifact_deck_falls_back_to_a_distinct_ring() {
     Random::reset_generators();
     Random::push_generator_seeded(777);
     while generator.random_artifact(18).is_some() {}
-    let options = rewards::generate_reward_options(&mut generator, 18);
+    let (options, draws) = rewards::generate_reward_options(&mut generator, 18);
     Random::pop_generator();
 
+    // Both slot 0 and slot 1 are RING-deck draws once artifacts run out.
+    assert_eq!(draws[0].kind, ImpSlotKind::Ring);
+    assert_eq!(draws[0].category, Some(Category::Ring));
     assert_eq!(options[0].category, ItemCategory::Ring);
     assert_eq!(options[1].category, ItemCategory::Ring);
     assert_ne!(options[0].class_name, options[1].class_name);
@@ -384,4 +396,101 @@ fn imp_reward_enchant_pin() {
     assert_eq!(options[2].enchantment.as_deref(), Some("Unstable"));
     assert_eq!(options[3].enchantment.as_deref(), Some("Eldritch"));
     assert_eq!(options[4].enchantment.as_deref(), Some("Swiftness"));
+}
+
+/// The load-bearing claim behind reward distributions: a category's draw
+/// sequence is a pure function of the seed, so deck index N in a from-zero
+/// replay equals the draw that actually happened at index N. Pinned against
+/// java-oracle ground truth.
+#[test]
+fn deck_index_matches_real_draw() {
+    for fixture_json in RING_DECK_FIXTURES {
+        let fixture: RingDeckFixture = serde_json::from_str(fixture_json).unwrap();
+        let seed = fixture.input.numeric;
+        let dungeon = replay_through(seed, fixture.spawn.depth);
+        let idx = fixture.spawn.ring_dropped_before as usize;
+        let seq = dungeon
+            .generator
+            .category_class_history(Category::Ring, fixture.spawn.depth);
+        // reward_options[1] is always the ring slot.
+        let actual_ring = &fixture.spawn.reward_options[1].class;
+        eprintln!(
+            "seed={} idx={} seq={:?} actual={}",
+            fixture.input.seed, idx, seq, actual_ring
+        );
+        assert_eq!(
+            seq.get(idx).map(String::as_str),
+            Some(actual_ring.as_str()),
+            "seed {} ring index {}",
+            fixture.input.seed,
+            idx
+        );
+    }
+}
+
+/// Drift is bidirectional: a trinket profile can move the Imp's deck index in
+/// either direction, and the from-zero sequence predicts the new draw either
+/// way. Seed 42 moves backward (5 -> 3), which is why the candidate window
+/// cannot be forward-only.
+#[test]
+fn drift_matches_profile_replay_in_both_directions() {
+    for seed in [0_i64, 1, 2, 7, 42] {
+        // Baseline.
+        let base = replay_through(seed, 19);
+        if !base.imp.spawned {
+            continue;
+        }
+        let base_idx = base.imp.dropped_before.ring as usize;
+        let base_ring = base.imp.reward_options[1].class_name.clone();
+
+        // Profiled run with a trinket that adds deck-using sites earlier.
+        let mut dungeon = dungeon_from_run(init_run(seed));
+        let profile = MapProfile {
+            trinket_events: vec![TrinketEvent {
+                before_depth: 17,
+                action: TrinketEventAction::Acquired {
+                    trinket: TrinketKind::MimicTooth,
+                    min_upgrades: None,
+                },
+            }],
+            ..MapProfile::default()
+        };
+        crate::level::analyze_floors_with_profile(&mut dungeon, 19, Some(&profile));
+        if !dungeon.imp.spawned {
+            continue;
+        }
+        let prof_idx = dungeon.imp.dropped_before.ring as usize;
+        let prof_ring = dungeon.imp.reward_options[1].class_name.clone();
+
+        // The from-zero sequence taken from the PROFILED generator.
+        let seq = dungeon
+            .generator
+            .category_class_history(Category::Ring, dungeon.imp.depth);
+        eprintln!(
+            "seed={seed} base(idx={base_idx},{base_ring}) prof(idx={prof_idx},{prof_ring}) seq={seq:?}"
+        );
+        assert_eq!(
+            seq.get(prof_idx).map(String::as_str),
+            Some(prof_ring.as_str()),
+            "seed {seed}: profiled ring index {prof_idx}"
+        );
+
+        // Cross-check: the BASELINE generator's sequence, extended, must predict
+        // the profiled ring too -- that is the forward-drift claim.
+        let base_seq = base
+            .generator
+            .category_class_history(Category::Ring, base.imp.depth);
+        if prof_idx < base_seq.len() {
+            assert_eq!(
+                base_seq.get(prof_idx).map(String::as_str),
+                Some(prof_ring.as_str()),
+                "seed {seed}: baseline sequence must predict profiled ring at index {prof_idx}"
+            );
+        } else {
+            eprintln!(
+                "  (profiled index {prof_idx} beyond baseline window {})",
+                base_seq.len()
+            );
+        }
+    }
 }

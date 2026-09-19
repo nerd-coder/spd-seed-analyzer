@@ -423,11 +423,20 @@ impl GeneratorState {
         classes
     }
 
-    /// Replays a category deck from its initial state through the current draw.
-    /// Used for ordered candidate sets when runtime history can only advance the
-    /// deck counter, not alter its seed or weights.
-    pub(crate) fn category_class_history(&self, cat: Category, depth: i32) -> Vec<String> {
-        let count = self.cats[cat.index()].dropped.max(0) as usize + 1;
+    /// Replays a category deck from its initial state for `count` draws.
+    ///
+    /// The draw at index `n` is a pure function of the seed: `cat.seed` is fixed
+    /// at `fullReset` and `probs` evolves deterministically from the draw
+    /// sequence, so run history only chooses *which* index a draw lands on. That
+    /// makes this the candidate set for any deck-index drift, in either
+    /// direction. Pinned against java-oracle ground truth by
+    /// `quests::imp::tests::deck_index_matches_real_draw`.
+    pub(crate) fn category_class_sequence(
+        &self,
+        cat: Category,
+        count: usize,
+        depth: i32,
+    ) -> Vec<String> {
         let mut preview = self.clone();
         let runtime = &mut preview.cats[cat.index()];
         runtime.dropped = 0;
@@ -442,6 +451,14 @@ impl GeneratorState {
             .collect();
         Random::pop_generator();
         classes
+    }
+
+    /// Replays a category deck from its initial state through the current draw.
+    /// Used for ordered candidate sets when runtime history can only advance the
+    /// deck counter, not alter its seed or weights.
+    pub(crate) fn category_class_history(&self, cat: Category, depth: i32) -> Vec<String> {
+        let count = self.cats[cat.index()].dropped.max(0) as usize + 1;
+        self.category_class_sequence(cat, count, depth)
     }
 
     #[cfg(test)]

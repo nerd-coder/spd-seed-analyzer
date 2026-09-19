@@ -6,9 +6,10 @@ use crate::level::TerrainMap;
 use crate::quests;
 use crate::report::{
     AmbitiousImpQuestBaseline, AmbitiousImpQuestContract, BlacksmithObjective, GhostTarget,
-    GhostTargetRule, OldWandmakerQuestBaseline, OldWandmakerQuestContract, QuestDepthRange,
-    QuestReport, QuestRewardSelection, SadGhostQuestBaseline, SadGhostQuestContract,
-    TrollBlacksmithQuestBaseline, TrollBlacksmithQuestContract, WandmakerObjective,
+    GhostTargetRule, ImpRewardSlot, OldWandmakerQuestBaseline, OldWandmakerQuestContract,
+    QuestDepthRange, QuestReport, QuestRewardSelection, SadGhostQuestBaseline,
+    SadGhostQuestContract, TrollBlacksmithQuestBaseline, TrollBlacksmithQuestContract,
+    WandmakerObjective,
 };
 use crate::rooms::room::Room;
 
@@ -39,7 +40,14 @@ pub(super) fn take_pending(dungeon: &mut DungeonState) -> InitQuestRewards {
     }
 
     if let Some(imp) = quests::take_imp_pending(&mut dungeon.imp) {
-        result.quests.push(imp_report(dungeon.imp.depth));
+        let slots = quests::build_reward_slots(
+            &dungeon.generator,
+            &dungeon.imp.slot_draws,
+            &imp.options,
+            dungeon.imp.depth,
+            quests::IMP_DEFAULT_DRIFT,
+        );
+        result.quests.push(imp_report(dungeon.imp.depth, slots));
         result.items.extend(imp.options);
     }
     result
@@ -160,11 +168,17 @@ fn blacksmith_report(quest_type: quests::BlacksmithQuestType) -> QuestReport {
     }
 }
 
-fn imp_report(spawn_depth: i32) -> QuestReport {
+fn imp_report(spawn_depth: i32, slots: Vec<ImpRewardSlot>) -> QuestReport {
     QuestReport::AmbitiousImp {
         contract: AmbitiousImpQuestContract {
             spawn_depth_range: QuestDepthRange { min: 17, max: 19 },
-            rewards: reward_selection("Imp.Quest", 6, 1, None),
+            // Every option is +2..+5, and `EscapeCrystal` only lets an item
+            // above +1 leave at score >= 4000 (`EscapeCrystal.java:177-195`).
+            // The best non-statue total is 3000 (1000 explore + 1250 token door
+            // + 750 boss), so carrying the ImpStatue out is the only way to
+            // keep one of these six.
+            rewards: reward_selection("Imp.Quest", 6, 1, Some(4_000)),
+            slots,
         },
         baseline: AmbitiousImpQuestBaseline {
             spawn_depth: spawn_depth as u32,

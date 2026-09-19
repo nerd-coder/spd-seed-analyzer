@@ -68,6 +68,7 @@ fn depth_four_search_completes_with_minimum_size_secret_larder() {
         }],
         match_mode: MatchMode::Any,
         include_baseline: false,
+        deep_search: false,
         max_matches: 10,
     })
     .expect("the bounded search should complete");
@@ -108,6 +109,7 @@ fn request(constraints: Vec<ItemConstraint>, match_mode: MatchMode) -> SeedSearc
         constraints,
         match_mode,
         include_baseline: false,
+        deep_search: false,
         max_matches: 10,
     }
 }
@@ -405,6 +407,7 @@ fn later_identity_unknown_food_spawns_never_match_exact_item_searches() {
             constraints: vec![constraint(class_name, 2, 2)],
             match_mode: MatchMode::Any,
             include_baseline: false,
+            deep_search: false,
             max_matches: 4,
         })
         .expect("forced queue search");
@@ -431,6 +434,7 @@ fn floor_one_exact_food_identity_matches_exact_item_search() {
         constraints: vec![constraint(&class_name, 1, 1)],
         match_mode: MatchMode::Any,
         include_baseline: false,
+        deep_search: false,
         max_matches: 1,
     })
     .expect("exact floor-one food search");
@@ -449,6 +453,7 @@ fn finder_baseline_highlights_exclude_promoted_floor_one_rewards() {
         constraints: vec![constraint("Food", 1, 1)],
         match_mode: MatchMode::Any,
         include_baseline: false,
+        deep_search: false,
         max_matches: 1,
     })
     .expect("baseline-highlight finder result");
@@ -479,6 +484,7 @@ fn sacrifice_sickle_requires_baseline_opt_in_and_is_labeled() {
         constraints: vec![wanted],
         match_mode: MatchMode::All,
         include_baseline: false,
+        deep_search: false,
         max_matches: 1,
     };
 
@@ -600,6 +606,7 @@ fn every_quest_exposes_searchable_rewards_including_baseline_samples() {
             .collect(),
         match_mode: MatchMode::All,
         include_baseline: true,
+        deep_search: false,
         max_matches: 1,
     })
     .expect("quest reward search");
@@ -622,6 +629,7 @@ fn search_generates_floors_for_the_deepest_constraint() {
         constraints: vec![constraint("PotionOfStrength", 1, 4)],
         match_mode: MatchMode::Any,
         include_baseline: false,
+        deep_search: false,
         max_matches: 1,
     })
     .expect("constraint depth should extend generation");
@@ -647,6 +655,7 @@ fn guaranteed_limited_drop_spawns_match_exact_item_searches() {
             constraints: vec![constraint(class_name, 1, 4)],
             match_mode: MatchMode::Any,
             include_baseline: false,
+            deep_search: false,
             max_matches: 1,
         })
         .expect("guaranteed limited drop search");
@@ -663,6 +672,7 @@ fn guaranteed_limited_drop_spawns_match_exact_item_searches() {
         constraints: vec![constraint("Torch", 21, 24)],
         match_mode: MatchMode::Any,
         include_baseline: false,
+        deep_search: false,
         max_matches: 1,
     })
     .expect("guaranteed Torch search");
@@ -695,6 +705,7 @@ fn puzzle_solution_potions_match_exact_item_searches() {
             constraints: vec![constraint(class_name, 1, 1)],
             match_mode: MatchMode::Any,
             include_baseline: false,
+            deep_search: false,
             max_matches: 1,
         })
         .expect("puzzle solution search");
@@ -824,6 +835,7 @@ fn search_does_not_wrap_at_total_seeds() {
         constraints: vec![constraint("NoSuchItemClass", 1, 1)],
         match_mode: MatchMode::Any,
         include_baseline: false,
+        deep_search: false,
         max_matches: 1,
     };
 
@@ -903,4 +915,59 @@ fn any_item_in_category_matches_exact_and_upgraded_items() {
         max_depth: 5,
     };
     assert!(matching_evidence(&[floor], &[any_wand], false).is_empty());
+}
+
+/// The seed-only Imp entries carry no concrete class, so without widening they
+/// can never satisfy a class constraint. Deep search fills them from the quest
+/// contract's drift window, which always contains the fresh-run draw.
+#[test]
+fn deep_search_widens_seed_only_imp_entries() {
+    let mut report = crate::analyze_seed_seed_only("0", 19).expect("analyze seed 0");
+
+    let imp_constrained = |report: &crate::SeedReport| -> Vec<Vec<String>> {
+        report
+            .floors
+            .iter()
+            .flat_map(|floor| &floor.items)
+            .filter(|group| group.source.as_deref() == Some("Imp.Quest"))
+            .flat_map(|group| &group.variants)
+            .filter(|item| item.prediction == crate::report::ItemPredictionKind::Constrained)
+            .map(|item| item.candidate_classes.clone())
+            .collect()
+    };
+
+    let before = imp_constrained(&report);
+    assert_eq!(before.len(), 6, "six seed-only Imp slots");
+    assert!(
+        before.iter().all(|classes| classes.is_empty()),
+        "seed-only Imp entries start with no candidates: {before:?}"
+    );
+
+    super::quest_candidates::widen_quest_candidates(&mut report.floors);
+    let after = imp_constrained(&report);
+    assert_eq!(after.len(), 6);
+    assert!(
+        after.iter().all(|classes| !classes.is_empty()),
+        "every slot gains candidates: {after:?}"
+    );
+    // The plate slot has no deck at all.
+    assert_eq!(after[4], vec!["PlateArmor".to_string()]);
+
+    // Each slot's window must contain the fresh-run draw for that slot.
+    let baseline: Vec<String> = report
+        .floors
+        .iter()
+        .flat_map(|floor| &floor.items)
+        .filter(|group| group.source.as_deref() == Some("Imp.Quest"))
+        .flat_map(|group| &group.variants)
+        .filter(|item| item.prediction == crate::report::ItemPredictionKind::Baseline)
+        .filter_map(|item| item.class_name.clone())
+        .collect();
+    assert_eq!(baseline.len(), 6);
+    for (slot, (classes, concrete)) in after.iter().zip(&baseline).enumerate() {
+        assert!(
+            classes.contains(concrete),
+            "slot {slot}: window {classes:?} must contain the fresh-run draw {concrete}"
+        );
+    }
 }

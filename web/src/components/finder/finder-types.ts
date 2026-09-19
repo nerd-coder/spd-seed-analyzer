@@ -53,6 +53,7 @@ export type FinderConfig = {
   matchMode: SeedSearchMatchMode
   maxMatches: number
   nonStop: boolean
+  deepSearch: boolean
 }
 
 export type FinderCompletionReason = 'scanned' | 'result-limit' | 'exhausted'

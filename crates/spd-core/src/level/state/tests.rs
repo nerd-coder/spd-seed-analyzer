@@ -340,6 +340,7 @@ fn real_shop_remains_constrained_after_inherited_generation_taint() {
         }],
         match_mode: crate::MatchMode::All,
         include_baseline: false,
+        deep_search: false,
         max_matches: 1,
     })
     .expect("search fixed shop armor");

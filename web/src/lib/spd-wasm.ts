@@ -304,9 +304,43 @@ export type QuestReport =
       contract: {
         spawn_depth_range: QuestDepthRange
         rewards: QuestRewardSelection
+        slots?: ImpRewardSlot[]
       }
       baseline: { spawn_depth: number }
     }
+
+export type ImpSlotRole =
+  | 'artifact'
+  | 'ring'
+  | 'weapon'
+  | 'missile'
+  | 'armor'
+  | 'wand'
+
+/** `Random.IntRange(min, max)`, or `Artifact.transferUpgrade(transfer)`. */
+export type ImpLevelRule =
+  | { type: 'range'; min: number; max: number }
+  | { type: 'transfer_upgrade'; transfer: number }
+
+export type ImpSlotCandidate = {
+  class_name: string
+  /** Deck-index offsets from the fresh baseline, nearest first. 0 is baseline. */
+  drifts: number[]
+  weight: number
+}
+
+export type ImpRewardSlot = {
+  slot: number
+  role: ImpSlotRole
+  baseline_class: string
+  level_rule: ImpLevelRule
+  enchanted: boolean
+  /** Set only when the class cannot vary (the plate armor slot). */
+  fixed_class?: string | null
+  candidates?: ImpSlotCandidate[]
+  /** Denominator for candidate weights. */
+  scenario_count: number
+}
 
 export type GuaranteedAppearance = {
   name: string
@@ -352,6 +386,11 @@ export type SeedSearchRequest = {
   constraints: SeedSearchConstraint[]
   matchMode: SeedSearchMatchMode
   includeBaseline?: boolean
+  /**
+   * Widen quest-reward matching to every class a deck-index shift can reach.
+   * A hit then means "reachable in some run", not "present in a fresh run".
+   */
+  deepSearch?: boolean
   maxMatches: number
 }
 

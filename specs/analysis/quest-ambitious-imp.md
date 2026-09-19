@@ -121,6 +121,62 @@ Tomahawk, Heavy Boomerang / Trident, Throwing Hammer, Force Cube
 (`Generator.java:397-412`). RING is twelve classes at weight 3
 (`Generator.java:544-558`).
 
+### Per-slot guarantees
+
+Seed-independent for every spawn (`Imp.java:318-353`):
+
+| Slot | Fixed | Upgrade | Enchant/glyph |
+|---|---|---|---|
+| 0 | ARTIFACT deck, or a RING draw once the deck is empty | `transferUpgrade(5)`, cap-scaled: stored `5` at cap 10, `3` at cap 5, `2` at cap 3 | none |
+| 1 | RING deck, never slot 0's class | `IntRange(2, 4)` | none |
+| 2 | WEP_T5 or MIS_T5 (`Random.Int(2)`) | `IntRange(2, 4)` | always `.enchant()` |
+| 3 | MIS_T4 or WEP_T4, opposite of slot 2 | `IntRange(3, 5)` | always `.enchant()` |
+| 4 | **always `PlateArmor`** — `new PlateArmor()`, no ARMOR deck | `IntRange(2, 4)` | always `inscribe()` |
+| 5 | WAND deck, `curCharges = maxCharges` | `IntRange(2, 4)` | none |
+
+All six are forced `cursed = false` (`Imp.java:351-353`). Enchant and glyph
+type weights are 50 / 40 / 10 common / uncommon / rare (`Weapon.java:611-620`,
+`Armor.java:862-871`). Levels are drawn on the city ambient stream, so each is
+uniform over its inclusive range for any given ambient position.
+
+### Deck draw order is a pure function of the seed
+
+`cat.seed` is assigned once in `Generator.fullReset` and `dropped` starts at 0
+(`Generator.java:624-635`). Each draw pushes that stream, burns `dropped`
+longs, picks with `Random.chances(cat.probs)`, then decrements the chosen
+weight (`Generator.java:712-728`). `probs` at draw *n* is therefore fully
+determined by draws `0..n`, and the whole ordered sequence is fixed by the
+seed alone.
+
+Consequence: run history cannot change *what* a category's *n*-th draw is, only
+*which index* the Imp's draw lands on. The candidate set for a slot is a window
+of that sequence around the fresh-baseline index.
+
+Verified two ways in `crates/spd-core/src/quests/imp/tests.rs`:
+
+- `deck_index_matches_real_draw` — for all five `imp_ring_deck` java-oracle
+  fixtures, replaying the RING deck from index 0 reproduces the ring actually
+  drawn at `ring_dropped_before`.
+
+| Seed | `ring_dropped_before` | Sequence index | Oracle ring |
+|---|---|---|---|
+| `AAA-AAA-AAA` | 4 | `RingOfHaste` | `RingOfHaste` |
+| `ABC-DEF-GHI` | 4 | `RingOfElements` | `RingOfElements` |
+| `GFX-PZH-DCH` | 1 | `RingOfArcana` | `RingOfArcana` |
+| `HKT-JZN-XQQ` | 4 | `RingOfFuror` | `RingOfFuror` |
+| `ZZZ-ZZZ-ZZZ` | 3 | `RingOfForce` | `RingOfForce` |
+
+- `drift_matches_profile_replay_in_both_directions` — replaying with a held
+  Mimic Tooth moves the index and the sequence still predicts the draw. Seed 42
+  moves **backward**, 5 → 3 (`RingOfArcana` → `RingOfSharpshooting`), so a
+  held trinket can remove deck-using sites as well as add them. Candidate
+  windows must therefore extend both ways.
+
+Deck sizes bound how far a window can travel before repeating: ARTIFACT is 11
+cards at weight 1 (a permutation, so every drift is a different artifact), RING
+12 × 3, WAND 13 × 3, WEP_T4/WEP_T5 7 × 2, MIS_T4/MIS_T5 3 × 3
+(`Generator.java:452-474, 521-535, 544-576`).
+
 ### Pool exists without entering the vault
 
 `rewardOptions` is filled during city `initRooms`. The vault is a later

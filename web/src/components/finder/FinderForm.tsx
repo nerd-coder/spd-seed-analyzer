@@ -64,6 +64,7 @@ export function FinderForm({
     maxMatches,
     matchMode,
     nonStop,
+    deepSearch,
     constraints,
   } = useStore($finderForm)
 
@@ -205,6 +206,7 @@ export function FinderForm({
       matchMode,
       maxMatches: Number(maxMatches),
       nonStop,
+      deepSearch,
     })
   }
 
@@ -294,6 +296,38 @@ export function FinderForm({
               disabled={running}
               onCheckedChange={(checked) => updateState({ nonStop: checked })}
               aria-label="Don't let me down"
+            />
+          </Field>
+          <Field orientation="horizontal" className="w-auto gap-2">
+            <div className="flex flex-1 items-center gap-1">
+              <FieldLabel htmlFor="finder-deep-search">Deep search</FieldLabel>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-foreground focus-visible:ring-ring rounded-sm focus-visible:ring-2 focus-visible:outline-none"
+                    aria-label="About Deep search mode"
+                  >
+                    <InfoIcon className="size-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Also match quest rewards a player&apos;s earlier history could
+                  shift into range, not just the fresh-run draw. Returns many
+                  more seeds, and a hit means &ldquo;reachable in some
+                  run&rdquo; rather than guaranteed.
+                </TooltipContent>
+              </Tooltip>
+            </div>
+            <Switch
+              id="finder-deep-search"
+              size="sm"
+              checked={deepSearch}
+              disabled={running}
+              onCheckedChange={(checked) =>
+                updateState({ deepSearch: checked })
+              }
+              aria-label="Deep search"
             />
           </Field>
         </div>

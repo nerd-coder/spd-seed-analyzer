@@ -15,6 +15,7 @@ export type FinderFormState = {
   maxMatches: FinderNumericInput
   matchMode: SeedSearchMatchMode
   nonStop: boolean
+  deepSearch: boolean
   constraints: FinderConstraint[]
 }
 
@@ -26,6 +27,7 @@ export const $finderForm = new AppStore<FinderFormState>({
   maxMatches: 10,
   matchMode: 'all',
   nonStop: false,
+  deepSearch: false,
   constraints: [
     {
       id: 1,

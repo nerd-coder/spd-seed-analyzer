@@ -108,11 +108,76 @@ pub struct TrollBlacksmithQuestBaseline {
 pub struct AmbitiousImpQuestContract {
     pub spawn_depth_range: QuestDepthRange,
     pub rewards: QuestRewardSelection,
+    /// The six take-out slots, in `rewardOptions` order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub slots: Vec<ImpRewardSlot>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub struct AmbitiousImpQuestBaseline {
     pub spawn_depth: u32,
+}
+
+/// Which `Imp.Quest.spawn` draw site fills a reward slot (`Imp.java:318-350`).
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ImpSlotRole {
+    /// `Generator.randomArtifact()`, or a RING-deck draw once artifacts run out.
+    Artifact,
+    /// `Generator.random(RING)`, re-drawn while it duplicates the artifact slot.
+    Ring,
+    Weapon,
+    Missile,
+    /// `new PlateArmor()` — no deck, no `Armor.random()`.
+    Armor,
+    Wand,
+}
+
+/// How a slot's upgrade level is fixed. Both variants are seed-independent.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum ImpLevelRule {
+    /// `Random.IntRange(min, max)` — uniform over the inclusive range.
+    Range { min: i32, max: i32 },
+    /// `Artifact.transferUpgrade(transfer)` — scaled by each artifact's level
+    /// cap, so the stored level depends on the drawn class.
+    TransferUpgrade { transfer: i32 },
+}
+
+/// One class a slot can hold, with the deck-index drift that produces it.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ImpSlotCandidate {
+    pub class_name: String,
+    /// Deck-index offsets from the fresh baseline draw that yield this class,
+    /// nearest first. `0` is the baseline itself.
+    pub drifts: Vec<i32>,
+    /// Number of enumerated offsets yielding this class. Divide by the slot's
+    /// `scenario_count` for a share of the enumerated window.
+    pub weight: u32,
+}
+
+/// Per-slot projection for the six take-out options.
+///
+/// `candidates` is a share of an *enumerated deck-drift window*, not an
+/// empirical player frequency. Only `level_rule`, `enchanted`, and
+/// `fixed_class` are seed-independent guarantees.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ImpRewardSlot {
+    pub slot: u8,
+    pub role: ImpSlotRole,
+    /// The class drawn by the fresh/no-history replay.
+    pub baseline_class: String,
+    pub level_rule: ImpLevelRule,
+    /// Slot always carries an enchantment or glyph (50/40/10 common/uncommon/rare).
+    pub enchanted: bool,
+    /// Set when the class cannot vary at all (the plate armor slot).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fixed_class: Option<String>,
+    /// Empty when `fixed_class` is set.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub candidates: Vec<ImpSlotCandidate>,
+    /// Denominator for `ImpSlotCandidate::weight`.
+    pub scenario_count: u32,
 }
 
 #[cfg(test)]
@@ -166,6 +231,7 @@ mod tests {
                 contract: AmbitiousImpQuestContract {
                     spawn_depth_range: depth_range,
                     rewards: rewards(),
+                    slots: Vec::new(),
                 },
                 baseline: AmbitiousImpQuestBaseline { spawn_depth: 17 },
             },
