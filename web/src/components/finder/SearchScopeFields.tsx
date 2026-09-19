@@ -7,7 +7,6 @@ import {
   InputGroupInput,
 } from '@/components/ui/input-group'
 import { Kbd } from '@/components/ui/kbd'
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import {
   Popover,
   PopoverContent,
@@ -25,7 +24,6 @@ import {
   type FinderNumericInput,
   isIntegerInRange,
   MAX_CANDIDATES,
-  MAX_FLOORS,
   MAX_RESULTS,
   MIN_CANDIDATES,
   TOTAL_SEEDS,
@@ -34,13 +32,11 @@ import {
 type SearchScopeFieldsProps = {
   startSeed: FinderNumericInput
   candidateCount: FinderNumericInput
-  floors: number
   maxMatches: FinderNumericInput
   running: boolean
   attempted: boolean
   onStartSeedChange: (value: FinderNumericInput) => void
   onCandidateCountChange: (value: FinderNumericInput) => void
-  onFloorsChange: (value: number) => void
   onMaxMatchesChange: (value: FinderNumericInput) => void
   onRandomStartSeed: () => void
 }
@@ -52,13 +48,11 @@ function inputNumber(value: string, valueAsNumber: number): FinderNumericInput {
 export function SearchScopeFields({
   startSeed,
   candidateCount,
-  floors,
   maxMatches,
   running,
   attempted,
   onStartSeedChange,
   onCandidateCountChange,
-  onFloorsChange,
   onMaxMatchesChange,
   onRandomStartSeed,
 }: SearchScopeFieldsProps) {
@@ -147,7 +141,7 @@ export function SearchScopeFields({
           <FieldError>Use an integer from 0 to 5,429,503,678,975.</FieldError>
         ) : null}
       </Field>
-      <div className="grid grid-cols-3 items-start gap-2">
+      <div className="grid grid-cols-2 items-start gap-2">
         <Field
           data-invalid={attempted && candidateCountInvalid ? true : undefined}
           data-disabled={running ? true : undefined}
@@ -179,24 +173,6 @@ export function SearchScopeFields({
               {MAX_CANDIDATES.toLocaleString()} candidates.
             </FieldError>
           ) : null}
-        </Field>
-        <Field data-disabled={running ? true : undefined}>
-          <FieldLabel htmlFor="finder-floors">Depth</FieldLabel>
-          <NativeSelect
-            id="finder-floors"
-            value={String(floors)}
-            disabled={running}
-            onChange={(event) => onFloorsChange(Number(event.target.value))}
-            className="w-full"
-          >
-            {Array.from({ length: MAX_FLOORS }, (_, index) => index + 1).map(
-              (depth) => (
-                <NativeSelectOption key={depth} value={depth}>
-                  {depth}
-                </NativeSelectOption>
-              )
-            )}
-          </NativeSelect>
         </Field>
         <Field
           data-invalid={attempted && maxMatchesInvalid ? true : undefined}

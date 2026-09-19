@@ -8,11 +8,28 @@ const APP_STORAGE = {
 async function configureNoMatchSearch(page: Page, startSeed: string) {
   await page.getByRole('spinbutton', { name: 'Start seed' }).fill(startSeed)
   await page.getByRole('spinbutton', { name: 'Candidates' }).fill('10')
-  await page.getByRole('combobox', { name: 'Depth' }).selectOption('1')
+  await page.getByLabel('Item 1 depth').selectOption('1')
   await page.getByRole('spinbutton', { name: 'Results' }).fill('1')
   await page.getByLabel('Item 1 name').selectOption('RingOfMight')
   await page.getByLabel('Item 1 upgrade level').selectOption('4')
 }
+
+test('finder item constraints keep independent depths', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
+  await page.addInitScript((storage) => {
+    localStorage.clear()
+    localStorage.setItem(storage.mode, 'finder')
+    localStorage.setItem(storage.theme, 'light')
+  }, APP_STORAGE)
+
+  await page.goto('/')
+  await page.getByLabel('Item 1 depth').selectOption('4')
+  await page.getByRole('button', { name: 'Add item' }).click()
+  await expect(page.getByLabel('Item 2 depth')).toHaveValue('5')
+  await page.getByLabel('Item 2 depth').selectOption('12')
+  await expect(page.getByLabel('Item 1 depth')).toHaveValue('4')
+  await expect(page.getByLabel('Item 2 depth')).toHaveValue('12')
+})
 
 async function startAndWait(page: Page) {
   await page.getByRole('button', { name: 'Find' }).click()
@@ -60,7 +77,7 @@ test('finder keeps its form and reuses only result-less search tabs', async ({
   await page
     .getByRole('spinbutton', { name: 'Start seed' })
     .fill('3293380032588')
-  await page.getByRole('combobox', { name: 'Depth' }).selectOption('4')
+  await page.getByLabel('Item 1 depth').selectOption('4')
   await page.getByLabel('Item 1 name').selectOption('RingOfElements')
   await page.getByLabel('Item 1 upgrade level').selectOption('any')
   await startAndWait(page)
@@ -100,7 +117,7 @@ test('finder searches successfully when item name is set to any', async ({
     .getByRole('spinbutton', { name: 'Start seed' })
     .fill('3293380032588')
   await page.getByRole('spinbutton', { name: 'Candidates' }).fill('10')
-  await page.getByRole('combobox', { name: 'Depth' }).selectOption('4')
+  await page.getByLabel('Item 1 depth').selectOption('4')
   await page.getByRole('spinbutton', { name: 'Results' }).fill('1')
   await page.getByLabel('Item 1 name').selectOption('any')
   await page.getByLabel('Item 1 upgrade level').selectOption('any')
@@ -218,7 +235,7 @@ test('finder search results survive page reload', async ({ page }) => {
     .getByRole('spinbutton', { name: 'Start seed' })
     .fill('3293380032588')
   await page.getByRole('spinbutton', { name: 'Candidates' }).fill('10')
-  await page.getByRole('combobox', { name: 'Depth' }).selectOption('4')
+  await page.getByLabel('Item 1 depth').selectOption('4')
   await page.getByRole('spinbutton', { name: 'Results' }).fill('1')
   await page.getByLabel('Item 1 name').selectOption('RingOfElements')
   await page.getByLabel('Item 1 upgrade level').selectOption('any')
@@ -262,7 +279,7 @@ test('ongoing search survives reload', async ({ page }) => {
     .getByRole('spinbutton', { name: 'Start seed' })
     .fill('3293380032588')
   await page.getByRole('spinbutton', { name: 'Candidates' }).fill('1000')
-  await page.getByRole('combobox', { name: 'Depth' }).selectOption('4')
+  await page.getByLabel('Item 1 depth').selectOption('4')
   await page.getByRole('spinbutton', { name: 'Results' }).fill('5')
   await page.getByLabel('Item 1 name').selectOption('RingOfWealth')
   await page.getByLabel('Item 1 upgrade level').selectOption('any')
@@ -300,7 +317,7 @@ test('shows confirmation dialog when reloading during an ongoing search', async 
   await page.goto('/')
   await page.getByRole('spinbutton', { name: 'Start seed' }).fill('1000')
   await page.getByRole('spinbutton', { name: 'Candidates' }).fill('1000')
-  await page.getByRole('combobox', { name: 'Depth' }).selectOption('20')
+  await page.getByLabel('Item 1 depth').selectOption('20')
   await page.getByRole('spinbutton', { name: 'Results' }).fill('10')
   await page.getByLabel('Item 1 name').selectOption('RingOfWealth')
   await page.getByLabel('Item 1 upgrade level').selectOption('4')

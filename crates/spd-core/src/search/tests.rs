@@ -86,6 +86,20 @@ fn constraint(class_name: &str, min_depth: u32, max_depth: u32) -> ItemConstrain
     }
 }
 
+#[test]
+fn generation_floors_uses_the_deepest_constraint() {
+    let mut value = request(
+        vec![
+            constraint("RingOfWealth", 1, 5),
+            constraint("WandOfLightning", 1, 17),
+        ],
+        MatchMode::All,
+    );
+    value.floors = 4;
+    assert_eq!(value.generation_floors(), 17);
+    assert!(value.validate().is_ok());
+}
+
 fn request(constraints: Vec<ItemConstraint>, match_mode: MatchMode) -> SeedSearchRequest {
     SeedSearchRequest {
         start_seed: 0,
@@ -174,6 +188,12 @@ fn validation_rejects_unbounded_and_malformed_requests() {
     ));
 
     value.constraints = vec![constraint("Food", 2, 1)];
+    assert!(matches!(
+        value.validate(),
+        Err(SearchError::InvalidDepthRange { index: 0 })
+    ));
+
+    value.constraints = vec![constraint("Food", 1, MAX_SEARCH_FLOORS + 1)];
     assert!(matches!(
         value.validate(),
         Err(SearchError::InvalidDepthRange { index: 0 })
@@ -591,6 +611,24 @@ fn every_quest_exposes_searchable_rewards_including_baseline_samples() {
         .source
         .as_deref()
         .is_some_and(|source| quest_sources.contains(&source))));
+}
+
+#[test]
+fn search_generates_floors_for_the_deepest_constraint() {
+    let result = search_seeds(&SeedSearchRequest {
+        start_seed: 0,
+        candidate_count: 64,
+        floors: 1,
+        constraints: vec![constraint("PotionOfStrength", 1, 4)],
+        match_mode: MatchMode::Any,
+        include_baseline: false,
+        max_matches: 1,
+    })
+    .expect("constraint depth should extend generation");
+    assert!(
+        !result.matches.is_empty(),
+        "missing PotionOfStrength spawn match when floors is shallower than the constraint"
+    );
 }
 
 #[test]

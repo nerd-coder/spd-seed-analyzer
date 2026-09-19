@@ -36,7 +36,7 @@ pub use run::{dungeon_from_run, init_run, RunState};
 pub use search::{
     search_seeds, BaselineItemEvidence, ItemConstraint, ItemMatchEvidence, MatchMode, SearchError,
     SeedMatch, SeedSearchRequest, SeedSearchResult, MAX_SEARCH_CANDIDATES, MAX_SEARCH_CONSTRAINTS,
-    MAX_SEARCH_MATCHES,
+    MAX_SEARCH_FLOORS, MAX_SEARCH_MATCHES,
 };
 pub use trinkets::{
     ArtifactEvent, ArtifactEventAction, ArtifactKind, Challenge, ClaimState, MapProfile,

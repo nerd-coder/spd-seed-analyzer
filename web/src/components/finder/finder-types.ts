@@ -9,6 +9,7 @@ export const MIN_CANDIDATES = 10
 export const MAX_CANDIDATES = 10_000
 export const MAX_CONSTRAINTS = 32
 export const MAX_FLOORS = 26
+export const DEFAULT_FLOORS = 5
 export const MAX_RESULTS = 100
 
 export function randomStartSeed(): number {
@@ -30,6 +31,15 @@ export function isIntegerInRange(
     Number.isInteger(value) &&
     value >= min &&
     value <= max
+  )
+}
+
+export function generationFloors(
+  constraints: Pick<SeedSearchConstraint, 'maxDepth'>[]
+): number {
+  return constraints.reduce(
+    (floors, constraint) => Math.max(floors, constraint.maxDepth),
+    1
   )
 }
 

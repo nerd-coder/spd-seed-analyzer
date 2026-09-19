@@ -48,6 +48,28 @@ fn item_quantity_represents_distinct_matchable_occurrences() {
 }
 
 #[test]
+fn constraints_use_independent_depth_windows() {
+    let floors = [
+        exact_floor(2, &[("RingOfWealth", 0)]),
+        exact_floor(8, &[("WandOfLightning", 0)]),
+    ];
+    let early_ring = constraint("RingOfWealth", 1, 5);
+    let late_wand = constraint("WandOfLightning", 1, 10);
+
+    let evidence = matching_evidence(&floors, &[early_ring.clone(), late_wand], false);
+    assert_eq!(evidence.len(), 2);
+    assert_eq!(evidence[0].class_name.as_deref(), Some("RingOfWealth"));
+    assert_eq!(evidence[0].depth, 2);
+    assert_eq!(evidence[1].class_name.as_deref(), Some("WandOfLightning"));
+    assert_eq!(evidence[1].depth, 8);
+
+    let wand_too_shallow = constraint("WandOfLightning", 1, 5);
+    let evidence = matching_evidence(&floors, &[early_ring, wand_too_shallow], false);
+    assert_eq!(evidence.len(), 1);
+    assert_eq!(evidence[0].class_name.as_deref(), Some("RingOfWealth"));
+}
+
+#[test]
 fn alternative_variants_do_not_count_as_multiple_items() {
     let mut floor = exact_floor(3, &[("RingOfWealth", 2)]);
     let mut alternative = floor.items[0].variants[0].clone();

@@ -14,6 +14,8 @@ pub const MAX_SEARCH_CANDIDATES: u32 = 10_000;
 pub const MAX_SEARCH_CONSTRAINTS: usize = 32;
 /// Maximum matching seeds returned by one search call.
 pub const MAX_SEARCH_MATCHES: u32 = 100;
+/// Maximum depth generated or accepted on a constraint window.
+pub const MAX_SEARCH_FLOORS: u32 = 26;
 
 const PARTIAL_SEARCH_MESSAGE: &str = "Search results use the partial analyzer; generated loot is incomplete and may not match the pinned game.";
 
@@ -117,7 +119,7 @@ pub enum SearchError {
     StartSeedOutOfRange,
     #[error("candidateCount must be between 1 and {MAX_SEARCH_CANDIDATES}")]
     CandidateCountOutOfRange,
-    #[error("floors must be between 1 and 26")]
+    #[error("floors must be between 1 and {MAX_SEARCH_FLOORS}")]
     FloorsOutOfRange,
     #[error("constraints must contain at least one item constraint")]
     EmptyConstraints,
@@ -129,7 +131,9 @@ pub enum SearchError {
     ClassNameTooLong { index: usize },
     #[error("constraints[{index}].minLevel must be between 1 and 4 when present")]
     InvalidLevel { index: usize },
-    #[error("constraints[{index}] depths must satisfy 1 <= minDepth <= maxDepth <= floors")]
+    #[error(
+        "constraints[{index}] depths must satisfy 1 <= minDepth <= maxDepth <= {MAX_SEARCH_FLOORS}"
+    )]
     InvalidDepthRange { index: usize },
     #[error("maxMatches must be between 1 and {MAX_SEARCH_MATCHES}")]
     MaxMatchesOutOfRange,
@@ -149,7 +153,7 @@ impl SeedSearchRequest {
         if !(1..=MAX_SEARCH_CANDIDATES).contains(&self.candidate_count) {
             return Err(SearchError::CandidateCountOutOfRange);
         }
-        if !(1..=26).contains(&self.floors) {
+        if !(1..=MAX_SEARCH_FLOORS).contains(&self.floors) {
             return Err(SearchError::FloorsOutOfRange);
         }
         if self.constraints.is_empty() {
@@ -177,9 +181,9 @@ impl SeedSearchRequest {
             {
                 return Err(SearchError::InvalidLevel { index });
             }
-            if constraint.min_depth == 0
+            if !(1..=MAX_SEARCH_FLOORS).contains(&constraint.min_depth)
+                || !(1..=MAX_SEARCH_FLOORS).contains(&constraint.max_depth)
                 || constraint.min_depth > constraint.max_depth
-                || constraint.max_depth > self.floors
             {
                 return Err(SearchError::InvalidDepthRange { index });
             }
@@ -188,6 +192,17 @@ impl SeedSearchRequest {
             return Err(SearchError::MaxMatchesOutOfRange);
         }
         Ok(())
+    }
+
+    /// Floors generated for each candidate: enough to cover every constraint
+    /// window, and at least the requested `floors` value.
+    pub fn generation_floors(&self) -> u32 {
+        self.constraints
+            .iter()
+            .map(|constraint| constraint.max_depth)
+            .max()
+            .unwrap_or(self.floors)
+            .max(self.floors)
     }
 }
 
@@ -204,7 +219,7 @@ pub fn search_seeds(request: &SeedSearchRequest) -> Result<SeedSearchResult, Sea
             break;
         }
 
-        let report = analyze_seed_seed_only(&seed.to_string(), request.floors)
+        let report = analyze_seed_seed_only(&seed.to_string(), request.generation_floors())
             .map_err(|source| SearchError::Analyze { seed, source })?;
         candidates_scanned += 1;
 

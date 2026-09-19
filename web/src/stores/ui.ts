@@ -1,4 +1,5 @@
 import {
+  DEFAULT_FLOORS,
   type FinderConstraint,
   type FinderNumericInput,
   randomStartSeed,
@@ -11,7 +12,6 @@ export type FinderFormState = {
   cancelCooldown: boolean
   startSeed: FinderNumericInput
   candidateCount: FinderNumericInput
-  floors: number
   maxMatches: FinderNumericInput
   matchMode: SeedSearchMatchMode
   nonStop: boolean
@@ -23,7 +23,6 @@ export const $finderForm = new AppStore<FinderFormState>({
   cancelCooldown: false,
   startSeed: randomStartSeed(),
   candidateCount: 100,
-  floors: 20,
   maxMatches: 10,
   matchMode: 'all',
   nonStop: false,
@@ -34,7 +33,7 @@ export const $finderForm = new AppStore<FinderFormState>({
       className: 'RingOfWealth',
       minLevel: null,
       minDepth: 1,
-      maxDepth: 20,
+      maxDepth: DEFAULT_FLOORS,
     },
   ],
 })

@@ -24,11 +24,14 @@ import {
 import { $finderForm } from '@/stores/app'
 import { ConstraintEditor } from './ConstraintEditor'
 import {
+  DEFAULT_FLOORS,
   type FinderConfig,
   type FinderConstraint,
+  generationFloors,
   isIntegerInRange,
   MAX_CANDIDATES,
   MAX_CONSTRAINTS,
+  MAX_FLOORS,
   MAX_RESULTS,
   MIN_CANDIDATES,
   randomStartSeed,
@@ -58,7 +61,6 @@ export function FinderForm({
     cancelCooldown,
     startSeed,
     candidateCount,
-    floors,
     maxMatches,
     matchMode,
     nonStop,
@@ -83,8 +85,8 @@ export function FinderForm({
             constraint.className.length > 128)) ||
         (constraint.minLevel !== null &&
           !isIntegerInRange(constraint.minLevel, 1, 4)) ||
-        !isIntegerInRange(constraint.minDepth, 1, floors) ||
-        !isIntegerInRange(constraint.maxDepth, 1, floors) ||
+        !isIntegerInRange(constraint.minDepth, 1, MAX_FLOORS) ||
+        !isIntegerInRange(constraint.maxDepth, 1, MAX_FLOORS) ||
         constraint.minDepth > constraint.maxDepth
     )
   const invalid =
@@ -140,16 +142,6 @@ export function FinderForm({
     return () => window.removeEventListener('keydown', handleShortcut)
   }, [cancelCooldown, randomizeStartSeed, running])
 
-  function updateFloors(value: number) {
-    updateState({
-      floors: value,
-      constraints: constraints.map((constraint) => ({
-        ...constraint,
-        maxDepth: value,
-      })),
-    })
-  }
-
   function updateConstraint(
     id: number,
     patch: Partial<Omit<FinderConstraint, 'id'>>
@@ -176,7 +168,7 @@ export function FinderForm({
           className: 'RingOfWealth',
           minLevel: null,
           minDepth: 1,
-          maxDepth: floors,
+          maxDepth: DEFAULT_FLOORS,
         },
       ],
     })
@@ -200,7 +192,7 @@ export function FinderForm({
     onSearch({
       startSeed: Number(startSeed),
       candidateCount: Number(candidateCount),
-      floors,
+      floors: generationFloors(constraints),
       constraints: constraints.map(
         ({ itemGroup, className, minLevel, minDepth, maxDepth }) => ({
           itemGroup,
@@ -238,7 +230,6 @@ export function FinderForm({
         <SearchScopeFields
           startSeed={startSeed}
           candidateCount={candidateCount}
-          floors={floors}
           maxMatches={maxMatches}
           running={running}
           attempted={attempted}
@@ -246,7 +237,6 @@ export function FinderForm({
           onCandidateCountChange={(value) =>
             updateState({ candidateCount: value })
           }
-          onFloorsChange={updateFloors}
           onMaxMatchesChange={(value) => updateState({ maxMatches: value })}
           onRandomStartSeed={randomizeStartSeed}
         />

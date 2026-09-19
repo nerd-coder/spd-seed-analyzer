@@ -1,9 +1,11 @@
 import { PlusIcon, TrashIcon } from '@phosphor-icons/react'
+import type { ReactNode } from 'react'
 import { ItemIcon } from '@/components/ItemIcon'
 import { Button } from '@/components/ui/button'
 import { Field, FieldGroup, FieldLegend, FieldSet } from '@/components/ui/field'
 import { InputGroup } from '@/components/ui/input-group'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { upgradeLevelClass } from '@/lib/upgrade'
 import {
   FINDER_GROUP_ORDER,
   type FinderItemGroup,
@@ -13,7 +15,11 @@ import {
   itemsForGroup,
   toCoreCategory,
 } from './finder-items'
-import { type FinderConstraint, MAX_CONSTRAINTS } from './finder-types'
+import {
+  type FinderConstraint,
+  MAX_CONSTRAINTS,
+  MAX_FLOORS,
+} from './finder-types'
 
 type ConstraintEditorProps = {
   constraints: FinderConstraint[]
@@ -24,6 +30,47 @@ type ConstraintEditorProps = {
 }
 
 const UPGRADE_LEVELS = [1, 2, 3, 4] as const
+const DEPTHS = Array.from({ length: MAX_FLOORS }, (_, index) => index + 1)
+const OVERLAY_SELECT_CLASS =
+  'absolute inset-0 h-full w-full cursor-pointer opacity-0 [&_[data-slot=native-select]]:h-full [&_[data-slot=native-select]]:border-0 [&_[data-slot=native-select]]:bg-transparent [&_[data-slot=native-select-icon]]:hidden'
+
+type CompactOverlaySelectProps = {
+  id?: string
+  value: string
+  display: ReactNode
+  disabled?: boolean
+  'aria-label': string
+  onChange: (value: string) => void
+  children: ReactNode
+}
+
+function CompactOverlaySelect({
+  id,
+  value,
+  display,
+  disabled,
+  'aria-label': ariaLabel,
+  onChange,
+  children,
+}: CompactOverlaySelectProps) {
+  return (
+    <div className="relative flex w-10 shrink-0 self-stretch items-center justify-center border-l py-0 has-[select:disabled]:opacity-50">
+      <span className="pointer-events-none text-xs tabular-nums whitespace-nowrap">
+        {display}
+      </span>
+      <NativeSelect
+        id={id}
+        value={value}
+        disabled={disabled}
+        aria-label={ariaLabel}
+        onChange={(event) => onChange(event.target.value)}
+        className={OVERLAY_SELECT_CLASS}
+      >
+        {children}
+      </NativeSelect>
+    </div>
+  )
+}
 
 export function ConstraintEditor({
   constraints,
@@ -52,7 +99,7 @@ export function ConstraintEditor({
             >
               <div className="flex items-center gap-1">
                 <InputGroup className="min-w-0 flex-1">
-                  <div className="relative flex w-10 shrink-0 items-center justify-center border-r py-0">
+                  <div className="relative flex w-10 shrink-0 self-stretch items-center justify-center border-r py-0">
                     <ItemIcon
                       classNameItem={constraint.className ?? undefined}
                       category={
@@ -96,7 +143,7 @@ export function ConstraintEditor({
                             : null,
                         })
                       }}
-                      className="absolute inset-0 h-full w-full opacity-0 cursor-pointer [&_[data-slot=native-select]]:h-full [&_[data-slot=native-select]]:border-0 [&_[data-slot=native-select]]:bg-transparent"
+                      className={OVERLAY_SELECT_CLASS}
                     >
                       {FINDER_GROUP_ORDER.map((groupLabel) => (
                         <NativeSelectOption key={groupLabel} value={groupLabel}>
@@ -139,23 +186,30 @@ export function ConstraintEditor({
                   </NativeSelect>
 
                   {upgradeable ? (
-                    <NativeSelect
+                    <CompactOverlaySelect
                       value={
                         constraint.minLevel === null
                           ? 'any'
                           : String(constraint.minLevel)
                       }
+                      display={
+                        constraint.minLevel === null ? (
+                          'Any'
+                        ) : (
+                          <span
+                            className={upgradeLevelClass(constraint.minLevel)}
+                          >
+                            +{constraint.minLevel}
+                          </span>
+                        )
+                      }
                       disabled={running}
                       aria-label={`Item ${index + 1} upgrade level`}
-                      onChange={(event) =>
+                      onChange={(value) =>
                         onUpdate(constraint.id, {
-                          minLevel:
-                            event.target.value === 'any'
-                              ? null
-                              : Number(event.target.value),
+                          minLevel: value === 'any' ? null : Number(value),
                         })
                       }
-                      className="w-20 shrink-0 border-l [&_[data-slot=native-select]]:border-0 [&_[data-slot=native-select]]:bg-transparent [&_[data-slot=native-select]]:focus-visible:ring-0"
                     >
                       <NativeSelectOption value="any">Any</NativeSelectOption>
                       {UPGRADE_LEVELS.map((level) => (
@@ -163,8 +217,24 @@ export function ConstraintEditor({
                           ≥ +{level}
                         </NativeSelectOption>
                       ))}
-                    </NativeSelect>
+                    </CompactOverlaySelect>
                   ) : null}
+
+                  <CompactOverlaySelect
+                    value={String(constraint.maxDepth)}
+                    display={`↑${constraint.maxDepth}`}
+                    disabled={running}
+                    aria-label={`Item ${index + 1} depth`}
+                    onChange={(value) =>
+                      onUpdate(constraint.id, { maxDepth: Number(value) })
+                    }
+                  >
+                    {DEPTHS.map((depth) => (
+                      <NativeSelectOption key={depth} value={depth}>
+                        ↑{depth}
+                      </NativeSelectOption>
+                    ))}
+                  </CompactOverlaySelect>
                 </InputGroup>
 
                 <Button
