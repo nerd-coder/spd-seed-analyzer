@@ -198,7 +198,41 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
                     item_source: 'Imp.Quest',
                     option_count: 6,
                     selected_count: 1,
+                    favor_requirement: 4000,
                   },
+                  slots: [
+                    {
+                      slot: 0,
+                      role: 'artifact',
+                      baseline_class: 'SandalsOfNature',
+                      level_rule: { type: 'transfer_upgrade', transfer: 5 },
+                      enchanted: false,
+                      scenario_count: 3,
+                      candidates: [
+                        {
+                          class_name: 'SandalsOfNature',
+                          drifts: [0],
+                          weight: 1,
+                        },
+                        {
+                          class_name: 'HornOfPlenty',
+                          drifts: [-1],
+                          weight: 1,
+                        },
+                        { class_name: 'SkeletonKey', drifts: [1], weight: 1 },
+                      ],
+                    },
+                    {
+                      slot: 4,
+                      role: 'armor',
+                      baseline_class: 'PlateArmor',
+                      level_rule: { type: 'range', min: 2, max: 4 },
+                      enchanted: true,
+                      fixed_class: 'PlateArmor',
+                      scenario_count: 1,
+                      candidates: [],
+                    },
+                  ],
                 },
                 baseline: { spawn_depth: 19 },
               },
@@ -291,12 +325,38 @@ test('quest cards prefer concrete baselines and keep the universal warning visib
     'The floor 20/21 Imp shop is not guaranteed. It appears only after completing the vault with score > 2000.'
   )
   await expect(imp).not.toContainText(/monk|golem|token|cursed \+2/i)
-  await expect(imp.getByText('Baseline rewards')).toBeVisible()
-  await expect(imp.getByRole('listitem')).toHaveCount(1)
+  await expect(imp).toContainText(
+    'Keeping one of these six requires leaving with the Imp Statue'
+  )
+  await expect(imp.getByText('Rewards', { exact: true })).toBeVisible()
   await expect(imp.getByText('artifact or ring', { exact: true })).toHaveCount(
     0
   )
   await expect(imp.getByText('OR', { exact: true })).toHaveCount(0)
+  await expect(imp).not.toContainText('Per-slot outlook')
+  await expect(imp).not.toContainText(/share of ±/)
+
+  await imp.getByRole('button', { name: 'Per-slot reward outlook' }).click()
+  const outlook = page
+    .getByRole('dialog')
+    .filter({ hasText: 'Per-slot outlook' })
+  await expect(outlook).toBeVisible()
+  await expect(outlook).toContainText('These shares cover a ±1 shift')
+  await expect(outlook).toContainText('+5 transferred')
+  const artifactRows = outlook
+    .getByRole('listitem')
+    .first()
+    .getByRole('listitem')
+  await expect(artifactRows).toHaveCount(3)
+  await expect(artifactRows.first()).toContainText('Sandals Of Nature')
+  await expect(artifactRows.first()).toContainText('fresh run')
+  await expect(artifactRows.first()).toContainText('baseline')
+  await expect(artifactRows.nth(1)).toContainText('−1')
+  await expect(artifactRows.nth(2)).toContainText('+1')
+  // The plate slot has no deck, so it reports a single fixed class.
+  await expect(outlook).toContainText('Plate Armor')
+  await expect(outlook).toContainText('100%')
+  await expect(outlook).toContainText('glyphed')
   expect(browserErrors).toEqual([])
 })
 
@@ -315,8 +375,9 @@ test('quest cards fall back to the universal reward entries without a baseline',
 
   await page.getByRole('tab', { name: /^City/ }).click()
   const imp = page.locator('[data-quest-type="ambitious_imp"]')
+  await expect(imp.getByText('Rewards', { exact: true })).toBeVisible()
   await expect(
-    imp.getByText('Take-out options (choose 1 of 6)', { exact: true })
+    imp.getByRole('button', { name: 'Per-slot reward outlook' })
   ).toBeVisible()
   await expect(imp).toContainText(
     'The floor 20/21 Imp shop is not guaranteed. It appears only after completing the vault with score > 2000.'

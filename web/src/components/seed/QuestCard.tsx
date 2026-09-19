@@ -1,4 +1,5 @@
 import { FloorItemList } from '@/components/seed/FloorItemSections'
+import { ImpRewardDistribution } from '@/components/seed/ImpRewardDistribution'
 import { QuestBranchMap } from '@/components/seed/QuestBranchMap'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -74,12 +75,19 @@ function shopGateCopy(quest: QuestReport) {
   return 'The floor 20/21 Imp shop is not guaranteed. It appears only after completing the vault with score > 2000.'
 }
 
+/**
+ * Every option is +2…+5, and `EscapeCrystal` only lets an item above +1 leave
+ * at score >= 4000. The best non-statue total is 3000, so the statue is the
+ * only way to keep one of the six.
+ */
+function extractionGateCopy(quest: QuestReport) {
+  if (quest.type !== 'ambitious_imp') return null
+  return 'Keeping one of these six requires leaving with the Imp Statue: every option is +2 or better, and lower vault scores can only take out an item at +0/+1.'
+}
+
 function rewardsHeading(quest: QuestReport, isBaseline: boolean) {
-  if (quest.type === 'ambitious_imp' && !isBaseline) {
-    const { option_count, selected_count } = quest.contract.rewards
-    return `Take-out options (choose ${selected_count} of ${option_count})`
-  }
-  return isBaseline ? 'Baseline rewards' : 'Rewards'
+  if (quest.type === 'ambitious_imp' || !isBaseline) return 'Rewards'
+  return 'Baseline rewards'
 }
 
 export function QuestCard({
@@ -98,6 +106,9 @@ export function QuestCard({
   const styles = QUEST_STYLES[quest.type]
   const contract = baselineContract(quest)
   const shopGate = shopGateCopy(quest)
+  const extractionGate = extractionGateCopy(quest)
+  const impSlots =
+    quest.type === 'ambitious_imp' ? (quest.contract.slots ?? []) : []
   const baselineRewards = contract
     ? groupsWithPrediction(rewards, 'baseline')
     : []
@@ -127,6 +138,11 @@ export function QuestCard({
           {shopGate}
         </p>
       ) : null}
+      {extractionGate ? (
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          {extractionGate}
+        </p>
+      ) : null}
       {contract ? (
         <Alert variant="warning">
           <AlertTitle>Fresh/no-history baseline</AlertTitle>
@@ -136,16 +152,23 @@ export function QuestCard({
           </AlertDescription>
         </Alert>
       ) : null}
-      {displayedRewards.length > 0 ? (
+      {displayedRewards.length > 0 || impSlots.length > 0 ? (
         <div className="flex flex-col gap-1 border-t pt-2">
-          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            {rewardsHeading(quest, baselineRewards.length > 0)}
-          </p>
-          <FloorItemList
-            items={displayedRewards}
-            identities={identities}
-            depth={depth}
-          />
+          <div className="flex items-center gap-1">
+            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+              {rewardsHeading(quest, baselineRewards.length > 0)}
+            </p>
+            {impSlots.length > 0 ? (
+              <ImpRewardDistribution slots={impSlots} />
+            ) : null}
+          </div>
+          {displayedRewards.length > 0 ? (
+            <FloorItemList
+              items={displayedRewards}
+              identities={identities}
+              depth={depth}
+            />
+          ) : null}
         </div>
       ) : null}
       {branch ? (
