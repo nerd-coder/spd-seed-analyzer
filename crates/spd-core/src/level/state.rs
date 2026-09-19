@@ -150,6 +150,15 @@ fn is_exact_floor_one_room_prize(
             }))
 }
 
+fn trinket_catalyst_public_name(class_name: &str) -> Option<&'static str> {
+    (class_name == "TrinketCatalyst").then_some("Trinket Catalyst")
+}
+
+fn trinket_catalyst_offers(item: &GeneratedItem) -> Option<Vec<String>> {
+    (item.class_name == "TrinketCatalyst" && !item.candidate_classes.is_empty())
+        .then(|| item.candidate_classes.clone())
+}
+
 #[derive(Debug, Clone)]
 pub struct LevelState {
     pub depth: i32,
@@ -392,7 +401,9 @@ impl LevelState {
             } else {
                 item.title()
             };
-            let exact_name = if exact_floor_one_room_prize && item.class_name == "Food" {
+            let exact_name = if let Some(name) = trinket_catalyst_public_name(&item.class_name) {
+                name.to_string()
+            } else if exact_floor_one_room_prize && item.class_name == "Food" {
                 "ration of food".to_string()
             } else if item.category == crate::items::model::ItemCategory::Gold {
                 "gold".to_string()
@@ -502,16 +513,18 @@ impl LevelState {
                 prediction
             };
             let constrained = prediction == ItemPredictionKind::Constrained;
-            let candidate_classes = ghost_weapon
-                .filter(|_| item.candidate_classes.len() > 1)
-                .map(|_| item.candidate_classes.clone())
-                .unwrap_or_else(|| {
-                    if artifact_conditional {
-                        vec![item.class_name.clone()]
-                    } else {
-                        Vec::new()
-                    }
-                });
+            let candidate_classes = trinket_catalyst_offers(item).unwrap_or_else(|| {
+                ghost_weapon
+                    .filter(|_| item.candidate_classes.len() > 1)
+                    .map(|_| item.candidate_classes.clone())
+                    .unwrap_or_else(|| {
+                        if artifact_conditional {
+                            vec![item.class_name.clone()]
+                        } else {
+                            Vec::new()
+                        }
+                    })
+            });
             let mut conditions = item_conditions_typed(quest_role, imp_shop_conditional);
             if exact_floor_one_room_prize
                 && item.source.as_deref().is_some_and(|source| {

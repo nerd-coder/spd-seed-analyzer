@@ -112,3 +112,85 @@ fn floor_two_room_contracts_pair_seed_constraints_with_fresh_baselines() {
         2
     );
 }
+
+fn public_catalyst_groups(floor: &report::FloorReport) -> Vec<&report::ItemGroup> {
+    floor
+        .items
+        .iter()
+        .filter(|item| item.class_name.as_deref() == Some("TrinketCatalyst"))
+        .collect()
+}
+
+#[test]
+fn floor_one_magical_fire_catalyst_keeps_canonical_name_and_offers() {
+    let report = analyze_seed("NCZ-LFD-SCX", 4).expect("analyze");
+    let floor = &report.floors[0];
+    let catalyst = floor
+        .items
+        .iter()
+        .find(|item| {
+            item.source.as_deref() == Some("MagicalFireRoom")
+                && item.class_name.as_deref() == Some("TrinketCatalyst")
+        })
+        .expect("floor-one MagicalFireRoom catalyst");
+
+    assert_eq!(catalyst.name, "Trinket Catalyst");
+    assert_eq!(catalyst.prediction, report::ItemPredictionKind::Exact);
+    assert_eq!(
+        report.trinket_selection.catalyst_options,
+        [
+            "ShardOfOblivion",
+            "CrackedSpyglass",
+            "ParchmentScrap",
+            "RatSkull"
+        ]
+    );
+    assert_eq!(
+        catalyst.candidate_classes,
+        report.trinket_selection.catalyst_options
+    );
+    assert_eq!(public_catalyst_groups(floor).len(), 1);
+    assert!(
+        report.floors[1..]
+            .iter()
+            .all(|floor| public_catalyst_groups(floor).is_empty()),
+        "catalyst must not reappear after MagicalFireRoom consumes it"
+    );
+}
+
+#[test]
+fn floor_one_public_catalyst_copies_seed_offers() {
+    let mut seen = 0;
+    for seed in 0..40 {
+        let report = analyze_seed(&seed.to_string(), 4).expect("analyze");
+        if report.trinket_selection.catalyst_depth != 1 {
+            continue;
+        }
+        let catalysts = public_catalyst_groups(&report.floors[0]);
+        assert_eq!(catalysts.len(), 1, "seed {seed} floor-one catalyst group");
+        let catalyst = catalysts[0];
+        assert_eq!(catalyst.name, "Trinket Catalyst", "seed {seed}");
+        assert_eq!(
+            catalyst.class_name.as_deref(),
+            Some("TrinketCatalyst"),
+            "seed {seed}"
+        );
+        assert_eq!(
+            catalyst.prediction,
+            report::ItemPredictionKind::Exact,
+            "seed {seed}"
+        );
+        assert_eq!(
+            catalyst.candidate_classes, report.trinket_selection.catalyst_options,
+            "seed {seed}"
+        );
+        assert!(
+            report.floors[1..]
+                .iter()
+                .all(|floor| public_catalyst_groups(floor).is_empty()),
+            "seed {seed} duplicate catalyst"
+        );
+        seen += 1;
+    }
+    assert!(seen > 0, "expected a depth-1 catalyst among 40 seeds");
+}

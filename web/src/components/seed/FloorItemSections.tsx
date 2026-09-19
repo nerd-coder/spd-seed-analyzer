@@ -80,7 +80,7 @@ function CandidateOptions({
 }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1">
-      {item.name === 'Trinket Catalyst' ? (
+      {item.class_name === 'TrinketCatalyst' ? (
         <span className="font-medium">Trinket Catalyst — choose one</span>
       ) : null}
       {item.candidate_classes?.map((className, index) => {
@@ -201,7 +201,7 @@ function ItemVariantRow({
       : formatItemSource(source)
 
   if (item.candidate_classes?.length) {
-    return item.name === 'Trinket Catalyst' ? (
+    return item.class_name === 'TrinketCatalyst' ? (
       <CatalystOffers
         item={item}
         identities={identities}
