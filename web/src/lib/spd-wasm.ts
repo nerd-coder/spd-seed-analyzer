@@ -305,6 +305,13 @@ export type QuestReport =
         spawn_depth_range: QuestDepthRange
         rewards: QuestRewardSelection
         slots?: ImpRewardSlot[]
+        /**
+         * True when no reachable deck drift changes any slot's upgrade or
+         * enchant, making every `baseline_level` a seed-only guarantee.
+         */
+        upgrades_pinned?: boolean
+        /** Scroll of Upgrade equivalents across all six options. */
+        total_upgrade_value?: number
       }
       baseline: { spawn_depth: number }
     }
@@ -335,6 +342,10 @@ export type ImpRewardSlot = {
   baseline_class: string
   level_rule: ImpLevelRule
   enchanted: boolean
+  /** The rolled upgrade. Pinned by the seed unless `upgrades_pinned` is false. */
+  baseline_level: number
+  /** The rolled enchantment or glyph, pinned on the same stream as the level. */
+  baseline_enchantment?: string | null
   /** Set only when the class cannot vary (the plate armor slot). */
   fixed_class?: string | null
   candidates?: ImpSlotCandidate[]

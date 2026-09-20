@@ -16,7 +16,8 @@ pub use rewards::{ImpSlotDraw, ImpSlotKind};
 #[path = "imp/distribution.rs"]
 mod distribution;
 pub use distribution::{
-    build_reward_slots, DEEP_DRIFT as IMP_DEEP_DRIFT, DEFAULT_DRIFT as IMP_DEFAULT_DRIFT,
+    build_reward_slots, total_upgrade_value, upgrades_pinned, DEEP_DRIFT as IMP_DEEP_DRIFT,
+    DEFAULT_DRIFT as IMP_DEFAULT_DRIFT,
 };
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]

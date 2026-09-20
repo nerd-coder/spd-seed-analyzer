@@ -159,7 +159,19 @@ export function QuestCard({
               {rewardsHeading(quest, baselineRewards.length > 0)}
             </p>
             {impSlots.length > 0 ? (
-              <ImpRewardDistribution slots={impSlots} />
+              <ImpRewardDistribution
+                slots={impSlots}
+                upgradesPinned={
+                  quest.type === 'ambitious_imp'
+                    ? (quest.contract.upgrades_pinned ?? true)
+                    : true
+                }
+                totalUpgradeValue={
+                  quest.type === 'ambitious_imp'
+                    ? quest.contract.total_upgrade_value
+                    : undefined
+                }
+              />
             ) : null}
           </div>
           {displayedRewards.length > 0 ? (

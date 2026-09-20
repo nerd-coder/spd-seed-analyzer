@@ -494,3 +494,85 @@ fn drift_matches_profile_replay_in_both_directions() {
         }
     }
 }
+
+/// Upgrades and enchants survive a change of run profile.
+///
+/// Everything the city floor spends before `Imp.Quest.spawn` is seed-fixed:
+/// the limited-drop checks gate `addItemToSpawn` without rolling
+/// (`Level.java:224-247`), and the feeling switch is one `Random.Int(14)` whose
+/// branches each spend a fixed amount (`Level.java:258-296`). So a held trinket
+/// or an enabled challenge can move a deck index without moving a single `+N`.
+#[test]
+fn upgrades_survive_profile_changes() {
+    let profiles: Vec<(&str, MapProfile)> = vec![
+        ("baseline", MapProfile::default()),
+        (
+            "forbidden_runes",
+            MapProfile {
+                challenges: vec![crate::Challenge::ForbiddenRunes],
+                ..MapProfile::default()
+            },
+        ),
+        (
+            "mimic_tooth",
+            MapProfile {
+                trinket_events: vec![TrinketEvent {
+                    before_depth: 17,
+                    action: TrinketEventAction::Acquired {
+                        trinket: TrinketKind::MimicTooth,
+                        min_upgrades: None,
+                    },
+                }],
+                ..MapProfile::default()
+            },
+        ),
+        (
+            "rat_skull_and_forbidden_runes",
+            MapProfile {
+                challenges: vec![crate::Challenge::ForbiddenRunes],
+                trinket_events: vec![TrinketEvent {
+                    before_depth: 17,
+                    action: TrinketEventAction::Acquired {
+                        trinket: TrinketKind::RatSkull,
+                        min_upgrades: None,
+                    },
+                }],
+                ..MapProfile::default()
+            },
+        ),
+    ];
+
+    /// Spawn depth plus the `(level, enchant)` of each slot.
+    type UpgradeFacts = (i32, Vec<(i32, Option<String>)>);
+
+    let mut checked = 0;
+    for seed in [0_i64, 7, 42, 99, 1234] {
+        let mut expected: Option<UpgradeFacts> = None;
+        for (label, profile) in &profiles {
+            let mut dungeon = dungeon_from_run(init_run(seed));
+            crate::level::analyze_floors_with_profile(&mut dungeon, 19, Some(profile));
+            assert!(
+                dungeon.imp.spawned,
+                "seed {seed} {label}: Imp always spawns"
+            );
+            let actual = (
+                dungeon.imp.depth,
+                dungeon
+                    .imp
+                    .reward_options
+                    .iter()
+                    .map(|item| (item.level, item.enchantment.clone()))
+                    .collect::<Vec<_>>(),
+            );
+            match &expected {
+                None => expected = Some(actual),
+                Some(first) => assert_eq!(
+                    &actual, first,
+                    "seed {seed}: profile {label} moved the spawn depth or an upgrade"
+                ),
+            }
+        }
+        checked += 1;
+    }
+    assert_eq!(checked, 5);
+}

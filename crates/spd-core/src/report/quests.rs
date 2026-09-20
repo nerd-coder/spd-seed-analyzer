@@ -111,6 +111,19 @@ pub struct AmbitiousImpQuestContract {
     /// The six take-out slots, in `rewardOptions` order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub slots: Vec<ImpRewardSlot>,
+    /// True when no reachable deck drift changes any slot's upgrade or
+    /// enchant, making every `baseline_level` a seed-only guarantee.
+    ///
+    /// False only when `UnstableSpellbook` is reachable in slot 0: its
+    /// constructor burns a `SCROLL.defaultProbsTotal` loop on the floor's
+    /// ambient stream (`UnstableSpellbook.java:84-104`), which shifts every
+    /// later roll.
+    #[serde(default)]
+    pub upgrades_pinned: bool,
+    /// Total upgrade value across the six options. The artifact slot counts
+    /// its `transferUpgrade` amount, not its cap-scaled stored level.
+    #[serde(default)]
+    pub total_upgrade_value: i32,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -170,6 +183,14 @@ pub struct ImpRewardSlot {
     pub level_rule: ImpLevelRule,
     /// Slot always carries an enchantment or glyph (50/40/10 common/uncommon/rare).
     pub enchanted: bool,
+    /// The rolled upgrade for this slot. Pinned by the seed: every class in a
+    /// category consumes the same ambient RNG, so deck drift moves the class
+    /// without moving the level. See `AmbitiousImpQuestContract::upgrades_pinned`
+    /// for the single exception.
+    pub baseline_level: i32,
+    /// The rolled enchantment or glyph, pinned on the same stream as the level.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub baseline_enchantment: Option<String>,
     /// Set when the class cannot vary at all (the plate armor slot).
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fixed_class: Option<String>,
@@ -232,6 +253,8 @@ mod tests {
                     spawn_depth_range: depth_range,
                     rewards: rewards(),
                     slots: Vec::new(),
+                    upgrades_pinned: true,
+                    total_upgrade_value: 0,
                 },
                 baseline: AmbitiousImpQuestBaseline { spawn_depth: 17 },
             },

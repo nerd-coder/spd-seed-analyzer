@@ -169,6 +169,8 @@ fn blacksmith_report(quest_type: quests::BlacksmithQuestType) -> QuestReport {
 }
 
 fn imp_report(spawn_depth: i32, slots: Vec<ImpRewardSlot>) -> QuestReport {
+    let upgrades_pinned = quests::imp_upgrades_pinned(&slots);
+    let total_upgrade_value = quests::imp_upgrade_value(&slots);
     QuestReport::AmbitiousImp {
         contract: AmbitiousImpQuestContract {
             spawn_depth_range: QuestDepthRange { min: 17, max: 19 },
@@ -179,6 +181,8 @@ fn imp_report(spawn_depth: i32, slots: Vec<ImpRewardSlot>) -> QuestReport {
             // keep one of these six.
             rewards: reward_selection("Imp.Quest", 6, 1, Some(4_000)),
             slots,
+            upgrades_pinned,
+            total_upgrade_value,
         },
         baseline: AmbitiousImpQuestBaseline {
             spawn_depth: spawn_depth as u32,

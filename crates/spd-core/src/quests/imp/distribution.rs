@@ -61,6 +61,8 @@ fn build_slot(
             baseline_class: item.class_name.clone(),
             level_rule,
             enchanted,
+            baseline_level: item.level,
+            baseline_enchantment: item.enchantment.clone(),
             fixed_class: Some(item.class_name.clone()),
             candidates: Vec::new(),
             scenario_count: 1,
@@ -76,10 +78,46 @@ fn build_slot(
         baseline_class: item.class_name.clone(),
         level_rule,
         enchanted,
+        baseline_level: item.level,
+        baseline_enchantment: item.enchantment.clone(),
         fixed_class: None,
         candidates,
         scenario_count,
     }
+}
+
+/// The artifact whose constructor burns a variable-length ambient loop, so
+/// drawing it shifts every later slot's level and enchant
+/// (`UnstableSpellbook.java:84-104`).
+const AMBIENT_SHIFTING_ARTIFACT: &str = "UnstableSpellbook";
+
+/// True when no reachable deck drift changes any slot's upgrade or enchant.
+///
+/// Every class within a category costs the same ambient RNG in `item.random()`,
+/// so drift normally moves the class and nothing else. The one exception is
+/// `UnstableSpellbook` in slot 0. When slot 0 fell back to a RING draw the
+/// window is over rings, which cannot surface that artifact, so the levels are
+/// pinned across the modelled window.
+pub fn upgrades_pinned(slots: &[ImpRewardSlot]) -> bool {
+    slots.first().is_none_or(|slot| {
+        !slot
+            .candidates
+            .iter()
+            .any(|candidate| candidate.class_name == AMBIENT_SHIFTING_ARTIFACT)
+    })
+}
+
+/// Total upgrade value of the pool. The artifact slot contributes its
+/// `transferUpgrade` amount rather than its cap-scaled stored level, because
+/// that is the number of Scroll of Upgrade equivalents it is worth.
+pub fn total_upgrade_value(slots: &[ImpRewardSlot]) -> i32 {
+    slots
+        .iter()
+        .map(|slot| match slot.level_rule {
+            ImpLevelRule::TransferUpgrade { transfer } => transfer,
+            ImpLevelRule::Range { .. } => slot.baseline_level,
+        })
+        .sum()
 }
 
 /// Collapse the drift window into weighted classes, most likely first.

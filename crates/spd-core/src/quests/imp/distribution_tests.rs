@@ -178,3 +178,166 @@ fn ring_slot_never_duplicates_the_artifact_slot() {
         );
     }
 }
+
+/// Fingerprint of everything the player actually banks: the six upgrades and
+/// the two enchant/glyph rolls.
+fn upgrade_fingerprint(options: &[crate::items::model::GeneratedItem]) -> String {
+    options
+        .iter()
+        .map(|item| {
+            format!(
+                "{}{}",
+                item.level,
+                item.enchantment
+                    .as_deref()
+                    .map(|e| format!("/{e}"))
+                    .unwrap_or_default()
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
+/// Upgrades and enchants do not move with deck drift.
+///
+/// Every class inside a category costs the same ambient RNG in `item.random()`,
+/// so shifting a deck index changes *which* item a slot holds without changing
+/// its `+N` or its enchant. The lone exception is `UnstableSpellbook`, whose
+/// constructor burns a `SCROLL.defaultProbsTotal` loop on the ambient stream.
+#[test]
+fn deck_drift_moves_classes_but_not_upgrades() {
+    use crate::generator::Category;
+    use crate::random::Random;
+
+    for seed in [0_i64, 7, 42, 99, 1234] {
+        let base = crate::run::init_run(seed).generator;
+
+        let reference = {
+            let mut generator = base.clone();
+            Random::reset_generators();
+            Random::push_generator_seeded(777);
+            let (options, _) = super::super::rewards::generate_reward_options(&mut generator, 18);
+            Random::pop_generator();
+            upgrade_fingerprint(&options)
+        };
+
+        for category in [
+            Category::Ring,
+            Category::Wand,
+            Category::WepT4,
+            Category::WepT5,
+            Category::MisT4,
+            Category::MisT5,
+        ] {
+            for bump in 1..=3 {
+                let mut generator = base.clone();
+                Random::reset_generators();
+                Random::push_generator_seeded(4242);
+                for _ in 0..bump {
+                    let _ = generator.random_category(category, 18);
+                }
+                Random::pop_generator();
+
+                Random::reset_generators();
+                Random::push_generator_seeded(777);
+                let (options, _) =
+                    super::super::rewards::generate_reward_options(&mut generator, 18);
+                Random::pop_generator();
+                assert_eq!(
+                    upgrade_fingerprint(&options),
+                    reference,
+                    "seed {seed}: {category:?}+{bump} must not move upgrades or enchants"
+                );
+            }
+        }
+    }
+}
+
+/// The artifact deck is the one that can move later upgrades, and only when it
+/// lands on `UnstableSpellbook`.
+#[test]
+fn only_unstable_spellbook_shifts_later_upgrades() {
+    use crate::random::Random;
+
+    let mut saw_spellbook = false;
+    for seed in [0_i64, 7, 42] {
+        let base = crate::run::init_run(seed).generator;
+        let mut reference: Option<String> = None;
+
+        for skip in 0..11 {
+            let mut generator = base.clone();
+            Random::reset_generators();
+            Random::push_generator_seeded(4242);
+            for _ in 0..skip {
+                let _ = generator.random_artifact(18);
+            }
+            Random::pop_generator();
+
+            Random::reset_generators();
+            Random::push_generator_seeded(777);
+            let (options, _) = super::super::rewards::generate_reward_options(&mut generator, 18);
+            Random::pop_generator();
+
+            // Slot 0's own stored level is cap-scaled from its class, so compare
+            // only the five slots drawn after it.
+            let later = upgrade_fingerprint(&options[1..]);
+            if options[0].class_name == "UnstableSpellbook" {
+                saw_spellbook = true;
+                continue;
+            }
+            match &reference {
+                None => reference = Some(later),
+                Some(expected) => assert_eq!(
+                    &later, expected,
+                    "seed {seed}: artifact {} must not move later upgrades",
+                    options[0].class_name
+                ),
+            }
+        }
+    }
+    assert!(
+        saw_spellbook,
+        "sweep must cover the UnstableSpellbook case it exempts"
+    );
+}
+
+/// `upgrades_pinned` is exactly "UnstableSpellbook is not reachable in slot 0".
+#[test]
+fn upgrades_pinned_tracks_the_spellbook_window() {
+    let mut seen_pinned = false;
+    let mut seen_unpinned = false;
+    for seed in 0..40_i64 {
+        let Some((dungeon, imp)) = spawned_imp(seed) else {
+            continue;
+        };
+        let slots = build_reward_slots(
+            &dungeon.generator,
+            &imp.slot_draws,
+            &imp.reward_options,
+            imp.depth,
+            DEFAULT_DRIFT,
+        );
+        let reachable = slots[0]
+            .candidates
+            .iter()
+            .any(|candidate| candidate.class_name == "UnstableSpellbook");
+        assert_eq!(upgrades_pinned(&slots), !reachable, "seed {seed}");
+        if reachable {
+            seen_unpinned = true;
+        } else {
+            seen_pinned = true;
+        }
+
+        // The pool's upgrade worth counts the artifact as its transfer amount.
+        let expected: i32 = slots
+            .iter()
+            .map(|slot| match slot.level_rule {
+                ImpLevelRule::TransferUpgrade { transfer } => transfer,
+                ImpLevelRule::Range { .. } => slot.baseline_level,
+            })
+            .sum();
+        assert_eq!(total_upgrade_value(&slots), expected, "seed {seed}");
+        assert!(total_upgrade_value(&slots) >= 5 + 2 * 4 + 3, "seed {seed}");
+    }
+    assert!(seen_pinned && seen_unpinned, "cover both pinned states");
+}

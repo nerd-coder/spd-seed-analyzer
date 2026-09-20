@@ -37,9 +37,21 @@ function driftText(drifts: number[]): string {
   return parts.join(' / ')
 }
 
-function SlotRow({ slot }: { slot: ImpRewardSlot }) {
+function SlotRow({
+  slot,
+  upgradesPinned,
+}: {
+  slot: ImpRewardSlot
+  upgradesPinned: boolean
+}) {
   const candidates = slot.candidates ?? []
   const fixed = slot.fixed_class
+  // The artifact slot always transfers the same amount; only its cap-scaled
+  // stored level differs by class, so show the transfer instead.
+  const upgrade =
+    slot.level_rule.type === 'transfer_upgrade'
+      ? `+${slot.level_rule.transfer}`
+      : `+${slot.baseline_level}`
 
   return (
     <li className="flex flex-col gap-1 border-t pt-2 first:border-t-0 first:pt-0">
@@ -47,10 +59,22 @@ function SlotRow({ slot }: { slot: ImpRewardSlot }) {
         <span className="text-xs font-medium tracking-wide uppercase">
           {ROLE_LABEL[slot.role]}
         </span>
-        <span className="font-mono text-xs text-muted-foreground tabular-nums">
-          {levelText(slot.level_rule)}
+        <span
+          className="font-mono text-sm font-medium tabular-nums"
+          title={
+            upgradesPinned
+              ? `Pinned by the seed. Rolled from ${levelText(slot.level_rule)}.`
+              : `Rolled from ${levelText(slot.level_rule)}.`
+          }
+        >
+          {upgrade}
         </span>
-        {slot.enchanted ? (
+        <span className="font-mono text-xs text-muted-foreground tabular-nums">
+          of {levelText(slot.level_rule)}
+        </span>
+        {slot.baseline_enchantment ? (
+          <Badge variant="secondary">{slot.baseline_enchantment}</Badge>
+        ) : slot.enchanted ? (
           <Badge variant="secondary">
             {slot.role === 'armor' ? 'glyphed' : 'enchanted'}
           </Badge>
@@ -128,7 +152,15 @@ function SlotRow({ slot }: { slot: ImpRewardSlot }) {
  * a slot is against that shift. Only the level range, the enchant flag, and the
  * plate armor slot are seed-independent guarantees.
  */
-export function ImpRewardDistribution({ slots }: { slots: ImpRewardSlot[] }) {
+export function ImpRewardDistribution({
+  slots,
+  upgradesPinned = true,
+  totalUpgradeValue,
+}: {
+  slots: ImpRewardSlot[]
+  upgradesPinned?: boolean
+  totalUpgradeValue?: number
+}) {
   if (slots.length === 0) return null
   const window = Math.max(
     ...slots.flatMap((slot) =>
@@ -159,10 +191,33 @@ export function ImpRewardDistribution({ slots }: { slots: ImpRewardSlot[] }) {
             ±{window} shift either way — they measure how stable a slot is, not
             how often players see it. A fresh run gets the “fresh run” row.
           </PopoverDescription>
+          <PopoverDescription>
+            {upgradesPinned ? (
+              <>
+                The <strong>upgrades and enchants are fixed by the seed</strong>
+                {typeof totalUpgradeValue === 'number' ? (
+                  <> — {totalUpgradeValue} upgrades across the six options</>
+                ) : null}
+                . Every class in a category costs the same RNG, so drift changes
+                which item a slot holds, never its +N.
+              </>
+            ) : (
+              <>
+                Upgrades are fixed by the seed <em>unless</em> the artifact slot
+                lands on the Unstable Spellbook, which is reachable here: its
+                constructor consumes extra RNG and shifts every later +N and
+                enchant.
+              </>
+            )}
+          </PopoverDescription>
         </PopoverHeader>
         <ul className="flex max-h-80 flex-col gap-2 overflow-y-auto">
           {slots.map((slot) => (
-            <SlotRow key={slot.slot} slot={slot} />
+            <SlotRow
+              key={slot.slot}
+              slot={slot}
+              upgradesPinned={upgradesPinned}
+            />
           ))}
         </ul>
       </PopoverContent>

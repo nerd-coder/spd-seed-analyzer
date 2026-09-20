@@ -207,6 +207,7 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
                       baseline_class: 'SandalsOfNature',
                       level_rule: { type: 'transfer_upgrade', transfer: 5 },
                       enchanted: false,
+                      baseline_level: 2,
                       scenario_count: 3,
                       candidates: [
                         {
@@ -228,11 +229,15 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
                       baseline_class: 'PlateArmor',
                       level_rule: { type: 'range', min: 2, max: 4 },
                       enchanted: true,
+                      baseline_level: 4,
+                      baseline_enchantment: 'Viscosity',
                       fixed_class: 'PlateArmor',
                       scenario_count: 1,
                       candidates: [],
                     },
                   ],
+                  upgrades_pinned: true,
+                  total_upgrade_value: 21,
                 },
                 baseline: { spawn_depth: 19 },
               },
@@ -356,7 +361,21 @@ test('quest cards prefer concrete baselines and keep the universal warning visib
   // The plate slot has no deck, so it reports a single fixed class.
   await expect(outlook).toContainText('Plate Armor')
   await expect(outlook).toContainText('100%')
-  await expect(outlook).toContainText('glyphed')
+
+  // Upgrades are seed-pinned, so each slot shows its concrete +N (the artifact
+  // shows its transfer amount, not its cap-scaled stored level) and the glyph
+  // is named rather than described.
+  await expect(outlook).toContainText('+5')
+  await expect(outlook).toContainText('of +5 transferred')
+  await expect(outlook).toContainText('+4')
+  await expect(outlook).toContainText('of +2…+4')
+  await expect(outlook).toContainText('Viscosity')
+  await expect(outlook).toContainText(
+    'upgrades and enchants are fixed by the seed'
+  )
+  await expect(outlook).toContainText('21 upgrades across the six options')
+  await expect(outlook).not.toContainText('undefined')
+  await expect(outlook).not.toContainText('NaN')
   expect(browserErrors).toEqual([])
 })
 

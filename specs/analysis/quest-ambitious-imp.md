@@ -25,10 +25,15 @@ The strongest unprofiled seed-only contract is:
   guarantee that shop stock exists in the world
   (`Imp.java:397-399`, `CityBossLevel.java:377-379`).
 
-Concrete classes, exact `+N` values, which city depth hosts the Imp, and
-the WEP/MIS coin flip are **not** universal seed-only results. They
-require a fixed generation profile (deck indices, artifact exhaustion,
-challenges, trinkets, and current-floor RNG before `initRooms`).
+Concrete classes are **not** universal seed-only results. They depend on the
+deck index each slot lands on, which moves with prior generation (deck
+history, artifact exhaustion, challenges, trinkets).
+
+Exact `+N` values and both enchant rolls **are** seed-only, because the
+ambient spend before and during the pool is fixed — see *Upgrades and enchants
+are pinned by the seed*. The one exception is an `UnstableSpellbook` artifact
+draw. Which city depth hosts the Imp and the WEP/MIS coin flip held across
+every profile tested there, but neither is verified beyond those profiles.
 
 ### Spawn site and RNG test
 
@@ -176,6 +181,56 @@ Deck sizes bound how far a window can travel before repeating: ARTIFACT is 11
 cards at weight 1 (a permutation, so every drift is a different artifact), RING
 12 × 3, WAND 13 × 3, WEP_T4/WEP_T5 7 × 2, MIS_T4/MIS_T5 3 × 3
 (`Generator.java:452-474, 521-535, 544-576`).
+
+### Upgrades and enchants are pinned by the seed
+
+The `+N` on every slot, and both the weapon enchant and the plate glyph, are a
+pure function of the seed. Deck drift moves the *class* a slot holds without
+moving its upgrade.
+
+Why: the ambient spend before `Imp.Quest.spawn` is fixed. The limited-drop
+checks gate `addItemToSpawn` without rolling — including the `NO_SCROLLS`
+branch, which only decides whether a `ScrollOfUpgrade` is added
+(`Level.java:224-247`). The feeling switch is one `Random.Int(14)` whose
+branches each spend a fixed amount: `LARGE` adds one FOOD draw, the default
+branch always pre-generates both floats, and the rest spend nothing
+(`Level.java:258-296`). Inside the pool, every class in a category costs the
+same ambient RNG in `item.random()`, so a different draw index does not move
+the stream.
+
+| Perturbation | Class | Upgrade | Enchant |
+|---|---|---|---|
+| RING / WAND / WEP_T4 / WEP_T5 / MIS_T4 / MIS_T5 drift, +1..+3 | changes | unchanged | unchanged |
+| ARTIFACT drift onto any of 10 artifacts | changes | unchanged | unchanged |
+| ARTIFACT drift onto `UnstableSpellbook` | changes | **all later slots shift** | **all later slots shift** |
+| Held Mimic Tooth or Rat Skull | may change | unchanged | unchanged |
+| Forbidden Runes challenge | may change | unchanged | unchanged |
+
+The single exception is `UnstableSpellbook`: its constructor burns a full
+`SCROLL.defaultProbsTotal` chances loop on ambient
+(`UnstableSpellbook.java:84-104`). Measured on seed 7 at depth 18, slots 1–5
+move from `[2, 4, 5, 4, 4]` / Kinetic, Blooming, Viscosity to
+`[4, 3, 4, 3, 3]` / Shocking, Elastic, Flow the moment slot 0 lands on it. The
+other ten artifacts leave both rows byte-identical.
+
+The artifact slot's own stored level is cap-scaled and so does vary by class —
+`round(5 * cap / 10)`, giving `5` at cap 10, `3` at cap 5, `2` at cap 3 — but
+the transferred amount is always `transferUpgrade(5)`, so its worth in Scroll
+of Upgrade terms is fixed regardless of which artifact appears.
+
+Pinned by:
+
+- `quests::imp::distribution::tests::deck_drift_moves_classes_but_not_upgrades`
+  — six categories x three offsets x five seeds, upgrade and enchant
+  fingerprint unchanged.
+- `quests::imp::distribution::tests::only_unstable_spellbook_shifts_later_upgrades`
+  — full 11-artifact sweep; every non-Spellbook draw leaves slots 1–5 equal.
+- `quests::imp::tests::upgrades_survive_profile_changes` — baseline, Forbidden
+  Runes, Mimic Tooth, and Rat Skull + Forbidden Runes agree on spawn depth and
+  on every `(level, enchant)` pair across five seeds.
+
+Thirteen-leaf Clover is out of scope for these claims: it rewrites `Random`
+globally.
 
 ### Pool exists without entering the vault
 
