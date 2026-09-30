@@ -5,6 +5,7 @@
  * Ephemeral: draft input, session runtime (reports), analyzing, form error.
  */
 
+import { isCompleteCanonicalSeed } from '@/lib/canonical-seed'
 import type { SeedReport } from '@/lib/spd-wasm'
 import { analyzeSeedInWorker, type WorkerTask } from '@/lib/spd-worker-client'
 import { AppStore, derivedStore, persistentStore } from './store-utils'
@@ -299,7 +300,9 @@ export async function analyzeSeedInput(input: string): Promise<void> {
  * Enforces {@link MAX_SAVED_SEEDS} by dropping oldest sessions.
  */
 export async function analyzeDraftSeed(): Promise<void> {
-  await analyzeSeedInputInternal($seedInput.get(), true)
+  const input = $seedInput.get()
+  if (!isCompleteCanonicalSeed(input)) return
+  await analyzeSeedInputInternal(input, true)
 }
 
 /**

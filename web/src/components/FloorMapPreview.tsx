@@ -1,9 +1,8 @@
 import { ArrowsOut, SpinnerGapIcon } from '@phosphor-icons/react'
-import { useStore } from '@tanstack/react-store'
 import { useMemo, useRef } from 'react'
 
 import { FloorMapCanvas } from '@/components/FloorMapCanvas'
-import { MapSettingsPanel } from '@/components/MapSettingsPanel'
+import { MapStage } from '@/components/MapStage'
 import {
   Dialog,
   DialogContent,
@@ -15,7 +14,6 @@ import {
 import type { FloorMap, IdentityMaps } from '@/lib/spd-wasm'
 import { mapViewport, TILE_PX } from '@/lib/tiles'
 import { cn } from '@/lib/utils'
-import { AppStore } from '@/stores/store-utils'
 
 const PREVIEW_BOX = 128
 
@@ -29,14 +27,17 @@ type Props = {
   loading?: boolean
 }
 
-/** Preserve the previous fitted scale, now bounded to the available choices. */
-function initialZoom(map: FloorMap): string {
-  if (typeof window === 'undefined') return '1'
+/**
+ * Canvas backing-store scale. On-screen zoom is independent, so this stays on
+ * the historical 1×/2× choice and map snapshots keep the same bitmap.
+ */
+function rasterScaleFor(map: FloorMap): number {
+  if (typeof window === 'undefined') return 1
   const budget = Math.min(window.innerWidth - 48, window.innerHeight - 140)
   const viewport = mapViewport(map)
   const tileEdge = Math.max(viewport.width, viewport.height) * TILE_PX
   const fit = Math.floor((budget + 2 * TILE_PX) / tileEdge)
-  return String(Math.max(1, Math.min(2, fit || 1)))
+  return Math.max(1, Math.min(2, fit || 1))
 }
 
 /**
@@ -53,8 +54,9 @@ export function FloorMapPreview({
 }: Props) {
   const viewport = useMemo(() => mapViewport(map), [map])
   const dialogContentRef = useRef<HTMLDivElement>(null)
-  const zoomStore = useMemo(() => new AppStore(initialZoom(map)), [map])
-  const zoom = useStore(zoomStore)
+  const rasterScale = useMemo(() => rasterScaleFor(map), [map])
+  const contentWidth = viewport.width * TILE_PX * rasterScale
+  const contentHeight = viewport.height * TILE_PX * rasterScale
 
   return (
     <Dialog>
@@ -94,14 +96,14 @@ export function FloorMapPreview({
       </DialogTrigger>
       <DialogContent
         ref={dialogContentRef}
-        className="inset-0 flex h-dvh max-h-none w-screen max-w-none translate-x-0 translate-y-0 flex-col gap-3 sm:top-1/2 sm:left-1/2 sm:h-[min(94vh,72rem)] sm:w-[min(96vw,80rem)] sm:max-w-[min(96vw,80rem)] sm:-translate-x-1/2 sm:-translate-y-1/2"
+        className="inset-0 flex h-dvh max-h-none w-full max-w-none translate-x-0 translate-y-0 flex-col gap-3 overflow-hidden sm:top-1/2 sm:left-1/2 sm:h-[min(94vh,72rem)] sm:w-[min(96vw,80rem)] sm:max-w-[min(96vw,80rem)] sm:-translate-x-1/2 sm:-translate-y-1/2"
         onOpenAutoFocus={(event) => {
           event.preventDefault()
           dialogContentRef.current?.focus()
         }}
         showCloseButton
       >
-        <DialogHeader>
+        <DialogHeader className="shrink-0 pr-14">
           <DialogTitle className="font-mono">{dialogTitle}</DialogTitle>
           <DialogDescription>
             {map.width}×{map.height} · {map.tileset} · discoverable crop{' '}
@@ -109,25 +111,25 @@ export function FloorMapPreview({
             items
           </DialogDescription>
         </DialogHeader>
-        <div className="relative min-h-0 flex-1 overflow-hidden bg-black/80">
-          <MapSettingsPanel
-            zoom={zoom}
-            onZoomChange={(value) => zoomStore.set(value)}
-          />
-          <div
-            className="flex size-full items-start justify-start overflow-auto p-2"
-            data-testid="map-scroll-container"
+        <div className="relative z-0 min-h-0 min-w-0 flex-1 overflow-hidden bg-black/80">
+          <MapStage
+            contentWidth={contentWidth}
+            contentHeight={contentHeight}
+            rasterScale={rasterScale}
           >
-            <FloorMapCanvas
-              map={map}
-              identities={identities}
-              className="m-auto"
-              scale={Number(zoom)}
-              animateWater
-            />
-          </div>
+            {(zoom) => (
+              <FloorMapCanvas
+                map={map}
+                identities={identities}
+                scale={rasterScale}
+                displayScale={zoom}
+                canvasClassName="border-0"
+                animateWater
+              />
+            )}
+          </MapStage>
           {loading ? (
-            <div className="absolute inset-0 flex items-center justify-center gap-2 bg-black/65 text-sm text-white">
+            <div className="absolute inset-0 z-20 flex items-center justify-center gap-2 bg-black/65 text-sm text-white">
               <SpinnerGapIcon className="animate-spin" aria-hidden />
               Regenerating maps…
             </div>

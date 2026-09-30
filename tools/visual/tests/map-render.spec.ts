@@ -13,7 +13,7 @@ const APP_STORAGE = {
   theme: 'spd-analyzer-theme',
 } as const
 
-const GENERIC_MAP_SEED = 'VISUAL-MAP'
+const GENERIC_MAP_SEED = 'VIS-UAL-MAP'
 const GENERIC_MAP_FLOOR = 4
 
 type BrowserErrors = {
@@ -181,10 +181,10 @@ async function installSyntheticMapReport(page: Page) {
     })
     const report = {
       seed: {
-        input: 'VISUAL-MAP',
+        input: 'VIS-UAL-MAP',
         numeric: 0,
         code: null,
-        formatted: 'VISUAL-MAP',
+        formatted: 'VIS-UAL-MAP',
       },
       spd_version: 'v4.0.0',
       spd_commit: '2bb34a4e9',
@@ -436,7 +436,7 @@ for (const fixture of MAP_RENDER_FIXTURES) {
   })
 }
 
-test('mobile map dialog fills the viewport and supports 1x and 2x zoom', async ({
+test('mobile map dialog fills the viewport and supports pan, zoom, and close', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 })
@@ -458,42 +458,79 @@ test('mobile map dialog fills the viewport and supports 1x and 2x zoom', async (
   })
   await waitForCanvasPaint(canvas)
   await expectSyntheticCustomTile(canvas)
-  const oneXWidth = await canvas.evaluate(
-    (node) => (node as HTMLCanvasElement).width
-  )
-  await dialog.getByRole('button', { name: 'Switch map to 2x zoom' }).click()
+  const stage = dialog.getByTestId('map-scroll-container')
+  await expect(stage).toHaveAttribute('data-zoom')
+  const maxZoom = Number(await stage.getAttribute('data-max-zoom'))
+  const minZoom = Number(await stage.getAttribute('data-min-zoom'))
+  await stage.hover()
+  for (let step = 0; step < 24; step++) await page.mouse.wheel(0, -240)
   await expect
-    .poll(() => canvas.evaluate((node) => (node as HTMLCanvasElement).width))
-    .toBe(oneXWidth * 2)
-  await dialog.getByRole('button', { name: 'Switch map to 1x zoom' }).click()
+    .poll(async () => Number(await stage.getAttribute('data-zoom')))
+    .toBeGreaterThan(maxZoom - 0.01)
+  const zoomedPan = Number(await stage.getAttribute('data-pan-x'))
+  const box = await stage.boundingBox()
+  if (!box) throw new Error('map stage has no box')
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(box.x + 24, box.y + box.height / 2 + 36, { steps: 8 })
+  await page.mouse.up()
   await expect
-    .poll(() => canvas.evaluate((node) => (node as HTMLCanvasElement).width))
-    .toBe(oneXWidth)
-  await dialog.getByRole('button', { name: 'Switch map to 2x zoom' }).click()
+    .poll(async () => Number(await stage.getAttribute('data-pan-x')))
+    .not.toBe(zoomedPan)
+  for (let step = 0; step < 24; step++) await page.mouse.wheel(0, 240)
   await expect
-    .poll(() => canvas.evaluate((node) => (node as HTMLCanvasElement).width))
-    .toBe(oneXWidth * 2)
+    .poll(async () => Number(await stage.getAttribute('data-zoom')))
+    .toBeLessThan(minZoom + 0.01)
 
   const settingsPanel = dialog.getByTestId('map-settings-panel')
-  const scrollContainer = dialog.getByTestId('map-scroll-container')
   await expect(settingsPanel).toHaveClass(/\bdark\b/)
   await expect(settingsPanel).toHaveClass(/bg-background\/30/)
   const panelButtons = settingsPanel.getByRole('button')
-  await expect(panelButtons).toHaveCount(1)
+  await expect(panelButtons).toHaveCount(2)
   for (const button of await panelButtons.all()) {
     await expect(button).toHaveAttribute('data-variant', 'ghost')
   }
   const panelBounds = await settingsPanel.boundingBox()
-  await scrollContainer.evaluate((node) => {
-    node.scrollTo({ left: node.scrollWidth, top: node.scrollHeight })
-  })
-  await expect
-    .poll(() => scrollContainer.evaluate((node) => node.scrollLeft))
-    .toBeGreaterThan(0)
-  await expect
-    .poll(() => scrollContainer.evaluate((node) => node.scrollTop))
-    .toBeGreaterThan(0)
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(box.x + box.width - 20, box.y + 80, { steps: 8 })
+  await page.mouse.up()
   expect(await settingsPanel.boundingBox()).toEqual(panelBounds)
+
+  const close = dialog.getByRole('button', { name: 'Close' })
+  await expect(close).toBeVisible()
+  await expect
+    .poll(() =>
+      close.evaluate((node) => {
+        const rect = node.getBoundingClientRect()
+        const hit = document.elementFromPoint(
+          rect.left + rect.width / 2,
+          rect.top + rect.height / 2
+        )
+        return hit === node || node.contains(hit)
+      })
+    )
+    .toBe(true)
+  const touchBlocked = await close.evaluate((node) => {
+    const rect = node.getBoundingClientRect()
+    const touch = new Touch({
+      identifier: 1,
+      target: node,
+      clientX: rect.left + rect.width / 2,
+      clientY: rect.top + rect.height / 2,
+    })
+    const event = new TouchEvent('touchmove', {
+      bubbles: true,
+      cancelable: true,
+      touches: [touch],
+      changedTouches: [touch],
+    })
+    node.dispatchEvent(event)
+    return event.defaultPrevented
+  })
+  expect(touchBlocked).toBe(false)
+  await close.click()
+  await expect(dialog).toBeHidden()
 
   expect(browserErrors.console, 'browser console errors').toEqual([])
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
@@ -527,8 +564,28 @@ test('floor rooms open from a title chip and desktop maps use a large dialog', a
     .poll(async () => (await dialog.boundingBox())?.height)
     .toBeGreaterThan(1100)
   await expect(
-    dialog.getByRole('button', { name: /Switch map to [12]x zoom/ })
+    dialog.getByRole('button', { name: 'Zoom map in' })
   ).toBeVisible()
+  await expect(
+    dialog.getByRole('button', { name: 'Zoom map out' })
+  ).toBeVisible()
+  const stage = dialog.getByTestId('map-scroll-container')
+  await stage.hover()
+  const beforeZoom = Number(await stage.getAttribute('data-zoom'))
+  for (let step = 0; step < 6; step++) await page.mouse.wheel(0, -400)
+  await expect
+    .poll(async () => Number(await stage.getAttribute('data-zoom')))
+    .toBeGreaterThan(beforeZoom)
+  const beforePan = Number(await stage.getAttribute('data-pan-x'))
+  const box = await stage.boundingBox()
+  if (!box) throw new Error('map stage has no box')
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(box.x + 40, box.y + box.height / 2 + 28, { steps: 6 })
+  await page.mouse.up()
+  await expect
+    .poll(async () => Number(await stage.getAttribute('data-pan-x')))
+    .not.toBe(beforePan)
 
   expect(browserErrors.console, 'browser console errors').toEqual([])
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
@@ -564,19 +621,21 @@ test('map dialog initially focuses its container instead of a control', async ({
   await expect(dialog).toBeVisible()
   await expect(dialog).toBeFocused()
   await expect(
-    dialog.getByRole('button', { name: /Switch map/ })
+    dialog.getByRole('button', { name: 'Zoom map out' })
   ).not.toBeFocused()
   await expect(dialog.getByRole('button', { name: 'Close' })).not.toBeFocused()
 
   await page.keyboard.press('Tab')
-  await expect(dialog.getByRole('button', { name: /Switch map/ })).toBeFocused()
+  await expect(
+    dialog.getByRole('button', { name: 'Zoom map out' })
+  ).toBeFocused()
 
   expect(browserErrors.console, 'browser console errors').toEqual([])
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
 test('Sad Ghost card shows only its resolved target', async ({ page }) => {
-  const browserErrors = await openAnalyzer(page, '0')
+  const browserErrors = await openAnalyzer(page, 'AAA-AAA-AAA')
 
   await expect(
     page.getByRole('alert').filter({ hasText: 'Other Ghost options' })

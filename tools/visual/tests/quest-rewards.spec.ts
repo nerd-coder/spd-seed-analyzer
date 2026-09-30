@@ -1,6 +1,6 @@
 import { expect, type Page, test } from '@playwright/test'
 
-const SEED = 'QUEST-BASELINE'
+const SEED = 'QUE-STB-ASE'
 
 function collectBrowserErrors(page: Page) {
   const errors: string[] = []

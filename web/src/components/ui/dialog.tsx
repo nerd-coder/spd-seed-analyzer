@@ -68,8 +68,11 @@ function DialogContent({
           <DialogPrimitive.Close data-slot="dialog-close" asChild>
             <Button
               variant="ghost"
-              className="absolute top-2 right-2"
+              className="absolute top-2 right-2 z-20 touch-manipulation max-sm:size-11"
               size="icon-sm"
+              // Scroll lock cancels a touchmove that is not on a scroller, which
+              // drops the click. Keep the tap on this button.
+              onTouchMove={(event) => event.stopPropagation()}
             >
               <XIcon />
               <span className="sr-only">Close</span>

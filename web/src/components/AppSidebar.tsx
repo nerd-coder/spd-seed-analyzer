@@ -5,7 +5,12 @@ import {
   SpinnerGapIcon,
 } from '@phosphor-icons/react'
 import { useStore } from '@tanstack/react-store'
-import type { FormEvent } from 'react'
+import {
+  type ChangeEvent,
+  type FormEvent,
+  useLayoutEffect,
+  useRef,
+} from 'react'
 import { AppFloatingAction } from '@/components/AppFloatingAction'
 import { FinderForm } from '@/components/finder/FinderForm'
 import { SupportedVersionAlert } from '@/components/SupportedVersionAlert'
@@ -24,6 +29,12 @@ import {
 } from '@/components/ui/input-group'
 import { TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
+  caretAfterSignificant,
+  formatCanonicalSeedInput,
+  isCompleteCanonicalSeed,
+  significantCountBefore,
+} from '@/lib/canonical-seed'
+import {
   $activeFinderSession,
   $analyzing,
   $finderRunning,
@@ -33,7 +44,6 @@ import {
   analyzeDraftSeed,
   cancelFinderSearch,
   MAX_SAVED_SEEDS,
-  normalizeSeedInput,
   setSeedInput,
   startFinderSearch,
 } from '@/stores/app'
@@ -44,6 +54,31 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
   const formError = useStore($formError)
   const activeFinder = useStore($activeFinderSession)
   const finderRunning = useStore($finderRunning)
+  const seedInputRef = useRef<HTMLInputElement>(null)
+  const caretRef = useRef<number | null>(null)
+
+  useLayoutEffect(() => {
+    const input = seedInputRef.current
+    const caret = caretRef.current
+    if (!input || caret == null || input.value !== seedInput) return
+    input.setSelectionRange(caret, caret)
+  }, [seedInput])
+
+  function onSeedChange(event: ChangeEvent<HTMLInputElement>) {
+    const raw = event.target.value
+    const cursor = event.target.selectionStart ?? raw.length
+    const formatted = formatCanonicalSeedInput(raw)
+    caretRef.current = caretAfterSignificant(
+      formatted,
+      significantCountBefore(raw, cursor)
+    )
+    if (formatted === seedInput) {
+      event.target.value = formatted
+      event.target.setSelectionRange(caretRef.current, caretRef.current)
+      return
+    }
+    setSeedInput(formatted)
+  }
 
   async function onAnalyze(event: FormEvent) {
     event.preventDefault()
@@ -113,20 +148,24 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
                       <PlantIcon />
                     </InputGroupAddon>
                     <InputGroupInput
+                      ref={seedInputRef}
                       id="seed"
                       value={seedInput}
-                      onChange={(event) => setSeedInput(event.target.value)}
+                      onChange={onSeedChange}
                       placeholder="XXX-XXX-XXX or YYYY-MM-DD"
+                      autoCapitalize="characters"
                       autoComplete="off"
+                      autoCorrect="off"
                       spellCheck={false}
-                      className="font-mono uppercase"
+                      maxLength={11}
+                      className="font-mono"
                     />
                   </InputGroup>
                   <Button
                     type="submit"
                     size="default"
                     aria-label="Analyze"
-                    disabled={analyzing || !normalizeSeedInput(seedInput)}
+                    disabled={analyzing || !isCompleteCanonicalSeed(seedInput)}
                   >
                     {analyzing ? (
                       <SpinnerGapIcon
@@ -139,8 +178,8 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
                   </Button>
                 </div>
                 <FieldDescription>
-                  Codes, numeric seeds, Daily Run dates, or free-text fun seeds.
-                  Up to {MAX_SAVED_SEEDS} open seeds are kept (oldest dropped).
+                  Seed codes are ABC-DEF-GHI. Daily Runs are YYYY-MM-DD. Up to{' '}
+                  {MAX_SAVED_SEEDS} open seeds are kept (oldest dropped).
                 </FieldDescription>
               </Field>
             </FieldGroup>

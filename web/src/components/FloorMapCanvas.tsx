@@ -33,6 +33,11 @@ type Props = {
   maxDisplay?: number
   className?: string
   canvasClassName?: string
+  /**
+   * Extra CSS scale on the bitmap. Keeps `image-rendering: pixelated`
+   * instead of scaling the canvas through a CSS transform.
+   */
+  displayScale?: number
   /** Animate the region water texture; disabled for thumbnails to avoid many RAF loops. */
   animateWater?: boolean
   showItems?: boolean
@@ -44,6 +49,7 @@ export function FloorMapCanvas({
   identities,
   scale = 2,
   maxDisplay,
+  displayScale = 1,
   className,
   canvasClassName,
   animateWater = false,
@@ -67,6 +73,8 @@ export function FloorMapCanvas({
     displayW = Math.max(1, Math.round(naturalW * fit))
     displayH = Math.max(1, Math.round(naturalH * fit))
   }
+  const shownW = Math.max(1, displayW * displayScale)
+  const shownH = Math.max(1, displayH * displayScale)
   const hasWater = animateWater && map.tiles.includes(Terrain.WATER)
   const visibleMarkerLabels = map.markers
     .filter(
@@ -170,8 +178,8 @@ export function FloorMapCanvas({
           aria-label={`Shattered Pixel Dungeon floor map. ${map.heaps.length} exact heaps, ${map.mobs.length} exact mobs, ${map.traps.length} traps, and ${map.transitions.length} transitions.${markerDescription}`}
           title={markerDescription.trim() || undefined}
           style={{
-            width: displayW,
-            height: displayH,
+            width: shownW,
+            height: shownH,
             imageRendering: 'pixelated',
           }}
         />
