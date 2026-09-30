@@ -14,7 +14,6 @@ import {
   matchingQuestBranch,
   unclaimedBranches,
 } from '@/components/seed/quest-branch'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -110,7 +109,6 @@ export function FloorDetail({
 }) {
   const hasQuest = (floor.quests?.length ?? 0) > 0
   const showMap = !!floor.map
-  const showAssumedMap = !floor.map && !!floor.assumed_map
   const displayedMap = floor.map ?? floor.assumed_map ?? null
   const visibleItems = visibleItemGroups(floor.items)
   const leftoverBranches = unclaimedBranches(floor.branches, floor.quests)
@@ -206,24 +204,11 @@ export function FloorDetail({
       <div className="flex items-start gap-3">
         {details}
         {displayedMap && (
-          <div className="w-32 shrink-0 space-y-1.5">
-            <FloorMapPreview
-              map={displayedMap}
-              identities={identities}
-              depth={floor.depth}
-            />
-            {showAssumedMap && (
-              <Alert variant="warning" className="px-1.5 py-1">
-                <AlertTitle className="text-[10px] leading-tight">
-                  Assumed continuation
-                </AlertTitle>
-                <AlertDescription className="text-[9px] leading-tight text-pretty">
-                  Baseline continuation through unresolved player or meta state.
-                  Your floor can differ.
-                </AlertDescription>
-              </Alert>
-            )}
-          </div>
+          <FloorMapPreview
+            map={displayedMap}
+            identities={identities}
+            depth={floor.depth}
+          />
         )}
       </div>
 
