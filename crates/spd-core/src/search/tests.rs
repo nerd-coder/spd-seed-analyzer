@@ -971,3 +971,69 @@ fn deep_search_widens_seed_only_imp_entries() {
         );
     }
 }
+
+/// Deep search copies each Wandmaker slot's window onto the seed-only rows,
+/// in slot order, and leaves the fresh baseline rows empty.
+#[test]
+fn deep_search_widens_seed_only_wandmaker_entries() {
+    let mut report = crate::analyze_seed_seed_only("0", 9).expect("analyze seed 0");
+
+    let wandmaker_classes = |report: &crate::SeedReport, prediction| -> Vec<Vec<String>> {
+        report
+            .floors
+            .iter()
+            .flat_map(|floor| &floor.items)
+            .filter(|group| group.source.as_deref() == Some("Wandmaker.Quest"))
+            .flat_map(|group| &group.variants)
+            .filter(|item| item.prediction == prediction)
+            .map(|item| item.candidate_classes.clone())
+            .collect()
+    };
+
+    let constrained = crate::report::ItemPredictionKind::Constrained;
+    let baseline = crate::report::ItemPredictionKind::Baseline;
+    let before = wandmaker_classes(&report, constrained);
+    assert_eq!(before.len(), 2, "two seed-only wand rows");
+    assert!(
+        before.iter().all(|classes| classes.is_empty()),
+        "constrained wand rows start empty: {before:?}"
+    );
+
+    super::quest_candidates::widen_quest_candidates(&mut report.floors);
+    let after = wandmaker_classes(&report, constrained);
+    let slots: Vec<_> = report
+        .floors
+        .iter()
+        .find_map(|floor| {
+            floor.quests.iter().find_map(|quest| match quest {
+                crate::report::QuestReport::OldWandmaker { contract, .. } => {
+                    Some(contract.slots.clone())
+                }
+                _ => None,
+            })
+        })
+        .expect("wandmaker slots");
+    assert_eq!(slots.len(), 2);
+    assert_eq!(after.len(), 2);
+    for (slot, classes) in slots.iter().zip(&after) {
+        let expected: Vec<_> = slot
+            .candidates
+            .iter()
+            .map(|candidate| candidate.class_name.clone())
+            .collect();
+        assert_eq!(classes, &expected, "slot {}", slot.slot);
+        assert!(
+            classes.contains(&slot.baseline_class),
+            "slot {} window {classes:?} must contain {}",
+            slot.slot,
+            slot.baseline_class
+        );
+    }
+
+    let baseline_rows = wandmaker_classes(&report, baseline);
+    assert_eq!(baseline_rows.len(), 2);
+    assert!(
+        baseline_rows.iter().all(|classes| classes.is_empty()),
+        "baseline wand rows stay empty: {baseline_rows:?}"
+    );
+}

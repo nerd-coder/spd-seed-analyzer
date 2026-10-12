@@ -70,6 +70,9 @@ pub struct OldWandmakerQuestContract {
     pub spawn_depth_range: QuestDepthRange,
     pub objective_options: Vec<WandmakerObjective>,
     pub rewards: QuestRewardSelection,
+    /// Wand 1 then wand 2. Empty when the reward draw did not run.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub slots: Vec<WandmakerRewardSlot>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -83,6 +86,23 @@ pub enum WandmakerObjective {
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub struct OldWandmakerQuestBaseline {
     pub objective: WandmakerObjective,
+}
+
+/// One ordered wand option.
+///
+/// `baseline_level` is the fresh pair's +N, not a per-candidate roll.
+/// Wand 1 is always `level_pinned`. Wand 2 is pinned only when every offset
+/// in the window rejects the same number of duplicate wands as the fresh draw.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct WandmakerRewardSlot {
+    /// 0 = wand 1, 1 = wand 2.
+    pub slot: u8,
+    pub baseline_class: String,
+    pub baseline_level: i32,
+    pub level_pinned: bool,
+    pub candidates: Vec<ImpSlotCandidate>,
+    /// Number of deck-index offsets in the window. Denominator for `weight`.
+    pub scenario_count: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -233,6 +253,7 @@ mod tests {
                     spawn_depth_range: depth_range,
                     objective_options: vec![],
                     rewards: rewards(),
+                    slots: Vec::new(),
                 },
                 baseline: OldWandmakerQuestBaseline {
                     objective: WandmakerObjective::CorpseDust,

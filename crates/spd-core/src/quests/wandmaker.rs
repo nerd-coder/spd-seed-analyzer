@@ -14,6 +14,10 @@ use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::{RoomKind, RoomSpec};
 
+#[path = "wandmaker/distribution.rs"]
+mod distribution;
+pub use distribution::{build_reward_slots, DEFAULT_DRIFT};
+
 /// 1 = corpse dust, 2 = elemental embers, 3 = rotberry.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WandmakerQuestType {
@@ -68,6 +72,9 @@ pub struct WandmakerSpawnResult {
     pub wand2: GeneratedItem,
     /// Cell occupied before `RegularLevel.createMobs` places ambient enemies.
     pub cell: usize,
+    /// `WAND.dropped` before the first reward draw. Not recoverable afterwards:
+    /// the duplicate loop's `undoDrop` does not restore a concrete wand.
+    pub wand1_deck_index: i32,
 }
 
 /// `Wandmaker.Quest.spawnRoom(rooms)` — prison only; call before room shuffle.
@@ -146,7 +153,9 @@ pub fn try_spawn_wandmaker(
     dungeon.wandmaker.depth = dungeon.depth;
     let quest_type = WandmakerQuestType::from_int(dungeon.wandmaker.quest_type);
 
-    let (wand1, wand2) = generate_wands(dungeon);
+    let (wand1, wand2, wand1_deck_index) = generate_wands(dungeon);
+    #[cfg(test)]
+    LAST_WAND1_INDEX.with(|index| index.set(Some(wand1_deck_index)));
 
     #[cfg(test)]
     LAST_PLACEMENT_TRACE.with(|trace| {
@@ -160,6 +169,7 @@ pub fn try_spawn_wandmaker(
         wand1,
         wand2,
         cell,
+        wand1_deck_index,
     })
 }
 
@@ -223,18 +233,10 @@ fn has_adjacent_door(map: &TerrainMap, cell: usize) -> bool {
     false
 }
 
-fn generate_wands(dungeon: &mut DungeonState) -> (GeneratedItem, GeneratedItem) {
-    // The concrete pair below is the exact result for the generation profile
-    // being replayed. It is not a universal seed-only pair: held trinkets,
-    // challenge-dependent prize queues, and prior artifact history can change
-    // painter work before this callback, including levelgen WAND draw sites.
-    // Keep the full category as the conservative cross-profile candidate set.
-    let candidates = Category::Wand
-        .def()
-        .classes
-        .iter()
-        .map(|class_name| (*class_name).to_string())
-        .collect::<Vec<_>>();
+fn generate_wands(dungeon: &mut DungeonState) -> (GeneratedItem, GeneratedItem, i32) {
+    // Index of the next wand draw. `undoDrop` does not put a rejected wand
+    // back, so `dropped` after the pair is not wand 2's index either.
+    let wand1_deck_index = dungeon.generator.deck_dropped(Category::Wand);
 
     let mut wand1 = dungeon
         .generator
@@ -267,10 +269,7 @@ fn generate_wands(dungeon: &mut DungeonState) -> (GeneratedItem, GeneratedItem) 
         crate::items::model::QuestRewardRole::WandmakerWand,
     );
 
-    wand1.candidate_classes = candidates.clone();
-    wand2.candidate_classes = candidates;
-
-    (wand1, wand2)
+    (wand1, wand2, wand1_deck_index)
 }
 
 /// `Wand.upgrade()` after clearing curse: level++, `Random.Int(3)==0` curse clear.
@@ -310,7 +309,7 @@ mod tests {
         Random::reset_generators();
         let run = init_run(42);
         Random::push_generator_seeded(12345);
-        let (w1a, w1b) = {
+        let (w1a, w1b, _) = {
             let mut d = dungeon_from_run(run.clone());
             d.depth = 9;
             generate_wands(&mut d)
@@ -319,7 +318,7 @@ mod tests {
 
         Random::reset_generators();
         Random::push_generator_seeded(12345);
-        let (w2a, w2b) = {
+        let (w2a, w2b, _) = {
             let mut d = dungeon_from_run(run);
             d.depth = 9;
             generate_wands(&mut d)
@@ -330,29 +329,6 @@ mod tests {
         assert_eq!(w1a.level, w2a.level);
         assert_eq!(w1b.class_name, w2b.class_name);
         assert_ne!(w1a.class_name, w1b.class_name);
-    }
-
-    #[test]
-    fn wand_reward_candidates_cover_the_full_category() {
-        Random::reset_generators();
-        let run = init_run(42);
-        Random::push_generator_seeded(12345);
-        let (wand1, wand2) = {
-            let mut dungeon = dungeon_from_run(run);
-            dungeon.depth = 9;
-            generate_wands(&mut dungeon)
-        };
-        Random::pop_generator();
-
-        let expected = Category::Wand
-            .def()
-            .classes
-            .iter()
-            .map(|class_name| (*class_name).to_string())
-            .collect::<Vec<_>>();
-        assert_eq!(wand1.candidate_classes, expected);
-        assert_eq!(wand2.candidate_classes, expected);
-        assert_eq!(expected.len(), 13);
     }
 
     #[test]
@@ -435,6 +411,12 @@ type PlacementTrace = (i32, i32, usize, Vec<i32>);
 thread_local! {
     static LAST_PLACEMENT_TRACE: std::cell::RefCell<Option<PlacementTrace>> =
         const { std::cell::RefCell::new(None) };
+    static LAST_WAND1_INDEX: std::cell::Cell<Option<i32>> = const { std::cell::Cell::new(None) };
+}
+
+#[cfg(test)]
+pub(super) fn take_wand1_index() -> Option<i32> {
+    LAST_WAND1_INDEX.with(std::cell::Cell::take)
 }
 
 #[cfg(test)]

@@ -1,4 +1,7 @@
+import type { WandmakerRewardSlot } from '@/lib/wandmaker-reward'
 import init, * as wasmBindings from '@/wasm/spd_wasm'
+
+export type { WandmakerRewardSlot }
 
 export type SeedInfo = {
   input: string
@@ -287,6 +290,8 @@ export type QuestReport =
         spawn_depth_range: QuestDepthRange
         objective_options: WandmakerObjective[]
         rewards: QuestRewardSelection
+        /** Wand 1 then wand 2. Absent when the reward draw did not run. */
+        slots?: WandmakerRewardSlot[]
       }
       baseline: { objective: WandmakerObjective }
     }

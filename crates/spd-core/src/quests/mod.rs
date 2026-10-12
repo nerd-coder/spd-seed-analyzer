@@ -16,8 +16,9 @@ pub use imp::{
     ImpSlotKind, IMP_DEEP_DRIFT, IMP_DEFAULT_DRIFT,
 };
 pub use wandmaker::{
-    try_spawn_room as try_spawn_wandmaker_room, try_spawn_wandmaker, WandmakerQuestState,
-    WandmakerQuestType,
+    build_reward_slots as build_wandmaker_slots, try_spawn_room as try_spawn_wandmaker_room,
+    try_spawn_wandmaker, WandmakerQuestState, WandmakerQuestType,
+    DEFAULT_DRIFT as WANDMAKER_DEFAULT_DRIFT,
 };
 
 #[cfg(test)]

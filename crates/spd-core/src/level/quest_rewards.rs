@@ -1,6 +1,7 @@
 //! Quest rewards created during `initRooms`, before build and paint.
 
 use crate::dungeon::DungeonState;
+use crate::generator::GeneratorState;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::level::TerrainMap;
 use crate::quests;
@@ -82,7 +83,14 @@ pub(super) fn spawn_npcs(
         if let Some(wandmaker) = quests::try_spawn_wandmaker(dungeon, entrance, map) {
             map.mob_occupied[wandmaker.cell] = true;
             map.known_mobs[wandmaker.cell] = Some("Wandmaker");
-            result.quests.push(wandmaker_report(wandmaker.quest_type));
+            result.quests.push(wandmaker_report(
+                wandmaker.quest_type,
+                &wandmaker.wand1,
+                &wandmaker.wand2,
+                &dungeon.generator,
+                wandmaker.wand1_deck_index,
+                dungeon.depth,
+            ));
             result.items.extend([wandmaker.wand1, wandmaker.wand2]);
         }
     }
@@ -132,12 +140,27 @@ fn ghost_report(quest_type: quests::GhostType) -> QuestReport {
     }
 }
 
-fn wandmaker_report(quest_type: quests::WandmakerQuestType) -> QuestReport {
+fn wandmaker_report(
+    quest_type: quests::WandmakerQuestType,
+    wand1: &GeneratedItem,
+    wand2: &GeneratedItem,
+    generator: &GeneratorState,
+    wand1_index: i32,
+    depth: i32,
+) -> QuestReport {
     let objective = match quest_type {
         quests::WandmakerQuestType::CorpseDust => WandmakerObjective::CorpseDust,
         quests::WandmakerQuestType::ElementalEmbers => WandmakerObjective::ElementalEmbers,
         quests::WandmakerQuestType::Rotberry => WandmakerObjective::Rotberry,
     };
+    let slots = quests::build_wandmaker_slots(
+        generator,
+        wand1_index,
+        wand1,
+        wand2,
+        depth,
+        quests::WANDMAKER_DEFAULT_DRIFT,
+    );
     QuestReport::OldWandmaker {
         contract: OldWandmakerQuestContract {
             spawn_depth_range: QuestDepthRange { min: 7, max: 9 },
@@ -147,6 +170,7 @@ fn wandmaker_report(quest_type: quests::WandmakerQuestType) -> QuestReport {
                 WandmakerObjective::Rotberry,
             ],
             rewards: reward_selection("Wandmaker.Quest", 2, 1, None),
+            slots,
         },
         baseline: OldWandmakerQuestBaseline { objective },
     }

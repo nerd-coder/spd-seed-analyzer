@@ -651,6 +651,24 @@ test('Sad Ghost card shows only its resolved target', async ({ page }) => {
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
+test('Wandmaker outlook shows the fresh pair inside the deck window', async ({
+  page,
+}) => {
+  const browserErrors = await openAnalyzer(page, 'AAA-AAA-AAA')
+  await page.getByRole('tab', { name: /^Prison/ }).click()
+  const card = page.locator('[data-quest-type="old_wandmaker"]')
+  await expect(card).toBeVisible()
+  await card.getByRole('button', { name: 'Wand reward outlook' }).click()
+  await expect(page.getByText('The player keeps one.')).toBeVisible()
+  await expect(
+    page.getByText("Wand 1's +N is fixed by the seed.")
+  ).toBeVisible()
+  await expect(page.getByText('fresh run').first()).toBeVisible()
+
+  expect(browserErrors.console, 'browser console errors').toEqual([])
+  expect(browserErrors.page, 'uncaught page errors').toEqual([])
+})
+
 test('Other items explains fresh baseline equipment rewards', async ({
   page,
 }) => {

@@ -29,10 +29,9 @@ pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
         ItemProvenance::Quest(role) => Some(role),
         _ => None,
     };
-    // Wandmaker and Imp keep their full categories internally for parity and
-    // conservative reasoning. Publishing those categories on a concrete
-    // baseline sample makes shared renderers present every class at the
-    // sample's exact level, which is not a sound cross-profile claim.
+    // Publishing an internal category list on a concrete baseline sample makes
+    // shared renderers present every class at the sample's exact level, which
+    // is not a sound cross-profile claim. Imp still carries that list internally.
     let candidate_classes = if matches!(
         quest_role,
         Some(QuestRewardRole::WandmakerWand | QuestRewardRole::ImpVaultOption { .. })

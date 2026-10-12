@@ -1,6 +1,7 @@
 import { FloorItemList } from '@/components/seed/FloorItemSections'
 import { ImpRewardDistribution } from '@/components/seed/ImpRewardDistribution'
 import { QuestBranchMap } from '@/components/seed/QuestBranchMap'
+import { WandmakerRewardDistribution } from '@/components/seed/WandmakerRewardDistribution'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import type {
@@ -109,6 +110,8 @@ export function QuestCard({
   const extractionGate = extractionGateCopy(quest)
   const impSlots =
     quest.type === 'ambitious_imp' ? (quest.contract.slots ?? []) : []
+  const wandSlots =
+    quest.type === 'old_wandmaker' ? (quest.contract.slots ?? []) : []
   const baselineRewards = contract
     ? groupsWithPrediction(rewards, 'baseline')
     : []
@@ -152,7 +155,9 @@ export function QuestCard({
           </AlertDescription>
         </Alert>
       ) : null}
-      {displayedRewards.length > 0 || impSlots.length > 0 ? (
+      {displayedRewards.length > 0 ||
+      impSlots.length > 0 ||
+      wandSlots.length > 0 ? (
         <div className="flex flex-col gap-1 border-t pt-2">
           <div className="flex items-center gap-1">
             <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
@@ -172,6 +177,9 @@ export function QuestCard({
                     : undefined
                 }
               />
+            ) : null}
+            {wandSlots.length > 0 ? (
+              <WandmakerRewardDistribution slots={wandSlots} />
             ) : null}
           </div>
           {displayedRewards.length > 0 ? (

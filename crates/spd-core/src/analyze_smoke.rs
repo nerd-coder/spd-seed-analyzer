@@ -818,6 +818,29 @@ fn wandmaker_quest_spawns_within_prison() {
                         && item.level.is_some()
                         && item.candidate_classes.is_empty()
                 }));
+                let contract = f.quests.iter().find_map(|quest| match quest {
+                    report::QuestReport::OldWandmaker { contract, .. } => Some(contract),
+                    _ => None,
+                });
+                let contract = contract.expect("wandmaker quest contract");
+                assert_eq!(contract.slots.len(), 2);
+                assert_eq!(contract.slots[0].slot, 0);
+                assert_eq!(
+                    contract.slots[0]
+                        .candidates
+                        .first()
+                        .map(|candidate| candidate.class_name.as_str()),
+                    baseline_rewards[0].class_name.as_deref(),
+                    "slot 0's fresh candidate must be the baseline wand"
+                );
+                for slot in &contract.slots {
+                    let weight: u32 = slot
+                        .candidates
+                        .iter()
+                        .map(|candidate| candidate.weight)
+                        .sum();
+                    assert_eq!(weight, slot.scenario_count);
+                }
                 if let Some(map) = &f.map {
                     assert!(map.mobs.is_empty());
                     assert!(map.heaps.is_empty());

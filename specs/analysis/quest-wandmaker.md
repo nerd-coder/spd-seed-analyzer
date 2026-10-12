@@ -105,11 +105,12 @@ doors, isolated decoration, and `buildFlagMaps` (`Level.java:259-321`).
 
 ### Held trinkets
 
-The default-feeling branch always performs the Mossy Clump check and, when it
-does not short-circuit, the Trap Mechanism check (`Level.java:259-297`). A
-successful Mossy check skips the second main-stream float and can replace the
-feeling with grass or water (`MossyClump.java:54-91`), which changes room
-counts only for Large/Secrets but still moves the stream before `spawnRoom`.
+On branch 0, cases 7–13 always draw both `mossyChance` and `trapMechChance`
+before either override (`Level.java:287-290`). A Mossy hit skips only
+`TrapMechanism.getNextFeeling()`. `MossyClump.getNextFeeling` shuffles under
+`pushGenerator(Dungeon.seed+1)` (`MossyClump.java:77-88`) and does not touch
+the main stream. GRASS/WATER do not by themselves change the pre-spawn
+room-count formulas. Trap Mechanism can still change later painting.
 
 Trap Mechanism can replace the feeling with traps or chasm
 (`TrapMechanism.java:54-104`) on the same two pre-build floats as the
@@ -179,7 +180,29 @@ Without a fully fixed generation profile, the honest public contract is:
 - no combat/runtime drop (including ordinary Shaman wand loot) is part of this
   reward contract.
 
-The Rust port stores both exact options plus all 13 WAND classes internally for
-parity (`crates/spd-core/src/quests/wandmaker.rs`). The public report keeps
-generic +1..+3 wand options as the route-independent contract and may carry the
-concrete pair as an explicitly labelled fresh/no-history baseline.
+The quest contract carries two ordered slots, wand1 then wand2. The class at
+deck index n is a pure function of the seed: `Generator.fullReset` fixes
+`WAND.seed` (`Generator.java:625-635`), and the category is thirteen classes
+at weight 3 with no second probability row (`Generator.java:397-412`). Each
+`random(WAND)` advances `dropped`. `undoDrop` does not restore a concrete wand
+(`Generator.java:662-673`). Run history chooses the index.
+
+Each slot lists classes in a ±3 deck-index window around the fresh wand1
+index, fresh draw first. A weight is how many offsets in that window produce
+the class. The share is weight / scenario_count. It is a stability measure
+for that window, not an observed player frequency.
+
+wand1's +N is pinned across the window, because every class costs the same
+`Wand.random()` and the callback stream is unchanged when only the index
+moves. wand2's +N is the fresh roll. It stays pinned only when every offset
+in the window rejects the same number of duplicate draws. A different
+duplicate count consumes a different `Wand.random()` for the accepted wand2
+(`Wandmaker.java:334-348`, `Wand.java:547-567`, `359-365`).
+
+Same-floor paint that itself draws a wand also moves this floor's stream.
+Mass Grave's 60% `Generator.random()` when the quest is Corpse Dust is that
+draw (`MassGraveRoom.java:108`). The window does not replay it. Earlier
+floors move the deck index only.
+
+The normal item rows do not list all 13 classes. Baseline rows are the fresh
+pair. The classless rows stay empty until deep search copies the window.

@@ -200,8 +200,10 @@ class is decoupled from its later floor-stream level roll. Across playable
 routes, spawn depth, deck indices, and the WEP/MIS coin flip are not
 seed-only: Mimic Tooth changes levelgen mimic prizes; Rat Skull can add a
 deck-using Crystal Mimic prize; earlier map/challenge paths can change
-levelgen draw sites; Mossy Clump can short-circuit a current-floor feeling
-roll before `Imp.Quest.spawn`. Runtime artifact requests still advance
+levelgen draw sites; before `Imp.Quest.spawn`, branch 0 cases 7–13 draw
+both feeling floats and a Mossy hit skips only `TrapMechanism.getNextFeeling()`
+without touching the main stream (`Level.java:287-290`,
+`MossyClump.java:77-88`). Runtime artifact requests still advance
 `ARTIFACT.dropped` (§11), which can flip option 1 from artifact to ring.
 Quest conditions are in `specs/analysis/quest-ambitious-imp.md`.
 
@@ -209,9 +211,13 @@ Quest conditions are in `specs/analysis/quest-ambitious-imp.md`.
 
 The call shape below is for a fresh profile with no map-affecting trinket, no
 challenge, and no external artifact. It is not a universal pair for every
-playable route. A successful Mossy Clump check short-circuits a main-stream
-feeling roll and can shift room work before the quest room is selected; Trap
-Mechanism can alter painting after selection. Mimic Tooth, Rat Skull, artifact
+playable route. On branch 0, cases 7–13 always draw both `mossyChance` and
+`trapMechChance` before either override (`Level.java:287-290`). A Mossy hit
+skips only `TrapMechanism.getNextFeeling()`. `MossyClump.getNextFeeling`
+shuffles under `pushGenerator(Dungeon.seed+1)` (`MossyClump.java:77-88`) and
+does not touch the main stream. GRASS/WATER do not by themselves change the
+pre-spawn room-count formulas. Trap Mechanism can alter painting after
+selection. Mimic Tooth, Rat Skull, artifact
 constructor history, and challenge-dependent prize queues can also add or
 remove painter and levelgen item draws before the NPC callback. The full state
 audit is in `specs/analysis/quest-wandmaker.md`.
