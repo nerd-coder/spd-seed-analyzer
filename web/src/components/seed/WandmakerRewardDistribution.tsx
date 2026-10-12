@@ -46,12 +46,12 @@ function SlotRow({ slot }: { slot: WandmakerRewardSlot }) {
           return (
             <li
               key={candidate.class_name}
-              className="grid grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-x-2"
+              className="grid grid-cols-[32px_minmax(0,1fr)_auto] items-center gap-x-2"
             >
               <ItemIcon
                 classNameItem={candidate.class_name}
                 category="wand"
-                size={16}
+                size={32}
                 title={finderItemLabel(candidate.class_name)}
               />
               <span className="flex min-w-0 flex-col gap-0.5">

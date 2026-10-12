@@ -1,18 +1,7 @@
 import type { IdentityMaps } from '@/lib/spd-wasm'
 
-export function appearanceDescription(
-  category: 'potion' | 'scroll' | 'ring',
-  appearance: string
-): string {
-  const label = appearance.toLowerCase()
-  switch (category) {
-    case 'potion':
-      return `${label} potion`
-    case 'scroll':
-      return `${label} rune`
-    case 'ring':
-      return `${label} gem`
-  }
+export function appearanceDescription(appearance: string): string {
+  return appearance.toLowerCase()
 }
 
 export function itemAppearance(
@@ -33,7 +22,7 @@ export function itemAppearance(
   return undefined
 }
 
-/** Drop "Potion of " / "Scroll of " / "Ring of " — tab already names the category. */
+/** Drop "Potion of " / "Scroll of " / "Ring of " regardless of case — the tab already names the category. */
 export function shortIdentityName(
   name: string,
   category: 'potion' | 'scroll' | 'ring'
@@ -44,5 +33,7 @@ export function shortIdentityName(
       : category === 'scroll'
         ? 'Scroll of '
         : 'Ring of '
-  return name.startsWith(prefix) ? name.slice(prefix.length) : name
+  return name.toLowerCase().startsWith(prefix.toLowerCase())
+    ? name.slice(prefix.length)
+    : name
 }

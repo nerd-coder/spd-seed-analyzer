@@ -326,9 +326,6 @@ test('quest cards prefer concrete baselines and keep the universal warning visib
   await expect(imp).toContainText(
     'Reward contract: six vault take-out options; the player keeps one.'
   )
-  await expect(imp).toContainText(
-    'The floor 20/21 Imp shop is not guaranteed. It appears only after completing the vault with score > 2000.'
-  )
   await expect(imp).not.toContainText(/monk|golem|token|cursed \+2/i)
   await expect(imp).toContainText(
     'Keeping one of these six requires leaving with the Imp Statue'
@@ -398,9 +395,6 @@ test('quest cards fall back to the universal reward entries without a baseline',
   await expect(
     imp.getByRole('button', { name: 'Per-slot reward outlook' })
   ).toBeVisible()
-  await expect(imp).toContainText(
-    'The floor 20/21 Imp shop is not guaranteed. It appears only after completing the vault with score > 2000.'
-  )
   await expect(imp).not.toContainText(/monk|golem|token|cursed \+2/i)
   expect(browserErrors).toEqual([])
 })

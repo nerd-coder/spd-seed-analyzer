@@ -30,18 +30,7 @@ test('floor one shows exact room rewards and non-positional encounters', async (
   page.on('pageerror', (error) => browserErrors.push(error.message))
 
   const floor = await openFloorOne(page, 'AAA-AAA-AFU')
-  await expect(
-    floor.locator('p').filter({ hasText: 'Initial encounters' })
-  ).toContainText(/Initial encounters\s*\(8\)/)
-  await expect(
-    floor.locator('[data-slot="item-title"]').filter({ hasText: 'Rat' })
-  ).toContainText(/Rat\s*x6/)
-  await expect(
-    floor.locator('[data-slot="item-title"]').filter({ hasText: 'Snake' })
-  ).toContainText(/Snake\s*x2/)
-  await expect(floor.getByText('No seed-determined base drop')).toBeVisible()
-  await expect(floor.getByText('25% runtime chance: random seed')).toBeVisible()
-  await expect(floor.getByText('Runtime roll')).toBeVisible()
+  await expect(floor.getByText('Initial encounters')).toHaveCount(0)
   await expect(floor.getByText(/stone of blast/i)).toBeVisible()
   await expect(floor.getByText(/stone of deep sleep/i)).toBeVisible()
   await expect(floor.getByText('2–3 runestone-room rewards')).toHaveCount(0)
@@ -53,9 +42,6 @@ test('floor one shows exact room rewards and non-positional encounters', async (
     scrollWidth: document.documentElement.scrollWidth,
   }))
   expect(viewport.scrollWidth).toBe(viewport.clientWidth)
-  await expect(
-    floor.locator('p').filter({ hasText: 'Initial encounters' })
-  ).toBeVisible()
   expect(browserErrors).toEqual([])
 })
 
@@ -69,6 +55,6 @@ test('Shattered Pot uses its in-game item sprite', async ({ page }) => {
   await expect(icon).toBeVisible()
   await expect(icon.locator('[aria-hidden="true"]')).toHaveCSS(
     'background-position',
-    '-96px -48px'
+    '-192px -96px'
   )
 })

@@ -15,7 +15,7 @@ import type { FloorMap, IdentityMaps } from '@/lib/spd-wasm'
 import { mapViewport, TILE_PX } from '@/lib/tiles'
 import { cn } from '@/lib/utils'
 
-const PREVIEW_BOX = 128
+const PREVIEW_BOX = 64
 
 type Props = {
   map: FloorMap
@@ -41,7 +41,7 @@ function rasterScaleFor(map: FloorMap): number {
 }
 
 /**
- * Fixed 128×128 clickable map thumbnail; opens a dialog for a larger view.
+ * Fixed 64×64 clickable map thumbnail; opens a dialog for a larger view.
  */
 export function FloorMapPreview({
   map,
@@ -64,7 +64,7 @@ export function FloorMapPreview({
         <button
           type="button"
           className={cn(
-            'group relative size-32 shrink-0 cursor-zoom-in overflow-hidden border bg-black/80 outline-none',
+            'group relative size-16 shrink-0 cursor-zoom-in overflow-hidden border bg-black/80 outline-none',
             'hover:ring-1 hover:ring-ring focus-visible:ring-2 focus-visible:ring-ring',
             className
           )}

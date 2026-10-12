@@ -41,7 +41,7 @@ export function TrinketRotationPopover({ sequence }: { sequence: string[] }) {
                 <ItemIcon
                   classNameItem={className}
                   category="trinket"
-                  size={16}
+                  size={32}
                   title={finderItemLabel(className)}
                 />
                 <ItemName name={finderItemLabel(className)} />

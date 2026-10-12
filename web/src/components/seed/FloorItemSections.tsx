@@ -89,7 +89,7 @@ function CandidateOptions({
         return (
           <div key={`${index}-${className}`} className="flex flex-col gap-1">
             {index > 0 ? (
-              <span className="pl-6 text-xs font-medium text-muted-foreground">
+              <span className="pl-10 text-xs font-medium text-muted-foreground">
                 OR
               </span>
             ) : null}
@@ -98,7 +98,7 @@ function CandidateOptions({
                 classNameItem={className}
                 category={item.category}
                 appearance={itemAppearance(candidate, identities)}
-                size={16}
+                size={32}
                 title={label}
                 className="mt-0.5"
               />
@@ -143,13 +143,13 @@ function CatalystOffers({
           classNameItem={item.class_name}
           category={item.category}
           appearance={itemAppearance(item, identities)}
-          size={16}
+          size={32}
           title={item.name}
           className="mt-0.5"
         />
         <ItemName name={item.name} />
       </div>
-      <div className="flex flex-col gap-1 pl-6">
+      <div className="flex flex-col gap-1 pl-10">
         <span className="flex items-center gap-1 font-medium text-muted-foreground">
           Trinket offers
           <TrinketRotationPopover
@@ -164,7 +164,7 @@ function CatalystOffers({
                 classNameItem={className}
                 category={item.category}
                 appearance={itemAppearance(candidate, identities)}
-                size={16}
+                size={32}
                 title={finderItemLabel(className)}
               />
               <ItemName name={finderItemLabel(className)} />
@@ -217,14 +217,14 @@ function ItemVariantRow({
       {item.name === 'artifact or ring' ? (
         <CircleQuestionMark
           aria-label="Unknown artifact or ring"
-          className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+          className="mt-0.5 size-8 shrink-0 text-muted-foreground"
         />
       ) : (
         <ItemIcon
           classNameItem={item.class_name}
           category={item.category}
           appearance={itemAppearance(item, identities)}
-          size={16}
+          size={32}
           title={item.name}
           className="mt-0.5"
         />
@@ -297,7 +297,7 @@ export function FloorItemList({
               className={
                 variantIndex === 0
                   ? 'min-w-0'
-                  : 'flex min-w-0 items-center gap-2 pl-6'
+                  : 'flex min-w-0 items-center gap-2 pl-10'
               }
             >
               {variantIndex > 0 ? (
@@ -330,7 +330,6 @@ export function FloorItemSections({
   trinketSelection?: TrinketSelectionReport
 }) {
   const groups = partitionFloorItems(visibleItemGroups(floor.items))
-  const isImpShop = groups.shop.some((item) => item.source === 'ImpShopRoom')
   const sections = [
     {
       key: 'guaranteed',
@@ -344,14 +343,6 @@ export function FloorItemSections({
       label: 'Other items',
       caption: null,
       items: groups.general,
-    },
-    {
-      key: 'shop',
-      label: isImpShop ? 'Imp shop' : 'Shop',
-      caption: isImpShop
-        ? 'Not guaranteed. Appears only after completing the Imp vault with score > 2000.'
-        : null,
-      items: groups.shop,
     },
   ].filter(({ items }) => items.length > 0)
 

@@ -24,7 +24,7 @@ function IdentityGrid({
               classNameItem={e.item}
               category={category}
               appearance={e.appearance}
-              size={24}
+              size={72}
               title={name}
               className="shrink-0"
             />
@@ -33,7 +33,7 @@ function IdentityGrid({
                 {shortName}
               </div>
               <div className="text-muted-foreground truncate text-xs capitalize">
-                {appearanceDescription(category, e.appearance)}
+                {appearanceDescription(e.appearance)}
               </div>
             </div>
           </div>

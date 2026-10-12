@@ -36,23 +36,41 @@ export function AnalyzerWorkspace() {
           >
             <TabsTrigger
               value={session.id}
-              className="min-w-0 max-w-48 gap-1 pr-1"
+              asChild
+              aria-label={tabLabel(session)}
+              className="w-full min-w-0 gap-1 pr-1"
             >
-              {session.status === 'loading' || session.status === 'pending' ? (
-                <SpinnerGapIcon className="shrink-0 animate-spin" />
-              ) : null}
-              <span className="truncate font-mono text-xs">
-                {tabLabel(session)}
-              </span>
+              <div>
+                {session.status === 'loading' ||
+                session.status === 'pending' ? (
+                  <SpinnerGapIcon className="shrink-0 animate-spin" />
+                ) : null}
+                <span className="truncate font-mono text-xs">
+                  {tabLabel(session)}
+                </span>
+                <button
+                  type="button"
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex size-5 shrink-0 items-center justify-center rounded-none opacity-60 group-hover/seed-tab:opacity-100"
+                  aria-label={`Close ${tabLabel(session)}`}
+                  onMouseDown={(event) => {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    closeSeedSession(session.id)
+                  }}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter' && event.key !== ' ') return
+                    event.preventDefault()
+                    event.stopPropagation()
+                    closeSeedSession(session.id)
+                  }}
+                >
+                  <XIcon className="size-3" />
+                </button>
+              </div>
             </TabsTrigger>
-            <button
-              type="button"
-              className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex size-5 shrink-0 items-center justify-center rounded-none opacity-60 group-hover/seed-tab:opacity-100"
-              aria-label={`Close ${tabLabel(session)}`}
-              onClick={() => closeSeedSession(session.id)}
-            >
-              <XIcon className="size-3" />
-            </button>
           </div>
         ))}
       </ScrollableSessionTabs>

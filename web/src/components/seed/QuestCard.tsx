@@ -71,11 +71,6 @@ function baselineContract(quest: QuestReport) {
   }
 }
 
-function shopGateCopy(quest: QuestReport) {
-  if (quest.type !== 'ambitious_imp') return null
-  return 'The floor 20/21 Imp shop is not guaranteed. It appears only after completing the vault with score > 2000.'
-}
-
 /**
  * Every option is +2…+5, and `EscapeCrystal` only lets an item above +1 leave
  * at score >= 4000. The best non-statue total is 3000, so the statue is the
@@ -106,7 +101,6 @@ export function QuestCard({
 }) {
   const styles = QUEST_STYLES[quest.type]
   const contract = baselineContract(quest)
-  const shopGate = shopGateCopy(quest)
   const extractionGate = extractionGateCopy(quest)
   const impSlots =
     quest.type === 'ambitious_imp' ? (quest.contract.slots ?? []) : []
@@ -136,11 +130,6 @@ export function QuestCard({
       <p className="text-muted-foreground text-xs leading-relaxed">
         {targetSummary(quest)}
       </p>
-      {shopGate ? (
-        <p className="text-muted-foreground text-xs leading-relaxed">
-          {shopGate}
-        </p>
-      ) : null}
       {extractionGate ? (
         <p className="text-muted-foreground text-xs leading-relaxed">
           {extractionGate}

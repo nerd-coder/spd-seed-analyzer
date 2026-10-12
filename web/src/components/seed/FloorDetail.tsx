@@ -1,7 +1,6 @@
 import { DepthIcon } from '@/components/DepthIcon'
 import { FloorMapPreview } from '@/components/FloorMapPreview'
 import { FloorAppearanceSection } from '@/components/seed/FloorAppearanceSection'
-import { FloorEncounterSection } from '@/components/seed/FloorEncounterSection'
 import {
   FloorItemSections,
   visibleItemGroups,
@@ -138,10 +137,6 @@ export function FloorDetail({
       )}
 
       <FloorAppearanceSection appearances={floor.guaranteed_appearances} />
-      <FloorEncounterSection
-        encounters={floor.initial_encounters}
-        identities={identities}
-      />
       <FloorItemSections
         floor={floor}
         identities={identities}
