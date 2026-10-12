@@ -88,7 +88,9 @@ pub(super) fn paint(ctx: &mut PaintCtx<'_>, ri: usize) {
         ctx.occupy_heap(loot_positions[0]);
     }
 
-    let _ = ctx.create_mob();
+    let near_entrance = ctx.next_to_entrance(ri);
+    let (_enemy, returned) = ctx.create_spawn_mob(near_entrance, false);
+    ctx.return_mobs(returned);
     let _ = Random::int_max(2);
     ctx.occupy_mob(ctx.point_cell(c));
 

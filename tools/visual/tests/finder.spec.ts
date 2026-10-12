@@ -296,9 +296,12 @@ test('ongoing search survives reload', async ({ page }) => {
   await page.reload()
 
   await expect(page.getByRole('tab', { name: /3293380032588/ })).toBeVisible()
-  await expect(
-    page.locator('[data-slot="item"]').filter({ hasText: 'Ring of Wealth' })
-  ).toBeVisible({ timeout: 60_000 })
+  const wealth = page
+    .locator('[data-slot="item"]')
+    .filter({ hasText: 'Ring of Wealth' })
+  await expect(wealth).toHaveCount(2, { timeout: 60_000 })
+  await expect(wealth.filter({ hasText: 'Pit room' })).toBeVisible()
+  await expect(wealth.filter({ hasText: 'Crystal vault' })).toBeVisible()
 
   expect(consoleErrors, 'browser console errors').toEqual([])
   expect(pageErrors, 'uncaught page errors').toEqual([])

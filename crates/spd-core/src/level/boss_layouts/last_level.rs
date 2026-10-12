@@ -1,4 +1,4 @@
-//! Pinned SPD v4.0.0 `LastLevel` structural generation.
+//! Pinned SPD v4.0.2 `LastLevel` structural generation.
 
 use crate::dungeon::DungeonState;
 use crate::generator::Category;

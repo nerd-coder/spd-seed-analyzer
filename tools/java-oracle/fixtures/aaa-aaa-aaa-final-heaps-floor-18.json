@@ -1,8 +1,15 @@
 {
   "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
-  "input": { "seed": "AAA-AAA-AAA", "numeric": 0, "depths": [18] },
+  "spd": {
+    "version": "v4.0.2",
+    "commit": "57a4e06a4"
+  },
+  "input": {
+    "seed": "AAA-AAA-AAA",
+    "numeric": 0,
+    "depths": [18]
+  },
   "identities": {
     "potions": [
       { "item": "PotionOfStrength", "appearance": "crimson" },
@@ -224,8 +231,8 @@
         5, 4, 4, 4, 4, 4, 4, 4, 4, 29, 14, 26, 14, 4, 29, 4, 4, 4, 4, 4, 4, 4,
         4, 4, 4, 4, 4, 29, 25, 32, 32, 32, 25, 1, 4, 27, 27, 27, 27, 14, 27, 27,
         27, 14, 4, 4, 4, 4, 4, 4, 4, 4, 1, 14, 14, 14, 12, 1, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 12, 4, 29, 32, 32, 32, 32, 32, 18, 12, 27, 14, 14, 14, 14,
-        27, 14, 14, 14, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 20, 14, 5, 1, 4, 4, 4, 4,
+        4, 4, 4, 4, 12, 4, 29, 32, 32, 32, 32, 32, 1, 12, 27, 14, 14, 14, 14,
+        27, 14, 14, 14, 4, 4, 4, 4, 4, 4, 4, 4, 1, 20, 18, 14, 5, 1, 4, 4, 4, 4,
         4, 4, 4, 4, 4, 4, 29, 5, 29, 32, 32, 32, 32, 32, 1, 5, 14, 14, 14, 14,
         14, 14, 14, 14, 27, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 16, 4, 4, 4,
         4, 4, 4, 4, 4, 4, 4, 29, 4, 29, 25, 32, 32, 32, 25, 20, 4, 27, 14, 27,
@@ -1976,7 +1983,7 @@
       ],
       "traps": [
         {
-          "cell": 704,
+          "cell": 725,
           "class": "DisintegrationTrap",
           "visible": true,
           "active": true,
@@ -2139,15 +2146,10 @@
       "custom_walls": [],
       "final_heaps": [
         {
-          "cell": 417,
+          "cell": 419,
           "heap_type": "heap",
           "items": [
-            {
-              "class": "PotionOfStrength",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
+            { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
@@ -2155,7 +2157,7 @@
           "heap_type": "heap",
           "items": [
             {
-              "class": "PotionOfHealing",
+              "class": "PotionOfParalyticGas",
               "quantity": 1,
               "level": 0,
               "cursed": false
@@ -2163,15 +2165,8 @@
           ]
         },
         {
-          "cell": 551,
-          "heap_type": "heap",
-          "items": [
-            { "class": "Food", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
           "cell": 554,
-          "heap_type": "heap",
+          "heap_type": "chest",
           "items": [
             {
               "class": "StoneOfAggression",
@@ -2197,29 +2192,8 @@
           "cell": 595,
           "heap_type": "heap",
           "items": [
-            { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 683,
-          "heap_type": "heap",
-          "items": [
-            { "class": "GuidePage", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 725,
-          "heap_type": "heap",
-          "items": [
-            { "class": "Gold", "quantity": 213, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 788,
-          "heap_type": "heap",
-          "items": [
             {
-              "class": "PotionOfParalyticGas",
+              "class": "PotionOfHaste",
               "quantity": 1,
               "level": 0,
               "cursed": false
@@ -2227,7 +2201,26 @@
           ]
         },
         {
-          "cell": 849,
+          "cell": 681,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "ScrollOfIdentify",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 723,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Gold", "quantity": 213, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 814,
           "heap_type": "heap",
           "items": [
             {
@@ -2239,15 +2232,17 @@
           ]
         },
         {
-          "cell": 984,
+          "cell": 833,
+          "heap_type": "chest",
+          "items": [
+            { "class": "Seed", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 977,
           "heap_type": "heap",
           "items": [
-            {
-              "class": "PotionOfHaste",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
+            { "class": "Food", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
@@ -2270,10 +2265,29 @@
           ]
         },
         {
-          "cell": 1121,
+          "cell": 1036,
           "heap_type": "heap",
           "items": [
-            { "class": "MailArmor", "quantity": 1, "level": 1, "cursed": true }
+            {
+              "class": "PotionOfStrength",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 1056,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Gold", "quantity": 238, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 1067,
+          "heap_type": "heap",
+          "items": [
+            { "class": "GuidePage", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
@@ -2308,7 +2322,6 @@
         { "cell": 501, "class": "Ghoul" },
         { "cell": 547, "class": "Warlock" },
         { "cell": 594, "class": "Warlock" },
-        { "cell": 698, "class": "Mimic" },
         { "cell": 749, "class": "Monk" },
         { "cell": 1012, "class": "FireElemental" },
         { "cell": 1039, "class": "Golem" }

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "spd": {
-    "version": "v4.0.0",
-    "commit": "2bb34a4e9"
+    "version": "v4.0.2",
+    "commit": "57a4e06a4"
   },
   "input": {
     "seed": "AAA-AAA-AAA",

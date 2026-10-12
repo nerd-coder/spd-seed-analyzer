@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract": "generator_lifecycle",
-  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
+  "spd": { "version": "v4.0.2", "commit": "57a4e06a4" },
   "input": { "seed": "GFX-PZH-DCH", "numeric": 1300416271343 },
   "boundaries": [
     {
@@ -26,13 +26,13 @@
       "boundary": "floor_2_complete",
       "scroll": {
         "seed": -6198305397357196810,
-        "dropped": 4,
-        "probabilities": [0, 1, 2, 0, 2, 1, 1, 1, 1, 0, 1, 1]
+        "dropped": 3,
+        "probabilities": [0, 2, 2, 0, 2, 1, 1, 1, 1, 0, 1, 1]
       },
       "wep_t2": {
         "seed": -5771918163882724647,
-        "dropped": 2,
-        "probabilities": [2, 1, 2, 2, 1, 2, 0]
+        "dropped": 3,
+        "probabilities": [2, 1, 1, 2, 1, 2, 0]
       },
       "wep_t4": {
         "seed": -3713498913475024867,
@@ -44,13 +44,13 @@
       "boundary": "floor_3_after_sacrifice_room",
       "scroll": {
         "seed": -6198305397357196810,
-        "dropped": 4,
-        "probabilities": [0, 1, 2, 0, 2, 1, 1, 1, 1, 0, 1, 1]
+        "dropped": 3,
+        "probabilities": [0, 2, 2, 0, 2, 1, 1, 1, 1, 0, 1, 1]
       },
       "wep_t2": {
         "seed": -5771918163882724647,
-        "dropped": 2,
-        "probabilities": [2, 1, 2, 2, 1, 2, 0]
+        "dropped": 3,
+        "probabilities": [2, 1, 1, 2, 1, 2, 0]
       },
       "wep_t4": {
         "seed": -3713498913475024867,
@@ -62,13 +62,13 @@
       "boundary": "floor_3_create_items_complete",
       "scroll": {
         "seed": -6198305397357196810,
-        "dropped": 7,
-        "probabilities": [0, 1, 2, 0, 1, 1, 1, 1, 0, 0, 0, 1]
+        "dropped": 6,
+        "probabilities": [0, 1, 2, 0, 1, 1, 1, 1, 0, 0, 1, 1]
       },
       "wep_t2": {
         "seed": -5771918163882724647,
-        "dropped": 2,
-        "probabilities": [2, 1, 2, 2, 1, 2, 0]
+        "dropped": 3,
+        "probabilities": [2, 1, 1, 2, 1, 2, 0]
       },
       "wep_t4": {
         "seed": -3713498913475024867,
@@ -80,13 +80,13 @@
       "boundary": "floor_4_create_items_complete",
       "scroll": {
         "seed": -6198305397357196810,
-        "dropped": 8,
-        "probabilities": [0, 0, 2, 0, 1, 1, 1, 1, 0, 0, 0, 1]
+        "dropped": 7,
+        "probabilities": [0, 1, 2, 0, 1, 1, 1, 1, 0, 0, 0, 1]
       },
       "wep_t2": {
         "seed": -5771918163882724647,
-        "dropped": 2,
-        "probabilities": [2, 1, 2, 2, 1, 2, 0]
+        "dropped": 3,
+        "probabilities": [2, 1, 1, 2, 1, 2, 0]
       },
       "wep_t4": {
         "seed": -3713498913475024867,
@@ -98,13 +98,13 @@
       "boundary": "floor_5_complete",
       "scroll": {
         "seed": -6198305397357196810,
-        "dropped": 8,
-        "probabilities": [0, 0, 2, 0, 1, 1, 1, 1, 0, 0, 0, 1]
+        "dropped": 7,
+        "probabilities": [0, 1, 2, 0, 1, 1, 1, 1, 0, 0, 0, 1]
       },
       "wep_t2": {
         "seed": -5771918163882724647,
-        "dropped": 2,
-        "probabilities": [2, 1, 2, 2, 1, 2, 0]
+        "dropped": 3,
+        "probabilities": [2, 1, 1, 2, 1, 2, 0]
       },
       "wep_t4": {
         "seed": -3713498913475024867,
@@ -116,36 +116,36 @@
       "boundary": "floor_6_create_items_complete",
       "scroll": {
         "seed": -6198305397357196810,
-        "dropped": 9,
-        "probabilities": [0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 0, 1]
+        "dropped": 8,
+        "probabilities": [0, 0, 2, 0, 1, 1, 1, 1, 0, 0, 0, 1]
       },
       "wep_t2": {
         "seed": -5771918163882724647,
-        "dropped": 3,
-        "probabilities": [2, 1, 1, 2, 1, 2, 0]
+        "dropped": 4,
+        "probabilities": [1, 1, 1, 2, 1, 2, 0]
       },
       "wep_t4": {
         "seed": -3713498913475024867,
-        "dropped": 2,
-        "probabilities": [2, 2, 2, 1, 2, 2, 1]
+        "dropped": 1,
+        "probabilities": [2, 2, 2, 1, 2, 2, 2]
       }
     },
     {
       "boundary": "floor_19_create_items_complete",
       "scroll": {
         "seed": -6198305397357196810,
-        "dropped": 23,
-        "probabilities": [0, 1, 2, 2, 0, 0, 1, 0, 0, 1, 0, 0]
+        "dropped": 22,
+        "probabilities": [0, 1, 2, 2, 0, 0, 1, 0, 1, 1, 0, 0]
       },
       "wep_t2": {
         "seed": -5771918163882724647,
-        "dropped": 3,
-        "probabilities": [2, 1, 1, 2, 1, 2, 0]
+        "dropped": 4,
+        "probabilities": [1, 1, 1, 2, 1, 2, 0]
       },
       "wep_t4": {
         "seed": -3713498913475024867,
-        "dropped": 5,
-        "probabilities": [1, 2, 2, 1, 1, 2, 0]
+        "dropped": 6,
+        "probabilities": [1, 2, 2, 1, 0, 2, 0]
       }
     }
   ]

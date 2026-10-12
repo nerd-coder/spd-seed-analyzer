@@ -1,8 +1,15 @@
 {
   "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
-  "input": { "seed": "AAA-AAA-AAA", "numeric": 0, "depths": [12] },
+  "spd": {
+    "version": "v4.0.2",
+    "commit": "57a4e06a4"
+  },
+  "input": {
+    "seed": "AAA-AAA-AAA",
+    "numeric": 0,
+    "depths": [12]
+  },
   "identities": {
     "potions": [
       { "item": "PotionOfStrength", "appearance": "crimson" },
@@ -253,8 +260,8 @@
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 29, 0, 0, 4, 29, 29, 29, 0,
         0, 0, 0, 29, 29, 29, 4, 12, 4, 4, 4, 12, 12, 4, 4, 4, 4, 4, 4, 4, 4, 4,
         4, 4, 4, 4, 4, 4, 4, 5, 4, 4, 4, 29, 29, 0, 0, 0, 0, 0, 0, 29, 29, 16,
-        17, 1, 17, 27, 14, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29,
-        29, 29, 4, 4, 29, 29, 0, 0, 0, 0, 0, 0, 29, 29, 4, 1, 1, 1, 27, 14, 14,
+        17, 1, 1, 27, 14, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29,
+        29, 29, 4, 4, 29, 29, 0, 0, 0, 0, 0, 0, 29, 29, 4, 1, 1, 17, 27, 14, 14,
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 29, 29, 29, 29, 4, 29,
         29, 0, 0, 0, 0, 0, 0, 29, 29, 4, 1, 20, 1, 27, 14, 14, 4, 4, 4, 4, 4, 4,
         4, 4, 4, 4, 4, 4, 4, 20, 29, 29, 29, 29, 29, 4, 29, 29, 0, 0, 0, 0, 0,
@@ -265,11 +272,11 @@
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 34, 34, 34, 14, 34, 34, 4, 12,
         29, 29, 29, 29, 29, 29, 29, 29, 4, 4, 1, 1, 1, 27, 14, 14, 4, 4, 4, 4,
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 15, 15, 2, 15, 2, 16, 29, 29, 29, 29, 29,
-        29, 29, 4, 29, 4, 4, 20, 1, 18, 27, 14, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 4, 4, 4, 12, 4, 4, 16, 4, 4, 4,
-        4, 4, 12, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-        4, 4, 29, 29, 29, 34, 29, 29, 29, 29, 12, 4, 4, 12, 4, 29, 29, 4, 4, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 29, 34,
+        29, 29, 4, 29, 4, 4, 18, 1, 1, 27, 14, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 4, 4, 4, 12, 4, 4, 16, 4, 4, 4, 4,
+        4, 12, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 29, 29, 29, 34, 29, 29, 29, 29, 12, 4, 4, 12, 4, 29, 29, 4, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 29, 34,
         29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4,
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 29, 34, 29, 29, 29, 29,
         29, 29, 8, 29, 29, 29, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
@@ -2526,7 +2533,7 @@
           "shape": 4
         },
         {
-          "cell": 1030,
+          "cell": 1067,
           "class": "FrostTrap",
           "visible": false,
           "active": true,
@@ -2542,7 +2549,7 @@
           "shape": 3
         },
         {
-          "cell": 1289,
+          "cell": 1287,
           "class": "RockfallTrap",
           "visible": true,
           "active": true,
@@ -2601,27 +2608,39 @@
         },
         {
           "cell": 542,
-          "heap_type": "locked_chest",
-          "items": [
-            { "class": "Javelin", "quantity": 3, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 655,
           "heap_type": "heap",
           "items": [
             { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 707,
+          "cell": 577,
+          "heap_type": "heap",
+          "items": [
+            { "class": "GuidePage", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 643,
           "heap_type": "heap",
           "items": [
             {
-              "class": "PotionOfMindVision",
+              "class": "ScrollOfRemoveCurse",
               "quantity": 1,
               "level": 0,
               "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 672,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "WandOfMagicMissile",
+              "quantity": 1,
+              "level": 1,
+              "cursed": true
             }
           ]
         },
@@ -2633,46 +2652,10 @@
           ]
         },
         {
-          "cell": 781,
+          "cell": 982,
           "heap_type": "heap",
           "items": [
-            { "class": "GuidePage", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 782,
-          "heap_type": "heap",
-          "items": [
-            {
-              "class": "PotionOfInvisibility",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
-          ]
-        },
-        {
-          "cell": 987,
-          "heap_type": "heap",
-          "items": [
-            {
-              "class": "ScrollOfUpgrade",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
-          ]
-        },
-        {
-          "cell": 1049,
-          "heap_type": "heap",
-          "items": [
-            {
-              "class": "PotionOfLiquidFlame",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
+            { "class": "Food", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
@@ -2688,13 +2671,6 @@
           ]
         },
         {
-          "cell": 1089,
-          "heap_type": "chest",
-          "items": [
-            { "class": "Mace", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
           "cell": 1103,
           "heap_type": "heap",
           "items": [
@@ -2707,10 +2683,22 @@
           ]
         },
         {
-          "cell": 1277,
+          "cell": 1242,
           "heap_type": "heap",
           "items": [
-            { "class": "Food", "quantity": 1, "level": 0, "cursed": false }
+            {
+              "class": "PotionOfLiquidFlame",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 1274,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Stylus", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
@@ -2726,17 +2714,39 @@
           ]
         },
         {
-          "cell": 1393,
+          "cell": 1400,
           "heap_type": "heap",
           "items": [
-            { "class": "GoldenKey", "quantity": 1, "level": 0, "cursed": false }
+            {
+              "class": "PotionOfInvisibility",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
           ]
         },
         {
-          "cell": 1537,
+          "cell": 1403,
           "heap_type": "heap",
           "items": [
-            { "class": "Stylus", "quantity": 1, "level": 0, "cursed": false }
+            {
+              "class": "PotionOfPurity",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 1432,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "ScrollOfUpgrade",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
           ]
         },
         {

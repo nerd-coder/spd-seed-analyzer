@@ -8,8 +8,8 @@ Browser-based **Shattered Pixel Dungeon** seed analyzer. Generation logic is por
 
 | Field | Value |
 |-------|--------|
-| SPD version | v4.0.0 |
-| SPD commit | `2bb34a4e9` |
+| SPD version | v4.0.2 |
+| SPD commit | `57a4e06a4` |
 
 ## Support
 

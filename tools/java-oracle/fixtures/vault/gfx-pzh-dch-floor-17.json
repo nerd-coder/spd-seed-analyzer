@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract": "vault_level_using_defaults",
-  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
+  "spd": { "version": "v4.0.2", "commit": "57a4e06a4" },
   "input": { "seed": "GFX-PZH-DCH", "numeric": 1300416271343 },
   "depth": 17,
   "branch": 1,
@@ -150,7 +150,10 @@
         { "class": "MarkerTiles", "x": 37, "y": 7, "width": 9, "height": 9, "texture": "environment/custom_tiles/city_quest.png", "static_data": [69, 70, 71, 72, 73, 74, 75, 76, 77, 85, 86, 87, 88, 89, 90, 91, 92, 93, 101, 102, 103, 104, 105, 106, 107, 108, 109, 117, 118, 119, 120, 121, 122, 123, 124, 125, 133, 134, 135, 136, 137, 138, 139, 140, 141, 149, 150, 151, 152, 153, 154, 155, 156, 157, 165, 166, 167, 168, 169, 170, 171, 172, 173, 181, 182, 183, 184, 185, 186, 187, 188, 189, 197, 198, 199, 200, 201, 202, 203, 204, 205] },
         { "class": "Carpet", "x": 36, "y": 18, "width": 11, "height": 3, "texture": "environment/custom_tiles/carpet.png", "static_data": [57, 49, 49, 49, 49, 49, 49, 49, 49, 49, 51, 56, 81, 48, 81, 48, 48, 48, 81, 48, 81, 50, 60, 52, 52, 52, 52, 52, 52, 52, 52, 52, 54] },
         { "class": "VaultTreasure", "x": 34, "y": 1, "width": 15, "height": 4, "texture": "environment/custom_tiles/city_quest.png", "static_data": [84, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 83, 100, 98, 98, 98, 98, 98, 98, 98, 98, 98, 98, 98, 98, 98, 99, 97, 115, 113, 115, 114, 115, 112, 115, 112, 115, 114, 115, 113, 115, 96, 97, 112, 112, 114, 114, 114, 113, 114, 112, 113, 112, 113, 114, 112, 96] },
+        { "class": "FinalRoomDoor", "x": 41, "y": 17, "width": 1, "height": 1, "texture": "environment/custom_tiles/city_quest.png", "static_data": [] },
+        { "class": "FinalRoomDoor", "x": 41, "y": 5, "width": 1, "height": 1, "texture": "environment/custom_tiles/city_quest.png", "static_data": [] },
         { "class": "Carpet", "x": 40, "y": 45, "width": 3, "height": 3, "texture": "environment/custom_tiles/carpet.png", "static_data": [88, 49, 87, 56, 48, 50, 60, 52, 54] },
+        { "class": "TokenDoorFloor", "x": 41, "y": 49, "width": 1, "height": 1, "texture": "environment/custom_tiles/city_quest.png", "static_data": [] },
         { "class": "Carpet", "x": 3, "y": 25, "width": 7, "height": 3, "texture": "environment/custom_tiles/carpet.png", "static_data": [57, 49, 49, 49, 49, 49, 51, 56, 48, 48, 48, 48, 48, 50, 60, 52, 52, 52, 52, 52, 54] },
         { "class": "Carpet", "x": 5, "y": 23, "width": 3, "height": 7, "texture": "environment/custom_tiles/carpet.png", "static_data": [57, 49, 51, 56, 48, 50, 56, 48, 50, 56, 48, 50, 56, 48, 50, 56, 48, 50, 60, 52, 54] },
         { "class": "QuestEntranceInternal", "x": 5, "y": 25, "width": 3, "height": 3, "texture": "environment/custom_tiles/city_quest.png", "static_data": [24, 25, 26, 40, 41, 42, 56, 57, 58] }

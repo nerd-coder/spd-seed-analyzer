@@ -1,6 +1,6 @@
 # Level feelings, Mossy Clump, and Trap Mechanism
 
-Target: **Shattered Pixel Dungeon v4.0.0 @ `2bb34a4e9`**.
+Target: **Shattered Pixel Dungeon v4.0.2 @ `57a4e06a4`**.
 
 Feelings are chosen during `Level.create`, after forced-drop queueing and
 before `build` (`Level.java:218-316`). They apply only on branch 0, non-boss
@@ -29,7 +29,11 @@ LARGE and SECRETS are the only feelings that change `initRooms` counts
 (`RegularLevel.java:129-163`). WATER and GRASS change region water/grass fill.
 CHASM changes padding and default fill (`RegularPainter.java:79-81`,
 `Level.java:334`). TRAPS paints `5 * nTraps` traps with extras visible
-(`RegularPainter.java:473-474`). DARK only shortens view distance.
+(`RegularPainter.java:474-505`); traps with `avoidsClosedSpaces` take a cell
+from the open-space list when it is non-empty, and that cell plus its four
+orthogonal neighbors are then removed from the open-space list, the neighbors
+from that list only (`RegularPainter.java:480-491`). DARK only shortens view
+distance.
 
 `nTraps()` is `NormalIntRange(2, 3 + depth/5)` on the depth stream before the
 painter isolates decoration (`RegularLevel.java:193-195`,
@@ -121,7 +125,7 @@ false -> CHASM
 
 Also shuffled under `Dungeon.seed+1` on the item instance. Reveal chance while
 painting traps is `0.1 + 0.1 * level` (`TrapMechanism.java:66-76`,
-`RegularPainter.java:470-498`).
+`RegularPainter.java:471-500`).
 
 TRAPS does not change `initRooms`. CHASM does not change the room multiset
 either, but padding 2 versus 1 and chasm default fill change the painted map.

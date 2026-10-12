@@ -304,6 +304,10 @@ pub(super) fn paint_weak_floor(
         )
     };
     set(map, well, CHASM);
+    if let Some(cell) = map.point_to_cell(well.x, well.y) {
+        // `WeakFloorRoom` tracks the hidden well with a one-cell `WellID` blob.
+        map.record_blob_cell("WellID", false, cell, 1);
+    }
     map.record_custom_tile("HiddenWell", "weak_floor", (well.x, well.y, 1, 1), vec![4]);
 }
 

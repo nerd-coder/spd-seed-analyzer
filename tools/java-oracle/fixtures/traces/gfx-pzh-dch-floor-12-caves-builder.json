@@ -93,6 +93,10 @@
   "pre_shuffle_rooms": null,
   "pre_mobs_rng": null,
   "pre_items_rng": null,
+  "pre_trap_rng": [],
+  "post_trap_capture_rng": [],
+  "trap_candidates": [],
+  "trap_non_hall_cells": [],
   "crystal_vaults": [],
   "drops": [],
   "blacksmith_state": {
@@ -109,7 +113,7 @@
     "using_first_deck": true,
     "category_probs": [
       0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-      0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0
+      0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0
     ],
     "categories": [
       {
@@ -129,22 +133,22 @@
         "dropped": 0
       },
       {
-        "probs": [2.0, 1.0, 1.0, 2.0, 1.0, 2.0, 0.0],
+        "probs": [1.0, 1.0, 1.0, 2.0, 1.0, 2.0, 0.0],
         "using_2nd_probs": false,
         "seed": -5771918163882724647,
+        "dropped": 4
+      },
+      {
+        "probs": [2.0, 2.0, 1.0, 1.0, 1.0, 2.0],
+        "using_2nd_probs": false,
+        "seed": -7243016205079533422,
         "dropped": 3
       },
       {
-        "probs": [2.0, 2.0, 2.0, 1.0, 1.0, 2.0],
-        "using_2nd_probs": false,
-        "seed": -7243016205079533422,
-        "dropped": 2
-      },
-      {
-        "probs": [2.0, 2.0, 2.0, 1.0, 2.0, 2.0, 1.0],
+        "probs": [2.0, 2.0, 2.0, 1.0, 2.0, 2.0, 2.0],
         "using_2nd_probs": false,
         "seed": -3713498913475024867,
-        "dropped": 2
+        "dropped": 1
       },
       {
         "probs": [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0],
@@ -166,16 +170,16 @@
         "dropped": 0
       },
       {
-        "probs": [2.0, 3.0, 3.0],
+        "probs": [2.0, 3.0, 2.0],
         "using_2nd_probs": false,
         "seed": 760040897669438048,
-        "dropped": 1
+        "dropped": 2
       },
       {
-        "probs": [2.0, 2.0, 3.0],
+        "probs": [2.0, 3.0, 3.0],
         "using_2nd_probs": false,
         "seed": 5479209157312539551,
-        "dropped": 2
+        "dropped": 1
       },
       {
         "probs": [3.0, 3.0, 3.0],
@@ -191,17 +195,17 @@
       },
       {
         "probs": [
-          3.0, 1.0, 3.0, 3.0, 3.0, 2.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 2.0
+          3.0, 1.0, 3.0, 3.0, 3.0, 2.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0
         ],
         "using_2nd_probs": false,
         "seed": -5135241931996733240,
-        "dropped": 4
+        "dropped": 3
       },
       {
-        "probs": [3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 2.0],
+        "probs": [3.0, 2.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 2.0],
         "using_2nd_probs": false,
         "seed": 3463647073178929225,
-        "dropped": 1
+        "dropped": 2
       },
       {
         "probs": [
@@ -230,16 +234,16 @@
         "dropped": 0
       },
       {
-        "probs": [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+        "probs": [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
         "using_2nd_probs": false,
         "seed": -6198305397357196810,
-        "dropped": 13
+        "dropped": 11
       },
       {
-        "probs": [0.0, 1.0, 1.0, 2.0, 2.0, 1.0, 1.0, 0.0, 2.0, 2.0, 1.0, 0.0],
+        "probs": [0.0, 2.0, 1.0, 2.0, 2.0, 1.0, 1.0, 0.0, 2.0, 2.0, 1.0, 0.0],
         "using_2nd_probs": false,
         "seed": -1320899939598838849,
-        "dropped": 7
+        "dropped": 6
       },
       { "probs": [1.0], "using_2nd_probs": false, "seed": null, "dropped": 0 }
     ]

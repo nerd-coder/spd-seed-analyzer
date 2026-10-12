@@ -1,8 +1,8 @@
 use crate::level::carpet::{CITY_ENTRANCE, CITY_PEDESTAL, CITY_STATUE, SKIP};
 use crate::level::painter::{place_doors_for_room, DoorMap};
 use crate::level::terrain::{
-    self, BOOKSHELF, EMPTY, EMPTY_SP, ENTRANCE, ENTRANCE_SP, EXIT, REGION_DECO, REGION_DECO_ALT,
-    STATUE, STATUE_SP,
+    self, BOOKSHELF, EMPTY, EMPTY_DECO, EMPTY_SP, ENTRANCE, ENTRANCE_SP, EXIT, REGION_DECO,
+    REGION_DECO_ALT, STATUE, STATUE_SP,
 };
 use crate::random::Random;
 use crate::report::MapCustomTile;
@@ -267,4 +267,82 @@ fn segmented_library_uses_bookshelf_walls_and_single_cell_gaps() {
         .point_to_cell(first_inside.0, first_inside.1)
         .expect("inside door");
     assert_eq!(map.map[cell], EMPTY_SP);
+}
+
+#[test]
+fn large_even_statue_transition_clears_the_full_carpet_rect() {
+    for (name, kind, transition, overlay) in [
+        (
+            "StatuesEntranceRoom",
+            RoomKind::Entrance,
+            ENTRANCE,
+            CITY_ENTRANCE,
+        ),
+        ("StatuesExitRoom", RoomKind::Exit, EXIT, SKIP),
+    ] {
+        Random::push_generator_seeded(0x00CA_57E7);
+        let variant = room(name, kind, 2, 12, 12);
+        let (rooms, doors) = with_east_connection(variant);
+        let mut map = terrain::paint_minimal(&rooms).expect("map");
+        assert!(paint(&mut map, &rooms, &rooms[0], 0, &doors, 18).is_some());
+        Random::pop_generator();
+
+        let transition_cell = map
+            .map
+            .iter()
+            .position(|&tile| tile == transition)
+            .unwrap_or_else(|| panic!("missing transition for {name}"));
+        let x = map.origin_x + (transition_cell as i32 % map.width);
+        let y = map.origin_y + (transition_cell as i32 / map.width);
+        let room = &rooms[0];
+        let (left, top, right, bottom) = large_even_carpet(room, x, y);
+        assert!(right - left + 1 >= 4 && bottom - top + 1 >= 4, "{name}");
+        let mut extended_floor = 0;
+        for cy in top..=bottom {
+            for cx in left..=right {
+                let cell = map.point_to_cell(cx, cy).expect("carpet cell");
+                let tile = map.map[cell];
+                if cx == x && cy == y {
+                    assert_eq!(tile, transition, "{name} center");
+                    continue;
+                }
+                if tile == STATUE {
+                    continue;
+                }
+                assert_eq!(tile, EMPTY_DECO, "{name} carpet cell {cx},{cy}");
+                if (cx - x).abs() > 1 || (cy - y).abs() > 1 {
+                    extended_floor += 1;
+                }
+            }
+        }
+        assert!(extended_floor > 0, "{name} even-size extension");
+        assert_eq!(carpets(&map)[0].width, (right - left + 1) as u32);
+        assert_eq!(carpets(&map)[0].height, (bottom - top + 1) as u32);
+        assert!(carpets(&map)[0].static_data.contains(&overlay));
+        if kind == RoomKind::Exit {
+            assert!(!map.character_allowed[transition_cell]);
+        }
+    }
+}
+
+fn large_even_carpet(room: &Room, x: i32, y: i32) -> (i32, i32, i32, i32) {
+    let mut left = x - 1;
+    let mut top = y - 1;
+    let mut right = x + 1;
+    let mut bottom = y + 1;
+    if room.width() % 2 == 0 {
+        if (x as f32) < (room.left + room.right) as f32 / 2.0 {
+            right += 1;
+        } else {
+            left -= 1;
+        }
+    }
+    if room.height() % 2 == 0 {
+        if (y as f32) < (room.top + room.bottom) as f32 / 2.0 {
+            bottom += 1;
+        } else {
+            top -= 1;
+        }
+    }
+    (left, top, right, bottom)
 }

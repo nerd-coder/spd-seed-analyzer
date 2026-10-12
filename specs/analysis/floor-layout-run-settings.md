@@ -1,10 +1,10 @@
 # Floor layout certainty
 
-Target: **Shattered Pixel Dungeon v4.0.0 @ `2bb34a4e9`**. Public maps follow
+Target: **Shattered Pixel Dungeon v4.0.2 @ `57a4e06a4`**. Public maps follow
 `MAP-LAYOUT-GOAL`: painter-complete rooms, connections, doors, transitions,
-terrain, traps, plants, and blobs, captured before NPC, mob, heap, forced-item,
-or Guide Page population. A later floor can still depend on that hidden
-population when it mutates persistent generator state.
+terrain, traps, plants, blobs, and custom tiles/carpets, captured before NPC,
+mob, heap, forced-item, or Guide Page population. A later floor can still
+depend on that hidden population when it mutates persistent generator state.
 
 This note is Java generation fact. A declared run profile is a player-facing
 description of challenges, held trinkets, and artifact events. It is not an
@@ -59,8 +59,9 @@ Region standard/special rolls (non-LARGE):
 | Halls | 8–9 | 2–3 |
 
 (`SewerLevel.java:88-99`, `PrisonLevel.java:95-106`, `CavesLevel.java:95-106`,
-`CityLevel.java:93-104`, `HallsLevel.java:97-108`). Secrets come from the
-run-shuffled secret deck (`SecretRoom.java:66-87`). Specials come from the
+`CityLevel.java:93-104`, `HallsLevel.java:97-108`). Secret identities come from
+the run-shuffled secret deck (`SecretRoom.java:61-62,90-100`). Per-floor counts
+are `secretsForFloor` (`SecretRoom.java:66-88`). Specials come from the
 run queue plus a laboratory on depth 3 or 4 of each chapter
 (`SpecialRoom.java:131-138`, `Dungeon.java:589-598`).
 
@@ -74,6 +75,41 @@ consume (`HallwayRoom.java:107-122`). Statues rooms still use `Random.Int(2)`
 for even-dimension centers (`StatuesRoom.java:85-94`). Those are paint-stream
 facts, not room-selection facts.
 
+`paintTraps` is painter-complete trap terrain, inside the isolated
+`Random.Long()` above. Candidates are `EMPTY` trap-placeable cells
+(`RegularPainter.java:429-447`). Open space means both axes have a passable
+neighbor. `PathFinder.CIRCLE4` is `{-width, +1, +width, -1}`
+(`PathFinder.java:73`), so indices 0 and 2 are vertical and 1 and 3 are
+horizontal. `Level.setSize` installs that array for the level width before
+painting (`Level.java:352`). The test is passable on `(0 or 2)` and `(1 or 3)`
+(`RegularPainter.java:456-465`). A trap with `avoidsClosedSpaces`
+(`Trap.java:70-71`) draws `Random.element(validOpenSpace)` when that list is
+non-empty. Every other trap, and an `avoidsClosedSpaces` trap when the open
+list is empty, draws from `validCells` (`RegularPainter.java:475-484`). After
+each placement, that cell leaves both lists, and its four orthogonal neighbors
+leave `validOpenSpace` only (`RegularPainter.java:485-492`). Two
+`avoidsClosedSpaces` traps therefore cannot be orthogonally adjacent while the
+second still draws from `validOpenSpace`.
+
+`StatuesRoom`, `StatuesEntranceRoom`, and `StatuesExitRoom` do not call
+`Statue.random`. They paint `STATUE` tiles and carpets. When `width() >= 11`
+or `height() >= 11`, the entrance and exit variants also set the center
+transition, paint non-`STATUE` cells of the center carpet rect to `EMPTY_DECO`,
+and insert that carpet (`StatuesEntranceRoom.java:46-91`,
+`StatuesExitRoom.java:46-91`). The special `StatueRoom` calls `Statue.random()`
+during `paint` and adds the mob (`StatueRoom.java:70-72`).
+`Statue.random(boolean)` spends one parent-stream `Random.Float()` on armored
+versus normal (`1/10f * RatSkull.exoticChanceMultiplier()`, half as effective
+above 0.1), then runs `createWeapon` inside `Random.pushGenerator(Random.Long())`
+(`Statue.java:206-221`). Rat Skull can change the type. It cannot change how
+many parent-stream calls the weapon roll makes: always that `Float()` plus
+that `Long()`, so the weapon roll cannot desync later levelgen. The statue and
+its weapon are mob state, outside the public map. The `Long()` is consumed
+when the statue is created, which current SPD does during special statue-room
+paint, before later rooms in the shuffled paint loop and before `paintDoors`
+and the isolated water/grass/trap generator. A public-map cutoff that skips
+mob creation still has to consume it.
+
 ## Feeling order (summary)
 
 On branch 0, non-boss, `depth > 1`: `Random.Int(14)` then, on cases 7–13, two
@@ -85,7 +121,7 @@ CHASM uses padding 2 and fills unset cells with chasm
 (`RegularPainter.java:79-81`, `Level.java:334`). WATER/GRASS change region
 fill percents (for example sewers 0.85/0.80 versus 0.30/0.20,
 `SewerLevel.java:102-107`). TRAPS paints `5 * nTraps` traps with extras
-visible (`RegularPainter.java:473-474`). SECRETS pulls hidden-door chance
+visible (`RegularPainter.java:474-475`). SECRETS pulls hidden-door chance
 toward 50% (`RegularPainter.java:187-197`). DARK only shortens `viewDistance`.
 
 ## Challenges that touch painter-complete maps
@@ -96,7 +132,7 @@ Nine bits exist (`Challenges.java:30-38`). Only these alter initial layout:
   (`Level.java:232-240`). `findPrizeItem` may then take a different queued
   item or return null (`Level.java:827-855`).
 - **Barren Land** (`NO_HERBALISM`): `Level.plant` still does the grass/RNG
-  work, then returns null (`Level.java:1049-1068`). Plants are part of the
+  work, then returns null (`Level.java:1051-1069`). Plants are part of the
   public layout.
 - **Badder Bosses** (`STRONGER_BOSSES`): depth 15 inactive-trap chance is 1/4
   instead of 1/8 (`CavesBossLevel.java:126-133`).
@@ -112,11 +148,14 @@ Layout-affecting trinkets, given class, `buffedLvl()`, and instance identity:
 
 - **Mossy Clump** — GRASS/WATER override; does not change room counts.
 - **Trap Mechanism** — TRAPS/CHASM override plus reveal chance during
-  `paintTraps` (`TrapMechanism.java:66-76`, `RegularPainter.java:470-498`).
+  `paintTraps` (`TrapMechanism.java:66-76`, `RegularPainter.java:471-504`).
 - **Mimic Tooth** — mimic chance and extra `generatePrize` during paint
   (`Mimic.java:306-358`). That can move the paint stream and item decks.
-- **Rat Skull** — Armored Statue versus Statue (`Statue.java:202-216`) and
-  Crystal Vault chest versus Crystal Mimic (`CrystalVaultRoom.java:75-82`).
+- **Rat Skull** — Crystal Vault chest versus Crystal Mimic
+  (`CrystalVaultRoom.java:75-82`). The armored-statue roll is still one
+  parent `Float()` (`Statue.java:208-214`); `createWeapon` then sits under
+  one parent `Long()` (`Statue.java:216-219`), so the skull does not change
+  how many parent calls follow.
 - **Cracked Spyglass** — extra hidden loot after ordinary `createItems`, under
   an isolated `Random.Long()` (`RegularLevel.java:679-690`). The isolated
   stream protects ambient RNG; `Generator.randomUsingDefaults()` can still

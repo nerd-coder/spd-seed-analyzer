@@ -300,7 +300,7 @@ fn compact_report_promotes_exact_floor_one_room_rewards() {
     }));
 
     let compact = report.compact_text();
-    assert!(compact.starts_with("RZN-LKU-EFS\nShPD v4.0.0\n\n"));
+    assert!(compact.starts_with("RZN-LKU-EFS\nShPD v4.0.2\n\n"));
     assert!(
         compact
             .lines()

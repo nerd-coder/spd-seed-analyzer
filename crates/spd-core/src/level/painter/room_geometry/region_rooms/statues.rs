@@ -76,17 +76,14 @@ fn paint_transition(map: &mut TerrainMap, room: &Room, depth: i32) {
     let cell = if room.width() >= 11 || room.height() >= 11 {
         let point = center(room);
         if let Some(cell) = map.point_to_cell(point.x, point.y) {
-            for dy in -1..=1 {
-                for dx in -1..=1 {
-                    if dx == 0 && dy == 0 {
-                        continue;
-                    }
-                    if terrain_at(map, point.x + dx, point.y + dy) != Some(STATUE) {
-                        set(map, point.x + dx, point.y + dy, EMPTY_DECO);
+            let (left, top, width, height) = large_transition_carpet(room, point);
+            for y in top..top + height {
+                for x in left..left + width {
+                    if terrain_at(map, x, y) != Some(STATUE) {
+                        set(map, x, y, EMPTY_DECO);
                     }
                 }
             }
-            let (left, top, width, height) = large_transition_carpet(room, point);
             carpet::add_city_under(
                 map,
                 left,

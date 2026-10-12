@@ -1,8 +1,15 @@
 {
   "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
-  "input": { "seed": "AAA-AAA-AAA", "numeric": 0, "depths": [26] },
+  "spd": {
+    "version": "v4.0.2",
+    "commit": "57a4e06a4"
+  },
+  "input": {
+    "seed": "AAA-AAA-AAA",
+    "numeric": 0,
+    "depths": [26]
+  },
   "identities": {
     "potions": [
       { "item": "PotionOfStrength", "appearance": "crimson" },

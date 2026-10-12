@@ -456,6 +456,14 @@ fn paint_traps(
         // object. Overlapping rooms can contribute duplicate candidate cells.
         remove_first(&mut valid, pos);
         remove_first(&mut non_hall, pos);
+        // Every placed trap drops its four CIRCLE4 neighbors from the open-space
+        // list only. Those cells stay in `valid` for traps that do not avoid halls.
+        for delta in circle4 {
+            let neighbor = pos as i32 + delta;
+            if neighbor >= 0 {
+                remove_first(&mut non_hall, neighbor as usize);
+            }
+        }
 
         reveal_inc += revealed_chance;
         let can_be_hidden = params::trap_metadata(trap.name)

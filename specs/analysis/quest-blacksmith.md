@@ -1,6 +1,6 @@
 # Troll Blacksmith reward — verified audit
 
-Target: **Shattered Pixel Dungeon v4.0.0 @ `2bb34a4e9`**. This note separates
+Target: **Shattered Pixel Dungeon v4.0.2 @ `57a4e06a4`**. This note separates
 the pre-generated Smith pool from the player's quest route and service choices.
 
 ### Verdict

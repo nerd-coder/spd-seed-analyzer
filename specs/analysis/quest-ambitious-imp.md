@@ -1,6 +1,6 @@
 # Ambitious Imp quest — verified audit
 
-Target: **Shattered Pixel Dungeon v4.0.0 @ `2bb34a4e9`**.
+Target: **Shattered Pixel Dungeon v4.0.2 @ `57a4e06a4`**.
 
 This note is the source of trust for the city Imp, the pre-rolled reward
 pool, vault entry, score, and the depth-20 Imp shop. Vault layout and
@@ -20,7 +20,7 @@ The strongest unprofiled seed-only contract is:
 - every option is forcibly uncursed (`Imp.java:351-353`);
 - the player keeps **at most one** item, chosen when leaving the vault
   with `EscapeCrystal`, and only if score is at least 500
-  (`EscapeCrystal.java:165-236`);
+  (`EscapeCrystal.java:164-235`);
 - the depth-20 Imp shop is an access condition (`earnedShop()`), not a
   guarantee that shop stock exists in the world
   (`Imp.java:397-399`, `CityBossLevel.java:377-379`).
@@ -114,7 +114,7 @@ WAND uses the category's isolated `cat.seed` stream for the class, then
 (`Generator.java:712-740`). Artifact class selection is the same pattern
 (`Generator.java:860-878`). `UnstableSpellbook`'s constructor then burns
 a full `SCROLL.defaultProbsTotal` chances loop on ambient
-(`UnstableSpellbook.java:84-104`), so drawing that artifact shifts every
+(`UnstableSpellbook.java:85-105`), so drawing that artifact shifts every
 later slot on this floor.
 
 T4/T5 melee classes (equal weight 2): Longsword, Battle Axe, Flail, Runic
@@ -208,7 +208,7 @@ the stream.
 
 The single exception is `UnstableSpellbook`: its constructor burns a full
 `SCROLL.defaultProbsTotal` chances loop on ambient
-(`UnstableSpellbook.java:84-104`). Measured on seed 7 at depth 18, slots 1–5
+(`UnstableSpellbook.java:85-105`). Measured on seed 7 at depth 18, slots 1–5
 move from `[2, 4, 5, 4, 4]` / Kinetic, Blooming, Viscosity to
 `[4, 3, 4, 3, 3]` / Shocking, Elastic, Flow the moment slot 0 lands on it. The
 other ten artifacts leave both rows byte-identical.
@@ -238,24 +238,24 @@ globally.
 branch level. If the player never uses the `BRANCH_EXIT`, the six items
 remain on the quest object and are not world heaps. `VaultFinalRoom.paint`
 is what drops them onto pedestals and `rewardOptions.clear()`
-(`VaultFinalRoom.java:228-236`). The city Imp has no reward window on a
+(`VaultFinalRoom.java:231-239`). The city Imp has no reward window on a
 fresh run (`Imp.java:153-181`).
 
 ### Claiming one item
 
 Vault entry (below) strips gear. Inside the vault the six options sit on
 `VaultFinalRoom` pedestals with a unique `ImpStatue` on the center
-pedestal (`VaultFinalRoom.java:228-229`). The locked door opens only after
-the boss fight (`VaultFinalRoom.java:329-340`). Leaving uses
+pedestal (`VaultFinalRoom.java:231-232`). The locked door opens only after
+the boss fight (`VaultFinalRoom.java:369-380`). Leaving uses
 `EscapeCrystal`:
 
 - score **< 50**: flavour only; the hero does not leave
-  (`EscapeCrystal.java:144-147`);
+  (`EscapeCrystal.java:143-146`);
 - score **50–499**: leave with no preserved item
-  (`EscapeCrystal.java:234-236`);
+  (`EscapeCrystal.java:233-235`);
 - score **≥ 500**: pick exactly one non-crystal item, with level / unique
-  filters that tighten below 4000 (`EscapeCrystal.java:165-198`).
-  Quantity > 1 consumables keep a single copy (`EscapeCrystal.java:211-213`).
+  filters that tighten below 4000 (`EscapeCrystal.java:164-197`).
+  Quantity > 1 consumables keep a single copy (`EscapeCrystal.java:210-212`).
   The six pre-rolled options are equipment or a wand at +2…+5, so they fail
   the ≤1000 consumable-only filter and the <4000 `level() ≤ 0 or 1` filter.
   Taking one of those six out requires statue score (≥ 4000). Lower scores
@@ -263,7 +263,7 @@ the boss fight (`VaultFinalRoom.java:329-340`). Leaving uses
 
 `leaveVault` restores stored belongings, then collects that one item (or
 stashes it as `Imp.Quest.reward` if the backpack is full, and the city Imp
-drops it on its turn) (`EscapeCrystal.java:258-346`, `Imp.java:77-82`).
+drops it on its turn) (`EscapeCrystal.java:257-345`, `Imp.java:77-82`).
 Everything else held in the vault is discarded. `ImpStatue` is unique, so
 it cannot be the preserved item (`ImpStatue.java:32-33`).
 
@@ -275,7 +275,7 @@ quest is old, already complete, not yet given, or the hero has
 Otherwise a yes/no prompt runs. Accepting: `hero.live()` (non-persistent
 buffs cleared, hunger/regen reset), full HP, belongings / gold / energy /
 quickslots stored on an `EscapeCrystal`, inventory cleared, `ClothArmor`
-equipped (`CityLevel.java:160-178`, `EscapeCrystal.java:301-319`). Walking
+equipped (`CityLevel.java:160-178`, `EscapeCrystal.java:300-318`). Walking
 onto the tile does not travel; the crystal is the only way out of the
 vault (`VaultLevel.java:206-209`).
 
@@ -285,7 +285,7 @@ or refuse the door.
 
 ### Score, `earnedShop`, depth-20 shop
 
-`EscapeCrystal` scores a vault leave (`EscapeCrystal.java:93-140`):
+`EscapeCrystal` scores a vault leave (`EscapeCrystal.java:92-139`):
 
 | Source | Points |
 |---|---|

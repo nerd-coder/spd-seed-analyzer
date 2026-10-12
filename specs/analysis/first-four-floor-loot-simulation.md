@@ -1,6 +1,6 @@
 # First-four-floor item and room-reward simulation
 
-Target: **Shattered Pixel Dungeon v4.0.0 @ `2bb34a4e9`**.
+Target: **Shattered Pixel Dungeon v4.0.2 @ `57a4e06a4`**.
 
 This note is the loot-side companion to `floor-layout-run-settings.md` and
 `generator-decks.md`. Public reports follow `SEED-ANALYSIS` and
@@ -119,6 +119,31 @@ Gnoll Trickster / Great Crab. The reward pair is generated immediately:
 
 Parchment Scrap changes whether those already generated effects are retained,
 not the number of RNG calls. Details: `specs/analysis/quest-sad-ghost.md`.
+
+## Statue room and sewer traps
+
+A painted `StatueRoom` calls `Statue.random()` during `paint`
+(`StatueRoom.java:70`). `StatueRoom` is one of the equipment specials
+(`SpecialRoom.java:82-86`), so not every seed has this room.
+
+Parent cost is one `Random.Float()` against
+`1/10f * RatSkull.exoticChanceMultiplier()`, half-effect above 0.1, then one
+`Random.Long()` child (`Statue.java:206-219`). `createWeapon` runs on that
+child (`Statue.java:63-71`) and still advances the rolled `WEP_T*` deck,
+because deck state is global (`Generator.java:712-727`, `:809-818`). Rat
+Skull changes the type and whether armor and glyph rolls run
+(`ArmoredStatue.java:51-56`); it does not change the parent call count.
+
+On the Ghost's floor that paint runs before `SewerLevel.createMobs`
+(`Level.java:316-321`, `RegularPainter.java:124-130`,
+`SewerLevel.java:140-142`), so `Ghost.Quest.spawn` sees that parent tail.
+The reward algorithm is unchanged. Details:
+`specs/analysis/quest-sad-ghost.md`.
+
+After each trap, `RegularPainter` removes the cell from both lists and its
+four orthogonal neighbors from the open-space list only
+(`RegularPainter.java:485-492`). That removal is no extra RNG. Depth 1's
+trap table is only `WornDartTrap` (`SewerLevel.java:120-122`).
 
 ## Isolated tails that must not be folded into guaranteed loot
 

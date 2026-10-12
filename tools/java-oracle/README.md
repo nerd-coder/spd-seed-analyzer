@@ -19,7 +19,7 @@ plants, and active blobs. It does **not** claim full seed-finder parity.
 ## Requirements
 
 - A local Shattered Pixel Dungeon checkout at commit
-  `2bb34a4e91d29c8785a9363cad6ddfe5122b1d4f` (v4.0.0).
+  `57a4e06a4caf162446d1c28caa7983f0493fecf0` (v4.0.2).
 - `git`, `tar`, and JDK 17 or newer (the pinned checkout's Gradle wrapper
   requires Java 17, while the oracle bytecode targets Java 11).
 - Network access on the first run if Gradle dependencies are not cached.
@@ -283,7 +283,7 @@ contract.
 ```json
 {
   "schema_version": 1,
-  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
+  "spd": { "version": "v4.0.2", "commit": "57a4e06a4" },
   "input": { "seed": "AAA-AAA-AAA", "numeric": 0, "depths": [] },
   "identities": {
     "potions": [{ "item": "PotionOfStrength", "appearance": "..." }],

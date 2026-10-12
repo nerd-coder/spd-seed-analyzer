@@ -1,8 +1,15 @@
 {
   "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
-  "input": { "seed": "AAA-AAA-AAA", "numeric": 0, "depths": [16] },
+  "spd": {
+    "version": "v4.0.2",
+    "commit": "57a4e06a4"
+  },
+  "input": {
+    "seed": "AAA-AAA-AAA",
+    "numeric": 0,
+    "depths": [16]
+  },
   "identities": {
     "potions": [
       { "item": "PotionOfStrength", "appearance": "crimson" },
@@ -240,21 +247,21 @@
         14, 14, 14, 14, 4, 4, 27, 27, 27, 1, 27, 27, 27, 27, 4, 4, 4, 4, 29, 1,
         1, 1, 9, 17, 9, 17, 2, 15, 1, 4, 4, 4, 4, 27, 27, 27, 14, 27, 27, 27,
         27, 27, 14, 4, 4, 27, 1, 1, 1, 20, 1, 15, 27, 4, 4, 4, 4, 29, 1, 9, 1,
-        9, 9, 9, 9, 9, 17, 1, 4, 4, 4, 4, 4, 4, 4, 16, 4, 4, 4, 12, 4, 5, 12, 4,
-        27, 1, 1, 20, 1, 1, 2, 27, 4, 4, 4, 4, 29, 29, 9, 17, 1, 1, 9, 17, 9, 1,
-        1, 4, 4, 4, 4, 4, 1, 20, 1, 1, 20, 4, 1, 1, 1, 1, 4, 27, 2, 15, 27, 27,
+        9, 9, 9, 9, 9, 1, 1, 4, 4, 4, 4, 4, 4, 4, 16, 4, 12, 4, 4, 12, 5, 4, 4,
+        27, 1, 20, 1, 1, 1, 2, 27, 4, 4, 4, 4, 29, 29, 9, 17, 1, 1, 9, 17, 9, 1,
+        1, 4, 4, 4, 4, 4, 20, 1, 1, 20, 1, 4, 1, 1, 1, 1, 4, 27, 2, 15, 27, 27,
         29, 29, 27, 4, 4, 4, 4, 29, 9, 17, 9, 9, 9, 9, 17, 9, 1, 1, 4, 4, 4, 4,
-        4, 1, 4, 4, 4, 20, 4, 1, 4, 4, 1, 16, 15, 15, 2, 2, 1, 29, 29, 27, 4, 4,
+        4, 20, 4, 4, 4, 1, 4, 1, 4, 4, 1, 16, 15, 15, 2, 2, 1, 29, 29, 27, 4, 4,
         4, 4, 9, 17, 9, 29, 17, 9, 17, 9, 1, 1, 1, 4, 4, 4, 4, 4, 1, 4, 4, 4, 1,
         1, 1, 4, 4, 4, 4, 27, 2, 2, 2, 1, 29, 29, 27, 4, 4, 4, 4, 9, 9, 9, 9, 9,
-        9, 1, 9, 1, 1, 1, 4, 4, 4, 4, 4, 5, 4, 4, 4, 4, 12, 12, 4, 4, 4, 4, 27,
+        9, 1, 9, 1, 1, 1, 4, 4, 4, 4, 4, 5, 4, 4, 4, 12, 12, 4, 4, 4, 4, 4, 27,
         27, 27, 27, 27, 27, 27, 27, 4, 4, 4, 4, 29, 9, 17, 17, 9, 1, 1, 1, 9, 1,
-        1, 1, 20, 27, 27, 27, 17, 4, 14, 14, 14, 14, 14, 14, 4, 4, 4, 4, 4, 4,
+        1, 20, 1, 27, 27, 27, 17, 4, 14, 14, 14, 14, 14, 14, 4, 4, 4, 4, 4, 4,
         4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 9, 9, 17, 9, 1, 9, 9, 9, 17, 1, 1, 1, 1,
-        1, 1, 20, 4, 14, 14, 14, 14, 14, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 9, 1, 9, 9, 9, 1, 9, 17, 9, 1, 9, 4, 1, 1, 7, 20, 20, 5, 14,
+        1, 20, 1, 4, 14, 14, 14, 14, 14, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 9, 1, 9, 9, 9, 1, 9, 17, 9, 1, 9, 4, 1, 20, 7, 20, 20, 5, 14,
         14, 14, 14, 14, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 20, 17,
-        9, 20, 1, 1, 9, 20, 9, 1, 1, 4, 1, 1, 1, 1, 20, 4, 14, 14, 14, 14, 14,
+        9, 1, 1, 20, 9, 17, 9, 1, 1, 4, 1, 1, 1, 1, 20, 4, 14, 14, 14, 14, 14,
         14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
         4, 4, 4, 4, 27, 27, 27, 27, 27, 4, 14, 14, 14, 14, 14, 14, 4, 4, 4, 4,
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
@@ -1859,14 +1866,6 @@
           "shape": 4
         },
         {
-          "cell": 908,
-          "class": "FlashingTrap",
-          "visible": false,
-          "active": true,
-          "color": 7,
-          "shape": 3
-        },
-        {
           "cell": 941,
           "class": "ExplosiveTrap",
           "visible": false,
@@ -1977,6 +1976,14 @@
           "active": true,
           "color": 1,
           "shape": 4
+        },
+        {
+          "cell": 1218,
+          "class": "FlashingTrap",
+          "visible": false,
+          "active": true,
+          "color": 7,
+          "shape": 3
         }
       ],
       "plants": [],
@@ -2066,13 +2073,6 @@
           ]
         },
         {
-          "cell": 303,
-          "heap_type": "heap",
-          "items": [
-            { "class": "GoldenKey", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
           "cell": 329,
           "heap_type": "chest",
           "items": [
@@ -2087,7 +2087,38 @@
           ]
         },
         {
-          "cell": 527,
+          "cell": 537,
+          "heap_type": "locked_chest",
+          "items": [
+            {
+              "class": "ThrowingHammer",
+              "quantity": 3,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 653,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "PotionOfHealing",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 691,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Food", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 694,
           "heap_type": "heap",
           "items": [
             {
@@ -2099,26 +2130,42 @@
           ]
         },
         {
-          "cell": 528,
-          "heap_type": "locked_chest",
+          "cell": 753,
+          "heap_type": "chest",
           "items": [
-            {
-              "class": "UnstableSpellbook",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
+            { "class": "Glaive", "quantity": 1, "level": 1, "cursed": false }
           ]
         },
         {
-          "cell": 608,
+          "cell": 798,
+          "heap_type": "heap",
+          "items": [
+            { "class": "GoldenKey", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 889,
+          "heap_type": "heap",
+          "items": [
+            { "class": "GuidePage", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 932,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Gold", "quantity": 250, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 1006,
           "heap_type": "heap",
           "items": [
             { "class": "Stylus", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 616,
+          "cell": 1010,
           "heap_type": "heap",
           "items": [
             {
@@ -2130,50 +2177,22 @@
           ]
         },
         {
-          "cell": 618,
+          "cell": 1024,
           "heap_type": "heap",
           "items": [
-            { "class": "Food", "quantity": 1, "level": 0, "cursed": false }
+            { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 647,
-          "heap_type": "heap",
+          "cell": 1063,
+          "heap_type": "chest",
           "items": [
             {
-              "class": "ScrollOfTerror",
+              "class": "PotionOfFrost",
               "quantity": 1,
               "level": 0,
               "cursed": false
             }
-          ]
-        },
-        {
-          "cell": 653,
-          "heap_type": "heap",
-          "items": [
-            { "class": "GuidePage", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 692,
-          "heap_type": "chest",
-          "items": [
-            { "class": "Gold", "quantity": 282, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 753,
-          "heap_type": "chest",
-          "items": [
-            { "class": "Glaive", "quantity": 1, "level": 1, "cursed": false }
-          ]
-        },
-        {
-          "cell": 774,
-          "heap_type": "heap",
-          "items": [
-            { "class": "Gold", "quantity": 318, "level": 0, "cursed": false }
           ]
         },
         {
@@ -2268,17 +2287,10 @@
           ]
         },
         {
-          "cell": 1182,
-          "heap_type": "heap",
-          "items": [
-            { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
           "cell": 1195,
           "heap_type": "for_sale",
           "items": [
-            { "class": "Javelin", "quantity": 3, "level": 0, "cursed": false }
+            { "class": "Tomahawk", "quantity": 3, "level": 0, "cursed": false }
           ]
         },
         {

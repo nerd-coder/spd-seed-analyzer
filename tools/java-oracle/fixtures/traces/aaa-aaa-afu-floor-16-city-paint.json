@@ -57,6 +57,10 @@
   ],
   "pre_mobs_rng": null,
   "pre_items_rng": null,
+  "pre_trap_rng": [],
+  "post_trap_capture_rng": [],
+  "trap_candidates": [],
+  "trap_non_hall_cells": [],
   "crystal_vaults": [],
   "drops": [],
   "blacksmith_state": {

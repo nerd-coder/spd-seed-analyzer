@@ -20,8 +20,8 @@ import java.util.List;
 /** A deliberately small, headless oracle for seed-dependent run facts. */
 public final class JavaOracle {
 
-	static final String SPD_VERSION = "v4.0.0";
-	static final String SPD_COMMIT = "2bb34a4e9";
+	static final String SPD_VERSION = "v4.0.2";
+	static final String SPD_COMMIT = "57a4e06a4";
 
 	static String spdJson() {
 		return "{ \"version\": \"" + SPD_VERSION + "\", \"commit\": \"" + SPD_COMMIT + "\" }";

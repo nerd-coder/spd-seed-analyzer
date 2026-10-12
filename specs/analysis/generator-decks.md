@@ -1,6 +1,6 @@
 # Generator decks — verified facts
 
-Target: **Shattered Pixel Dungeon v4.0.0 @ `2bb34a4e9`**. Java line numbers
+Target: **Shattered Pixel Dungeon v4.0.2 @ `57a4e06a4`**. Java line numbers
 are from that commit. Method: reading the pinned clone. Tables below are
 `defaultProbs` (and related static arrays) from source, not sampled
 distributions.
@@ -27,7 +27,10 @@ return newInstance(classes[i]).random();
 The class of the *k*-th draw from a category is a function of
 `(dungeon seed, k)`, independent of where on a floor stream the draw lands.
 `.random()` on the instance runs **after** `popGenerator`, so level/curse
-rolls use the ambient floor stream.
+rolls use the ambient floor stream. `Statue.createWeapon` is wrapped in
+`Statue.random`’s own `pushGenerator(Random.Long())`
+(`Statue.java:217-219`), so the `.random()` after that category pop uses
+the child, not the floor.
 
 `WEAPON` / `MISSILE` / `ARMOR` do not use this path: they dispatch to
 `randomWeapon` / `randomMissile` / `randomArmor`. `ARTIFACT` dispatches to
@@ -82,7 +85,7 @@ These use `randomUsingDefaults(RING)` or `randomUsingDefaults()`:
 
 | Site | Java |
 |------|------|
-| Mob loot, including Thief `oneOf(RING, ARTIFACT)` | `Mob.java:1106`, `Thief.java:52` |
+| Mob loot, including Thief `oneOf(RING, ARTIFACT)` | `Mob.java:1141-1143`, `Thief.java:52` |
 | Ring of Wealth equipment | `RingOfWealth.java:288` |
 | Scroll of Transmutation (ring, and artifact→ring) | `ScrollOfTransmutation.java:181`, `:276` |
 | Cursed Wand mimic reward / transmogrify | `CursedWand.java:1081-1082`, `:1174-1175` |
@@ -121,7 +124,7 @@ Call sites that can hit the fallback (any `random` / `randomUsingDefaults` of
   `CrystalChoiceRoom.java:122-126`, `ShopRoom.java:343`)
 - Ring of Wealth (`RingOfWealth.java:291`)
 - Thief loot when the stolen category is ARTIFACT (`Thief.java:52` →
-  `Mob.java:1106`)
+  `Mob.java:1143`)
 - Cursed Wand transmogrify (`CursedWand.java:1174-1175`)
 - no-arg `Generator.random()` on the second general deck (`RegularLevel.java:388`
   and the grave/summoning sites in §3)

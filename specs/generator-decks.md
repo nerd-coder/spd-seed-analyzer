@@ -1,23 +1,13 @@
 # Generator decks — verified facts
 
-Verified against SPD **v4.0.0 @ `2bb34a4e9`**. Java line numbers are from that
+Verified against SPD **v4.0.2 @ `57a4e06a4`**. Java line numbers are from that
 commit. **Re-verify only when the pinned version changes** — the deck
 mechanism, the call sites, and the challenge behaviour below are all
 version-sensitive.
 
-Method: reading the pinned clone, plus temporary `eprintln!` instrumentation in
-`generator/state.rs` (`random_deck_item`, `random_artifact`) run over
-`analyze_seed(.., 19)`. Instrumentation was reverted; the measurements are
-reproducible by re-adding it. Imp spawn deck counters and first-option class
-for five reference seeds are pinned by the `imp-ring-deck` Java oracle around
-`CityLevel.initRooms`. VaultLevel `usingDefaults` is pinned by
+Method: `Generator.java` was read at this commit. Sections below record that
+source's call shape. VaultLevel `usingDefaults` is pinned by
 `tools/java-oracle/fixtures/vault/aaa-aaa-aaa-floor-17.json`.
-
-Sections 9–10 were measured the same way: temporary probe fields on
-`WandmakerQuestState` / `GhostQuestState` recording the deck index and the
-branch outcomes at the reward call, driven by `create_level_partial` over
-floors 1–9 (Wandmaker) and 1–4 (Ghost) for 200 seeds
-(`init_run(seed * 7919 + 13)`), default `MapTrinketProfile`. Reverted after.
 
 ## 1. Category sub-decks make item identity index-keyed, not stream-keyed
 
@@ -90,7 +80,8 @@ count over a deck cycle is stable even if the in-cycle order shifts.
 > uses the artifact deck (`Generator.java:744-752`). See §11.
 
 All use `randomUsingDefaults`: mob loot including Thief's
-`oneOf(RING, ARTIFACT)` (`Mob.java:1106`), Ring of Wealth
+`oneOf(RING, ARTIFACT)` (`Thief.java:52`, category branch
+`Mob.java:1141-1143`), Ring of Wealth
 (`RingOfWealth.java:288`), Scroll of Transmutation
 (`ScrollOfTransmutation.java:276`), Cursed Wand (`CursedWand.java:1081`,
 `:1174`), and runtime-spawned mimics (`useDecks=false` at
@@ -178,24 +169,14 @@ and Crystal Path (`CrystalPathRoom.java:173-176`). Ring of Wealth
 (`RingOfWealth.java:264-266`) and mob loot (`Mob.java:1111-1115`) stay
 runtime. Method: pinned-source call-site audit.
 
-## 7. Measurements at the Ambitious Imp spawn (five oracle seeds)
+## 7. Ambitious Imp spawn
 
 `Imp.Quest.spawn` fills six `rewardOptions` during `CityLevel.initRooms` on
 the first success of `Random.Int(20 - depth) == 0` for depths 17–19
-(`Imp.java:306-353`). The `imp-ring-deck` Java oracle records those
-`dropped` counters around `initRooms`.
-
-| Seed | Depth | RING | ARTIFACT | WAND | WEP/MIS pair | First option |
-|------|------:|-----:|---------:|-----:|--------------|--------------|
-| AAA-AAA-AAA | 19 | 4→5 | 1→2 | 4→5 | WEP_T5+MIS_T4 | SandalsOfNature |
-| ABC-DEF-GHI | 18 | 4→5 | 3→4 | 5→6 | MIS_T5+WEP_T4 | MasterThievesArmband |
-| GFX-PZH-DCH | 17 | 1→2 | 2→3 | 5→6 | WEP_T5+MIS_T4 | TimekeepersHourglass |
-| HKT-JZN-XQQ | 19 | 4→5 | 3→4 | 4→5 | MIS_T5+WEP_T4 | SandalsOfNature |
-| ZZZ-ZZZ-ZZZ | 18 | 3→4 | 3→4 | 4→5 | WEP_T5+MIS_T4 | TalismanOfForesight |
-
-All five advance ARTIFACT and WAND by 1 and RING by 1 (option 1 was an
-artifact, so the RING uniqueness loop did not retry). Every option is
-`cursed = false`.
+(`Imp.java:306-353`). Options 3–4 are the `Random.Int(2)` weapon/missile pair
+(`Imp.java:338-344`). Every option is then `cursed = false`
+(`Imp.java:351-353`). The concrete index for a fixed profile is pinned by
+replaying that profile.
 
 ## 8. Consequence for the Imp reward pool
 
@@ -207,8 +188,7 @@ fact.
 Option 1 is an ARTIFACT deck draw (`randomArtifact`). If that deck is
 exhausted, the same slot is a RING deck draw (`Generator.random(RING)`,
 `Imp.java:323-327`) — labelled, and not the `random(ARTIFACT)` defaults
-fallback of §4. The five oracle seeds all still have artifact headroom
-(ARTIFACT +1; first option is an artifact class). Option 2 is always a RING
+fallback of §4. Option 2 is always a RING
 deck draw; the uniqueness loop can consume extra RING draws only when
 option 1 was already a ring. Options 3–4 are one WEP/MIS pair from the
 coin flip in §7. Option 5 is a constructed `PlateArmor` (no ARMOR deck).
@@ -227,15 +207,14 @@ Quest conditions are in `specs/analysis/quest-ambitious-imp.md`.
 
 ## 9. Old Wandmaker reward (floors 7–9)
 
-**Scope correction (2026-07-29):** the measurements and concrete-pair facts in
-this section use the fresh no-map-affecting-trinket, no-challenge,
-no-external-artifact profile. They verify the fixed call shape, not a universal
-pair for every playable route. A successful Mossy Clump check short-circuits a
-main-stream feeling roll and can shift room work before the quest room is
-selected; Trap Mechanism can alter painting after selection. Mimic Tooth, Rat
-Skull, artifact constructor history, and challenge-dependent prize queues can
-also add or remove painter and levelgen item draws before the NPC callback. The
-full state audit is in `specs/analysis/quest-wandmaker.md`.
+The call shape below is for a fresh profile with no map-affecting trinket, no
+challenge, and no external artifact. It is not a universal pair for every
+playable route. A successful Mossy Clump check short-circuits a main-stream
+feeling roll and can shift room work before the quest room is selected; Trap
+Mechanism can alter painting after selection. Mimic Tooth, Rat Skull, artifact
+constructor history, and challenge-dependent prize queues can also add or
+remove painter and levelgen item draws before the NPC callback. The full state
+audit is in `specs/analysis/quest-wandmaker.md`.
 
 `Wandmaker.Quest.spawnWandmaker` (`Wandmaker.java:303`) runs at the **start** of
 `PrisonLevel.createMobs`, before `super.createMobs()`
@@ -271,34 +250,22 @@ Verified properties:
   is decoupled.
 - **No runtime path directly moves the wand deck.** Every `Category.WAND`
   reference outside levelgen uses `randomUsingDefaults`: Shaman loot via
-  `Mob.createLoot` (`Mob.java:996`), Scroll of Transmutation
+  `Mob.createLoot` (`Mob.java:1141-1143`), Scroll of Transmutation
   (`ScrollOfTransmutation.java:211`, `:339`), Cursed Wand
   (`CursedWand.java:363`, `:371`). Consistent with §4. Player state can still
   change which levelgen WAND draw sites run before the reward, so the concrete
   deck index and both floor-stream levels require a fixed profile.
 
-Measured for that fixed profile (200 seeds, floors 1–9):
-
-| Quantity | Distribution |
-|----------|--------------|
-| Spawn depth | 7: 32%, 8: 34%, 9: 34% |
-| Quest type (1/2/3) | uniform ⅓ |
-| WAND deck index *k* at the reward | 0–4, mode 1 (0: 27, 1: 87, 2: 57, 3: 28, 4: 1) |
-| `wand2` duplicate rejections | 0 in 189, 1 in 11 (**5.5%**) |
-| `wand1` level | +1 65.5%, +2 28%, +3 6.5% |
-
-Collision rate matches theory: 13 classes × weight 3 (`Generator.java:240`), so
-a fresh deck gives 2/38 ≈ 5.3%.
+The concrete index for a fixed profile is pinned by replaying that profile.
 
 ## 10. Sad Ghost reward (floors 2–4)
 
-**Scope correction (2026-07-29):** the measurements and fixed-call-shape facts
-below use the default no-map-affecting-trinket, no-challenge, no-external-
-artifact profile. They do not establish that the concrete pair is a pure
-function of the seed across every playable route. Mossy Clump can change the
-paint stream before `Ghost.Quest.spawn`; Mimic Tooth and Rat Skull can change
-pre-Ghost mimic/statue generation; and external artifact history can change a
-later artifact constructor tail. The complete state audit is in
+The call shape below is for the default profile with no map-affecting trinket,
+no challenge, and no external artifact. It does not make the concrete pair a
+pure function of the seed across every playable route. Mossy Clump can change
+the paint stream before `Ghost.Quest.spawn`; Mimic Tooth and Rat Skull can
+change pre-Ghost mimic/statue generation; and external artifact history can
+change a later artifact constructor tail. The complete state audit is in
 `specs/analysis/quest-sad-ghost.md`.
 
 `Ghost.Quest.spawn` (`Ghost.java:303-362`) runs at the **start** of
@@ -339,21 +306,8 @@ Verified properties:
 Net for the fixed profile: everything except the weapon's *class* is
 independent of the WEP sub-deck. This is not a seed-only claim across different
 held-trinket, challenge, or artifact-history profiles; those can move the main
-floor stream before the Ghost rolls tiers, level, and effects.
-
-Measured (200 seeds, floors 1–4):
-
-| Quantity | Distribution |
-|----------|--------------|
-| Spawn depth | 2: 37.5%, 3: 29.5%, 4: 33% |
-| Weapon tier | 2: 46.5%, 3: 32%, 4: 15%, 5: 6.5% |
-| Armor tier | 2: 46%, 3: 35.5%, 4: 13%, 5: 5.5% |
-| Tier-deck index *k* at the weapon draw | **0 in 64%, ≤1 in 85%**, max 6 |
-| Shared level | +0 50.5%, +1 34%, +2 12%, +3 3.5% |
-| Lowest Parchment Scrap that enchants | none 21.5%, +0 38.5%, +1 76.5%, +2 100% (cumulative) |
-
-*k* is far tighter than the Imp's or the Wandmaker's because only floors 1–3
-precede the draw and the five weapon tiers are separate decks.
+floor stream before the Ghost rolls tiers, level, and effects. The concrete
+index for a fixed profile is pinned by replaying that profile.
 
 ## 11. Fixed-profile ordinary floor loot: ARTIFACT is the runtime deck leak
 
@@ -365,7 +319,7 @@ mechanisms would have to leak for run history to move them; two are closed.
 - **General category deck** (`categoryProbs`, picks *which* category) — only
   no-arg `Generator.random()` decrements it (`Generator.java:676-683`), and its
   four call sites are all levelgen: `RegularLevel.java:388`,
-  `GrassyGraveRoom.java:67`, `MassGraveRoom.java:86`,
+  `GrassyGraveRoom.java:67`, `MassGraveRoom.java:108`,
   `SecretSummoningRoom.java:53`. `randomUsingDefaults()` reads `defaultCatProbs`
   and never decrements. **Closed.**
 - **Per-category sub-decks** (pick the class) — closed for RING (§4), WAND (§9),
@@ -386,6 +340,15 @@ mechanisms would have to leak for run history to move them; two are closed.
   Smith purchase cannot reach that fallback. Full lifecycle details are in
   `specs/analysis/quest-blacksmith.md`.
 
+Levelgen `StatueRoom` is not that runtime path. `paint` calls `Statue.random()`
+(`StatueRoom.java:70`), which is `random(true)` (`Statue.java:202-204`).
+`createWeapon` draws the weapon deck on the child (`Statue.java:63-71`,
+`:206-219`). That is level generation, not a runtime leak. `DistortionTrap`
+remains `random(false)` (`DistortionTrap.java:125`). Imp rewards roll in
+`initRooms` before paint (`CityLevel.java:192-194`,
+`RegularLevel.java:109-120`), so a statue on the Imp floor does not move that
+floor's Imp pool.
+
 **Not closed: ARTIFACT.** `randomUsingDefaults(cat)` routes artifacts straight
 back into the deck (`Generator.java:744-752`, comment: *"except for artifacts,
 which must always use a deck"*), so these runtime sources all advance
@@ -394,7 +357,7 @@ which must always use a deck"*), so these runtime sources all advance
 | Runtime source | Java |
 |----------------|------|
 | Ring of Wealth equipment drop | `RingOfWealth.java:291` |
-| Thief steal-loot | `Thief.java:52` → `Mob.java:1106` |
+| Thief steal-loot | `Thief.java:52` → `Mob.java:1141-1143` |
 | Scroll of Transmutation | `ScrollOfTransmutation.java:298` |
 | Cursed Wand | `CursedWand.java:1174` |
 | Gnoll Exile / Ebony Mimic / tooth-mimic extras | `randomUsingDefaults()` no-arg landing on ARTIFACT |
@@ -417,9 +380,10 @@ The drift is not cosmetic. `randomArtifact` calls
 `Reflection.newInstance(cls).random()` **after** `popGenerator`
 (`Generator.java:856-878`), and `UnstableSpellbook`'s constructor burns a
 variable number of `Random.chances` rolls in `setupScrolls`
-(`UnstableSpellbook.java:90-103`). A shifted artifact index therefore changes
-floor-stream consumption and desyncs every later draw on that floor, which in
-turn shifts the deck counters every later floor reads. Deck exhaustion falls
+(`UnstableSpellbook.java:91-105`; chances loop `:96-103`, transmutation
+removed at `:104`; constructor `:85-89`). A shifted artifact index therefore
+changes floor-stream consumption and desyncs every later draw on that
+floor, which in turn shifts the deck counters every later floor reads. Deck exhaustion falls
 through to `randomUsingDefaults(RING)` (`Generator.java:706-710`) and does
 **not** move `RING.dropped`. Runtime `randomUsingDefaults(ARTIFACT)` still uses
 the artifact deck (`Generator.java:744-752`). Only the ARTIFACT→RING
@@ -432,15 +396,5 @@ drift. Everything after it is seed-determined under one additional condition —
 `random_artifact` (`generator/state.rs:327`) is the single Rust site that moves
 the counter, so the artifact gate is one monotone flag. Other player-state
 hooks can still change which generation path reaches that draw; the quest
-audits track those separately.
-
-Measured over 200 seeds (`init_run(seed * 7919 + 13)`, floors 1–24, default
-`MapTrinketProfile`), floor of the first levelgen artifact draw, cumulative:
-
-| Floor | 1 | 2 | 3 | 4 | 9 | 13 | 24 |
-|-------|---|---|---|---|---|----|----|
-| Seeds covered | 15% | 34% | 48% | 55.5% | 87% | 95% | 100% |
-
-Every seed draws an artifact somewhere in floors 1–24; mean main-loop drops per
-floor is 3.83. Method: a throwaway `examples/loot_probe.rs` walking
-`create_level_partial` and counting `ItemCategory::Artifact` in `placed_items`.
+audits track those separately. The concrete index for a fixed profile is
+pinned by replaying that profile.

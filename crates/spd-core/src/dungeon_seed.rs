@@ -18,7 +18,7 @@ pub enum SeedError {
     OutOfRange,
     #[error("Daily Run dates must use a valid YYYY-MM-DD date")]
     InvalidDailyDate,
-    #[error("Daily Runs in SPD v4.0.0 begin on 2026-04-01")]
+    #[error("Daily Runs in SPD v4.0.2 begin on 2026-04-01")]
     DailyBeforeStart,
 }
 

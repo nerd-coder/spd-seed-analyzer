@@ -1,6 +1,6 @@
 # Sad Ghost reward — verified audit
 
-Target: **Shattered Pixel Dungeon v4.0.0 @ `2bb34a4e9`**. This note records
+Target: **Shattered Pixel Dungeon v4.0.2 @ `57a4e06a4`**. This note records
 the generation contract and the inputs that are not encoded by the dungeon
 seed. It is separate from the public accuracy status.
 
@@ -115,13 +115,29 @@ history before `Ghost.Quest.spawn` can change the pair.
    deck draws run **before** a later Ghost callback.
 
 3. **Rat Skull.** It changes Crystal Vault’s alternate-mimic chance
-   (`CrystalVaultRoom.java:75-82`) and the Statue-room alternate branch
-   (`Statue.java:206-216`). An Armored Statue performs an extra armor generation
-   and glyph roll (`ArmoredStatue.java:50-56`).
+   (`CrystalVaultRoom.java:75-82`) and the armored-statue threshold: one
+   parent `Random.Float()` against `1/10f * RatSkull.exoticChanceMultiplier()`,
+   halved in effect above 0.1 (`Statue.java:208-210`). `Statue.random` then
+   draws one parent `Long` and runs `createWeapon` on that child
+   (`Statue.java:217-219`). Tier and `WEP_T*` deck draws still happen, but
+   their `Random` calls, `Weapon.random`, the enchant, and an armored
+   statue’s `Generator.randomArmor()` plus `Glyph.random()`
+   (`ArmoredStatue.java:51-56`) use the child, not the floor stream. Parent
+   cost is that `Float` plus that `Long`, for both statue types. A
+   `StatueRoom` on an earlier floor can still change which `WEP_T*` card a
+   later Ghost weapon draw sees, because `createWeapon(true)` decrements
+   that deck inside the child. Same-floor Ghost runs in
+   `SewerLevel.createMobs` after paint, so it does not pay the statue’s
+   weapon, enchant, armor, or glyph tail; it does pay the one `Long`, and
+   the threshold `Float`, if a `StatueRoom` painted on that floor
+   (`SewerLevel.java:140-142`, `StatueRoom.java:70`). `SpecialRoom` does not
+   depth-ban `StatueRoom` (`SpecialRoom.java:82-86,158-188`), and sewer
+   floors still request specials (`SewerLevel.java:95-98`), so depths 2–4
+   can paint one.
 
 4. **Artifact history.** The ARTIFACT deck is runtime-movable. An artifact
    obtained outside levelgen can change a later class; `UnstableSpellbook`
-   consumes a variable constructor tail (`UnstableSpellbook.java:84-103`).
+   consumes a variable constructor tail (`UnstableSpellbook.java:91-104`).
    Cracked Spyglass extra loot is isolated and uses
    `Generator.randomUsingDefaults()` after `createMobs`
    (`RegularLevel.java:679-689`, `CrackedSpyglass.java:52-61`), so it is not a

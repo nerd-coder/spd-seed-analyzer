@@ -1,8 +1,15 @@
 {
   "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
-  "input": { "seed": "AAA-AAA-AAA", "numeric": 0, "depths": [14] },
+  "spd": {
+    "version": "v4.0.2",
+    "commit": "57a4e06a4"
+  },
+  "input": {
+    "seed": "AAA-AAA-AAA",
+    "numeric": 0,
+    "depths": [14]
+  },
   "identities": {
     "potions": [
       { "item": "PotionOfStrength", "appearance": "crimson" },
@@ -2345,7 +2352,7 @@
           "heap_type": "heap",
           "items": [
             {
-              "class": "PotionOfHaste",
+              "class": "PotionOfHealing",
               "quantity": 1,
               "level": 0,
               "cursed": false
@@ -2376,7 +2383,7 @@
           "heap_type": "heap",
           "items": [
             {
-              "class": "PotionOfFrost",
+              "class": "PotionOfHaste",
               "quantity": 1,
               "level": 0,
               "cursed": false

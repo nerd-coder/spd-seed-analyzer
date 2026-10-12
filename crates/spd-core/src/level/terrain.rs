@@ -464,9 +464,14 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
                 // Connection tunnels often paint as empty corridors; treat thin rooms as empty fill
                 let is_connection = r.kind == RoomKind::Connection;
                 map[idx(x, y)] = if is_connection {
-                    // Java starts the whole level as wall; connection painters carve
-                    // only their tunnel path instead of receiving a pre-cleared room.
-                    WALL
+                    // Connection painters carve only the tunnel path. A chasm-feeling
+                    // level is already filled with chasm, and that fill is the
+                    // uncarved interior. Other feelings start as wall.
+                    if chasm_feeling {
+                        CHASM
+                    } else {
+                        WALL
+                    }
                 } else if border {
                     WALL
                 } else {

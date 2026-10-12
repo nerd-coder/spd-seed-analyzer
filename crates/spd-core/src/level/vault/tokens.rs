@@ -3,7 +3,7 @@
 use crate::level::terrain::{EMPTY, EMPTY_SP, LOCKED_DOOR, REGION_DECO_ALT, WALL};
 use crate::random::Random;
 
-use super::geometry::{self, CITY_PEDESTAL_TL, CITY_PEDESTAL_TR};
+use super::geometry::{self, CITY_PEDESTAL_TL, CITY_PEDESTAL_TR, CITY_QUEST_TEX};
 use super::paint::PaintCtx;
 
 pub(super) fn paint(ctx: &mut PaintCtx<'_>, ri: usize) {
@@ -111,6 +111,12 @@ pub(super) fn paint(ctx: &mut PaintCtx<'_>, ri: usize) {
     );
 
     geometry::set(ctx.map, c.x, c.y + 3, LOCKED_DOOR);
+    ctx.map.record_custom_tile(
+        "TokenDoorFloor",
+        CITY_QUEST_TEX,
+        (c.x, c.y + 3, 1, 1),
+        Vec::new(),
+    );
     // VaultTokenDoor / VaultMirror are NPCs; consume mirror reward RNG only.
     let seed = Random::long();
     Random::push_generator_seeded(seed);

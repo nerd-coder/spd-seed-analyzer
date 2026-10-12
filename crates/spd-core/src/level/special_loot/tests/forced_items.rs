@@ -225,10 +225,17 @@ fn statue_room_consumes_center_jitter_before_weapon_and_pushes_iron_key() {
     let mut map = paint_minimal(std::slice::from_ref(&room)).expect("map");
     let entrance = Point::new(room.left, room.top + 2);
     let loot = statue_weapon(&mut d, &room, &mut map, entrance, &mut spawn);
+    let after_statue = Random::peek_ints(3);
+    Random::pop_generator();
+    Random::push_generator_seeded(106);
+    let _ = Random::int_max(2);
+    let _ = Random::int_max(2);
+    let _ = Random::float();
+    let _ = Random::long();
     assert_eq!(
+        after_statue,
         Random::peek_ints(3),
-        [-519_812_201, 2_064_769_344, -1_269_687_844],
-        "pinned StatueRoom center + Statue.random weapon boundary"
+        "parent stream is center jitter, armored float, and one child-seed long"
     );
     Random::pop_generator();
 

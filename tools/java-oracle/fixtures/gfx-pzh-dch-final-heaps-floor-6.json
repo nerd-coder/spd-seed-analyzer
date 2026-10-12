@@ -1,8 +1,15 @@
 {
   "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
-  "input": { "seed": "GFX-PZH-DCH", "numeric": 1300416271343, "depths": [6] },
+  "spd": {
+    "version": "v4.0.2",
+    "commit": "57a4e06a4"
+  },
+  "input": {
+    "seed": "GFX-PZH-DCH",
+    "numeric": 1300416271343,
+    "depths": [6]
+  },
   "identities": {
     "potions": [
       { "item": "PotionOfStrength", "appearance": "charcoal" },
@@ -217,29 +224,29 @@
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 29, 29, 29, 29, 29, 1, 1,
         1, 1, 1, 1, 1, 1, 1, 4, 14, 14, 14, 14, 4, 29, 29, 29, 29, 29, 29, 4, 4,
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 29, 29,
-        29, 29, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 4, 29, 29, 29, 29, 4, 29, 29, 29,
+        29, 29, 1, 1, 18, 1, 1, 1, 1, 1, 1, 1, 4, 29, 29, 29, 29, 4, 29, 29, 29,
         29, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
         4, 4, 1, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 4, 29, 29, 29, 29,
         4, 1, 1, 1, 1, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 4, 4, 20, 1, 5, 33, 33, 33, 33, 4, 14, 14, 14, 14, 4, 29,
+        4, 4, 4, 4, 4, 4, 1, 20, 5, 33, 33, 33, 33, 4, 14, 14, 14, 14, 4, 29,
         29, 4, 29, 29, 29, 29, 4, 1, 1, 1, 1, 29, 29, 4, 4, 4, 4, 12, 12, 12,
         12, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 4, 33, 33, 33, 33,
         4, 14, 14, 14, 14, 5, 29, 29, 4, 29, 29, 11, 29, 4, 1, 17, 1, 1, 29, 29,
         4, 4, 4, 4, 14, 14, 14, 14, 14, 14, 14, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-        1, 20, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 4, 4, 4, 4, 4, 4, 5, 4,
+        1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 29, 29, 4, 4, 4, 4, 4, 4, 5, 4,
         4, 4, 4, 4, 4, 4, 4, 4, 14, 14, 14, 14, 14, 14, 14, 4, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 1, 1, 5, 33, 33, 33, 33, 4, 14, 14, 14, 14, 4, 29, 29, 4, 4,
-        4, 4, 4, 4, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 14, 14, 14, 14, 14, 14, 14, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 12, 4, 29, 29, 4, 33, 33, 33, 33, 4, 14, 14, 14,
-        14, 5, 29, 29, 4, 4, 4, 4, 4, 4, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 14, 14,
-        14, 14, 14, 14, 14, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 16, 29, 29, 4, 4, 4,
-        4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 4, 4, 4, 4, 4, 4, 29, 4, 4, 4, 4, 4, 4, 4,
-        4, 4, 14, 14, 14, 14, 14, 14, 14, 4, 12, 4, 12, 12, 4, 4, 5, 4, 4, 4,
-        29, 29, 5, 33, 33, 33, 33, 4, 14, 14, 14, 14, 4, 1, 1, 5, 20, 4, 12, 4,
+        4, 4, 4, 4, 20, 1, 5, 33, 33, 33, 33, 4, 14, 14, 14, 14, 4, 29, 29, 4,
+        4, 4, 4, 4, 4, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 14, 14, 14, 14, 14, 14, 14,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 12, 4, 29, 29, 4, 33, 33, 33, 33, 4, 14, 14,
+        14, 14, 5, 29, 29, 4, 4, 4, 4, 4, 4, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 14,
+        14, 14, 14, 14, 14, 14, 4, 4, 4, 4, 4, 4, 4, 1, 1, 1, 16, 29, 29, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 1, 4, 4, 4, 4, 4, 4, 29, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 14, 14, 14, 14, 14, 14, 14, 4, 12, 4, 12, 12, 4, 4, 5, 4, 4, 4,
+        29, 29, 5, 33, 33, 33, 33, 4, 14, 14, 14, 14, 4, 1, 1, 5, 20, 12, 4, 4,
         4, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 14, 14, 14, 14, 14, 14, 14, 5, 1, 1,
         1, 1, 29, 29, 29, 4, 4, 4, 29, 29, 4, 33, 33, 33, 33, 4, 14, 14, 14, 14,
-        5, 1, 1, 4, 1, 20, 1, 1, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
-        4, 4, 4, 4, 33, 18, 1, 1, 1, 29, 29, 4, 4, 4, 29, 29, 4, 4, 4, 4, 4, 12,
+        5, 1, 1, 4, 1, 1, 20, 1, 29, 29, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+        4, 4, 4, 4, 33, 1, 1, 1, 1, 29, 29, 4, 4, 4, 29, 29, 4, 4, 4, 4, 4, 12,
         4, 4, 4, 4, 4, 1, 1, 4, 4, 4, 4, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
         4, 4, 4, 4, 4, 4, 4, 33, 1, 1, 20, 20, 1, 1, 4, 4, 4, 2, 2, 2, 2, 2, 1,
         1, 1, 1, 1, 1, 1, 1, 1, 1, 5, 1, 1, 1, 1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
@@ -2332,20 +2339,20 @@
           "shape": 2
         },
         {
+          "cell": 566,
+          "class": "PoisonDartTrap",
+          "visible": true,
+          "active": true,
+          "color": 3,
+          "shape": 5
+        },
+        {
           "cell": 728,
           "class": "ChillingTrap",
           "visible": false,
           "active": true,
           "color": 6,
           "shape": 0
-        },
-        {
-          "cell": 1040,
-          "class": "PoisonDartTrap",
-          "visible": true,
-          "active": true,
-          "color": 3,
-          "shape": 5
         }
       ],
       "plants": [],
@@ -2362,22 +2369,22 @@
       "custom_walls": [],
       "final_heaps": [
         {
-          "cell": 379,
+          "cell": 378,
+          "heap_type": "heap",
+          "items": [
+            { "class": "GoldenKey", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 388,
           "heap_type": "heap",
           "items": [
             {
-              "class": "PotionOfStrength",
+              "class": "ScrollOfUpgrade",
               "quantity": 1,
               "level": 0,
               "cursed": false
             }
-          ]
-        },
-        {
-          "cell": 386,
-          "heap_type": "chest",
-          "items": [
-            { "class": "Katana", "quantity": 1, "level": 0, "cursed": true }
           ]
         },
         {
@@ -2392,7 +2399,7 @@
           "heap_type": "heap",
           "items": [
             {
-              "class": "ScrollOfRemoveCurse",
+              "class": "ScrollOfIdentify",
               "quantity": 1,
               "level": 0,
               "cursed": false
@@ -2400,17 +2407,46 @@
           ]
         },
         {
-          "cell": 633,
+          "cell": 583,
           "heap_type": "heap",
           "items": [
-            { "class": "Stylus", "quantity": 1, "level": 0, "cursed": false }
+            {
+              "class": "PotionOfStrength",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
           ]
         },
         {
-          "cell": 716,
+          "cell": 670,
+          "heap_type": "locked_chest",
+          "items": [
+            {
+              "class": "WandOfLightning",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 678,
           "heap_type": "heap",
           "items": [
             { "class": "Food", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 719,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "PotionOfInvisibility",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
           ]
         },
         {
@@ -2467,7 +2503,12 @@
           "cell": 741,
           "heap_type": "for_sale",
           "items": [
-            { "class": "Spear", "quantity": 1, "level": 0, "cursed": false }
+            {
+              "class": "Shortsword",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
           ]
         },
         {
@@ -2562,18 +2603,6 @@
           ]
         },
         {
-          "cell": 903,
-          "heap_type": "heap",
-          "items": [
-            {
-              "class": "PotionOfInvisibility",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
-          ]
-        },
-        {
           "cell": 933,
           "heap_type": "for_sale",
           "items": [
@@ -2608,12 +2637,7 @@
           "cell": 984,
           "heap_type": "for_sale",
           "items": [
-            {
-              "class": "FishingSpear",
-              "quantity": 3,
-              "level": 0,
-              "cursed": false
-            }
+            { "class": "Shuriken", "quantity": 3, "level": 0, "cursed": false }
           ]
         },
         {
@@ -2645,25 +2669,6 @@
           "heap_type": "for_sale",
           "items": [
             { "class": "Stylus", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 1150,
-          "heap_type": "heap",
-          "items": [
-            {
-              "class": "ScrollOfUpgrade",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
-          ]
-        },
-        {
-          "cell": 1152,
-          "heap_type": "heap",
-          "items": [
-            { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
@@ -2705,7 +2710,21 @@
           ]
         },
         {
-          "cell": 1788,
+          "cell": 1589,
+          "heap_type": "heap",
+          "items": [
+            { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 1738,
+          "heap_type": "heap",
+          "items": [
+            { "class": "Stylus", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 1787,
           "heap_type": "heap",
           "items": [
             { "class": "GuidePage", "quantity": 1, "level": 0, "cursed": false }

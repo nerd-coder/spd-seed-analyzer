@@ -1,6 +1,6 @@
 # Old Wandmaker reward — verified audit
 
-Target: **Shattered Pixel Dungeon v4.0.0 @ `2bb34a4e9`**. This note separates
+Target: **Shattered Pixel Dungeon v4.0.2 @ `57a4e06a4`**. This note separates
 the reward contract from the player's quest choices and from generation work
 that can happen before the NPC callback.
 
@@ -42,7 +42,7 @@ There is no seed-only concrete class or level across all playable generation
 profiles. A fixed, fully replayed profile can still produce one exact pair.
 No runtime path directly advances the WAND deck: Shaman loot, Scroll of
 Transmutation, and Cursed Wand all use `randomUsingDefaults`
-(`Mob.java:1102-1106`, `ScrollOfTransmutation.java:203-217,336-350`,
+(`Mob.java:1141-1143`, `ScrollOfTransmutation.java:203-217,336-350`,
 `CursedWand.java:362-371`). The WAND deck can nevertheless sit at a different
 levelgen index when state changes which levelgen draw sites fire before the
 callback.
@@ -114,8 +114,11 @@ counts only for Large/Secrets but still moves the stream before `spawnRoom`.
 Trap Mechanism can replace the feeling with traps or chasm
 (`TrapMechanism.java:54-104`) on the same two pre-build floats as the
 no-trinket path. It does not move the fresh route’s pre-`spawnRoom` stream by
-itself; it does change painting after room selection. Revealed-trap work is
-isolated (`RegularPainter.java:135-153`); the surrounding painter path is the
+itself; it does change painting after room selection. Trap class, cell, and
+reveal rolls stay inside the isolated decoration generator
+(`RegularPainter.java:135-153`). A trapped cell still fails a
+`spawnWandmaker` try, and each failed try calls `room.random(dist)`
+(`Wandmaker.java:307-328`) before the wand draws, so those retries are a
 reward lever.
 
 The Catalyst offers four trinkets by seeded TRINKET draws
@@ -135,17 +138,24 @@ and ordinary item population (`SuspiciousChestRoom.java:65-70`,
 reward (`Mimic.java:306-358`). On a Wandmaker floor those paint-time mimics run
 before `spawnWandmaker`; on earlier floors they can move persistent decks.
 
-Rat Skull changes the alternate Statue chance (`Statue.java:206-216`) and
-Crystal Vault’s alternate Crystal-Mimic chance (`CrystalVaultRoom.java:75-89`).
-An Armored Statue adds an armor generation and glyph roll
-(`ArmoredStatue.java:50-56`).
+Rat Skull changes the armored-statue `Float` threshold
+(`Statue.java:208-210`) and Crystal Vault’s alternate Crystal-Mimic chance
+(`CrystalVaultRoom.java:75-82`). `Statue.random` pays that `Float` and one
+`Long` on the parent, then runs `createWeapon` on the child
+(`Statue.java:217-219`). Tier and `WEP_T*` draws still decrement those
+decks, but their `Random` calls, `Weapon.random`, the enchant, and an
+armored statue’s `Generator.randomArmor()` plus `Glyph.random()`
+(`ArmoredStatue.java:51-56`) do not consume the parent stream. A statue
+that paints on the Wandmaker floor therefore moves `spawnWandmaker` by
+that `Float` and `Long` only. `createWeapon(true)` on an earlier floor can
+still change a later `WEP_T*` card; it does not consume the WAND deck.
 
 Artifacts are a runtime-movable seeded deck (`Generator.java:855-878`). Prison
 paint can draw them in Pit Room, Crystal Vault, Crystal Choice, and (on a shop
 floor in the prior region) Shop Room (`PitRoom.java:68-80`,
 `CrystalVaultRoom.java:92-105`, `CrystalChoiceRoom.java:122-127`,
 `ShopRoom.java:332-350`). `UnstableSpellbook` drains a variable scroll-
-probability loop (`UnstableSpellbook.java:84-103`). Exhausted artifacts now
+probability loop (`UnstableSpellbook.java:91-104`). Exhausted artifacts now
 fall back to `randomUsingDefaults(RING)` rather than the RING deck
 (`Generator.java:706-710`).
 

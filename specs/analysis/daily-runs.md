@@ -1,6 +1,6 @@
 # Daily Run seeds
 
-Target: **Shattered Pixel Dungeon v4.0.0 @ `2bb34a4e9`**.
+Target: **Shattered Pixel Dungeon v4.0.2 @ `57a4e06a4`**.
 
 ## Seed derivation
 

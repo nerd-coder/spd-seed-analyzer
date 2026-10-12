@@ -1,8 +1,15 @@
 {
   "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
-  "input": { "seed": "GFX-PZH-DCH", "numeric": 1300416271343, "depths": [9] },
+  "spd": {
+    "version": "v4.0.2",
+    "commit": "57a4e06a4"
+  },
+  "input": {
+    "seed": "GFX-PZH-DCH",
+    "numeric": 1300416271343,
+    "depths": [9]
+  },
   "identities": {
     "potions": [
       { "item": "PotionOfStrength", "appearance": "charcoal" },
@@ -2007,15 +2014,10 @@
           ]
         },
         {
-          "cell": 459,
-          "heap_type": "chest",
+          "cell": 445,
+          "heap_type": "heap",
           "items": [
-            {
-              "class": "ThrowingSpear",
-              "quantity": 3,
-              "level": 0,
-              "cursed": false
-            }
+            { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
@@ -2023,7 +2025,19 @@
           "heap_type": "chest",
           "items": [
             {
-              "class": "ScrollOfRemoveCurse",
+              "class": "ScrollOfLullaby",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 551,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "ScrollOfUpgrade",
               "quantity": 1,
               "level": 0,
               "cursed": false
@@ -2043,11 +2057,11 @@
           ]
         },
         {
-          "cell": 575,
-          "heap_type": "heap",
+          "cell": 574,
+          "heap_type": "chest",
           "items": [
             {
-              "class": "ScrollOfUpgrade",
+              "class": "PotionOfInvisibility",
               "quantity": 1,
               "level": 0,
               "cursed": false
@@ -2055,36 +2069,24 @@
           ]
         },
         {
-          "cell": 617,
+          "cell": 577,
           "heap_type": "heap",
           "items": [
             { "class": "GuidePage", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 701,
+          "cell": 904,
           "heap_type": "heap",
           "items": [
-            { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
+            { "class": "Food", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
-          "cell": 787,
+          "cell": 1150,
           "heap_type": "heap",
           "items": [
             { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 953,
-          "heap_type": "heap",
-          "items": [
-            {
-              "class": "CrystalKey",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
           ]
         },
         {
@@ -2128,7 +2130,19 @@
           "heap_type": "heap",
           "items": [
             {
-              "class": "ScrollOfTeleportation",
+              "class": "ScrollOfRemoveCurse",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 1308,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "CrystalKey",
               "quantity": 1,
               "level": 0,
               "cursed": false
@@ -2155,13 +2169,6 @@
           ]
         },
         {
-          "cell": 1345,
-          "heap_type": "heap",
-          "items": [
-            { "class": "Food", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
           "cell": 1377,
           "heap_type": "heap",
           "items": [
@@ -2182,15 +2189,15 @@
       ],
       "quest_rewards": [
         {
-          "class": "WandOfLightning",
+          "class": "WandOfBlastWave",
           "quantity": 1,
-          "level": 2,
+          "level": 1,
           "cursed": false
         },
         {
-          "class": "WandOfRegrowth",
+          "class": "WandOfLightning",
           "quantity": 1,
-          "level": 1,
+          "level": 2,
           "cursed": false
         }
       ]

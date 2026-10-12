@@ -38,12 +38,256 @@
     { "class": "RingBridgeRoom", "bounds": [13, 22, 20, 27] }
   ],
   "pre_mobs_rng": [
-    1727363473, -1781246059, 1893851408, -1517615804, -274446151, -1169291173,
-    -1769381221, -882354355
+    -1079100156, -722103834, -1660767478, 1727363473, -1781246059, 1893851408,
+    -1517615804, -274446151
   ],
   "pre_items_rng": [
-    -1720007865, 817426365, -1152480540, -226832734, 3977385, -195265335,
-    572170115, -1330184813
+    1478391381, -792625952, 1594090615, 1499017427, -1951341518, -958541517,
+    -299080965, 1505648042
+  ],
+  "pre_trap_rng": [
+    -2031065024, 1158015829, 1897472605, -1905992859, -2111232782, 413846867,
+    -1147294237, -1547202912
+  ],
+  "post_trap_capture_rng": [
+    -2031065024, 1158015829, 1897472605, -1905992859, -2111232782, 413846867,
+    -1147294237, -1547202912
+  ],
+  "trap_candidates": [
+    { "cell": 251, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 299, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 347, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 395, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 443, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 204, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 252, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 300, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 348, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 396, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 444, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 205, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 301, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 349, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 397, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 445, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 206, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 254, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 302, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 350, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 398, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 446, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 255, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 303, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 351, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 399, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 447, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 160, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 208, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 256, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 352, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 400, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 448, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 161, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 209, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 257, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 353, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 401, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 354, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 402, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 1711, "room": "CrystalChoiceRoom", "terrain": 1 },
+    { "cell": 1759, "room": "CrystalChoiceRoom", "terrain": 1 },
+    { "cell": 1712, "room": "CrystalChoiceRoom", "terrain": 1 },
+    { "cell": 1760, "room": "CrystalChoiceRoom", "terrain": 1 },
+    { "cell": 1713, "room": "CrystalChoiceRoom", "terrain": 1 },
+    { "cell": 1761, "room": "CrystalChoiceRoom", "terrain": 1 },
+    { "cell": 1714, "room": "CrystalChoiceRoom", "terrain": 1 },
+    { "cell": 1762, "room": "CrystalChoiceRoom", "terrain": 1 },
+    { "cell": 1715, "room": "CrystalChoiceRoom", "terrain": 1 },
+    { "cell": 1763, "room": "CrystalChoiceRoom", "terrain": 1 },
+    { "cell": 1716, "room": "CrystalChoiceRoom", "terrain": 1 },
+    { "cell": 1764, "room": "CrystalChoiceRoom", "terrain": 1 },
+    { "cell": 1029, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1125, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1173, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1126, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1222, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 695, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 743, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 791, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1175, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1223, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1271, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 744, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 840, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 697, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1082, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1226, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 987, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1035, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1083, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1131, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1179, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1227, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1036, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1084, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1228, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1276, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 941, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1037, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1085, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1133, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 942, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1134, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1182, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1230, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 847, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 895, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 943, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1135, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1183, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1231, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1327, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 752, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 848, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 896, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 944, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 992, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1040, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1088, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1136, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1232, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1280, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 753, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 801, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 849, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1041, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1360, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1408, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1456, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1504, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1409, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1457, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1505, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1458, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1506, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1554, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1602, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1650, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1459, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1507, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1555, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1460, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1508, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1479, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1527, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1384, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1432, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1480, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1528, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1289, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1337, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1433, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1481, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1529, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1290, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1530, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1291, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1339, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1387, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1435, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1483, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1531, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1579, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1292, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1340, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1388, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1580, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1670, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1718, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1766, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1814, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1862, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1671, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1719, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1767, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1815, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1863, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1672, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1720, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1768, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1816, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1864, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1673, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1721, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1769, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1817, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1865, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1674, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1722, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1770, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1818, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1866, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1675, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1723, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1771, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1819, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1867, "room": "SecretHoneypotRoom", "terrain": 1 },
+    { "cell": 1022, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 975, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1023, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 976, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1327, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1375, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1423, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1471, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1519, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1567, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1615, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1610, "room": "RegionDecoPatchRoom", "terrain": 1 },
+    { "cell": 1658, "room": "RegionDecoPatchRoom", "terrain": 1 },
+    { "cell": 1659, "room": "RegionDecoPatchRoom", "terrain": 1 },
+    { "cell": 1707, "room": "RegionDecoPatchRoom", "terrain": 1 },
+    { "cell": 1612, "room": "RegionDecoPatchRoom", "terrain": 1 },
+    { "cell": 1660, "room": "RegionDecoPatchRoom", "terrain": 1 },
+    { "cell": 1708, "room": "RegionDecoPatchRoom", "terrain": 1 },
+    { "cell": 1613, "room": "RegionDecoPatchRoom", "terrain": 1 },
+    { "cell": 1661, "room": "RegionDecoPatchRoom", "terrain": 1 },
+    { "cell": 1709, "room": "RegionDecoPatchRoom", "terrain": 1 },
+    { "cell": 1757, "room": "RegionDecoPatchRoom", "terrain": 1 },
+    { "cell": 543, "room": "StatueRoom", "terrain": 1 },
+    { "cell": 591, "room": "StatueRoom", "terrain": 1 },
+    { "cell": 639, "room": "StatueRoom", "terrain": 1 },
+    { "cell": 544, "room": "StatueRoom", "terrain": 1 },
+    { "cell": 592, "room": "StatueRoom", "terrain": 1 },
+    { "cell": 545, "room": "StatueRoom", "terrain": 1 },
+    { "cell": 593, "room": "StatueRoom", "terrain": 1 },
+    { "cell": 1702, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1750, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1798, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1655, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1703, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1751, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1608, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 1656, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 354, "room": "PlantsRoom", "terrain": 1 },
+    { "cell": 402, "room": "PlantsRoom", "terrain": 1 }
+  ],
+  "trap_non_hall_cells": [
+    251, 299, 347, 395, 443, 204, 252, 300, 348, 396, 444, 205, 301, 349, 397,
+    445, 206, 254, 302, 350, 398, 446, 255, 303, 351, 399, 447, 160, 208, 256,
+    352, 400, 448, 161, 209, 257, 353, 401, 354, 402, 1711, 1759, 1712, 1760,
+    1713, 1761, 1714, 1762, 1715, 1763, 1716, 1764, 1029, 1125, 1126, 743, 1223,
+    840, 697, 987, 1035, 1083, 1227, 1036, 1084, 1228, 941, 1037, 1085, 1133,
+    1134, 1182, 1230, 847, 895, 943, 1135, 1183, 1231, 1327, 848, 896, 944,
+    1040, 1136, 1232, 1280, 753, 849, 1360, 1408, 1456, 1504, 1409, 1457, 1505,
+    1458, 1506, 1554, 1459, 1507, 1555, 1460, 1508, 1479, 1527, 1384, 1432,
+    1480, 1528, 1289, 1337, 1433, 1481, 1529, 1291, 1339, 1387, 1531, 1579,
+    1292, 1340, 1388, 1670, 1718, 1766, 1814, 1862, 1671, 1719, 1767, 1815,
+    1863, 1672, 1720, 1768, 1816, 1864, 1673, 1721, 1769, 1817, 1865, 1674,
+    1722, 1770, 1818, 1866, 1675, 1723, 1771, 1819, 1867, 1022, 975, 1023, 1327,
+    1375, 1423, 1471, 1519, 1567, 1615, 1658, 1659, 1707, 1612, 1660, 1708,
+    1613, 1661, 1709, 1757, 543, 591, 639, 544, 592, 545, 593, 1702, 1750, 1798,
+    1655, 1703, 1751, 1656, 354, 402
   ],
   "crystal_vaults": [],
   "drops": [],
@@ -58,10 +302,10 @@
     "glyph": null
   },
   "generator_state": {
-    "using_first_deck": true,
+    "using_first_deck": false,
     "category_probs": [
-      0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-      1.0, 0.0, 0.0, 8.0, 1.0, 8.0, 0.0, 9.0
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.0, 0.0
     ],
     "categories": [
       {
@@ -87,22 +331,22 @@
         "dropped": 4
       },
       {
-        "probs": [1.0, 1.0, 0.0, 2.0, 0.0, 1.0],
+        "probs": [1.0, 2.0, 0.0, 2.0, 0.0, 1.0],
         "using_2nd_probs": false,
         "seed": -8558639645654909497,
-        "dropped": 7
+        "dropped": 6
       },
       {
-        "probs": [1.0, 2.0, 2.0, 2.0, 1.0, 1.0, 0.0],
+        "probs": [2.0, 2.0, 2.0, 2.0, 1.0, 1.0, 0.0],
         "using_2nd_probs": false,
         "seed": 7287648844454157976,
-        "dropped": 5
+        "dropped": 4
       },
       {
-        "probs": [2.0, 1.0, 1.0, 2.0, 0.0, 2.0, 2.0],
+        "probs": [2.0, 1.0, 1.0, 1.0, 0.0, 2.0, 2.0],
         "using_2nd_probs": false,
         "seed": 5545526166384806630,
-        "dropped": 4
+        "dropped": 5
       },
       {
         "probs": [1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -124,10 +368,10 @@
         "dropped": 2
       },
       {
-        "probs": [1.0, 3.0, 0.0],
+        "probs": [1.0, 3.0, 2.0],
         "using_2nd_probs": false,
         "seed": 8917439813178074983,
-        "dropped": 5
+        "dropped": 3
       },
       {
         "probs": [0.0, 2.0, 3.0],
@@ -136,10 +380,10 @@
         "dropped": 4
       },
       {
-        "probs": [3.0, 0.0, 3.0],
+        "probs": [3.0, 0.0, 2.0],
         "using_2nd_probs": false,
         "seed": 6293778580530110453,
-        "dropped": 3
+        "dropped": 4
       },
       {
         "probs": [
@@ -170,10 +414,10 @@
         "dropped": 22
       },
       {
-        "probs": [0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+        "probs": [0.0, 0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
         "using_2nd_probs": true,
         "seed": -8037445516927618605,
-        "dropped": 27
+        "dropped": 26
       },
       {
         "probs": [0.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 1.0],
@@ -182,10 +426,10 @@
         "dropped": 0
       },
       {
-        "probs": [0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0],
+        "probs": [0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0],
         "using_2nd_probs": true,
         "seed": 8129270787689514689,
-        "dropped": 24
+        "dropped": 23
       },
       {
         "probs": [0.0, 0.0, 2.0, 2.0, 1.0, 1.0, 0.0, 2.0, 0.0, 1.0, 0.0, 0.0],
@@ -305,29 +549,45 @@
       "stage": "room",
       "room": "StatueRoom",
       "rng": [
-        1689569525, 1836647630, -1508373143, 860033028, -1754770792, -972311613,
-        -1448682887, -872552437
+        1167081333, -1450256331, 1334710692, -1541488698, 1689569525,
+        1836647630, -1508373143, 860033028
       ]
     },
     {
       "stage": "room",
       "room": "RuinsRoom",
       "rng": [
-        -1540006589, 419079335, 688945192, -1420009323, -1546043852, -77492906,
-        -1714251900, 701222230
+        -542703261, 667438520, 1409075135, 454953115, -1540006589, 419079335,
+        688945192, -1420009323
       ]
     },
     {
       "stage": "room",
       "room": "RingBridgeRoom",
       "rng": [
-        688945192, -1420009323, -1546043852, -77492906, -1714251900, 701222230,
-        -309521633, 344547992
+        1409075135, 454953115, -1540006589, 419079335, 688945192, -1420009323,
+        -1546043852, -77492906
       ]
     },
     {
       "stage": "room",
       "room": "PlantsRoom",
+      "rng": [
+        419079335, 688945192, -1420009323, -1546043852, -77492906, -1714251900,
+        701222230, -309521633
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "TunnelRoom",
+      "rng": [
+        -1420009323, -1546043852, -77492906, -1714251900, 701222230, -309521633,
+        344547992, 714819408
+      ]
+    },
+    {
+      "stage": "room",
+      "room": "DemonSpawnerRoom",
       "rng": [
         -1546043852, -77492906, -1714251900, 701222230, -309521633, 344547992,
         714819408, -659594983
@@ -342,27 +602,11 @@
       ]
     },
     {
-      "stage": "room",
-      "room": "DemonSpawnerRoom",
-      "rng": [
-        701222230, -309521633, 344547992, 714819408, -659594983, 1002240794,
-        -150184659, -1686267066
-      ]
-    },
-    {
-      "stage": "room",
-      "room": "TunnelRoom",
-      "rng": [
-        344547992, 714819408, -659594983, 1002240794, -150184659, -1686267066,
-        209541548, -34548519
-      ]
-    },
-    {
       "stage": "doors",
       "room": "paintDoors",
       "rng": [
-        -722103834, -1660767478, 1727363473, -1781246059, 1893851408,
-        -1517615804, -274446151, -1169291173
+        1018954930, -265617912, -1079100156, -722103834, -1660767478,
+        1727363473, -1781246059, 1893851408
       ]
     }
   ]

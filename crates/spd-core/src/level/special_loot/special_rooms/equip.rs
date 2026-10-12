@@ -245,6 +245,16 @@ fn pool_equip(dungeon: &mut DungeonState) -> GeneratedItem {
         _ => dungeon.generator.random_armor(floor, dungeon.depth),
     }
 }
+
+/// Pops the `Statue.random` child generator on every return path.
+struct ChildGeneratorGuard;
+
+impl Drop for ChildGeneratorGuard {
+    fn drop(&mut self) {
+        Random::pop_generator();
+    }
+}
+
 pub fn statue_weapon(
     dungeon: &mut DungeonState,
     room: &Room,
@@ -273,15 +283,20 @@ pub fn statue_weapon(
     map.mob_occupied[cell] = true;
     map.known_mobs[cell] = Some("Statue");
     // Statue.random: Rat Skull's rare-alt chance is half-effective above base.
+    // The float stays on the level-generation stream. Weapon, enchant, and any
+    // armored armor+glyph rolls run on a child seeded by one parent long.
+    // Deck counters still move: generator deck state is global.
     let armored = Random::float() < crate::level::trinkets::exotic_chance(0.1);
+    Random::push_generator_seeded(Random::long());
+    let _child = ChildGeneratorGuard;
     let mut weapon = dungeon
         .generator
         .random_category(Category::Weapon, dungeon.depth);
     weapon.cursed = false;
     weapon.enchantment = Some(enchants::random_weapon_enchant(None).to_string());
-    // ArmoredStatue.createWeapon: after the shared weapon, create and glyph
-    // its armor. The armor is not a guaranteed drop, but these rolls remain
-    // on the level-generation stream and therefore affect later callbacks.
+    // ArmoredStatue.createWeapon: armor is not a guaranteed drop. Its tier and
+    // glyph rolls stay on the child stream so later level-generation callbacks
+    // see the same parent state for both statue types.
     if armored {
         let mut armor = dungeon
             .generator
@@ -293,5 +308,80 @@ pub fn statue_weapon(
     PlacedLoot {
         item: weapon,
         heap_type: "statue",
+    }
+}
+
+#[cfg(test)]
+mod statue_stream_tests {
+    use super::statue_weapon;
+    use crate::geom::Point;
+    use crate::items::model::GeneratedItem;
+    use crate::level::terrain::paint_minimal;
+    use crate::level::trinkets::{self, set_held};
+    use crate::random::Random;
+    use crate::rooms::room::Room;
+    use crate::rooms::types::RoomKind;
+    use crate::run::{dungeon_from_run, init_run};
+    use crate::trinkets::{ActiveTrinket, TrinketKind};
+
+    fn even_statue_room() -> Room {
+        let mut room = Room::new(0, "StatueRoom", RoomKind::Special, 1, 3, 8, 10, 8, 10);
+        room.left = 0;
+        room.top = 0;
+        room.right = 8;
+        room.bottom = 8;
+        room
+    }
+
+    fn parent_tail(seed: i64, rat_skull: bool) -> (Vec<i32>, GeneratedItem) {
+        trinkets::reset(1);
+        set_held(rat_skull.then_some(ActiveTrinket {
+            trinket: TrinketKind::RatSkull,
+            level: 3,
+            instance: 1,
+        }));
+        let mut dungeon = dungeon_from_run(init_run(36));
+        dungeon.depth = 8;
+        Random::push_generator_seeded(seed);
+        let room = even_statue_room();
+        let mut map = paint_minimal(std::slice::from_ref(&room)).expect("map");
+        let loot = statue_weapon(
+            &mut dungeon,
+            &room,
+            &mut map,
+            Point::new(room.left, room.top + 2),
+            &mut Vec::new(),
+        );
+        let tail = Random::peek_ints(4);
+        Random::pop_generator();
+        set_held(None);
+        (tail, loot.item)
+    }
+
+    #[test]
+    fn armored_and_plain_statues_spend_one_parent_long_after_the_float() {
+        let seed = (0..64).find(|&seed| {
+            Random::reset_generators();
+            Random::push_generator_seeded(seed);
+            let roll = Random::float();
+            Random::pop_generator();
+            (0.1..0.3).contains(&roll)
+        });
+        let Some(seed) = seed else {
+            panic!("expected a parent float in the plain-vs-rat-skull window");
+        };
+
+        Random::reset_generators();
+        Random::push_generator_seeded(seed);
+        let _ = Random::float();
+        let _ = Random::long();
+        let manual = Random::peek_ints(4);
+        Random::pop_generator();
+
+        let (plain_tail, plain_weapon) = parent_tail(seed, false);
+        let (armored_tail, armored_weapon) = parent_tail(seed, true);
+        assert_eq!(plain_tail, manual, "plain branch");
+        assert_eq!(armored_tail, manual, "rat skull armored branch");
+        assert_eq!(plain_weapon, armored_weapon);
     }
 }

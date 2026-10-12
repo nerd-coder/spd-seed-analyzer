@@ -101,6 +101,116 @@
     894064923, -1377475132, -827899636, -245857228, -1772218150, -1650151586,
     943772282, 1165878330
   ],
+  "pre_trap_rng": [
+    -992331146, -570459499, 69005594, 239118069, -216760845, -552115607,
+    -695226097, -1041855751
+  ],
+  "post_trap_capture_rng": [
+    -992331146, -570459499, 69005594, 239118069, -216760845, -552115607,
+    -695226097, -1041855751
+  ],
+  "trap_candidates": [
+    { "cell": 643, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 742, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 644, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 645, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 917, "room": "RegionDecoPatchRoom", "terrain": 1 },
+    { "cell": 918, "room": "RegionDecoPatchRoom", "terrain": 1 },
+    { "cell": 951, "room": "RegionDecoPatchRoom", "terrain": 1 },
+    { "cell": 178, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 113, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 146, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 179, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 212, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 115, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 181, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 544, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 116, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 182, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 479, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 512, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 545, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 578, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 513, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 546, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 579, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 514, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 580, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 548, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 581, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 614, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 319, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 352, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 385, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 287, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 320, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 386, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 588, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 556, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 589, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 491, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 863, "room": "RegionDecoPatchEntranceRoom", "terrain": 1 },
+    { "cell": 432, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 465, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 433, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 401, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 434, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 402, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 1237, "room": "CrystalChoiceRoom", "terrain": 1 },
+    { "cell": 1303, "room": "CrystalChoiceRoom", "terrain": 1 },
+    { "cell": 1238, "room": "CrystalChoiceRoom", "terrain": 1 },
+    { "cell": 1039, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 1072, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 1040, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 1106, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 1107, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 884, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 917, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 852, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 885, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 918, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 853, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 886, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1107, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 1108, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 1141, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 1174, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 1207, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 1208, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 1209, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 614, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 747, "room": "RuinsRoom", "terrain": 1 },
+    { "cell": 933, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 966, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 999, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 808, "room": "AquariumRoom", "terrain": 1 },
+    { "cell": 841, "room": "AquariumRoom", "terrain": 1 },
+    { "cell": 940, "room": "AquariumRoom", "terrain": 1 },
+    { "cell": 973, "room": "AquariumRoom", "terrain": 1 },
+    { "cell": 809, "room": "AquariumRoom", "terrain": 1 },
+    { "cell": 974, "room": "AquariumRoom", "terrain": 1 },
+    { "cell": 810, "room": "AquariumRoom", "terrain": 1 },
+    { "cell": 811, "room": "AquariumRoom", "terrain": 1 },
+    { "cell": 812, "room": "AquariumRoom", "terrain": 1 },
+    { "cell": 845, "room": "AquariumRoom", "terrain": 1 },
+    { "cell": 1209, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 1210, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 1344, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 1377, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 1306, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 1442, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 1443, "room": "ChasmRoom", "terrain": 1 },
+    { "cell": 465, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 498, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 531, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 564, "room": "TunnelRoom", "terrain": 1 }
+  ],
+  "trap_non_hall_cells": [
+    643, 917, 918, 951, 179, 182, 512, 545, 578, 513, 546, 579, 548, 581, 614,
+    319, 385, 287, 320, 386, 588, 556, 589, 863, 432, 401, 434, 1237, 1303,
+    1238, 1039, 1040, 884, 917, 852, 885, 918, 853, 886, 1108, 1207, 614, 747,
+    999, 808, 841, 940, 973, 809, 974, 810, 811, 812, 845, 1210, 1442, 1443
+  ],
   "crystal_vaults": [],
   "drops": [],
   "blacksmith_state": {
@@ -116,8 +226,8 @@
   "generator_state": {
     "using_first_deck": false,
     "category_probs": [
-      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-      0.0, 0.0, 0.0, 4.0, 1.0, 1.0, 1.0, 4.0
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+      0.0, 1.0, 0.0, 1.0, 0.0, 2.0, 1.0, 2.0
     ],
     "categories": [
       {
@@ -180,10 +290,10 @@
         "dropped": 2
       },
       {
-        "probs": [3.0, 0.0, 2.0],
+        "probs": [3.0, 0.0, 3.0],
         "using_2nd_probs": false,
         "seed": 604694503495956844,
-        "dropped": 4
+        "dropped": 3
       },
       {
         "probs": [2.0, 2.0, 2.0],
@@ -213,11 +323,11 @@
       },
       {
         "probs": [
-          1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0
+          1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0
         ],
         "using_2nd_probs": false,
         "seed": 2632793901004004387,
-        "dropped": 4
+        "dropped": 3
       },
       {
         "probs": [4.0, 0.0, 0.0],
@@ -226,10 +336,10 @@
         "dropped": 16
       },
       {
-        "probs": [0.0, 2.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0],
+        "probs": [0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
         "using_2nd_probs": false,
         "seed": -8941297708669008988,
-        "dropped": 24
+        "dropped": 27
       },
       {
         "probs": [0.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 1.0],
@@ -238,10 +348,10 @@
         "dropped": 0
       },
       {
-        "probs": [0.0, 1.0, 2.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0],
+        "probs": [0.0, 2.0, 2.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0],
         "using_2nd_probs": false,
         "seed": -1588026090766845994,
-        "dropped": 22
+        "dropped": 21
       },
       {
         "probs": [0.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 1.0, 2.0, 1.0, 2.0, 0.0],

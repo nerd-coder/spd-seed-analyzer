@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract": "generator_lifecycle",
-  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
+  "spd": { "version": "v4.0.2", "commit": "57a4e06a4" },
   "input": { "seed": "AAA-AAA-AAA", "numeric": 0 },
   "boundaries": [
     {
@@ -144,8 +144,8 @@
       },
       "wep_t4": {
         "seed": 7287648844454157976,
-        "dropped": 5,
-        "probabilities": [1, 2, 2, 2, 1, 1, 0]
+        "dropped": 4,
+        "probabilities": [2, 2, 2, 2, 1, 1, 0]
       }
     }
   ]

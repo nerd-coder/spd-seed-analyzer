@@ -161,4 +161,16 @@ pub(super) fn paint(ctx: &mut PaintCtx<'_>, ri: usize) {
         (tx, ty, tw, th),
         geometry::vault_treasure_map(ctx.map, tx, ty, tw, th, &variance),
     );
+    ctx.map.record_custom_tile(
+        "FinalRoomDoor",
+        CITY_QUEST_TEX,
+        (entry_door.x, entry_door.y, 1, 1),
+        Vec::new(),
+    );
+    ctx.map.record_custom_tile(
+        "FinalRoomDoor",
+        CITY_QUEST_TEX,
+        (locked_door.x, locked_door.y, 1, 1),
+        Vec::new(),
+    );
 }

@@ -1,4 +1,4 @@
-//! `ExoticPotion.regToExo` / `ExoticScroll.regToExo` (pinned v4.0.0).
+//! `ExoticPotion.regToExo` / `ExoticScroll.regToExo` (pinned v4.0.2).
 
 const REG_TO_EXO: &[(&str, &str)] = &[
     ("PotionOfStrength", "PotionOfMastery"),

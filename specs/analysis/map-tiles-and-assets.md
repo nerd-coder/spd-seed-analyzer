@@ -1,12 +1,13 @@
 # Map tiles and assets
 
-Target: **Shattered Pixel Dungeon v4.0.0 @ `2bb34a4e9`**. Public maps follow
+Target: **Shattered Pixel Dungeon v4.0.2 @ `57a4e06a4`**. Public maps follow
 `MAP-LAYOUT-GOAL`: painter-complete rooms, terrain, doors, transitions, traps,
-plants, and blobs. Not heaps, mobs, or NPCs.
+plants, blobs, and custom tiles/carpets. Not heaps, mobs, or NPCs.
 
 Analyzer map drawing lives in `web/src/lib/tiles.ts`,
-`web/src/lib/dungeon-tile-visuals.ts`, and `web/src/lib/map-assets.ts`. Visual
-fixtures: `tools/visual/tests/map-render-fixtures.ts`.
+`web/src/lib/dungeon-tile-visuals.ts`, `web/src/lib/tiles-overlays.ts`, and
+`web/src/lib/map-assets.ts`. Visual fixtures:
+`tools/visual/tests/map-render-fixtures.ts`.
 
 ## Terrain IDs
 
@@ -23,25 +24,40 @@ stay floor; `CUSTOM_DECO_WTR` is the water-looking hole under a custom overlay.
 
 ## Render stack
 
-`GameScene.java:273-336` composites, bottom to top:
+`GameScene.java:256-338` adds these layers bottom to top. Custom tilemaps are
+attached at `GameScene.java:377-387`.
 
 1. scrolling water (`water0.png`…`water4.png`)
-2. `DungeonTerrainTilemap` from `tiles_*.png` (`DungeonTerrainTilemap.java:43-115`)
+2. `DungeonTerrainTilemap` from `tiles_*.png` (`DungeonTerrainTilemap.java:43-117`)
 3. `level.customTiles`
 4. visual grid
 5. **wall–floor occlusion** (`WallOcclusionTilemap`)
 6. `TerrainFeaturesTilemap` (`terrain_features.png`: traps, plants, grass,
    embers, barricade, alchemy, statues, region deco, mine crystal/boulder;
-   `TerrainFeaturesTilemap.java:56-135`)
+   `TerrainFeaturesTilemap.java:56-137`)
 7. `level.customTerrain`
 8. heaps / mobs (not public maps)
 9. **raised grass** (`RaisedTerrainTilemap` on `raised_terrain.png`)
 10. `DungeonWallsTilemap` (wall internals + overhangs from `tiles_*.png`)
 11. `level.customWalls`
 
-The analyzer draws 2, a grass/embers subset of 6, `custom_tiles`, then raised
-grass **from `tiles_*.png`**, then walls and `custom_walls`. It has no
-occlusion layer, no `customTerrain`, and no `raised_terrain.png`.
+`drawFloorMap` paints scrolling water, then the static bitmap
+(`tiles.ts:210-240`). That bitmap is terrain from `tiles_*.png`, a
+grass/embers subset of features (`dungeon-tile-visuals.ts:465-472`),
+`custom_tiles`, visible traps, known entities, `custom_terrain`, raised grass
+from `raised_terrain.png`, walls from `tiles_*.png`, wall occlusion,
+`custom_walls`, then markers (`tiles.ts:122-179`). `FloorMap` carries
+`custom_tiles`, optional `custom_terrain`, and `custom_walls`
+(`spd-wasm.ts:118-120`).
+
+`CityBossLevel.CustomGroundVisuals` (`city_boss.png`, `tileW` 15,
+`CityBossLevel.java:455-460`) overrides `allowWater`. The superclass allows
+water when the custom image is null (`CustomTilemap.java:130-131`). Otherwise
+a curtain tail is allowed only when `i = tileX + tileY*tileW` is greater than
+`tileW*32`, the cell is `EMPTY` or `EMPTY_DECO`, and the cell `tileW` above is
+`WALL_DECO` (`CityBossLevel.java:620-627`). `setCellToWater` refuses the cell
+if any covering custom tilemap returns false (`Level.java:1118-1131`). The
+index stride is `tileW`, not `tileH`.
 
 ## City carpets — custom tilemap, painter-complete: **yes**
 
@@ -62,9 +78,21 @@ Paint sites (all `Room.paint`, before `RegularPainter.decorate` at
 `RegularPainter.java:124-151`):
 
 - city standards: `HallwayRoom.java:106-122`, `StatuesRoom.java:70-83`,
-  `SegmentedLibraryRoom.java:131`, `LibraryRingEntranceRoom` /
-  `LibraryRingExitRoom`, `StatuesEntranceRoom.java:59-77` /
-  `StatuesExitRoom` (inserted at index 0 so later carpets stack on top)
+  `SegmentedLibraryRoom.java:131-133`, `LibraryRingEntranceRoom.java:65-68` /
+  `LibraryRingExitRoom.java:65-68`
+- `StatuesEntranceRoom` / `StatuesExitRoom`, when `width() >= 11` or
+  `height() >= 11`: the center cell is the transition. The carpet rect starts
+  as `(c.x-1, c.y-1, c.x+1, c.y+1)`, an inclusive 3×3. An even width or height
+  grows that axis by one: `right++` or `bottom++` when `c.x < (left+right)/2f`
+  or `c.y < (top+bottom)/2f`, otherwise `left--` or `top--`. Every cell of
+  that rect that is not already `STATUE` becomes `EMPTY_DECO`. The carpet
+  `setRect` passes `width()+1` and `height()+1` (`Rect.width()` is
+  `right-left`; `getPoints()` is inclusive), then is inserted at
+  `customTiles` index 0 so later carpets stack on top. Entrance overrides the
+  center with `CITY_ENTRANCE`; exit uses `SKIP`. Both rooms then set
+  `ENTRANCE` or `EXIT` and add the transition
+  (`StatuesEntranceRoom.java:50-91`, `StatuesExitRoom.java:50-91`,
+  `Rect.java:48-49,155-160`).
 - `AmbitiousImpRoom.java:85-94`, vault rooms
   (`VaultEntranceRoom.java:71-77`, `VaultFinalRoom`, `VaultTokensRoom`)
 - secret `RatKingRoom.java:101-103`
@@ -73,10 +101,9 @@ Paint sites (all `Room.paint`, before `RegularPainter.decorate` at
 `WALL_DECO`. It does not emit carpets. `HallwayRoom` / `StatuesRoom` weights
 are city-only (`StandardRoom.java:144-147,182-183`).
 
-`customTerrain` is a third painter-complete list (`Level.java:189-190`), drawn
-after features (`GameScene.java:295-381`). Imp banners, mass-grave raised
-statues, ritual tables, and rat-king statues live there. The analyzer
-`FloorMap` has `custom_tiles` / `custom_walls` only (`spd-wasm.ts:118-119`).
+`customTerrain` is a third painter-complete list (`Level.java:189`), drawn
+after features (`GameScene.java:294-298,381-383`). Imp banners, mass-grave raised
+statues, ritual tables, and rat-king statues live there.
 
 ## Wall–floor shadowing — overlay, not a map fact
 
@@ -96,7 +123,11 @@ extra pixels from `environment/raised_terrain.png` at `region*4`
 `tilesTex()` = `tiles_city.png` and `waterTex()` = `water3.png`
 (`CityLevel.java:107-114`). Music is `CITY_TENSE` (`VaultLevel.java:126-128`).
 No distinct vault tilesheet; vault rooms add `Carpet` plus `city_quest.png`
-overlays.
+overlays. Paint also attaches these `CITY_QUEST` tilemaps: `FinalRoomDoor`
+(1×1 on `customTiles`) and `FinalRoomDoorOverhang` (1×2 on `customWalls`,
+origin on the cell above the door) (`VaultFinalRoom.java:245-259,473-477,557-562`);
+`TokenDoorFloor` (1×1 on `customTiles`)
+(`VaultTokensRoom.java:112-114,210-214`).
 
 ## Quest-room layout visuals
 
@@ -110,8 +141,8 @@ same rooms are not public-map content.
   3×3 `QuestExit` from `caves_quest.png`.
 - **MassGraveRoom** (`MassGraveRoom.java:55-83`): `CUSTOM_DECO_EMPTY` floor,
   9×9 `MassGraveDeco` from `prison_quest.png` on `customTiles`,
-  `StatueRaised` on `customTerrain`. (Class `Bones` is pre-v4 save restore
-  only.)
+  `StatueRaised` on `customTerrain`. (`Bones` is the old-save tilemap, not a
+  paint attachment, `MassGraveRoom.java:162-163`.)
 - **RitualSiteRoom** (`RitualSiteRoom.java:52-124`): wall cages /
   `REGION_DECO` / `CUSTOM_DECO` tables, 5×5 `RitualMarker` on `customTiles`,
   `Table` on `customTerrain`, all `prison_quest.png`.
@@ -123,38 +154,33 @@ same rooms are not public-map content.
 
 Clone root: `core/src/main/assets/`. Analyzer: `web/public/assets/` (flat).
 
-**Clone-only environment sheets (public-map gaps):**
-`occlusion_shadows.png`, `raised_terrain.png`, `custom_tiles/carpet.png`,
-`custom_tiles/rat_king_room.png`.
+`loadMapAssets` loads, and the clone bytes match, the seven `tiles_*.png`
+sheets (256×256), `terrain_features.png` (256×256), the active
+`water{region}.png`, `occlusion_shadows.png`, `raised_terrain.png`, and
+`custom_tiles/{carpet,rat_king_room,caves_quest,prison_quest,city_boss,halls_special,weak_floor}.png`
+(`map-assets.ts:67-120`). `water0.png`–`water4.png` are all present and match.
+Also present and matching, and not requested by that loader:
+`visual_grid.png`, `wall_blocking.png`,
+`custom_tiles/{caves_boss,prison_exit,sewer_boss}.png`.
 
-**Same path, different pixels (stale analyzer copies):** every
-`tiles_{sewers,prison,caves,caves_crystal,caves_gnoll,city,halls}.png`
-(still 256×256); `terrain_features.png` (analyzer 256×128, clone 256×256);
-`custom_tiles/{caves_quest,city_quest,prison_quest,caves_boss,city_boss}.png`
-(quest sheets also changed size: `caves_quest` 128×64→64×128, `city_quest`
-128×128→256×256, `prison_quest` 64×64→256×256).
+`custom_tiles/city_quest.png` (256×256) and `sprites/items.png` (256×512,
+`ItemSpriteSheet.java:29-32`) match the clone. `item_icons.png` matches the
+clone and is unused by the map UI.
 
-**Unchanged and already present:** `water0.png`–`water4.png`,
-`custom_tiles/{halls_special,prison_exit,sewer_boss,weak_floor}.png`,
-`visual_grid.png`, `wall_blocking.png`.
+`customTileImage` resolves `prison_quest`, `caves_quest`, `city_quest`,
+`city_boss`, `weak_floor`, `halls_special`, `carpet`, and `rat_king_room`
+(`tiles-overlays.ts:28-39`).
 
-Analyzer `loadMapAssets` never loads carpet, occlusion, raised terrain, or
-`rat_king_room`. `customTileImage` keys only
-`prison_quest` / `caves_quest` / `city_quest` / `city_boss` / `weak_floor` /
-`halls_special` (`tiles.ts:90-98`).
-
-Sprite gaps that are **not** public-map layout: `imp.png`, `sentry.png`
-(analyzer still has `red_sentry.png`), `vault_boss_elemental.png`,
-`vault_mirror.png`, `vault_tokens_door.png`. Analyzer leftover: `demon.png`.
+Sprite gaps that are **not** public-map layout: `imp.png`, `sentry.png`,
+`vault_boss_elemental.png`, `vault_mirror.png`, `vault_tokens_door.png`.
+Analyzer leftovers: `red_sentry.png`, `demon.png`.
 
 ## Consumable sprites
 
 The analyzer UI draws item icons from `/assets/sprites/items.png`
 (`ItemIcon.tsx`, `item-icons.ts`; heap sprites in `map-entities.ts` are not
-public maps). `item_icons.png` is unused. Clone `items.png` differs at the
-same 256×512 size (`ItemSpriteSheet.java:29-32`): seeds, darts, potions,
-elixirs/brews, runestones, scrolls, spells, dewdrop, petrified seed, liquid
-metal, blood vial, energy / exotic crystals, dwarf tokens.
+public maps). `item_icons.png` is unused. `items.png` matches the clone
+(256×512, `ItemSpriteSheet.java:29-32`).
 
 ## Visual-test snapshots
 
@@ -164,7 +190,5 @@ Committed files in `tools/visual/snapshots/`:
 - `HKT-JZN-XQQ-F1.png`
 - `AAA-AAA-AAA-F13-B1-Crystal.png`
 - `AAA-AAA-AAB-F13-B1-Gnoll.png`
-
-All four are invalid under v4 tiles: sewers and both mining tilesheets plus
-`terrain_features.png` and `caves_quest.png` changed, and a correct stack
-adds `occlusion_shadows.png` on every floor.
+- `AAA-AAA-AAA-F19-B1-Vault.png`
+- `GFX-PZH-DCH-F16.png`

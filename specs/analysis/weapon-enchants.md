@@ -1,6 +1,6 @@
 # Weapon enchantments, curses, and armor glyphs
 
-Target: **Shattered Pixel Dungeon v4.0.0 @ `2bb34a4e9`**. Java line numbers
+Target: **Shattered Pixel Dungeon v4.0.2 @ `57a4e06a4`**. Java line numbers
 are from that commit. Method: reading the pinned clone.
 
 These tables are the ones `Weapon.Enchantment.random*` / `Armor.Glyph.random*`
@@ -90,8 +90,8 @@ Direct `Enchantment.random()` / `Glyph.random()` / no-arg `enchant()` /
 | Sad Ghost (`Ghost.java:335-361`) | Clears the weapon’s random effect; always `Enchantment.random()` + `Glyph.random()`; keep both iff `enchantRoll <= 0.2 * parchment` | Floor |
 | Troll Blacksmith (`Blacksmith.java:392-411`) | Clears all four rewards; always `Enchantment.random()` + `Glyph.random()`; keep both iff `enchantRoll <= 0.3 * parchment` | Floor |
 | Imp pool (`Imp.java:338-345`) | `.enchant()` on the two weapons; `new PlateArmor().inscribe()` | Floor (overwrites `Weapon.random`) |
-| Statue (`Statue.java:63-71`) | `cursed = false` then `enchant(Enchantment.random())` | Floor |
-| Armored statue (`ArmoredStatue.java:51-56`) | Same weapon path plus `Generator.randomArmor()` then `inscribe(Glyph.random())` | Floor |
+| Statue (`Statue.java:63-71`) | `cursed = false` then `enchant(Enchantment.random())` | Child of one floor `Long` |
+| Armored statue (`ArmoredStatue.java:51-56`) | Same weapon path plus `Generator.randomArmor()` then `inscribe(Glyph.random())` | Child of one floor `Long` |
 | Vault equipment (`VaultLevel.java:271-356`) | After defaults + `level(...)`: `Int(3) >= lootTier` → `enchant(null)` / `inscribe(null)`, else `enchant()` / `inscribe()`. T0 always clears; T3 always applies | Floor |
 | Vault mirror (`VaultMirror.java:69-97`) | Warrior seal `Glyph.random()`; mage staff / spirit bow / mirror sword `enchant()` under `pushGenerator(Random.Long())` | Isolated long |
 | Sacrifice room (`SacrificeRoom.java:87-104`) | Always `Enchantment.randomCurse()`; apply if the prize has no good enchant; then force cursed | Floor |
@@ -110,9 +110,13 @@ picks the class, `Weapon.random()` may already roll an isolated effect, then
 `.enchant()` overwrites it on the floor stream. Plate armor is constructed
 directly (no `Armor.random()`), so its only glyph roll is `inscribe()`.
 
-Statue levelgen uses decks (`Statue.random()` → `createWeapon(true)`);
-`DistortionTrap` and `GuardianTrap` use defaults. Guardian then
-`enchant(null)` (`GuardianTrap.java:85-87`).
+Statue levelgen uses decks (`Statue.random()` → `createWeapon(true)`,
+`Statue.java:206-219`). Enchant, glyph, and weapon-level rolls sit on the
+child seeded by one floor `Long()`. `DistortionTrap` calls
+`Statue.random(false)` at runtime (defaults, same child wrapper,
+`DistortionTrap.java:125`). `GuardianTrap` does not use `Statue.random`;
+the guardian calls `createWeapon(false)` on the ambient generator and
+`enchant(null)` (`GuardianTrap.java:61,85-87`).
 
 Runtime-only (not seed generation): `StoneOfEnchantment`,
 `ScrollOfEnchantment` (common + uncommon + `random` with those two ignored),

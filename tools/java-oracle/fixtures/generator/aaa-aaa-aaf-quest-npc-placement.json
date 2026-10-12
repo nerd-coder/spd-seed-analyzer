@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract": "quest_npc_placement",
-  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
+  "spd": { "version": "v4.0.2", "commit": "57a4e06a4" },
   "input": { "seed": "AAA-AAA-AAF", "numeric": 5 },
   "ghost": {
     "depth": 3,
@@ -15,10 +15,10 @@
   "wandmaker": {
     "depth": 9,
     "quest_type": 3,
-    "cell": 803,
+    "cell": 845,
     "rng_tail": [
-      -495962193, -1983712274, 628878971, -203297333, -219246059, 995561916,
-      1289620423, 881286738
+      1067143314, 1016284400, -404266452, 1825189436, 840037702, 1349554560,
+      806133834, -1774623409
     ]
   }
 }

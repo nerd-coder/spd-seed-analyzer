@@ -440,6 +440,10 @@ pub fn can_connect_rooms(a: &Room, b: &Room, rooms: &[Room]) -> bool {
     if a.name == "VaultFinalRoom" && entrance_within_three_hops(b, rooms) {
         return false;
     }
+    // `VaultLongRingsRoom.canConnect` rejects `VaultEntranceRoom` on the caller only.
+    if a.name == "VaultLongRingsRoom" && b.is_entrance() {
+        return false;
+    }
     if a.name == "VaultTokensRoom" {
         if b.is_entrance() {
             return false;
@@ -752,5 +756,37 @@ mod tests {
             &right_side[0],
             &right_side
         ));
+    }
+
+    #[test]
+    fn vault_long_rings_caller_rejects_entrance() {
+        let mut rings = Room::new(
+            0,
+            "VaultLongRingsRoom",
+            RoomKind::Standard,
+            2,
+            16,
+            21,
+            21,
+            11,
+            11,
+        );
+        rings.resize(20, 10);
+        let mut entrance = Room::new(
+            1,
+            "VaultEntranceRoom",
+            RoomKind::Entrance,
+            1,
+            16,
+            11,
+            11,
+            11,
+            11,
+        );
+        entrance.resize(10, 10);
+        entrance.set_pos(rings.right, rings.top);
+        let rooms = [rings.clone(), entrance.clone()];
+        assert!(!can_connect_rooms(&rooms[0], &rooms[1], &rooms));
+        assert!(can_connect_rooms(&rooms[1], &rooms[0], &rooms));
     }
 }

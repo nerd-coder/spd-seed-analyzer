@@ -69,6 +69,66 @@
     278239783, -727532693, 1140308860, 33983402, -2117844453, -1320165537,
     1915817009, 1433982039
   ],
+  "pre_trap_rng": [
+    -1641364428, -582487316, 545618585, -1756928730, 1640556996, -1002570338,
+    326626135, -1667299484
+  ],
+  "post_trap_capture_rng": [
+    -1641364428, -582487316, 545618585, -1756928730, 1640556996, -1002570338,
+    326626135, -1667299484
+  ],
+  "trap_candidates": [
+    { "cell": 1319, "room": "WalkwayRoom", "terrain": 1 },
+    { "cell": 1173, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 959, "room": "RegionDecoPatchRoom", "terrain": 1 },
+    { "cell": 994, "room": "RegionDecoPatchRoom", "terrain": 1 },
+    { "cell": 1029, "room": "RegionDecoPatchRoom", "terrain": 1 },
+    { "cell": 1030, "room": "RegionDecoPatchRoom", "terrain": 1 },
+    { "cell": 1613, "room": "SecretMazeRoom", "terrain": 1 },
+    { "cell": 1753, "room": "SecretMazeRoom", "terrain": 1 },
+    { "cell": 1788, "room": "SecretMazeRoom", "terrain": 1 },
+    { "cell": 1823, "room": "SecretMazeRoom", "terrain": 1 },
+    { "cell": 1858, "room": "SecretMazeRoom", "terrain": 1 },
+    { "cell": 1893, "room": "SecretMazeRoom", "terrain": 1 },
+    { "cell": 1754, "room": "SecretMazeRoom", "terrain": 1 },
+    { "cell": 1789, "room": "SecretMazeRoom", "terrain": 1 },
+    { "cell": 1859, "room": "SecretMazeRoom", "terrain": 1 },
+    { "cell": 1756, "room": "SecretMazeRoom", "terrain": 1 },
+    { "cell": 1623, "room": "SecretMazeRoom", "terrain": 1 },
+    { "cell": 1624, "room": "SecretMazeRoom", "terrain": 1 },
+    { "cell": 1625, "room": "SecretMazeRoom", "terrain": 1 },
+    { "cell": 1420, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 1455, "room": "TunnelRoom", "terrain": 1 },
+    { "cell": 1306, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1341, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1376, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1342, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1343, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1344, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1345, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1380, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1415, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1450, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1346, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1381, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1416, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1451, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1486, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 1521, "room": "RegionDecoPatchExitRoom", "terrain": 1 },
+    { "cell": 492, "room": "MagicWellRoom", "terrain": 1 },
+    { "cell": 527, "room": "MagicWellRoom", "terrain": 1 },
+    { "cell": 1095, "room": "RingBridgeRoom", "terrain": 1 },
+    { "cell": 1130, "room": "RingBridgeRoom", "terrain": 1 },
+    { "cell": 1165, "room": "RingBridgeRoom", "terrain": 1 },
+    { "cell": 1166, "room": "RingBridgeRoom", "terrain": 1 },
+    { "cell": 1201, "room": "RingBridgeRoom", "terrain": 1 },
+    { "cell": 1236, "room": "RingBridgeRoom", "terrain": 1 }
+  ],
+  "trap_non_hall_cells": [
+    1319, 959, 994, 1029, 1030, 1753, 1788, 1858, 1754, 1789, 1625, 1341, 1376,
+    1342, 1343, 1345, 1380, 1415, 1450, 1346, 1381, 1416, 1451, 1486, 1521, 492,
+    527, 1095, 1165, 1166
+  ],
   "crystal_vaults": [],
   "drops": [],
   "blacksmith_state": {
@@ -84,8 +144,8 @@
   "generator_state": {
     "using_first_deck": true,
     "category_probs": [
-      0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-      0.0, 0.0, 0.0, 7.0, 1.0, 8.0, 1.0, 8.0
+      0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+      1.0, 0.0, 0.0, 8.0, 1.0, 7.0, 1.0, 9.0
     ],
     "categories": [
       {
@@ -105,28 +165,28 @@
         "dropped": 0
       },
       {
-        "probs": [2.0, 1.0, 1.0, 2.0, 1.0, 2.0, 0.0],
+        "probs": [1.0, 1.0, 1.0, 2.0, 1.0, 2.0, 0.0],
         "using_2nd_probs": false,
         "seed": -5771918163882724647,
-        "dropped": 3
+        "dropped": 4
       },
       {
-        "probs": [2.0, 2.0, 1.0, 1.0, 1.0, 2.0],
+        "probs": [2.0, 2.0, 0.0, 1.0, 0.0, 2.0],
         "using_2nd_probs": false,
         "seed": -7243016205079533422,
-        "dropped": 3
-      },
-      {
-        "probs": [1.0, 2.0, 2.0, 1.0, 1.0, 2.0, 0.0],
-        "using_2nd_probs": false,
-        "seed": -3713498913475024867,
         "dropped": 5
       },
       {
-        "probs": [2.0, 0.0, 1.0, 1.0, 1.0, 0.0, 2.0],
+        "probs": [1.0, 2.0, 2.0, 1.0, 0.0, 2.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": -3713498913475024867,
+        "dropped": 6
+      },
+      {
+        "probs": [2.0, 1.0, 1.0, 2.0, 1.0, 1.0, 2.0],
         "using_2nd_probs": false,
         "seed": -7024149857385468291,
-        "dropped": 7
+        "dropped": 4
       },
       {
         "probs": [1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
@@ -142,16 +202,16 @@
         "dropped": 0
       },
       {
-        "probs": [2.0, 3.0, 3.0],
+        "probs": [2.0, 3.0, 2.0],
         "using_2nd_probs": false,
         "seed": 760040897669438048,
-        "dropped": 1
+        "dropped": 2
       },
       {
-        "probs": [2.0, 1.0, 3.0],
+        "probs": [2.0, 2.0, 3.0],
         "using_2nd_probs": false,
         "seed": 5479209157312539551,
-        "dropped": 3
+        "dropped": 2
       },
       {
         "probs": [3.0, 2.0, 1.0],
@@ -167,17 +227,17 @@
       },
       {
         "probs": [
-          3.0, 0.0, 3.0, 3.0, 3.0, 2.0, 2.0, 3.0, 3.0, 3.0, 2.0, 3.0, 2.0
+          3.0, 0.0, 3.0, 3.0, 3.0, 2.0, 3.0, 3.0, 3.0, 3.0, 2.0, 3.0, 2.0
         ],
         "using_2nd_probs": false,
         "seed": -5135241931996733240,
-        "dropped": 7
+        "dropped": 6
       },
       {
-        "probs": [3.0, 2.0, 3.0, 3.0, 3.0, 3.0, 2.0, 3.0, 3.0, 3.0, 3.0, 2.0],
+        "probs": [3.0, 2.0, 3.0, 3.0, 3.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 2.0],
         "using_2nd_probs": false,
         "seed": 3463647073178929225,
-        "dropped": 3
+        "dropped": 4
       },
       {
         "probs": [
@@ -194,10 +254,10 @@
         "dropped": 21
       },
       {
-        "probs": [0.0, 3.0, 2.0, 0.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+        "probs": [0.0, 3.0, 2.0, 0.0, 2.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0],
         "using_2nd_probs": false,
         "seed": 6274051388366741291,
-        "dropped": 31
+        "dropped": 33
       },
       {
         "probs": [0.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 1.0],
@@ -206,16 +266,16 @@
         "dropped": 0
       },
       {
-        "probs": [0.0, 1.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+        "probs": [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
         "using_2nd_probs": true,
         "seed": -6198305397357196810,
-        "dropped": 26
+        "dropped": 28
       },
       {
-        "probs": [0.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 2.0, 1.0, 1.0, 0.0],
+        "probs": [0.0, 1.0, 1.0, 0.0, 2.0, 1.0, 1.0, 0.0, 2.0, 1.0, 1.0, 0.0],
         "using_2nd_probs": false,
         "seed": -1320899939598838849,
-        "dropped": 11
+        "dropped": 10
       },
       { "probs": [1.0], "using_2nd_probs": false, "seed": null, "dropped": 0 }
     ]

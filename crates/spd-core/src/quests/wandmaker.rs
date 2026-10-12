@@ -367,8 +367,8 @@ mod tests {
             (
                 "GFX-PZH-DCH",
                 7,
+                ("WandOfBlastWave", 1),
                 ("WandOfLightning", 2),
-                ("WandOfRegrowth", 1),
             ),
             (
                 "HKT-JZN-XQQ",

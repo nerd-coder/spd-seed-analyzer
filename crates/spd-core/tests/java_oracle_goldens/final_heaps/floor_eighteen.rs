@@ -72,7 +72,12 @@ fn aaa_floor_eighteen_matches_through_blobs() {
                 .items
                 .iter()
                 .map(|item| OracleItem {
-                    class_name: item.class_name.clone(),
+                    // Java reports nested plant seed classes by their simple name.
+                    class_name: if item.class_name.ends_with("Seed") {
+                        "Seed".into()
+                    } else {
+                        item.class_name.clone()
+                    },
                     quantity: item.quantity,
                     level: item.level,
                     cursed: item.cursed,

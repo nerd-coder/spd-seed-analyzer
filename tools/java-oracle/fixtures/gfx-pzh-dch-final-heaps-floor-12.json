@@ -1,8 +1,15 @@
 {
   "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
-  "input": { "seed": "GFX-PZH-DCH", "numeric": 1300416271343, "depths": [12] },
+  "spd": {
+    "version": "v4.0.2",
+    "commit": "57a4e06a4"
+  },
+  "input": {
+    "seed": "GFX-PZH-DCH",
+    "numeric": 1300416271343,
+    "depths": [12]
+  },
   "identities": {
     "potions": [
       { "item": "PotionOfStrength", "appearance": "charcoal" },
@@ -2562,18 +2569,6 @@
           ]
         },
         {
-          "cell": 579,
-          "heap_type": "heap",
-          "items": [
-            {
-              "class": "ScrollOfUpgrade",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
-          ]
-        },
-        {
           "cell": 800,
           "heap_type": "heap",
           "items": [
@@ -2610,18 +2605,6 @@
           ]
         },
         {
-          "cell": 895,
-          "heap_type": "heap",
-          "items": [
-            {
-              "class": "PotionOfMindVision",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
-          ]
-        },
-        {
           "cell": 924,
           "heap_type": "heap",
           "items": [
@@ -2634,29 +2617,10 @@
           ]
         },
         {
-          "cell": 1140,
+          "cell": 1175,
           "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 209, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 1216,
-          "heap_type": "heap",
-          "items": [
-            {
-              "class": "PotionOfLiquidFlame",
-              "quantity": 1,
-              "level": 0,
-              "cursed": false
-            }
-          ]
-        },
-        {
-          "cell": 1217,
-          "heap_type": "heap",
-          "items": [
-            { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
+            { "class": "GoldenKey", "quantity": 1, "level": 0, "cursed": false }
           ]
         },
         {
@@ -2668,17 +2632,10 @@
         },
         {
           "cell": 1257,
-          "heap_type": "heap",
-          "items": [
-            { "class": "GuidePage", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
-          "cell": 1416,
           "heap_type": "chest",
           "items": [
             {
-              "class": "ScrollOfRecharging",
+              "class": "PotionOfMindVision",
               "quantity": 1,
               "level": 0,
               "cursed": false
@@ -2686,10 +2643,65 @@
           ]
         },
         {
-          "cell": 1506,
+          "cell": 1266,
           "heap_type": "heap",
           "items": [
-            { "class": "GoldenKey", "quantity": 1, "level": 0, "cursed": false }
+            { "class": "GuidePage", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 1298,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "ScrollOfUpgrade",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 1306,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "ScrollOfTeleportation",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 1416,
+          "heap_type": "skeleton",
+          "items": [
+            {
+              "class": "StoneOfIntuition",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
+          ]
+        },
+        {
+          "cell": 1424,
+          "heap_type": "heap",
+          "items": [
+            { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
+          "cell": 1466,
+          "heap_type": "heap",
+          "items": [
+            {
+              "class": "PotionOfLiquidFlame",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
           ]
         },
         {
@@ -2754,15 +2766,15 @@
       ],
       "quest_rewards": [
         {
-          "class": "WandOfLightning",
+          "class": "WandOfBlastWave",
           "quantity": 1,
-          "level": 2,
+          "level": 1,
           "cursed": false
         },
         {
-          "class": "WandOfRegrowth",
+          "class": "WandOfLightning",
           "quantity": 1,
-          "level": 1,
+          "level": 2,
           "cursed": false
         }
       ]

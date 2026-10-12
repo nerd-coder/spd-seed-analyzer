@@ -13,7 +13,8 @@ pub(super) fn paint_ring(ctx: &mut PaintCtx<'_>, ri: usize) {
     geometry::fill_margin(ctx.map, &room, 1, EMPTY);
     geometry::fill_margin(ctx.map, &room, 4, WALL);
     ctx.set_regular_doors(ri);
-    let _ = ctx.create_mob();
+    let near_entrance = ctx.next_to_entrance(ri);
+    let (_enemy, returned) = ctx.create_spawn_mob(near_entrance, false);
     let clockwise = Random::int_max(2) == 0;
     let idx = Random::int_max(4) as usize;
     let wander = if clockwise {
@@ -32,6 +33,7 @@ pub(super) fn paint_ring(ctx: &mut PaintCtx<'_>, ri: usize) {
         ]
     };
     ctx.occupy_mob(wander[idx]);
+    ctx.return_mobs(returned);
 }
 
 pub(super) fn paint_rings(ctx: &mut PaintCtx<'_>, ri: usize) {
@@ -44,15 +46,8 @@ pub(super) fn paint_rings(ctx: &mut PaintCtx<'_>, ri: usize) {
     geometry::fill_wh(ctx.map, room.right - 4, room.bottom - 4, 3, 3, WALL);
     ctx.set_regular_doors(ri);
 
-    let mut returned = Vec::new();
-    let enemy = loop {
-        let enemy = ctx.create_mob();
-        if enemy.large() {
-            returned.push(enemy);
-            continue;
-        }
-        break enemy;
-    };
+    let near_entrance = ctx.next_to_entrance(ri);
+    let (enemy, returned) = ctx.create_spawn_mob(near_entrance, true);
     let pos = loop {
         let p = room.random_margin(1);
         let cell = ctx.point_cell(p);
@@ -74,9 +69,7 @@ pub(super) fn paint_rings(ctx: &mut PaintCtx<'_>, ri: usize) {
     ];
     Random::shuffle(&mut wander);
     let _ = enemy;
-    for mob in returned {
-        ctx.return_mob(mob);
-    }
+    ctx.return_mobs(returned);
 }
 
 pub(super) fn paint_long_rings(ctx: &mut PaintCtx<'_>, ri: usize) {
@@ -161,7 +154,9 @@ pub(super) fn paint_enemy_center(ctx: &mut PaintCtx<'_>, ri: usize) {
         EMPTY,
     );
     ctx.set_regular_doors(ri);
-    let enemy = ctx.create_mob();
+    let near_entrance = ctx.next_to_entrance(ri);
+    let (enemy, returned) = ctx.create_spawn_mob(near_entrance, false);
+    ctx.return_mobs(returned);
     let c = geometry::center(&room);
     let clockwise = Random::int_max(2) == 0;
     let wander = if clockwise {
@@ -206,7 +201,9 @@ pub(super) fn paint_quadrants(ctx: &mut PaintCtx<'_>, ri: usize) {
     let doors = ctx.door_points(ri);
     spawn.retain(|p| doors.iter().all(|d| geometry::point_distance(*p, *d) > 3.0));
     if !spawn.is_empty() {
-        let enemy = ctx.create_mob();
+        let near_entrance = ctx.next_to_entrance(ri);
+        let (enemy, returned) = ctx.create_spawn_mob(near_entrance, false);
+        ctx.return_mobs(returned);
         let corner = *Random::element(&spawn).expect("spawn");
         ctx.occupy_mob(ctx.point_cell(corner));
         ctx.create_equipment(enemy.tier());

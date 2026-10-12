@@ -1,6 +1,6 @@
 # Dwarven vault — verified audit
 
-Target: **Shattered Pixel Dungeon v4.0.0 @ `2bb34a4e9`**.
+Target: **Shattered Pixel Dungeon v4.0.2 @ `57a4e06a4`**.
 
 One `VaultLevel` exists per run, on **branch 1 at the Imp's city depth**.
 Room-by-room catalogue: `vault-rooms.md`. Imp spawn and `rewardOptions`:
@@ -40,7 +40,7 @@ constructors. It does **not** mutate main-dungeon category decks.
 and feelings (`Level.java:224`). `InterlevelScene` does not hold allies
 when the branch changes on depths 16–20 (`InterlevelScene.java:650-655`).
 Walking onto vault transitions does nothing; `EscapeCrystal` is the exit
-(`VaultLevel.java:206-209`, `EscapeCrystal.java:85-91,285-293`). After
+(`VaultLevel.java:206-209`, `EscapeCrystal.java:84-90,284-292`). After
 `complete`, stepping in the vault force-returns the hero
 (`VaultLevel.java:576-588`).
 
@@ -67,15 +67,23 @@ interleaves multi-connection rooms with `maxConnections == 1` singles
 (`GridBuilder.java:38-41,67-99,299-307`). Entrance is forced onto the
 perimeter (`GridBuilder.java:104-125`). `VaultFinalRoom` is 21×21 (2×2
 cells) and is moved to the end of the placement queue
-(`VaultFinalRoom.java:65-83`, `GridBuilder.java:127-131`). Long rooms
+(`VaultFinalRoom.java:69-86`, `GridBuilder.java:127-131`). Long rooms
 (`VaultHallwayRoom`, `VaultLongRingsRoom`, `VaultTokensRoom`) occupy two
 cells (`VaultLongRoom.java:50-72`).
 
 Typical pack: 18–20 rooms on a ~5×5 cell grid (one large floor, not three
 sequential depths). `VaultFinalRoom` refuses a path of fewer than three
 rooms to the entrance; `VaultTokensRoom` refuses fewer than two
-(`VaultFinalRoom.java:96-118`, `VaultTokensRoom.java:173-190`). Placement
-can retry (`RegularLevel.java:112-118`, `GridBuilder.java:166-174`).
+(`VaultFinalRoom.java:99-121`, `VaultTokensRoom.java:178-196`).
+`VaultLongRingsRoom.canConnect(Room)` returns false for a
+`VaultEntranceRoom` (`VaultLongRingsRoom.java:85-89`; more difficult
+rooms cannot neighbor the entrance), so that room cannot connect itself
+to the entrance. `connect` tests only the caller
+(`Room.java:270-273`); placement uses `r.connect(n)`
+(`GridBuilder.java:286`). The extra-connection pass can still call
+`entrance.connect(longRings)` (`GridBuilder.java:300-304`). That changes
+the room graph. Placement can retry (`RegularLevel.java:112-118`,
+`GridBuilder.java:166-174`).
 
 `VaultLevel` paints with hidden-door chance 0, water 0.15 / smoothness 12,
 grass 0.30 / 3, and `nTraps() == 0` (`VaultLevel.java:189-203`). Water,
@@ -101,7 +109,7 @@ grass patches.
 
 - Imp spawn depth selects the vault seed.
 - `Dungeon.hero.heroClass` is read while painting `VaultTokensRoom` to
-  build the mirror reward (`VaultTokensRoom.java:109-111`,
+  build the mirror reward (`VaultTokensRoom.java:116-118`,
   `VaultMirror.java:69-98`). The reward RNG is `pushGenerator(Random.Long())`,
   so class does not shift later ambient vault rolls.
 - `DARKNESS` adds a torch among the two `VaultBeacon`s (the `Int(3)` is
@@ -164,9 +172,21 @@ become ordinary heaps in `createItems` (`VaultLevel.java:602-611`). Some
 treasure rooms also queue `PotionOfLiquidFlame`, `PotionOfPurity`,
 `PotionOfInvisibility`, or `StoneOfBlink` for that leftover pass.
 
+`createItems` then drops one `PotionOfHealing` as a `HEAP`
+(`VaultLevel.java:627-640`). It calls `randomDropCell` up to 1000 times
+and stops when the cell's room is directly connected to `roomEntrance`
+(`r.connected.containsKey(roomEntrance)`). `randomDropCell` itself never
+returns the entrance room (`RegularLevel.java:743`), so the entrance does
+not satisfy the test. If every try fails, the last cell is still used.
+The drop is guaranteed either way. This runs after painter-complete
+layout. If that cell is `HIGH_GRASS` or `FURROWED_GRASS`, it becomes
+`GRASS` (`VaultLevel.java:637-639`). That flatten is a `createItems`
+terrain edit and is not part of the public map.
+
 **Guaranteed if the vault is generated:** two `VaultBeacon`s in the
-entrance (`VaultEntranceRoom.java:118-135`); `ImpStatue` plus the six
-pre-rolled Imp options on final pedestals (`VaultFinalRoom.java:228-236`);
+entrance (`VaultEntranceRoom.java:118-135`); one `PotionOfHealing` heap
+from `createItems` (`VaultLevel.java:627-640`); `ImpStatue` plus the six
+pre-rolled Imp options on final pedestals (`VaultFinalRoom.java:231-239`);
 per spawned treasure room, the equipment/consumable/token heaps listed in
 `vault-rooms.md`. Heap **identities** follow the default-weight rules
 above, not main-dungeon decks.
@@ -190,13 +210,16 @@ are discarded on pickup (`DwarfToken.java:51-57`). The duelist sword is
 
 `VaultBossElemental` is **not** created at paint time. Stepping within
 Chebyshev distance 3 of the locked door locks the entry, seals the level,
-and `GameScene.add`s the boss at the room center
-(`VaultFinalRoom.java:247-265`). Constructor `Random.Int(3)` for initial
+and `GameScene.add`s the boss (`VaultFinalRoom.java:271-294`). The cell
+is the room center, or a random empty neighbour when the center is
+occupied (`Random.element` on live game RNG). If every neighbour is
+occupied, that step returns without spawning. The reposition is runtime,
+not painter-complete layout. Constructor `Random.Int(3)` for initial
 form, plus combat cooldowns, use live game RNG, not the vault seed
 (`VaultBossElemental.java:93-97,146-148`). Fixed generation stats: HT 600,
 EXP 30, defenseSkill 20 (`VaultBossElemental.java:83-91`). Death calls
 `unseal`, which opens both doors and `identify(false)` on remaining
-unidentified rings (`VaultLevel.java:638-645`, `VaultFinalRoom.java:329-340`).
+unidentified rings (`VaultLevel.java:654-660`, `VaultFinalRoom.java:369-380`).
 
 ### Main-dungeon decks
 
@@ -210,7 +233,18 @@ vault does not add another.
 
 Show: room graph and types, terrain (including pedestals, bookshelves,
 `EMPTY_SP`, locked doors), regular doors, branch transitions, flame-trap
-tiles, `VaultFlameTraps` coverage, water, grass.
+tiles, `VaultFlameTraps` coverage, water, grass. Paint-time custom tiles
+are overlays on that terrain and do not change it: entrance `Carpet`,
+`FinalRoomDoor` and `FinalRoomDoorOverhang` on the final entry and locked
+doors (`VaultFinalRoom.java:179-180,245-259`), and `TokenDoorFloor` on the
+token door (`VaultTokensRoom.java:107-114`).
+
+Public grass is the painter result. `createItems` may later flatten
+`HIGH_GRASS` or `FURROWED_GRASS` to `GRASS` under a leftover heap, a
+darkness torch, or the healing potion
+(`VaultLevel.java:607-610,619-622,637-639`). Those edits are after the
+painter-complete boundary and stay off the public map. The healing potion
+is a guaranteed spawn, not a map entity.
 
 Keep internal: wandering vault mobs, heaps, `ImpStatue`, Imp
 `rewardOptions`, `VaultBeacon`s, token door / mirror / laser / sentry

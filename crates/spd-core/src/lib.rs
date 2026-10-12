@@ -44,8 +44,8 @@ pub use trinkets::{
 };
 
 /// Pinned SPD version this port targets (from local clone at scaffold time).
-pub const SPD_VERSION: &str = "v4.0.0";
-pub const SPD_COMMIT: &str = "2bb34a4e9";
+pub const SPD_VERSION: &str = "v4.0.2";
+pub const SPD_COMMIT: &str = "57a4e06a4";
 
 /// Parse a user seed string into display info (no levelgen).
 pub fn parse_seed(input: &str) -> Result<SeedInfo, SeedError> {

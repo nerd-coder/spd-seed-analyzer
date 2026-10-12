@@ -29,13 +29,9 @@ class window so quest rewards can be matched at all; it is off by default.
 
 ## Next steps
 
-1. Extend conditional route discovery beyond its current verified depth when
-   supported pre-quest state needs explicit alternate Blacksmith branch maps.
-2. Re-verify MiningLevel generation and fixtures when the pinned SPD commit
-   changes.
-3. The finder item catalogue covers only Rings, Wands, and Artifacts, so the
-   Imp's weapon, missile, and armor slots are surfaced in the report but are
-   not yet searchable. Adding those groups widens the whole finder, not just
-   the Imp, so scope it deliberately.
-4. Apply the same deck-window projection to the Wandmaker, which still reports
-   all thirteen wands as its candidate set (`quests/wandmaker.rs:232-238`).
+1. Conditional Blacksmith routes beyond the verified fresh path when pre-quest
+   state needs alternate branch maps.
+2. The finder catalogue is only Rings, Wands, and Artifacts, so Imp weapon,
+   missile, and armor slots are reported but not searchable.
+3. Wandmaker still reports all thirteen wands
+   (`quests/wandmaker.rs:232-238`) rather than a deck window.

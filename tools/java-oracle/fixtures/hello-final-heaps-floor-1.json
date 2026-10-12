@@ -1,50 +1,165 @@
 {
   "schema_version": 4,
   "contract": "final_placed_heaps",
-  "spd": { "version": "v4.0.0", "commit": "2bb34a4e9" },
-  "input": { "seed": "hello", "numeric": 99162322, "depths": [1] },
+  "spd": {
+    "version": "v4.0.2",
+    "commit": "57a4e06a4"
+  },
+  "input": {
+    "seed": "hello",
+    "numeric": 99162322,
+    "depths": [1]
+  },
   "identities": {
     "potions": [
-      { "item": "PotionOfStrength", "appearance": "turquoise" },
-      { "item": "PotionOfHealing", "appearance": "jade" },
-      { "item": "PotionOfMindVision", "appearance": "crimson" },
-      { "item": "PotionOfFrost", "appearance": "indigo" },
-      { "item": "PotionOfLiquidFlame", "appearance": "charcoal" },
-      { "item": "PotionOfToxicGas", "appearance": "silver" },
-      { "item": "PotionOfHaste", "appearance": "bistre" },
-      { "item": "PotionOfInvisibility", "appearance": "amber" },
-      { "item": "PotionOfLevitation", "appearance": "ivory" },
-      { "item": "PotionOfParalyticGas", "appearance": "golden" },
-      { "item": "PotionOfPurity", "appearance": "magenta" },
-      { "item": "PotionOfExperience", "appearance": "azure" }
+      {
+        "item": "PotionOfStrength",
+        "appearance": "turquoise"
+      },
+      {
+        "item": "PotionOfHealing",
+        "appearance": "jade"
+      },
+      {
+        "item": "PotionOfMindVision",
+        "appearance": "crimson"
+      },
+      {
+        "item": "PotionOfFrost",
+        "appearance": "indigo"
+      },
+      {
+        "item": "PotionOfLiquidFlame",
+        "appearance": "charcoal"
+      },
+      {
+        "item": "PotionOfToxicGas",
+        "appearance": "silver"
+      },
+      {
+        "item": "PotionOfHaste",
+        "appearance": "bistre"
+      },
+      {
+        "item": "PotionOfInvisibility",
+        "appearance": "amber"
+      },
+      {
+        "item": "PotionOfLevitation",
+        "appearance": "ivory"
+      },
+      {
+        "item": "PotionOfParalyticGas",
+        "appearance": "golden"
+      },
+      {
+        "item": "PotionOfPurity",
+        "appearance": "magenta"
+      },
+      {
+        "item": "PotionOfExperience",
+        "appearance": "azure"
+      }
     ],
     "scrolls": [
-      { "item": "ScrollOfUpgrade", "appearance": "MANNAZ" },
-      { "item": "ScrollOfIdentify", "appearance": "YNGVI" },
-      { "item": "ScrollOfRemoveCurse", "appearance": "KAUNAN" },
-      { "item": "ScrollOfMirrorImage", "appearance": "NAUDIZ" },
-      { "item": "ScrollOfRecharging", "appearance": "TIWAZ" },
-      { "item": "ScrollOfTeleportation", "appearance": "RAIDO" },
-      { "item": "ScrollOfLullaby", "appearance": "ODAL" },
-      { "item": "ScrollOfMagicMapping", "appearance": "BERKANAN" },
-      { "item": "ScrollOfRage", "appearance": "ISAZ" },
-      { "item": "ScrollOfRetribution", "appearance": "GYFU" },
-      { "item": "ScrollOfTerror", "appearance": "SOWILO" },
-      { "item": "ScrollOfTransmutation", "appearance": "LAGUZ" }
+      {
+        "item": "ScrollOfUpgrade",
+        "appearance": "MANNAZ"
+      },
+      {
+        "item": "ScrollOfIdentify",
+        "appearance": "YNGVI"
+      },
+      {
+        "item": "ScrollOfRemoveCurse",
+        "appearance": "KAUNAN"
+      },
+      {
+        "item": "ScrollOfMirrorImage",
+        "appearance": "NAUDIZ"
+      },
+      {
+        "item": "ScrollOfRecharging",
+        "appearance": "TIWAZ"
+      },
+      {
+        "item": "ScrollOfTeleportation",
+        "appearance": "RAIDO"
+      },
+      {
+        "item": "ScrollOfLullaby",
+        "appearance": "ODAL"
+      },
+      {
+        "item": "ScrollOfMagicMapping",
+        "appearance": "BERKANAN"
+      },
+      {
+        "item": "ScrollOfRage",
+        "appearance": "ISAZ"
+      },
+      {
+        "item": "ScrollOfRetribution",
+        "appearance": "GYFU"
+      },
+      {
+        "item": "ScrollOfTerror",
+        "appearance": "SOWILO"
+      },
+      {
+        "item": "ScrollOfTransmutation",
+        "appearance": "LAGUZ"
+      }
     ],
     "rings": [
-      { "item": "RingOfAccuracy", "appearance": "diamond" },
-      { "item": "RingOfArcana", "appearance": "sapphire" },
-      { "item": "RingOfElements", "appearance": "quartz" },
-      { "item": "RingOfEnergy", "appearance": "garnet" },
-      { "item": "RingOfEvasion", "appearance": "agate" },
-      { "item": "RingOfForce", "appearance": "emerald" },
-      { "item": "RingOfFuror", "appearance": "onyx" },
-      { "item": "RingOfHaste", "appearance": "tourmaline" },
-      { "item": "RingOfMight", "appearance": "ruby" },
-      { "item": "RingOfSharpshooting", "appearance": "opal" },
-      { "item": "RingOfTenacity", "appearance": "topaz" },
-      { "item": "RingOfWealth", "appearance": "amethyst" }
+      {
+        "item": "RingOfAccuracy",
+        "appearance": "diamond"
+      },
+      {
+        "item": "RingOfArcana",
+        "appearance": "sapphire"
+      },
+      {
+        "item": "RingOfElements",
+        "appearance": "quartz"
+      },
+      {
+        "item": "RingOfEnergy",
+        "appearance": "garnet"
+      },
+      {
+        "item": "RingOfEvasion",
+        "appearance": "agate"
+      },
+      {
+        "item": "RingOfForce",
+        "appearance": "emerald"
+      },
+      {
+        "item": "RingOfFuror",
+        "appearance": "onyx"
+      },
+      {
+        "item": "RingOfHaste",
+        "appearance": "tourmaline"
+      },
+      {
+        "item": "RingOfMight",
+        "appearance": "ruby"
+      },
+      {
+        "item": "RingOfSharpshooting",
+        "appearance": "opal"
+      },
+      {
+        "item": "RingOfTenacity",
+        "appearance": "topaz"
+      },
+      {
+        "item": "RingOfWealth",
+        "appearance": "amethyst"
+      }
     ]
   },
   "floors": [
@@ -75,7 +190,13 @@
           "right": 23,
           "bottom": 22
         },
-        { "class": "RingRoom", "left": 2, "top": 2, "right": 11, "bottom": 10 },
+        {
+          "class": "RingRoom",
+          "left": 2,
+          "top": 2,
+          "right": 11,
+          "bottom": 10
+        },
         {
           "class": "RingTunnelRoom",
           "left": 11,
@@ -174,12 +295,20 @@
         1665481509, -393578399, -10493484, 2098872273, -1430248273, -2013214730,
         1500399982, 669762854
       ],
+      "custom_tiles": [],
+      "custom_terrain": [],
+      "custom_walls": [],
       "final_heaps": [
         {
           "cell": 94,
           "heap_type": "chest",
           "items": [
-            { "class": "IronKey", "quantity": 1, "level": 0, "cursed": false }
+            {
+              "class": "IronKey",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
           ]
         },
         {
@@ -198,42 +327,72 @@
           "cell": 713,
           "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 47, "level": 0, "cursed": false }
+            {
+              "class": "Gold",
+              "quantity": 47,
+              "level": 0,
+              "cursed": false
+            }
           ]
         },
         {
           "cell": 730,
           "heap_type": "heap",
           "items": [
-            { "class": "Pasty", "quantity": 1, "level": 0, "cursed": false }
+            {
+              "class": "Pasty",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
           ]
         },
         {
           "cell": 785,
           "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 10, "level": 0, "cursed": false }
+            {
+              "class": "Gold",
+              "quantity": 10,
+              "level": 0,
+              "cursed": false
+            }
           ]
         },
         {
           "cell": 789,
           "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 9, "level": 0, "cursed": false }
+            {
+              "class": "Gold",
+              "quantity": 9,
+              "level": 0,
+              "cursed": false
+            }
           ]
         },
         {
           "cell": 821,
           "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 83, "level": 0, "cursed": false }
+            {
+              "class": "Gold",
+              "quantity": 83,
+              "level": 0,
+              "cursed": false
+            }
           ]
         },
         {
           "cell": 823,
           "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 13, "level": 0, "cursed": false }
+            {
+              "class": "Gold",
+              "quantity": 13,
+              "level": 0,
+              "cursed": false
+            }
           ]
         },
         {
@@ -252,21 +411,36 @@
           "cell": 861,
           "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 6, "level": 0, "cursed": false }
+            {
+              "class": "Gold",
+              "quantity": 6,
+              "level": 0,
+              "cursed": false
+            }
           ]
         },
         {
           "cell": 866,
           "heap_type": "heap",
           "items": [
-            { "class": "Stylus", "quantity": 1, "level": 0, "cursed": false }
+            {
+              "class": "Stylus",
+              "quantity": 1,
+              "level": 0,
+              "cursed": false
+            }
           ]
         },
         {
           "cell": 868,
           "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 77, "level": 0, "cursed": false }
+            {
+              "class": "Gold",
+              "quantity": 77,
+              "level": 0,
+              "cursed": false
+            }
           ]
         },
         {
@@ -297,19 +471,48 @@
           "cell": 990,
           "heap_type": "heap",
           "items": [
-            { "class": "Gold", "quantity": 53, "level": 0, "cursed": false }
+            {
+              "class": "Gold",
+              "quantity": 53,
+              "level": 0,
+              "cursed": false
+            }
           ]
         }
       ],
       "final_mobs": [
-        { "cell": 301, "class": "Rat" },
-        { "cell": 532, "class": "Snake" },
-        { "cell": 543, "class": "Rat" },
-        { "cell": 570, "class": "Snake" },
-        { "cell": 687, "class": "Rat" },
-        { "cell": 811, "class": "Rat" },
-        { "cell": 869, "class": "Rat" },
-        { "cell": 941, "class": "Rat" }
+        {
+          "cell": 301,
+          "class": "Rat"
+        },
+        {
+          "cell": 532,
+          "class": "Snake"
+        },
+        {
+          "cell": 543,
+          "class": "Rat"
+        },
+        {
+          "cell": 570,
+          "class": "Snake"
+        },
+        {
+          "cell": 687,
+          "class": "Rat"
+        },
+        {
+          "cell": 811,
+          "class": "Rat"
+        },
+        {
+          "cell": 869,
+          "class": "Rat"
+        },
+        {
+          "cell": 941,
+          "class": "Rat"
+        }
       ],
       "quest_rewards": []
     }

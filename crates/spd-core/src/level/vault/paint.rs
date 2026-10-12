@@ -65,6 +65,38 @@ impl PaintCtx<'_> {
         self.gen.return_mob(mob);
     }
 
+    pub(super) fn return_mobs(&mut self, mobs: Vec<VaultMob>) {
+        for mob in mobs {
+            self.return_mob(mob);
+        }
+    }
+
+    pub(super) fn next_to_entrance(&self, ri: usize) -> bool {
+        self.rooms[ri]
+            .connected
+            .iter()
+            .any(|&other| self.rooms[other].is_entrance())
+    }
+
+    /// `createMob` until the spawn is legal. Rejects are not returned yet.
+    /// Near an entrance only tier 1 (`Skeleton`, `Dm100`) is kept.
+    pub(super) fn create_spawn_mob(
+        &mut self,
+        near_entrance: bool,
+        reject_large: bool,
+    ) -> (VaultMob, Vec<VaultMob>) {
+        let mut returned = Vec::new();
+        let enemy = loop {
+            let enemy = self.create_mob();
+            if (reject_large && enemy.large()) || (near_entrance && enemy.tier() != 1) {
+                returned.push(enemy);
+                continue;
+            }
+            break enemy;
+        };
+        (enemy, returned)
+    }
+
     pub(super) fn create_equipment(&mut self, tier: usize) {
         let _ = self.gen.create_equipment(self.dungeon, tier);
     }

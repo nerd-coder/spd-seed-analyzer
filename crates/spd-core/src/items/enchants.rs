@@ -1,6 +1,6 @@
 //! Weapon enchantments and armor glyphs (random selection tables).
 //!
-//! Weapon arrays match `Weapon.Enchantment` in `Weapon.java:518-540` (v4.0.0).
+//! Weapon arrays match `Weapon.Enchantment` in `Weapon.java:518-540` (v4.0.2).
 //! Names only — `proc` and Unstable's on-hit pool are combat (07).
 
 use crate::random::Random;
