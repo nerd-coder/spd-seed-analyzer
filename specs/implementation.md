@@ -1,15 +1,14 @@
 # Implementation status
 
-The analyzer renders the Troll Blacksmith's Crystal and Gnoll MiningLevel
-branches for the fresh, once-generated-floor route. Branch maps appear inside
-the origin floor's quest panel, with reciprocal transitions, access conditions,
+The analyzer renders the Troll Blacksmith's Crystal or Gnoll mine as the
+once-through painter-complete map for the seed. Branch maps appear inside the
+origin floor's quest panel, with reciprocal transitions, access conditions,
 objective-specific tilesets, and painter-complete layout. Rust generation
 matches pinned Java painter fixtures exactly; browser snapshots cover both
-objectives.
+objectives. Entry still requires accepting the quest, carrying the Pickaxe,
+and confirming travel.
 
-The overall analyzer remains partial. Mining entry still depends on accepting
-the quest, carrying the Pickaxe, and confirming travel, while reset paths and
-unmodeled pre-quest player/meta state are not enumerated.
+The overall analyzer remains partial.
 
 The Ambitious Imp quest panel reports each of the six take-out slots with its
 seed-independent guarantees and a candidate distribution over a +-3 deck-index
@@ -29,9 +28,7 @@ class window so quest rewards can be matched at all; it is off by default.
 
 ## Next steps
 
-1. Conditional Blacksmith routes beyond the verified fresh path when pre-quest
-   state needs alternate branch maps.
-2. The finder catalogue is only Rings, Wands, and Artifacts, so Imp weapon,
+1. The finder catalogue is only Rings, Wands, and Artifacts, so Imp weapon,
    missile, and armor slots are reported but not searchable.
-3. Wandmaker still reports all thirteen wands
+2. Wandmaker still reports all thirteen wands
    (`quests/wandmaker.rs:232-238`) rather than a deck window.

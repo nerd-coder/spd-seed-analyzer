@@ -168,43 +168,53 @@ on order.
 
 Every ordinary main-path floor pushes a generator derived from that depth
 (`Level.java:218-221`). Spawn-time default equipment selection also closes
-WEP/MIS deck-history leaks. In a fresh run, the remaining pre-reward state is:
+WEP/MIS deck-history leaks. What follows is what can and cannot change the
+Smith pool and the mine before reward creation.
 
-1. **Mossy Clump can change the active floor stream.** `Level.create` evaluates
-   feeling overrides before `build`; a successful Mossy check short-circuits
-   the following Trap Mechanism float (`Level.java:259-297`,
-   `MossyClump.java:54-64`). `builder()` and ordinary room selection then
-   precede `Blacksmith.Quest.spawn` (`RegularLevel.java:105-165`,
-   `CavesLevel.java:90-91`). The missing second float moves the spawn check,
-   quest type, reward classes, shared level, and effects.
+1. **The mine does not roll feelings or those trinkets.** MiningLevel is
+   branch 1. `Level.create`'s feeling, forced-drop, and trinket block runs
+   only when `!bossLevel() && branch == 0` (`Level.java:224-300`). The mine
+   does not roll `Int(14)`, Mossy Clump, or Trap Mechanism.
 
-2. **Trap Mechanism alone does not move the fresh spawn-time pool.** Its
-   override occupies the second float slot already consumed by the no-trinket
-   path, and Traps/Chasm do not change the room counts that only special-case
-   Large/Secrets (`Level.java:259-297`, `RegularLevel.java:129-163`,
-   `TrapMechanism.java:54-64,83-104`).
+2. **Mossy Clump and Trap Mechanism do not move spawn, quest type, or the
+   mine.** On branch 0, the default feeling arm always consumes both floats
+   before either override (`Level.java:287-297`). A Mossy hit skips only
+   `TrapMechanism.getNextFeeling()`. `MossyClump.getNextFeeling` shuffles
+   under `pushGenerator(Dungeon.seed+1)` (`MossyClump.java:71-91`). GRASS and
+   WATER do not change `initRooms` counts. Those counts change only for LARGE
+   and SECRETS (`RegularLevel.java:129-163`). `builder()` does not read
+   feeling (`RegularLevel.java:176-188`). Spawn runs at the end of that
+   `initRooms` (`CavesLevel.java:90-91`, `Blacksmith.java:347-357`). Mossy
+   Clump at every buffed level, and Trap Mechanism, therefore do not change
+   Blacksmith spawn depth, quest type, or the branch-1 mine.
 
-3. **Parchment Scrap changes only effect retention.** Classes, levels, and the
-   main RNG tail are unchanged.
+3. **Parchment Scrap changes only effect retention.** It changes only whether
+   the already rolled enchantment and glyph are kept
+   (`Blacksmith.java:402-411`).
 
-4. **Mimic Tooth, Rat Skull, Cracked Spyglass, artifact history, and ordinary
-   challenge hooks do not precede the fresh reward callback.** Their
-   mimic/statue/room-paint and item-population effects occur after `initRooms`,
-   while the pool uses default WEP/MIS weights. Spyglass extra loot is isolated
-   and default-weighted except ARTIFACT, and it runs in `createItems`
-   (`RegularLevel.java:679-689`). Forbidden Runes' every-second Upgrade Scroll
-   omission has no RNG call and does not change room selection before spawn
-   (`Level.java:232-240`). These states can change later Blacksmith-room ground
-   equipment, not the already stored Smith pool.
+4. **Forbidden Runes, challenges, Mimic Tooth, and Rat Skull do not rewrite
+   the pool or the mine.** Forbidden Runes omits every second queued Scroll of
+   Upgrade and makes no RNG call (`Level.java:232-240`). No challenge is read
+   by mining init, build, or paint. Mimic Tooth and Rat Skull act during
+   origin-floor paint, after spawn, on that floor's own generator.
 
-5. **Floor reset is a real player-route divergence.** Resetting a level clears
-   a pending next-floor PitRoom and generates another level without rewinding
-   persistent limited-drop counters, special-room rotation, or secret-room
-   allocation (`InterlevelScene.java:805-813`, `SpecialRoom.java:131-187`). The
-   analyzer's ordinary replay is the fresh, once-generated-floor route.
+5. **Reset is not a live route, and Crystal versus Gnoll is the spawn roll.**
+   `InterlevelScene.Mode.RESET` has no assignment site (the enum, a switch,
+   and a log line only). It is not a live route. Ankh reseal calls
+   `newLevel()` only when `level.locked` (`InterlevelScene.java:749-759`).
+   That seal is boss and vault combat, not the mining level. It does not
+   change the stored quest type or the mine. Crystal versus Gnoll does change
+   mine terrain. That type is the fresh spawn roll `Random.IntRange(1, 2)`,
+   not a player choice (`Blacksmith.java:353-354`). The mine seed is
+   `seedForDepth(spawnDepth, 1)`. Entering still requires accepting the quest,
+   carrying the Pickaxe, and confirming (`CavesLevel.java:117-160`). That is
+   access, not a second layout.
 
 The Rust port matches the fixed-profile normal `generateRewards(true)` call
-shape (`crates/spd-core/src/quests/blacksmith.rs`). The public projection must
-present all four items as mutually exclusive Smith choices, not guaranteed
-spawns, and must say that Parchment Scrap is evaluated when the spawn floor is
-first generated.
+shape (`crates/spd-core/src/quests/blacksmith.rs`). The replay already attaches
+one mine from that fresh spawn (`attach_side_branches` in
+`crates/spd-core/src/level/mod.rs`, `generate` in
+`crates/spd-core/src/level/mining/mod.rs`). The public mine is that one
+once-through layout. The public projection must present all four items as
+mutually exclusive Smith choices, not guaranteed spawns, and must say that
+Parchment Scrap is evaluated when the spawn floor is first generated.

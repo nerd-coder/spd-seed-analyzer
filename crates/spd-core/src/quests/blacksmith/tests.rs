@@ -1,7 +1,8 @@
 use super::*;
 use crate::generator::Category;
 use crate::items::model::{ItemCategory, ItemProvenance, QuestRewardRole};
-use crate::run::init_run;
+use crate::run::{dungeon_from_run, init_run};
+use crate::{BranchFloorKind, MapProfile, TrinketEvent, TrinketEventAction, TrinketKind};
 use std::collections::BTreeSet;
 
 fn generate_with_seed(seed: i64, use_defaults: bool) -> BlacksmithQuestState {
@@ -157,4 +158,129 @@ fn depth11_never_spawns() {
     let mut specs = Vec::new();
     assert!(!try_spawn(&mut bs, &mut generator, 11, &mut specs));
     assert!(specs.is_empty());
+}
+
+struct FreshBlacksmithMine {
+    depth: i32,
+    quest_type: i32,
+    tileset: String,
+    terrain: Vec<u16>,
+}
+
+fn profiled_blacksmith_mine(seed: i64, trinket: Option<TrinketKind>) -> FreshBlacksmithMine {
+    let mut dungeon = dungeon_from_run(init_run(seed));
+    let profile = MapProfile {
+        trinket_events: trinket
+            .into_iter()
+            .flat_map(|trinket| {
+                [
+                    TrinketEvent {
+                        before_depth: 2,
+                        action: TrinketEventAction::Acquired {
+                            trinket,
+                            min_upgrades: None,
+                        },
+                    },
+                    TrinketEvent {
+                        before_depth: 2,
+                        action: TrinketEventAction::Upgraded,
+                    },
+                    TrinketEvent {
+                        before_depth: 2,
+                        action: TrinketEventAction::Upgraded,
+                    },
+                    TrinketEvent {
+                        before_depth: 2,
+                        action: TrinketEventAction::Upgraded,
+                    },
+                ]
+            })
+            .collect(),
+        ..MapProfile::default()
+    };
+    let floors = crate::level::analyze_floors_with_profile(&mut dungeon, 14, Some(&profile));
+    let depth = dungeon.blacksmith.depth;
+    let floor = floors
+        .iter()
+        .find(|floor| floor.depth == depth as u32)
+        .unwrap_or_else(|| panic!("seed {seed} has no floor report at blacksmith depth {depth}"));
+    let branch = floor
+        .branches
+        .iter()
+        .find(|branch| branch.kind == BranchFloorKind::BlacksmithMine)
+        .unwrap_or_else(|| panic!("seed {seed} depth {depth} has no blacksmith_mine branch"));
+    let map = branch
+        .map
+        .as_ref()
+        .unwrap_or_else(|| panic!("seed {seed} depth {depth} blacksmith_mine map is missing"));
+    FreshBlacksmithMine {
+        depth,
+        quest_type: dungeon.blacksmith.quest_type,
+        tileset: map.tileset.clone(),
+        terrain: map.tiles.clone(),
+    }
+}
+
+#[test]
+fn held_feeling_trinkets_do_not_change_fresh_blacksmith_mine() {
+    for seed in [0_i64, 5] {
+        let baseline = profiled_blacksmith_mine(seed, None);
+        let mossy = profiled_blacksmith_mine(seed, Some(TrinketKind::MossyClump));
+        let traps = profiled_blacksmith_mine(seed, Some(TrinketKind::TrapMechanism));
+
+        assert!(
+            (12..=14).contains(&baseline.depth),
+            "seed {seed} blacksmith depth {}",
+            baseline.depth
+        );
+        assert!(
+            matches!(baseline.quest_type, 1 | 2),
+            "seed {seed} blacksmith quest type {}",
+            baseline.quest_type
+        );
+        assert_eq!(
+            (mossy.depth, mossy.quest_type),
+            (baseline.depth, baseline.quest_type),
+            "seed {seed} Mossy Clump +3 changed spawn depth or quest type"
+        );
+        assert_eq!(
+            (traps.depth, traps.quest_type),
+            (baseline.depth, baseline.quest_type),
+            "seed {seed} Trap Mechanism +3 changed spawn depth or quest type"
+        );
+        assert_eq!(
+            mossy.tileset, baseline.tileset,
+            "seed {seed} depth {} quest {} Mossy Clump +3 tileset",
+            baseline.depth, baseline.quest_type
+        );
+        assert_eq!(
+            traps.tileset, baseline.tileset,
+            "seed {seed} depth {} quest {} Trap Mechanism +3 tileset",
+            baseline.depth, baseline.quest_type
+        );
+        assert_eq!(
+            mossy.terrain.len(),
+            baseline.terrain.len(),
+            "seed {seed} depth {} quest {} Mossy Clump +3 terrain length",
+            baseline.depth,
+            baseline.quest_type
+        );
+        assert_eq!(
+            traps.terrain.len(),
+            baseline.terrain.len(),
+            "seed {seed} depth {} quest {} Trap Mechanism +3 terrain length",
+            baseline.depth,
+            baseline.quest_type
+        );
+        assert_eq!(
+            mossy.terrain, baseline.terrain,
+            "seed {seed} depth {} quest {} Mossy Clump +3 terrain contents",
+            baseline.depth, baseline.quest_type
+        );
+        assert_eq!(
+            traps.terrain, baseline.terrain,
+            "seed {seed} depth {} quest {} Trap Mechanism +3 terrain contents",
+            baseline.depth, baseline.quest_type
+        );
+    }
 }
