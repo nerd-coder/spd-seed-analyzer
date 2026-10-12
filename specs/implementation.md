@@ -23,12 +23,13 @@ reports each slot's concrete `+N`, its enchant by name, and the pool's total
 Scroll of Upgrade worth. `upgrades_pinned` goes false only when an
 `UnstableSpellbook` draw is reachable in slot 0, which shifts every later roll.
 
-The finder's Deep search switch fills the seed-only Imp entries with the same
-class window so quest rewards can be matched at all; it is off by default.
+The finder catalogue includes the weapon, missile, and armor classes those
+quests can roll. Its upgrade filter reaches +5 for that equipment. Rings and
+wands still stop at +4. The Deep search switch fills the seed-only Imp entries
+with the same class window so quest rewards can be matched at all; it is off
+by default.
 
 ## Next steps
 
-1. The finder catalogue is only Rings, Wands, and Artifacts, so Imp weapon,
-   missile, and armor slots are reported but not searchable.
-2. Wandmaker still reports all thirteen wands
+1. Wandmaker still reports all thirteen wands
    (`quests/wandmaker.rs:232-238`) rather than a deck window.

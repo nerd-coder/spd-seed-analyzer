@@ -6,9 +6,22 @@ export type FinderItemOption = {
   group: FinderItemGroup
 }
 
-export type FinderItemGroup = 'Rings' | 'Wands' | 'Artifacts'
+export type FinderItemGroup =
+  | 'Rings'
+  | 'Wands'
+  | 'Artifacts'
+  | 'Weapons'
+  | 'Missiles'
+  | 'Armor'
 
-const GROUP_ORDER: FinderItemGroup[] = ['Rings', 'Wands', 'Artifacts']
+const GROUP_ORDER: FinderItemGroup[] = [
+  'Rings',
+  'Wands',
+  'Artifacts',
+  'Weapons',
+  'Missiles',
+  'Armor',
+]
 
 const RING_SET = new Set<string>(RING_CLASSES)
 
@@ -29,6 +42,56 @@ const ARTIFACTS = new Set([
   'UnstableSpellbook',
 ])
 
+// Positive-weight classes from crates/spd-core/src/generator/categories.rs.
+// Pickaxe (weight 0) and class-kit armor are omitted.
+const WEAPONS = new Set([
+  'Shortsword',
+  'HandAxe',
+  'Spear',
+  'Quarterstaff',
+  'Dirk',
+  'Sickle',
+  'Sword',
+  'Mace',
+  'Scimitar',
+  'RoundShield',
+  'Sai',
+  'Whip',
+  'Longsword',
+  'BattleAxe',
+  'Flail',
+  'RunicBlade',
+  'AssassinsBlade',
+  'Crossbow',
+  'Katana',
+  'Greatsword',
+  'WarHammer',
+  'Glaive',
+  'Greataxe',
+  'Greatshield',
+  'Gauntlet',
+  'WarScythe',
+])
+
+const MISSILES = new Set([
+  'ThrowingSpear',
+  'Kunai',
+  'Bolas',
+  'Javelin',
+  'Tomahawk',
+  'HeavyBoomerang',
+  'Trident',
+  'ThrowingHammer',
+  'ForceCube',
+])
+
+const ARMOR = new Set(['LeatherArmor', 'MailArmor', 'ScaleArmor', 'PlateArmor'])
+
+const CLASS_NAMES = new Set(Object.keys(CLASS_ICON))
+
+const RING_WAND_UPGRADES = [1, 2, 3, 4] as const
+const EQUIPMENT_UPGRADES = [1, 2, 3, 4, 5] as const
+
 function words(value: string): string {
   return value.replace(/([a-z])([A-Z])/g, '$1 $2')
 }
@@ -47,6 +110,10 @@ function itemGroup(className: string): FinderItemGroup | null {
   if (RING_SET.has(className)) return 'Rings'
   if (className.startsWith('WandOf')) return 'Wands'
   if (ARTIFACTS.has(className)) return 'Artifacts'
+  if (!CLASS_NAMES.has(className)) return null
+  if (WEAPONS.has(className)) return 'Weapons'
+  if (MISSILES.has(className)) return 'Missiles'
+  if (ARMOR.has(className)) return 'Armor'
   return null
 }
 
@@ -71,7 +138,13 @@ export const FINDER_ITEM_GROUPS = GROUP_ORDER.map((label) => ({
     .sort((a, b) => a.label.localeCompare(b.label)),
 })).filter((group) => group.items.length > 0)
 
-const UPGRADEABLE_GROUPS = new Set<FinderItemGroup>(['Rings', 'Wands'])
+const UPGRADEABLE_GROUPS = new Set<FinderItemGroup>([
+  'Rings',
+  'Wands',
+  'Weapons',
+  'Missiles',
+  'Armor',
+])
 
 const ITEM_GROUP_BY_CLASS = new Map(
   allOptions.map((item) => [item.className, item.group])
@@ -92,6 +165,12 @@ export function toCoreCategory(group: FinderItemGroup): string {
       return 'wand'
     case 'Artifacts':
       return 'artifact'
+    case 'Weapons':
+      return 'weapon'
+    case 'Missiles':
+      return 'missile'
+    case 'Armor':
+      return 'armor'
   }
 }
 
@@ -101,8 +180,28 @@ export function fromCoreCategory(core: string): FinderItemGroup {
       return 'Wands'
     case 'artifact':
       return 'Artifacts'
+    case 'weapon':
+      return 'Weapons'
+    case 'missile':
+      return 'Missiles'
+    case 'armor':
+      return 'Armor'
     default:
       return 'Rings'
+  }
+}
+
+export function finderUpgradeLevels(group: FinderItemGroup): readonly number[] {
+  switch (group) {
+    case 'Weapons':
+    case 'Missiles':
+    case 'Armor':
+      return EQUIPMENT_UPGRADES
+    case 'Rings':
+    case 'Wands':
+      return RING_WAND_UPGRADES
+    case 'Artifacts':
+      return []
   }
 }
 

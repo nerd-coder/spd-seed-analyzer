@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/tooltip'
 import { $finderForm } from '@/stores/app'
 import { ConstraintEditor } from './ConstraintEditor'
+import { finderUpgradeLevels, fromCoreCategory } from './finder-items'
 import {
   DEFAULT_FLOORS,
   type FinderConfig,
@@ -85,7 +86,9 @@ export function FinderForm({
           (constraint.className.length === 0 ||
             constraint.className.length > 128)) ||
         (constraint.minLevel !== null &&
-          !isIntegerInRange(constraint.minLevel, 1, 4)) ||
+          !finderUpgradeLevels(fromCoreCategory(constraint.itemGroup)).includes(
+            constraint.minLevel
+          )) ||
         !isIntegerInRange(constraint.minDepth, 1, MAX_FLOORS) ||
         !isIntegerInRange(constraint.maxDepth, 1, MAX_FLOORS) ||
         constraint.minDepth > constraint.maxDepth

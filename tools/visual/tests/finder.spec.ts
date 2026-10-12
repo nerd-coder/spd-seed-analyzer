@@ -339,3 +339,22 @@ test('shows confirmation dialog when reloading during an ongoing search', async 
   await page.reload()
   expect(beforeUnloadTriggered).toBe(true)
 })
+
+test('finder submits a weapon reward at upgrade +5', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'reduce' })
+  await page.addInitScript((storage) => {
+    localStorage.clear()
+    localStorage.setItem(storage.mode, 'finder')
+    localStorage.setItem(storage.theme, 'light')
+  }, APP_STORAGE)
+
+  await page.goto('/')
+  await page.getByLabel('Item 1 category').selectOption('Weapons')
+  await page.getByLabel('Item 1 name').selectOption('Greatsword')
+  const upgrade = page.getByLabel('Item 1 upgrade level')
+  await expect(upgrade).toBeVisible()
+  await expect(upgrade.locator('option[value="5"]')).toHaveText('≥ +5')
+  await upgrade.selectOption('5')
+  await page.getByRole('button', { name: 'Find' }).click()
+  await expect(page.getByRole('button', { name: 'Cancel' })).toBeVisible()
+})

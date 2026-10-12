@@ -9,6 +9,7 @@ import { upgradeLevelClass } from '@/lib/upgrade'
 import {
   FINDER_GROUP_ORDER,
   type FinderItemGroup,
+  finderUpgradeLevels,
   fromCoreCategory,
   isFinderItemGroupUpgradeable,
   isFinderItemUpgradeable,
@@ -29,7 +30,6 @@ type ConstraintEditorProps = {
   onUpdate: (id: number, patch: Partial<Omit<FinderConstraint, 'id'>>) => void
 }
 
-const UPGRADE_LEVELS = [1, 2, 3, 4] as const
 const DEPTHS = Array.from({ length: MAX_FLOORS }, (_, index) => index + 1)
 const OVERLAY_SELECT_CLASS =
   'absolute inset-0 h-full w-full cursor-pointer opacity-0 [&_[data-slot=native-select]]:h-full [&_[data-slot=native-select]]:border-0 [&_[data-slot=native-select]]:bg-transparent [&_[data-slot=native-select-icon]]:hidden'
@@ -42,6 +42,11 @@ type CompactOverlaySelectProps = {
   'aria-label': string
   onChange: (value: string) => void
   children: ReactNode
+}
+
+function keptMinLevel(group: FinderItemGroup, minLevel: number | null) {
+  if (minLevel === null) return null
+  return finderUpgradeLevels(group).includes(minLevel) ? minLevel : null
 }
 
 function CompactOverlaySelect({
@@ -138,9 +143,10 @@ export function ConstraintEditor({
                         onUpdate(constraint.id, {
                           itemGroup: coreCategory,
                           className: null,
-                          minLevel: isFinderItemGroupUpgradeable(newUiGroup)
-                            ? constraint.minLevel
-                            : null,
+                          minLevel: keptMinLevel(
+                            newUiGroup,
+                            constraint.minLevel
+                          ),
                         })
                       }}
                       className={OVERLAY_SELECT_CLASS}
@@ -161,14 +167,13 @@ export function ConstraintEditor({
                       const val = event.target.value
                       const newClassName = val === 'any' ? null : val
 
+                      const upgradeableName = newClassName
+                        ? isFinderItemUpgradeable(newClassName)
+                        : isFinderItemGroupUpgradeable(uiGroup)
                       onUpdate(constraint.id, {
                         className: newClassName,
-                        minLevel: (
-                          newClassName
-                            ? isFinderItemUpgradeable(newClassName)
-                            : isFinderItemGroupUpgradeable(uiGroup)
-                        )
-                          ? constraint.minLevel
+                        minLevel: upgradeableName
+                          ? keptMinLevel(uiGroup, constraint.minLevel)
                           : null,
                       })
                     }}
@@ -212,7 +217,7 @@ export function ConstraintEditor({
                       }
                     >
                       <NativeSelectOption value="any">Any</NativeSelectOption>
-                      {UPGRADE_LEVELS.map((level) => (
+                      {finderUpgradeLevels(uiGroup).map((level) => (
                         <NativeSelectOption key={level} value={level}>
                           ≥ +{level}
                         </NativeSelectOption>
