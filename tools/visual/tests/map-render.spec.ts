@@ -693,7 +693,7 @@ test('analyzer displays baseline items in their ordinary item group', async ({
 }) => {
   const browserErrors = await openAnalyzer(page, 'RZN-LKU-EFS')
   const baselineItem = page.getByRole('listitem').filter({
-    has: page.getByRole('img', { name: 'dried Rose' }),
+    has: page.getByRole('img', { name: /dried Rose/i }),
   })
   const otherItems = page
     .getByText(/^Other items/)
@@ -701,10 +701,11 @@ test('analyzer displays baseline items in their ordinary item group', async ({
     .locator('../..')
 
   await expect(page.getByText(/^Fresh baseline highlights/)).toHaveCount(0)
-  await expect(otherItems).toContainText('dried Rose')
-  await expect(baselineItem).toContainText('dried Rose')
-  await expect(baselineItem).toContainText('Crystal choice')
-  await expect(baselineItem).toContainText('cursed')
+  await expect(
+    otherItems.getByRole('img', { name: /dried Rose/i })
+  ).toBeVisible()
+  await expect(baselineItem).toBeVisible()
+  await expect(baselineItem.getByRole('img', { name: /cursed/i })).toBeVisible()
   await expect(page.getByText('planning only', { exact: true })).toHaveCount(0)
 
   expect(browserErrors.console, 'browser console errors').toEqual([])
@@ -804,9 +805,7 @@ test('finder includes Wandmaker fresh-baseline items by default', async ({
   expect(errors.page, 'uncaught page errors').toEqual([])
 })
 
-test('conditional items render inline with their item properties', async ({
-  page,
-}) => {
+test('floor items render as icon slots', async ({ page }) => {
   await installSyntheticMapReport(page)
   const browserErrors = await openAnalyzer(page, GENERIC_MAP_SEED)
 
@@ -819,45 +818,38 @@ test('conditional items render inline with their item properties', async ({
   await expect(page.getByRole('heading', { name: 'Identities' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Floor 1' })).toBeVisible()
   const syntheticItem = page.getByRole('listitem').filter({
-    hasText: 'Synthetic conditional item',
+    has: page.getByRole('img', { name: /Synthetic conditional item/i }),
   })
   await expect(syntheticItem).toBeVisible()
-  await expect(syntheticItem.getByText('+0…+3', { exact: true })).toBeVisible()
+  await expect(
+    syntheticItem.getByRole('img', { name: /cursed/i })
+  ).toBeVisible()
+  await expect(
+    syntheticItem.getByRole('img', { name: /Blazing/i })
+  ).toBeVisible()
   await expect(
     page.getByRole('button', { name: 'Show upgrade conditions' })
   ).toHaveCount(0)
-  await expect(syntheticItem.getByText('cursed', { exact: true })).toBeVisible()
   await expect(
-    syntheticItem.getByText('Blazing', { exact: true })
+    page.getByRole('button', { name: 'Forbidden Runes disabled' })
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: 'Show enchantment conditions' })
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('button', { name: 'Show trinket transmutation rotation' })
+  ).toHaveCount(0)
+  await expect(
+    page.getByRole('img', { name: 'Trinket Catalyst' })
   ).toBeVisible()
-  const condition = syntheticItem.getByRole('button', {
-    name: 'Forbidden Runes disabled',
+  await expect(page.getByRole('img', { name: 'Mossy Clump' })).toBeVisible()
+  const sickle = page.getByRole('listitem').filter({
+    has: page.getByRole('img', { name: /friendly sickle \+2/i }),
   })
-  await expect(condition).toBeVisible()
-  await condition.click()
-  await expect(
-    page.getByText('Spawn conditions', { exact: true })
-  ).toBeVisible()
-  const enhancement = syntheticItem.getByRole('button', {
-    name: 'Show enchantment conditions',
-  })
-  await enhancement.click()
-  await expect(
-    page.getByText('Enchantment conditions', { exact: true })
-  ).toBeVisible()
-  await page
-    .getByRole('button', { name: 'Show trinket transmutation rotation' })
-    .click()
-  await expect(
-    page.getByText('Trinket transmutation rotation', { exact: true })
-  ).toBeVisible()
-  await expect(page.getByText('Trap Mechanism', { exact: true })).toBeVisible()
-  const sacrificeReward = page.getByRole('listitem').filter({
-    hasText: 'weapon reward',
-  })
-  await expect(sacrificeReward).toHaveCount(1)
-  await expect(sacrificeReward).toContainText('friendly sickle +2')
-  await expect(sacrificeReward).toContainText('Fresh baseline')
+  await expect(sickle).toHaveCount(1)
+  await expect(sickle).toContainText('+2')
+  await expect(page.getByRole('img', { name: /weapon reward/i })).toBeVisible()
+  await expect(page.getByText('Fresh baseline', { exact: true })).toHaveCount(0)
   await expect(
     page.getByRole('button', { name: 'Expand floor 4 map' })
   ).toHaveCount(1)

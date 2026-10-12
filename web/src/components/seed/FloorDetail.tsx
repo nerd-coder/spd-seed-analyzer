@@ -28,7 +28,6 @@ import type {
   FloorReport,
   IdentityMaps,
   PossibleRoom,
-  TrinketSelectionReport,
 } from '@/lib/spd-wasm'
 
 function roomLabel(className: string) {
@@ -100,111 +99,115 @@ function NestedBranchFloor({
 export function FloorDetail({
   floor,
   identities,
-  trinketSelection,
 }: {
   floor: FloorReport
   identities: IdentityMaps
-  trinketSelection: TrinketSelectionReport
 }) {
   const hasQuest = (floor.quests?.length ?? 0) > 0
   const showMap = !!floor.map
   const displayedMap = floor.map ?? floor.assumed_map ?? null
   const visibleItems = visibleItemGroups(floor.items)
   const leftoverBranches = unclaimedBranches(floor.branches, floor.quests)
-
-  const details = (
-    <div className="min-w-0 flex-1 space-y-3">
-      {floor.quests && floor.quests.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            Quests
-          </p>
-          <div className="space-y-2">
-            {floor.quests.map((q, i) => (
-              <QuestCard
-                key={`${floor.depth}-quest-${i}`}
-                quest={q}
-                rewards={visibleItems.filter(
-                  (item) => item.source === q.contract.rewards.item_source
-                )}
-                identities={identities}
-                depth={floor.depth}
-                branch={matchingQuestBranch(q, floor.branches)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      <FloorAppearanceSection appearances={floor.guaranteed_appearances} />
-      <FloorItemSections
-        floor={floor}
-        identities={identities}
-        trinketSelection={trinketSelection}
-      />
-    </div>
-  )
+  const hasMeta =
+    (floor.rooms?.length ?? 0) > 0 ||
+    (floor.possible_rooms?.length ?? 0) > 0 ||
+    (!!floor.feeling && floor.feeling !== 'none') ||
+    !!floor.builder ||
+    hasQuest ||
+    showMap
 
   return (
     <section className="space-y-3 border-b py-6 first:pt-0 last:border-b-0 last:pb-0">
-      <div className="flex flex-wrap items-center gap-2">
-        <DepthIcon feeling={floor.feeling} size={20} />
-        <h3 className="font-mono text-sm font-medium tabular-nums">
-          Floor {floor.depth}
-        </h3>
-        {floor.rooms && floor.rooms.length > 0 && (
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="xs">
-                Rooms ({floor.rooms.length})
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-72">
-              <PopoverHeader>
-                <PopoverTitle>Rooms on floor {floor.depth}</PopoverTitle>
-              </PopoverHeader>
-              <p className="text-sm leading-relaxed">
-                {floor.rooms
-                  .map((room) => room.replace(/Room$/, ''))
-                  .join(' · ')}
-              </p>
-            </PopoverContent>
-          </Popover>
-        )}
-        {floor.possible_rooms && floor.possible_rooms.length > 0 && (
-          <PossibleRoomsPopover rooms={floor.possible_rooms} />
-        )}
-        {floor.feeling && floor.feeling !== 'none' && (
-          <Badge variant="secondary" className="capitalize">
-            {floor.feeling}
-          </Badge>
-        )}
-        {floor.builder && (
-          <Badge variant="outline" className="font-mono text-xs">
-            {floor.builder}
-          </Badge>
-        )}
-        {hasQuest && (
-          <Badge variant="default" className="text-xs">
-            Quest
-          </Badge>
-        )}
-        {showMap && floor.map && (
-          <Badge variant="outline" className="font-mono text-xs">
-            {floor.map.width}×{floor.map.height}
-          </Badge>
-        )}
-      </div>
-
-      <div className="flex items-start gap-3">
-        {details}
-        {displayedMap && (
+      <div className="relative h-32 w-full overflow-hidden bg-black focus-within:ring-2 focus-within:ring-ring">
+        {displayedMap ? (
           <FloorMapPreview
+            variant="banner"
             map={displayedMap}
             identities={identities}
             depth={floor.depth}
           />
+        ) : null}
+        <div className="pointer-events-none absolute inset-0 z-10 bg-black/50" />
+        <div className="pointer-events-none absolute inset-0 z-20 flex items-center gap-2 px-3">
+          <DepthIcon feeling={floor.feeling} size={32} />
+          <h3 className="font-mono text-sm font-medium text-white tabular-nums">
+            Floor {floor.depth}
+          </h3>
+        </div>
+      </div>
+
+      {hasMeta ? (
+        <div className="flex flex-wrap items-center gap-2">
+          {floor.rooms && floor.rooms.length > 0 && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="xs">
+                  Rooms ({floor.rooms.length})
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-72">
+                <PopoverHeader>
+                  <PopoverTitle>Rooms on floor {floor.depth}</PopoverTitle>
+                </PopoverHeader>
+                <p className="text-sm leading-relaxed">
+                  {floor.rooms
+                    .map((room) => room.replace(/Room$/, ''))
+                    .join(' · ')}
+                </p>
+              </PopoverContent>
+            </Popover>
+          )}
+          {floor.possible_rooms && floor.possible_rooms.length > 0 && (
+            <PossibleRoomsPopover rooms={floor.possible_rooms} />
+          )}
+          {floor.feeling && floor.feeling !== 'none' && (
+            <Badge variant="secondary" className="capitalize">
+              {floor.feeling}
+            </Badge>
+          )}
+          {floor.builder && (
+            <Badge variant="outline" className="font-mono text-xs">
+              {floor.builder}
+            </Badge>
+          )}
+          {hasQuest && (
+            <Badge variant="default" className="text-xs">
+              Quest
+            </Badge>
+          )}
+          {showMap && floor.map && (
+            <Badge variant="outline" className="font-mono text-xs">
+              {floor.map.width}×{floor.map.height}
+            </Badge>
+          )}
+        </div>
+      ) : null}
+
+      <div className="space-y-3">
+        {floor.quests && floor.quests.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+              Quests
+            </p>
+            <div className="space-y-2">
+              {floor.quests.map((q, i) => (
+                <QuestCard
+                  key={`${floor.depth}-quest-${i}`}
+                  quest={q}
+                  rewards={visibleItems.filter(
+                    (item) => item.source === q.contract.rewards.item_source
+                  )}
+                  identities={identities}
+                  depth={floor.depth}
+                  branch={matchingQuestBranch(q, floor.branches)}
+                />
+              ))}
+            </div>
+          </div>
         )}
+
+        <FloorAppearanceSection appearances={floor.guaranteed_appearances} />
+        <FloorItemSections floor={floor} identities={identities} />
       </div>
 
       {leftoverBranches.length > 0 && (

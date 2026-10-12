@@ -25,6 +25,8 @@ type Props = {
   dialogTitle?: string
   className?: string
   loading?: boolean
+  /** `thumbnail` is a 64×64 box. `banner` covers its positioned parent. */
+  variant?: 'thumbnail' | 'banner'
 }
 
 /**
@@ -41,7 +43,8 @@ function rasterScaleFor(map: FloorMap): number {
 }
 
 /**
- * Fixed 64×64 clickable map thumbnail; opens a dialog for a larger view.
+ * Clickable map that opens a dialog for a larger view.
+ * `thumbnail` stays a fixed 64×64 box; `banner` covers its parent.
  */
 export function FloorMapPreview({
   map,
@@ -51,12 +54,14 @@ export function FloorMapPreview({
   dialogTitle = `Floor ${depth}`,
   className,
   loading = false,
+  variant = 'thumbnail',
 }: Props) {
   const viewport = useMemo(() => mapViewport(map), [map])
   const dialogContentRef = useRef<HTMLDivElement>(null)
   const rasterScale = useMemo(() => rasterScaleFor(map), [map])
   const contentWidth = viewport.width * TILE_PX * rasterScale
   const contentHeight = viewport.height * TILE_PX * rasterScale
+  const banner = variant === 'banner'
 
   return (
     <Dialog>
@@ -64,8 +69,11 @@ export function FloorMapPreview({
         <button
           type="button"
           className={cn(
-            'group relative size-16 shrink-0 cursor-zoom-in overflow-hidden border bg-black/80 outline-none',
+            'group cursor-zoom-in overflow-hidden bg-black/80 outline-none',
             'hover:ring-1 hover:ring-ring focus-visible:ring-2 focus-visible:ring-ring',
+            banner
+              ? 'absolute inset-0 h-full w-full'
+              : 'relative size-16 shrink-0 border',
             className
           )}
           title={`${mapLabel} - click to expand`}
@@ -76,12 +84,16 @@ export function FloorMapPreview({
               map={map}
               identities={identities}
               scale={1}
-              maxDisplay={PREVIEW_BOX}
+              maxDisplay={banner ? undefined : PREVIEW_BOX}
+              fill={banner}
               canvasClassName="border-0"
             />
           </span>
           <span
-            className="pointer-events-none absolute right-1 bottom-1 flex size-5 items-center justify-center bg-black/55 text-white opacity-70 transition-opacity group-hover:opacity-100"
+            className={cn(
+              'pointer-events-none absolute right-1 bottom-1 flex size-5 items-center justify-center bg-black/55 text-white opacity-70 transition-opacity group-hover:opacity-100',
+              banner && 'z-30'
+            )}
             aria-hidden
           >
             <ArrowsOut size={12} />

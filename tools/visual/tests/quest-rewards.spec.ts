@@ -385,7 +385,7 @@ test('quest cards fall back to the universal reward entries without a baseline',
   const wandmaker = page.locator('[data-quest-type="old_wandmaker"]')
   await expect(wandmaker.getByText('Rewards', { exact: true })).toBeVisible()
   await expect(wandmaker.getByText('Baseline rewards')).toHaveCount(0)
-  await expect(wandmaker.getByText('wand reward', { exact: true })).toHaveCount(
+  await expect(wandmaker.getByRole('img', { name: 'wand reward' })).toHaveCount(
     2
   )
 

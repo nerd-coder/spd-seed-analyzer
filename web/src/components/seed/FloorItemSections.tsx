@@ -1,14 +1,6 @@
 import { CircleQuestionMark, InfoIcon } from 'lucide-react'
 import { finderItemLabel } from '@/components/finder/finder-items'
 import { ItemIcon } from '@/components/ItemIcon'
-import { ItemName } from '@/components/ItemName'
-import {
-  EnchantmentConditionDetails,
-  SpawnConditionDetails,
-  UpgradeConditionDetails,
-} from '@/components/seed/ItemConditionDetails'
-import { TrinketRotationPopover } from '@/components/seed/TrinketRotationPopover'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -19,14 +11,16 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { itemAppearance } from '@/lib/identity'
-import { formatItemSource, isHighlightSource } from '@/lib/labels'
 import type {
   FloorReport,
   IdentityMaps,
   ItemGroup,
   ItemVariant,
-  TrinketSelectionReport,
 } from '@/lib/spd-wasm'
+
+/** SPD `InventorySlot` NORMAL, ARGB `0x9953564D`. */
+const SLOT_BACKGROUND = 'rgba(83, 86, 77, 0.6)'
+const CURSED_SLOT_BACKGROUND = 'rgba(150, 64, 58, 0.75)'
 
 function itemSection(
   item: ItemGroup
@@ -71,208 +65,140 @@ function BaselineItemsPopover() {
   )
 }
 
-function CandidateOptions({
-  item,
-  identities,
-}: {
-  item: ItemVariant
-  identities: IdentityMaps
-}) {
-  return (
-    <div className="flex min-w-0 flex-1 flex-col gap-1">
-      {item.class_name === 'TrinketCatalyst' ? (
-        <span className="font-medium">Trinket Catalyst — choose one</span>
-      ) : null}
-      {item.candidate_classes?.map((className, index) => {
-        const candidate = { category: item.category, class_name: className }
-        const label = finderItemLabel(className)
-        return (
-          <div key={`${index}-${className}`} className="flex flex-col gap-1">
-            {index > 0 ? (
-              <span className="pl-10 text-xs font-medium text-muted-foreground">
-                OR
-              </span>
-            ) : null}
-            <div className="flex items-start gap-2">
-              <ItemIcon
-                classNameItem={className}
-                category={item.category}
-                appearance={itemAppearance(candidate, identities)}
-                size={32}
-                title={label}
-                className="mt-0.5"
-              />
-              <span className="flex min-w-0 flex-wrap items-baseline gap-1.5">
-                <ItemName
-                  name={`${label}${item.level != null ? ` +${item.level}` : ''}`}
-                />
-                {item.cursed === true ? (
-                  <Badge variant="destructive">cursed</Badge>
-                ) : null}
-                {item.enchantment ? (
-                  <Badge variant="secondary">{item.enchantment.type}</Badge>
-                ) : null}
-                <UpgradeConditionDetails
-                  levelRange={item.level_range}
-                  conditions={item.conditions}
-                />
-                <EnchantmentConditionDetails enchantment={item.enchantment} />
-                <SpawnConditionDetails conditions={item.spawn_conditions} />
-              </span>
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
+type FloorItemSlotModel = {
+  key: string
+  label: string
+  quantity: number
+  level: number | null
+  cursed: boolean
+  unknown: boolean
+  className?: string | null
+  category?: string
+  appearance?: string
 }
 
-function CatalystOffers({
-  item,
-  identities,
-  trinketSelection,
-}: {
-  item: ItemVariant
-  identities: IdentityMaps
-  trinketSelection?: TrinketSelectionReport
-}) {
-  return (
-    <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-      <div className="flex items-center gap-2">
-        <ItemIcon
-          classNameItem={item.class_name}
-          category={item.category}
-          appearance={itemAppearance(item, identities)}
-          size={32}
-          title={item.name}
-          className="mt-0.5"
-        />
-        <ItemName name={item.name} />
-      </div>
-      <div className="flex flex-col gap-1 pl-10">
-        <span className="flex items-center gap-1 font-medium text-muted-foreground">
-          Trinket offers
-          <TrinketRotationPopover
-            sequence={trinketSelection?.transmutation_sequence ?? []}
-          />
-        </span>
-        {item.candidate_classes?.map((className) => {
-          const candidate = { category: item.category, class_name: className }
-          return (
-            <div key={className} className="flex items-center gap-2">
-              <ItemIcon
-                classNameItem={className}
-                category={item.category}
-                appearance={itemAppearance(candidate, identities)}
-                size={32}
-                title={finderItemLabel(className)}
-              />
-              <ItemName name={finderItemLabel(className)} />
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
+function describedTitle(name: string, item: ItemVariant) {
+  const extras = [
+    item.cursed === true ? 'cursed' : null,
+    item.enchantment?.type ?? null,
+  ].filter((part): part is string => part != null)
+  return extras.length > 0 ? `${name}, ${extras.join(', ')}` : name
 }
 
-function ItemVariantRow({
-  item,
-  source,
-  identities,
-  trinketSelection,
-  showSource,
-}: {
-  item: ItemVariant
-  source?: string | null
-  identities: IdentityMaps
-  trinketSelection?: TrinketSelectionReport
-  showSource: boolean
-}) {
-  const displayedLevelRange = item.name.includes('…') ? null : item.level_range
-  const sourceLabel =
-    !showSource ||
-    source?.includes('ShopRoom') ||
-    source === 'Ghost.Quest' ||
-    source === 'Wandmaker.Quest' ||
-    source === 'Blacksmith.Quest' ||
-    source === 'Imp.Quest'
-      ? null
-      : formatItemSource(source)
+function slotFrom(
+  item: ItemVariant,
+  key: string,
+  label: string,
+  className: string | null | undefined,
+  identities: IdentityMaps,
+  unknown = false
+): FloorItemSlotModel {
+  const subject = { category: item.category, class_name: className }
+  return {
+    key,
+    label,
+    quantity: item.quantity,
+    level: item.level ?? null,
+    cursed: item.cursed === true,
+    unknown,
+    className,
+    category: item.category,
+    appearance: unknown ? undefined : itemAppearance(subject, identities),
+  }
+}
 
+function slotsForVariant(
+  item: ItemVariant,
+  identities: IdentityMaps,
+  keyPrefix: string
+) {
   if (item.candidate_classes?.length) {
-    return item.class_name === 'TrinketCatalyst' ? (
-      <CatalystOffers
-        item={item}
-        identities={identities}
-        trinketSelection={trinketSelection}
-      />
-    ) : (
-      <CandidateOptions item={item} identities={identities} />
-    )
+    const slots: FloorItemSlotModel[] = []
+    if (item.class_name === 'TrinketCatalyst') {
+      slots.push(
+        slotFrom(
+          item,
+          `${keyPrefix}-catalyst`,
+          describedTitle(item.name, item),
+          item.class_name,
+          identities
+        )
+      )
+    }
+    for (const [index, className] of item.candidate_classes.entries()) {
+      slots.push(
+        slotFrom(
+          item,
+          `${keyPrefix}-${index}-${className}`,
+          describedTitle(finderItemLabel(className), item),
+          className,
+          identities
+        )
+      )
+    }
+    return slots
   }
 
+  if (item.name === 'artifact or ring') {
+    return [
+      slotFrom(
+        item,
+        keyPrefix,
+        'Unknown artifact or ring',
+        null,
+        identities,
+        true
+      ),
+    ]
+  }
+
+  return [
+    slotFrom(
+      item,
+      keyPrefix,
+      describedTitle(item.name, item),
+      item.class_name,
+      identities
+    ),
+  ]
+}
+
+function FloorItemSlot({ slot }: { slot: FloorItemSlotModel }) {
   return (
-    <div className="flex min-w-0 items-center gap-2">
-      {item.name === 'artifact or ring' ? (
+    <li
+      title={slot.label}
+      className="relative flex size-[56px] shrink-0 items-center justify-center"
+      style={{
+        backgroundColor: slot.cursed ? CURSED_SLOT_BACKGROUND : SLOT_BACKGROUND,
+      }}
+    >
+      {slot.unknown ? (
         <CircleQuestionMark
-          aria-label="Unknown artifact or ring"
-          className="mt-0.5 size-8 shrink-0 text-muted-foreground"
+          role="img"
+          aria-label={slot.label}
+          size={32}
+          className="text-white"
         />
       ) : (
         <ItemIcon
-          classNameItem={item.class_name}
-          category={item.category}
-          appearance={itemAppearance(item, identities)}
+          classNameItem={slot.className}
+          category={slot.category}
+          appearance={slot.appearance}
           size={32}
-          title={item.name}
-          className="mt-0.5"
+          title={slot.label}
         />
       )}
-      <span className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
-        <ItemName name={item.name} />
-        {item.quantity > 1 ? (
-          <span className="font-mono text-muted-foreground tabular-nums">
-            x{item.quantity}
-          </span>
-        ) : null}
-        {item.tier != null ? (
-          <Badge variant="outline">tier {item.tier}</Badge>
-        ) : null}
-        {item.tier_range ? (
-          <Badge variant="outline">
-            tier {item.tier_range.min}–{item.tier_range.max}
-          </Badge>
-        ) : null}
-        {displayedLevelRange ? (
-          <Badge variant="outline">
-            +{displayedLevelRange.min}…+{displayedLevelRange.max}
-          </Badge>
-        ) : null}
-        {item.cursed === true ? (
-          <Badge variant="destructive">cursed</Badge>
-        ) : null}
-        {item.enchantment ? (
-          <Badge variant="secondary">{item.enchantment.type}</Badge>
-        ) : null}
-        {sourceLabel ? (
-          <Badge
-            variant={isHighlightSource(source) ? 'secondary' : 'outline'}
-            title={source ?? undefined}
-          >
-            {sourceLabel}
-          </Badge>
-        ) : null}
-        <SpawnConditionDetails conditions={item.spawn_conditions} />
-        {displayedLevelRange ? null : (
-          <UpgradeConditionDetails
-            levelRange={item.level_range}
-            conditions={item.conditions}
-          />
-        )}
-        <EnchantmentConditionDetails enchantment={item.enchantment} />
-      </span>
-    </div>
+      {slot.quantity > 1 ? (
+        <span className="pointer-events-none absolute top-0.5 left-0.5 font-mono text-[10px] leading-none text-white">
+          {slot.quantity}
+        </span>
+      ) : null}
+      {slot.level != null && slot.level !== 0 ? (
+        <span className="pointer-events-none absolute right-0.5 bottom-0.5 font-mono text-[10px] leading-none text-white">
+          {slot.level > 0 ? `+${slot.level}` : `${slot.level}`}
+        </span>
+      ) : null}
+    </li>
   )
 }
 
@@ -280,41 +206,25 @@ export function FloorItemList({
   items,
   identities,
   depth,
-  trinketSelection,
 }: {
   items: ItemGroup[]
   identities: IdentityMaps
   depth: number
-  trinketSelection?: TrinketSelectionReport
 }) {
+  const slots = items.flatMap((group, groupIndex) =>
+    group.variants.flatMap((item, variantIndex) =>
+      slotsForVariant(
+        item,
+        identities,
+        `${depth}-${groupIndex}-${variantIndex}`
+      )
+    )
+  )
+
   return (
-    <ul className="flex flex-col gap-1.5 text-sm">
-      {items.map((group, index) => (
-        <li key={`${depth}-${index}`} className="flex min-w-0 flex-col gap-1">
-          {group.variants.map((item, variantIndex) => (
-            <div
-              key={`${item.prediction}-${variantIndex}`}
-              className={
-                variantIndex === 0
-                  ? 'min-w-0'
-                  : 'flex min-w-0 items-center gap-2 pl-10'
-              }
-            >
-              {variantIndex > 0 ? (
-                <Badge variant="outline" className="shrink-0">
-                  Fresh baseline
-                </Badge>
-              ) : null}
-              <ItemVariantRow
-                item={item}
-                source={group.source}
-                identities={identities}
-                trinketSelection={trinketSelection}
-                showSource={variantIndex === 0}
-              />
-            </div>
-          ))}
-        </li>
+    <ul className="flex flex-wrap gap-[2px]">
+      {slots.map((slot) => (
+        <FloorItemSlot key={slot.key} slot={slot} />
       ))}
     </ul>
   )
@@ -323,11 +233,9 @@ export function FloorItemList({
 export function FloorItemSections({
   floor,
   identities,
-  trinketSelection,
 }: {
   floor: FloorReport
   identities: IdentityMaps
-  trinketSelection?: TrinketSelectionReport
 }) {
   const groups = partitionFloorItems(visibleItemGroups(floor.items))
   const sections = [
@@ -370,7 +278,6 @@ export function FloorItemSections({
             items={items}
             identities={identities}
             depth={floor.depth}
-            trinketSelection={trinketSelection}
           />
         </div>
       ))}

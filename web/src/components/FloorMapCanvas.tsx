@@ -38,6 +38,10 @@ type Props = {
    * instead of scaling the canvas through a CSS transform.
    */
   displayScale?: number
+  /**
+   * Cover the parent with CSS. Does not change `canvas.width` / `canvas.height`.
+   */
+  fill?: boolean
   /** Animate the region water texture; disabled for thumbnails to avoid many RAF loops. */
   animateWater?: boolean
   showItems?: boolean
@@ -50,6 +54,7 @@ export function FloorMapCanvas({
   scale = 2,
   maxDisplay,
   displayScale = 1,
+  fill = false,
   className,
   canvasClassName,
   animateWater = false,
@@ -161,7 +166,12 @@ export function FloorMapCanvas({
   ])
 
   return (
-    <div className={cn('inline-flex items-center justify-center', className)}>
+    <div
+      className={cn(
+        fill ? 'absolute inset-0' : 'inline-flex items-center justify-center',
+        className
+      )}
+    >
       {error ? (
         <p className="text-destructive text-xs">
           {error} (place tilesheets under{' '}
@@ -170,18 +180,31 @@ export function FloorMapCanvas({
       ) : (
         <canvas
           ref={canvasRef}
-          className={cn('rounded-none border bg-black/80', canvasClassName)}
+          className={cn(
+            'rounded-none border bg-black/80',
+            fill && 'block h-full w-full',
+            canvasClassName
+          )}
           data-water-animation={
             hasWater && !reducedMotion ? 'running' : 'paused'
           }
           role="img"
           aria-label={`Shattered Pixel Dungeon floor map. ${map.heaps.length} exact heaps, ${map.mobs.length} exact mobs, ${map.traps.length} traps, and ${map.transitions.length} transitions.${markerDescription}`}
           title={markerDescription.trim() || undefined}
-          style={{
-            width: shownW,
-            height: shownH,
-            imageRendering: 'pixelated',
-          }}
+          style={
+            fill
+              ? {
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  imageRendering: 'pixelated',
+                }
+              : {
+                  width: shownW,
+                  height: shownH,
+                  imageRendering: 'pixelated',
+                }
+          }
         />
       )}
     </div>

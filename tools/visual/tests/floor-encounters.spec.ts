@@ -31,8 +31,12 @@ test('floor one shows exact room rewards and non-positional encounters', async (
 
   const floor = await openFloorOne(page, 'AAA-AAA-AFU')
   await expect(floor.getByText('Initial encounters')).toHaveCount(0)
-  await expect(floor.getByText(/stone of blast/i)).toBeVisible()
-  await expect(floor.getByText(/stone of deep sleep/i)).toBeVisible()
+  await expect(
+    floor.getByRole('img', { name: /stone of blast/i })
+  ).toBeVisible()
+  await expect(
+    floor.getByRole('img', { name: /stone of deep sleep/i })
+  ).toBeVisible()
   await expect(floor.getByText('2–3 runestone-room rewards')).toHaveCount(0)
 
   await page.setViewportSize({ width: 390, height: 844 })
