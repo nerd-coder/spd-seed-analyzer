@@ -4,7 +4,7 @@ Target: **Shattered Pixel Dungeon v4.0.2 @ `57a4e06a4`**
 (`57a4e06a4caf162446d1c28caa7983f0493fecf0`). Java clone:
 `/Users/toan/code/repos/00-Evan/shattered-pixel-dungeon`.
 
-These notes and `specs/generator-decks.md` are the generation facts for this
+These notes and `specs/generator-decks.md` are the verified facts for this
 pin. The analyzer remains a partial port; see `specs/implementation.md`.
 
 Public reports follow **SEED-ANALYSIS**, **SPAWN-PRESENCE**, and
@@ -27,5 +27,13 @@ Public reports follow **SEED-ANALYSIS**, **SPAWN-PRESENCE**, and
 | [daily-runs.md](daily-runs.md) | Daily seed formula; first Daily is `2026-04-01` |
 | [first-four-floor-loot-simulation.md](first-four-floor-loot-simulation.md) | Floors 1–4 replay boundary |
 | [map-tiles-and-assets.md](map-tiles-and-assets.md) | Terrain IDs, carpets, occlusion, asset inventory |
+| [item-sprite-rects.md](item-sprite-rects.md) | `items.png` / `item_icons.png` film crops |
 
 Citations are `Class.java:start-end` in the pinned clone.
+
+## Version bump
+
+Re-verify each file in the index against the new pin, in the same change.
+[item-sprite-rects.md](item-sprite-rects.md) is part of that pass: re-read
+`ItemSpriteSheet` film crops, re-measure `sprites/items.png` and
+`sprites/item_icons.png`, and replace `web/src/lib/item-sprite-rects.ts`.

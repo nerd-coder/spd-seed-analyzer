@@ -1,42 +1,18 @@
 import { SHEET_COLS, TILE_PX } from '@/lib/dungeon-tile-visuals'
 import { ITEM_SHEET, resolveItemIconIndex } from '@/lib/item-icons'
+import { itemSpriteSize } from '@/lib/item-sprite-rects'
 import type { MapEntityAssets, MobAssetKey } from '@/lib/map-assets'
 import type { FloorMap, IdentityMaps, MapHeap, MapMob } from '@/lib/spd-wasm'
 
 type Visibility = { item: boolean; mob: boolean }
 
-const CONTAINER_FRAMES: Record<string, [number, number, number]> = {
-  chest: [36, 16, 14],
-  locked_chest: [37, 16, 14],
-  crystal_chest: [38, 16, 14],
-  tomb: [34, 14, 15],
-  skeleton: [32, 14, 11],
-  remains: [33, 14, 11],
-}
-
-const ITEM_FRAME_SIZES: Record<string, [number, number]> = {
-  Alchemize: [10, 15],
-  AlchemyPage: [10, 11],
-  Ankh: [10, 16],
-  Bomb: [10, 13],
-  Crossbow: [15, 15],
-  CrystalKey: [8, 14],
-  Dirk: [13, 14],
-  EnergyCrystal: [16, 16],
-  Food: [16, 12],
-  Gold: [15, 13],
-  GuidePage: [10, 11],
-  HandAxe: [12, 14],
-  HealingDart: [15, 15],
-  IronKey: [8, 14],
-  LeatherArmor: [14, 13],
-  MagicalHolster: [15, 16],
-  MailArmor: [14, 12],
-  Pasty: [16, 11],
-  Scimitar: [13, 16],
-  Shuriken: [12, 12],
-  SmallRation: [14, 11],
-  StoneOfIntuition: [14, 12],
+const CONTAINER_FRAMES: Record<string, number> = {
+  chest: 36,
+  locked_chest: 37,
+  crystal_chest: 38,
+  tomb: 34,
+  skeleton: 32,
+  remains: 33,
 }
 
 type MobFrame = {
@@ -141,23 +117,19 @@ function appearanceFor(className: string, identities: IdentityMaps) {
 
 function itemFrame(heap: MapHeap, identities: IdentityMaps) {
   const container = CONTAINER_FRAMES[heap.heap_type]
-  if (container) return container
+  if (container != null) {
+    const [width, height] = itemSpriteSize(container)
+    return [container, width, height] as const
+  }
   const item = heap.items[0]
-  if (!item) return [0, 8, 13] as const
+  if (!item) {
+    const [width, height] = itemSpriteSize(0)
+    return [0, width, height] as const
+  }
   const index = resolveItemIconIndex(item.class, {
     appearance: appearanceFor(item.class, identities),
   })
-  const [width, height] = item.class.startsWith('PotionOf')
-    ? [12, 14]
-    : item.class.startsWith('ScrollOf')
-      ? [15, 14]
-      : item.class.startsWith('RingOf')
-        ? [8, 10]
-        : item.class.startsWith('WandOf')
-          ? [14, 14]
-          : item.class.startsWith('StoneOf')
-            ? [14, 12]
-            : (ITEM_FRAME_SIZES[item.class] ?? [16, 16])
+  const [width, height] = itemSpriteSize(index)
   return [index, width, height] as const
 }
 
