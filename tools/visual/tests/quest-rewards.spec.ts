@@ -300,13 +300,12 @@ test('quest cards prefer concrete baselines and keep the universal warning visib
   const floorNine = page
     .getByRole('heading', { name: 'Floor 9', exact: true })
     .locator('xpath=ancestor::section[1]')
-  await floorNine.getByRole('button', { name: 'Possible rooms (2)' }).click()
-  const possibleRooms = page.getByRole('dialog')
-  await expect(possibleRooms).toContainText('Possible rooms')
-  await expect(possibleRooms).toContainText('Mass Grave')
-  await expect(possibleRooms).toContainText('Mossy Clump is acquired')
-  await expect(possibleRooms).toContainText('Rot Garden')
-  await expect(possibleRooms).toContainText('Forbidden Runes enabled')
+  await expect(
+    floorNine.getByRole('button', { name: /^Possible rooms/ })
+  ).toHaveCount(0)
+  await expect(
+    floorNine.getByRole('button', { name: /^Rooms \(/ })
+  ).toHaveCount(0)
 
   const wandmaker = page.locator('[data-quest-type="old_wandmaker"]')
   await expect(wandmaker).toContainText('Baseline target: Rotberry')
@@ -385,9 +384,9 @@ test('quest cards fall back to the universal reward entries without a baseline',
   const wandmaker = page.locator('[data-quest-type="old_wandmaker"]')
   await expect(wandmaker.getByText('Rewards', { exact: true })).toBeVisible()
   await expect(wandmaker.getByText('Baseline rewards')).toHaveCount(0)
-  await expect(wandmaker.getByRole('img', { name: 'wand reward' })).toHaveCount(
-    2
-  )
+  await expect(
+    wandmaker.getByLabel('wand reward', { exact: true })
+  ).toHaveCount(2)
 
   await page.getByRole('tab', { name: /^City/ }).click()
   const imp = page.locator('[data-quest-type="ambitious_imp"]')

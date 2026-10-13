@@ -1,8 +1,9 @@
 import { useStore } from '@tanstack/react-store'
 import { finderItemLabel } from '@/components/finder/finder-items'
-import { ItemIcon } from '@/components/ItemIcon'
+import { ItemBox } from '@/components/ItemBox'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { appearanceDescription, shortIdentityName } from '@/lib/identity'
+import { appearanceDescription } from '@/lib/identity'
+import { ItemCategory, itemSprite } from '@/lib/item-kind'
 import type { IdentityEntry, IdentityMaps } from '@/lib/spd-wasm'
 import { $reportNavigation, setIdentitiesTab } from '@/stores/app'
 
@@ -11,32 +12,25 @@ function IdentityGrid({
   category,
 }: {
   entries: IdentityEntry[]
-  category: 'potion' | 'scroll' | 'ring'
+  category: ItemCategory
 }) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-2">
+    <div className="flex flex-wrap gap-1">
       {entries.map((e) => {
         const name = finderItemLabel(e.item)
-        const shortName = shortIdentityName(name, category)
+        const appearance = appearanceDescription(e.appearance)
         return (
-          <div key={e.item} className="flex min-w-0 items-center gap-2">
-            <ItemIcon
-              classNameItem={e.item}
-              category={category}
-              appearance={e.appearance}
-              size={72}
-              title={name}
-              className="shrink-0"
-            />
-            <div className="min-w-0 leading-tight">
-              <div className="truncate text-sm font-medium" title={name}>
-                {shortName}
-              </div>
-              <div className="text-muted-foreground truncate text-xs capitalize">
-                {appearanceDescription(e.appearance)}
-              </div>
-            </div>
-          </div>
+          <ItemBox
+            key={e.item}
+            sprites={itemSprite({
+              className: e.item,
+              category,
+              appearance: e.appearance,
+            })}
+            scale={3}
+            title={`${name} (${appearance})`}
+            caption={appearance}
+          />
         )
       })}
     </div>
@@ -76,13 +70,22 @@ export function IdentitiesPanel({ identities }: { identities: IdentityMaps }) {
             <TabsTrigger value="rings">Rings</TabsTrigger>
           </TabsList>
           <TabsContent value="potions" className="mt-3">
-            <IdentityGrid entries={identities.potions} category="potion" />
+            <IdentityGrid
+              entries={identities.potions}
+              category={ItemCategory.Potion}
+            />
           </TabsContent>
           <TabsContent value="scrolls" className="mt-3">
-            <IdentityGrid entries={identities.scrolls} category="scroll" />
+            <IdentityGrid
+              entries={identities.scrolls}
+              category={ItemCategory.Scroll}
+            />
           </TabsContent>
           <TabsContent value="rings" className="mt-3">
-            <IdentityGrid entries={identities.rings} category="ring" />
+            <IdentityGrid
+              entries={identities.rings}
+              category={ItemCategory.Ring}
+            />
           </TabsContent>
         </Tabs>
       </div>

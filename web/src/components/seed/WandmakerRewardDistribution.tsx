@@ -1,6 +1,6 @@
 import { InfoIcon } from 'lucide-react'
 import { finderItemLabel } from '@/components/finder/finder-items'
-import { ItemIcon } from '@/components/ItemIcon'
+import { ItemBox } from '@/components/ItemBox'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,6 +12,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Progress } from '@/components/ui/progress'
+import { ItemCategory, itemSprite } from '@/lib/item-kind'
 import type { WandmakerRewardSlot } from '@/lib/spd-wasm'
 
 /** `+1`, `−2`, or `baseline` for the fresh/no-history draw. */
@@ -46,12 +47,13 @@ function SlotRow({ slot }: { slot: WandmakerRewardSlot }) {
           return (
             <li
               key={candidate.class_name}
-              className="grid grid-cols-[32px_minmax(0,1fr)_auto] items-center gap-x-2"
+              className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2"
             >
-              <ItemIcon
-                classNameItem={candidate.class_name}
-                category="wand"
-                size={32}
+              <ItemBox
+                sprites={itemSprite({
+                  className: candidate.class_name,
+                  category: ItemCategory.Wand,
+                })}
                 title={finderItemLabel(candidate.class_name)}
               />
               <span className="flex min-w-0 flex-col gap-0.5">

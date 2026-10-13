@@ -31,12 +31,8 @@ test('floor one shows exact room rewards and non-positional encounters', async (
 
   const floor = await openFloorOne(page, 'AAA-AAA-AFU')
   await expect(floor.getByText('Initial encounters')).toHaveCount(0)
-  await expect(
-    floor.getByRole('img', { name: /stone of blast/i })
-  ).toBeVisible()
-  await expect(
-    floor.getByRole('img', { name: /stone of deep sleep/i })
-  ).toBeVisible()
+  await expect(floor.getByLabel(/stone of blast/i)).toBeVisible()
+  await expect(floor.getByLabel(/stone of deep sleep/i)).toBeVisible()
   await expect(floor.getByText('2–3 runestone-room rewards')).toHaveCount(0)
 
   await page.setViewportSize({ width: 390, height: 844 })
@@ -54,7 +50,7 @@ test('Shattered Pot uses its in-game item sprite', async ({ page }) => {
   const floor = page
     .getByRole('heading', { name: 'Floor 2', exact: true })
     .locator('xpath=ancestor::section[1]')
-  const icon = floor.getByRole('img', { name: 'Shattered Pot' })
+  const icon = floor.getByLabel('Shattered Pot', { exact: true })
 
   await expect(icon).toBeVisible()
   await expect(icon.locator('[aria-hidden="true"]')).toHaveCSS(

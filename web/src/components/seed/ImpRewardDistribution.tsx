@@ -1,6 +1,6 @@
 import { InfoIcon } from 'lucide-react'
 import { finderItemLabel } from '@/components/finder/finder-items'
-import { ItemIcon } from '@/components/ItemIcon'
+import { ItemBox } from '@/components/ItemBox'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,6 +12,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Progress } from '@/components/ui/progress'
+import { itemSprite, parseItemEnhancement } from '@/lib/item-kind'
 import type { ImpLevelRule, ImpRewardSlot, ImpSlotRole } from '@/lib/spd-wasm'
 
 const ROLE_LABEL: Record<ImpSlotRole, string> = {
@@ -84,10 +85,9 @@ function SlotRow({
 
       {fixed ? (
         <div className="flex items-center gap-2">
-          <ItemIcon
-            classNameItem={fixed}
-            category={slot.role}
-            size={32}
+          <ItemBox
+            sprites={itemSprite({ className: fixed, category: slot.role })}
+            enhancement={parseItemEnhancement(slot.baseline_enchantment)}
             title={finderItemLabel(fixed)}
           />
           <span className="text-sm">{finderItemLabel(fixed)}</span>
@@ -103,12 +103,14 @@ function SlotRow({
             return (
               <li
                 key={candidate.class_name}
-                className="grid grid-cols-[32px_minmax(0,1fr)_auto] items-center gap-x-2"
+                className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2"
               >
-                <ItemIcon
-                  classNameItem={candidate.class_name}
-                  category={slot.role}
-                  size={32}
+                <ItemBox
+                  sprites={itemSprite({
+                    className: candidate.class_name,
+                    category: slot.role,
+                  })}
+                  enhancement={parseItemEnhancement(slot.baseline_enchantment)}
                   title={finderItemLabel(candidate.class_name)}
                 />
                 <span className="flex min-w-0 flex-col gap-0.5">

@@ -536,20 +536,14 @@ test('mobile map dialog fills the viewport and supports pan, zoom, and close', a
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
-test('floor rooms open from a title chip and desktop maps use a large dialog', async ({
-  page,
-}) => {
+test('desktop maps use a large dialog', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1200 })
   await installSyntheticMapReport(page)
   const browserErrors = await openAnalyzer(page, GENERIC_MAP_SEED)
 
-  const rooms = page
-    .getByRole('button', { name: /^Rooms \(\d+\)$/ })
-    .nth(GENERIC_MAP_FLOOR - 1)
-  await rooms.click()
   await expect(
-    page.getByText(new RegExp(`^Rooms on floor ${GENERIC_MAP_FLOOR}$`))
-  ).toBeVisible()
+    page.getByRole('button', { name: /^Rooms \(\d+\)$/ })
+  ).toHaveCount(0)
 
   await page
     .getByRole('button', { name: `Expand floor ${GENERIC_MAP_FLOOR} map` })
@@ -693,19 +687,17 @@ test('analyzer displays baseline items in their ordinary item group', async ({
 }) => {
   const browserErrors = await openAnalyzer(page, 'RZN-LKU-EFS')
   const baselineItem = page.getByRole('listitem').filter({
-    has: page.getByRole('img', { name: /dried Rose/i }),
+    has: page.getByLabel(/dried Rose/i),
   })
-  const otherItems = page
-    .getByText(/^Other items/)
+  const notable = page
+    .getByText(/^Notable/)
     .first()
     .locator('../..')
 
   await expect(page.getByText(/^Fresh baseline highlights/)).toHaveCount(0)
-  await expect(
-    otherItems.getByRole('img', { name: /dried Rose/i })
-  ).toBeVisible()
+  await expect(notable.getByLabel(/dried Rose/i)).toBeVisible()
   await expect(baselineItem).toBeVisible()
-  await expect(baselineItem.getByRole('img', { name: /cursed/i })).toBeVisible()
+  await expect(baselineItem.getByLabel(/cursed/i)).toBeVisible()
   await expect(page.getByText('planning only', { exact: true })).toHaveCount(0)
 
   expect(browserErrors.console, 'browser console errors').toEqual([])
@@ -818,15 +810,11 @@ test('floor items render as icon slots', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Identities' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Floor 1' })).toBeVisible()
   const syntheticItem = page.getByRole('listitem').filter({
-    has: page.getByRole('img', { name: /Synthetic conditional item/i }),
+    has: page.getByLabel(/Synthetic conditional item/i),
   })
   await expect(syntheticItem).toBeVisible()
-  await expect(
-    syntheticItem.getByRole('img', { name: /cursed/i })
-  ).toBeVisible()
-  await expect(
-    syntheticItem.getByRole('img', { name: /Blazing/i })
-  ).toBeVisible()
+  await expect(syntheticItem.getByLabel(/cursed/i)).toBeVisible()
+  await expect(syntheticItem.getByLabel(/Blazing/i)).toBeVisible()
   await expect(
     page.getByRole('button', { name: 'Show upgrade conditions' })
   ).toHaveCount(0)
@@ -840,15 +828,19 @@ test('floor items render as icon slots', async ({ page }) => {
     page.getByRole('button', { name: 'Show trinket transmutation rotation' })
   ).toHaveCount(0)
   await expect(
-    page.getByRole('img', { name: 'Trinket Catalyst' })
+    page.getByLabel('Trinket Catalyst', { exact: true })
   ).toBeVisible()
-  await expect(page.getByRole('img', { name: 'Mossy Clump' })).toBeVisible()
+  await expect(page.getByLabel('Mossy Clump', { exact: true })).toBeVisible()
   const sickle = page.getByRole('listitem').filter({
-    has: page.getByRole('img', { name: /friendly sickle \+2/i }),
+    has: page.getByLabel(/friendly sickle \+2/i),
   })
   await expect(sickle).toHaveCount(1)
   await expect(sickle).toContainText('+2')
-  await expect(page.getByRole('img', { name: /weapon reward/i })).toBeVisible()
+  await expect(page.getByLabel(/weapon reward/i)).toBeVisible()
+  await expect(page.getByText('Guaranteed spawns')).toHaveCount(0)
+  await expect(page.getByText('Floor loot')).toHaveCount(0)
+  await expect(page.getByText('No notable items on this floor.')).toHaveCount(3)
+  await expect(page.getByText(/^Other items/)).toBeVisible()
   await expect(page.getByText('Fresh baseline', { exact: true })).toHaveCount(0)
   await expect(
     page.getByRole('button', { name: 'Expand floor 4 map' })

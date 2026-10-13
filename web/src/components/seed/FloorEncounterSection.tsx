@@ -1,6 +1,6 @@
 import { DiceFiveIcon, PawPrintIcon } from '@phosphor-icons/react'
 
-import { ItemIcon } from '@/components/ItemIcon'
+import { ItemBox } from '@/components/ItemBox'
 import { ItemName } from '@/components/ItemName'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -12,6 +12,7 @@ import {
   ItemTitle,
 } from '@/components/ui/item'
 import { itemAppearance } from '@/lib/identity'
+import { itemSprite } from '@/lib/item-kind'
 import type {
   CombatReward,
   IdentityMaps,
@@ -55,11 +56,13 @@ function EncounterReward({
   const item = { category: reward.category, class_name: reward.class_name }
   return (
     <ItemDescription className="line-clamp-none flex flex-wrap items-center gap-1.5">
-      <ItemIcon
-        classNameItem={reward.class_name}
-        category={reward.category}
-        appearance={itemAppearance(item, identities)}
-        size={16}
+      <ItemBox
+        scale={1}
+        sprites={itemSprite({
+          className: reward.class_name,
+          category: reward.category,
+          appearance: itemAppearance(item, identities),
+        })}
         title={reward.name}
       />
       <span>{rewardText(reward)}</span>

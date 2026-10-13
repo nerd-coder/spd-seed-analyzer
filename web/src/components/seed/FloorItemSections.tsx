@@ -1,6 +1,6 @@
 import { CircleQuestionMark, InfoIcon } from 'lucide-react'
 import { finderItemLabel } from '@/components/finder/finder-items'
-import { ItemIcon } from '@/components/ItemIcon'
+import { ItemBox } from '@/components/ItemBox'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -11,6 +11,12 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { itemAppearance } from '@/lib/identity'
+import {
+  enhancementInItemName,
+  itemSprite,
+  parseItemEnhancement,
+} from '@/lib/item-kind'
+import { isNotableSpawn } from '@/lib/item-notable'
 import type {
   FloorReport,
   IdentityMaps,
@@ -18,9 +24,23 @@ import type {
   ItemVariant,
 } from '@/lib/spd-wasm'
 
-/** SPD `InventorySlot` NORMAL, ARGB `0x9953564D`. */
-const SLOT_BACKGROUND = 'rgba(83, 86, 77, 0.6)'
 const CURSED_SLOT_BACKGROUND = 'rgba(150, 64, 58, 0.75)'
+
+function splitNotableItems(items: ItemGroup[]) {
+  const notable: ItemGroup[] = []
+  const other: ItemGroup[] = []
+  for (const group of items) {
+    const notableVariants = group.variants.filter(isNotableSpawn)
+    const otherVariants = group.variants.filter((item) => !isNotableSpawn(item))
+    if (notableVariants.length > 0) {
+      notable.push({ ...group, variants: notableVariants })
+    }
+    if (otherVariants.length > 0) {
+      other.push({ ...group, variants: otherVariants })
+    }
+  }
+  return { notable, other }
+}
 
 function itemSection(
   item: ItemGroup
@@ -72,6 +92,7 @@ type FloorItemSlotModel = {
   level: number | null
   cursed: boolean
   unknown: boolean
+  enchantment?: string | null
   className?: string | null
   category?: string
   appearance?: string
@@ -101,6 +122,7 @@ function slotFrom(
     level: item.level ?? null,
     cursed: item.cursed === true,
     unknown,
+    enchantment: item.enchantment?.type,
     className,
     category: item.category,
     appearance: unknown ? undefined : itemAppearance(subject, identities),
@@ -164,40 +186,40 @@ function slotsForVariant(
 }
 
 function FloorItemSlot({ slot }: { slot: FloorItemSlotModel }) {
+  const namedEnhancement = enhancementInItemName(slot.label, slot.className)
+  const enhancement = slot.cursed
+    ? (namedEnhancement ?? parseItemEnhancement(slot.enchantment))
+    : (parseItemEnhancement(slot.enchantment) ?? namedEnhancement)
   return (
-    <li
-      title={slot.label}
-      className="relative flex size-[56px] shrink-0 items-center justify-center"
-      style={{
-        backgroundColor: slot.cursed ? CURSED_SLOT_BACKGROUND : SLOT_BACKGROUND,
-      }}
-    >
-      {slot.unknown ? (
-        <CircleQuestionMark
-          role="img"
-          aria-label={slot.label}
-          size={32}
-          className="text-white"
-        />
-      ) : (
-        <ItemIcon
-          classNameItem={slot.className}
-          category={slot.category}
-          appearance={slot.appearance}
-          size={32}
-          title={slot.label}
-        />
-      )}
-      {slot.quantity > 1 ? (
-        <span className="pointer-events-none absolute top-0.5 left-0.5 font-mono text-[10px] leading-none text-white">
-          {slot.quantity}
-        </span>
-      ) : null}
-      {slot.level != null && slot.level !== 0 ? (
-        <span className="pointer-events-none absolute right-0.5 bottom-0.5 font-mono text-[10px] leading-none text-white">
-          {slot.level > 0 ? `+${slot.level}` : `${slot.level}`}
-        </span>
-      ) : null}
+    <li className="shrink-0">
+      <ItemBox
+        sprites={
+          slot.unknown
+            ? undefined
+            : itemSprite({
+                className: slot.className,
+                category: slot.category,
+                appearance: slot.appearance,
+              })
+        }
+        enhancement={enhancement}
+        cursed={slot.cursed}
+        level={slot.level}
+        title={slot.label}
+        bgColor={slot.cursed ? CURSED_SLOT_BACKGROUND : undefined}
+      >
+        {slot.unknown ? (
+          <CircleQuestionMark
+            aria-hidden
+            className="pointer-events-none absolute inset-0 m-auto size-8 text-neutral-900 dark:text-white"
+          />
+        ) : null}
+        {slot.quantity > 1 ? (
+          <span className="spd-slot-edge pointer-events-none absolute top-1 left-1 font-sans text-[12px] leading-none font-bold tracking-normal text-[#f0c040]">
+            {slot.quantity}
+          </span>
+        ) : null}
+      </ItemBox>
     </li>
   )
 }
@@ -230,6 +252,44 @@ export function FloorItemList({
   )
 }
 
+function ItemGroupSection({
+  label,
+  items,
+  empty,
+  identities,
+  depth,
+}: {
+  label: string
+  items: ItemGroup[]
+  empty?: string
+  identities: IdentityMaps
+  depth: number
+}) {
+  const baseline = items.some((group) =>
+    group.variants.some((item) => item.prediction === 'baseline')
+  )
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-1">
+        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+          {label}
+          {items.length > 0 ? (
+            <span className="ml-1.5 font-mono font-normal tabular-nums normal-case">
+              ({items.length})
+            </span>
+          ) : null}
+        </p>
+        {baseline ? <BaselineItemsPopover /> : null}
+      </div>
+      {items.length > 0 ? (
+        <FloorItemList items={items} identities={identities} depth={depth} />
+      ) : empty ? (
+        <p className="text-muted-foreground text-sm">{empty}</p>
+      ) : null}
+    </div>
+  )
+}
+
 export function FloorItemSections({
   floor,
   identities,
@@ -238,49 +298,27 @@ export function FloorItemSections({
   identities: IdentityMaps
 }) {
   const groups = partitionFloorItems(visibleItemGroups(floor.items))
-  const sections = [
-    {
-      key: 'guaranteed',
-      label: 'Guaranteed spawns',
-      caption: null,
-      items: groups.guaranteed,
-    },
-    { key: 'loot', label: 'Floor loot', caption: null, items: groups.loot },
-    {
-      key: 'general',
-      label: 'Other items',
-      caption: null,
-      items: groups.general,
-    },
-  ].filter(({ items }) => items.length > 0)
+  // Shop stays off the floor list. Quest rewards stay on the quest card.
+  const shown = [...groups.guaranteed, ...groups.loot, ...groups.general]
+  const { notable, other } = splitNotableItems(shown)
 
   return (
     <>
-      {sections.map(({ key, label, caption, items }) => (
-        <div key={key} className="flex flex-col gap-1">
-          <div className="flex items-center gap-1">
-            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-              {label}
-              <span className="ml-1.5 font-mono font-normal tabular-nums normal-case">
-                ({items.length})
-              </span>
-            </p>
-            {items.some((group) =>
-              group.variants.some((item) => item.prediction === 'baseline')
-            ) ? (
-              <BaselineItemsPopover />
-            ) : null}
-          </div>
-          {caption ? (
-            <p className="text-muted-foreground text-xs">{caption}</p>
-          ) : null}
-          <FloorItemList
-            items={items}
-            identities={identities}
-            depth={floor.depth}
-          />
-        </div>
-      ))}
+      <ItemGroupSection
+        label="Notable"
+        items={notable}
+        empty="No notable items on this floor."
+        identities={identities}
+        depth={floor.depth}
+      />
+      {other.length > 0 ? (
+        <ItemGroupSection
+          label="Other items"
+          items={other}
+          identities={identities}
+          depth={floor.depth}
+        />
+      ) : null}
     </>
   )
 }

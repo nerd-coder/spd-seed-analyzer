@@ -5,7 +5,6 @@ import {
   FloorItemSections,
   visibleItemGroups,
 } from '@/components/seed/FloorItemSections'
-import { SpawnConditionDetails } from '@/components/seed/ItemConditionDetails'
 import { QuestBranchMap } from '@/components/seed/QuestBranchMap'
 import { QuestCard } from '@/components/seed/QuestCard'
 import {
@@ -13,60 +12,11 @@ import {
   matchingQuestBranch,
   unclaimedBranches,
 } from '@/components/seed/quest-branch'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  Popover,
-  PopoverContent,
-  PopoverDescription,
-  PopoverHeader,
-  PopoverTitle,
-  PopoverTrigger,
-} from '@/components/ui/popover'
 import type {
   BranchFloorReport,
   FloorReport,
   IdentityMaps,
-  PossibleRoom,
 } from '@/lib/spd-wasm'
-
-function roomLabel(className: string) {
-  return className.replace(/Room$/, '').replace(/([a-z])([A-Z])/g, '$1 $2')
-}
-
-function PossibleRoomsPopover({ rooms }: { rooms: PossibleRoom[] }) {
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" size="xs">
-          Possible rooms ({rooms.length})
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="w-80">
-        <PopoverHeader>
-          <PopoverTitle>Possible rooms</PopoverTitle>
-          <PopoverDescription>
-            Alternate room counts under modeled player and trinket profiles.
-          </PopoverDescription>
-        </PopoverHeader>
-        <ul className="flex flex-col gap-2 text-sm">
-          {rooms.map((room, index) => (
-            <li
-              key={`${room.class}-${room.quantity}-${index}`}
-              className="flex min-w-0 items-center justify-between gap-2"
-            >
-              <span>
-                {roomLabel(room.class)}
-                {room.quantity > 1 ? ` ×${room.quantity}` : ''}
-              </span>
-              <SpawnConditionDetails conditions={room.spawn_conditions} />
-            </li>
-          ))}
-        </ul>
-      </PopoverContent>
-    </Popover>
-  )
-}
 
 function branchBorderClass(kind: BranchFloorReport['kind']) {
   switch (kind) {
@@ -103,18 +53,9 @@ export function FloorDetail({
   floor: FloorReport
   identities: IdentityMaps
 }) {
-  const hasQuest = (floor.quests?.length ?? 0) > 0
-  const showMap = !!floor.map
   const displayedMap = floor.map ?? floor.assumed_map ?? null
   const visibleItems = visibleItemGroups(floor.items)
   const leftoverBranches = unclaimedBranches(floor.branches, floor.quests)
-  const hasMeta =
-    (floor.rooms?.length ?? 0) > 0 ||
-    (floor.possible_rooms?.length ?? 0) > 0 ||
-    (!!floor.feeling && floor.feeling !== 'none') ||
-    !!floor.builder ||
-    hasQuest ||
-    showMap
 
   return (
     <section className="space-y-3 border-b py-6 first:pt-0 last:border-b-0 last:pb-0">
@@ -135,53 +76,6 @@ export function FloorDetail({
           </h3>
         </div>
       </div>
-
-      {hasMeta ? (
-        <div className="flex flex-wrap items-center gap-2">
-          {floor.rooms && floor.rooms.length > 0 && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="xs">
-                  Rooms ({floor.rooms.length})
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="start" className="w-72">
-                <PopoverHeader>
-                  <PopoverTitle>Rooms on floor {floor.depth}</PopoverTitle>
-                </PopoverHeader>
-                <p className="text-sm leading-relaxed">
-                  {floor.rooms
-                    .map((room) => room.replace(/Room$/, ''))
-                    .join(' · ')}
-                </p>
-              </PopoverContent>
-            </Popover>
-          )}
-          {floor.possible_rooms && floor.possible_rooms.length > 0 && (
-            <PossibleRoomsPopover rooms={floor.possible_rooms} />
-          )}
-          {floor.feeling && floor.feeling !== 'none' && (
-            <Badge variant="secondary" className="capitalize">
-              {floor.feeling}
-            </Badge>
-          )}
-          {floor.builder && (
-            <Badge variant="outline" className="font-mono text-xs">
-              {floor.builder}
-            </Badge>
-          )}
-          {hasQuest && (
-            <Badge variant="default" className="text-xs">
-              Quest
-            </Badge>
-          )}
-          {showMap && floor.map && (
-            <Badge variant="outline" className="font-mono text-xs">
-              {floor.map.width}×{floor.map.height}
-            </Badge>
-          )}
-        </div>
-      ) : null}
 
       <div className="space-y-3">
         {floor.quests && floor.quests.length > 0 && (

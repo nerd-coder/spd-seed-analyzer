@@ -177,10 +177,11 @@ Analyzer leftovers: `red_sentry.png`, `demon.png`.
 
 ## Consumable sprites
 
-The analyzer UI draws item icons from `/assets/sprites/items.png`
-(`ItemIcon.tsx`, `item-icons.ts`; heap sprites in `map-entities.ts` are not
-public maps). `item_icons.png` is unused. `items.png` matches the clone
-(256×512, `ItemSpriteSheet.java:29-32`).
+The analyzer UI draws item icons from `/assets/sprites/items.png` and the
+corner marks from `item_icons.png` (`ItemBox`, `item-icons.ts`). Film crops
+are [item-sprite-rects.md](item-sprite-rects.md). Heap sprites in
+`map-entities.ts` are not public maps. Both sheets match the clone
+(`ItemSpriteSheet.java:29-32`, `822-837`).
 
 ## Visual-test snapshots
 

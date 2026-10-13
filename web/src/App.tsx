@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { AnalyzerWorkspace } from '@/components/AnalyzerWorkspace'
 import { AppSidebar } from '@/components/AppSidebar'
 import { SeedFinder } from '@/components/finder/SeedFinder'
+import { ItemDetailLayer } from '@/components/item-detail'
 import { SiteFooter } from '@/components/SiteFooter'
 import { Tabs, TabsContent } from '@/components/ui/tabs'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -41,6 +42,7 @@ export default function App() {
 
   return (
     <TooltipProvider delayDuration={200}>
+      <ItemDetailLayer />
       <Tabs
         value={mode}
         onValueChange={(value) => {

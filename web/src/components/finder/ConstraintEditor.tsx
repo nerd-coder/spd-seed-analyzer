@@ -1,10 +1,11 @@
 import { PlusIcon, TrashIcon } from '@phosphor-icons/react'
 import type { ReactNode } from 'react'
-import { ItemIcon } from '@/components/ItemIcon'
+import { ItemBox } from '@/components/ItemBox'
 import { Button } from '@/components/ui/button'
 import { Field, FieldGroup, FieldLegend, FieldSet } from '@/components/ui/field'
 import { InputGroup } from '@/components/ui/input-group'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { itemSprite } from '@/lib/item-kind'
 import { upgradeLevelClass } from '@/lib/upgrade'
 import {
   FINDER_GROUP_ORDER,
@@ -105,25 +106,15 @@ export function ConstraintEditor({
               <div className="flex items-center gap-1">
                 <InputGroup className="min-w-0 flex-1">
                   <div className="relative flex w-10 shrink-0 self-stretch items-center justify-center border-r py-0">
-                    <ItemIcon
-                      classNameItem={constraint.className ?? undefined}
-                      category={
-                        constraint.className
+                    <ItemBox
+                      scale={2}
+                      panel={false}
+                      sprites={itemSprite({
+                        className: constraint.className,
+                        category: constraint.className
                           ? undefined
-                          : toCoreCategory(uiGroup)
-                      }
-                      size={16}
-                      sourceWidth={
-                        constraint.className?.startsWith('RingOf')
-                          ? 8
-                          : undefined
-                      }
-                      sourceHeight={
-                        constraint.className?.startsWith('RingOf')
-                          ? 10
-                          : undefined
-                      }
-                      scaleSource={false}
+                          : toCoreCategory(uiGroup),
+                      })}
                       title={
                         constraint.className
                           ? itemsInGroup.find(

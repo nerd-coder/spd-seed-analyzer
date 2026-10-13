@@ -14,6 +14,7 @@
       "!!**/node_modules",
       "!bun.lock",
       "!**/web/src/wasm",
+      "!**/web/src/lib/item-catalog.json",
       "!**/web/public/assets",
       "!**/tools/java-oracle/fixtures/vault",
       "!**/*.tsbuildinfo",

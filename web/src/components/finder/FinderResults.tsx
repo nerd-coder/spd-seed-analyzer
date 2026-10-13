@@ -5,7 +5,7 @@ import {
   StopIcon,
   WarningCircleIcon,
 } from '@phosphor-icons/react'
-import { ItemIcon } from '@/components/ItemIcon'
+import { ItemBox } from '@/components/ItemBox'
 import { ItemName } from '@/components/ItemName'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -37,6 +37,7 @@ import {
 } from '@/components/ui/item'
 import { Progress } from '@/components/ui/progress'
 import { formatElapsed, useElapsedTime } from '@/hooks/useElapsedTime'
+import { itemSprite } from '@/lib/item-kind'
 import { formatItemSource, isImpVaultPool } from '@/lib/labels'
 import type { SeedSearchMatch } from '@/lib/spd-wasm'
 import type { FinderRunState } from './finder-types'
@@ -127,19 +128,12 @@ function ResultCard({
                   size="sm"
                 >
                   <ItemMedia>
-                    <ItemIcon
-                      classNameItem={evidence.className ?? undefined}
-                      category={evidence.itemGroup}
-                      size={24}
-                      sourceWidth={
-                        evidence.className?.startsWith('RingOf') ? 8 : undefined
-                      }
-                      sourceHeight={
-                        evidence.className?.startsWith('RingOf')
-                          ? 10
-                          : undefined
-                      }
-                      scaleSource={false}
+                    <ItemBox
+                      sprites={itemSprite({
+                        className: evidence.className,
+                        category: evidence.itemGroup,
+                      })}
+                      level={evidence.level}
                       title={evidence.name}
                     />
                   </ItemMedia>

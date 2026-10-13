@@ -7,6 +7,23 @@ export const ITEM_SHEET = {
   height: 512,
 } as const
 
+/** `ItemSpriteSheet.Icons` on item_icons.png (8×8 cells, 16 cols, 128×64). */
+export const ITEM_ICON_SHEET = {
+  url: '/assets/sprites/item_icons.png',
+  size: 8,
+  cols: 16,
+  width: 128,
+  height: 64,
+} as const
+
+export type SpriteSheet = {
+  url: string
+  size: number
+  cols: number
+  width: number
+  height: number
+}
+
 /** Known class_name → sheet index. Potions/scrolls/rings use appearance maps. */
 export const CLASS_ICON: Record<string, number> = {
   // Artifacts (crystal vault / random)
@@ -378,13 +395,31 @@ export function resolveItemIconIndex(
   return CATEGORY_HOLDER.other
 }
 
-/** Clipped sprite style for a frame within a 16×16 items.png atlas cell. */
+/**
+ * `ItemSpriteSheet.Icons` index for a potion, scroll, or ring.
+ * Bases are `xy(1, 6)`, `xy(1, 3)`, and `xy(1, 1)` on the 8px sheet.
+ */
+export function itemTypeIconIndex(
+  className: string | null | undefined
+): number | null {
+  if (!className) return null
+  const potion = (POTION_CLASSES as readonly string[]).indexOf(className)
+  if (potion >= 0) return 80 + potion
+  const scroll = (SCROLL_CLASSES as readonly string[]).indexOf(className)
+  if (scroll >= 0) return 32 + scroll
+  const ring = (RING_CLASSES as readonly string[]).indexOf(className)
+  if (ring >= 0) return ring
+  return null
+}
+
+/** Clipped sprite style for one atlas cell. */
 export function itemIconStyle(
   index: number,
   displayPx = 16,
   sourceWidth: number = ITEM_SHEET.size,
   sourceHeight: number = ITEM_SHEET.size,
-  scaleSource = true
+  scaleSource = true,
+  sheet: SpriteSheet = ITEM_SHEET
 ): {
   display: 'block'
   width: number
@@ -396,8 +431,8 @@ export function itemIconStyle(
   imageRendering: 'pixelated'
   flexShrink: number
 } {
-  const col = index % ITEM_SHEET.cols
-  const row = Math.floor(index / ITEM_SHEET.cols)
+  const col = index % sheet.cols
+  const row = Math.floor(index / sheet.cols)
   const scale = scaleSource
     ? displayPx / Math.max(sourceWidth, sourceHeight)
     : 1
@@ -405,10 +440,10 @@ export function itemIconStyle(
     display: 'block',
     width: sourceWidth * scale,
     height: sourceHeight * scale,
-    backgroundImage: `url(${ITEM_SHEET.url})`,
+    backgroundImage: `url(${sheet.url})`,
     backgroundRepeat: 'no-repeat',
-    backgroundSize: `${ITEM_SHEET.width * scale}px ${ITEM_SHEET.height * scale}px`,
-    backgroundPosition: `-${col * ITEM_SHEET.size * scale}px -${row * ITEM_SHEET.size * scale}px`,
+    backgroundSize: `${sheet.width * scale}px ${sheet.height * scale}px`,
+    backgroundPosition: `-${col * sheet.size * scale}px -${row * sheet.size * scale}px`,
     imageRendering: 'pixelated',
     flexShrink: 0,
   }

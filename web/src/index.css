@@ -134,3 +134,30 @@
     @apply font-sans;
   }
 }
+
+/* Dark translucent edge so gold quantity and colored upgrade text read on the slot. */
+.spd-slot-edge {
+  -webkit-text-stroke: 4px rgb(28 20 12 / 70%);
+  paint-order: stroke fill;
+}
+
+@keyframes spd-item-glow {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.spd-item-glow {
+  animation: spd-item-glow 1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spd-item-glow {
+    animation: none;
+    opacity: 0.35;
+  }
+}

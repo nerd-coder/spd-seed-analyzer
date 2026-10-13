@@ -21,19 +21,3 @@ export function itemAppearance(
   }
   return undefined
 }
-
-/** Drop "Potion of " / "Scroll of " / "Ring of " regardless of case — the tab already names the category. */
-export function shortIdentityName(
-  name: string,
-  category: 'potion' | 'scroll' | 'ring'
-): string {
-  const prefix =
-    category === 'potion'
-      ? 'Potion of '
-      : category === 'scroll'
-        ? 'Scroll of '
-        : 'Ring of '
-  return name.toLowerCase().startsWith(prefix.toLowerCase())
-    ? name.slice(prefix.length)
-    : name
-}
