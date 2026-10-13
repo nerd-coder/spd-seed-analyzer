@@ -1,8 +1,13 @@
-import { ArrowsOut, SpinnerGapIcon } from '@phosphor-icons/react'
+import {
+  ArrowsOut,
+  MapTrifoldIcon,
+  SpinnerGapIcon,
+} from '@phosphor-icons/react'
 import { useMemo, useRef } from 'react'
 
 import { FloorMapCanvas } from '@/components/FloorMapCanvas'
 import { MapStage } from '@/components/MapStage'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -43,8 +48,9 @@ function rasterScaleFor(map: FloorMap): number {
 }
 
 /**
- * Clickable map that opens a dialog for a larger view.
- * `thumbnail` stays a fixed 64×64 box; `banner` covers its parent.
+ * Map that opens a dialog for a larger view.
+ * `thumbnail` is a 64×64 button. `banner` paints across its parent; only the
+ * map icon opens the dialog.
  */
 export function FloorMapPreview({
   map,
@@ -63,49 +69,75 @@ export function FloorMapPreview({
   const contentHeight = viewport.height * TILE_PX * rasterScale
   const banner = variant === 'banner'
 
+  const loadingOverlay = loading ? (
+    <span className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/65 text-white">
+      <SpinnerGapIcon className="animate-spin" aria-hidden />
+      <span className="sr-only">Regenerating {mapLabel}</span>
+    </span>
+  ) : null
+
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            'group cursor-zoom-in overflow-hidden bg-black/80 outline-none',
-            'hover:ring-1 hover:ring-ring focus-visible:ring-2 focus-visible:ring-ring',
-            banner
-              ? 'absolute inset-0 h-full w-full'
-              : 'relative size-16 shrink-0 border',
-            className
-          )}
-          title={`${mapLabel} - click to expand`}
-          aria-label={`Expand ${mapLabel}`}
-        >
-          <span className="absolute inset-0 flex items-center justify-center">
+      {banner ? (
+        <>
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-0"
+          >
             <FloorMapCanvas
               map={map}
               identities={identities}
               scale={1}
-              maxDisplay={banner ? undefined : PREVIEW_BOX}
-              fill={banner}
+              fill
               canvasClassName="border-0"
             />
           </span>
-          <span
+          {loadingOverlay}
+          <DialogTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-lg"
+              // Dialog triggers set aria-haspopup, which skips the shared press offset.
+              className="absolute right-1.5 bottom-1.5 z-30 active:translate-y-px"
+              title={`${mapLabel} - click to expand`}
+              aria-label={`Expand ${mapLabel}`}
+            >
+              <MapTrifoldIcon className="size-6" />
+            </Button>
+          </DialogTrigger>
+        </>
+      ) : (
+        <DialogTrigger asChild>
+          <button
+            type="button"
             className={cn(
-              'pointer-events-none absolute right-1 bottom-1 flex size-5 items-center justify-center bg-black/55 text-white opacity-70 transition-opacity group-hover:opacity-100',
-              banner && 'z-30'
+              'group relative size-16 shrink-0 cursor-zoom-in overflow-hidden border bg-black/80 outline-none',
+              'hover:ring-1 hover:ring-ring focus-visible:ring-2 focus-visible:ring-ring',
+              className
             )}
-            aria-hidden
+            title={`${mapLabel} - click to expand`}
+            aria-label={`Expand ${mapLabel}`}
           >
-            <ArrowsOut size={12} />
-          </span>
-          {loading ? (
-            <span className="absolute inset-0 flex items-center justify-center bg-black/65 text-white">
-              <SpinnerGapIcon className="animate-spin" aria-hidden />
-              <span className="sr-only">Regenerating {mapLabel}</span>
+            <span className="absolute inset-0 flex items-center justify-center">
+              <FloorMapCanvas
+                map={map}
+                identities={identities}
+                scale={1}
+                maxDisplay={PREVIEW_BOX}
+                canvasClassName="border-0"
+              />
             </span>
-          ) : null}
-        </button>
-      </DialogTrigger>
+            <span
+              className="pointer-events-none absolute right-1 bottom-1 flex size-5 items-center justify-center bg-black/55 text-white opacity-70 transition-opacity group-hover:opacity-100"
+              aria-hidden
+            >
+              <ArrowsOut size={12} />
+            </span>
+            {loadingOverlay}
+          </button>
+        </DialogTrigger>
+      )}
       <DialogContent
         ref={dialogContentRef}
         className="inset-0 flex h-dvh max-h-none w-full max-w-none translate-x-0 translate-y-0 flex-col gap-3 overflow-hidden sm:top-1/2 sm:left-1/2 sm:h-[min(94vh,72rem)] sm:w-[min(96vw,80rem)] sm:max-w-[min(96vw,80rem)] sm:-translate-x-1/2 sm:-translate-y-1/2"

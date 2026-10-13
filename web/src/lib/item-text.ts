@@ -1,3 +1,4 @@
+import { gameObjectText } from '@/lib/game-object-text'
 import catalog from '@/lib/item-catalog.json'
 
 /**
@@ -16,7 +17,7 @@ export function itemGameText(
   className: string | null | undefined
 ): GameItemText | null {
   if (!className) return null
-  return TEXTS[className] ?? null
+  return gameObjectText(className) ?? TEXTS[className] ?? null
 }
 
 /** Fill a `%s` name template and capitalize the first letter. */

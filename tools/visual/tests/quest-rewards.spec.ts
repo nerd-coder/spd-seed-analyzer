@@ -291,9 +291,7 @@ async function openQuestReport(page: Page, includeBaselines: boolean) {
   ).toBeVisible()
 }
 
-test('quest cards prefer concrete baselines and keep the universal warning visible', async ({
-  page,
-}) => {
+test('quest cards prefer concrete baseline rewards', async ({ page }) => {
   const browserErrors = collectBrowserErrors(page)
   await openQuestReport(page, true)
 
@@ -308,10 +306,9 @@ test('quest cards prefer concrete baselines and keep the universal warning visib
   ).toHaveCount(0)
 
   const wandmaker = page.locator('[data-quest-type="old_wandmaker"]')
-  await expect(wandmaker).toContainText('Baseline target: Rotberry')
-  await expect(wandmaker).toContainText(
-    'Reward contract: two distinct uncursed +1…+3 wands'
-  )
+  await expect(wandmaker.getByLabel('Rotberry', { exact: true })).toBeVisible()
+  await expect(wandmaker).not.toContainText('Baseline target')
+  await expect(wandmaker).not.toContainText('Fresh/no-history baseline')
   await expect(wandmaker.getByText('Baseline rewards')).toBeVisible()
   await expect(wandmaker.getByRole('listitem')).toHaveCount(2)
   await expect(wandmaker.getByText('wand reward', { exact: true })).toHaveCount(
@@ -319,16 +316,30 @@ test('quest cards prefer concrete baselines and keep the universal warning visib
   )
   await expect(wandmaker.getByText('OR', { exact: true })).toHaveCount(0)
 
-  await page.getByRole('tab', { name: /^City/ }).click()
   const imp = page.locator('[data-quest-type="ambitious_imp"]')
-  await expect(imp).toContainText('Spawned on depth 19')
-  await expect(imp).toContainText(
-    'Reward contract: six vault take-out options; the player keeps one.'
-  )
+  await expect(imp).not.toContainText('Spawned on depth')
+  await expect(imp.getByRole('img', { name: 'Imp', exact: true })).toBeVisible()
+  await expect(imp).not.toContainText('Fresh/no-history baseline')
   await expect(imp).not.toContainText(/monk|golem|token|cursed \+2/i)
-  await expect(imp).toContainText(
-    'Keeping one of these six requires leaving with the Imp Statue'
+  await expect(imp).not.toContainText('Keeping one of these six')
+  await imp.getByRole('button', { name: 'About the Imp Statue' }).click()
+  const statue = page.getByRole('dialog').filter({ hasText: 'Imp Statue' })
+  await expect(statue).toBeVisible()
+  await expect(statue).toContainText(
+    'Keeping one of these six requires leaving with the Imp Statue: every option is +2 or better, and lower vault scores can only take out an item at +0/+1.'
   )
+  await page.keyboard.press('Escape')
+  await imp.getByRole('img', { name: 'Imp', exact: true }).click()
+  const examine = page.locator('[data-slot="item-detail"]')
+  await expect(examine).toBeVisible()
+  await expect(
+    examine.getByText('Ambitious imp', { exact: true })
+  ).toBeVisible()
+  await expect(examine).toContainText(
+    'This little red person look like an Imp. Imps are lesser demons'
+  )
+  await page.keyboard.press('Escape')
+  await expect(examine).toHaveCount(0)
   await expect(imp.getByText('Rewards', { exact: true })).toBeVisible()
   await expect(imp.getByText('artifact or ring', { exact: true })).toHaveCount(
     0
@@ -388,8 +399,13 @@ test('quest cards fall back to the universal reward entries without a baseline',
     wandmaker.getByLabel('wand reward', { exact: true })
   ).toHaveCount(2)
 
-  await page.getByRole('tab', { name: /^City/ }).click()
   const imp = page.locator('[data-quest-type="ambitious_imp"]')
+  await expect(imp.getByRole('img', { name: 'Imp', exact: true })).toBeVisible()
+  await expect(imp).not.toContainText('Spawned on depth')
+  await expect(imp).not.toContainText('Keeping one of these six')
+  await expect(
+    imp.getByRole('button', { name: 'About the Imp Statue' })
+  ).toBeVisible()
   await expect(imp.getByText('Rewards', { exact: true })).toBeVisible()
   await expect(
     imp.getByRole('button', { name: 'Per-slot reward outlook' })

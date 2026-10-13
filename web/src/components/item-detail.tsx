@@ -259,7 +259,10 @@ export function ItemDetailLayer() {
       if (layerRef.current?.contains(target)) return
       if (
         target instanceof Element &&
-        target.closest('[data-slot="item-box"]') instanceof HTMLButtonElement
+        (target.closest('[data-slot="item-box"]') instanceof
+          HTMLButtonElement ||
+          target.closest('[data-slot="game-sprite"]') instanceof
+            HTMLButtonElement)
       ) {
         return
       }

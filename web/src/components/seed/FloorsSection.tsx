@@ -1,130 +1,46 @@
-import { useStore } from '@tanstack/react-store'
-import { useCallback, useRef } from 'react'
 import { FloorDetail } from '@/components/seed/FloorDetail'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { groupFloorsByRegion } from '@/lib/regions'
-import type { FloorReport, IdentityMaps } from '@/lib/spd-wasm'
-import { cn } from '@/lib/utils'
-import { $reportNavigation, setSelectedRegion } from '@/stores/app'
-
-/** Small gap between sticky region tabs and the first floor after scroll. */
-const SCROLL_GAP_PX = 8
+import { catalystOfferClasses } from '@/components/seed/trinket-offers'
+import type {
+  FloorReport,
+  IdentityMaps,
+  TrinketSelectionReport,
+} from '@/lib/spd-wasm'
 
 export function FloorsSection({
   floors,
   identities,
+  trinketSelection,
 }: {
   floors: FloorReport[]
   identities: IdentityMaps
+  trinketSelection: TrinketSelectionReport
 }) {
-  const selectedRegion = useStore(
-    $reportNavigation,
-    (state) => state.selectedRegion
-  )
-  const groups = groupFloorsByRegion(floors)
-  const stickyBarRef = useRef<HTMLDivElement>(null)
-  const regionContentRefs = useRef(new Map<string, HTMLElement>())
-  const scrollRequestRef = useRef(0)
+  if (floors.length === 0) return null
 
-  const scrollRegionIntoView = useCallback((regionId: string) => {
-    const requestId = ++scrollRequestRef.current
+  const offerClasses = catalystOfferClasses(floors)
+  const ordered = [...floors].sort((a, b) => a.depth - b.depth)
 
-    // Stop an in-flight smooth scroll before measuring the newly selected
-    // region. Otherwise its remaining frames can move the viewport after the
-    // new region has been aligned.
-    window.scrollTo({ top: window.scrollY, behavior: 'auto' })
-
-    // Double rAF: wait for Radix to show the new TabsContent and for layout.
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (requestId !== scrollRequestRef.current) return
-
-        const content = regionContentRefs.current.get(regionId)
-        const sticky = stickyBarRef.current
-        if (!content || !sticky) return
-
-        const stickyBottom = sticky.getBoundingClientRect().bottom
-        const contentTop = content.getBoundingClientRect().top
-        const delta = contentTop - stickyBottom - SCROLL_GAP_PX
-        if (Math.abs(delta) < 1) return
-
-        window.scrollBy({ top: delta, behavior: 'smooth' })
-      })
-    })
-  }, [])
-
-  if (groups.length === 0) return null
-
-  const defaultRegion = groups[0].region.id
-  const activeRegion =
-    selectedRegion && groups.some(({ region }) => region.id === selectedRegion)
-      ? selectedRegion
-      : defaultRegion
-
-  // Not using Card: its default overflow-hidden kills position:sticky.
-  // Region tabs stick under the seed session bar (--seed-tabs-height from App).
+  // Ancestors must not set overflow:hidden, or the floor banners cannot stick.
   return (
     <section className="bg-card text-card-foreground ring-1 ring-foreground/10">
-      <div className="space-y-1 px-4 pt-4">
+      <div className="space-y-1 px-4 py-4">
         <h2 className="font-heading text-sm font-medium">Floors</h2>
         <p className="text-muted-foreground text-xs leading-relaxed">
           Items you may find on each floor.
         </p>
       </div>
 
-      <Tabs
-        value={activeRegion}
-        className="block gap-0 overflow-visible"
-        onValueChange={(regionId) => {
-          setSelectedRegion(regionId)
-          scrollRegionIntoView(regionId)
-        }}
-      >
-        <div
-          ref={stickyBarRef}
-          className={cn(
-            'sticky z-10 border-b px-4 py-2',
-            'bg-card/95 backdrop-blur supports-backdrop-filter:bg-card/90'
-          )}
-          style={{ top: 'var(--seed-tabs-height, 3rem)' }}
-        >
-          <TabsList className="h-auto w-full flex-wrap sm:w-auto">
-            {groups.map(({ region, floors: regionFloors }) => {
-              const lo = regionFloors[0].depth
-              const hi = regionFloors[regionFloors.length - 1].depth
-              return (
-                <TabsTrigger key={region.id} value={region.id}>
-                  {region.label}
-                  <span className="text-muted-foreground ml-1 hidden text-xs tabular-nums sm:inline">
-                    {lo}
-                    {hi !== lo ? `–${hi}` : ''}
-                  </span>
-                </TabsTrigger>
-              )
-            })}
-          </TabsList>
-        </div>
-
-        {groups.map(({ region, floors: regionFloors }) => (
-          <TabsContent
-            key={region.id}
-            value={region.id}
-            className="space-y-0 px-4 py-4"
-            ref={(el) => {
-              if (el) regionContentRefs.current.set(region.id, el)
-              else regionContentRefs.current.delete(region.id)
-            }}
-          >
-            {regionFloors.map((floor) => (
-              <FloorDetail
-                key={floor.depth}
-                floor={floor}
-                identities={identities}
-              />
-            ))}
-          </TabsContent>
+      <div>
+        {ordered.map((floor) => (
+          <FloorDetail
+            key={floor.depth}
+            floor={floor}
+            identities={identities}
+            trinketSelection={trinketSelection}
+            offerClasses={offerClasses}
+          />
         ))}
-      </Tabs>
+      </div>
     </section>
   )
 }

@@ -1,5 +1,12 @@
-import { depthIconFrame, uiIconStyle } from '@/lib/ui-icons'
-import { cn } from '@/lib/utils'
+import { GameSprite } from '@/components/GameSprite'
+import { feelingTextKey } from '@/lib/game-object-text'
+import { depthIconFrame, UI_ICONS } from '@/lib/ui-icons'
+
+const ICONS = {
+  url: UI_ICONS.url,
+  width: UI_ICONS.sheetW,
+  height: UI_ICONS.sheetH,
+} as const
 
 type Props = {
   /** Level feeling (`none`, `water`, …) — picks Icons.DEPTH_* frame. */
@@ -27,16 +34,17 @@ export function DepthIcon({
   title,
 }: Props) {
   const frame = depthIconFrame(feeling)
-  // Fit the longer edge to `size` so the icon stays within a size×size box.
   const scale = scaleProp ?? size / Math.max(frame.w, frame.h)
   const label = title ?? (feeling && feeling !== 'none' ? feeling : 'depth')
   return (
-    <span
-      role="img"
-      aria-label={label}
+    <GameSprite
+      sheet={ICONS}
+      frames={[frame]}
+      scale={scale}
+      label={label}
       title={feeling && feeling !== 'none' ? feeling : undefined}
-      className={cn('inline-block align-middle', className)}
-      style={uiIconStyle(frame, scale)}
+      textKey={feelingTextKey(feeling)}
+      className={className}
     />
   )
 }

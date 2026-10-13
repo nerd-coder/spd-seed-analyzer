@@ -134,19 +134,21 @@ function slotsForVariant(
   identities: IdentityMaps,
   keyPrefix: string
 ) {
+  // Catalyst offers render beside the first alchemy pot, not in this list.
+  if (item.class_name === 'TrinketCatalyst') {
+    return [
+      slotFrom(
+        item,
+        `${keyPrefix}-catalyst`,
+        describedTitle(item.name, item),
+        item.class_name,
+        identities
+      ),
+    ]
+  }
+
   if (item.candidate_classes?.length) {
     const slots: FloorItemSlotModel[] = []
-    if (item.class_name === 'TrinketCatalyst') {
-      slots.push(
-        slotFrom(
-          item,
-          `${keyPrefix}-catalyst`,
-          describedTitle(item.name, item),
-          item.class_name,
-          identities
-        )
-      )
-    }
     for (const [index, className] of item.candidate_classes.entries()) {
       slots.push(
         slotFrom(
@@ -284,7 +286,7 @@ function ItemGroupSection({
       {items.length > 0 ? (
         <FloorItemList items={items} identities={identities} depth={depth} />
       ) : empty ? (
-        <p className="text-muted-foreground text-sm">{empty}</p>
+        <p className="text-muted-foreground/75 text-sm italic">{empty}</p>
       ) : null}
     </div>
   )

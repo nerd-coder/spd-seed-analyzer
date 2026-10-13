@@ -44,6 +44,9 @@ export const STAIRS_ICONS: Record<string, IconFrame> = {
   secrets: { x: 112, y: 64, w: 15, h: 16 },
 }
 
+/** Journal notes icon (`Icons.ALCHEMY`, 16×16). */
+export const ALCHEMY_ICON: IconFrame = { x: 96, y: 48, w: 16, h: 16 }
+
 export function depthIconFrame(feeling?: string | null): IconFrame {
   const key = (feeling ?? 'none').toLowerCase()
   return DEPTH_ICONS[key] ?? DEPTH_ICONS.none
@@ -52,20 +55,4 @@ export function depthIconFrame(feeling?: string | null): IconFrame {
 export function stairsIconFrame(feeling?: string | null): IconFrame {
   const key = (feeling ?? 'none').toLowerCase()
   return STAIRS_ICONS[key] ?? STAIRS_ICONS.none
-}
-
-/** CSS background crop for a frame, scaled by `scale` (1 = native px). */
-export function uiIconStyle(frame: IconFrame, scale = 2) {
-  const dw = frame.w * scale
-  const dh = frame.h * scale
-  return {
-    width: dw,
-    height: dh,
-    backgroundImage: `url(${UI_ICONS.url})`,
-    backgroundRepeat: 'no-repeat' as const,
-    backgroundSize: `${UI_ICONS.sheetW * scale}px ${UI_ICONS.sheetH * scale}px`,
-    backgroundPosition: `-${frame.x * scale}px -${frame.y * scale}px`,
-    imageRendering: 'pixelated' as const,
-    flexShrink: 0,
-  }
 }

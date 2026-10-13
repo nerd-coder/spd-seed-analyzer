@@ -9,21 +9,6 @@ export function branchTitle(kind: BranchFloorReport['kind']) {
   }
 }
 
-export function branchAccessText(branch: BranchFloorReport) {
-  const conditions: string[] = []
-  if (branch.access.requires_acceptance) {
-    conditions.push(
-      `accept ${branch.access.quest_id.replaceAll('_', ' ')} quest`
-    )
-  }
-  if (branch.access.required_item) {
-    conditions.push(`carry ${branch.access.required_item.replaceAll('_', ' ')}`)
-  }
-  return conditions.length > 0
-    ? conditions.join(' and ')
-    : 'No additional access condition'
-}
-
 export function branchKindForQuest(
   quest: QuestReport
 ): BranchFloorReport['kind'] | null {

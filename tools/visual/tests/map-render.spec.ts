@@ -242,14 +242,6 @@ async function installSyntheticMapReport(page: Page) {
   })
 }
 
-const floorRegions = [
-  { first: 1, last: 4, name: /^Sewers/ },
-  { first: 6, last: 9, name: /^Prison/ },
-  { first: 11, last: 14, name: /^Caves/ },
-  { first: 16, last: 19, name: /^City/ },
-  { first: 21, last: 24, name: /^Halls/ },
-] as const
-
 async function openAnalyzer(
   page: Page,
   seed: string,
@@ -373,14 +365,9 @@ async function captureLevel(
   snapshot: string
 ) {
   const floor = level.depth
-  const region = floorRegions.find(
-    ({ first, last }) => floor >= first && floor <= last
-  )
-  if (!region) throw new Error(`Floor ${floor} is not in a report region`)
-
-  const regionTab = page.getByRole('tab', { name: region.name })
-  await regionTab.click()
-  await expect(regionTab).toHaveAttribute('aria-selected', 'true')
+  await page
+    .getByRole('heading', { name: `Floor ${floor}`, exact: true })
+    .scrollIntoViewIfNeeded()
 
   const mapLabel =
     level.kind === 'main'
@@ -394,11 +381,25 @@ async function captureLevel(
   if (level.kind === 'branch') {
     const questType =
       level.objective === 'Vault' ? 'ambitious_imp' : 'troll_blacksmith'
+    const questName =
+      level.objective === 'Vault' ? 'Ambitious Imp' : 'Troll Blacksmith'
     const questCard = page.locator(`[data-quest-type="${questType}"]`)
-    await expect(questCard).toContainText(`Objective: ${level.objective}`)
-    await expect(questCard).toContainText(
-      `Floor ${floor}, branch ${level.branch}`
-    )
+    await expect(
+      questCard.getByRole('heading', { name: questName, exact: true })
+    ).toBeVisible()
+    await expect(questCard).not.toContainText('Objective:')
+    await expect(questCard).not.toContainText('Access:')
+    if (level.objective === 'Crystal' || level.objective === 'Gnoll') {
+      await expect(
+        questCard.getByRole('img', { name: level.objective, exact: true })
+      ).toBeVisible()
+    }
+    if (level.objective === 'Vault') {
+      await expect(
+        questCard.getByRole('img', { name: 'Imp', exact: true })
+      ).toBeVisible()
+      await expect(questCard).not.toContainText('Spawned on depth')
+    }
   }
 
   await page
@@ -585,17 +586,45 @@ test('desktop maps use a large dialog', async ({ page }) => {
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
-test('alchemy pots render as guaranteed non-loot appearances', async ({
-  page,
-}) => {
+test('alchemy pots render in the floor banner', async ({ page }) => {
   await installSyntheticMapReport(page)
   const browserErrors = await openAnalyzer(page, GENERIC_MAP_SEED)
 
+  const floor3 = page
+    .locator('section')
+    .filter({
+      has: page.getByRole('heading', { name: 'Floor 3', exact: true }),
+    })
+    .last()
   await expect(
-    page.getByText('Guaranteed appearances', { exact: false })
+    floor3.getByRole('img', { name: 'Alchemy pot, Laboratory' })
   ).toBeVisible()
-  await expect(page.getByText('Alchemy pot', { exact: true })).toBeVisible()
-  await expect(page.getByText('Laboratory', { exact: true })).toBeVisible()
+  await expect(page.getByText('Guaranteed appearances')).toHaveCount(0)
+  await expect(page.getByText('Alchemy pot', { exact: true })).toHaveCount(0)
+  await expect(
+    page
+      .locator('section')
+      .filter({
+        has: page.getByRole('heading', { name: 'Floor 4', exact: true }),
+      })
+      .last()
+      .getByRole('img', { name: /Alchemy pot/ })
+  ).toHaveCount(0)
+
+  const pot = floor3.getByRole('img', { name: 'Alchemy pot, Laboratory' })
+  await pot.hover()
+  const detail = page.locator('[data-slot="item-detail"]')
+  await expect(detail).toContainText('Alchemy pot')
+  await expect(detail).toContainText(
+    'This pot is filled with magical water. Items can be mixed into the pot to create something new!'
+  )
+  await floor3.getByRole('heading', { name: 'Floor 3', exact: true }).hover()
+  await expect(detail).toHaveCount(0)
+  await pot.click()
+  await floor3.getByRole('heading', { name: 'Floor 3', exact: true }).hover()
+  await expect(detail).toContainText('magical water')
+  await page.keyboard.press('Escape')
+  await expect(detail).toHaveCount(0)
 
   expect(browserErrors.console, 'browser console errors').toEqual([])
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
@@ -635,7 +664,14 @@ test('Sad Ghost card shows only its resolved target', async ({ page }) => {
     page.getByRole('alert').filter({ hasText: 'Other Ghost options' })
   ).toHaveCount(0)
   await expect(
-    page.getByText(/^Target: (Fetid Rat|Gnoll Trickster|Great Crab)$/)
+    page.getByRole('img', {
+      name: /^(Fetid Rat|Gnoll Trickster|Great Crab)$/,
+    })
+  ).toBeVisible()
+  await expect(page.getByText(/^Target:/)).toHaveCount(0)
+
+  await expect(
+    page.getByRole('img', { name: /^(Crystal|Gnoll)$/ })
   ).toBeVisible()
   await expect(
     page.getByText('target follows spawn floor', { exact: false })
@@ -649,9 +685,17 @@ test('Wandmaker outlook shows the fresh pair inside the deck window', async ({
   page,
 }) => {
   const browserErrors = await openAnalyzer(page, 'AAA-AAA-AAA')
-  await page.getByRole('tab', { name: /^Prison/ }).click()
   const card = page.locator('[data-quest-type="old_wandmaker"]')
   await expect(card).toBeVisible()
+  const questItem = card.getByLabel(/^(Corpse Dust|Elemental Embers|Rotberry)$/)
+  await expect(questItem).toBeVisible()
+  await questItem.hover()
+  const examine = page.locator('[data-slot="item-detail"]')
+  await expect(examine).toContainText(
+    /malevolent energy|thermal energy|sweet, sweet death/
+  )
+  await page.keyboard.press('Escape')
+  await expect(examine).toHaveCount(0)
   await card.getByRole('button', { name: 'Wand reward outlook' }).click()
   await expect(page.getByText('The player keeps one.')).toBeVisible()
   await expect(
@@ -808,6 +852,10 @@ test('floor items render as icon slots', async ({ page }) => {
   await expect(page.getByRole('switch', { name: 'Identities' })).toHaveCount(0)
   await expect(page.getByRole('switch', { name: 'Floor maps' })).toHaveCount(0)
   await expect(page.getByRole('heading', { name: 'Identities' })).toBeVisible()
+  await expect(page.getByRole('tab', { name: 'Potions' })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Potions' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Scrolls' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Rings' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Floor 1' })).toBeVisible()
   const syntheticItem = page.getByRole('listitem').filter({
     has: page.getByLabel(/Synthetic conditional item/i),
@@ -830,7 +878,27 @@ test('floor items render as icon slots', async ({ page }) => {
   await expect(
     page.getByLabel('Trinket Catalyst', { exact: true })
   ).toBeVisible()
-  await expect(page.getByLabel('Mossy Clump', { exact: true })).toBeVisible()
+  const floor3 = page
+    .getByRole('heading', { name: 'Floor 3', exact: true })
+    .locator('xpath=ancestor::section[1]')
+  const floor4 = page
+    .getByRole('heading', { name: 'Floor 4', exact: true })
+    .locator('xpath=ancestor::section[1]')
+  const mossy = floor3.getByLabel('Mossy Clump', { exact: true })
+  await expect(mossy).toBeVisible()
+  await expect(mossy).toHaveCSS('width', '25px')
+  await expect(floor3.getByLabel('Mimic Tooth', { exact: true })).toBeVisible()
+  await expect(floor4.getByLabel('Mossy Clump', { exact: true })).toHaveCount(0)
+  await mossy.click()
+  const offerDetail = page.locator('[data-slot="item-detail"]')
+  await expect(offerDetail).toContainText('Catalyst choice 1 of 4.')
+  await expect(offerDetail).toContainText('Transmutation order')
+  const order = offerDetail.locator('[data-slot="item-box"]')
+  await expect(order).toHaveCount(13)
+  await expect(order.first()).toHaveAttribute('aria-label', 'Trap Mechanism')
+  await expect(order.nth(1)).toHaveAttribute('aria-label', 'Parchment Scrap')
+  await page.keyboard.press('Escape')
+  await expect(offerDetail).toHaveCount(0)
   const sickle = page.getByRole('listitem').filter({
     has: page.getByLabel(/friendly sickle \+2/i),
   })
@@ -839,9 +907,29 @@ test('floor items render as icon slots', async ({ page }) => {
   await expect(page.getByLabel(/weapon reward/i)).toBeVisible()
   await expect(page.getByText('Guaranteed spawns')).toHaveCount(0)
   await expect(page.getByText('Floor loot')).toHaveCount(0)
-  await expect(page.getByText('No notable items on this floor.')).toHaveCount(3)
+  const emptyNotable = page.getByText('No notable items on this floor.')
+  await expect(emptyNotable).toHaveCount(3)
+  await expect(emptyNotable.first()).toHaveCSS('font-style', 'italic')
   await expect(page.getByText(/^Other items/)).toBeVisible()
   await expect(page.getByText('Fresh baseline', { exact: true })).toHaveCount(0)
+  const floor1Banner = page
+    .getByRole('heading', { name: 'Floor 1', exact: true })
+    .locator('xpath=ancestor::section[1]')
+    .locator('> div')
+    .first()
+  const floor1Box = await floor1Banner.boundingBox()
+  expect(floor1Box?.height ?? 0).toBeLessThan(64)
+  await expect(
+    page.getByRole('heading', { name: 'Floor 1', exact: true })
+  ).toHaveCSS('color', 'rgb(255, 255, 255)')
+  await expect(
+    page.getByRole('heading', { name: 'Floor 1', exact: true })
+  ).toHaveCSS('font-weight', '700')
+  await expect(
+    page.getByRole('heading', { name: 'Floor 1', exact: true })
+  ).toHaveCSS('-webkit-text-stroke-width', '4px')
+  await floor4.getByRole('heading', { name: 'Floor 4', exact: true }).click()
+  await expect(page.getByRole('dialog')).toHaveCount(0)
   await expect(
     page.getByRole('button', { name: 'Expand floor 4 map' })
   ).toHaveCount(1)

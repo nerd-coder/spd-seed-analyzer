@@ -141,6 +141,12 @@
   paint-order: stroke fill;
 }
 
+/* Floor banner heading: white fill, 4px black translucent outline. */
+.spd-floor-label {
+  -webkit-text-stroke: 4px rgb(0 0 0 / 70%);
+  paint-order: stroke fill;
+}
+
 @keyframes spd-item-glow {
   0%,
   100% {

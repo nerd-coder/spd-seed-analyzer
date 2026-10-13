@@ -64,6 +64,11 @@ type ItemBoxProps = {
   scale?: number
   title?: string
   /**
+   * Item-window class when the sprite itself has no class name.
+   * Used for quest items drawn by sprite index, such as corpse dust.
+   */
+  textKey?: string
+  /**
    * Analyzer notes, shown under the game description.
    * Omit to hide that section.
    */
@@ -287,7 +292,7 @@ function ItemFrame({
         ))}
       </span>
       {corner ? (
-        <span className="pointer-events-none absolute top-0 right-0">
+        <span className="pointer-events-none absolute top-0.5 right-0.5">
           <ItemGlyph spec={corner} scale={scale} />
         </span>
       ) : null}
@@ -305,7 +310,7 @@ function ItemFrame({
         </span>
       ) : null}
       {hasCaption ? (
-        <span className="pointer-events-none absolute inset-x-0 bottom-0 truncate bg-black/60 px-1 py-0.5 text-center font-sans text-[12px] leading-none font-normal tracking-normal text-white capitalize">
+        <span className="pointer-events-none absolute inset-x-0 bottom-0 truncate bg-black/60 px-1 py-0.5 text-center font-sans text-[11px] leading-none font-normal tracking-normal text-white capitalize">
           {caption}
         </span>
       ) : null}
@@ -344,12 +349,13 @@ export function ItemBox({
   enhancement,
   cursed = false,
   level,
-  border = true,
-  bg = true,
+  border = false,
+  bg = false,
   bgColor,
   caption,
   scale = 2,
   title,
+  textKey,
   details,
   panel = true,
   className,
@@ -371,7 +377,7 @@ export function ItemBox({
   const classNameForText = subjectClass(mains)
   const detail = {
     title,
-    className: classNameForText,
+    className: textKey ?? classNameForText,
     enhancement,
     details,
   }
@@ -385,7 +391,7 @@ export function ItemBox({
       ref={anchorRef}
       interactive={interactive}
       size={size}
-      bg={bg}
+      bg={bg || cursed}
       bgColor={bgColor}
       border={border}
       borderColor={coloredBorder ?? FRAME}
