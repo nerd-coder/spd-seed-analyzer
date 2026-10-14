@@ -1,4 +1,4 @@
-import { InfoIcon } from 'lucide-react'
+import { InfoIcon } from '@phosphor-icons/react'
 import { finderItemLabel } from '@/components/finder/finder-items'
 import { ItemBox } from '@/components/ItemBox'
 import { Badge } from '@/components/ui/badge'
@@ -57,11 +57,9 @@ function SlotRow({
   return (
     <li className="flex flex-col gap-1 border-t pt-2 first:border-t-0 first:pt-0">
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-        <span className="text-xs font-medium tracking-wide uppercase">
-          {ROLE_LABEL[slot.role]}
-        </span>
+        <span className="text-sm font-semibold">{ROLE_LABEL[slot.role]}</span>
         <span
-          className="font-mono text-sm font-medium tabular-nums"
+          className="text-sm font-semibold tabular-nums"
           title={
             upgradesPinned
               ? `Pinned by the seed. Rolled from ${levelText(slot.level_rule)}.`
@@ -70,7 +68,7 @@ function SlotRow({
         >
           {upgrade}
         </span>
-        <span className="font-mono text-xs text-muted-foreground tabular-nums">
+        <span className="text-xs text-muted-foreground tabular-nums">
           of {levelText(slot.level_rule)}
         </span>
         {slot.baseline_enchantment ? (
@@ -91,7 +89,7 @@ function SlotRow({
             title={finderItemLabel(fixed)}
           />
           <span className="text-sm">{finderItemLabel(fixed)}</span>
-          <span className="font-mono text-xs text-muted-foreground tabular-nums">
+          <span className="text-xs text-muted-foreground tabular-nums">
             100%
           </span>
         </div>
@@ -130,7 +128,7 @@ function SlotRow({
                   </span>
                   <Progress value={share} className="h-1" />
                 </span>
-                <span className="flex items-baseline gap-1.5 font-mono text-xs tabular-nums">
+                <span className="flex items-baseline gap-1.5 text-xs tabular-nums">
                   <span>{share.toFixed(0)}%</span>
                   <span className="text-muted-foreground">
                     {driftText(candidate.drifts)}

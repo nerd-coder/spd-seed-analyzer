@@ -1,4 +1,4 @@
-import { InfoIcon } from 'lucide-react'
+import { InfoIcon } from '@phosphor-icons/react'
 import { finderItemLabel } from '@/components/finder/finder-items'
 import { ItemBox } from '@/components/ItemBox'
 import { Badge } from '@/components/ui/badge'
@@ -30,10 +30,8 @@ function SlotRow({ slot }: { slot: WandmakerRewardSlot }) {
   return (
     <li className="flex flex-col gap-1 border-t pt-2 first:border-t-0 first:pt-0">
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-        <span className="text-xs font-medium tracking-wide uppercase">
-          {label}
-        </span>
-        <span className="font-mono text-sm font-medium tabular-nums">
+        <span className="text-sm font-semibold">{label}</span>
+        <span className="text-sm font-semibold tabular-nums">
           +{slot.baseline_level}
         </span>
       </div>
@@ -73,7 +71,7 @@ function SlotRow({ slot }: { slot: WandmakerRewardSlot }) {
                 </span>
                 <Progress value={share} className="h-1" />
               </span>
-              <span className="flex items-baseline gap-1.5 font-mono text-xs tabular-nums">
+              <span className="flex items-baseline gap-1.5 text-xs tabular-nums">
                 <span>{share.toFixed(0)}%</span>
                 <span className="text-muted-foreground">
                   {driftText(candidate.drifts)}

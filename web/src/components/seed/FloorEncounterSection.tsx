@@ -88,13 +88,13 @@ export function FloorEncounterSection({
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex flex-col gap-0.5">
-        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-          Initial encounters
-          <span className="ml-1.5 font-mono font-normal tabular-nums normal-case">
-            ({entityCount})
+        <p className="text-sm font-semibold">
+          Initial encounters{' '}
+          <span className="text-muted-foreground ml-1 font-normal tabular-nums">
+            {entityCount}
           </span>
         </p>
-        <p className="text-muted-foreground text-xs">
+        <p className="text-muted-foreground text-sm">
           Generated with this floor. Runtime summons and bonus drops are not
           predicted.
         </p>
@@ -109,7 +109,7 @@ export function FloorEncounterSection({
               <ItemTitle className="flex-wrap">
                 <ItemName name={encounter.name} />
                 {encounter.quantity > 1 ? (
-                  <span className="font-mono text-muted-foreground tabular-nums">
+                  <span className="text-muted-foreground tabular-nums">
                     x{encounter.quantity}
                   </span>
                 ) : null}

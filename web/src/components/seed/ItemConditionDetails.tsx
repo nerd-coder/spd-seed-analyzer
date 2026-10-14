@@ -1,4 +1,4 @@
-import { ListFilterIcon, SparklesIcon } from 'lucide-react'
+import { FunnelSimpleIcon, SparkleIcon } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -111,7 +111,7 @@ export function SpawnConditionDetails({
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline" size="xs">
-          <ListFilterIcon data-icon="inline-start" />
+          <FunnelSimpleIcon data-icon="inline-start" />
           {spawnSummary(conditions)}
         </Button>
       </PopoverTrigger>
@@ -153,7 +153,7 @@ export function UpgradeConditionDetails({
           size="icon-xs"
           aria-label="Show upgrade conditions"
         >
-          <SparklesIcon />
+          <SparkleIcon />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80">
@@ -197,7 +197,7 @@ export function EnchantmentConditionDetails({
           size="icon-xs"
           aria-label="Show enchantment conditions"
         >
-          <SparklesIcon />
+          <SparkleIcon />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80">

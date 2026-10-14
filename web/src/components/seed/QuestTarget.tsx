@@ -1,4 +1,4 @@
-import { InfoIcon } from 'lucide-react'
+import { InfoIcon } from '@phosphor-icons/react'
 import {
   filmFrames,
   GameSprite,
