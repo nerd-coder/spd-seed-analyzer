@@ -219,18 +219,21 @@ details or the finder. The report itself uses bands and rules, not cards.
 | Scroll of Upgrade | ScrollOfUpgrade, deck index 3 | Use the game's names |
 | Notable 2 | NOTABLE (2) | Sentence case; plain counts |
 
-## Adopting in the web app
+## In the web app
 
-1. Add `@spd-seed-analyzer/design` and the two Atkinson font packages to
-   `web`, then replace the theme block in `web/src/index.css` with
-   `@import "@spd-seed-analyzer/design/theme.css";` after the Tailwind,
-   `tw-animate-css` and `shadcn/tailwind.css` imports. The import brings the
-   fonts, `@custom-variant dark`, tokens, base layer and utilities.
-2. Replace `web/src/lib/utils.ts` with this package's `cn()` so `text-px-*`
-   survives merging.
-3. Copy components from `src/components/ui/` over their `web` counterparts.
-   APIs match the `radix-lyra` originals; only classes and added variants
-   differ.
-4. Port `ItemSlot`, `FloorBanner` and `DescentRail` styling onto the app's
-   data-driven components rather than copying the preview's sample-data
-   versions.
+- `web/src/index.css` imports `@spd-seed-analyzer/design/theme.css` after
+  Tailwind, `tw-animate-css` and `shadcn/tailwind.css`; the import brings the
+  fonts, `@custom-variant dark`, tokens, base layer and utilities. Tokens are
+  single-sourced here.
+- The shadcn components are copies: `web/src/components/ui/` owns the app's
+  set (plus the app-only `item` and `combobox`), and `src/components/ui/`
+  here mirrors the shared ones for the preview. Change a shared component in
+  both places. `cn()` is identical in both `lib/utils.ts` files.
+- The game pieces are the app's own data-driven components, styled to this
+  spec: `ItemBox` (item slot), `seed/FloorBanner`, and `seed/DescentRail`.
+  In the app the descent rail is a compact sticky strip under the seed tabs:
+  region names move into each floor's tooltip, clicking a floor scrolls to
+  it, and the floor being read is outlined. Floor banners stick beneath it
+  via `--descent-rail-height`.
+- Floor banners draw `web/public/assets/environment/strip_<tileset>.png`,
+  picked by the map's own tileset so mine branches show their tiles.
