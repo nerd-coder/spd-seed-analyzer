@@ -1,4 +1,4 @@
-import { CircleQuestionMark, InfoIcon } from 'lucide-react'
+import { InfoIcon, QuestionIcon } from '@phosphor-icons/react'
 import { finderItemLabel } from '@/components/finder/finder-items'
 import { ItemBox } from '@/components/ItemBox'
 import { Button } from '@/components/ui/button'
@@ -24,7 +24,8 @@ import type {
   ItemVariant,
 } from '@/lib/spd-wasm'
 
-const CURSED_SLOT_BACKGROUND = 'rgba(150, 64, 58, 0.75)'
+const CURSED_SLOT_BACKGROUND =
+  'color-mix(in oklch, var(--degraded) 22%, var(--muted))'
 
 function splitNotableItems(items: ItemGroup[]) {
   const notable: ItemGroup[] = []
@@ -211,13 +212,14 @@ function FloorItemSlot({ slot }: { slot: FloorItemSlotModel }) {
         bgColor={slot.cursed ? CURSED_SLOT_BACKGROUND : undefined}
       >
         {slot.unknown ? (
-          <CircleQuestionMark
+          <QuestionIcon
             aria-hidden
-            className="pointer-events-none absolute inset-0 m-auto size-8 text-neutral-900 dark:text-white"
+            weight="bold"
+            className="text-foreground pointer-events-none absolute inset-0 m-auto size-7"
           />
         ) : null}
         {slot.quantity > 1 ? (
-          <span className="spd-slot-edge pointer-events-none absolute top-1 left-1 font-sans text-[12px] leading-none font-bold tracking-normal text-[#f0c040]">
+          <span className="ink-outline font-pixel text-px-1 pointer-events-none absolute -top-0.5 left-0.5 leading-[20px] text-[#f0c040]">
             {slot.quantity}
           </span>
         ) : null}
@@ -246,7 +248,7 @@ export function FloorItemList({
   )
 
   return (
-    <ul className="flex flex-wrap gap-[2px]">
+    <ul className="flex flex-wrap gap-1">
       {slots.map((slot) => (
         <FloorItemSlot key={slot.key} slot={slot} />
       ))}

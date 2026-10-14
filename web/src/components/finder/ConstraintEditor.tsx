@@ -109,6 +109,8 @@ export function ConstraintEditor({
                     <ItemBox
                       scale={2}
                       panel={false}
+                      border={false}
+                      bg={false}
                       sprites={itemSprite({
                         className: constraint.className,
                         category: constraint.className

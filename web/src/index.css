@@ -3,12 +3,6 @@
 @import "shadcn/tailwind.css";
 @import "@spd-seed-analyzer/design/theme.css";
 
-/* Dark translucent edge so gold quantity and colored upgrade text read on the slot. */
-.spd-slot-edge {
-  -webkit-text-stroke: 4px rgb(28 20 12 / 70%);
-  paint-order: stroke fill;
-}
-
 @keyframes spd-item-glow {
   0%,
   100% {

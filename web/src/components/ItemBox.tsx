@@ -39,8 +39,6 @@ import { cn } from '@/lib/utils'
 const CELL = 17
 /** Extra pixels on each side so the frame sits off the sprite. */
 const PAD = 4
-/** `ScrollingGridPane.GridItem` background, ARGB `0x9953564D`. Dark mode only. */
-const FRAME = 'rgba(12, 11, 10, 0.85)'
 
 type ItemBoxProps = {
   sprites?: ItemSpriteSpec | ItemSpriteSpec[]
@@ -52,7 +50,7 @@ type ItemBoxProps = {
   cursed?: boolean
   /** Upgrade or degrade. Draws a colored `+N` chip. `0` draws nothing. */
   level?: number | null
-  /** Draw the slot frame. Default true. */
+  /** Draw the slot frame. Default true; off when the slot sits inside a control. */
   border?: boolean
   /** Fill the slot. Default true. */
   bg?: boolean
@@ -216,7 +214,8 @@ type ItemFrameProps = {
   bg: boolean
   bgColor?: string
   border?: boolean
-  borderColor: string
+  /** Enchantment or curse frame; the theme border otherwise. */
+  borderColor: string | null
   borderWidth: number
   label: string
   title?: string
@@ -262,8 +261,10 @@ function ItemFrame({
     'aria-label': label,
     'data-slot': 'item-box',
     className: cn(
-      'relative inline-block shrink-0 border-0 align-middle font-sans',
-      bg && !bgColor && 'bg-[#d8d9ce] dark:bg-[rgba(83,86,77,0.6)]',
+      'relative inline-block shrink-0 align-middle font-sans',
+      border ? 'border border-border' : 'border-0',
+      bg && 'inset-shadow-recessed',
+      bg && !bgColor && 'bg-muted',
       interactive &&
         'cursor-pointer p-0 text-left font-inherit select-none focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring',
       className
@@ -272,9 +273,8 @@ function ItemFrame({
       width: size,
       height: size,
       background: !bg ? 'transparent' : bgColor,
-      boxShadow: border
-        ? `inset 0 0 0 ${borderWidth}px ${borderColor}`
-        : undefined,
+      borderColor: border ? (borderColor ?? undefined) : undefined,
+      borderWidth: border && borderColor ? borderWidth : undefined,
     },
     onPointerEnter,
     onPointerLeave,
@@ -298,11 +298,14 @@ function ItemFrame({
       ) : null}
       {children}
       {showLevel ? (
+        // `dark` scopes the bright tier values: like the game, labels on art
+        // are outlined in black in both themes.
         <span
           data-upgrade={level}
           className={cn(
-            'spd-slot-edge pointer-events-none absolute right-1 font-sans text-[12px] leading-none font-bold tracking-normal',
-            hasCaption ? 'bottom-5' : 'bottom-1',
+            'dark ink-outline pointer-events-none absolute right-0.5 leading-[20px]',
+            scale >= 2 ? 'font-pixel text-px-1' : 'font-sans text-xs font-bold',
+            hasCaption ? 'bottom-4' : '-bottom-0.5',
             upgradeLevelColorClass(level)
           )}
         >
@@ -349,8 +352,8 @@ export function ItemBox({
   enhancement,
   cursed = false,
   level,
-  border = false,
-  bg = false,
+  border = true,
+  bg = true,
   bgColor,
   caption,
   scale = 2,
@@ -394,7 +397,7 @@ export function ItemBox({
       bg={bg || cursed}
       bgColor={bgColor}
       border={border}
-      borderColor={coloredBorder ?? FRAME}
+      borderColor={coloredBorder}
       borderWidth={coloredBorder ? 2 : 1}
       label={label}
       title={interactive ? undefined : title}
