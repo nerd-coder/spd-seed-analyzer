@@ -1,0 +1,251 @@
+/*
+ * SPD Seed Analyzer design tokens for shadcn/ui on Tailwind CSS v4.
+ *
+ * Import after `tailwindcss`, `tw-animate-css` and `shadcn/tailwind.css`.
+ * Rules and rationale live in brand/design/DESIGN.md.
+ */
+@import "@fontsource-variable/atkinson-hyperlegible-next";
+@import "@fontsource-variable/atkinson-hyperlegible-mono";
+
+/* The game's own pixel font (Apache-2.0, Watabou / Shattered Pixel). */
+@font-face {
+  font-family: "SPD Pixel";
+  src: url("./fonts/pixel_font.ttf") format("truetype");
+  font-display: swap;
+}
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Static scales.
+ * The pixel font draws on a 100-unit grid in a 2048-unit em, so one font
+ * pixel is 2048/100 = 20.48px per step. Only these sizes render crisp.
+ * Line heights are 24 font pixels (the font's ascent + descent) or 20 for
+ * tight display lines, so the baseline also lands on a whole pixel.
+ */
+@theme {
+  --text-px-1: 20.48px;
+  --text-px-1--line-height: 24px;
+  --text-px-2: 40.96px;
+  --text-px-2--line-height: 48px;
+  --text-px-3: 61.44px;
+  --text-px-3--line-height: 60px;
+  --text-px-4: 81.92px;
+  --text-px-4--line-height: 80px;
+}
+
+@theme inline {
+  --font-sans: "Atkinson Hyperlegible Next Variable", system-ui, sans-serif;
+  --font-mono: "Atkinson Hyperlegible Mono Variable", ui-monospace, monospace;
+  --font-pixel: "SPD Pixel", "Atkinson Hyperlegible Mono Variable", monospace;
+  --font-heading: var(--font-pixel);
+
+  /* Pixel surfaces (slots, sprites, maps) stay square; see DESIGN.md. */
+  --radius-sm: calc(var(--radius) - 1px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 1px);
+  --radius-xl: calc(var(--radius) + 3px);
+
+  /* Carved stone edges, after the game's window and button chrome. */
+  --inset-shadow-raised:
+    inset 0 1px 0 var(--bevel-light), inset 0 -2px 0 var(--bevel-dark);
+  --inset-shadow-pressed: inset 0 2px 0 var(--bevel-dark);
+  --inset-shadow-recessed:
+    inset 0 2px 0 var(--bevel-dark), inset 0 -1px 0 var(--bevel-light);
+  --shadow-window: 0 4px 0 0 var(--window-drop);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-tier-1: var(--tier-1);
+  --color-tier-2: var(--tier-2);
+  --color-tier-3: var(--tier-3);
+  --color-tier-4: var(--tier-4);
+  --color-degraded: var(--degraded);
+
+  --color-sewers: var(--region-sewers);
+  --color-prison: var(--region-prison);
+  --color-caves: var(--region-caves);
+  --color-city: var(--region-city);
+  --color-halls: var(--region-halls);
+  --color-region-foreground: var(--region-foreground);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/*
+ * Regions are information, not decoration: each marks a band of floors and
+ * stays the same in both themes. Text on a region fill uses
+ * --region-foreground (pitch), at least 5.3:1 on every fill.
+ */
+:root {
+  --radius: 3px;
+
+  --region-sewers: oklch(0.72 0.09 128);
+  --region-prison: oklch(0.74 0.12 66);
+  --region-caves: oklch(0.7 0.07 245);
+  --region-city: oklch(0.68 0.08 340);
+  --region-halls: oklch(0.64 0.15 30);
+  --region-foreground: oklch(0.17 0.006 95);
+
+  --chart-1: var(--region-sewers);
+  --chart-2: var(--region-prison);
+  --chart-3: var(--region-caves);
+  --chart-4: var(--region-city);
+  --chart-5: var(--region-halls);
+}
+
+/* Limestone: daylight on the sewer walls. */
+:root {
+  --background: oklch(0.915 0.009 100);
+  --foreground: oklch(0.21 0.008 95);
+  --card: oklch(0.958 0.006 100);
+  --card-foreground: oklch(0.21 0.008 95);
+  --popover: oklch(0.975 0.004 100);
+  --popover-foreground: oklch(0.21 0.008 95);
+  --primary: oklch(0.48 0.1 78);
+  --primary-foreground: oklch(0.975 0.004 100);
+  --secondary: oklch(0.87 0.012 100);
+  --secondary-foreground: oklch(0.21 0.008 95);
+  --muted: oklch(0.885 0.01 100);
+  --muted-foreground: oklch(0.47 0.012 100);
+  --accent: oklch(0.88 0.035 88);
+  --accent-foreground: oklch(0.21 0.008 95);
+  --destructive: oklch(0.52 0.19 27);
+  --warning: oklch(0.5 0.13 55);
+  --info: oklch(0.5 0.1 245);
+  --border: oklch(0.8 0.012 100);
+  --input: oklch(0.6 0.012 100);
+  --ring: oklch(0.6 0.13 82);
+
+  --tier-1: oklch(0.47 0.13 145);
+  --tier-2: oklch(0.5 0.12 250);
+  --tier-3: oklch(0.5 0.16 300);
+  --tier-4: oklch(0.49 0.1 80);
+  --degraded: oklch(0.52 0.19 27);
+
+  --bevel-light: oklch(1 0 0 / 0.75);
+  --bevel-dark: oklch(0.21 0.008 95 / 0.18);
+  --window-drop: oklch(0.21 0.008 95 / 0.16);
+
+  --sidebar: oklch(0.935 0.008 100);
+  --sidebar-foreground: oklch(0.21 0.008 95);
+  --sidebar-primary: oklch(0.48 0.1 78);
+  --sidebar-primary-foreground: oklch(0.975 0.004 100);
+  --sidebar-accent: oklch(0.87 0.012 100);
+  --sidebar-accent-foreground: oklch(0.21 0.008 95);
+  --sidebar-border: oklch(0.8 0.012 100);
+  --sidebar-ring: oklch(0.6 0.13 82);
+}
+
+/* Torchlit: the dungeon at depth, lit by the window-title yellow. */
+.dark {
+  --background: oklch(0.19 0.006 95);
+  --foreground: oklch(0.92 0.012 100);
+  --card: oklch(0.225 0.007 95);
+  --card-foreground: oklch(0.92 0.012 100);
+  --popover: oklch(0.25 0.008 95);
+  --popover-foreground: oklch(0.92 0.012 100);
+  --primary: oklch(0.84 0.13 92);
+  --primary-foreground: oklch(0.19 0.006 95);
+  --secondary: oklch(0.29 0.009 100);
+  --secondary-foreground: oklch(0.92 0.012 100);
+  --muted: oklch(0.26 0.008 98);
+  --muted-foreground: oklch(0.71 0.012 100);
+  --accent: oklch(0.31 0.03 90);
+  --accent-foreground: oklch(0.92 0.012 100);
+  --destructive: oklch(0.68 0.18 27);
+  --warning: oklch(0.76 0.14 60);
+  --info: oklch(0.74 0.09 240);
+  --border: oklch(0.33 0.009 100);
+  --input: oklch(0.53 0.01 100);
+  --ring: oklch(0.84 0.13 92);
+
+  --tier-1: oklch(0.8 0.17 145);
+  --tier-2: oklch(0.76 0.12 240);
+  --tier-3: oklch(0.74 0.14 300);
+  --tier-4: oklch(0.85 0.14 92);
+  --degraded: oklch(0.7 0.17 25);
+
+  --bevel-light: oklch(1 0 0 / 0.12);
+  --bevel-dark: oklch(0 0 0 / 0.45);
+  --window-drop: oklch(0 0 0 / 0.5);
+
+  --sidebar: oklch(0.205 0.007 95);
+  --sidebar-foreground: oklch(0.92 0.012 100);
+  --sidebar-primary: oklch(0.84 0.13 92);
+  --sidebar-primary-foreground: oklch(0.19 0.006 95);
+  --sidebar-accent: oklch(0.29 0.009 100);
+  --sidebar-accent-foreground: oklch(0.92 0.012 100);
+  --sidebar-border: oklch(0.33 0.009 100);
+  --sidebar-ring: oklch(0.84 0.13 92);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply min-h-svh bg-background text-base text-foreground antialiased;
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--primary) 35%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      /* biome-ignore-start lint/complexity/noImportantStyles: reduced motion has to beat component animation utilities */
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      /* biome-ignore-end lint/complexity/noImportantStyles: reduced motion has to beat component animation utilities */
+    }
+  }
+}
+
+/* Sprites and tile art scale by whole numbers, never smoothed. */
+@utility pixelated {
+  image-rendering: pixelated;
+}
+
+/* The game's outlined label: light fill, dark translucent stroke behind it. */
+@utility ink-outline {
+  -webkit-text-stroke: 4px oklch(0.17 0.006 95 / 0.75);
+  paint-order: stroke fill;
+}

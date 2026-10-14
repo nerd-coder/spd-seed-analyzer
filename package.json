@@ -7,6 +7,7 @@
   "packageManager": "bun@1.3.14",
   "workspaces": [
     "web",
+    "brand/design",
     "tools/visual"
   ],
   "scripts": {
@@ -15,6 +16,8 @@
     "build": "bun run build:wasm && bun run --filter spd-seed-analyzer-web build",
     "deploy": "bun run build && bun run --filter spd-seed-analyzer-web deploy",
     "preview": "bun run --filter spd-seed-analyzer-web preview",
+    "design": "bun run --filter @spd-seed-analyzer/design dev",
+    "build:design": "bun run --filter @spd-seed-analyzer/design build",
     "test:map-render": "bun run --cwd tools/visual test:registry",
     "test:visual": "bun run build && bun run test:visual:only",
     "test:visual:only": "bun run --cwd tools/visual test",
