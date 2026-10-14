@@ -26,7 +26,7 @@ export function MapSettingsPanel({
 }: Props) {
   return (
     <div
-      className="dark absolute top-2 left-2 z-10 flex items-center gap-0.5 bg-background/30 p-1 text-foreground shadow-sm ring-1 ring-foreground/15 backdrop-blur-[2px]"
+      className="dark absolute top-2 left-2 z-10 flex items-center gap-0.5 rounded-sm border border-border bg-background/30 p-1 text-foreground shadow-window backdrop-blur-[2px]"
       data-testid="map-settings-panel"
     >
       <ZoomButton

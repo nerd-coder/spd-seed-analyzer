@@ -95,28 +95,26 @@ export function ItemDetail({
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-sm font-medium text-popover-foreground">{heading}</p>
+      <p className="font-semibold text-popover-foreground">{heading}</p>
       {item ? (
-        <p className="whitespace-pre-wrap text-xs/relaxed text-muted-foreground">
+        <p className="whitespace-pre-wrap text-sm text-muted-foreground">
           <GameText text={item.desc} />
         </p>
       ) : null}
       {enchantment && enchantmentName ? (
-        <div className="flex flex-col gap-1 border-t border-foreground/10 pt-2">
-          <p className="font-medium text-popover-foreground">
+        <div className="flex flex-col gap-1 border-t pt-2">
+          <p className="font-semibold text-popover-foreground">
             {enchantmentName}
           </p>
-          <p className="whitespace-pre-wrap text-xs/relaxed text-muted-foreground">
+          <p className="whitespace-pre-wrap text-sm text-muted-foreground">
             <GameText text={enchantment.desc} />
           </p>
         </div>
       ) : null}
       {details != null && details !== false && details !== '' ? (
-        <div className="flex flex-col gap-1 border-t border-foreground/10 pt-2">
-          <p className="text-[10px] font-medium tracking-wide text-popover-foreground uppercase">
-            Notes
-          </p>
-          <div className="text-xs/relaxed text-muted-foreground">{details}</div>
+        <div className="flex flex-col gap-1 border-t pt-2">
+          <p className="text-sm font-semibold text-popover-foreground">Notes</p>
+          <div className="text-sm text-muted-foreground">{details}</div>
         </div>
       ) : null}
     </div>
@@ -283,7 +281,7 @@ export function ItemDetailLayer() {
       ref={layerRef}
       data-slot="item-detail"
       role="dialog"
-      className="fixed z-50 max-h-80 overflow-y-auto bg-popover p-2.5 text-xs text-popover-foreground shadow-md ring-1 ring-foreground/10"
+      className="fixed z-50 max-h-80 overflow-y-auto rounded-lg border bg-popover p-3.5 text-sm text-popover-foreground shadow-window inset-shadow-raised"
       style={{
         width: PANEL_WIDTH,
         left: place.left,
