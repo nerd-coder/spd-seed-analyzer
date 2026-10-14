@@ -45,12 +45,12 @@ export function AnalyzerWorkspace() {
                 session.status === 'pending' ? (
                   <SpinnerGapIcon className="shrink-0 animate-spin" />
                 ) : null}
-                <span className="truncate font-mono text-xs">
+                <span className="truncate font-mono text-sm">
                   {tabLabel(session)}
                 </span>
                 <button
                   type="button"
-                  className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex size-5 shrink-0 items-center justify-center rounded-none opacity-60 group-hover/seed-tab:opacity-100"
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex size-5 shrink-0 items-center justify-center rounded-sm opacity-60 group-hover/seed-tab:opacity-100"
                   aria-label={`Close ${tabLabel(session)}`}
                   onMouseDown={(event) => {
                     event.preventDefault()

@@ -1,5 +1,5 @@
+import { MonitorIcon, MoonIcon, SunIcon } from '@phosphor-icons/react'
 import { useStore } from '@tanstack/react-store'
-import { Monitor, Moon, Sun } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -12,11 +12,11 @@ import { $theme, cycleTheme, type Theme } from '@/stores/theme'
 
 const THEME_META: Record<
   Theme,
-  { label: string; next: string; Icon: typeof Sun }
+  { label: string; next: string; Icon: typeof SunIcon }
 > = {
-  light: { label: 'Light', next: 'Dark', Icon: Sun },
-  dark: { label: 'Dark', next: 'System', Icon: Moon },
-  system: { label: 'System', next: 'Light', Icon: Monitor },
+  light: { label: 'Light', next: 'Dark', Icon: SunIcon },
+  dark: { label: 'Dark', next: 'System', Icon: MoonIcon },
+  system: { label: 'System', next: 'Light', Icon: MonitorIcon },
 }
 
 type ThemeToggleProps = {
@@ -34,7 +34,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
           type="button"
           variant="outline"
           size="icon-sm"
-          className={cn('bg-background/90 shadow-sm backdrop-blur', className)}
+          className={cn('bg-background/90 backdrop-blur', className)}
           aria-label={`Theme: ${label}. Click for ${next}.`}
           onClick={cycleTheme}
         >
@@ -43,7 +43,7 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       </TooltipTrigger>
       <TooltipContent side="bottom" className="text-left">
         Theme: {label}
-        <span className="text-muted-foreground"> · click for {next}</span>
+        <span className="text-muted-foreground">. Click for {next}.</span>
       </TooltipContent>
     </Tooltip>
   )

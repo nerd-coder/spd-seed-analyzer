@@ -48,9 +48,9 @@ export default function App() {
         onValueChange={(value) => {
           if (value === 'analyze' || value === 'finder') setMode(value)
         }}
-        className="bg-muted/40 flex min-h-svh w-full justify-center gap-0"
+        className="flex min-h-svh w-full justify-center gap-0 bg-background"
       >
-        <div className="bg-background border-border min-h-svh w-full max-w-6xl mx-auto grid grid-cols-1 grid-rows-[1fr_max-content] lg:border-x">
+        <div className="border-border mx-auto grid min-h-svh w-full max-w-6xl grid-cols-1 grid-rows-[1fr_max-content] bg-background lg:border-x">
           <div className="grid grid-cols-1 lg:grid-cols-[max-content_1fr]">
             <AppSidebar mode={mode} />
             <main className="relative min-w-0 flex-1">

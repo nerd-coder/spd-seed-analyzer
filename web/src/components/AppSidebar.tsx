@@ -86,7 +86,7 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
   }
 
   return (
-    <aside className="border-border text-sidebar-foreground lg:sticky lg:top-0 lg:max-h-svh lg:h-full lg:w-80 lg:shrink-0 lg:self-start lg:overflow-y-auto lg:border-r">
+    <aside className="border-border bg-sidebar text-sidebar-foreground lg:sticky lg:top-0 lg:max-h-svh lg:h-full lg:w-80 lg:shrink-0 lg:self-start lg:overflow-y-auto lg:border-r">
       <div className="flex flex-col gap-4 p-4 lg:h-full">
         <div
           className="relative w-full bg-black"
@@ -143,7 +143,7 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
               <Field>
                 <FieldLabel htmlFor="seed">Enter your seed</FieldLabel>
                 <div className="flex w-full items-stretch">
-                  <InputGroup className="min-w-0 flex-1 border-r-0">
+                  <InputGroup className="min-w-0 flex-1 rounded-r-none border-r-0">
                     <InputGroupAddon align="inline-start" aria-hidden>
                       <PlantIcon />
                     </InputGroupAddon>
@@ -158,12 +158,13 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
                       autoCorrect="off"
                       spellCheck={false}
                       maxLength={11}
-                      className="font-mono"
+                      className="font-mono placeholder:font-sans"
                     />
                   </InputGroup>
                   <Button
                     type="submit"
-                    size="default"
+                    size="icon"
+                    className="rounded-l-none"
                     aria-label="Analyze"
                     disabled={analyzing || !isCompleteCanonicalSeed(seedInput)}
                   >

@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react'
+import { SpinnerGapIcon } from '@phosphor-icons/react'
 import { SeedReportView } from '@/components/seed/SeedReportView'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -11,13 +11,13 @@ export function SessionPane({ session }: { session: SeedSession }) {
   if (loading) {
     return (
       <div className="flex min-h-48 flex-col items-center justify-center gap-2 py-12">
-        <Loader2 className="text-muted-foreground size-6 animate-spin" />
+        <SpinnerGapIcon className="text-muted-foreground size-6 animate-spin" />
         <p className="text-muted-foreground text-sm">
           Analyzing{' '}
           <span className="text-foreground font-mono">{session.input}</span>…
         </p>
         <p
-          className="text-muted-foreground font-mono text-xs"
+          className="text-muted-foreground text-sm tabular-nums"
           aria-live="polite"
         >
           Elapsed {formatElapsed(elapsed)}
