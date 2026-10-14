@@ -1,34 +1,12 @@
-import { useLayoutEffect } from 'react'
+import { usePublishedHeight } from '@/hooks/usePublishedHeight'
 
 /**
- * Publish seed-tab bar height so floor banners stick beneath it. ResizeObserver
- * keeps the offset current when desktop session tabs wrap onto another row.
- * Re-runs when `active` flips (sessions mount/unmount the bar).
+ * Publish seed-tab bar height so floor banners stick beneath it. Re-runs when
+ * `active` flips (sessions mount/unmount the bar).
  */
 export function useSeedTabsHeight(
   ref: { current: HTMLElement | null },
   active: boolean
 ) {
-  useLayoutEffect(() => {
-    if (!active) {
-      document.documentElement.style.removeProperty('--seed-tabs-height')
-      return
-    }
-    const el = ref.current
-    if (!el) return
-
-    const publish = () => {
-      document.documentElement.style.setProperty(
-        '--seed-tabs-height',
-        `${el.offsetHeight}px`
-      )
-    }
-    publish()
-    const ro = new ResizeObserver(publish)
-    ro.observe(el)
-    return () => {
-      ro.disconnect()
-      document.documentElement.style.removeProperty('--seed-tabs-height')
-    }
-  }, [ref, active])
+  usePublishedHeight(ref, '--seed-tabs-height', active)
 }

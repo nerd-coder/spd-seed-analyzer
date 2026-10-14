@@ -1,6 +1,7 @@
 import { InfoIcon, QuestionIcon } from '@phosphor-icons/react'
 import { finderItemLabel } from '@/components/finder/finder-items'
 import { ItemBox } from '@/components/ItemBox'
+import { floorItemGroups } from '@/components/seed/floor-items'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -16,7 +17,6 @@ import {
   itemSprite,
   parseItemEnhancement,
 } from '@/lib/item-kind'
-import { isNotableSpawn } from '@/lib/item-notable'
 import type {
   FloorReport,
   IdentityMaps,
@@ -26,39 +26,6 @@ import type {
 
 const CURSED_SLOT_BACKGROUND =
   'color-mix(in oklch, var(--degraded) 22%, var(--muted))'
-
-function splitNotableItems(items: ItemGroup[]) {
-  const notable: ItemGroup[] = []
-  const other: ItemGroup[] = []
-  for (const group of items) {
-    const notableVariants = group.variants.filter(isNotableSpawn)
-    const otherVariants = group.variants.filter((item) => !isNotableSpawn(item))
-    if (notableVariants.length > 0) {
-      notable.push({ ...group, variants: notableVariants })
-    }
-    if (otherVariants.length > 0) {
-      other.push({ ...group, variants: otherVariants })
-    }
-  }
-  return { notable, other }
-}
-
-function itemSection(
-  item: ItemGroup
-): 'shop' | 'quest' | 'guaranteed' | 'loot' | 'general' {
-  const source = item.source ?? ''
-  if (source.includes('ShopRoom')) return 'shop'
-  if (
-    /Ghost\.Quest|Wandmaker\.Quest|Blacksmith\.Quest|Imp\.Quest/.test(source)
-  ) {
-    return 'quest'
-  }
-  if (source === 'guaranteed floor spawn' || source === 'forced') {
-    return 'guaranteed'
-  }
-  if (source === 'heap') return 'loot'
-  return 'general'
-}
 
 function BaselineItemsPopover() {
   return (
@@ -304,10 +271,7 @@ export function FloorItemSections({
   floor: FloorReport
   identities: IdentityMaps
 }) {
-  const groups = partitionFloorItems(visibleItemGroups(floor.items))
-  // Shop stays off the floor list. Quest rewards stay on the quest card.
-  const shown = [...groups.guaranteed, ...groups.loot, ...groups.general]
-  const { notable, other } = splitNotableItems(shown)
+  const { notable, other } = floorItemGroups(floor)
 
   return (
     <>
@@ -330,36 +294,7 @@ export function FloorItemSections({
   )
 }
 
-export function visibleItemGroups(items: ItemGroup[]) {
-  const exactItems = new Set(
-    items.flatMap((group) =>
-      group.variants
-        .filter((item) => item.prediction === 'exact')
-        .map((item) => itemDisplayKey(item, group.source))
-    )
-  )
-  return items
-    .map((group) => ({
-      ...group,
-      variants: group.variants.filter(
-        (item) =>
-          item.prediction !== 'baseline' ||
-          !exactItems.has(itemDisplayKey(item, group.source))
-      ),
-    }))
-    .filter((group) => group.variants.length > 0)
-}
-
-function itemDisplayKey(item: ItemVariant, source?: string | null) {
-  return JSON.stringify([item.class_name, item.level, source])
-}
-
-export function partitionFloorItems(items: ItemGroup[]) {
-  return {
-    general: items.filter((item) => itemSection(item) === 'general'),
-    guaranteed: items.filter((item) => itemSection(item) === 'guaranteed'),
-    loot: items.filter((item) => itemSection(item) === 'loot'),
-    shop: items.filter((item) => itemSection(item) === 'shop'),
-    quest: items.filter((item) => itemSection(item) === 'quest'),
-  }
-}
+export {
+  partitionFloorItems,
+  visibleItemGroups,
+} from '@/components/seed/floor-items'

@@ -1,5 +1,16 @@
 import type { BranchFloorReport, QuestReport } from '@/lib/spd-wasm'
 
+const QUEST_TITLES: Record<QuestReport['type'], string> = {
+  sad_ghost: 'Sad Ghost',
+  old_wandmaker: 'Old Wandmaker',
+  troll_blacksmith: 'Troll Blacksmith',
+  ambitious_imp: 'Ambitious Imp',
+}
+
+export function questTitle(type: QuestReport['type']) {
+  return QUEST_TITLES[type]
+}
+
 export function branchTitle(kind: BranchFloorReport['kind']) {
   switch (kind) {
     case 'blacksmith_mine':

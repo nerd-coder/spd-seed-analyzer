@@ -56,11 +56,13 @@ export function FloorDetail({
   )
 
   return (
-    <section>
-      {/* Sticky below the seed tabs. z-10 keeps the banner's own layers under that bar. */}
+    <section data-floor-depth={floor.depth}>
+      {/* Sticky below the seed tabs and the floor strip; z-10 keeps it under both. */}
       <div
         className="sticky z-10"
-        style={{ top: 'var(--seed-tabs-height, 3rem)' }}
+        style={{
+          top: 'calc(var(--seed-tabs-height, 3rem) + var(--descent-rail-height, 0px))',
+        }}
       >
         <FloorBanner
           depth={floor.depth}

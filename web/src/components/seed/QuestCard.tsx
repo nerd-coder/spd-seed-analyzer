@@ -2,6 +2,7 @@ import { FloorItemList } from '@/components/seed/FloorItemSections'
 import { ImpRewardDistribution } from '@/components/seed/ImpRewardDistribution'
 import { QuestBranchMap } from '@/components/seed/QuestBranchMap'
 import { QuestTarget } from '@/components/seed/QuestTarget'
+import { questTitle } from '@/components/seed/quest-branch'
 import { WandmakerRewardDistribution } from '@/components/seed/WandmakerRewardDistribution'
 import type {
   BranchFloorReport,
@@ -10,13 +11,6 @@ import type {
   QuestReport,
 } from '@/lib/spd-wasm'
 import { cn } from '@/lib/utils'
-
-const QUEST_TITLES: Record<QuestReport['type'], string> = {
-  sad_ghost: 'Sad Ghost',
-  old_wandmaker: 'Old Wandmaker',
-  troll_blacksmith: 'Troll Blacksmith',
-  ambitious_imp: 'Ambitious Imp',
-}
 
 function prefersBaselineRewards(quest: QuestReport) {
   return quest.type === 'old_wandmaker' || quest.type === 'ambitious_imp'
@@ -40,7 +34,7 @@ export function QuestCard({
   depth: number
   branch?: BranchFloorReport | null
 }) {
-  const title = QUEST_TITLES[quest.type]
+  const title = questTitle(quest.type)
   const impSlots =
     quest.type === 'ambitious_imp' ? (quest.contract.slots ?? []) : []
   const wandSlots =
