@@ -128,10 +128,15 @@ running text.
 | `text-px-2` | 40.96px | 48px | Section titles, depth numbers |
 | `text-px-1` | 20.48px | 24px | Subsections, dialog and card titles, slot labels |
 
-`cn()` registers `text-px-*` as a font-size group with tailwind-merge.
-Without that, `cn('text-px-1', 'text-tier-3')` drops the size. For the same
-reason no custom utility uses the `text-` prefix unless it is a size or a
-color: the game's black label outline is `ink-outline`.
+`cn()` registers the custom scales with tailwind-merge: `text-px-*` as font
+sizes, `inset-shadow-raised|pressed|recessed` as inset shadows and
+`shadow-window` as a shadow. tailwind-merge reads unknown `text-*` and
+`inset-shadow-*` values as colors, so without this `cn('text-px-1',
+'text-tier-3')` drops the size and `cn('inset-shadow-recessed',
+'inset-shadow-none')` keeps both. For the same reason no custom utility uses
+the `text-` prefix unless it is a size or a color: the game's black label
+outline is `ink-outline`. Add any new custom scale to `cn()` in the same
+change.
 
 ### Text scale
 

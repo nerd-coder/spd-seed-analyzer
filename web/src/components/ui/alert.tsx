@@ -3,17 +3,18 @@ import type * as React from 'react'
 
 import { cn } from '@/lib/utils'
 
+/* A left rule in the alert's color carries the severity; the fill stays faint. */
 const alertVariants = cva(
-  "group/alert relative grid w-full gap-0.5 rounded-none border px-2.5 py-2 text-left text-xs has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pr-18 has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-2 *:[svg]:row-span-2 *:[svg]:translate-y-0 *:[svg]:text-current *:[svg:not([class*='size-'])]:size-4",
+  "group/alert relative grid w-full gap-1 rounded-md border border-l-4 px-3.5 py-3 text-left text-sm has-data-[slot=alert-action]:relative has-data-[slot=alert-action]:pr-18 has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-2.5 *:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg]:text-current *:[svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: 'bg-card text-card-foreground',
+        default: 'border-l-foreground/40 bg-card text-card-foreground',
         destructive:
-          'bg-card text-destructive *:data-[slot=alert-description]:text-destructive/90 *:[svg]:text-current',
+          'border-l-destructive bg-destructive/8 text-destructive *:data-[slot=alert-description]:text-foreground/85',
         warning:
-          'border-warning/30 bg-warning/10 text-warning *:data-[slot=alert-description]:text-warning *:[svg]:text-current',
-        info: 'border-info/30 bg-info/10 text-info *:data-[slot=alert-description]:text-info *:[svg]:text-current',
+          'border-l-warning bg-warning/8 text-warning *:data-[slot=alert-description]:text-foreground/85',
+        info: 'border-l-info bg-info/8 text-info *:data-[slot=alert-description]:text-foreground/85',
       },
     },
     defaultVariants: {
@@ -42,7 +43,7 @@ function AlertTitle({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="alert-title"
       className={cn(
-        'font-medium group-has-[>svg]/alert:col-start-2 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground',
+        'font-semibold group-has-[>svg]/alert:col-start-2 [&_a]:underline [&_a]:underline-offset-3',
         className
       )}
       {...props}
@@ -58,7 +59,7 @@ function AlertDescription({
     <div
       data-slot="alert-description"
       className={cn(
-        'text-xs/relaxed text-balance text-muted-foreground md:text-pretty [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-2',
+        'text-sm text-pretty text-muted-foreground [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-2',
         className
       )}
       {...props}
@@ -70,10 +71,7 @@ function AlertAction({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="alert-action"
-      className={cn(
-        'absolute top-[calc(--spacing(1.25))] right-[calc(--spacing(1.25))]',
-        className
-      )}
+      className={cn('absolute top-2 right-2', className)}
       {...props}
     />
   )
