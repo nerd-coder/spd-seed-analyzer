@@ -125,13 +125,13 @@ export function formatItemSource(
     if (unique[unique.length - 1] !== l) unique.push(l)
   }
 
-  // "Locked chest · Floor drop" is noisy — prefer the more specific first part
+  // "Locked chest, Floor drop" is noisy — prefer the more specific first part
   // when second is generic floor drop / same room context.
   if (unique.length === 2 && unique[1] === 'Floor drop') {
     return unique[0]
   }
 
-  return unique.join(' · ')
+  return unique.join(', ')
 }
 
 /** Imp vault take-out items are a 6-choose-1 pool, not a guaranteed take-home. */

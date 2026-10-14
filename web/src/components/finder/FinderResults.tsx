@@ -99,9 +99,9 @@ function ResultCard({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="font-mono">{canonical}</CardTitle>
+        <CardTitle>{canonical}</CardTitle>
         <CardDescription>
-          Result {index + 1} · numeric seed{' '}
+          Result {index + 1}, numeric seed{' '}
           <span className="text-foreground font-mono">
             {match.seed.numeric}
           </span>
@@ -115,9 +115,7 @@ function ResultCard({
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-2">
-          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            Matched constraints
-          </p>
+          <p className="text-sm font-semibold">Matched constraints</p>
           <ItemGroup className="gap-2">
             {match.evidence.map((evidence) => {
               const source = formatItemSource(evidence.source)
@@ -143,8 +141,8 @@ function ResultCard({
                     </ItemTitle>
                     <ItemDescription>
                       Floor {evidence.depth}
-                      {evidence.level > 0 ? ` · +${evidence.level}` : ''}
-                      {source ? ` · ${source}` : ''}
+                      {evidence.level > 0 ? `, +${evidence.level}` : ''}
+                      {source ? `, ${source}` : ''}
                     </ItemDescription>
                   </ItemContent>
                   <ItemActions>
@@ -225,7 +223,7 @@ export function FinderResults({
         </CardHeader>
         <CardContent>
           {run.status === 'running' && run.attemptStartSeed !== null ? (
-            <div className="mb-2 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+            <div className="mb-2 flex items-center justify-between gap-2 text-sm text-muted-foreground">
               <span>Attempt {run.attemptNumber}</span>
               <span className="font-mono">
                 Start seed {run.attemptStartSeed}
@@ -238,15 +236,15 @@ export function FinderResults({
           />
         </CardContent>
         <CardFooter className="justify-between gap-2 text-muted-foreground">
-          <span>
+          <span className="tabular-nums">
             {run.scanned} / {run.requestedCandidates} scanned
           </span>
-          <span className="font-mono">Elapsed {formatElapsed(elapsed)}</span>
+          <span className="tabular-nums">Elapsed {formatElapsed(elapsed)}</span>
           {run.currentCandidateSeed !== null ? (
-            <span className="font-mono">
+            <span className="tabular-nums">
               {run.status === 'running' ? 'Current' : 'Last'}:{' '}
               {run.currentCandidateSeed} (candidate{' '}
-              {run.currentCandidateNumber ?? run.scanned}) · depth{' '}
+              {run.currentCandidateNumber ?? run.scanned}), depth{' '}
               {run.currentDepth ?? '—'}
             </span>
           ) : (
@@ -302,14 +300,18 @@ export function FinderResults({
           </EmptyHeader>
         </Empty>
       ) : (
-        <section aria-labelledby="finder-results-heading">
+        <section
+          aria-labelledby="finder-results-heading"
+          className="@container"
+        >
           <div className="mb-3 flex items-center justify-between gap-2">
-            <h2 id="finder-results-heading" className="text-sm font-medium">
+            <h2 id="finder-results-heading" className="font-pixel text-px-1">
               Matching seeds
             </h2>
             <Badge variant="outline">Ascending numeric order</Badge>
           </div>
-          <div className="grid gap-4 xl:grid-cols-2">
+          {/* Two columns only when the results column itself has room. */}
+          <div className="grid gap-4 @4xl:grid-cols-2">
             {run.matches.map((match, index) => (
               <ResultCard
                 key={match.seed.numeric}

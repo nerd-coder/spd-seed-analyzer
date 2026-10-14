@@ -82,13 +82,13 @@ export function SeedFinder({ onOpenAnalyze }: { onOpenAnalyze: () => void }) {
               {session.run.status === 'running' ? (
                 <SpinnerGapIcon className="shrink-0 animate-spin" />
               ) : null}
-              <span className="truncate font-mono text-xs">
+              <span className="truncate font-mono text-sm">
                 {session.name} ({session.run.matches.length})
               </span>
             </TabsTrigger>
             <button
               type="button"
-              className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex size-5 shrink-0 items-center justify-center rounded-none opacity-60 group-hover/finder-tab:opacity-100"
+              className="text-muted-foreground hover:text-foreground hover:bg-muted inline-flex size-5 shrink-0 items-center justify-center rounded-sm opacity-60 group-hover/finder-tab:opacity-100"
               aria-label={`Close ${session.name}`}
               onClick={() =>
                 requestClose(session.id, session.run.status === 'running')
