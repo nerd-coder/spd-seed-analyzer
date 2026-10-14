@@ -909,7 +909,7 @@ test('floor items render as icon slots', async ({ page }) => {
   await expect(page.getByText('Floor loot')).toHaveCount(0)
   const emptyNotable = page.getByText('No notable items on this floor.')
   await expect(emptyNotable).toHaveCount(3)
-  await expect(emptyNotable.first()).toHaveCSS('font-style', 'italic')
+  await expect(emptyNotable.first()).toHaveCSS('font-style', 'normal')
   await expect(page.getByText(/^Other items/)).toBeVisible()
   await expect(page.getByText('Fresh baseline', { exact: true })).toHaveCount(0)
   const floor1Banner = page
@@ -924,7 +924,7 @@ test('floor items render as icon slots', async ({ page }) => {
   ).toHaveCSS('color', 'rgb(255, 255, 255)')
   await expect(
     page.getByRole('heading', { name: 'Floor 1', exact: true })
-  ).toHaveCSS('font-weight', '700')
+  ).toHaveCSS('font-family', /SPD Pixel/)
   await expect(
     page.getByRole('heading', { name: 'Floor 1', exact: true })
   ).toHaveCSS('-webkit-text-stroke-width', '4px')

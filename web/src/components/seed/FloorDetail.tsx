@@ -1,8 +1,9 @@
 import { AlchemyPotIcon } from '@/components/AlchemyPotIcon'
 import { DepthIcon } from '@/components/DepthIcon'
-import { FloorMapPreview } from '@/components/FloorMapPreview'
+import { FloorMapDialog } from '@/components/FloorMapDialog'
 import { finderItemLabel } from '@/components/finder/finder-items'
 import { ItemBox } from '@/components/ItemBox'
+import { FloorBanner } from '@/components/seed/FloorBanner'
 import {
   FloorItemSections,
   visibleItemGroups,
@@ -27,7 +28,6 @@ import type {
   IdentityMaps,
   TrinketSelectionReport,
 } from '@/lib/spd-wasm'
-import { cn } from '@/lib/utils'
 
 function alchemyPotLabel(appearance: GuaranteedAppearance) {
   const source = formatItemSource(appearance.source)
@@ -62,66 +62,59 @@ export function FloorDetail({
         className="sticky z-10"
         style={{ top: 'var(--seed-tabs-height, 3rem)' }}
       >
-        <div className="relative isolate w-full overflow-hidden border-y border-border bg-black">
-          {displayedMap ? (
-            <FloorMapPreview
-              variant="banner"
-              map={displayedMap}
-              identities={identities}
-              depth={floor.depth}
-            />
+        <FloorBanner
+          depth={floor.depth}
+          tileset={displayedMap?.tileset}
+          action={
+            displayedMap ? (
+              <FloorMapDialog
+                map={displayedMap}
+                identities={identities}
+                depth={floor.depth}
+              />
+            ) : null
+          }
+        >
+          {floor.feeling && floor.feeling !== 'none' ? (
+            <DepthIcon feeling={floor.feeling} scale={4} />
           ) : null}
-          <div className="pointer-events-none absolute inset-0 z-10 bg-white/70 dark:bg-black/50" />
-          <div
-            className={cn(
-              'relative z-20 flex w-full flex-wrap items-center gap-2 px-3 py-2',
-              displayedMap && 'pr-12'
-            )}
-          >
-            <DepthIcon feeling={floor.feeling} size={32} />
-            <h3 className="spd-floor-label font-mono text-sm font-bold text-white tabular-nums">
-              Floor {floor.depth}
-            </h3>
-            {alchemyPots.map((appearance, index) => (
-              <span
-                key={`${appearance.source ?? appearance.kind}-${index}`}
-                className="inline-flex items-center gap-1"
-              >
-                <AlchemyPotIcon label={alchemyPotLabel(appearance)} />
-                {index === offerPotIndex ? (
-                  <span className="inline-flex items-center gap-0">
-                    {offerClasses.map((className, offerIndex) => (
-                      <ItemBox
-                        key={className}
-                        scale={1}
-                        border
-                        bg
-                        title={finderItemLabel(className)}
-                        sprites={itemSprite({
-                          className,
-                          category: 'trinket',
-                        })}
-                        details={trinketOfferDetails(
-                          offerIndex,
-                          offerClasses.length,
-                          trinketSelection.transmutation_sequence
-                        )}
-                      />
-                    ))}
-                  </span>
-                ) : null}
-              </span>
-            ))}
-          </div>
-        </div>
+          {alchemyPots.map((appearance, index) => (
+            <span
+              key={`${appearance.source ?? appearance.kind}-${index}`}
+              className="inline-flex items-center gap-1"
+            >
+              <AlchemyPotIcon label={alchemyPotLabel(appearance)} />
+              {index === offerPotIndex ? (
+                <span className="inline-flex items-center gap-0">
+                  {offerClasses.map((className, offerIndex) => (
+                    <ItemBox
+                      key={className}
+                      scale={1}
+                      border
+                      bg
+                      title={finderItemLabel(className)}
+                      sprites={itemSprite({
+                        className,
+                        category: 'trinket',
+                      })}
+                      details={trinketOfferDetails(
+                        offerIndex,
+                        offerClasses.length,
+                        trinketSelection.transmutation_sequence
+                      )}
+                    />
+                  ))}
+                </span>
+              ) : null}
+            </span>
+          ))}
+        </FloorBanner>
       </div>
 
-      <div className="space-y-3 px-4 py-4">
+      <div className="flex flex-col gap-4 px-4 py-4">
         {floor.quests && floor.quests.length > 0 && (
           <div className="space-y-2">
-            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-              Quests
-            </p>
+            <h4 className="text-sm font-semibold">Quests</h4>
             <div className="space-y-2">
               {floor.quests.map((q, i) => (
                 <QuestCard

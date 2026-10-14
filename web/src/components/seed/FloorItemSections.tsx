@@ -271,14 +271,17 @@ function ItemGroupSection({
     group.variants.some((item) => item.prediction === 'baseline')
   )
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-2">
       <div className="flex items-center gap-1">
-        <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+        <p className="text-sm font-semibold">
           {label}
           {items.length > 0 ? (
-            <span className="ml-1.5 font-mono font-normal tabular-nums normal-case">
-              ({items.length})
-            </span>
+            <>
+              {' '}
+              <span className="text-muted-foreground ml-1 font-normal tabular-nums">
+                {items.length}
+              </span>
+            </>
           ) : null}
         </p>
         {baseline ? <BaselineItemsPopover /> : null}
@@ -286,7 +289,7 @@ function ItemGroupSection({
       {items.length > 0 ? (
         <FloorItemList items={items} identities={identities} depth={depth} />
       ) : empty ? (
-        <p className="text-muted-foreground/75 text-sm italic">{empty}</p>
+        <p className="text-muted-foreground text-sm">{empty}</p>
       ) : null}
     </div>
   )

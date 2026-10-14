@@ -47,10 +47,8 @@ function IdentityGroup({
   category: ItemCategory
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-        {title}
-      </h3>
+    <div className="flex flex-col gap-2">
+      <h3 className="text-sm font-semibold">{title}</h3>
       <IdentityGrid entries={entries} category={category} />
     </div>
   )
@@ -58,14 +56,14 @@ function IdentityGroup({
 
 export function IdentitiesPanel({ identities }: { identities: IdentityMaps }) {
   return (
-    <section className="bg-card text-card-foreground ring-1 ring-foreground/10">
+    <section className="bg-card text-card-foreground rounded-lg border">
       <div className="space-y-1 px-4 pt-4">
-        <h2 className="font-heading text-sm font-medium">Identities</h2>
-        <p className="text-muted-foreground text-xs leading-relaxed">
+        <h2 className="font-pixel text-px-1">Identities</h2>
+        <p className="text-muted-foreground text-sm">
           Unidentified appearances for this seed
         </p>
       </div>
-      <div className="flex flex-col gap-3 px-4 pt-3 pb-4">
+      <div className="flex flex-col gap-4 px-4 pt-4 pb-4">
         <IdentityGroup
           title="Potions"
           entries={identities.potions}

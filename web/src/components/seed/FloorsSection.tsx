@@ -22,10 +22,10 @@ export function FloorsSection({
 
   // Ancestors must not set overflow:hidden, or the floor banners cannot stick.
   return (
-    <section className="bg-card text-card-foreground ring-1 ring-foreground/10">
+    <section className="bg-card text-card-foreground rounded-lg border">
       <div className="space-y-1 px-4 py-4">
-        <h2 className="font-heading text-sm font-medium">Floors</h2>
-        <p className="text-muted-foreground text-xs leading-relaxed">
+        <h2 className="font-pixel text-px-1">Floors</h2>
+        <p className="text-muted-foreground text-sm">
           Items you may find on each floor.
         </p>
       </div>
