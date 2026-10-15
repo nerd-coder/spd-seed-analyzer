@@ -155,7 +155,7 @@ seed alone.
 
 Consequence: run history cannot change *what* a category's *n*-th draw is, only
 *which index* the Imp's draw lands on. The candidate set for a slot is a window
-of that sequence around the fresh-baseline index.
+of that sequence around the seed-drawn (no-history) index.
 
 Verified two ways in `crates/spd-core/src/quests/imp/tests.rs`:
 

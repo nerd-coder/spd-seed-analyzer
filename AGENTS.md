@@ -10,6 +10,7 @@ Pinned game: SPD **v4.0.2** @ `57a4e06a4` — local clone often at `/Users/toan/
 | Path | Role |
 |------|------|
 | `crates/spd-core` | Pure Rust RNG + generation (no wasm) |
+| `crates/spd-objects` | Shared object id enums (items, mobs, rooms, …); source of truth for `web/src/generated/game-ids.ts` |
 | `crates/spd-wasm` | `wasm-bindgen` exports |
 | `web/` | Vite app; `web/src/wasm/` is **generated** |
 | `web/public/assets/` | SPD assets (flat; tiles under `environment/`) |
@@ -31,6 +32,7 @@ bun run test:map-render # map-render fixture registry
 bun run test:visual  # build + Playwright Chromium pixel comparison
 bun run install:visual-browser # once: install Playwright Chromium
 bun run build:wasm
+bun run gen:ids      # regenerate web/src/generated/game-ids.ts from spd-objects
 bun run check        # biome check (TS/JS/CSS/JSON)
 bun run check:fix    # biome check --fix
 bun run check:rust   # cargo fmt --check + clippy -D warnings (CI)

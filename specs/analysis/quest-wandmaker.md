@@ -204,5 +204,5 @@ Mass Grave's 60% `Generator.random()` when the quest is Corpse Dust is that
 draw (`MassGraveRoom.java:108`). The window does not replay it. Earlier
 floors move the deck index only.
 
-The normal item rows do not list all 13 classes. Baseline rows are the fresh
-pair. The classless rows stay empty until deep search copies the window.
+The normal item rows do not list all 13 classes. Variable rows (`prediction:
+"variable"`) are the seed-drawn pair. The classless rows stay empty until deep search copies the window.

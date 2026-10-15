@@ -12,7 +12,7 @@ The overall analyzer remains partial.
 
 The Ambitious Imp quest panel reports each of the six take-out slots with its
 seed-independent guarantees and a candidate distribution over a +-3 deck-index
-window, fresh-run draw first. The window is exact rather than sampled: a
+window, seed draw first. The window is exact rather than sampled: a
 category's draw order is fixed by the seed, so run history only shifts which
 index the Imp lands on. Percentages are the share of that enumerated window, a
 stability measure, not an observed player frequency.
@@ -24,11 +24,11 @@ Scroll of Upgrade worth. `upgrades_pinned` goes false only when an
 `UnstableSpellbook` draw is reachable in slot 0, which shifts every later roll.
 
 The Old Wandmaker quest panel reports two ordered options, wand1 then wand2,
-each over a +-3 deck-index window around the fresh wand1 index, fresh draw
-first. The class at each index is a pure function of the seed, so run history
+each over a +-3 deck-index window around the seed-drawn wand1 index, seed
+draw first. The class at each index is a pure function of the seed, so run history
 only shifts which index the reward lands on. Percentages are the share of that
 enumerated window, a stability measure, not an observed player frequency.
-wand1's +N is pinned across the window. wand2's +N is the fresh roll and stays
+wand1's +N is pinned across the window. wand2's +N is the seed roll and stays
 pinned only when every offset in the window rejects the same number of
 duplicate draws.
 
@@ -37,3 +37,20 @@ quests can roll. Its upgrade filter reaches +5 for that equipment. Rings and
 wands still stop at +4. The Deep search switch fills the seed-only Imp and Wandmaker entries with
 the same class window so those quest rewards can be matched at all; it is off
 by default.
+
+Every public object is a numeric id from `crates/spd-objects` (items,
+enchantments, mobs, rooms, traps, plants, blobs). `bun run gen:ids` writes
+`web/src/generated/game-ids.ts`; a Rust test fails when it drifts. Id lists are
+append-only. The UI composes titles from ids, levels, curses, and enchantments.
+Items whose concrete result depends on gameplay carry `prediction: "variable"`
+and keep their seed-drawn value.
+
+The finder runs an item-only pass (`search_seed_floors`): no maps, branches,
+probes, or report projection; it stops at the deepest constraint and, in
+Match all mode, as soon as a closed depth window can no longer match. A parity
+test pins it to the full seed-only analysis.
+
+Next:
+
+1. Decide whether enchanted item titles should use the game's `%s` templates
+   ("Friendly Sickle") instead of a separate enchantment tag.
