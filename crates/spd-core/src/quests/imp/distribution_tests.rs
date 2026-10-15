@@ -15,10 +15,10 @@ fn spawned_imp(seed: i64) -> Option<(crate::dungeon::DungeonState, ImpQuestState
     Some((dungeon, imp))
 }
 
-/// Every seed that spawns the Imp yields six slots, and the baseline pool is
+/// Every seed that spawns the Imp yields six slots, and the seed-drawn pool is
 /// always present in its own distribution at drift 0.
 #[test]
-fn baseline_sits_at_drift_zero() {
+fn seed_draw_sits_at_drift_zero() {
     let mut checked = 0;
     for seed in 0..25_i64 {
         let Some((dungeon, imp)) = spawned_imp(seed) else {
@@ -33,12 +33,12 @@ fn baseline_sits_at_drift_zero() {
         );
         assert_eq!(slots.len(), 6, "seed {seed}");
         for (slot, item) in slots.iter().zip(&imp.reward_options) {
-            assert_eq!(slot.baseline_class, item.class_name, "seed {seed}");
-            if slot.fixed_class.is_some() {
+            assert_eq!(slot.item, item.class_name, "seed {seed}");
+            if slot.fixed_item.is_some() {
                 assert!(slot.candidates.is_empty());
                 continue;
             }
-            // The fresh-run draw must lead the list: it is the concrete answer
+            // The seed draw must lead the list: it is the concrete answer
             // for a player who has not shifted the deck.
             let first = slot
                 .candidates
@@ -46,13 +46,14 @@ fn baseline_sits_at_drift_zero() {
                 .unwrap_or_else(|| panic!("seed {seed} slot {} has no candidates", slot.slot));
             assert!(
                 first.drifts.contains(&0),
-                "seed {seed} slot {}: first candidate must be the fresh-run draw, got {:?}",
+                "seed {seed} slot {}: first candidate must be the seed draw, got {:?}",
                 slot.slot,
                 first
             );
             assert_eq!(
-                first.class_name, item.class_name,
-                "seed {seed} slot {} drift 0 must be the baseline draw",
+                first.class_name(),
+                item.class_name,
+                "seed {seed} slot {} drift 0 must be the seed draw",
                 slot.slot
             );
             assert_eq!(
@@ -61,7 +62,7 @@ fn baseline_sits_at_drift_zero() {
                     .filter(|candidate| candidate.drifts.contains(&0))
                     .count(),
                 1,
-                "seed {seed} slot {}: exactly one row holds the fresh-run draw",
+                "seed {seed} slot {}: exactly one row holds the seed draw",
                 slot.slot
             );
         }
@@ -86,16 +87,16 @@ fn armor_slot_is_always_plate() {
         );
         let armor = &slots[4];
         assert_eq!(armor.role, ImpSlotRole::Armor);
-        assert_eq!(armor.fixed_class.as_deref(), Some("PlateArmor"));
+        assert_eq!(armor.fixed_item, Some(spd_objects::ItemId::PlateArmor));
         assert!(armor.enchanted, "plate is always inscribed");
         assert_eq!(armor.scenario_count, 1);
     }
 }
 
 /// Guaranteed level ranges come straight from `Imp.java:318-350` and must hold
-/// for the concrete baseline pool on every seed.
+/// for the concrete seed-drawn pool on every seed.
 #[test]
-fn level_rules_bound_the_baseline_pool() {
+fn level_rules_bound_the_seed_drawn_pool() {
     for seed in 0..25_i64 {
         let Some((dungeon, imp)) = spawned_imp(seed) else {
             continue;
@@ -148,23 +149,23 @@ fn deep_window_is_a_superset() {
             DEEP_DRIFT,
         );
         for (narrow_slot, deep_slot) in narrow.iter().zip(&deep) {
-            assert_eq!(narrow_slot.baseline_class, deep_slot.baseline_class);
+            assert_eq!(narrow_slot.item, deep_slot.item);
             assert!(deep_slot.scenario_count >= narrow_slot.scenario_count);
             for candidate in &narrow_slot.candidates {
                 assert!(
                     deep_slot
                         .candidates
                         .iter()
-                        .any(|other| other.class_name == candidate.class_name),
+                        .any(|other| other.class_name() == candidate.class_name()),
                     "seed {seed}: deep window dropped {}",
-                    candidate.class_name
+                    candidate.class_name()
                 );
             }
         }
     }
 }
 
-/// Slot 2 never duplicates slot 1's class at the baseline draw — the `do/while`
+/// Slot 2 never duplicates slot 1's class at the seed draw — the `do/while`
 /// in `Imp.java:330-335` re-draws on a collision.
 #[test]
 fn ring_slot_never_duplicates_the_artifact_slot() {
@@ -320,7 +321,7 @@ fn upgrades_pinned_tracks_the_spellbook_window() {
         let reachable = slots[0]
             .candidates
             .iter()
-            .any(|candidate| candidate.class_name == "UnstableSpellbook");
+            .any(|candidate| candidate.class_name() == "UnstableSpellbook");
         assert_eq!(upgrades_pinned(&slots), !reachable, "seed {seed}");
         if reachable {
             seen_unpinned = true;
@@ -333,7 +334,7 @@ fn upgrades_pinned_tracks_the_spellbook_window() {
             .iter()
             .map(|slot| match slot.level_rule {
                 ImpLevelRule::TransferUpgrade { transfer } => transfer,
-                ImpLevelRule::Range { .. } => slot.baseline_level,
+                ImpLevelRule::Range { .. } => slot.level,
             })
             .sum();
         assert_eq!(total_upgrade_value(&slots), expected, "seed {seed}");

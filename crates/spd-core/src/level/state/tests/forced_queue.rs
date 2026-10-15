@@ -56,10 +56,7 @@ fn floor_one_projection_publishes_exact_food_identity() {
         .iter()
         .find(|item| item.category == "food")
         .expect("public food entry");
-    assert_eq!(
-        food.class_name.as_deref(),
-        Some(generated.class_name.as_str())
-    );
+    assert_eq!(food.class_name(), Some(generated.class_name.as_str()));
     assert_eq!(food.prediction, ItemPredictionKind::Exact);
     assert!(food.notes.is_empty());
     let expected_name = match generated.class_name.as_str() {
@@ -75,10 +72,10 @@ fn floor_one_projection_publishes_exact_food_identity() {
 fn catalyst_projection_publishes_ordered_choose_one_offers() {
     let mut catalyst = GeneratedItem::new("TrinketCatalyst", ItemCategory::Other);
     catalyst.candidate_classes = vec![
-        "AlchemistsSmock".into(),
-        "DriedRose".into(),
+        "ExoticCrystals".into(),
         "MimicTooth".into(),
-        "PiranhaPlant".into(),
+        "ParchmentScrap".into(),
+        "RatSkull".into(),
     ];
     catalyst.provenance = ItemProvenance::Forced(ForcedDropRole::TrinketCatalyst);
 
@@ -89,8 +86,8 @@ fn catalyst_projection_publishes_ordered_choose_one_offers() {
         .find(|entry| entry.name == "Trinket Catalyst")
         .expect("public Catalyst entry");
     assert_eq!(entry.prediction, ItemPredictionKind::Exact);
-    assert_eq!(entry.class_name.as_deref(), Some("TrinketCatalyst"));
-    assert_eq!(entry.candidate_classes, expected_candidates);
+    assert_eq!(entry.class_name(), Some("TrinketCatalyst"));
+    assert_eq!(entry.candidate_classes(), expected_candidates);
     assert_eq!(entry.level, Some(0));
 }
 
@@ -108,7 +105,7 @@ fn later_food_is_constrained_without_generator_history_copy() {
                 .find(|item| item.name == "food")
                 .expect("public food entry");
             assert_eq!(food.prediction, ItemPredictionKind::Constrained);
-            assert!(food.class_name.is_none());
+            assert!(food.class_name().is_none());
             assert!(food.notes.is_empty());
         }
     }
@@ -138,13 +135,13 @@ fn halls_torches_precede_food_and_survive_public_taint_as_one_constraint() {
     let torch_entries: Vec<_> = public
         .items
         .iter()
-        .filter(|item| item.class_name.as_deref() == Some("Torch"))
+        .filter(|item| item.class_name() == Some("Torch"))
         .collect();
     assert_eq!(torch_entries.len(), 1);
     assert_eq!(torch_entries[0].name, "Torch");
     assert_eq!(torch_entries[0].quantity, 2);
     assert_eq!(torch_entries[0].prediction, ItemPredictionKind::Exact);
-    assert_eq!(torch_entries[0].class_name.as_deref(), Some("Torch"));
+    assert_eq!(torch_entries[0].class_name(), Some("Torch"));
     assert!(torch_entries[0].notes.is_empty());
 }
 
@@ -160,7 +157,7 @@ fn upgrade_scroll_contract_distinguishes_guaranteed_and_conditional_spawns() {
         .find(|entry| entry.name.contains("Scroll of Upgrade"))
         .expect("odd Scroll contract");
     assert_eq!(odd_entry.name, "Scroll of Upgrade");
-    assert_eq!(odd_entry.class_name.as_deref(), Some("ScrollOfUpgrade"));
+    assert_eq!(odd_entry.class_name(), Some("ScrollOfUpgrade"));
     assert_eq!(odd_entry.prediction, ItemPredictionKind::Exact);
     assert!(odd_entry.notes.is_empty());
 
@@ -174,7 +171,7 @@ fn upgrade_scroll_contract_distinguishes_guaranteed_and_conditional_spawns() {
         .find(|entry| entry.name.contains("Scroll of Upgrade"))
         .expect("even Scroll contract");
     assert_eq!(even_entry.name, "Scroll of Upgrade");
-    assert_eq!(even_entry.class_name.as_deref(), Some("ScrollOfUpgrade"));
+    assert_eq!(even_entry.class_name(), Some("ScrollOfUpgrade"));
     assert!(even_entry.notes.is_empty());
     assert!(matches!(
         even_entry.spawn_conditions[0].all_of[0],

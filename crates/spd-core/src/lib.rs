@@ -24,19 +24,19 @@ pub use items::IdentityMaps;
 pub use java_random::JavaRandom;
 pub use random::Random;
 pub use report::{
-    AmbitiousImpQuestBaseline, AmbitiousImpQuestContract, AnalyzeError, BlacksmithObjective,
+    AmbitiousImpQuestContract, AmbitiousImpQuestVariable, AnalyzeError, BlacksmithObjective,
     BranchAccessReport, BranchFloorId, BranchFloorKind, BranchFloorReport, FloorReport,
     GhostTarget, GuaranteedAppearance, GuaranteedAppearanceKind, ItemCondition,
-    ItemDependencyCondition, ItemEnchantment, ItemSpawnCondition, OldWandmakerQuestBaseline,
-    OldWandmakerQuestContract, QuestDepthRange, QuestReport, QuestRewardSelection,
-    SadGhostQuestBaseline, SadGhostQuestContract, SeedInfo, SeedReport,
-    TrollBlacksmithQuestBaseline, TrollBlacksmithQuestContract, WandmakerObjective,
+    ItemDependencyCondition, ItemEnchantment, ItemSpawnCondition, OldWandmakerQuestContract,
+    OldWandmakerQuestVariable, QuestDepthRange, QuestReport, QuestRewardSelection,
+    SadGhostQuestContract, SadGhostQuestVariable, SeedInfo, SeedReport,
+    TrollBlacksmithQuestContract, TrollBlacksmithQuestVariable, WandmakerObjective,
 };
 pub use run::{dungeon_from_run, init_run, RunState};
 pub use search::{
-    search_seeds, BaselineItemEvidence, ItemConstraint, ItemMatchEvidence, MatchMode, SearchError,
-    SeedMatch, SeedSearchRequest, SeedSearchResult, MAX_SEARCH_CANDIDATES, MAX_SEARCH_CONSTRAINTS,
-    MAX_SEARCH_FLOORS, MAX_SEARCH_MATCHES,
+    search_seeds, ItemConstraint, ItemMatchEvidence, MatchMode, SearchError, SeedMatch,
+    SeedSearchRequest, SeedSearchResult, VariableItemEvidence, MAX_SEARCH_CANDIDATES,
+    MAX_SEARCH_CONSTRAINTS, MAX_SEARCH_FLOORS, MAX_SEARCH_MATCHES,
 };
 pub use trinkets::{
     ArtifactEvent, ArtifactEventAction, ArtifactKind, Challenge, ClaimState, MapProfile,
@@ -76,8 +76,8 @@ pub fn parse_seed(input: &str) -> Result<SeedInfo, SeedError> {
 /// Analyze a seed and merge every currently supported item-generating profile
 /// into each floor's item list with structured spawn conditions.
 pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError> {
-    let baseline_profile = MapProfile::default();
-    let mut report = analyze_seed_internal(input, floors, Some(&baseline_profile))?;
+    let default_profile = MapProfile::default();
+    let mut report = analyze_seed_internal(input, floors, Some(&default_profile))?;
     let routes = conditional::discover_routes(
         &report.trinket_selection,
         &report.floors,
@@ -90,12 +90,12 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
     }
     conditional::merge_possible_rooms(
         &mut report.floors,
-        conditional::baseline_condition(),
+        conditional::default_condition(),
         &alternatives,
     );
     conditional::merge_possible_items(
         &mut report.floors,
-        conditional::baseline_condition(),
+        conditional::default_condition(),
         &alternatives,
     );
     // Parity probes retain the latest replay trace for oracle inspection. Keep
@@ -105,14 +105,32 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
     Ok(report)
 }
 
-/// Seed-only projection used by the bounded finder. It deliberately avoids
-/// replaying the UI-facing modeled branch matrix for every candidate seed.
+/// Full seed-only projection: the parity reference for `search_seed_floors`.
+/// It deliberately avoids replaying the UI-facing modeled branch matrix.
+#[cfg(test)]
 pub(crate) fn analyze_seed_seed_only(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError> {
-    // A seed-only search still has a concrete baseline: no challenges, held
-    // trinket, or prior player history. Replaying that profile prevents the
+    // A seed-only search still replays the default profile: no challenges,
+    // held trinket, or prior player history. Replaying that profile prevents the
     // default-feeling callback from tainting all later layout facts merely
     // because this internal fast path omitted an explicit profile.
     analyze_seed_internal(input, floors, Some(&MapProfile::default()))
+}
+
+/// Item-only seed-only replay for the finder. Floor items and quests match
+/// `analyze_seed_seed_only`; maps, branches, encounters' map facts, and the
+/// alchemy-pot appearance are left out. `keep_going` can stop generation
+/// after any floor.
+pub(crate) fn search_seed_floors(
+    input: &str,
+    floors: u32,
+    keep_going: impl FnMut(&mut [FloorReport]) -> bool,
+) -> Result<(SeedInfo, IdentityMaps, Vec<FloorReport>), AnalyzeError> {
+    let info = parse_seed(input)?;
+    let mut dungeon = dungeon_from_run(init_run(info.numeric));
+    dungeon.expose_variable_items = true;
+    let identities = dungeon.identities.clone();
+    let floors = level::search_floors(&mut dungeon, floors, keep_going);
+    Ok((info, identities, floors))
 }
 
 /// Internal profile replay used by parity tests.
@@ -139,7 +157,8 @@ fn analyze_seed_internal(
         profile.validate(trinket_selection.first_effective_depth)?;
     }
     let mut dungeon = dungeon_from_run(run);
-    dungeon.baseline_projection = profile.is_some_and(|profile| profile == &MapProfile::default());
+    dungeon.expose_variable_items =
+        profile.is_some_and(|profile| profile == &MapProfile::default());
     let identities = dungeon.identities.clone();
     let mut floor_reports = level::analyze_floors_with_profile_and_trinket_availability(
         &mut dungeon,
@@ -152,19 +171,18 @@ fn analyze_seed_internal(
         .find(|floor| floor.depth == trinket_selection.first_alchemy_pot_depth)
     {
         let source = if trinket_selection.first_alchemy_pot_is_secret {
-            "SecretLaboratoryRoom"
+            spd_objects::RoomId::SecretLaboratoryRoom
         } else {
-            "LaboratoryRoom"
+            spd_objects::RoomId::LaboratoryRoom
         };
         if !floor
             .guaranteed_appearances
             .iter()
-            .any(|appearance| appearance.source.as_deref() == Some(source))
+            .any(|appearance| appearance.source == Some(source))
         {
             floor.guaranteed_appearances.push(GuaranteedAppearance {
-                name: "Alchemy pot".into(),
                 kind: GuaranteedAppearanceKind::AlchemyPot,
-                source: Some(source.into()),
+                source: Some(source),
             });
         }
     }

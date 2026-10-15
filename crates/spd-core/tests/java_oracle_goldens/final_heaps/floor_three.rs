@@ -30,7 +30,7 @@ fn gfx_floor_three_lifecycle_matches_v4_oracle() {
         .iter()
         .map(|mob| OracleMob {
             cell: mob.cell,
-            class_name: mob.class_name.clone(),
+            class_name: mob.class_name().to_string(),
         })
         .collect::<Vec<_>>();
     assert_eq!(actual_mobs, expected.final_mobs, "pinned v4 floor-3 mobs");
@@ -45,10 +45,10 @@ fn gfx_floor_three_lifecycle_matches_v4_oracle() {
                 .items
                 .iter()
                 .map(|item| OracleItem {
-                    class_name: if item.class_name.ends_with("Seed") {
+                    class_name: if item.class_name().ends_with("Seed") {
                         "Seed".into()
                     } else {
-                        item.class_name.clone()
+                        item.class_name().to_string()
                     },
                     quantity: item.quantity,
                     level: item.level,

@@ -123,7 +123,7 @@ pub(crate) fn generate(dungeon: &DungeonState, expose_map: bool) -> Option<Minin
         .collect::<Vec<_>>();
     let room_names = room_bounds
         .iter()
-        .map(|room| room.class_name.clone())
+        .map(|room| spd_objects::RoomId::from_class_name_lossy(&room.class_name))
         .collect();
     let mut floor_map = MapFacts::from_room_paint(&map)
         .into_floor_map(&map, depth, 1, depth_seed)
@@ -153,7 +153,7 @@ pub(crate) fn generate(dungeon: &DungeonState, expose_map: bool) -> Option<Minin
             access: BranchAccessReport {
                 quest_id: "troll_blacksmith".into(),
                 requires_acceptance: true,
-                required_item: Some("Pickaxe".into()),
+                required_item: Some(spd_objects::ItemId::Pickaxe),
             },
             rooms: room_names,
             map: expose_map.then_some(floor_map),
@@ -233,9 +233,20 @@ mod tests {
         terrain: Vec<u16>,
         discoverable: Vec<bool>,
         transitions: Vec<crate::report::MapTransition>,
-        traps: Vec<crate::report::MapTrap>,
+        traps: Vec<FixtureTrap>,
         custom_tiles: Vec<FixtureLayer>,
         custom_walls: Vec<FixtureLayer>,
+    }
+
+    #[derive(Deserialize)]
+    struct FixtureTrap {
+        cell: u32,
+        #[serde(rename = "class")]
+        class_name: String,
+        visible: bool,
+        active: bool,
+        color: u8,
+        shape: u8,
     }
 
     #[derive(Deserialize)]
@@ -353,7 +364,19 @@ mod tests {
         assert_eq!(actual.tiles, expected.terrain);
         assert_eq!(actual.discoverable, expected.discoverable);
         assert_eq!(actual.transitions, expected.transitions);
-        assert_eq!(actual.traps, expected.traps);
+        let expected_traps = expected
+            .traps
+            .iter()
+            .map(|trap| crate::report::MapTrap {
+                cell: trap.cell,
+                trap: spd_objects::TrapId::from_class_name_lossy(&trap.class_name),
+                visible: trap.visible,
+                active: trap.active,
+                color: trap.color,
+                shape: trap.shape,
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(actual.traps, expected_traps);
         assert_layers(&actual.custom_tiles, &expected.custom_tiles);
         assert_layers(&actual.custom_walls, &expected.custom_walls);
     }
@@ -434,7 +457,7 @@ mod tests {
         assert_eq!(branch.id.branch, 1);
         assert_eq!(branch.origin.depth, origin.depth);
         assert!(matches!(branch.objective.as_str(), "Crystal" | "Gnoll"));
-        let branch_map = branch.map.as_ref().expect("configured baseline map");
+        let branch_map = branch.map.as_ref().expect("configured default-profile map");
         let return_transition = branch_map
             .transitions
             .iter()
@@ -455,7 +478,10 @@ mod tests {
         let json = serde_json::to_value(&report).unwrap();
         let branch = &json["floors"][origin.depth as usize - 1]["branches"][0];
         assert_eq!(branch["kind"], "blacksmith_mine");
-        assert_eq!(branch["access"]["required_item"], "Pickaxe");
+        assert_eq!(
+            branch["access"]["required_item"],
+            spd_objects::ItemId::Pickaxe.id()
+        );
     }
 
     #[test]

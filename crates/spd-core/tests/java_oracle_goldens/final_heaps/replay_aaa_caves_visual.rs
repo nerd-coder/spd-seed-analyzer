@@ -169,7 +169,7 @@ fn traps(map: &spd_core::report::FloorMap) -> Vec<OracleTrap> {
         .iter()
         .map(|trap| OracleTrap {
             cell: trap.cell,
-            class_name: trap.class_name.clone(),
+            class_name: trap.class_name().to_string(),
             visible: trap.visible,
             active: trap.active,
             color: trap.color,
@@ -183,7 +183,7 @@ fn plants(map: &spd_core::report::FloorMap) -> Vec<OraclePlant> {
         .iter()
         .map(|plant| OraclePlant {
             cell: plant.cell,
-            class_name: plant.class_name.clone(),
+            class_name: plant.class_name().to_string(),
             image: plant.image,
         })
         .collect()
@@ -193,7 +193,7 @@ fn blobs(map: &spd_core::report::FloorMap) -> Vec<OracleBlob> {
     map.blobs
         .iter()
         .map(|blob| OracleBlob {
-            class_name: blob.class_name.clone(),
+            class_name: blob.class_name().to_string(),
             volume: blob.volume,
             always_visible: blob.always_visible,
             cells: blob

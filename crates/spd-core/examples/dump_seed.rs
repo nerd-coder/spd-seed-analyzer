@@ -15,14 +15,24 @@ fn main() {
             "--- floor {} feeling={:?} builder={:?}",
             f.depth, f.feeling, f.builder
         );
-        println!("  rooms: {}", f.rooms.join(", "));
+        println!(
+            "  rooms: {}",
+            f.rooms
+                .iter()
+                .map(|room| room.class_name())
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
         if !f.quests.is_empty() {
             println!("  quests: {:#?}", f.quests);
         }
         for it in f.items {
             println!(
                 "  [{:<10}] {:<40} class={:?} source={:?}",
-                it.category, it.name, it.class_name, it.source
+                it.category,
+                it.name,
+                it.class_name(),
+                it.source
             );
         }
     }

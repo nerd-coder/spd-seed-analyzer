@@ -26,9 +26,9 @@ use conditions::{
 #[path = "state/encounters.rs"]
 mod encounters;
 
-#[path = "state/baseline.rs"]
-mod baseline;
-use baseline::item_entry as baseline_item_entry;
+#[path = "state/variable.rs"]
+mod variable;
+use variable::item_entry as variable_item_entry;
 
 #[path = "state/sources.rs"]
 mod sources;
@@ -88,11 +88,11 @@ fn imp_option_level_range(slot: u8, category: ItemCategory) -> Option<NumericRan
 fn merge_identical_items(items: Vec<ItemEntry>) -> Vec<ItemEntry> {
     let mut merged: Vec<ItemEntry> = Vec::with_capacity(items.len());
     for item in items {
-        let matching = item.class_name.is_some().then(|| {
+        let matching = item.item.is_some().then(|| {
             merged.iter_mut().find(|existing| {
                 existing.name == item.name
-                    && existing.class_name == item.class_name
-                    && existing.candidate_classes == item.candidate_classes
+                    && existing.item == item.item
+                    && existing.candidates == item.candidates
                     && existing.category == item.category
                     && existing.tier == item.tier
                     && existing.tier_range == item.tier_range
@@ -196,12 +196,12 @@ pub struct LevelState {
     /// invalidating these facts.
     #[doc(hidden)]
     pub runtime_sensitive_rooms: bool,
-    /// The baseline feeling can be overridden by held trinkets before build.
+    /// The default feeling can be overridden by held trinkets before build.
     #[doc(hidden)]
     pub runtime_sensitive_feeling: bool,
     /// This replay uses the UI's declared fresh, no-history profile.
     #[doc(hidden)]
-    pub baseline_projection: bool,
+    pub expose_variable_items: bool,
     #[doc(hidden)]
     pub room_public_facts: Vec<super::room_public::RoomPublicFact>,
     #[doc(hidden)]
@@ -264,11 +264,11 @@ impl LevelState {
         first_effective_trinket_depth: Option<u32>,
     ) -> FloorReport {
         let mut items = forced_public_entries(self.depth, &self.initial_forced_items);
-        let baseline_items: Vec<_> = if self.baseline_projection {
+        let variable_items: Vec<_> = if self.expose_variable_items {
             self.placed_items
                 .iter()
-                .filter_map(baseline_item_entry)
-                .filter(crate::report::is_baseline_highlight)
+                .filter_map(variable_item_entry)
+                .filter(crate::report::is_variable_highlight)
                 .filter(|item| {
                     self.depth > 1
                         || !matches!(
@@ -305,14 +305,14 @@ impl LevelState {
             let prize = &self.placed_items[index];
             items.retain(|entry| {
                 !(entry.source.as_deref() == Some("guaranteed floor spawn")
-                    && entry.class_name.as_deref() == Some(&prize.class_name))
+                    && entry.class_name() == Some(prize.class_name.as_str()))
             });
         }
         let mut shop_items = Vec::new();
         let mut has_shop = false;
         for (index, item) in self.placed_items.iter().enumerate() {
             let exact_floor_one_room_prize = exact_floor_one_room_prize_indices.contains(&index);
-            let baseline_room_prize = self.baseline_projection
+            let variable_room_prize = self.expose_variable_items
                 && self.depth > 1
                 && matches!(
                     item.source.as_deref(),
@@ -331,7 +331,7 @@ impl LevelState {
             // alter the remaining floor stream. Its fixed entries and public
             // deck constraints therefore remain safe even when that callback
             // suppresses the layout and later loot.
-            if past_runtime_sensitive_boundary && !baseline_room_prize {
+            if past_runtime_sensitive_boundary && !variable_room_prize {
                 match item.provenance {
                     ItemProvenance::Shop(_) => {}
                     ItemProvenance::Quest(_) if !quest_past_runtime_sensitive_boundary => {}
@@ -348,7 +348,7 @@ impl LevelState {
             // history and remains internal for Java parity.
             if item.source.as_deref() == Some("SacrificeRoom")
                 && !exact_floor_one_room_prize
-                && !baseline_room_prize
+                && !variable_room_prize
             {
                 continue;
             }
@@ -359,7 +359,7 @@ impl LevelState {
             // items so runtime-sensitive count/control flow cannot leak.
             if matches!(item.provenance, ItemProvenance::Room(_))
                 && !exact_floor_one_room_prize
-                && !baseline_room_prize
+                && !variable_room_prize
             {
                 continue;
             }
@@ -507,8 +507,8 @@ impl LevelState {
                 || ghost_weapon.is_some_and(|_| item.candidate_classes.len() == 1)
             {
                 ItemPredictionKind::Exact
-            } else if baseline_room_prize {
-                ItemPredictionKind::Baseline
+            } else if variable_room_prize {
+                ItemPredictionKind::Variable
             } else {
                 prediction
             };
@@ -545,8 +545,9 @@ impl LevelState {
                     exact_name
                 },
                 quantity: item.quantity.max(1),
-                class_name: (!constrained).then(|| item.class_name.clone()),
-                candidate_classes,
+                label: None,
+                item: (!constrained).then(|| crate::report::item_id(&item.class_name)),
+                candidates: crate::report::item_ids(&candidate_classes),
                 category: if shop_role == Some(ShopStockRole::DeckRareArtifactOrRing) {
                     "other".into()
                 } else {
@@ -588,12 +589,25 @@ impl LevelState {
                 enchantment: (!blacksmith_smith_option && potential_enchantment_is_reachable)
                     .then(|| item.potential_enchantment.clone())
                     .flatten()
-                    .map(|enchantment_type| ItemEnchantment {
-                        enchantment_type,
-                        conditions: reachable_parchment_level
+                    .map(|enchantment_type| {
+                        let conditions = reachable_parchment_level
                             .map(|level| parchment_condition(self.depth as u32, level))
                             .into_iter()
-                            .collect(),
+                            .collect();
+                        (enchantment_type, conditions)
+                    })
+                    .or_else(|| {
+                        // Quest rewards publish only their potential enchantment.
+                        (quest_role.is_none() && !constrained)
+                            .then(|| item.enchantment.clone())
+                            .flatten()
+                            .map(|enchantment_type| (enchantment_type, Vec::new()))
+                    })
+                    .map(|(enchantment_type, conditions)| ItemEnchantment {
+                        enchantment_type: spd_objects::Enchantment::from_class_name_lossy(
+                            &enchantment_type,
+                        ),
+                        conditions,
                     }),
                 prediction,
                 spawn_conditions: item_conditions(
@@ -628,8 +642,9 @@ impl LevelState {
             shop_items.push(ItemEntry {
                 name: "inventory-dependent bag stock".into(),
                 quantity: 1,
-                class_name: None,
-                candidate_classes: Vec::new(),
+                label: None,
+                item: None,
+                candidates: Vec::new(),
                 category: "other".into(),
                 tier: None,
                 tier_range: None,
@@ -668,8 +683,9 @@ impl LevelState {
             shop_items.push(ItemEntry {
                 name: "Hourglass sand stock".into(),
                 quantity: 1,
-                class_name: Some("SandBag".into()),
-                candidate_classes: Vec::new(),
+                label: None,
+                item: Some(spd_objects::ItemId::SandBag),
+                candidates: Vec::new(),
                 category: "other".into(),
                 tier: None,
                 tier_range: None,
@@ -707,7 +723,7 @@ impl LevelState {
         // The pinned isolated shuffle order is not public: bag/sand list size
         // and artifact constructor/fallback RNG can change its permutation.
         shop_items.sort_by(|a, b| {
-            (&a.name, &a.class_name, &a.category).cmp(&(&b.name, &b.class_name, &b.category))
+            (&a.name, a.class_name(), &a.category).cmp(&(&b.name, b.class_name(), &b.category))
         });
         items.extend(shop_items);
         // These are room-class contracts, not painter/map facts. Once the
@@ -736,7 +752,7 @@ impl LevelState {
                         if Some(room) != entry_room {
                             return false;
                         }
-                        entry.class_name.as_deref().map_or_else(
+                        entry.class_name().map_or_else(
                             || {
                                 entry.source.as_deref() == Some(source.as_str())
                                     || entry.name == "single room reward source"
@@ -748,16 +764,16 @@ impl LevelState {
             }
         }
         let mut items = merge_identical_items(items);
-        for baseline in baseline_items {
+        for variable in variable_items {
             let already_projected = items.iter().any(|item| {
-                item.class_name == baseline.class_name
-                    && item.source == baseline.source
-                    && item.level == baseline.level
-                    && item.cursed == baseline.cursed
-                    && item.enchantment == baseline.enchantment
+                item.item == variable.item
+                    && item.source == variable.source
+                    && item.level == variable.level
+                    && item.cursed == variable.cursed
+                    && item.enchantment == variable.enchantment
             });
             if !already_projected {
-                items.push(baseline);
+                items.push(variable);
             }
         }
         let exact_map = allow_map
@@ -790,7 +806,10 @@ impl LevelState {
             rooms: if self.runtime_sensitive_rooms {
                 Vec::new()
             } else {
-                self.rooms.clone()
+                self.rooms
+                    .iter()
+                    .map(|room| spd_objects::RoomId::from_class_name_lossy(room))
+                    .collect()
             },
             possible_rooms: Vec::new(),
             guaranteed_appearances,

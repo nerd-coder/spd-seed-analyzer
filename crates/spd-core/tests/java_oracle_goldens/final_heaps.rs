@@ -86,7 +86,7 @@ fn assert_main_loop_heaps_match(
             let expected_index = expected_items
                 .iter()
                 .position(|expected_item| {
-                    expected_item.class_name == normalize_oracle_class(&item.class_name)
+                    expected_item.class_name == normalize_oracle_class(item.class_name())
                         && expected_item.quantity == item.quantity
                         && expected_item.level == item.level
                         && expected_item.cursed == item.cursed
@@ -466,10 +466,10 @@ fn depth_one_final_heaps_match_report_projection() {
                             // ambiguous simple name; preserve exact item
                             // identity in the analyzer and normalize only at
                             // this oracle boundary.
-                            class_name: if item.class_name.ends_with("Seed") {
+                            class_name: if item.class_name().ends_with("Seed") {
                                 "Seed".into()
                             } else {
-                                item.class_name.clone()
+                                item.class_name().to_string()
                             },
                             quantity: item.quantity,
                             level: item.level,
@@ -487,7 +487,7 @@ fn depth_one_final_heaps_match_report_projection() {
                 .iter()
                 .map(|mob| OracleMob {
                     cell: mob.cell,
-                    class_name: mob.class_name.clone(),
+                    class_name: mob.class_name().to_string(),
                 })
                 .collect();
             assert_eq!(
@@ -519,7 +519,7 @@ fn depth_one_final_heaps_match_report_projection() {
                 .iter()
                 .map(|trap| OracleTrap {
                     cell: trap.cell,
-                    class_name: trap.class_name.clone(),
+                    class_name: trap.class_name().to_string(),
                     visible: trap.visible,
                     active: trap.active,
                     color: trap.color,
@@ -534,7 +534,7 @@ fn depth_one_final_heaps_match_report_projection() {
                 .iter()
                 .map(|plant| OraclePlant {
                     cell: plant.cell,
-                    class_name: plant.class_name.clone(),
+                    class_name: plant.class_name().to_string(),
                     image: plant.image,
                 })
                 .collect();
@@ -545,7 +545,7 @@ fn depth_one_final_heaps_match_report_projection() {
                 .blobs
                 .iter()
                 .map(|blob| OracleBlob {
-                    class_name: blob.class_name.clone(),
+                    class_name: blob.class_name().to_string(),
                     volume: blob.volume,
                     always_visible: blob.always_visible,
                     cells: blob
@@ -760,7 +760,7 @@ fn rat_skull_fixtures_replay_exact_profiled_floor_state() {
             .iter()
             .map(|mob| OracleMob {
                 cell: mob.cell,
-                class_name: mob.class_name.clone(),
+                class_name: mob.class_name().to_string(),
             })
             .collect();
         assert_eq!(mobs, expected.final_mobs, "{name} mobs");
@@ -774,7 +774,7 @@ fn rat_skull_fixtures_replay_exact_profiled_floor_state() {
                     .items
                     .iter()
                     .map(|item| OracleItem {
-                        class_name: item.class_name.clone(),
+                        class_name: item.class_name().to_string(),
                         quantity: item.quantity,
                         level: item.level,
                         cursed: item.cursed,
@@ -836,7 +836,7 @@ fn aaa_floor_four_barren_land_matches_secret_garden_oracle() {
                 .items
                 .iter()
                 .map(|item| OracleItem {
-                    class_name: item.class_name.clone(),
+                    class_name: item.class_name().to_string(),
                     quantity: item.quantity,
                     level: item.level,
                     cursed: item.cursed,
@@ -853,7 +853,7 @@ fn aaa_floor_four_barren_land_matches_secret_garden_oracle() {
         .iter()
         .map(|mob| OracleMob {
             cell: mob.cell,
-            class_name: mob.class_name.clone(),
+            class_name: mob.class_name().to_string(),
         })
         .collect();
     assert_eq!(
@@ -922,7 +922,7 @@ fn aaa_floor_three_forbidden_runes_suppresses_even_upgrade_scroll() {
                 .items
                 .iter()
                 .map(|item| OracleItem {
-                    class_name: normalize_oracle_class(&item.class_name).to_string(),
+                    class_name: normalize_oracle_class(item.class_name()).to_string(),
                     quantity: item.quantity,
                     level: item.level,
                     cursed: item.cursed,

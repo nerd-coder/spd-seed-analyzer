@@ -11,7 +11,7 @@ fn floor_one_ring_room_contract_collapses_into_its_exact_forced_reward() {
         .collect();
 
     assert_eq!(ring_room_prizes.len(), 1);
-    assert_eq!(ring_room_prizes[0].class_name.as_deref(), Some("IronKey"));
+    assert_eq!(ring_room_prizes[0].class_name(), Some("IronKey"));
     assert_eq!(
         ring_room_prizes[0].prediction,
         report::ItemPredictionKind::Exact
@@ -24,7 +24,7 @@ fn floor_one_ring_room_contract_collapses_into_its_exact_forced_reward() {
         .items
         .iter()
         .find(|item| {
-            item.class_name.as_deref() == Some("RingOfWealth")
+            item.class_name() == Some("RingOfWealth")
                 && item.source.as_deref() == Some("CrystalVaultRoom")
         })
         .expect("separate Ring of Wealth crystal-vault prize");
@@ -35,7 +35,7 @@ fn floor_one_ring_room_contract_collapses_into_its_exact_forced_reward() {
 }
 
 #[test]
-fn floor_two_room_contracts_pair_seed_constraints_with_fresh_baselines() {
+fn floor_two_room_contracts_pair_seed_constraints_with_variable_items() {
     let report = analyze_seed("MWH-KAE-DHG", 2).expect("analyze");
     let floor = &report.floors[1];
 
@@ -48,12 +48,9 @@ fn floor_two_room_contracts_pair_seed_constraints_with_fresh_baselines() {
     assert_eq!(hidden.variants[0].name, "hidden crystal-choice reward");
     assert_eq!(
         hidden.variants[1].prediction,
-        report::ItemPredictionKind::Baseline
+        report::ItemPredictionKind::Variable
     );
-    assert_eq!(
-        hidden.variants[1].class_name.as_deref(),
-        Some("WandOfTransfusion")
-    );
+    assert_eq!(hidden.variants[1].class_name(), Some("WandOfTransfusion"));
 
     let honeypot_bomb = floor
         .items
@@ -62,17 +59,14 @@ fn floor_two_room_contracts_pair_seed_constraints_with_fresh_baselines() {
         .expect("Secret Honeypot bomb reward");
     assert_eq!(honeypot_bomb.variants.len(), 2);
     assert_eq!(
-        honeypot_bomb.variants[0].candidate_classes,
+        honeypot_bomb.variants[0].candidate_classes(),
         ["Bomb", "DoubleBomb"]
     );
     assert_eq!(
         honeypot_bomb.variants[1].prediction,
-        report::ItemPredictionKind::Baseline
+        report::ItemPredictionKind::Variable
     );
-    assert_eq!(
-        honeypot_bomb.variants[1].class_name.as_deref(),
-        Some("Bomb")
-    );
+    assert_eq!(honeypot_bomb.variants[1].class_name(), Some("Bomb"));
 
     let grave_prize = floor
         .items
@@ -84,13 +78,10 @@ fn floor_two_room_contracts_pair_seed_constraints_with_fresh_baselines() {
         grave_prize.variants[0].name,
         "Grassy Grave Generator reward"
     );
-    assert_eq!(
-        grave_prize.variants[1].class_name.as_deref(),
-        Some("StoneOfBlink")
-    );
+    assert_eq!(grave_prize.variants[1].class_name(), Some("StoneOfBlink"));
     assert_eq!(
         grave_prize.variants[1].prediction,
-        report::ItemPredictionKind::Baseline
+        report::ItemPredictionKind::Variable
     );
     assert!(floor.items.iter().any(|item| {
         item.name == "2 Grassy Grave gold rewards (50–100 gold each)"
@@ -103,10 +94,7 @@ fn floor_two_room_contracts_pair_seed_constraints_with_fresh_baselines() {
             .iter()
             .filter(|item| {
                 item.source.as_deref() == Some("SecretHoneypotRoom")
-                    && matches!(
-                        item.class_name.as_deref(),
-                        Some("ShatteredPot" | "Honeypot")
-                    )
+                    && matches!(item.class_name(), Some("ShatteredPot" | "Honeypot"))
             })
             .count(),
         2
@@ -117,7 +105,7 @@ fn public_catalyst_groups(floor: &report::FloorReport) -> Vec<&report::ItemGroup
     floor
         .items
         .iter()
-        .filter(|item| item.class_name.as_deref() == Some("TrinketCatalyst"))
+        .filter(|item| item.class_name() == Some("TrinketCatalyst"))
         .collect()
 }
 
@@ -130,7 +118,7 @@ fn floor_one_magical_fire_catalyst_keeps_canonical_name_and_offers() {
         .iter()
         .find(|item| {
             item.source.as_deref() == Some("MagicalFireRoom")
-                && item.class_name.as_deref() == Some("TrinketCatalyst")
+                && item.class_name() == Some("TrinketCatalyst")
         })
         .expect("floor-one MagicalFireRoom catalyst");
 
@@ -146,7 +134,7 @@ fn floor_one_magical_fire_catalyst_keeps_canonical_name_and_offers() {
         ]
     );
     assert_eq!(
-        catalyst.candidate_classes,
+        catalyst.candidates,
         report.trinket_selection.catalyst_options
     );
     assert_eq!(public_catalyst_groups(floor).len(), 1);
@@ -171,7 +159,7 @@ fn floor_one_public_catalyst_copies_seed_offers() {
         let catalyst = catalysts[0];
         assert_eq!(catalyst.name, "Trinket Catalyst", "seed {seed}");
         assert_eq!(
-            catalyst.class_name.as_deref(),
+            catalyst.class_name(),
             Some("TrinketCatalyst"),
             "seed {seed}"
         );
@@ -181,7 +169,7 @@ fn floor_one_public_catalyst_copies_seed_offers() {
             "seed {seed}"
         );
         assert_eq!(
-            catalyst.candidate_classes, report.trinket_selection.catalyst_options,
+            catalyst.candidates, report.trinket_selection.catalyst_options,
             "seed {seed}"
         );
         assert!(

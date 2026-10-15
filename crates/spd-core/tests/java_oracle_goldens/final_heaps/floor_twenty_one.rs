@@ -126,7 +126,7 @@ fn aaa_floor_twenty_one_pins_first_generation_divergence_fix() {
         .iter()
         .map(|mob| OracleMob {
             cell: mob.cell,
-            class_name: mob.class_name.clone(),
+            class_name: mob.class_name().to_string(),
         })
         .collect::<Vec<_>>();
     assert_eq!(mobs, expected.final_mobs, "floor-21 final mobs");
@@ -140,7 +140,7 @@ fn aaa_floor_twenty_one_pins_first_generation_divergence_fix() {
                 .items
                 .iter()
                 .map(|item| OracleItem {
-                    class_name: item.class_name.clone(),
+                    class_name: item.class_name().to_string(),
                     quantity: item.quantity,
                     level: item.level,
                     cursed: item.cursed,

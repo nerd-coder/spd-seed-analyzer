@@ -240,14 +240,14 @@ fn rot_garden_places_heart_and_lashers_without_duplicate_key_rng() {
     assert_eq!(
         known_plants
             .iter()
-            .filter(|(_, label)| *label == "Rot Heart")
+            .filter(|(_, label)| *label == "RotHeart")
             .count(),
         1
     );
     assert!(known_plants
         .iter()
-        .filter(|(_, label)| *label != "Rot Heart")
-        .all(|(_, label)| *label == "Rot Lasher"));
+        .filter(|(_, label)| *label != "RotHeart")
+        .all(|(_, label)| *label == "RotLasher"));
     assert!(known_plants
         .iter()
         .all(|&(cell, _)| map.mob_occupied[cell] && map.map[cell] == GRASS));

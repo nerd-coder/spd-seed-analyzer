@@ -24,7 +24,6 @@ use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::items::model::{ForcedDropRole, GeneratedItem, ItemCategory, ItemProvenance};
 use crate::random::Random;
-use crate::report::FloorReport;
 use crate::MapProfile;
 
 pub use create_items::PlacedLoot;
@@ -84,20 +83,42 @@ pub(crate) fn create_level_partial_with_profile(
     dungeon: &mut DungeonState,
     configured_profile: bool,
 ) -> LevelState {
-    create_level_internal(dungeon, configured_profile, false)
+    create_level_internal(dungeon, configured_profile, LevelOutput::FULL)
 }
 
-fn create_level_layout_with_profile(
-    dungeon: &mut DungeonState,
-    configured_profile: bool,
-) -> LevelState {
-    create_level_internal(dungeon, configured_profile, true)
+/// Which optional products one floor generation builds. Painting always runs:
+/// it consumes the RNG later floors depend on.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct LevelOutput {
+    /// Run createMobs/createItems after painting.
+    populate: bool,
+    /// Project painted layouts into `FloorMap`s and record RNG probes.
+    maps: bool,
+}
+
+impl LevelOutput {
+    const FULL: Self = Self {
+        populate: true,
+        maps: true,
+    };
+    const LAYOUT: Self = Self {
+        populate: false,
+        maps: true,
+    };
+    const ITEMS: Self = Self {
+        populate: true,
+        maps: false,
+    };
+    const ROOMS: Self = Self {
+        populate: false,
+        maps: false,
+    };
 }
 
 fn create_level_internal(
     dungeon: &mut DungeonState,
     configured_profile: bool,
-    layout_only: bool,
+    output: LevelOutput,
 ) -> LevelState {
     let inherited_public_taint = dungeon.public_generation_tainted;
     // An explicit fresh profile closes every input before the first floor is
@@ -294,7 +315,7 @@ fn create_level_internal(
                 runtime_sensitive_layout,
                 runtime_sensitive_rooms,
                 runtime_sensitive_feeling,
-                baseline_projection: dungeon.baseline_projection,
+                expose_variable_items: dungeon.expose_variable_items,
                 room_public_facts,
                 complete: false,
                 map: floor_map,
@@ -330,7 +351,7 @@ fn create_level_internal(
         // before room shuffle / placeDoors / special paint.
         terrain::shift_rooms_for_painter(&mut floor.rooms, feeling == Feeling::Chasm);
         let n_traps = painter::n_traps(dungeon.depth);
-        if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=22) {
+        if output.maps && matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=22) {
             pre_paint_rng_probe = Random::peek_ints(8);
         }
         pre_shuffle_room_bounds = floor
@@ -453,7 +474,7 @@ fn create_level_internal(
                 feeling,
                 &mut doors,
             );
-            if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=24) {
+            if output.maps && matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=24) {
                 post_doors_rng_probe = Random::peek_ints(8);
             }
 
@@ -468,13 +489,15 @@ fn create_level_internal(
                 n_traps,
             );
 
-            layout_map = Some(
-                map_facts::MapFacts::from_room_paint(&map)
-                    .into_floor_map(&map, dungeon.depth, dungeon.branch, depth_seed)
-                    .into_layout_only(),
-            );
+            if output.maps {
+                layout_map = Some(
+                    map_facts::MapFacts::from_room_paint(&map)
+                        .into_floor_map(&map, dungeon.depth, dungeon.branch, depth_seed)
+                        .into_layout_only(),
+                );
+            }
 
-            if !layout_only {
+            if output.populate {
                 // RegularPainter shuffles the actual Java `rooms` ArrayList in
                 // place. Later createMobs/createItems therefore observe painter
                 // order, not the builder's original room order.
@@ -483,7 +506,9 @@ fn create_level_internal(
                     .filter_map(|&index| floor.rooms.get(index).cloned())
                     .collect();
 
-                if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=24) {
+                if output.maps
+                    && matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=24)
+                {
                     pre_mobs_rng_probe = Random::peek_ints(8);
                 }
                 let spawned = quest_rewards::spawn_npcs(dungeon, &floor.rooms, &mut map);
@@ -508,7 +533,9 @@ fn create_level_internal(
                     false
                 };
 
-                if matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=24) {
+                if output.maps
+                    && matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=24)
+                {
                     pre_items_rng_probe = Random::peek_ints(8);
                 }
                 let loot = create_items::create_items_main(
@@ -518,10 +545,14 @@ fn create_level_internal(
                     feeling == Feeling::Large,
                     items_to_spawn,
                 );
-                let mut map_facts = map_facts::MapFacts::from_room_paint(&map);
+                let mut map_facts = output
+                    .maps
+                    .then(|| map_facts::MapFacts::from_room_paint(&map));
 
                 for created in loot {
-                    map_facts.add_created_loot(&created, map.len());
+                    if let Some(map_facts) = map_facts.as_mut() {
+                        map_facts.add_created_loot(&created, map.len());
+                    }
                     let p = created.loot;
                     if matches!(
                         p.item.source.as_deref(),
@@ -549,8 +580,9 @@ fn create_level_internal(
                     }
                     placed_items.push(item);
                 }
-                floor_map =
-                    Some(map_facts.into_floor_map(&map, dungeon.depth, dungeon.branch, depth_seed));
+                floor_map = map_facts.map(|map_facts| {
+                    map_facts.into_floor_map(&map, dungeon.depth, dungeon.branch, depth_seed)
+                });
             }
         }
 
@@ -595,7 +627,7 @@ fn create_level_internal(
         runtime_sensitive_layout,
         runtime_sensitive_rooms,
         runtime_sensitive_feeling,
-        baseline_projection: dungeon.baseline_projection,
+        expose_variable_items: dungeon.expose_variable_items,
         room_public_facts,
         complete: build_ok,
         map: floor_map,
@@ -608,124 +640,17 @@ fn create_level_internal(
     }
 }
 
-pub fn analyze_layouts_with_profile(
-    dungeon: &mut DungeonState,
-    max_floors: u32,
-    profile: &MapProfile,
-) -> Vec<FloorReport> {
-    let mut availability_preview = dungeon.clone();
-    let (catalyst_depth, pot_depth, _) = first_trinket_availability(&mut availability_preview);
-    let first_effective_trinket_depth = catalyst_depth.max(pot_depth) + 1;
-    dungeon.challenges = profile.challenge_mask();
-    let mut floors = Vec::new();
-    trinkets::reset(dungeon.seed);
-    let max = max_floors.clamp(1, 26) as i32;
-    for depth in 1..=max {
-        dungeon.depth = depth;
-        dungeon.branch = 0;
-        trinkets::set_held(profile.held_at(depth as u32));
-        let level =
-            create_level_layout_with_profile(dungeon, !profile.has_unmodeled_generation_inputs());
-        let mut report =
-            level.to_floor_report_with_trinket_availability(true, first_effective_trinket_depth);
-        attach_side_branches(dungeon, true, &mut report);
-        floors.push(report);
-    }
-    floors
-}
+mod replay;
 
-pub(crate) fn first_trinket_availability(dungeon: &mut DungeonState) -> (u32, u32, bool) {
-    dungeon.challenges = 0;
-    trinkets::reset(dungeon.seed);
-    let mut catalyst_depth = None;
-    let mut first_pot = None;
-    for depth in 1..=4 {
-        dungeon.depth = depth;
-        dungeon.branch = 0;
-        trinkets::set_held(None);
-        let level = create_level_layout_with_profile(dungeon, true);
-        if catalyst_depth.is_none()
-            && level
-                .initial_forced_items
-                .iter()
-                .any(|item| item.class_name == "TrinketCatalyst")
-        {
-            catalyst_depth = Some(depth as u32);
-        }
-        if first_pot.is_none() {
-            first_pot = level
-                .rooms
-                .iter()
-                .find(|room| matches!(room.as_str(), "LaboratoryRoom" | "SecretLaboratoryRoom"))
-                .map(|room| (depth as u32, room == "SecretLaboratoryRoom"));
-        }
-    }
-    let catalyst_depth = catalyst_depth.expect("one Trinket Catalyst is guaranteed by depth 4");
-    let (pot_depth, pot_is_secret) = first_pot.expect("a LaboratoryRoom is guaranteed by depth 4");
-    (catalyst_depth, pot_depth, pot_is_secret)
-}
-
-pub fn analyze_floors(dungeon: &mut DungeonState, max_floors: u32) -> Vec<FloorReport> {
-    analyze_floors_with_profile(dungeon, max_floors, None)
-}
-
-pub fn analyze_floors_with_profile(
-    dungeon: &mut DungeonState,
-    max_floors: u32,
-    profile: Option<&MapProfile>,
-) -> Vec<FloorReport> {
-    let mut availability_preview = dungeon.clone();
-    let (catalyst_depth, pot_depth, _) = first_trinket_availability(&mut availability_preview);
-    let first_effective_trinket_depth = catalyst_depth.max(pot_depth) + 1;
-    analyze_floors_with_profile_and_trinket_availability(
-        dungeon,
-        max_floors,
-        profile,
-        first_effective_trinket_depth,
-    )
-}
-
-pub(crate) fn analyze_floors_with_profile_and_trinket_availability(
-    dungeon: &mut DungeonState,
-    max_floors: u32,
-    profile: Option<&MapProfile>,
-    first_effective_trinket_depth: u32,
-) -> Vec<FloorReport> {
-    dungeon.challenges = profile.map_or(0, MapProfile::challenge_mask);
-    let mut floors = Vec::new();
-    dungeon.ghost_rewards_profiled = profile.is_some_and(|profile| {
-        !profile.has_unmodeled_generation_inputs() && profile.only_uses_mimic_tooth()
-    });
-    trinkets::reset(dungeon.seed);
-    let max = max_floors.clamp(1, 26) as i32;
-    for depth in 1..=max {
-        dungeon.depth = depth;
-        dungeon.branch = 0;
-        trinkets::set_held(profile.and_then(|profile| profile.held_at(depth as u32)));
-        let configured = profile.is_some_and(|profile| !profile.has_unmodeled_generation_inputs());
-        let level = create_level_partial_with_profile(dungeon, configured);
-        let mut report = level
-            .to_floor_report_with_trinket_availability(configured, first_effective_trinket_depth);
-        attach_side_branches(dungeon, configured, &mut report);
-        floors.push(report);
-    }
-    floors
-}
-
-fn attach_side_branches(dungeon: &DungeonState, expose_map: bool, report: &mut FloorReport) {
-    if dungeon.blacksmith.depth == dungeon.depth {
-        if let Some(branch) = mining::generate(dungeon, expose_map) {
-            report.branches.push(branch.report);
-        }
-    }
-    if dungeon.imp.spawned && dungeon.imp.depth == dungeon.depth {
-        let mut vault_dungeon = dungeon.clone();
-        if let Some(layout) = vault::generate(&mut vault_dungeon, expose_map) {
-            report.branches.push(layout.report);
-        }
-    }
-}
+pub use replay::{analyze_floors, analyze_floors_with_profile, analyze_layouts_with_profile};
+pub(crate) use replay::{
+    analyze_floors_with_profile_and_trinket_availability, first_trinket_availability, search_floors,
+};
 
 #[cfg(test)]
 #[path = "map_report_tests.rs"]
 mod map_report_tests;
+
+#[cfg(test)]
+#[path = "id_sweep_tests.rs"]
+mod id_sweep_tests;

@@ -8,8 +8,9 @@ fn constrained_spawn_entry(name: &str, class_name: &str, category: &str) -> Item
     ItemEntry {
         name: name.into(),
         quantity: 1,
-        class_name: Some(class_name.into()),
-        candidate_classes: Vec::new(),
+        label: None,
+        item: Some(crate::report::item_id(class_name)),
+        candidates: Vec::new(),
         category: category.into(),
         tier: None,
         tier_range: None,
@@ -34,8 +35,9 @@ fn guaranteed_spawn_entry(name: &str, class_name: &str, category: &str) -> ItemE
     ItemEntry {
         name: name.into(),
         quantity: 1,
-        class_name: Some(class_name.into()),
-        candidate_classes: Vec::new(),
+        label: None,
+        item: Some(crate::report::item_id(class_name)),
+        candidates: Vec::new(),
         category: category.into(),
         tier: None,
         tier_range: None,
@@ -80,8 +82,9 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
         vec![ItemEntry {
             name: "food".into(),
             quantity: 1,
-            class_name: None,
-            candidate_classes: Vec::new(),
+            label: None,
+            item: None,
+            candidates: Vec::new(),
             category: "food".into(),
             tier: None,
             tier_range: None,
@@ -115,8 +118,9 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
         entries.push(ItemEntry {
             name: "food".into(),
             quantity: 1,
-            class_name: None,
-            candidate_classes: Vec::new(),
+            label: None,
+            item: None,
+            candidates: Vec::new(),
             category: "food".into(),
             tier: None,
             tier_range: None,
@@ -160,7 +164,7 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
             ItemProvenance::Forced(ForcedDropRole::TrinketCatalyst) => {
                 let mut catalyst =
                     guaranteed_spawn_entry("Trinket Catalyst", "TrinketCatalyst", "other");
-                catalyst.candidate_classes = item.candidate_classes.clone();
+                catalyst.candidates = crate::report::item_ids(&item.candidate_classes);
                 entries.push(catalyst);
                 continue;
             }

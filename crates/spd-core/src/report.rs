@@ -5,13 +5,15 @@ mod quests;
 
 use serde::{Deserialize, Serialize};
 
+use spd_objects::{BlobId, Enchantment, ItemId, MobId, PlantId, RoomId, TrapId};
+
 use crate::dungeon_seed::SeedError;
 use crate::items::IdentityMaps;
 use crate::trinkets::{
     ArtifactEvent, Challenge, ProfileError, TrinketEvent, TrinketSelectionReport,
 };
 
-pub(crate) use compact::is_baseline_highlight;
+pub(crate) use compact::is_variable_highlight;
 pub use quests::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -94,6 +96,26 @@ pub struct MapCustomTile {
     pub static_data: Vec<i16>,
 }
 
+macro_rules! class_name_accessor {
+    ($($ty:ty => $field:ident),* $(,)?) => {
+        $(impl $ty {
+            pub fn class_name(&self) -> &'static str {
+                self.$field.class_name()
+            }
+        })*
+    };
+}
+
+class_name_accessor! {
+    MapHeapItem => item,
+    MapMob => mob,
+    MapTrap => trap,
+    MapPlant => plant,
+    MapBlob => blob,
+    InitialEncounter => mob,
+    PossibleRoom => room,
+}
+
 impl FloorMap {
     /// Terrain/layout projection. Entity placement is intentionally excluded.
     pub(crate) fn into_layout_only(mut self) -> Self {
@@ -115,8 +137,7 @@ pub struct MapHeap {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct MapHeapItem {
-    #[serde(rename = "class")]
-    pub class_name: String,
+    pub item: ItemId,
     pub quantity: i32,
     pub level: i32,
     pub cursed: bool,
@@ -129,8 +150,7 @@ pub struct MapHeapItem {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct MapMob {
     pub cell: u32,
-    #[serde(rename = "class")]
-    pub class_name: String,
+    pub mob: MobId,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -150,8 +170,7 @@ pub struct MapTransition {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct MapTrap {
     pub cell: u32,
-    #[serde(rename = "class")]
-    pub class_name: String,
+    pub trap: TrapId,
     pub visible: bool,
     pub active: bool,
     /// Pinned `Trap` sprite color index.
@@ -165,8 +184,7 @@ pub struct MapTrap {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct MapPlant {
     pub cell: u32,
-    #[serde(rename = "class")]
-    pub class_name: String,
+    pub plant: PlantId,
     /// Pinned `Plant.image` sprite index.
     #[serde(default)]
     pub image: u8,
@@ -174,8 +192,7 @@ pub struct MapPlant {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct MapBlob {
-    #[serde(rename = "class")]
-    pub class_name: String,
+    pub blob: BlobId,
     pub volume: u32,
     pub always_visible: bool,
     pub cells: Vec<MapBlobCell>,
@@ -211,10 +228,10 @@ pub struct FloorReport {
     pub builder: Option<String>,
     /// Room types selected by `initRooms` (order after shuffle).
     #[serde(default)]
-    pub rooms: Vec<String>,
+    pub rooms: Vec<RoomId>,
     /// Room types that can occur in the modeled player/trinket profiles.
     ///
-    /// `rooms` remains the no-extra-player-state baseline for compatibility.
+    /// `rooms` remains the no-extra-player-state room list.
     /// This field is the machine-readable projection when a profile can alter
     /// the layout. Each entry's conditions are alternatives (logical OR).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -226,14 +243,14 @@ pub struct FloorReport {
     /// Runtime summons and respawns are deliberately excluded.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub initial_encounters: Vec<InitialEncounter>,
-    /// Logical item spawns and their exact, constrained, or fresh-baseline variants.
+    /// Logical item spawns and their exact, constrained, or gameplay-variable variants.
     /// Only exact variants are finder evidence.
     pub items: Vec<ItemGroup>,
     pub quests: Vec<QuestReport>,
     /// Present when geometry build succeeded.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub map: Option<FloorMap>,
-    /// Layout produced by the analyzer's baseline continuation after an
+    /// Layout produced by the analyzer's default-profile continuation after an
     /// unresolved player/meta-state branch. This is never an exact public
     /// prediction and must be presented with its assumption warning.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -260,7 +277,7 @@ pub struct BranchAccessReport {
     pub quest_id: String,
     pub requires_acceptance: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub required_item: Option<String>,
+    pub required_item: Option<ItemId>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -271,7 +288,7 @@ pub struct BranchFloorReport {
     pub objective: String,
     pub access: BranchAccessReport,
     #[serde(default)]
-    pub rooms: Vec<String>,
+    pub rooms: Vec<RoomId>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub map: Option<FloorMap>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -286,8 +303,9 @@ impl FloorReport {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct InitialEncounter {
-    #[serde(rename = "class")]
-    pub class_name: String,
+    pub mob: MobId,
+    /// Internal English name; the wire carries `mob`.
+    #[serde(skip)]
     pub name: String,
     pub quantity: u32,
     /// Base rewards associated with defeating this generated entity. Empty means
@@ -298,10 +316,19 @@ pub struct InitialEncounter {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CombatReward {
+    /// Internal English name; the wire carries `item` and `category`.
+    #[serde(skip)]
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub class_name: Option<String>,
+    pub item: Option<ItemId>,
     pub category: String,
+    /// Upgrade level of a reward generated with the floor, when above zero.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub level: Option<i32>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub cursed: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub enchantment: Option<Enchantment>,
     pub prediction: CombatRewardPrediction,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub chance: Option<RewardChance>,
@@ -327,8 +354,7 @@ pub struct RewardChance {
 /// A room type and count observed in one or more modeled generation profiles.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct PossibleRoom {
-    #[serde(rename = "class")]
-    pub class_name: String,
+    pub room: RoomId,
     /// Number of rooms of this type for the associated profile condition.
     pub quantity: u32,
     /// Alternative player-state profiles under which this exact count occurs.
@@ -343,10 +369,9 @@ pub struct PossibleRoom {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct GuaranteedAppearance {
-    pub name: String,
     pub kind: GuaranteedAppearanceKind,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub source: Option<String>,
+    pub source: Option<RoomId>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -357,16 +382,22 @@ pub enum GuaranteedAppearanceKind {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ItemEntry {
+    /// Internal English description used by compact text and tests. The wire
+    /// carries `item` instead, or `label` when there is no single identity.
+    #[serde(skip)]
     pub name: String,
+    /// Description of an entry without a single item identity (room
+    /// contracts, constrained rewards). Absent whenever `item` is set.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
     /// Number of identical items represented by this entry.
     #[serde(default = "default_item_quantity")]
     pub quantity: i32,
-    /// Java simple class name (e.g. `Sword`, `PotionOfHealing`) for icons/lookup.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub class_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub item: Option<ItemId>,
     /// Ordered seed-determined identities when run history can shift a deck index.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub candidate_classes: Vec<String>,
+    pub candidates: Vec<ItemId>,
     pub category: String,
     /// Equipment tier when it is stable even though the concrete class is not.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -406,6 +437,37 @@ pub struct ItemEntry {
     pub source: Option<String>,
 }
 
+impl ItemEntry {
+    pub fn class_name(&self) -> Option<&'static str> {
+        self.item.map(ItemId::class_name)
+    }
+
+    pub fn candidate_classes(&self) -> Vec<&'static str> {
+        self.candidates
+            .iter()
+            .map(|item| item.class_name())
+            .collect()
+    }
+
+    /// Fills the wire `label` for entries without a single identity.
+    fn finalize_label(&mut self) {
+        self.label = self.item.is_none().then(|| self.name.clone());
+    }
+}
+
+/// Engine class name to public id. Unknown names map to `ItemId::Unknown`,
+/// which the analyze sweep tests reject.
+pub(crate) fn item_id(class_name: &str) -> ItemId {
+    ItemId::from_class_name_lossy(class_name)
+}
+
+pub(crate) fn item_ids<S: AsRef<str>>(class_names: &[S]) -> Vec<ItemId> {
+    class_names
+        .iter()
+        .map(|class| item_id(class.as_ref()))
+        .collect()
+}
+
 /// One logical item spawn. Multiple variants are alternative projections of
 /// that spawn, rather than additional items.
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -416,7 +478,8 @@ pub struct ItemGroup {
 }
 
 impl ItemGroup {
-    pub fn single(item: ItemEntry) -> Self {
+    pub fn single(mut item: ItemEntry) -> Self {
+        item.finalize_label();
         Self {
             source: item.source.clone(),
             variants: vec![item],
@@ -464,7 +527,8 @@ impl<'de> Deserialize<'de> for ItemGroup {
 
 pub(crate) fn group_item_entries(entries: Vec<ItemEntry>) -> Vec<ItemGroup> {
     let mut groups: Vec<ItemGroup> = Vec::with_capacity(entries.len());
-    for entry in entries {
+    for mut entry in entries {
+        entry.finalize_label();
         let paired_room_projection = matches!(
             entry.source.as_deref(),
             Some(
@@ -481,7 +545,7 @@ pub(crate) fn group_item_entries(entries: Vec<ItemEntry>) -> Vec<ItemGroup> {
         );
         let paired_prediction = matches!(
             entry.prediction,
-            ItemPredictionKind::Constrained | ItemPredictionKind::Baseline
+            ItemPredictionKind::Constrained | ItemPredictionKind::Variable
         );
         let matching = (paired_room_projection && paired_prediction).then(|| {
             groups.iter_mut().find(|group| {
@@ -501,9 +565,9 @@ pub(crate) fn group_item_entries(entries: Vec<ItemEntry>) -> Vec<ItemGroup> {
                         (group.variants[0].prediction, entry.prediction),
                         (
                             ItemPredictionKind::Constrained,
-                            ItemPredictionKind::Baseline
+                            ItemPredictionKind::Variable
                         ) | (
-                            ItemPredictionKind::Baseline,
+                            ItemPredictionKind::Variable,
                             ItemPredictionKind::Constrained
                         )
                     )
@@ -513,7 +577,7 @@ pub(crate) fn group_item_entries(entries: Vec<ItemEntry>) -> Vec<ItemGroup> {
             group.variants.push(entry);
             group
                 .variants
-                .sort_by_key(|variant| variant.prediction == ItemPredictionKind::Baseline);
+                .sort_by_key(|variant| variant.prediction == ItemPredictionKind::Variable);
         } else {
             groups.push(ItemGroup::single(entry));
         }
@@ -536,9 +600,9 @@ pub struct NumericRange {
 pub enum ItemPredictionKind {
     /// Concrete identity and properties are safe to use for display and search.
     Exact,
-    /// Concrete result from the fresh, no-history replay. It is useful for
-    /// planning but player-controlled prior generation can change it.
-    Baseline,
+    /// Concrete result this seed rolls when gameplay has not shifted the
+    /// shared generation state. Player choices can change it.
+    Variable,
     /// Only the explicitly populated constraints are seed-only guarantees.
     Constrained,
 }
@@ -554,7 +618,7 @@ pub struct ItemSpawnCondition {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ItemEnchantment {
     #[serde(rename = "type")]
-    pub enchantment_type: String,
+    pub enchantment_type: Enchantment,
     pub conditions: Vec<ItemCondition>,
 }
 

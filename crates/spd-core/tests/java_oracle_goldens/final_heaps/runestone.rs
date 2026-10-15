@@ -32,7 +32,7 @@ pub(super) fn assert_aaa_afu_facts(
             (
                 heap.cell,
                 heap.heap_type.as_str(),
-                heap.items[0].class_name.as_str(),
+                heap.items[0].class_name(),
             )
         })
         .collect();

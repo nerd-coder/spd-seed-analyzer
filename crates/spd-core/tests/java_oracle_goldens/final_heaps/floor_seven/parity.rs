@@ -43,7 +43,7 @@ pub(super) fn assert_map(map: &FloorMap, expected: &OracleFloor) {
                 .items
                 .iter()
                 .map(|item| OracleItem {
-                    class_name: item.class_name.clone(),
+                    class_name: item.class_name().to_string(),
                     quantity: item.quantity,
                     level: item.level,
                     cursed: item.cursed,
@@ -58,7 +58,7 @@ pub(super) fn assert_map(map: &FloorMap, expected: &OracleFloor) {
         .iter()
         .map(|mob| OracleMob {
             cell: mob.cell,
-            class_name: mob.class_name.clone(),
+            class_name: mob.class_name().to_string(),
         })
         .collect();
     assert_eq!(actual_mobs, expected.final_mobs, "HKT floor-7 mobs");
@@ -89,7 +89,7 @@ pub(super) fn assert_map(map: &FloorMap, expected: &OracleFloor) {
         .iter()
         .map(|trap| OracleTrap {
             cell: trap.cell,
-            class_name: trap.class_name.clone(),
+            class_name: trap.class_name().to_string(),
             visible: trap.visible,
             active: trap.active,
             color: trap.color,
@@ -107,7 +107,7 @@ pub(super) fn assert_map(map: &FloorMap, expected: &OracleFloor) {
         .iter()
         .map(|plant| OraclePlant {
             cell: plant.cell,
-            class_name: plant.class_name.clone(),
+            class_name: plant.class_name().to_string(),
             image: plant.image,
         })
         .collect();
@@ -121,7 +121,7 @@ pub(super) fn assert_map(map: &FloorMap, expected: &OracleFloor) {
         .blobs
         .iter()
         .map(|blob| OracleBlob {
-            class_name: blob.class_name.clone(),
+            class_name: blob.class_name().to_string(),
             volume: blob.volume,
             always_visible: blob.always_visible,
             cells: blob

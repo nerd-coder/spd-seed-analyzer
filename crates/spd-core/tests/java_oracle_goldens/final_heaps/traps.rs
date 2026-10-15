@@ -34,12 +34,7 @@ pub(super) fn assert_hello_traps_facts(
     assert_eq!(heap.items.len(), 1, "TrapsRoom stack size in {context}");
     let item = &heap.items[0];
     assert_eq!(
-        (
-            item.class_name.as_str(),
-            item.quantity,
-            item.level,
-            item.cursed
-        ),
+        (item.class_name(), item.quantity, item.level, item.cursed),
         ("PlateArmor", 1, 1, false),
         "pinned TrapsRoom prize in {context}"
     );

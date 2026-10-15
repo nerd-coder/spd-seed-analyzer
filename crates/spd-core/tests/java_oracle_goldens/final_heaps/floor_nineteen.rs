@@ -104,7 +104,7 @@ fn aaa_floor_nineteen_matches_through_tile_variance() {
         .iter()
         .map(|mob| OracleMob {
             cell: mob.cell,
-            class_name: mob.class_name.clone(),
+            class_name: mob.class_name().to_string(),
         })
         .collect();
     assert_eq!(mobs, expected.final_mobs, "floor-19 final mobs");
@@ -121,7 +121,7 @@ fn aaa_floor_nineteen_matches_through_tile_variance() {
                 .items
                 .iter()
                 .map(|item| OracleItem {
-                    class_name: item.class_name.clone(),
+                    class_name: item.class_name().to_string(),
                     quantity: item.quantity,
                     level: item.level,
                     cursed: item.cursed,
@@ -191,7 +191,7 @@ fn aaa_floor_nineteen_matches_through_tile_variance() {
         .iter()
         .map(|trap| OracleTrap {
             cell: trap.cell,
-            class_name: trap.class_name.clone(),
+            class_name: trap.class_name().to_string(),
             visible: trap.visible,
             active: trap.active,
             color: trap.color,
@@ -208,7 +208,7 @@ fn aaa_floor_nineteen_matches_through_tile_variance() {
         .iter()
         .map(|plant| OraclePlant {
             cell: plant.cell,
-            class_name: plant.class_name.clone(),
+            class_name: plant.class_name().to_string(),
             image: plant.image,
         })
         .collect::<Vec<_>>();
@@ -221,7 +221,7 @@ fn aaa_floor_nineteen_matches_through_tile_variance() {
         .blobs
         .iter()
         .map(|blob| OracleBlob {
-            class_name: blob.class_name.clone(),
+            class_name: blob.class_name().to_string(),
             volume: blob.volume,
             always_visible: blob.always_visible,
             cells: blob

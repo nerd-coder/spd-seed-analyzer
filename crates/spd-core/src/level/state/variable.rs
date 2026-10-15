@@ -3,11 +3,11 @@ use super::{is_blacklisted, is_unpublished_main_loot, sources::reported_source};
 use crate::items::model::{GeneratedItem, ItemProvenance, QuestRewardRole, RoomLootRole};
 use crate::report::{ItemEnchantment, ItemEntry, ItemPredictionKind};
 
-/// Project one concrete result from the fresh/no-history replay. The result is
-/// marked as baseline analysis inside the public item list: it is useful for a
-/// compact seed-finder-style report, but it is not a universal seed claim.
+/// Project one concrete result that varies with gameplay. It is the item this
+/// seed rolls on the default profile; player choices can shift it, so it is
+/// never a universal seed claim.
 pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
-    let room_baseline = matches!(
+    let room_variable = matches!(
         item.provenance,
         ItemProvenance::Room(
             RoomLootRole::PoolEquipment
@@ -19,8 +19,8 @@ pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
         )
     );
     if item.source.is_none()
-        || (is_blacklisted(item) && !room_baseline)
-        || (is_unpublished_main_loot(item) && !room_baseline)
+        || (is_blacklisted(item) && !room_variable)
+        || (is_unpublished_main_loot(item) && !room_variable)
         || item.provenance == ItemProvenance::Quest(QuestRewardRole::WandmakerPersisted)
     {
         return None;
@@ -29,7 +29,7 @@ pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
         ItemProvenance::Quest(role) => Some(role),
         _ => None,
     };
-    // Publishing an internal category list on a concrete baseline sample makes
+    // Publishing an internal category list on a concrete variable item makes
     // shared renderers present every class at the sample's exact level, which
     // is not a sound cross-profile claim. Imp still carries that list internally.
     let candidate_classes = if matches!(
@@ -50,8 +50,7 @@ pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
             Some(QuestRewardRole::ImpVaultOption { slot: 0 })
         );
     let notes = vec![
-        "Fresh/no-history baseline replay; player-controlled generation history can change this result."
-            .into(),
+        "Varies with gameplay; player-controlled generation history can change this result.".into(),
     ];
     let title = item.title();
     let source = match item.provenance {
@@ -69,7 +68,7 @@ pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
     } else {
         title.strip_prefix("cursed ").unwrap_or(&title).into()
     };
-    if room_baseline
+    if room_variable
         && item.level == 0
         && matches!(
             item.category,
@@ -84,8 +83,9 @@ pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
     Some(ItemEntry {
         name: public_name,
         quantity: item.quantity.max(1),
-        class_name: Some(item.class_name.clone()),
-        candidate_classes,
+        label: None,
+        item: Some(crate::report::item_id(&item.class_name)),
+        candidates: crate::report::item_ids(&candidate_classes),
         category: format!("{:?}", item.category).to_ascii_lowercase(),
         tier: crate::generator::weapon_tier_for_class(&item.class_name),
         tier_range: None,
@@ -96,10 +96,12 @@ pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
             .enchantment
             .clone()
             .map(|enchantment_type| ItemEnchantment {
-                enchantment_type,
+                enchantment_type: spd_objects::Enchantment::from_class_name_lossy(
+                    &enchantment_type,
+                ),
                 conditions: Vec::new(),
             }),
-        prediction: ItemPredictionKind::Baseline,
+        prediction: ItemPredictionKind::Variable,
         spawn_conditions: item_conditions(artifact_conditional),
         conditions: item_conditions_typed(quest_role, false),
         notes,

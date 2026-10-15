@@ -4,24 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use super::catalog::display_name;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum ItemCategory {
-    Weapon,
-    Armor,
-    Missile,
-    Wand,
-    Ring,
-    Artifact,
-    Potion,
-    Scroll,
-    Stone,
-    Seed,
-    Food,
-    Gold,
-    Trinket,
-    Other,
-}
+pub use spd_objects::ItemCategory;
 
 /// Internal reporting provenance. Exact generated values remain available to
 /// parity tests while public projection can enforce seed-only guarantees.

@@ -45,12 +45,7 @@ pub(super) fn assert_aaz_sentry_facts(
     let item = &heap.items[0];
     let expected_item = &expected_heap.items[0];
     assert_eq!(
-        (
-            item.class_name.as_str(),
-            item.quantity,
-            item.level,
-            item.cursed
-        ),
+        (item.class_name(), item.quantity, item.level, item.cursed),
         (
             expected_item.class_name.as_str(),
             expected_item.quantity,
@@ -66,7 +61,7 @@ pub(super) fn assert_aaz_sentry_facts(
         .expect("pinned AAA-AAZ SentryRoom mob");
     assert!(
         map.mobs.iter().any(|mob| {
-            mob.cell == expected_sentry.cell && mob.class_name == expected_sentry.class_name
+            mob.cell == expected_sentry.cell && mob.class_name() == expected_sentry.class_name
         }),
         "pinned room-painted Sentry in {context}"
     );

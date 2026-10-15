@@ -1,5 +1,7 @@
 //! Static seed-only contracts emitted by room painters.
 
+use spd_objects::ItemId;
+
 use crate::report::{ItemCondition, ItemEntry, ItemPredictionKind, NumericRange};
 use crate::rooms::room::Room;
 use crate::trinkets::Challenge;
@@ -42,9 +44,10 @@ impl RoomPublicFact {
             .into_iter()
             .map(|(name, category, cursed, note)| ItemEntry {
                 name: name.into(),
+                label: None,
                 quantity: 1,
-                class_name: None,
-                candidate_classes: Vec::new(),
+                item: None,
+                candidates: Vec::new(),
                 category: category.into(),
                 tier: None,
                 tier_range: None,
@@ -89,7 +92,7 @@ impl RoomPublicFact {
                 entry.source = Some("CrystalChoiceRoom:hidden_reward".into());
             }
             if entry.name == "Bomb reward" {
-                entry.candidate_classes = vec!["Bomb".into(), "DoubleBomb".into()];
+                entry.candidates = vec![ItemId::Bomb, ItemId::DoubleBomb];
                 entry.level = Some(0);
                 entry.source = Some("SecretHoneypotRoom:bomb".into());
             }
@@ -109,7 +112,7 @@ impl RoomPublicFact {
                 _ => None,
             };
             if let Some(class_name) = exact_class {
-                entry.class_name = Some(class_name.into());
+                entry.item = Some(crate::report::item_id(class_name));
                 entry.level = Some(0);
                 entry.prediction = ItemPredictionKind::Exact;
             }
@@ -150,9 +153,10 @@ fn larder_entries(depth: i32) -> Vec<ItemEntry> {
         .filter(|(_, count)| *count > 0)
         .map(|(class_name, count)| ItemEntry {
             name: class_name.into(),
+            label: None,
             quantity: count,
-            class_name: Some(class_name.into()),
-            candidate_classes: Vec::new(),
+            item: Some(crate::report::item_id(class_name)),
+            candidates: Vec::new(),
             category: "food".into(),
             tier: None,
             tier_range: None,

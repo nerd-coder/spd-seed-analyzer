@@ -20,13 +20,13 @@ pub(super) fn initial_encounters(
 
     let mut counts = BTreeMap::<&str, u32>::new();
     for mob in &map.mobs {
-        *counts.entry(&mob.class_name).or_default() += 1;
+        *counts.entry(mob.mob.class_name()).or_default() += 1;
     }
 
     counts
         .into_iter()
         .map(|(class_name, quantity)| InitialEncounter {
-            class_name: class_name.to_string(),
+            mob: spd_objects::MobId::from_class_name_lossy(class_name),
             name: encounter_name(class_name).to_string(),
             quantity,
             combat_rewards: combat_rewards(class_name, placed_items),
@@ -41,8 +41,11 @@ fn combat_rewards(class_name: &str, placed_items: &[GeneratedItem]) -> Vec<Comba
         "PhantomPiranha" => vec![fixed_reward("Phantom Meat", "PhantomMeat", "food")],
         "Snake" => vec![CombatReward {
             name: "random seed".into(),
-            class_name: None,
+            item: None,
             category: "seed".into(),
+            level: None,
+            cursed: false,
+            enchantment: None,
             prediction: CombatRewardPrediction::RuntimeChance,
             chance: Some(RewardChance {
                 numerator: 1,
@@ -68,8 +71,11 @@ fn combat_rewards(class_name: &str, placed_items: &[GeneratedItem]) -> Vec<Comba
 fn fixed_reward(name: &str, class_name: &str, category: &str) -> CombatReward {
     CombatReward {
         name: name.into(),
-        class_name: Some(class_name.into()),
+        item: Some(crate::report::item_id(class_name)),
         category: category.into(),
+        level: None,
+        cursed: false,
+        enchantment: None,
         prediction: CombatRewardPrediction::Guaranteed,
         chance: None,
     }
@@ -84,8 +90,14 @@ fn generated_rewards(
         .filter(|item| item.source.as_deref().is_some_and(&source_matches))
         .map(|item| CombatReward {
             name: item.title(),
-            class_name: Some(item.class_name.clone()),
+            item: Some(crate::report::item_id(&item.class_name)),
             category: category_name(item.category).into(),
+            level: (item.level > 0).then_some(item.level),
+            cursed: item.cursed,
+            enchantment: item
+                .enchantment
+                .as_deref()
+                .map(spd_objects::Enchantment::from_class_name_lossy),
             prediction: CombatRewardPrediction::GeneratedWithFloor,
             chance: None,
         })
@@ -149,7 +161,7 @@ mod tests {
     fn reward_classes(class_name: &str, items: &[GeneratedItem]) -> Vec<String> {
         combat_rewards(class_name, items)
             .into_iter()
-            .filter_map(|reward| reward.class_name)
+            .filter_map(|reward| reward.item.map(|item| item.class_name().to_string()))
             .collect()
     }
 }

@@ -1,6 +1,7 @@
 //! Machine-readable public quest report types.
 
 use serde::{Deserialize, Serialize};
+use spd_objects::{Enchantment, ItemId};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub struct QuestDepthRange {
@@ -23,19 +24,19 @@ pub struct QuestRewardSelection {
 pub enum QuestReport {
     SadGhost {
         contract: SadGhostQuestContract,
-        baseline: SadGhostQuestBaseline,
+        variable: SadGhostQuestVariable,
     },
     OldWandmaker {
         contract: OldWandmakerQuestContract,
-        baseline: OldWandmakerQuestBaseline,
+        variable: OldWandmakerQuestVariable,
     },
     TrollBlacksmith {
         contract: TrollBlacksmithQuestContract,
-        baseline: TrollBlacksmithQuestBaseline,
+        variable: TrollBlacksmithQuestVariable,
     },
     AmbitiousImp {
         contract: AmbitiousImpQuestContract,
-        baseline: AmbitiousImpQuestBaseline,
+        variable: AmbitiousImpQuestVariable,
     },
 }
 
@@ -61,7 +62,7 @@ pub enum GhostTarget {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-pub struct SadGhostQuestBaseline {
+pub struct SadGhostQuestVariable {
     pub target: GhostTarget,
 }
 
@@ -84,21 +85,21 @@ pub enum WandmakerObjective {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-pub struct OldWandmakerQuestBaseline {
+pub struct OldWandmakerQuestVariable {
     pub objective: WandmakerObjective,
 }
 
 /// One ordered wand option.
 ///
-/// `baseline_level` is the fresh pair's +N, not a per-candidate roll.
+/// `level` is the seed-drawn pair's +N, not a per-candidate roll.
 /// Wand 1 is always `level_pinned`. Wand 2 is pinned only when every offset
-/// in the window rejects the same number of duplicate wands as the fresh draw.
+/// in the window rejects the same number of duplicate wands as the seed draw.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct WandmakerRewardSlot {
     /// 0 = wand 1, 1 = wand 2.
     pub slot: u8,
-    pub baseline_class: String,
-    pub baseline_level: i32,
+    pub item: ItemId,
+    pub level: i32,
     pub level_pinned: bool,
     pub candidates: Vec<ImpSlotCandidate>,
     /// Number of deck-index offsets in the window. Denominator for `weight`.
@@ -120,7 +121,7 @@ pub enum BlacksmithObjective {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-pub struct TrollBlacksmithQuestBaseline {
+pub struct TrollBlacksmithQuestVariable {
     pub objective: BlacksmithObjective,
 }
 
@@ -132,7 +133,7 @@ pub struct AmbitiousImpQuestContract {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub slots: Vec<ImpRewardSlot>,
     /// True when no reachable deck drift changes any slot's upgrade or
-    /// enchant, making every `baseline_level` a seed-only guarantee.
+    /// enchant, making every `level` a seed-only guarantee.
     ///
     /// False only when `UnstableSpellbook` is reachable in slot 0: its
     /// constructor burns a `SCROLL.defaultProbsTotal` loop on the floor's
@@ -147,7 +148,7 @@ pub struct AmbitiousImpQuestContract {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-pub struct AmbitiousImpQuestBaseline {
+pub struct AmbitiousImpQuestVariable {
     pub spawn_depth: u32,
 }
 
@@ -180,26 +181,32 @@ pub enum ImpLevelRule {
 /// One class a slot can hold, with the deck-index drift that produces it.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ImpSlotCandidate {
-    pub class_name: String,
-    /// Deck-index offsets from the fresh baseline draw that yield this class,
-    /// nearest first. `0` is the baseline itself.
+    pub item: ItemId,
+    /// Deck-index offsets from the seed's own draw that yield this class,
+    /// nearest first. `0` is the seed's own draw.
     pub drifts: Vec<i32>,
     /// Number of enumerated offsets yielding this class. Divide by the slot's
     /// `scenario_count` for a share of the enumerated window.
     pub weight: u32,
 }
 
+impl ImpSlotCandidate {
+    pub fn class_name(&self) -> &'static str {
+        self.item.class_name()
+    }
+}
+
 /// Per-slot projection for the six take-out options.
 ///
 /// `candidates` is a share of an *enumerated deck-drift window*, not an
 /// empirical player frequency. Only `level_rule`, `enchanted`, and
-/// `fixed_class` are seed-independent guarantees.
+/// `fixed_item` are seed-independent guarantees.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ImpRewardSlot {
     pub slot: u8,
     pub role: ImpSlotRole,
-    /// The class drawn by the fresh/no-history replay.
-    pub baseline_class: String,
+    /// The class this seed draws when gameplay has not shifted the deck.
+    pub item: ItemId,
     pub level_rule: ImpLevelRule,
     /// Slot always carries an enchantment or glyph (50/40/10 common/uncommon/rare).
     pub enchanted: bool,
@@ -207,14 +214,14 @@ pub struct ImpRewardSlot {
     /// category consumes the same ambient RNG, so deck drift moves the class
     /// without moving the level. See `AmbitiousImpQuestContract::upgrades_pinned`
     /// for the single exception.
-    pub baseline_level: i32,
+    pub level: i32,
     /// The rolled enchantment or glyph, pinned on the same stream as the level.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub baseline_enchantment: Option<String>,
+    pub enchantment: Option<Enchantment>,
     /// Set when the class cannot vary at all (the plate armor slot).
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub fixed_class: Option<String>,
-    /// Empty when `fixed_class` is set.
+    pub fixed_item: Option<ItemId>,
+    /// Empty when `fixed_item` is set.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub candidates: Vec<ImpSlotCandidate>,
     /// Denominator for `ImpSlotCandidate::weight`.
@@ -244,7 +251,7 @@ mod tests {
                     target_rules: vec![],
                     rewards: rewards(),
                 },
-                baseline: SadGhostQuestBaseline {
+                variable: SadGhostQuestVariable {
                     target: GhostTarget::FetidRat,
                 },
             },
@@ -255,7 +262,7 @@ mod tests {
                     rewards: rewards(),
                     slots: Vec::new(),
                 },
-                baseline: OldWandmakerQuestBaseline {
+                variable: OldWandmakerQuestVariable {
                     objective: WandmakerObjective::CorpseDust,
                 },
             },
@@ -265,7 +272,7 @@ mod tests {
                     objective_options: vec![],
                     rewards: rewards(),
                 },
-                baseline: TrollBlacksmithQuestBaseline {
+                variable: TrollBlacksmithQuestVariable {
                     objective: BlacksmithObjective::Crystal,
                 },
             },
@@ -277,7 +284,7 @@ mod tests {
                     upgrades_pinned: true,
                     total_upgrade_value: 0,
                 },
-                baseline: AmbitiousImpQuestBaseline { spawn_depth: 17 },
+                variable: AmbitiousImpQuestVariable { spawn_depth: 17 },
             },
         ];
 

@@ -6,6 +6,7 @@ license.workspace = true
 description = "Headless Shattered Pixel Dungeon seed analysis (pure Rust)"
 
 [dependencies]
+spd-objects = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
 

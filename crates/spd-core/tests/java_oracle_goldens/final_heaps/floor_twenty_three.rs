@@ -124,7 +124,7 @@ pub(super) fn assert_halls_paint_trace(
         .iter()
         .filter(|item| {
             item.name == "Torch"
-                && item.class_name.as_deref() == Some("Torch")
+                && item.class_name() == Some("Torch")
                 && item.source.as_deref() == Some("guaranteed floor spawn")
         })
         .collect();
@@ -220,10 +220,7 @@ pub(super) fn assert_halls_paint_trace(
                 .expect("CrystalVault chest cell");
             assert_eq!(actual_chest.heap_type, "crystal_chest");
             assert_eq!(
-                actual_chest
-                    .items
-                    .first()
-                    .map(|item| item.class_name.as_str()),
+                actual_chest.items.first().map(|item| item.class_name()),
                 Some(chest.item.as_str()),
                 "CrystalVault chest item at {}",
                 chest.cell
@@ -232,7 +229,7 @@ pub(super) fn assert_halls_paint_trace(
         let actual_mimics = map
             .mobs
             .iter()
-            .filter(|mob| mob.class_name == "CrystalMimic")
+            .filter(|mob| mob.class_name() == "CrystalMimic")
             .map(|mob| mob.cell)
             .collect::<Vec<_>>();
         assert_eq!(actual_mimics, vault.crystal_mimics, "CrystalVault mimics");

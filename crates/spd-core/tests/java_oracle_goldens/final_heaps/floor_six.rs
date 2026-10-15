@@ -52,7 +52,7 @@ fn gfx_floor_six_secret_library_restores_preserved_run_lifecycle() {
         .iter()
         .map(|mob| OracleMob {
             cell: mob.cell,
-            class_name: mob.class_name.clone(),
+            class_name: mob.class_name().to_string(),
         })
         .collect::<Vec<_>>();
     assert_eq!(actual_mobs, expected.final_mobs, "GFX floor-6 mobs");
@@ -62,7 +62,7 @@ fn gfx_floor_six_secret_library_restores_preserved_run_lifecycle() {
         .heaps
         .iter()
         .filter(|heap| secret_library_cells.contains(&heap.cell))
-        .map(|heap| (heap.cell, heap.items[0].class_name.as_str()))
+        .map(|heap| (heap.cell, heap.items[0].class_name()))
         .collect::<Vec<_>>();
     assert_eq!(
         secret_library_drops,
@@ -174,7 +174,7 @@ fn hkt_floor_six_lifecycle_matches_oracle() {
                 .items
                 .iter()
                 .map(|item| OracleItem {
-                    class_name: item.class_name.clone(),
+                    class_name: item.class_name().to_string(),
                     quantity: item.quantity,
                     level: item.level,
                     cursed: item.cursed,
@@ -189,7 +189,7 @@ fn hkt_floor_six_lifecycle_matches_oracle() {
         .iter()
         .map(|mob| OracleMob {
             cell: mob.cell,
-            class_name: mob.class_name.clone(),
+            class_name: mob.class_name().to_string(),
         })
         .collect();
     assert_eq!(actual_mobs, expected.final_mobs, "HKT floor-6 mobs");
@@ -220,7 +220,7 @@ fn hkt_floor_six_lifecycle_matches_oracle() {
         .iter()
         .map(|trap| OracleTrap {
             cell: trap.cell,
-            class_name: trap.class_name.clone(),
+            class_name: trap.class_name().to_string(),
             visible: trap.visible,
             active: trap.active,
             color: trap.color,

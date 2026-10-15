@@ -4,7 +4,7 @@
 //! fixed at `Generator.fullReset` (`Generator.java:624-635`) and `probs`
 //! evolves deterministically from the draw sequence (`Generator.java:712-728`).
 //! Run history only chooses *which index* a draw lands on, so the candidate set
-//! for a slot is a window of that sequence around the fresh-baseline index.
+//! for a slot is a window of that sequence around the seed-drawn index.
 //!
 //! Drift is bidirectional — a held trinket can remove earlier deck-using sites
 //! as well as add them (see `tests::drift_matches_profile_replay_in_both_directions`).
@@ -14,7 +14,7 @@ use crate::generator::{Category, GeneratorState};
 use crate::items::model::GeneratedItem;
 use crate::report::{ImpLevelRule, ImpRewardSlot, ImpSlotCandidate, ImpSlotRole};
 
-/// Deck offsets either side of the baseline index for the standard report.
+/// Deck offsets either side of the seed-drawn index for the standard report.
 pub const DEFAULT_DRIFT: i32 = 3;
 /// Wider window used when the caller opts into deep search.
 pub const DEEP_DRIFT: i32 = 8;
@@ -58,12 +58,15 @@ fn build_slot(
         return ImpRewardSlot {
             slot,
             role,
-            baseline_class: item.class_name.clone(),
+            item: crate::report::item_id(&item.class_name),
             level_rule,
             enchanted,
-            baseline_level: item.level,
-            baseline_enchantment: item.enchantment.clone(),
-            fixed_class: Some(item.class_name.clone()),
+            level: item.level,
+            enchantment: item
+                .enchantment
+                .as_deref()
+                .map(spd_objects::Enchantment::from_class_name_lossy),
+            fixed_item: Some(crate::report::item_id(&item.class_name)),
             candidates: Vec::new(),
             scenario_count: 1,
         };
@@ -75,12 +78,15 @@ fn build_slot(
     ImpRewardSlot {
         slot,
         role,
-        baseline_class: item.class_name.clone(),
+        item: crate::report::item_id(&item.class_name),
         level_rule,
         enchanted,
-        baseline_level: item.level,
-        baseline_enchantment: item.enchantment.clone(),
-        fixed_class: None,
+        level: item.level,
+        enchantment: item
+            .enchantment
+            .as_deref()
+            .map(spd_objects::Enchantment::from_class_name_lossy),
+        fixed_item: None,
         candidates,
         scenario_count,
     }
@@ -103,7 +109,7 @@ pub fn upgrades_pinned(slots: &[ImpRewardSlot]) -> bool {
         !slot
             .candidates
             .iter()
-            .any(|candidate| candidate.class_name == AMBIENT_SHIFTING_ARTIFACT)
+            .any(|candidate| candidate.item == AMBIENT_SHIFTING_ARTIFACT)
     })
 }
 
@@ -115,7 +121,7 @@ pub fn total_upgrade_value(slots: &[ImpRewardSlot]) -> i32 {
         .iter()
         .map(|slot| match slot.level_rule {
             ImpLevelRule::TransferUpgrade { transfer } => transfer,
-            ImpLevelRule::Range { .. } => slot.baseline_level,
+            ImpLevelRule::Range { .. } => slot.level,
         })
         .sum()
 }
@@ -124,35 +130,35 @@ pub fn total_upgrade_value(slots: &[ImpRewardSlot]) -> i32 {
 fn candidates_for(
     generator: &GeneratorState,
     category: Category,
-    baseline_index: i32,
+    seed_index: i32,
     depth: i32,
     drift: i32,
 ) -> (Vec<ImpSlotCandidate>, u32) {
-    let first = (baseline_index - drift).max(0);
-    let last = baseline_index + drift;
+    let first = (seed_index - drift).max(0);
+    let last = seed_index + drift;
     let sequence = generator.category_class_sequence(category, (last + 1) as usize, depth);
 
-    // Offsets are relative to the baseline draw; nearest-first keeps the
-    // baseline at drift 0 and makes the annotation readable.
+    // Offsets are relative to the seed draw; nearest-first keeps the
+    // seed draw at drift 0 and makes the annotation readable.
     let mut collapsed: Vec<ImpSlotCandidate> = Vec::new();
-    let mut offsets: Vec<i32> = (first..=last).map(|index| index - baseline_index).collect();
+    let mut offsets: Vec<i32> = (first..=last).map(|index| index - seed_index).collect();
     offsets.sort_by_key(|offset| (offset.abs(), *offset));
 
     for offset in &offsets {
-        let index = (baseline_index + offset) as usize;
+        let index = (seed_index + offset) as usize;
         let Some(class_name) = sequence.get(index) else {
             continue;
         };
         match collapsed
             .iter_mut()
-            .find(|candidate| &candidate.class_name == class_name)
+            .find(|candidate| candidate.item == class_name.as_str())
         {
             Some(candidate) => {
                 candidate.drifts.push(*offset);
                 candidate.weight += 1;
             }
             None => collapsed.push(ImpSlotCandidate {
-                class_name: class_name.clone(),
+                item: crate::report::item_id(class_name),
                 drifts: vec![*offset],
                 weight: 1,
             }),
@@ -160,7 +166,7 @@ fn candidates_for(
     }
 
     let scenario_count: u32 = collapsed.iter().map(|candidate| candidate.weight).sum();
-    // The fresh-run draw always leads: it is the concrete answer for a player
+    // The seed draw always leads: it is the concrete answer for a player
     // who has not shifted the deck, so ranking a drift alternative above it
     // purely because that class occupies more offsets would read as if the
     // alternative were the likelier reward. Remaining rows are ordered by how

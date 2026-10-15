@@ -25,9 +25,9 @@ pub struct TrinketSelectionReport {
     /// First not-yet-generated floor the selected trinket can influence.
     pub first_effective_depth: u32,
     /// The Catalyst's four seed-determined choices (TRINKET draws 0–3).
-    pub catalyst_options: Vec<String>,
+    pub catalyst_options: Vec<spd_objects::ItemId>,
     /// Successive first-deck transmutation results (TRINKET draws 4–16).
-    pub transmutation_sequence: Vec<String>,
+    pub transmutation_sequence: Vec<spd_objects::ItemId>,
 }
 
 impl TrinketSelectionReport {
@@ -46,8 +46,14 @@ impl TrinketSelectionReport {
             first_alchemy_pot_is_secret,
             selection_depth,
             first_effective_depth: selection_depth + 1,
-            catalyst_options: deck[..4].to_vec(),
-            transmutation_sequence: deck[4..].to_vec(),
+            catalyst_options: deck[..4]
+                .iter()
+                .map(|class| crate::report::item_id(class))
+                .collect(),
+            transmutation_sequence: deck[4..]
+                .iter()
+                .map(|class| crate::report::item_id(class))
+                .collect(),
         }
     }
 }

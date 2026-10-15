@@ -218,7 +218,7 @@ fn artifact_rare_branch_redacts_layout_and_post_callback_floor_tail() {
     assert!(public_shop.iter().any(|item| {
         item.name == "artifact or ring"
             && item.prediction == crate::report::ItemPredictionKind::Constrained
-            && item.class_name.is_none()
+            && item.class_name().is_none()
     }));
     assert!(
         state
@@ -229,7 +229,7 @@ fn artifact_rare_branch_redacts_layout_and_post_callback_floor_tail() {
                 *index >= boundary && !matches!(item.provenance, ItemProvenance::Shop(_))
             })
             .all(|(_, hidden)| !public.items.iter().any(|item| {
-                item.class_name.as_deref() == Some(hidden.class_name.as_str())
+                item.class_name() == Some(hidden.class_name.as_str())
                     && item.source == hidden.source
             })),
         "no post-shop non-shop item fact crosses the public boundary"

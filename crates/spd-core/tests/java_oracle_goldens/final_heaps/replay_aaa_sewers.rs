@@ -70,10 +70,10 @@ fn aaa_replay_pins_floors_two_through_four() {
                         .items
                         .iter()
                         .map(|item| OracleItem {
-                            class_name: if item.class_name.ends_with("Seed") {
+                            class_name: if item.class_name().ends_with("Seed") {
                                 "Seed".into()
                             } else {
-                                item.class_name.clone()
+                                item.class_name().to_string()
                             },
                             quantity: item.quantity,
                             level: item.level,
@@ -141,10 +141,10 @@ fn aaa_replay_pins_floors_two_through_four() {
                         .items
                         .iter()
                         .map(|item| OracleItem {
-                            class_name: if item.class_name.ends_with("Seed") {
+                            class_name: if item.class_name().ends_with("Seed") {
                                 "Seed".into()
                             } else {
-                                item.class_name.clone()
+                                item.class_name().to_string()
                             },
                             quantity: item.quantity,
                             level: item.level,
@@ -168,7 +168,7 @@ fn aaa_replay_pins_floors_two_through_four() {
                 .iter()
                 .map(|plant| OraclePlant {
                     cell: plant.cell,
-                    class_name: plant.class_name.clone(),
+                    class_name: plant.class_name().to_string(),
                     image: plant.image,
                 })
                 .collect();
@@ -181,7 +181,7 @@ fn aaa_replay_pins_floors_two_through_four() {
                 .blobs
                 .iter()
                 .map(|blob| OracleBlob {
-                    class_name: blob.class_name.clone(),
+                    class_name: blob.class_name().to_string(),
                     volume: blob.volume,
                     always_visible: blob.always_visible,
                     cells: blob

@@ -15,9 +15,8 @@ pub(super) fn guaranteed_appearances(
         .iter()
         .filter(|room| matches!(room.as_str(), "LaboratoryRoom" | "SecretLaboratoryRoom"))
         .map(|room| GuaranteedAppearance {
-            name: "Alchemy pot".into(),
             kind: GuaranteedAppearanceKind::AlchemyPot,
-            source: Some(room.clone()),
+            source: spd_objects::RoomId::from_class_name(room),
         })
         .collect()
 }

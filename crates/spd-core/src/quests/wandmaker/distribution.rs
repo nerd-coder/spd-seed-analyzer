@@ -4,13 +4,13 @@
 //! wand 1's index. Wand 2 is the next card that is not wand 1's class; rejected
 //! duplicates stay drawn (`undoDrop` does not restore a concrete wand). Each
 //! reject also burns floor RNG inside `Wand.random`, so wand 2's +N stays at
-//! the fresh value only when every offset rejects the same number of duplicates.
+//! the seed-drawn value only when every offset rejects the same number of duplicates.
 
 use crate::generator::{Category, GeneratorState};
 use crate::items::model::GeneratedItem;
 use crate::report::{ImpSlotCandidate, WandmakerRewardSlot};
 
-/// Deck offsets either side of wand 1's fresh index.
+/// Deck offsets either side of wand 1's seed-drawn index.
 pub const DEFAULT_DRIFT: i32 = 3;
 
 /// Extra deck cards after the furthest wand-1 index. A same-class run cannot
@@ -38,14 +38,14 @@ pub fn build_reward_slots(
 ) -> Vec<WandmakerRewardSlot> {
     let draws = replay_pairs(generator, wand1_index, depth, drift);
     let scenario_count = draws.len() as u32;
-    let fresh_rejects = draws
+    let seed_rejects = draws
         .iter()
         .find(|draw| draw.offset == 0)
         .map(|draw| draw.rejects);
     // Same reject count means wand 2's `random` + `upgrade` see the same
     // floor RNG at every offset. A different count moves that +N.
     let wand2_level_pinned =
-        fresh_rejects.is_some_and(|fresh| draws.iter().all(|draw| draw.rejects == fresh));
+        seed_rejects.is_some_and(|seed| draws.iter().all(|draw| draw.rejects == seed));
 
     vec![
         slot_for(0, wand1, &draws, scenario_count, true, |draw| {
@@ -72,8 +72,8 @@ fn slot_for(
 ) -> WandmakerRewardSlot {
     WandmakerRewardSlot {
         slot,
-        baseline_class: item.class_name.clone(),
-        baseline_level: item.level,
+        item: crate::report::item_id(&item.class_name),
+        level: item.level,
         level_pinned,
         candidates: candidates_for(draws, class_of),
         scenario_count,
@@ -89,20 +89,20 @@ fn candidates_for(
         let class_name = class_of(draw);
         match collapsed
             .iter_mut()
-            .find(|candidate| candidate.class_name == class_name)
+            .find(|candidate| candidate.item == class_name)
         {
             Some(candidate) => {
                 candidate.drifts.push(draw.offset);
                 candidate.weight += 1;
             }
             None => collapsed.push(ImpSlotCandidate {
-                class_name: class_name.to_string(),
+                item: crate::report::item_id(class_name),
                 drifts: vec![draw.offset],
                 weight: 1,
             }),
         }
     }
-    // The fresh class leads even when another class occupies more offsets.
+    // The seed-drawn class leads even when another class occupies more offsets.
     // Remaining rows are by share of the window, then nearest offset.
     collapsed.sort_by_key(|candidate| {
         (
@@ -182,7 +182,7 @@ fn offsets_for(wand1_index: i32, drift: i32) -> Vec<i32> {
     let mut offsets: Vec<i32> = (-drift..=drift)
         .filter(|offset| wand1_index + offset >= 0)
         .collect();
-    // Nearest first, so grouped drift lists read baseline, then ±1, ±2, …
+    // Nearest first, so grouped drift lists read the seed draw, then ±1, ±2, …
     offsets.sort_by_key(|offset| (offset.abs(), *offset));
     offsets
 }
@@ -269,17 +269,17 @@ mod tests {
     }
 
     #[test]
-    fn window_puts_the_fresh_class_first() {
+    fn window_puts_the_seed_drawn_class_first() {
         let spawned = spawned_wandmaker(0).expect("seed 0 spawns the wandmaker by depth 9");
         assert_eq!(spawned.contract.slots.len(), 2);
         let wand1 = &spawned.contract.slots[0];
         let wand2 = &spawned.contract.slots[1];
         assert_eq!((wand1.slot, wand2.slot), (0, 1));
         assert!(wand1.level_pinned);
-        assert_eq!(wand1.baseline_class, spawned.wand1.class_name);
-        assert_eq!(wand2.baseline_class, spawned.wand2.class_name);
-        assert_eq!(wand1.baseline_level, spawned.wand1.level);
-        assert_eq!(wand2.baseline_level, spawned.wand2.level);
+        assert_eq!(wand1.item, spawned.wand1.class_name);
+        assert_eq!(wand2.item, spawned.wand2.class_name);
+        assert_eq!(wand1.level, spawned.wand1.level);
+        assert_eq!(wand2.level, spawned.wand2.level);
         assert!(spawned.wand1.candidate_classes.is_empty());
         assert!(spawned.wand2.candidate_classes.is_empty());
 
@@ -294,7 +294,7 @@ mod tests {
                 "slot {} drift 0 must lead, got {first:?}",
                 slot.slot
             );
-            assert_eq!(first.class_name, slot.baseline_class);
+            assert_eq!(first.class_name(), slot.item);
             let weight: u32 = slot
                 .candidates
                 .iter()
@@ -309,7 +309,7 @@ mod tests {
             .iter()
             .find(|candidate| candidate.drifts.contains(&0))
             .expect("wand2 drift 0");
-        assert_eq!(drift0.class_name, spawned.wand2.class_name);
+        assert_eq!(drift0.class_name(), spawned.wand2.class_name);
     }
 
     #[test]
@@ -322,12 +322,12 @@ mod tests {
             };
             checked += 1;
             let counts = duplicate_reject_counts(&spawned);
-            let fresh = counts
+            let seed_draw = counts
                 .iter()
                 .find(|(offset, _)| *offset == 0)
                 .map(|(_, rejects)| *rejects)
-                .expect("fresh offset");
-            let differs = counts.iter().any(|(_, rejects)| *rejects != fresh);
+                .expect("seed-draw offset");
+            let differs = counts.iter().any(|(_, rejects)| *rejects != seed_draw);
             let wand1 = &spawned.contract.slots[0];
             let wand2 = &spawned.contract.slots[1];
             assert!(wand1.level_pinned, "seed {seed}");

@@ -6,16 +6,16 @@ use crate::report::{
 use super::DiscoveredRoute;
 
 pub(crate) fn merge_possible_items(
-    baseline: &mut [FloorReport],
-    baseline_condition: ItemSpawnCondition,
+    floors: &mut [FloorReport],
+    default_condition: ItemSpawnCondition,
     alternatives: &[(DiscoveredRoute, Vec<FloorReport>)],
 ) {
-    for floor in baseline {
-        let (mut baseline_samples, baseline_items): (Vec<_>, Vec<_>) =
+    for floor in floors {
+        let (mut variable_items, default_items): (Vec<_>, Vec<_>) =
             std::mem::take(&mut floor.items)
                 .into_iter()
                 .flat_map(|group| group.variants)
-                .partition(|item| item.prediction == ItemPredictionKind::Baseline);
+                .partition(|item| item.prediction == ItemPredictionKind::Variable);
         let alternative_items = alternatives
             .iter()
             .filter_map(|(route, floors)| {
@@ -31,14 +31,14 @@ pub(crate) fn merge_possible_items(
                             .items
                             .iter()
                             .flat_map(|group| &group.variants)
-                            .filter(|item| item.prediction != ItemPredictionKind::Baseline)
+                            .filter(|item| item.prediction != ItemPredictionKind::Variable)
                             .cloned()
                             .collect::<Vec<_>>();
                         (&route.condition, items)
                     })
             })
             .collect::<Vec<_>>();
-        let contexts = std::iter::once((&baseline_condition, &baseline_items))
+        let contexts = std::iter::once((&default_condition, &default_items))
             .chain(
                 alternative_items
                     .iter()
@@ -46,7 +46,7 @@ pub(crate) fn merge_possible_items(
             )
             .collect::<Vec<_>>();
         let mut entries = merge_contexts(&contexts);
-        entries.append(&mut baseline_samples);
+        entries.append(&mut variable_items);
         floor.items = group_item_entries(entries);
     }
 }

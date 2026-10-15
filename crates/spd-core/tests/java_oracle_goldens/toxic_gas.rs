@@ -23,7 +23,7 @@ fn toxic_gas_room_lifecycle_matches_oracle() {
             (
                 heap.cell,
                 heap.heap_type.as_str(),
-                heap.items[0].class_name.as_str(),
+                heap.items[0].class_name(),
                 heap.items[0].quantity,
             )
         })
@@ -46,7 +46,7 @@ fn toxic_gas_room_lifecycle_matches_oracle() {
                 .items
                 .iter()
                 .map(|item| OracleItem {
-                    class_name: item.class_name.clone(),
+                    class_name: item.class_name().to_string(),
                     quantity: item.quantity,
                     level: item.level,
                     cursed: item.cursed,
@@ -60,7 +60,7 @@ fn toxic_gas_room_lifecycle_matches_oracle() {
         .iter()
         .map(|mob| OracleMob {
             cell: mob.cell,
-            class_name: mob.class_name.clone(),
+            class_name: mob.class_name().to_string(),
         })
         .collect();
     assert_eq!(actual_mobs, expected.final_mobs);

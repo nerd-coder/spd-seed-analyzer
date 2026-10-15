@@ -1,6 +1,7 @@
 //! Potion colors, scroll runes, and ring gems for a run.
 
 use serde::{Deserialize, Serialize};
+use spd_objects::ItemId;
 
 use super::catalog::{
     POTION_COLORS, POTION_ITEMS, RING_GEMS, RING_ITEMS, SCROLL_ITEMS, SCROLL_RUNES,
@@ -9,8 +10,7 @@ use super::status_handler::assign_labels;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct IdentityEntry {
-    /// Java simple class name.
-    pub item: String,
+    pub item: ItemId,
     /// Appearance label (color / rune / gem).
     pub appearance: String,
 }
@@ -25,7 +25,10 @@ pub struct IdentityMaps {
 fn to_entries(pairs: Vec<(String, String)>) -> Vec<IdentityEntry> {
     pairs
         .into_iter()
-        .map(|(item, appearance)| IdentityEntry { item, appearance })
+        .map(|(item, appearance)| IdentityEntry {
+            item: ItemId::from_class_name_lossy(&item),
+            appearance,
+        })
         .collect()
 }
 

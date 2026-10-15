@@ -147,7 +147,7 @@ fn aaa_replay_pins_floors_six_through_eleven_across_the_tengu_lifecycle() {
                 .iter()
                 .map(|mob| OracleMob {
                     cell: mob.cell,
-                    class_name: mob.class_name.clone(),
+                    class_name: mob.class_name().to_string(),
                 })
                 .collect();
             assert_eq!(actual_mobs, expected.final_mobs, "{context} exact mobs");
@@ -162,7 +162,7 @@ fn aaa_replay_pins_floors_six_through_eleven_across_the_tengu_lifecycle() {
                         .items
                         .iter()
                         .map(|item| OracleItem {
-                            class_name: item.class_name.clone(),
+                            class_name: item.class_name().to_string(),
                             quantity: item.quantity,
                             level: item.level,
                             cursed: item.cursed,
@@ -224,7 +224,7 @@ fn aaa_replay_pins_floors_six_through_eleven_across_the_tengu_lifecycle() {
                 .iter()
                 .map(|mob| OracleMob {
                     cell: mob.cell,
-                    class_name: mob.class_name.clone(),
+                    class_name: mob.class_name().to_string(),
                 })
                 .collect();
             assert_eq!(actual_mobs, expected.final_mobs, "{context} exact mobs");
@@ -239,7 +239,7 @@ fn aaa_replay_pins_floors_six_through_eleven_across_the_tengu_lifecycle() {
                         .items
                         .iter()
                         .map(|item| OracleItem {
-                            class_name: oracle_item_class(&item.class_name).into(),
+                            class_name: oracle_item_class(item.class_name()).into(),
                             quantity: item.quantity,
                             level: item.level,
                             cursed: item.cursed,
@@ -308,7 +308,7 @@ fn aaa_replay_pins_floors_six_through_eleven_across_the_tengu_lifecycle() {
             let weapon_heaps: Vec<_> = map
                 .heaps
                 .iter()
-                .filter(|heap| heap.items.iter().any(|item| is_weapon(&item.class_name)))
+                .filter(|heap| heap.items.iter().any(|item| is_weapon(item.class_name())))
                 .map(|heap| OracleHeap {
                     cell: heap.cell,
                     heap_type: heap.heap_type.clone(),
@@ -316,7 +316,7 @@ fn aaa_replay_pins_floors_six_through_eleven_across_the_tengu_lifecycle() {
                         .items
                         .iter()
                         .map(|item| OracleItem {
-                            class_name: item.class_name.clone(),
+                            class_name: item.class_name().to_string(),
                             quantity: item.quantity,
                             level: item.level,
                             cursed: item.cursed,
@@ -354,7 +354,7 @@ fn aaa_replay_pins_floors_six_through_eleven_across_the_tengu_lifecycle() {
                 .map(|heap| {
                     (
                         heap.cell,
-                        heap.items[0].class_name.as_str(),
+                        heap.items[0].class_name(),
                         heap.items[0].level,
                         heap.items[0].cursed,
                     )
@@ -380,7 +380,7 @@ fn aaa_replay_pins_floors_six_through_eleven_across_the_tengu_lifecycle() {
             let actual_mimics: Vec<_> = map
                 .mobs
                 .iter()
-                .filter(|mob| mob.class_name == "CrystalMimic")
+                .filter(|mob| mob.class_name() == "CrystalMimic")
                 .map(|mob| mob.cell)
                 .collect();
             let expected_mimics: Vec<_> = expected
@@ -484,7 +484,7 @@ fn aaa_floor_twelve_matches_the_pinned_layout_and_item_lifecycle() {
                 .items
                 .iter()
                 .map(|item| OracleItem {
-                    class_name: oracle_item_class(&item.class_name).into(),
+                    class_name: oracle_item_class(item.class_name()).into(),
                     quantity: item.quantity,
                     level: item.level,
                     cursed: item.cursed,
@@ -551,7 +551,7 @@ fn aaa_floor_thirteen_matches_the_pinned_final_facts() {
         .iter()
         .map(|mob| OracleMob {
             cell: mob.cell,
-            class_name: mob.class_name.clone(),
+            class_name: mob.class_name().to_string(),
         })
         .collect();
     assert_eq!(actual_mobs, expected.final_mobs, "floor-13 final mobs");
@@ -569,7 +569,7 @@ fn aaa_floor_thirteen_matches_the_pinned_final_facts() {
                 .items
                 .iter()
                 .map(|item| OracleItem {
-                    class_name: oracle_item_class(&item.class_name).into(),
+                    class_name: oracle_item_class(item.class_name()).into(),
                     quantity: item.quantity,
                     level: item.level,
                     cursed: item.cursed,
@@ -629,10 +629,10 @@ fn aaa_floor_fourteen_matches_the_pinned_final_facts() {
     let toxic_vents: Vec<_> = map
         .traps
         .iter()
-        .filter(|trap| trap.class_name == "ToxicVent")
+        .filter(|trap| trap.class_name() == "ToxicVent")
         .map(|trap| OracleTrap {
             cell: trap.cell,
-            class_name: trap.class_name.clone(),
+            class_name: trap.class_name().to_string(),
             visible: trap.visible,
             active: trap.active,
             color: trap.color,
@@ -666,7 +666,7 @@ fn aaa_floor_fourteen_matches_the_pinned_final_facts() {
         .iter()
         .map(|mob| OracleMob {
             cell: mob.cell,
-            class_name: mob.class_name.clone(),
+            class_name: mob.class_name().to_string(),
         })
         .collect();
     assert_eq!(actual_mobs, expected.final_mobs, "floor-14 final mobs");
@@ -684,7 +684,7 @@ fn aaa_floor_fourteen_matches_the_pinned_final_facts() {
                 .items
                 .iter()
                 .map(|item| OracleItem {
-                    class_name: oracle_item_class(&item.class_name).into(),
+                    class_name: oracle_item_class(item.class_name()).into(),
                     quantity: item.quantity,
                     level: item.level,
                     cursed: item.cursed,
@@ -739,7 +739,7 @@ fn assert_library(map: &spd_core::report::FloorMap, expected: &OracleFloor, cont
             (
                 heap.cell,
                 heap.heap_type.as_str(),
-                heap.items[0].class_name.as_str(),
+                heap.items[0].class_name(),
             )
         })
         .collect();
@@ -806,7 +806,7 @@ fn assert_armory_boundary(map: &spd_core::report::FloorMap, expected: &OracleFlo
             (
                 heap.cell,
                 heap.heap_type.as_str(),
-                item.class_name.as_str(),
+                item.class_name(),
                 item.quantity,
                 item.level,
                 item.cursed,

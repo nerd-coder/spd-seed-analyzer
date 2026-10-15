@@ -1,11 +1,11 @@
 //! Bounded, resumable constraint search over numeric dungeon seeds.
 
 use serde::{Deserialize, Serialize};
+use spd_objects::ItemId;
 
 use crate::{
-    analyze_seed_seed_only,
     report::{ItemEntry, ItemPredictionKind},
-    AnalyzeError, IdentityMaps, SeedInfo, TOTAL_SEEDS,
+    search_seed_floors, AnalyzeError, FloorReport, IdentityMaps, SeedInfo, TOTAL_SEEDS,
 };
 
 /// Maximum candidate seeds evaluated by one search call.
@@ -19,7 +19,7 @@ pub const MAX_SEARCH_FLOORS: u32 = 26;
 
 const PARTIAL_SEARCH_MESSAGE: &str = "Search results use the partial analyzer; generated loot is incomplete and may not match the pinned game.";
 
-const fn baseline_search_default() -> bool {
+const fn variable_search_default() -> bool {
     true
 }
 
@@ -31,13 +31,13 @@ pub struct SeedSearchRequest {
     pub floors: u32,
     pub constraints: Vec<ItemConstraint>,
     pub match_mode: MatchMode,
-    /// Allow fresh/no-history baseline predictions to satisfy constraints.
-    /// These matches are planning evidence, not seed-wide guarantees.
-    #[serde(default = "baseline_search_default")]
-    pub include_baseline: bool,
+    /// Allow gameplay-variable items to satisfy constraints. These matches
+    /// hold when gameplay has not shifted generation, not in every run.
+    #[serde(default = "variable_search_default")]
+    pub include_variable: bool,
     /// Widen quest-reward matching to every class a deck-index shift can reach,
-    /// not just the fresh-run draw. Off by default: it returns more seeds, and
-    /// a hit means "reachable in some run", not "present in a fresh run".
+    /// not just the seed draw. Off by default: it returns more seeds, and a hit
+    /// means "reachable in some run", not "present when gameplay is unchanged".
     #[serde(default)]
     pub deep_search: bool,
     pub max_matches: u32,
@@ -48,7 +48,7 @@ pub struct SeedSearchRequest {
 pub struct ItemConstraint {
     pub item_group: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub class_name: Option<String>,
+    pub item: Option<ItemId>,
     /// Optional minimum requested upgrade level (`None` accepts any level).
     #[serde(default)]
     pub min_level: Option<i32>,
@@ -88,14 +88,14 @@ pub struct SeedMatch {
     pub identities: IdentityMaps,
     /// One distinct matching item occurrence per satisfied constraint.
     pub evidence: Vec<ItemMatchEvidence>,
-    /// Fresh/no-history planning highlights. They contribute search evidence
-    /// only when `includeBaseline` is enabled and remain explicitly labeled.
-    pub baseline_items: Vec<BaselineItemEvidence>,
+    /// Gameplay-variable highlights. They contribute search evidence only when
+    /// `includeVariable` is enabled and remain explicitly labeled.
+    pub variable_items: Vec<VariableItemEvidence>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
-pub struct BaselineItemEvidence {
+pub struct VariableItemEvidence {
     pub depth: u32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
@@ -109,13 +109,21 @@ pub struct ItemMatchEvidence {
     pub constraint_index: u32,
     pub item_group: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub class_name: Option<String>,
+    pub item: Option<ItemId>,
     pub depth: u32,
-    pub name: String,
+    /// Present only when the matched entry has no single identity.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
     pub level: i32,
     pub prediction: ItemPredictionKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source: Option<String>,
+}
+
+impl ItemMatchEvidence {
+    pub fn class_name(&self) -> Option<&'static str> {
+        self.item.map(ItemId::class_name)
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -132,8 +140,8 @@ pub enum SearchError {
     TooManyConstraints,
     #[error("constraints[{index}].itemGroup must not be empty or whitespace")]
     EmptyItemGroup { index: usize },
-    #[error("constraints[{index}].className must be at most 128 characters")]
-    ClassNameTooLong { index: usize },
+    #[error("constraints[{index}].item must be a known item id")]
+    UnknownItem { index: usize },
     #[error("constraints[{index}].minLevel must be between 1 and 4 when present")]
     InvalidLevel { index: usize },
     #[error(
@@ -171,14 +179,8 @@ impl SeedSearchRequest {
             if constraint.item_group.trim().is_empty() {
                 return Err(SearchError::EmptyItemGroup { index });
             }
-            if constraint
-                .class_name
-                .as_deref()
-                .map(|s| s.chars().count())
-                .unwrap_or(0)
-                > 128
-            {
-                return Err(SearchError::ClassNameTooLong { index });
+            if constraint.item == Some(ItemId::Unknown) {
+                return Err(SearchError::UnknownItem { index });
             }
             if constraint
                 .min_level
@@ -199,15 +201,14 @@ impl SeedSearchRequest {
         Ok(())
     }
 
-    /// Floors generated for each candidate: enough to cover every constraint
-    /// window, and at least the requested `floors` value.
+    /// Floors generated for each candidate: through the deepest constraint
+    /// window. Floors below it cannot change a match.
     pub fn generation_floors(&self) -> u32 {
         self.constraints
             .iter()
             .map(|constraint| constraint.max_depth)
             .max()
             .unwrap_or(self.floors)
-            .max(self.floors)
     }
 }
 
@@ -224,34 +225,33 @@ pub fn search_seeds(request: &SeedSearchRequest) -> Result<SeedSearchResult, Sea
             break;
         }
 
-        let mut report = analyze_seed_seed_only(&seed.to_string(), request.generation_floors())
+        let (seed_info, identities, floors) =
+            search_seed_floors(&seed.to_string(), request.generation_floors(), |so_far| {
+                if request.deep_search {
+                    let newest = so_far.len() - 1;
+                    widen_quest_candidates(&mut so_far[newest..]);
+                }
+                request.match_mode == MatchMode::Any || closed_windows_can_match(request, so_far)
+            })
             .map_err(|source| SearchError::Analyze { seed, source })?;
-        if request.deep_search {
-            widen_quest_candidates(&mut report.floors);
-        }
         candidates_scanned += 1;
 
-        let evidence = matching_evidence(
-            &report.floors,
-            &request.constraints,
-            request.include_baseline,
-        );
+        let evidence = matching_evidence(&floors, &request.constraints, request.include_variable);
         let is_match = match request.match_mode {
             MatchMode::Any => !evidence.is_empty(),
             MatchMode::All => evidence.len() == request.constraints.len(),
         };
         if is_match {
-            let baseline_items = report
-                .floors
+            let variable_items = floors
                 .iter()
                 .flat_map(|floor| {
                     floor
                         .items
                         .iter()
                         .flat_map(|group| &group.variants)
-                        .filter(|item| item.prediction == ItemPredictionKind::Baseline)
+                        .filter(|item| item.prediction == ItemPredictionKind::Variable)
                         .cloned()
-                        .map(|item| BaselineItemEvidence {
+                        .map(|item| VariableItemEvidence {
                             depth: floor.depth,
                             source: item.source.clone(),
                             item,
@@ -259,10 +259,10 @@ pub fn search_seeds(request: &SeedSearchRequest) -> Result<SeedSearchResult, Sea
                 })
                 .collect();
             matches.push(SeedMatch {
-                seed: report.seed,
-                identities: report.identities,
+                seed: seed_info,
+                identities,
                 evidence,
-                baseline_items,
+                variable_items,
             });
             if matches.len() == request.max_matches as usize {
                 break;
@@ -290,10 +290,33 @@ pub fn search_seeds(request: &SeedSearchRequest) -> Result<SeedSearchResult, Sea
     })
 }
 
+/// All mode needs every constraint matched. Once the newest floor closes a
+/// depth window, the constraints whose windows have all closed must already
+/// be jointly satisfiable: no deeper floor can supply them.
+fn closed_windows_can_match(request: &SeedSearchRequest, floors: &[FloorReport]) -> bool {
+    let Some(depth) = floors.last().map(|floor| floor.depth) else {
+        return true;
+    };
+    if !request
+        .constraints
+        .iter()
+        .any(|constraint| constraint.max_depth == depth)
+    {
+        return true;
+    }
+    let closed = request
+        .constraints
+        .iter()
+        .filter(|constraint| constraint.max_depth <= depth)
+        .cloned()
+        .collect::<Vec<_>>();
+    matching_evidence(floors, &closed, request.include_variable).len() == closed.len()
+}
+
 fn matching_evidence(
-    floors: &[crate::FloorReport],
+    floors: &[FloorReport],
     constraints: &[ItemConstraint],
-    include_baseline: bool,
+    include_variable: bool,
 ) -> Vec<ItemMatchEvidence> {
     let occurrences = floors
         .iter()
@@ -322,7 +345,7 @@ fn matching_evidence(
             constraint_index,
             constraints,
             &occurrences,
-            include_baseline,
+            include_variable,
             &mut assigned_constraints,
             &mut visited_occurrences,
         );
@@ -337,7 +360,7 @@ fn matching_evidence(
                 constraint_index,
                 &constraints[constraint_index],
                 occurrences[occurrence_index],
-                include_baseline,
+                include_variable,
             )
         })
         .collect::<Vec<_>>();
@@ -356,13 +379,13 @@ fn assign_constraint(
     constraint_index: usize,
     constraints: &[ItemConstraint],
     occurrences: &[ItemOccurrence<'_>],
-    include_baseline: bool,
+    include_variable: bool,
     assigned_constraints: &mut [Option<usize>],
     visited_occurrences: &mut [bool],
 ) -> bool {
     for (occurrence_index, occurrence) in occurrences.iter().copied().enumerate() {
         if visited_occurrences[occurrence_index]
-            || matching_item(&constraints[constraint_index], occurrence, include_baseline).is_none()
+            || matching_item(&constraints[constraint_index], occurrence, include_variable).is_none()
         {
             continue;
         }
@@ -373,7 +396,7 @@ fn assign_constraint(
                 assigned,
                 constraints,
                 occurrences,
-                include_baseline,
+                include_variable,
                 assigned_constraints,
                 visited_occurrences,
             )
@@ -390,19 +413,18 @@ fn evidence_for(
     constraint_index: usize,
     constraint: &ItemConstraint,
     occurrence: ItemOccurrence<'_>,
-    include_baseline: bool,
+    include_variable: bool,
 ) -> Option<ItemMatchEvidence> {
-    let item = matching_item(constraint, occurrence, include_baseline)?;
+    let item = matching_item(constraint, occurrence, include_variable)?;
     Some(ItemMatchEvidence {
         constraint_index: constraint_index as u32,
         item_group: constraint.item_group.clone(),
-        class_name: item
-            .class_name
-            .clone()
-            .or_else(|| item.candidate_classes.first().cloned())
-            .or_else(|| constraint.class_name.clone()),
+        item: item
+            .item
+            .or_else(|| item.candidates.first().copied())
+            .or(constraint.item),
         depth: occurrence.depth,
-        name: item.name.clone(),
+        label: item.label.clone(),
         level: item.level.unwrap_or(0),
         prediction: item.prediction,
         source: item.source.clone(),
@@ -412,7 +434,7 @@ fn evidence_for(
 fn matching_item<'a>(
     constraint: &ItemConstraint,
     occurrence: ItemOccurrence<'a>,
-    include_baseline: bool,
+    include_variable: bool,
 ) -> Option<&'a ItemEntry> {
     if !(constraint.min_depth..=constraint.max_depth).contains(&occurrence.depth) {
         return None;
@@ -428,24 +450,20 @@ fn matching_item<'a>(
                 return false;
             }
 
-            let class_matches = if let Some(class_name) = &constraint.class_name {
-                let concrete_class_matches =
-                    item.class_name.as_deref() == Some(class_name.as_str());
-                let candidate_class_matches = item
-                    .candidate_classes
-                    .iter()
-                    .any(|candidate| candidate == class_name);
+            let class_matches = if let Some(wanted) = constraint.item {
+                let concrete_class_matches = item.item == Some(wanted);
+                let candidate_class_matches = item.candidates.contains(&wanted);
                 match item.prediction {
                     ItemPredictionKind::Exact => concrete_class_matches || candidate_class_matches,
-                    ItemPredictionKind::Baseline => {
-                        include_baseline && (concrete_class_matches || candidate_class_matches)
+                    ItemPredictionKind::Variable => {
+                        include_variable && (concrete_class_matches || candidate_class_matches)
                     }
                     ItemPredictionKind::Constrained => candidate_class_matches,
                 }
             } else {
                 match item.prediction {
                     ItemPredictionKind::Exact | ItemPredictionKind::Constrained => true,
-                    ItemPredictionKind::Baseline => include_baseline,
+                    ItemPredictionKind::Variable => include_variable,
                 }
             };
 
@@ -461,3 +479,6 @@ use quest_candidates::widen_quest_candidates;
 
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+mod mode_tests;

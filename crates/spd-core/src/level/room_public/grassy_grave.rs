@@ -23,8 +23,9 @@ pub(super) fn entries(reward_count: u32, depth: i32) -> Vec<ItemEntry> {
         ItemEntry {
             name: "Grassy Grave Generator reward".into(),
             quantity: 1,
-            class_name: None,
-            candidate_classes: Vec::new(),
+            label: None,
+            item: None,
+            candidates: Vec::new(),
             category: "other".into(),
             tier: None,
             tier_range: None,
@@ -41,8 +42,9 @@ pub(super) fn entries(reward_count: u32, depth: i32) -> Vec<ItemEntry> {
         ItemEntry {
             name: gold_name,
             quantity: 1,
-            class_name: None,
-            candidate_classes: Vec::new(),
+            label: None,
+            item: None,
+            candidates: Vec::new(),
             category: "gold".into(),
             tier: None,
             tier_range: None,

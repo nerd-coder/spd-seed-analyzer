@@ -43,7 +43,7 @@ fn larder_contract_is_exact_and_depth_derived() {
         .expect("contract")
         .entries();
     assert_eq!(entries.len(), 1);
-    assert_eq!(entries[0].class_name.as_deref(), Some("Pasty"));
+    assert_eq!(entries[0].class_name(), Some("Pasty"));
     assert_eq!(entries[0].prediction, ItemPredictionKind::Exact);
 }
 
@@ -77,7 +77,7 @@ fn sacrifice_contract_preserves_tier_and_upgrade_bounds() {
             })
         );
         assert_eq!(entry.cursed, Some(true));
-        assert_eq!(entry.class_name, None);
+        assert_eq!(entry.class_name(), None);
         assert_eq!(entry.level, None);
         assert_eq!(entry.level_range, Some(NumericRange { min: 0, max: 3 }));
         assert_eq!(entry.prediction, ItemPredictionKind::Constrained);
@@ -105,7 +105,7 @@ fn armory_contract_preserves_count_category_and_equipment_bounds() {
         assert_eq!(base.cursed, None);
 
         let catalyst = &entries[1];
-        assert_eq!(catalyst.class_name.as_deref(), None);
+        assert_eq!(catalyst.class_name(), None);
         assert_eq!(catalyst.category, "trinket");
         assert_eq!(catalyst.cursed, Some(false));
         assert!(catalyst.notes[0].starts_with("Conditional:"));
@@ -156,7 +156,7 @@ fn formerly_generic_room_sets_expose_their_fixed_reward_structure() {
         .expect("Laboratory contract")
         .entries();
     assert_eq!(laboratory.len(), 3);
-    assert_eq!(laboratory[0].class_name.as_deref(), Some("EnergyCrystal"));
+    assert_eq!(laboratory[0].class_name(), Some("EnergyCrystal"));
     assert_eq!(laboratory[0].level, Some(0));
 
     let toxic = RoomPublicFact::new("ToxicGasRoom", 12)
@@ -207,7 +207,7 @@ fn puzzle_room_contracts_expose_guaranteed_solution_potions() {
             .entries();
         let potion = entries
             .iter()
-            .find(|entry| entry.class_name.as_deref() == Some(class_name))
+            .find(|entry| entry.class_name() == Some(class_name))
             .unwrap_or_else(|| panic!("missing {class_name} for {room}"));
         assert_eq!(potion.name, name);
         assert_eq!(potion.category, "potion");
@@ -245,13 +245,13 @@ fn secret_honeypot_contract_exposes_its_two_fixed_items() {
         .entries();
 
     assert_eq!(entries.len(), 3);
-    assert_eq!(entries[0].class_name.as_deref(), Some("ShatteredPot"));
+    assert_eq!(entries[0].class_name(), Some("ShatteredPot"));
     assert_eq!(entries[0].prediction, ItemPredictionKind::Exact);
-    assert_eq!(entries[1].class_name.as_deref(), Some("Honeypot"));
+    assert_eq!(entries[1].class_name(), Some("Honeypot"));
     assert_eq!(entries[1].prediction, ItemPredictionKind::Exact);
     assert_eq!(entries[2].name, "Bomb reward");
-    assert_eq!(entries[2].class_name, None);
-    assert_eq!(entries[2].candidate_classes, ["Bomb", "DoubleBomb"]);
+    assert_eq!(entries[2].class_name(), None);
+    assert_eq!(entries[2].candidate_classes(), ["Bomb", "DoubleBomb"]);
     assert_eq!(entries[2].level, Some(0));
     assert_eq!(entries[2].prediction, ItemPredictionKind::Constrained);
 }

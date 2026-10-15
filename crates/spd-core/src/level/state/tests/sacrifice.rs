@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn higher_floor_sacrifice_reward_exposes_the_fresh_baseline() {
+fn higher_floor_sacrifice_reward_exposes_the_variable_item() {
     let mut floor = LevelState {
         depth: 13,
         feeling: Feeling::None,
@@ -20,7 +20,7 @@ fn higher_floor_sacrifice_reward_exposes_the_fresh_baseline() {
         runtime_sensitive_layout: false,
         runtime_sensitive_rooms: false,
         runtime_sensitive_feeling: false,
-        baseline_projection: true,
+        expose_variable_items: true,
         room_public_facts: vec![super::super::super::room_public::RoomPublicFact::new(
             "SacrificeRoom",
             13,
@@ -52,7 +52,7 @@ fn higher_floor_sacrifice_reward_exposes_the_fresh_baseline() {
     let variants = &rewards[0].variants;
     assert_eq!(variants.len(), 2);
     assert_eq!(variants[0].name, "weapon reward");
-    assert_eq!(variants[0].class_name, None);
+    assert_eq!(variants[0].class_name(), None);
     assert_eq!(
         variants[0].tier_range,
         Some(crate::report::NumericRange { min: 3, max: 5 })
@@ -66,12 +66,12 @@ fn higher_floor_sacrifice_reward_exposes_the_fresh_baseline() {
         crate::report::ItemPredictionKind::Constrained
     );
     assert_eq!(variants[1].name, "corrupting sword +2");
-    assert_eq!(variants[1].class_name.as_deref(), Some("Sword"));
+    assert_eq!(variants[1].class_name(), Some("Sword"));
     assert_eq!(variants[1].cursed, Some(true));
     assert_eq!(variants[1].level, Some(2));
     assert_eq!(
         variants[1].prediction,
-        crate::report::ItemPredictionKind::Baseline
+        crate::report::ItemPredictionKind::Variable
     );
 }
 
@@ -95,7 +95,7 @@ fn floor_one_sacrifice_reward_is_an_exact_seed_fact() {
         runtime_sensitive_layout: false,
         runtime_sensitive_rooms: false,
         runtime_sensitive_feeling: false,
-        baseline_projection: true,
+        expose_variable_items: true,
         room_public_facts: vec![super::super::super::room_public::RoomPublicFact::new(
             "SacrificeRoom",
             1,
@@ -128,15 +128,19 @@ fn floor_one_sacrifice_reward_is_an_exact_seed_fact() {
             crate::report::ItemEntry {
                 name: "corrupting mace +1".into(),
                 quantity: 1,
-                class_name: Some("Mace".into()),
-                candidate_classes: Vec::new(),
+                label: None,
+                item: Some(spd_objects::ItemId::Mace),
+                candidates: Vec::new(),
                 category: "weapon".into(),
                 tier: None,
                 tier_range: None,
                 level: Some(1),
                 level_range: None,
                 cursed: Some(true),
-                enchantment: None,
+                enchantment: Some(crate::report::ItemEnchantment {
+                    enchantment_type: spd_objects::Enchantment::Corrupting,
+                    conditions: Vec::new(),
+                }),
                 prediction: crate::report::ItemPredictionKind::Exact,
                 spawn_conditions: Vec::new(),
                 conditions: Vec::new(),
@@ -148,7 +152,7 @@ fn floor_one_sacrifice_reward_is_an_exact_seed_fact() {
 }
 
 #[test]
-fn equipment_room_contracts_and_baselines_share_one_group() {
+fn equipment_room_contracts_and_variable_items_share_one_group() {
     for source in ["SacrificeRoom", "CryptRoom", "StatueRoom"] {
         let contract = super::super::super::room_public::RoomPublicFact::new(source, 13)
             .expect("equipment room contract")
@@ -156,15 +160,15 @@ fn equipment_room_contracts_and_baselines_share_one_group() {
             .into_iter()
             .next()
             .expect("equipment reward");
-        let mut baseline = contract.clone();
-        baseline.name = "sampled equipment".into();
-        baseline.class_name = Some("SampleClass".into());
-        baseline.tier_range = None;
-        baseline.level = Some(2);
-        baseline.level_range = None;
-        baseline.prediction = crate::report::ItemPredictionKind::Baseline;
+        let mut variable = contract.clone();
+        variable.name = "sampled equipment".into();
+        variable.item = Some(spd_objects::ItemId::Mace);
+        variable.tier_range = None;
+        variable.level = Some(2);
+        variable.level_range = None;
+        variable.prediction = crate::report::ItemPredictionKind::Variable;
 
-        let groups = crate::report::group_item_entries(vec![baseline, contract]);
+        let groups = crate::report::group_item_entries(vec![variable, contract]);
         assert_eq!(groups.len(), 1, "{source}");
         assert_eq!(groups[0].source.as_deref(), Some(source));
         assert_eq!(groups[0].variants.len(), 2);
@@ -174,7 +178,7 @@ fn equipment_room_contracts_and_baselines_share_one_group() {
         );
         assert_eq!(
             groups[0].variants[1].prediction,
-            crate::report::ItemPredictionKind::Baseline
+            crate::report::ItemPredictionKind::Variable
         );
     }
 }

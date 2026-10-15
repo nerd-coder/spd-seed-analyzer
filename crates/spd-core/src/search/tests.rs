@@ -61,13 +61,13 @@ fn depth_four_search_completes_with_minimum_size_secret_larder() {
         floors: 4,
         constraints: vec![ItemConstraint {
             item_group: "ring".into(),
-            class_name: Some("RingOfWealth".into()),
+            item: Some(spd_objects::ItemId::RingOfWealth),
             min_level: None,
             min_depth: 1,
             max_depth: 4,
         }],
         match_mode: MatchMode::Any,
-        include_baseline: false,
+        include_variable: false,
         deep_search: false,
         max_matches: 10,
     })
@@ -80,7 +80,7 @@ fn depth_four_search_completes_with_minimum_size_secret_larder() {
 fn constraint(class_name: &str, min_depth: u32, max_depth: u32) -> ItemConstraint {
     ItemConstraint {
         item_group: category_for(class_name).into(),
-        class_name: Some(class_name.to_string()),
+        item: Some(spd_objects::ItemId::from_class_name_lossy(class_name)),
         min_level: None,
         min_depth,
         max_depth,
@@ -108,7 +108,7 @@ fn request(constraints: Vec<ItemConstraint>, match_mode: MatchMode) -> SeedSearc
         floors: 1,
         constraints,
         match_mode,
-        include_baseline: false,
+        include_variable: false,
         deep_search: false,
         max_matches: 10,
     }
@@ -129,8 +129,9 @@ fn exact_floor(depth: u32, classes: &[(&str, i32)]) -> crate::FloorReport {
                 crate::report::ItemEntry {
                     name: (*class_name).into(),
                     quantity: 1,
-                    class_name: Some((*class_name).into()),
-                    candidate_classes: Vec::new(),
+                    label: None,
+                    item: Some(spd_objects::ItemId::from_class_name_lossy(class_name)),
+                    candidates: Vec::new(),
                     category: category_for(class_name).into(),
                     tier: None,
                     tier_range: None,
@@ -179,7 +180,7 @@ fn validation_rejects_unbounded_and_malformed_requests() {
 
     value.constraints = vec![ItemConstraint {
         item_group: " \t ".into(),
-        class_name: None,
+        item: None,
         min_level: None,
         min_depth: 1,
         max_depth: 1,
@@ -217,23 +218,23 @@ fn validation_rejects_unbounded_and_malformed_requests() {
 }
 
 #[test]
-fn baseline_search_defaults_to_included_when_omitted() {
+fn variable_search_defaults_to_included_when_omitted() {
     let request: SeedSearchRequest = serde_json::from_value(serde_json::json!({
         "startSeed": 0,
         "candidateCount": 1,
         "floors": 1,
         "constraints": [{
             "itemGroup": "food",
-            "className": "Food",
+            "item": spd_objects::ItemId::Food.id(),
             "minDepth": 1,
             "maxDepth": 1
         }],
         "matchMode": "any",
         "maxMatches": 1
     }))
-    .expect("request without includeBaseline");
+    .expect("request without includeVariable");
 
-    assert!(request.include_baseline);
+    assert!(request.include_variable);
 }
 
 #[test]
@@ -294,15 +295,16 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
         depth: 13,
         feeling: None,
         builder: None,
-        rooms: vec!["SacrificeRoom".into()],
+        rooms: vec![spd_objects::RoomId::SacrificeRoom],
         possible_rooms: vec![],
         guaranteed_appearances: vec![],
         initial_encounters: vec![],
         items: vec![crate::report::ItemEntry {
             name: "weapon reward".into(),
             quantity: 1,
-            class_name: None,
-            candidate_classes: Vec::new(),
+            label: None,
+            item: None,
+            candidates: Vec::new(),
             category: "weapon".into(),
             tier: Some(3),
             tier_range: None,
@@ -324,7 +326,7 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
     };
     let constraints = [ItemConstraint {
         item_group: "weapon".into(),
-        class_name: Some("Sword".into()),
+        item: Some(spd_objects::ItemId::Sword),
         min_level: None,
         min_depth: 13,
         max_depth: 13,
@@ -339,8 +341,9 @@ fn category_only_imp_ring_never_matches_an_exact_ring_search() {
         crate::report::ItemEntry {
             name: "ring reward".into(),
             quantity: 1,
-            class_name: None,
-            candidate_classes: Vec::new(),
+            label: None,
+            item: None,
+            candidates: Vec::new(),
             category: "ring".into(),
             tier: None,
             tier_range: None,
@@ -372,8 +375,9 @@ fn conditional_floor_loot_candidates_keep_levels_for_search() {
         crate::report::ItemEntry {
             name: "long sword +2".into(),
             quantity: 1,
-            class_name: None,
-            candidate_classes: vec!["Longsword".into()],
+            label: None,
+            item: None,
+            candidates: vec![spd_objects::ItemId::Longsword],
             category: "weapon".into(),
             tier: None,
             tier_range: None,
@@ -406,7 +410,7 @@ fn later_identity_unknown_food_spawns_never_match_exact_item_searches() {
             floors: 2,
             constraints: vec![constraint(class_name, 2, 2)],
             match_mode: MatchMode::Any,
-            include_baseline: false,
+            include_variable: false,
             deep_search: false,
             max_matches: 4,
         })
@@ -425,7 +429,7 @@ fn floor_one_exact_food_identity_matches_exact_item_search() {
         .items
         .iter()
         .find(|item| item.category == "food")
-        .and_then(|item| item.class_name.clone())
+        .and_then(|item| item.class_name().map(str::to_string))
         .expect("exact floor-one food class");
     let result = search_seeds(&SeedSearchRequest {
         start_seed: 0,
@@ -433,7 +437,7 @@ fn floor_one_exact_food_identity_matches_exact_item_search() {
         floors: 1,
         constraints: vec![constraint(&class_name, 1, 1)],
         match_mode: MatchMode::Any,
-        include_baseline: false,
+        include_variable: false,
         deep_search: false,
         max_matches: 1,
     })
@@ -442,7 +446,7 @@ fn floor_one_exact_food_identity_matches_exact_item_search() {
 }
 
 #[test]
-fn finder_baseline_highlights_exclude_promoted_floor_one_rewards() {
+fn finder_variable_highlights_exclude_promoted_floor_one_rewards() {
     let numeric = crate::parse_seed("RZN-LKU-EFS")
         .expect("fixture seed")
         .numeric;
@@ -452,26 +456,27 @@ fn finder_baseline_highlights_exclude_promoted_floor_one_rewards() {
         floors: 17,
         constraints: vec![constraint("Food", 1, 1)],
         match_mode: MatchMode::Any,
-        include_baseline: false,
+        include_variable: false,
         deep_search: false,
         max_matches: 1,
     })
-    .expect("baseline-highlight finder result");
+    .expect("variable-highlight finder result");
 
     let matched = &result.matches[0];
     assert_eq!(matched.evidence.len(), 1);
-    assert_eq!(matched.evidence[0].class_name.as_deref(), Some("Food"));
-    assert!(matched.baseline_items.iter().all(|item| {
-        item.depth != 1 || item.item.class_name.as_deref() != Some("RingOfWealth")
-    }));
-    assert!(matched.baseline_items.iter().all(|item| {
-        item.item.prediction == ItemPredictionKind::Baseline
-            && item.item.class_name.as_deref() != Some("Food")
+    assert_eq!(matched.evidence[0].class_name(), Some("Food"));
+    assert!(matched
+        .variable_items
+        .iter()
+        .all(|item| { item.depth != 1 || item.item.class_name() != Some("RingOfWealth") }));
+    assert!(matched.variable_items.iter().all(|item| {
+        item.item.prediction == ItemPredictionKind::Variable
+            && item.item.class_name() != Some("Food")
     }));
 }
 
 #[test]
-fn sacrifice_sickle_requires_baseline_opt_in_and_is_labeled() {
+fn sacrifice_sickle_requires_variable_opt_in_and_is_labeled() {
     let numeric = crate::parse_seed("PUB-CLI-VNW")
         .expect("fixture seed")
         .numeric;
@@ -483,7 +488,7 @@ fn sacrifice_sickle_requires_baseline_opt_in_and_is_labeled() {
         floors: 4,
         constraints: vec![wanted],
         match_mode: MatchMode::All,
-        include_baseline: false,
+        include_variable: false,
         deep_search: false,
         max_matches: 1,
     };
@@ -491,18 +496,18 @@ fn sacrifice_sickle_requires_baseline_opt_in_and_is_labeled() {
     let guaranteed_only = search_seeds(&request).expect("guaranteed-only search");
     assert!(guaranteed_only.matches.is_empty());
 
-    request.include_baseline = true;
-    let with_baseline = search_seeds(&request).expect("baseline-inclusive search");
-    let evidence = &with_baseline.matches[0].evidence[0];
-    assert_eq!(evidence.class_name.as_deref(), Some("Mace"));
+    request.include_variable = true;
+    let with_variable = search_seeds(&request).expect("variable-inclusive search");
+    let evidence = &with_variable.matches[0].evidence[0];
+    assert_eq!(evidence.class_name(), Some("Mace"));
     assert_eq!(evidence.depth, 4);
     assert_eq!(evidence.level, 1);
-    assert_eq!(evidence.prediction, ItemPredictionKind::Baseline);
+    assert_eq!(evidence.prediction, ItemPredictionKind::Variable);
     assert_eq!(evidence.source.as_deref(), Some("SacrificeRoom"));
 }
 
 #[test]
-fn every_quest_exposes_searchable_rewards_including_baseline_samples() {
+fn every_quest_exposes_searchable_rewards_including_variable_items() {
     let report = crate::analyze_seed_seed_only("0", 20).expect("seed-zero quest report");
     let quest_sources = [
         "Ghost.Quest",
@@ -525,10 +530,10 @@ fn every_quest_exposes_searchable_rewards_including_baseline_samples() {
                 })
                 .flat_map(|item| {
                     let concrete = match item.prediction {
-                        ItemPredictionKind::Exact | ItemPredictionKind::Baseline => {
-                            item.class_name.iter().cloned().collect::<Vec<_>>()
+                        ItemPredictionKind::Exact | ItemPredictionKind::Variable => {
+                            item.class_name().into_iter().collect::<Vec<_>>()
                         }
-                        ItemPredictionKind::Constrained => item.candidate_classes.clone(),
+                        ItemPredictionKind::Constrained => item.candidate_classes(),
                     };
                     concrete.into_iter().map(|class_name| {
                         (
@@ -554,9 +559,9 @@ fn every_quest_exposes_searchable_rewards_including_baseline_samples() {
                 .filter(|floor| floor.depth == *depth)
                 .flat_map(crate::FloorReport::item_variants)
                 .filter(|item| {
-                    item.class_name.as_deref() == Some(class_name.as_str())
+                    item.class_name() == Some(*class_name)
                         || item
-                            .candidate_classes
+                            .candidate_classes()
                             .iter()
                             .any(|candidate| candidate == class_name)
                 })
@@ -582,7 +587,7 @@ fn every_quest_exposes_searchable_rewards_including_baseline_samples() {
             .iter()
             .flat_map(|group| &group.variants)
             .any(|item| {
-                item.prediction == ItemPredictionKind::Baseline
+                item.prediction == ItemPredictionKind::Variable
                     && item
                         .source
                         .as_deref()
@@ -598,14 +603,14 @@ fn every_quest_exposes_searchable_rewards_including_baseline_samples() {
             .iter()
             .map(|(class_name, category, depth, _)| ItemConstraint {
                 item_group: category.clone(),
-                class_name: Some(class_name.clone()),
+                item: Some(spd_objects::ItemId::from_class_name_lossy(class_name)),
                 min_level: None,
                 min_depth: *depth,
                 max_depth: *depth,
             })
             .collect(),
         match_mode: MatchMode::All,
-        include_baseline: true,
+        include_variable: true,
         deep_search: false,
         max_matches: 1,
     })
@@ -628,7 +633,7 @@ fn search_generates_floors_for_the_deepest_constraint() {
         floors: 1,
         constraints: vec![constraint("PotionOfStrength", 1, 4)],
         match_mode: MatchMode::Any,
-        include_baseline: false,
+        include_variable: false,
         deep_search: false,
         max_matches: 1,
     })
@@ -654,7 +659,7 @@ fn guaranteed_limited_drop_spawns_match_exact_item_searches() {
             floors: 4,
             constraints: vec![constraint(class_name, 1, 4)],
             match_mode: MatchMode::Any,
-            include_baseline: false,
+            include_variable: false,
             deep_search: false,
             max_matches: 1,
         })
@@ -671,7 +676,7 @@ fn guaranteed_limited_drop_spawns_match_exact_item_searches() {
         floors: 24,
         constraints: vec![constraint("Torch", 21, 24)],
         match_mode: MatchMode::Any,
-        include_baseline: false,
+        include_variable: false,
         deep_search: false,
         max_matches: 1,
     })
@@ -694,8 +699,7 @@ fn puzzle_solution_potions_match_exact_item_searches() {
     ] {
         let report = crate::analyze_seed(&seed.to_string(), 1).expect("puzzle solution report");
         assert!(report.floors[0].items.iter().any(|item| {
-            item.class_name.as_deref() == Some(class_name)
-                && item.source.as_deref() == Some(room_source)
+            item.class_name() == Some(class_name) && item.source.as_deref() == Some(room_source)
         }));
 
         let result = search_seeds(&SeedSearchRequest {
@@ -704,14 +708,14 @@ fn puzzle_solution_potions_match_exact_item_searches() {
             floors: 1,
             constraints: vec![constraint(class_name, 1, 1)],
             match_mode: MatchMode::Any,
-            include_baseline: false,
+            include_variable: false,
             deep_search: false,
             max_matches: 1,
         })
         .expect("puzzle solution search");
 
         let evidence = &result.matches[0].evidence[0];
-        assert_eq!(evidence.class_name.as_deref(), Some(class_name));
+        assert_eq!(evidence.class_name(), Some(class_name));
         assert_eq!(evidence.depth, 1);
         assert_eq!(evidence.level, 0);
         // Seed 53 also relocates another guaranteed Purity potion into a
@@ -731,8 +735,8 @@ fn secret_honeypot_fixed_items_match_exact_search_evidence() {
 
     let evidence = matching_evidence(&[floor], &constraints, false);
     assert_eq!(evidence.len(), 2);
-    assert_eq!(evidence[0].class_name.as_deref(), Some("ShatteredPot"));
-    assert_eq!(evidence[1].class_name.as_deref(), Some("Honeypot"));
+    assert_eq!(evidence[0].class_name(), Some("ShatteredPot"));
+    assert_eq!(evidence[1].class_name(), Some("Honeypot"));
 }
 
 #[test]
@@ -741,15 +745,16 @@ fn constrained_shop_stock_never_matches_its_internal_concrete_class() {
         depth: 6,
         feeling: None,
         builder: None,
-        rooms: vec!["ShopRoom".into()],
+        rooms: vec![spd_objects::RoomId::ShopRoom],
         possible_rooms: vec![],
         guaranteed_appearances: vec![],
         initial_encounters: vec![],
         items: vec![crate::report::ItemEntry {
             name: "weapon stock".into(),
             quantity: 1,
-            class_name: None,
-            candidate_classes: Vec::new(),
+            label: None,
+            item: None,
+            candidates: Vec::new(),
             category: "weapon".into(),
             tier: Some(2),
             tier_range: None,
@@ -771,7 +776,7 @@ fn constrained_shop_stock_never_matches_its_internal_concrete_class() {
     };
     let constraints = [ItemConstraint {
         item_group: "weapon".into(),
-        class_name: Some("Quarterstaff".into()),
+        item: Some(spd_objects::ItemId::Quarterstaff),
         min_level: None,
         min_depth: 6,
         max_depth: 6,
@@ -801,7 +806,9 @@ fn real_constrained_quest_class_never_matches_exact_search() {
         };
         let constraints = [ItemConstraint {
             item_group: format!("{:?}", internal.category).to_ascii_lowercase(),
-            class_name: Some(internal.class_name.clone()),
+            item: Some(spd_objects::ItemId::from_class_name_lossy(
+                &internal.class_name,
+            )),
             min_level: None,
             min_depth: depth as u32,
             max_depth: depth as u32,
@@ -814,7 +821,7 @@ fn real_constrained_quest_class_never_matches_exact_search() {
 
 #[test]
 fn bounded_search_preserves_ascending_resume_position_without_matches() {
-    let mut value = request(vec![constraint("NoSuchItemClass", 1, 1)], MatchMode::Any);
+    let mut value = request(vec![constraint("Amulet", 1, 1)], MatchMode::Any);
     value.max_matches = 1;
 
     let result = search_seeds(&value).expect("bounded search");
@@ -832,9 +839,9 @@ fn search_does_not_wrap_at_total_seeds() {
         start_seed: TOTAL_SEEDS - 1,
         candidate_count: 2,
         floors: 1,
-        constraints: vec![constraint("NoSuchItemClass", 1, 1)],
+        constraints: vec![constraint("Amulet", 1, 1)],
         match_mode: MatchMode::Any,
-        include_baseline: false,
+        include_variable: false,
         deep_search: false,
         max_matches: 1,
     };
@@ -854,8 +861,9 @@ fn any_item_in_category_matches_exact_and_upgraded_items() {
         crate::report::ItemEntry {
             name: "Ring of Wealth +1".into(),
             quantity: 1,
-            class_name: Some("RingOfWealth".into()),
-            candidate_classes: Vec::new(),
+            label: None,
+            item: Some(spd_objects::ItemId::RingOfWealth),
+            candidates: Vec::new(),
             category: "ring".into(),
             tier: None,
             tier_range: None,
@@ -875,20 +883,20 @@ fn any_item_in_category_matches_exact_and_upgraded_items() {
     // Matches any ring
     let any_ring = ItemConstraint {
         item_group: "ring".into(),
-        class_name: None,
+        item: None,
         min_level: None,
         min_depth: 1,
         max_depth: 5,
     };
     let evidence = matching_evidence(&[floor.clone()], &[any_ring], false);
     assert_eq!(evidence.len(), 1);
-    assert_eq!(evidence[0].class_name.as_deref(), Some("RingOfWealth"));
+    assert_eq!(evidence[0].class_name(), Some("RingOfWealth"));
     assert_eq!(evidence[0].level, 1);
 
     // Matches any ring with min_level <= 1
     let upgraded_ring = ItemConstraint {
         item_group: "ring".into(),
-        class_name: None,
+        item: None,
         min_level: Some(1),
         min_depth: 1,
         max_depth: 5,
@@ -899,7 +907,7 @@ fn any_item_in_category_matches_exact_and_upgraded_items() {
     // Does not match when min_level > 1
     let higher_level_ring = ItemConstraint {
         item_group: "ring".into(),
-        class_name: None,
+        item: None,
         min_level: Some(2),
         min_depth: 1,
         max_depth: 5,
@@ -909,7 +917,7 @@ fn any_item_in_category_matches_exact_and_upgraded_items() {
     // Does not match another category
     let any_wand = ItemConstraint {
         item_group: "wand".into(),
-        class_name: None,
+        item: None,
         min_level: None,
         min_depth: 1,
         max_depth: 5,
@@ -932,7 +940,12 @@ fn deep_search_widens_seed_only_imp_entries() {
             .filter(|group| group.source.as_deref() == Some("Imp.Quest"))
             .flat_map(|group| &group.variants)
             .filter(|item| item.prediction == crate::report::ItemPredictionKind::Constrained)
-            .map(|item| item.candidate_classes.clone())
+            .map(|item| {
+                item.candidate_classes()
+                    .into_iter()
+                    .map(str::to_string)
+                    .collect()
+            })
             .collect()
     };
 
@@ -954,17 +967,17 @@ fn deep_search_widens_seed_only_imp_entries() {
     assert_eq!(after[4], vec!["PlateArmor".to_string()]);
 
     // Each slot's window must contain the fresh-run draw for that slot.
-    let baseline: Vec<String> = report
+    let seed_drawn: Vec<String> = report
         .floors
         .iter()
         .flat_map(|floor| &floor.items)
         .filter(|group| group.source.as_deref() == Some("Imp.Quest"))
         .flat_map(|group| &group.variants)
-        .filter(|item| item.prediction == crate::report::ItemPredictionKind::Baseline)
-        .filter_map(|item| item.class_name.clone())
+        .filter(|item| item.prediction == crate::report::ItemPredictionKind::Variable)
+        .filter_map(|item| item.class_name().map(str::to_string))
         .collect();
-    assert_eq!(baseline.len(), 6);
-    for (slot, (classes, concrete)) in after.iter().zip(&baseline).enumerate() {
+    assert_eq!(seed_drawn.len(), 6);
+    for (slot, (classes, concrete)) in after.iter().zip(&seed_drawn).enumerate() {
         assert!(
             classes.contains(concrete),
             "slot {slot}: window {classes:?} must contain the fresh-run draw {concrete}"
@@ -973,7 +986,7 @@ fn deep_search_widens_seed_only_imp_entries() {
 }
 
 /// Deep search copies each Wandmaker slot's window onto the seed-only rows,
-/// in slot order, and leaves the fresh baseline rows empty.
+/// in slot order, and leaves the variable rows empty.
 #[test]
 fn deep_search_widens_seed_only_wandmaker_entries() {
     let mut report = crate::analyze_seed_seed_only("0", 9).expect("analyze seed 0");
@@ -986,12 +999,17 @@ fn deep_search_widens_seed_only_wandmaker_entries() {
             .filter(|group| group.source.as_deref() == Some("Wandmaker.Quest"))
             .flat_map(|group| &group.variants)
             .filter(|item| item.prediction == prediction)
-            .map(|item| item.candidate_classes.clone())
+            .map(|item| {
+                item.candidate_classes()
+                    .into_iter()
+                    .map(str::to_string)
+                    .collect()
+            })
             .collect()
     };
 
     let constrained = crate::report::ItemPredictionKind::Constrained;
-    let baseline = crate::report::ItemPredictionKind::Baseline;
+    let variable = crate::report::ItemPredictionKind::Variable;
     let before = wandmaker_classes(&report, constrained);
     assert_eq!(before.len(), 2, "two seed-only wand rows");
     assert!(
@@ -1019,21 +1037,21 @@ fn deep_search_widens_seed_only_wandmaker_entries() {
         let expected: Vec<_> = slot
             .candidates
             .iter()
-            .map(|candidate| candidate.class_name.clone())
+            .map(|candidate| candidate.class_name().to_string())
             .collect();
         assert_eq!(classes, &expected, "slot {}", slot.slot);
         assert!(
-            classes.contains(&slot.baseline_class),
+            classes.contains(&slot.item.class_name().to_string()),
             "slot {} window {classes:?} must contain {}",
             slot.slot,
-            slot.baseline_class
+            slot.item
         );
     }
 
-    let baseline_rows = wandmaker_classes(&report, baseline);
-    assert_eq!(baseline_rows.len(), 2);
+    let variable_rows = wandmaker_classes(&report, variable);
+    assert_eq!(variable_rows.len(), 2);
     assert!(
-        baseline_rows.iter().all(|classes| classes.is_empty()),
-        "baseline wand rows stay empty: {baseline_rows:?}"
+        variable_rows.iter().all(|classes| classes.is_empty()),
+        "variable wand rows stay empty: {variable_rows:?}"
     );
 }

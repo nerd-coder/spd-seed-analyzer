@@ -40,7 +40,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
         runtime_sensitive_layout: false,
         runtime_sensitive_rooms: false,
         runtime_sensitive_feeling: false,
-        baseline_projection: false,
+        expose_variable_items: false,
         room_public_facts: vec![
             super::super::room_public::RoomPublicFact::new("SacrificeRoom", 3)
                 .expect("Sacrifice contract"),
@@ -85,7 +85,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
                     cell: 7,
                     heap_type: "chest".into(),
                     items: vec![MapHeapItem {
-                        class_name: "PotionOfHealing".into(),
+                        item: spd_objects::ItemId::from_class_name_lossy("PotionOfHealing"),
                         quantity: 1,
                         level: 0,
                         cursed: false,
@@ -96,7 +96,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
                     cell: 12,
                     heap_type: "heap".into(),
                     items: vec![MapHeapItem {
-                        class_name: "PotionOfStrength".into(),
+                        item: spd_objects::ItemId::from_class_name_lossy("PotionOfStrength"),
                         quantity: 1,
                         level: 0,
                         cursed: false,
@@ -107,7 +107,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
                     cell: 14,
                     heap_type: "for_sale".into(),
                     items: vec![MapHeapItem {
-                        class_name: "LeatherArmor".into(),
+                        item: spd_objects::ItemId::from_class_name_lossy("LeatherArmor"),
                         quantity: 1,
                         level: 0,
                         cursed: false,
@@ -118,7 +118,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
                     cell: 15,
                     heap_type: "heap".into(),
                     items: vec![MapHeapItem {
-                        class_name: "GuidePage".into(),
+                        item: spd_objects::ItemId::from_class_name_lossy("GuidePage"),
                         quantity: 1,
                         level: 0,
                         cursed: false,
@@ -128,7 +128,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
             ],
             mobs: vec![MapMob {
                 cell: 9,
-                class_name: "Mimic".into(),
+                mob: spd_objects::MobId::Mimic,
             }],
             transitions: vec![],
             traps: vec![],
@@ -150,7 +150,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
 
     let report = floor.to_floor_report();
     assert!(report.items.iter().any(|item| {
-        item.class_name.as_deref() == Some("PotionOfHealing")
+        item.class_name() == Some("PotionOfHealing")
             && item.prediction == ItemPredictionKind::Exact
             && item.source.as_deref() == Some("chest:heap")
     }));
@@ -201,8 +201,8 @@ fn artifact_shifted_floor_loot_keeps_searchable_properties_and_one_candidate() {
         .expect("conditional floor loot");
 
     assert_eq!(loot.prediction, ItemPredictionKind::Constrained);
-    assert_eq!(loot.class_name, None);
-    assert_eq!(loot.candidate_classes, ["PotionOfHealing"]);
+    assert_eq!(loot.class_name(), None);
+    assert_eq!(loot.candidate_classes(), ["PotionOfHealing"]);
     assert_eq!(loot.level, Some(2));
     assert_eq!(loot.cursed, Some(true));
     assert!(loot.notes.is_empty());
@@ -231,7 +231,7 @@ fn empty_level_state(depth: i32) -> LevelState {
         runtime_sensitive_layout: false,
         runtime_sensitive_rooms: false,
         runtime_sensitive_feeling: false,
-        baseline_projection: false,
+        expose_variable_items: false,
         room_public_facts: vec![],
         complete: true,
         map: None,
@@ -270,7 +270,7 @@ fn known_room_contracts_survive_a_runtime_sensitive_paint_tail() {
     assert_eq!(report.rooms, ["PoolRoom"]);
     assert!(report.map.is_none());
     assert!(report.items.iter().any(|item| {
-        item.class_name.as_deref() == Some("PotionOfInvisibility")
+        item.class_name() == Some("PotionOfInvisibility")
             && item.source.as_deref() == Some("PoolRoom")
             && item.prediction == ItemPredictionKind::Exact
     }));
@@ -333,13 +333,13 @@ fn real_shop_remains_constrained_after_inherited_generation_taint() {
         floors: 6,
         constraints: vec![crate::ItemConstraint {
             item_group: "armor".into(),
-            class_name: Some("LeatherArmor".into()),
+            item: Some(spd_objects::ItemId::LeatherArmor),
             min_level: None,
             min_depth: 6,
             max_depth: 6,
         }],
         match_mode: crate::MatchMode::All,
-        include_baseline: false,
+        include_variable: false,
         deep_search: false,
         max_matches: 1,
     })
@@ -367,7 +367,7 @@ fn room_reward_projection_hides_all_concrete_fields_and_deduplicates_counts() {
         runtime_sensitive_layout: false,
         runtime_sensitive_rooms: false,
         runtime_sensitive_feeling: false,
-        baseline_projection: false,
+        expose_variable_items: false,
         room_public_facts: vec![
             super::super::room_public::RoomPublicFact::new("ArmoryRoom", 7)
                 .expect("Armory contract"),
@@ -399,7 +399,7 @@ fn room_reward_projection_hides_all_concrete_fields_and_deduplicates_counts() {
         .collect();
     assert_eq!(entries.len(), 2);
     assert_eq!(entries[0].prediction, ItemPredictionKind::Constrained);
-    assert!(entries[0].class_name.is_none());
+    assert!(entries[0].class_name().is_none());
     assert_eq!(entries[0].category, "bomb / weapon / armor / missile");
     assert_eq!(
         entries[0].level_range,
@@ -459,7 +459,7 @@ fn standard_center_room_sampled_classes_do_not_leak_to_report_or_searchable_entr
     );
     for class_name in sampled {
         assert!(report.items.iter().all(|entry| {
-            entry.class_name.as_deref() != Some(class_name.as_str())
+            entry.class_name() != Some(class_name.as_str())
                 || entry.source.as_deref() == Some("forced")
         }));
     }
@@ -492,12 +492,12 @@ fn quest_report_json_hides_constrained_classes_titles_and_persisted_wands() {
                 let class_is_exact_elsewhere = report
                     .items
                     .iter()
-                    .any(|entry| entry.class_name.as_deref() == Some(&item.class_name))
+                    .any(|entry| entry.class_name() == Some(&item.class_name))
                     || report.map.as_ref().is_some_and(|map| {
                         map.heaps.iter().any(|heap| {
                             heap.items
                                 .iter()
-                                .any(|entry| entry.class_name == item.class_name)
+                                .any(|entry| entry.class_name() == item.class_name)
                         })
                     });
                 if !class_is_exact_elsewhere {

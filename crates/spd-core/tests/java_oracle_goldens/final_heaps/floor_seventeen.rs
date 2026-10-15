@@ -55,7 +55,7 @@ fn aaa_floor_seventeen_matches_the_pinned_final_facts() {
         .iter()
         .map(|mob| OracleMob {
             cell: mob.cell,
-            class_name: mob.class_name.clone(),
+            class_name: mob.class_name().to_string(),
         })
         .collect();
     assert_eq!(mobs, expected.final_mobs, "floor-17 final mobs");
@@ -72,7 +72,7 @@ fn aaa_floor_seventeen_matches_the_pinned_final_facts() {
                 .items
                 .iter()
                 .map(|item| OracleItem {
-                    class_name: item.class_name.clone(),
+                    class_name: item.class_name().to_string(),
                     quantity: item.quantity,
                     level: item.level,
                     cursed: item.cursed,

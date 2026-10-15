@@ -6,10 +6,10 @@ use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::level::TerrainMap;
 use crate::quests;
 use crate::report::{
-    AmbitiousImpQuestBaseline, AmbitiousImpQuestContract, BlacksmithObjective, GhostTarget,
-    GhostTargetRule, ImpRewardSlot, OldWandmakerQuestBaseline, OldWandmakerQuestContract,
-    QuestDepthRange, QuestReport, QuestRewardSelection, SadGhostQuestBaseline,
-    SadGhostQuestContract, TrollBlacksmithQuestBaseline, TrollBlacksmithQuestContract,
+    AmbitiousImpQuestContract, AmbitiousImpQuestVariable, BlacksmithObjective, GhostTarget,
+    GhostTargetRule, ImpRewardSlot, OldWandmakerQuestContract, OldWandmakerQuestVariable,
+    QuestDepthRange, QuestReport, QuestRewardSelection, SadGhostQuestContract,
+    SadGhostQuestVariable, TrollBlacksmithQuestContract, TrollBlacksmithQuestVariable,
     WandmakerObjective,
 };
 use crate::rooms::room::Room;
@@ -136,7 +136,7 @@ fn ghost_report(quest_type: quests::GhostType) -> QuestReport {
             ],
             rewards: reward_selection("Ghost.Quest", 2, 1, None),
         },
-        baseline: SadGhostQuestBaseline { target },
+        variable: SadGhostQuestVariable { target },
     }
 }
 
@@ -172,7 +172,7 @@ fn wandmaker_report(
             rewards: reward_selection("Wandmaker.Quest", 2, 1, None),
             slots,
         },
-        baseline: OldWandmakerQuestBaseline { objective },
+        variable: OldWandmakerQuestVariable { objective },
     }
 }
 
@@ -188,7 +188,7 @@ fn blacksmith_report(quest_type: quests::BlacksmithQuestType) -> QuestReport {
             objective_options: vec![BlacksmithObjective::Crystal, BlacksmithObjective::Gnoll],
             rewards: reward_selection("Blacksmith.Quest", 4, 1, Some(2_000)),
         },
-        baseline: TrollBlacksmithQuestBaseline { objective },
+        variable: TrollBlacksmithQuestVariable { objective },
     }
 }
 
@@ -208,7 +208,7 @@ fn imp_report(spawn_depth: i32, slots: Vec<ImpRewardSlot>) -> QuestReport {
             upgrades_pinned,
             total_upgrade_value,
         },
-        baseline: AmbitiousImpQuestBaseline {
+        variable: AmbitiousImpQuestVariable {
             spawn_depth: spawn_depth as u32,
         },
     }

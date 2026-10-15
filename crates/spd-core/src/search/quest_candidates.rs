@@ -6,8 +6,8 @@ use crate::report::ItemPredictionKind;
 /// a deck-index shift can reach.
 ///
 /// Those entries carry no concrete class, and `Constrained` only ever matches
-/// through `candidate_classes`. The classes come from each quest contract's
-/// per-slot window, already computed for the report. Baseline rows are left
+/// through `candidates`. The classes come from each quest contract's
+/// per-slot window, already computed for the report. Variable rows are left
 /// unchanged.
 pub(super) fn widen_quest_candidates(floors: &mut [crate::FloorReport]) {
     for floor in floors {
@@ -24,7 +24,7 @@ fn widen_imp(floor: &mut crate::FloorReport) {
         return;
     };
 
-    // Both the `Constrained` and `Baseline` projections are emitted per
+    // Both the `Constrained` and `Variable` projections are emitted per
     // slot, in slot order. Only the seed-only half is widened.
     let mut slots = slots.into_iter();
     for group in floor.items.iter_mut() {
@@ -37,12 +37,12 @@ fn widen_imp(floor: &mut crate::FloorReport) {
             .filter(|item| item.prediction == ItemPredictionKind::Constrained)
         {
             let Some(slot) = slots.next() else { break };
-            item.candidate_classes = match slot.fixed_class {
+            item.candidates = match slot.fixed_item {
                 Some(fixed) => vec![fixed],
                 None => slot
                     .candidates
                     .into_iter()
-                    .map(|candidate| candidate.class_name)
+                    .map(|candidate| candidate.item)
                     .collect(),
             };
         }
@@ -57,7 +57,7 @@ fn widen_wandmaker(floor: &mut crate::FloorReport) {
         return;
     };
 
-    // Constrained rows are wand 1 then wand 2. Baseline rows stay empty.
+    // Constrained rows are wand 1 then wand 2. Variable rows stay empty.
     let mut slots = slots.into_iter();
     for group in floor.items.iter_mut() {
         if group.source.as_deref() != Some("Wandmaker.Quest") {
@@ -69,10 +69,10 @@ fn widen_wandmaker(floor: &mut crate::FloorReport) {
             .filter(|item| item.prediction == ItemPredictionKind::Constrained)
         {
             let Some(slot) = slots.next() else { break };
-            item.candidate_classes = slot
+            item.candidates = slot
                 .candidates
                 .into_iter()
-                .map(|candidate| candidate.class_name)
+                .map(|candidate| candidate.item)
                 .collect();
         }
     }

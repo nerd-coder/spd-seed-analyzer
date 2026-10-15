@@ -91,7 +91,7 @@ fn floor_one_traps_room_relocates_its_exact_forced_reward() {
         .iter()
         .find(|item| {
             item.source.as_deref() == Some("TrapsRoom")
-                && item.class_name.as_deref() == Some("PotionOfStrength")
+                && item.class_name() == Some("PotionOfStrength")
         })
         .expect("TrapsRoom reward");
 
@@ -101,7 +101,7 @@ fn floor_one_traps_room_relocates_its_exact_forced_reward() {
         item.name == "single room reward source" && item.source.as_deref() == Some("TrapsRoom")
     }));
     assert!(!floor.items.iter().any(|item| {
-        item.class_name.as_deref() == Some("PotionOfStrength")
+        item.class_name() == Some("PotionOfStrength")
             && item.source.as_deref() == Some("guaranteed floor spawn")
     }));
 }
@@ -115,7 +115,7 @@ fn small_floor_two_ring_rooms_do_not_report_phantom_rewards() {
         floor
             .rooms
             .iter()
-            .filter(|room| room.as_str() == "RingRoom")
+            .filter(|room| room.class_name() == "RingRoom")
             .count(),
         2,
         "fixture keeps both small RingRoom instances"
@@ -187,9 +187,9 @@ fn pub_cli_vnw_narrows_floor_two_pool_reward() {
     assert_eq!(pool.variants[0].cursed, Some(false));
     assert_eq!(
         pool.variants[1].prediction,
-        crate::report::ItemPredictionKind::Baseline
+        crate::report::ItemPredictionKind::Variable
     );
-    assert_eq!(pool.variants[1].class_name.as_deref(), Some("MailArmor"));
+    assert_eq!(pool.variants[1].class_name(), Some("MailArmor"));
     assert_eq!(pool.variants[1].name, "mail Armor +0");
     assert_eq!(pool.variants[1].category, "armor");
     assert_eq!(pool.variants[1].level, Some(0));
@@ -205,7 +205,7 @@ fn floor_one_runestone_rewards_and_initial_encounters_are_exact() {
         .items
         .iter()
         .filter(|item| item.source.as_deref() == Some("RunestoneRoom"))
-        .map(|item| (item.class_name.as_deref(), item.prediction, item.quantity))
+        .map(|item| (item.class_name(), item.prediction, item.quantity))
         .collect();
     assert_eq!(
         runestones,
@@ -227,14 +227,14 @@ fn floor_one_runestone_rewards_and_initial_encounters_are_exact() {
         floor
             .initial_encounters
             .iter()
-            .map(|encounter| (encounter.class_name.as_str(), encounter.quantity))
+            .map(|encounter| (encounter.class_name(), encounter.quantity))
             .collect::<Vec<_>>(),
         [("Rat", 6), ("Snake", 2)]
     );
     let snake = floor
         .initial_encounters
         .iter()
-        .find(|encounter| encounter.class_name == "Snake")
+        .find(|encounter| encounter.class_name() == "Snake")
         .expect("initial snakes");
     assert!(matches!(
         snake.combat_rewards.as_slice(),
@@ -244,7 +244,7 @@ fn floor_one_runestone_rewards_and_initial_encounters_are_exact() {
                 numerator: 1,
                 denominator: 4,
             }),
-            class_name: None,
+            item: None,
             ..
         }]
     ));
@@ -257,17 +257,17 @@ fn floor_one_room_mobs_keep_fixed_combat_rewards_non_positional() {
     let piranhas = floor
         .initial_encounters
         .iter()
-        .find(|encounter| encounter.class_name == "Piranha")
+        .find(|encounter| encounter.class_name() == "Piranha")
         .expect("PoolRoom piranhas");
     assert_eq!(piranhas.quantity, 3);
     assert!(matches!(
         piranhas.combat_rewards.as_slice(),
         [crate::report::CombatReward {
-            class_name: Some(class_name),
+            item: Some(item),
             prediction: crate::report::CombatRewardPrediction::Guaranteed,
             chance: None,
             ..
-        }] if class_name == "MysteryMeat"
+        }] if *item == spd_objects::ItemId::MysteryMeat
     ));
     assert!(
         floor.map.as_ref().is_some_and(|map| map.mobs.is_empty()),
@@ -284,7 +284,7 @@ fn compact_report_promotes_exact_floor_one_room_rewards() {
         .iter()
         .find(|item| {
             item.prediction == report::ItemPredictionKind::Exact
-                && item.class_name.as_deref() == Some("DriedRose")
+                && item.class_name() == Some("DriedRose")
         })
         .expect("exact floor-one Crystal Choice Dried Rose");
     assert_eq!(rose.level, Some(0));
@@ -295,7 +295,7 @@ fn compact_report_promotes_exact_floor_one_room_rewards() {
     );
     assert_eq!(rose.prediction, report::ItemPredictionKind::Exact);
     assert!(floor_one.items.iter().all(|item| {
-        item.class_name.as_deref() != Some("DriedRose")
+        item.class_name() != Some("DriedRose")
             || item.prediction == report::ItemPredictionKind::Exact
     }));
 
@@ -394,15 +394,18 @@ fn first_alchemy_pot_is_a_guaranteed_floor_appearance() {
 
         assert!(floor.guaranteed_appearances.iter().any(|appearance| {
             appearance.kind == GuaranteedAppearanceKind::AlchemyPot
-                && appearance.name == "Alchemy pot"
-                && appearance.source.as_deref() == Some(expected_source)
+                && appearance
+                    .source
+                    .is_some_and(|source| source == expected_source)
         }));
 
         for exact_floor in report.floors.iter().filter(|floor| !floor.rooms.is_empty()) {
             let room_pots = exact_floor
                 .rooms
                 .iter()
-                .filter(|room| matches!(room.as_str(), "LaboratoryRoom" | "SecretLaboratoryRoom"))
+                .filter(|room| {
+                    matches!(room.class_name(), "LaboratoryRoom" | "SecretLaboratoryRoom")
+                })
                 .count();
             assert_eq!(
                 exact_floor.guaranteed_appearances.len(),
@@ -451,8 +454,7 @@ fn automatic_item_conditions_cover_supported_run_combinations() {
         .iter()
         .flat_map(report::FloorReport::item_variants)
         .any(|item| {
-            item.class_name.as_deref() == Some("ScrollOfUpgrade")
-                && !item.spawn_conditions.is_empty()
+            item.class_name() == Some("ScrollOfUpgrade") && !item.spawn_conditions.is_empty()
         }));
 }
 
@@ -475,7 +477,7 @@ fn public_contract_serializes_conditions_on_items_only() {
         .as_array()
         .unwrap()
         .iter()
-        .all(|floor| floor.get("baseline_items").is_none()));
+        .all(|floor| floor.get("variable_items").is_none()));
     assert!(value.get("analysis_notes").is_none());
     assert!(value.get("message").is_none());
     assert!(value["identities"]["potions"][0].get("name").is_none());
@@ -500,8 +502,9 @@ fn no_op_spawn_dependencies_are_not_serialized() {
     let item = crate::report::ItemEntry {
         name: "test".into(),
         quantity: 1,
-        class_name: None,
-        candidate_classes: Vec::new(),
+        label: None,
+        item: None,
+        candidates: Vec::new(),
         category: "other".into(),
         tier: None,
         tier_range: None,
@@ -543,7 +546,7 @@ fn pub_cli_vnw_groups_the_depth_four_sacrifice_reward() {
         variants[0].prediction,
         report::ItemPredictionKind::Constrained
     );
-    assert_eq!(variants[0].class_name, None);
+    assert_eq!(variants[0].class_name(), None);
     assert_eq!(
         variants[0].tier_range,
         Some(report::NumericRange { min: 2, max: 5 })
@@ -556,10 +559,10 @@ fn pub_cli_vnw_groups_the_depth_four_sacrifice_reward() {
     assert!(variants[0].spawn_conditions.is_empty());
 
     assert_eq!(variants[1].name, "polarized mace +1");
-    assert_eq!(variants[1].class_name.as_deref(), Some("Mace"));
+    assert_eq!(variants[1].class_name(), Some("Mace"));
     assert_eq!(variants[1].level, Some(1));
     assert_eq!(variants[1].cursed, Some(true));
-    assert_eq!(variants[1].prediction, report::ItemPredictionKind::Baseline);
+    assert_eq!(variants[1].prediction, report::ItemPredictionKind::Variable);
 
     let value = serde_json::to_value(groups[0]).expect("serialize grouped reward");
     assert_eq!(value["source"], "SacrificeRoom");
@@ -575,11 +578,11 @@ fn pub_cli_vnw_groups_the_depth_four_sacrifice_reward() {
 #[test]
 fn enchantments_serialize_type_and_conditions() {
     let enchantment = report::ItemEnchantment {
-        enchantment_type: "Corrupting".into(),
+        enchantment_type: spd_objects::Enchantment::Corrupting,
         conditions: Vec::new(),
     };
     let value = serde_json::to_value(enchantment).expect("serialize enchantment");
-    assert_eq!(value["type"], "Corrupting");
+    assert_eq!(value["type"], spd_objects::Enchantment::Corrupting.id());
     assert_eq!(value["conditions"], serde_json::json!([]));
     assert_eq!(value.as_object().unwrap().len(), 2);
 }
@@ -589,7 +592,7 @@ fn enchantment_trinket_events_serialize_with_their_details() {
     use crate::trinkets::{TrinketEvent, TrinketEventAction, TrinketKind};
 
     let enchantment = report::ItemEnchantment {
-        enchantment_type: "Chilling".into(),
+        enchantment_type: spd_objects::Enchantment::Chilling,
         conditions: vec![report::ItemCondition::Trinket {
             events: vec![TrinketEvent {
                 before_depth: 3,
@@ -711,7 +714,7 @@ fn shop_stock_on_floor_6() {
         .iter()
         .any(|item| item.source.as_deref() == Some("ShopRoom")));
     assert!(public.items.iter().any(|item| {
-        item.name == "Hourglass sand stock" && item.class_name.as_deref() == Some("SandBag")
+        item.name == "Hourglass sand stock" && item.class_name() == Some("SandBag")
     }));
 }
 
@@ -750,9 +753,9 @@ fn imp_shop_stock_on_floor_20_is_reported_conditionally() {
     assert!(public
         .guaranteed_appearances
         .iter()
-        .all(|appearance| appearance.source.as_deref() != Some("ImpShopRoom")));
+        .all(|appearance| appearance.source != Some(spd_objects::RoomId::ImpShopRoom)));
     assert!(shop.iter().any(|item| {
-        item.class_name.as_deref() == Some("PlateArmor")
+        item.class_name() == Some("PlateArmor")
             && item.prediction == crate::report::ItemPredictionKind::Exact
     }));
     assert!(shop.iter().any(|item| {
@@ -788,7 +791,7 @@ fn wandmaker_quest_spawns_within_prison() {
                     .iter()
                     .filter(|i| {
                         i.source.as_deref() == Some("Wandmaker.Quest")
-                            && i.prediction != report::ItemPredictionKind::Baseline
+                            && i.prediction != report::ItemPredictionKind::Variable
                     })
                     .collect();
                 assert_eq!(rewards.len(), 2);
@@ -797,26 +800,26 @@ fn wandmaker_quest_spawns_within_prison() {
                         && item.level.is_none()
                         && item.level_range == Some(report::NumericRange { min: 1, max: 3 })
                         && item.cursed == Some(false)
-                        && item.class_name.is_none()
-                        && item.candidate_classes.is_empty()
+                        && item.class_name().is_none()
+                        && item.candidate_classes().is_empty()
                         && item.notes.iter().any(|note| {
                             note.contains("two distinct wand options")
                                 && note.contains("choose one")
                         })
                 }));
-                let baseline_rewards: Vec<_> = f
+                let variable_rewards: Vec<_> = f
                     .items
                     .iter()
                     .filter(|item| {
                         item.source.as_deref() == Some("Wandmaker.Quest")
-                            && item.prediction == report::ItemPredictionKind::Baseline
+                            && item.prediction == report::ItemPredictionKind::Variable
                     })
                     .collect();
-                assert_eq!(baseline_rewards.len(), 2);
-                assert!(baseline_rewards.iter().all(|item| {
-                    item.class_name.is_some()
+                assert_eq!(variable_rewards.len(), 2);
+                assert!(variable_rewards.iter().all(|item| {
+                    item.class_name().is_some()
                         && item.level.is_some()
-                        && item.candidate_classes.is_empty()
+                        && item.candidate_classes().is_empty()
                 }));
                 let contract = f.quests.iter().find_map(|quest| match quest {
                     report::QuestReport::OldWandmaker { contract, .. } => Some(contract),
@@ -829,9 +832,9 @@ fn wandmaker_quest_spawns_within_prison() {
                     contract.slots[0]
                         .candidates
                         .first()
-                        .map(|candidate| candidate.class_name.as_str()),
-                    baseline_rewards[0].class_name.as_deref(),
-                    "slot 0's fresh candidate must be the baseline wand"
+                        .map(|candidate| candidate.class_name()),
+                    variable_rewards[0].class_name(),
+                    "slot 0's fresh candidate must be the seed-drawn wand"
                 );
                 for slot in &contract.slots {
                     let weight: u32 = slot
@@ -847,13 +850,13 @@ fn wandmaker_quest_spawns_within_prison() {
                 }
                 assert!(f.quests.iter().any(|quest| matches!(
                     quest,
-                    report::QuestReport::OldWandmaker { contract, baseline }
+                    report::QuestReport::OldWandmaker { contract, variable }
                         if contract.spawn_depth_range == report::QuestDepthRange { min: 7, max: 9 }
                             && contract.rewards.item_source == "Wandmaker.Quest"
                             && contract.rewards.option_count == 2
                             && contract.rewards.selected_count == 1
                             && contract.objective_options.len() == 3
-                            && contract.objective_options.contains(&baseline.objective)
+                            && contract.objective_options.contains(&variable.objective)
                 )));
                 saw = true;
                 break;
@@ -896,13 +899,13 @@ fn imp_quest_spawns_within_city() {
                     .iter()
                     .filter(|item| {
                         item.source.as_deref() == Some("Imp.Quest")
-                            && item.prediction != report::ItemPredictionKind::Baseline
+                            && item.prediction != report::ItemPredictionKind::Variable
                     })
                     .collect();
                 assert_eq!(options.len(), 6);
                 assert!(options.iter().all(|item| {
                     item.prediction == report::ItemPredictionKind::Constrained
-                        && item.class_name.is_none()
+                        && item.class_name().is_none()
                         && item.cursed == Some(false)
                         && item
                             .notes
@@ -912,27 +915,27 @@ fn imp_quest_spawns_within_city() {
                 assert_eq!(options[0].name, "artifact or ring");
                 assert!(f.quests.iter().any(|quest| matches!(
                     quest,
-                    report::QuestReport::AmbitiousImp { contract, baseline }
+                    report::QuestReport::AmbitiousImp { contract, variable }
                         if contract.spawn_depth_range == report::QuestDepthRange { min: 17, max: 19 }
                             && contract.rewards.item_source == "Imp.Quest"
                             && contract.rewards.option_count == 6
                             && contract.rewards.selected_count == 1
-                            && (17..=19).contains(&baseline.spawn_depth)
+                            && (17..=19).contains(&variable.spawn_depth)
                 )));
-                let baseline_options: Vec<_> = f
+                let variable_options: Vec<_> = f
                     .items
                     .iter()
                     .filter(|item| {
                         item.source.as_deref() == Some("Imp.Quest")
-                            && item.prediction == report::ItemPredictionKind::Baseline
+                            && item.prediction == report::ItemPredictionKind::Variable
                     })
                     .collect();
-                assert_eq!(baseline_options.len(), 6);
-                assert!(baseline_options.iter().all(|item| {
-                    item.class_name.is_some()
+                assert_eq!(variable_options.len(), 6);
+                assert!(variable_options.iter().all(|item| {
+                    item.class_name().is_some()
                         && item.level.is_some()
                         && item.cursed == Some(false)
-                        && item.candidate_classes.is_empty()
+                        && item.candidate_classes().is_empty()
                 }));
                 let vault = f
                     .branches
@@ -983,7 +986,7 @@ fn blacksmith_quest_spawns_within_caves() {
                     .iter()
                     .filter(|item| {
                         item.source.as_deref() == Some("Blacksmith.Quest")
-                            && item.prediction != report::ItemPredictionKind::Baseline
+                            && item.prediction != report::ItemPredictionKind::Variable
                     })
                     .collect();
                 assert_eq!(
@@ -994,8 +997,8 @@ fn blacksmith_quest_spawns_within_caves() {
                 );
                 assert!(rewards.iter().all(|item| {
                     item.prediction == report::ItemPredictionKind::Constrained
-                        && item.class_name.is_none()
-                        && item.candidate_classes.is_empty()
+                        && item.class_name().is_none()
+                        && item.candidate_classes().is_empty()
                         && item.tier.is_none()
                         && item.tier_range == Some(report::NumericRange { min: 3, max: 5 })
                         && item.level.is_none()
@@ -1012,17 +1015,19 @@ fn blacksmith_quest_spawns_within_caves() {
                                 && note.contains("before this floor is generated")
                         })
                 }));
-                let baseline_rewards: Vec<_> = f
+                let variable_rewards: Vec<_> = f
                     .items
                     .iter()
                     .filter(|item| {
                         item.source.as_deref() == Some("Blacksmith.Quest")
-                            && item.prediction == report::ItemPredictionKind::Baseline
+                            && item.prediction == report::ItemPredictionKind::Variable
                     })
                     .collect();
-                assert_eq!(baseline_rewards.len(), 4);
-                assert!(baseline_rewards.iter().all(|item| {
-                    item.class_name.is_some() && item.level.is_some() && item.cursed == Some(false)
+                assert_eq!(variable_rewards.len(), 4);
+                assert!(variable_rewards.iter().all(|item| {
+                    item.class_name().is_some()
+                        && item.level.is_some()
+                        && item.cursed == Some(false)
                 }));
                 let room_rewards: Vec<_> = f
                     .items
@@ -1038,10 +1043,10 @@ fn blacksmith_quest_spawns_within_caves() {
                         && item.cursed.is_none()
                         && (item.category != "armor"
                             || (item.prediction == report::ItemPredictionKind::Exact
-                                && item.class_name.is_some()))
+                                && item.class_name().is_some()))
                         && (item.category == "armor"
                             || (item.prediction == report::ItemPredictionKind::Constrained
-                                && item.class_name.is_none()))
+                                && item.class_name().is_none()))
                 }));
                 if let Some(map) = &f.map {
                     let constrained_heaps: Vec<_> = map
@@ -1057,13 +1062,13 @@ fn blacksmith_quest_spawns_within_caves() {
                 }
                 assert!(f.quests.iter().any(|quest| matches!(
                     quest,
-                    report::QuestReport::TrollBlacksmith { contract, baseline }
+                    report::QuestReport::TrollBlacksmith { contract, variable }
                         if contract.spawn_depth_range == report::QuestDepthRange { min: 12, max: 14 }
                             && contract.rewards.item_source == "Blacksmith.Quest"
                             && contract.rewards.option_count == 4
                             && contract.rewards.selected_count == 1
                             && contract.rewards.favor_requirement == Some(2_000)
-                            && contract.objective_options.contains(&baseline.objective)
+                            && contract.objective_options.contains(&variable.objective)
                 )));
                 break;
             }
@@ -1168,7 +1173,7 @@ fn analyze_several_seeds() {
 }
 
 #[test]
-fn seed_only_baseline_keeps_regular_floor_room_facts() {
+fn seed_only_default_profile_keeps_regular_floor_room_facts() {
     let report = analyze_seed_seed_only("0", 4).expect("analyze");
     for floor in &report.floors {
         assert!(
@@ -1187,7 +1192,7 @@ fn analyze_full_run_no_panic() {
         let r = analyze_seed_seed_only(s, 26).unwrap_or_else(|e| panic!("seed {s}: {e:?}"));
         assert_eq!(r.floors.len(), 26, "seed {s}");
         // Dedicated levels have no regular-room builder, but their pinned
-        // layouts remain available in the concrete no-extra-state baseline.
+        // layouts remain available in the concrete no-extra-state default profile.
         for depth in [5u32, 10, 15, 20, 25, 26] {
             let f = r.floors.iter().find(|f| f.depth == depth).expect("depth");
             assert!(

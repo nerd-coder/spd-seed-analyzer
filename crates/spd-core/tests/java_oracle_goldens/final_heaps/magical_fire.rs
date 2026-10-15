@@ -38,7 +38,7 @@ pub(super) fn assert_abc_magical_fire_facts(
             (
                 heap.cell,
                 heap.heap_type.as_str(),
-                heap.items[0].class_name.as_str(),
+                heap.items[0].class_name(),
             )
         })
         .collect();

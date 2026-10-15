@@ -19,13 +19,13 @@ pub(crate) struct DiscoveredRoute {
     pub max_depth: u32,
 }
 
-pub(crate) fn baseline_condition() -> ItemSpawnCondition {
+pub(crate) fn default_condition() -> ItemSpawnCondition {
     condition_for_profile(&MapProfile::default())
 }
 
 pub(crate) fn discover_routes(
     selection: &TrinketSelectionReport,
-    baseline: &[FloorReport],
+    floors: &[FloorReport],
     floors_requested: u32,
 ) -> Vec<DiscoveredRoute> {
     let forbidden_profile = MapProfile {
@@ -39,7 +39,7 @@ pub(crate) fn discover_routes(
         return routes;
     }
 
-    let exact_scroll_depths = exact_transmutation_scroll_depths(baseline);
+    let exact_scroll_depths = exact_transmutation_scroll_depths(floors);
     let mut acquisitions = direct_acquisitions(selection);
     acquisitions.extend(transmuted_acquisitions(
         selection,
@@ -108,7 +108,7 @@ fn direct_acquisitions(selection: &TrinketSelectionReport) -> Vec<AcquisitionRou
     selection
         .catalyst_options
         .iter()
-        .filter_map(|class_name| TrinketKind::from_class_name(class_name))
+        .filter_map(|class_name| TrinketKind::from_class_name(class_name.class_name()))
         .filter(|trinket| is_replayed(*trinket))
         .map(|trinket| AcquisitionRoute {
             effective_depth: selection.first_effective_depth,
@@ -131,7 +131,7 @@ fn transmuted_acquisitions(
     let Some(initial) = selection
         .catalyst_options
         .iter()
-        .filter_map(|class_name| TrinketKind::from_class_name(class_name))
+        .filter_map(|class_name| TrinketKind::from_class_name(class_name.class_name()))
         .find(|trinket| !is_unsupported_stateful(*trinket))
     else {
         return Vec::new();
@@ -158,7 +158,7 @@ fn transmuted_acquisitions(
         {
             break;
         }
-        let Some(next) = TrinketKind::from_class_name(class_name) else {
+        let Some(next) = TrinketKind::from_class_name(class_name.class_name()) else {
             break;
         };
         events.push(TrinketEvent {
@@ -182,7 +182,7 @@ fn exact_transmutation_scroll_depths(floors: &[FloorReport]) -> Vec<u32> {
     for floor in floors.iter().filter(|floor| floor.depth < VERIFIED_DEPTH) {
         for item in floor.items.iter().flat_map(|group| &group.variants) {
             if item.prediction == ItemPredictionKind::Exact
-                && item.class_name.as_deref() == Some("ScrollOfTransmutation")
+                && item.item == Some(spd_objects::ItemId::ScrollOfTransmutation)
             {
                 depths.extend(std::iter::repeat_n(
                     floor.depth,

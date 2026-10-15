@@ -281,7 +281,7 @@ fn identity_pairs(entries: &[IdentityEntry]) -> Vec<OracleIdentity> {
     entries
         .iter()
         .map(|entry| OracleIdentity {
-            item: entry.item.clone(),
+            item: entry.item.class_name().to_string(),
             appearance: entry.appearance.clone(),
         })
         .collect()

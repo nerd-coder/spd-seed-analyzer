@@ -7,8 +7,14 @@ fn selection(options: &[&str], sequence: &[&str]) -> TrinketSelectionReport {
         first_alchemy_pot_is_secret: false,
         selection_depth: 1,
         first_effective_depth: 2,
-        catalyst_options: options.iter().map(|value| (*value).into()).collect(),
-        transmutation_sequence: sequence.iter().map(|value| (*value).into()).collect(),
+        catalyst_options: options
+            .iter()
+            .map(|value| spd_objects::ItemId::from_class_name_lossy(value))
+            .collect(),
+        transmutation_sequence: sequence
+            .iter()
+            .map(|value| spd_objects::ItemId::from_class_name_lossy(value))
+            .collect(),
     }
 }
 

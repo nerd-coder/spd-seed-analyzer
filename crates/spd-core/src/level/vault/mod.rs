@@ -105,7 +105,10 @@ fn generate_on_stream(
             bottom: room.bottom,
         })
         .collect();
-    let room_names = rooms.iter().map(|room| room.class_name.clone()).collect();
+    let room_names = rooms
+        .iter()
+        .map(|room| spd_objects::RoomId::from_class_name_lossy(&room.class_name))
+        .collect();
     let floor_map = MapFacts::from_room_paint(&map)
         .into_floor_map(&map, depth, 1, depth_seed)
         .into_layout_only();

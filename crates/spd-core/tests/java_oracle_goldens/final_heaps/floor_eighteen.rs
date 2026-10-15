@@ -55,7 +55,7 @@ fn aaa_floor_eighteen_matches_through_blobs() {
         .iter()
         .map(|mob| OracleMob {
             cell: mob.cell,
-            class_name: mob.class_name.clone(),
+            class_name: mob.class_name().to_string(),
         })
         .collect();
     assert_eq!(mobs, expected.final_mobs, "floor-18 final mobs");
@@ -73,10 +73,10 @@ fn aaa_floor_eighteen_matches_through_blobs() {
                 .iter()
                 .map(|item| OracleItem {
                     // Java reports nested plant seed classes by their simple name.
-                    class_name: if item.class_name.ends_with("Seed") {
+                    class_name: if item.class_name().ends_with("Seed") {
                         "Seed".into()
                     } else {
-                        item.class_name.clone()
+                        item.class_name().to_string()
                     },
                     quantity: item.quantity,
                     level: item.level,
@@ -117,7 +117,7 @@ fn aaa_floor_eighteen_matches_through_blobs() {
         .iter()
         .map(|trap| OracleTrap {
             cell: trap.cell,
-            class_name: trap.class_name.clone(),
+            class_name: trap.class_name().to_string(),
             visible: trap.visible,
             active: trap.active,
             color: trap.color,
@@ -137,7 +137,7 @@ fn aaa_floor_eighteen_matches_through_blobs() {
         .iter()
         .map(|plant| OraclePlant {
             cell: plant.cell,
-            class_name: plant.class_name.clone(),
+            class_name: plant.class_name().to_string(),
             image: plant.image,
         })
         .collect::<Vec<_>>();
@@ -153,7 +153,7 @@ fn aaa_floor_eighteen_matches_through_blobs() {
         .blobs
         .iter()
         .map(|blob| OracleBlob {
-            class_name: blob.class_name.clone(),
+            class_name: blob.class_name().to_string(),
             volume: blob.volume,
             always_visible: blob.always_visible,
             cells: blob

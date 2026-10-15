@@ -5,7 +5,7 @@ use super::*;
 impl SeedReport {
     /// Render the compact, seed-finder-style view of the report.
     ///
-    /// Baseline samples are identified by `ItemEntry::prediction`, keeping the
+    /// Gameplay-variable items are identified by `ItemEntry::prediction`, keeping the
     /// output useful for planning while preserving the explicit caveat in the
     /// machine-readable projection. It intentionally omits routine food/potion
     /// stock and unresolved entries without a concrete class.
@@ -26,7 +26,7 @@ impl SeedReport {
         for floor in &self.floors {
             let mut grouped: BTreeMap<String, Vec<String>> = BTreeMap::new();
             for item in floor.item_variants() {
-                if item.class_name.is_none() || !is_baseline_highlight(item) {
+                if item.item.is_none() || !is_variable_highlight(item) {
                     continue;
                 }
                 let label = compact_item_name(item, &self.identities);
@@ -69,8 +69,8 @@ impl SeedReport {
     }
 }
 
-pub(crate) fn is_baseline_highlight(item: &ItemEntry) -> bool {
-    let class_name = item.class_name.as_deref().unwrap_or_default();
+pub(crate) fn is_variable_highlight(item: &ItemEntry) -> bool {
+    let class_name = item.class_name().unwrap_or_default();
     let source = item.source.as_deref().unwrap_or_default();
     if source.contains("ShopRoom") {
         return false;
@@ -102,7 +102,7 @@ pub(crate) fn is_baseline_highlight(item: &ItemEntry) -> bool {
 }
 
 fn compact_item_name(item: &ItemEntry, identities: &IdentityMaps) -> String {
-    let class_name = item.class_name.as_deref().unwrap_or_default();
+    let class_name = item.class_name().unwrap_or_default();
     let cursed = item.cursed == Some(true) || item.name.starts_with("cursed ");
     let mut name = if item.category == "gold" {
         format!("{} Gold", item.quantity)
@@ -199,9 +199,9 @@ fn compact_source(source: Option<&str>, floor: &FloorReport) -> Option<String> {
         "SuspiciousChestRoom:mimic_reward" => "Suspicious Chest Mimic".into(),
         "Ghost.Quest" => "Ghost".into(),
         "Wandmaker.Quest" => floor.quests.iter().find_map(|quest| match quest {
-            QuestReport::OldWandmaker { baseline, .. } => Some(format!(
+            QuestReport::OldWandmaker { variable, .. } => Some(format!(
                 "Wandmaker - {}",
-                match baseline.objective {
+                match variable.objective {
                     WandmakerObjective::CorpseDust => "Dust",
                     WandmakerObjective::ElementalEmbers => "Embers",
                     WandmakerObjective::Rotberry => "Rotberry",

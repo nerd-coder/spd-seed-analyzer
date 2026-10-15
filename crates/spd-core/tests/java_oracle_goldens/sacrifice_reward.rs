@@ -76,7 +76,7 @@ fn parchment_three_floor_thirteen_sacrifice_reward_matches_java() {
         .iter()
         .find(|item| item.source.as_deref() == Some("SacrificeRoom"))
     {
-        assert_eq!(public.class_name, None);
+        assert_eq!(public.class_name(), None);
         assert_eq!(public.level, None);
         assert_eq!(public.cursed, Some(true));
         assert_eq!(public.tier, None);

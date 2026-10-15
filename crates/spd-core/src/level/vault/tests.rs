@@ -173,7 +173,7 @@ fn assert_vault_fixture(json: &str) {
             .iter()
             .map(|trap| (
                 trap.cell,
-                trap.class_name.as_str(),
+                trap.class_name(),
                 trap.visible,
                 trap.active,
                 trap.color,
@@ -197,7 +197,7 @@ fn assert_vault_fixture(json: &str) {
         map.blobs
             .iter()
             .map(|blob| (
-                blob.class_name.as_str(),
+                blob.class_name(),
                 blob.volume,
                 blob.always_visible,
                 blob.cells
@@ -323,7 +323,7 @@ fn report_serializes_branch_schema_and_reciprocal_transition() {
     assert!(branch.access.requires_acceptance);
     assert_eq!(branch.access.required_item, None);
     assert_eq!(branch.objective, "Vault");
-    let branch_map = branch.map.as_ref().expect("configured baseline map");
+    let branch_map = branch.map.as_ref().expect("configured default-profile map");
     assert!(branch_map.mobs.is_empty());
     assert!(branch_map.heaps.is_empty());
     let return_transition = branch_map

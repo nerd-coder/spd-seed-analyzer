@@ -5,8 +5,9 @@ fn exact_item(name: &str, class_name: &str, quantity: i32, level: i32) -> ItemEn
     ItemEntry {
         name: name.into(),
         quantity,
-        class_name: Some(class_name.into()),
-        candidate_classes: Vec::new(),
+        label: None,
+        item: Some(spd_objects::ItemId::from_class_name_lossy(class_name)),
+        candidates: Vec::new(),
         category: "other".into(),
         tier: None,
         tier_range: None,
@@ -48,7 +49,7 @@ fn visually_distinct_entries_remain_separate() {
 #[test]
 fn unresolved_same_name_entries_do_not_claim_identical_items() {
     let mut first = exact_item("weapon stock", "Sword", 1, 0);
-    first.class_name = None;
+    first.item = None;
     first.prediction = ItemPredictionKind::Constrained;
     let second = first.clone();
 

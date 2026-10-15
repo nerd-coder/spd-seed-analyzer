@@ -55,7 +55,7 @@ fn aaa_floor_sixteen_matches_room_classes_and_normalized_bounds() {
         .iter()
         .map(|mob| OracleMob {
             cell: mob.cell,
-            class_name: mob.class_name.clone(),
+            class_name: mob.class_name().to_string(),
         })
         .collect();
     assert_eq!(mobs, expected.final_mobs, "floor-16 final mobs");
@@ -72,7 +72,7 @@ fn aaa_floor_sixteen_matches_room_classes_and_normalized_bounds() {
                 .items
                 .iter()
                 .map(|item| OracleItem {
-                    class_name: item.class_name.clone(),
+                    class_name: item.class_name().to_string(),
                     quantity: item.quantity,
                     level: item.level,
                     cursed: item.cursed,

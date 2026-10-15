@@ -58,15 +58,15 @@ fn constraints_use_independent_depth_windows() {
 
     let evidence = matching_evidence(&floors, &[early_ring.clone(), late_wand], false);
     assert_eq!(evidence.len(), 2);
-    assert_eq!(evidence[0].class_name.as_deref(), Some("RingOfWealth"));
+    assert_eq!(evidence[0].class_name(), Some("RingOfWealth"));
     assert_eq!(evidence[0].depth, 2);
-    assert_eq!(evidence[1].class_name.as_deref(), Some("WandOfLightning"));
+    assert_eq!(evidence[1].class_name(), Some("WandOfLightning"));
     assert_eq!(evidence[1].depth, 8);
 
     let wand_too_shallow = constraint("WandOfLightning", 1, 5);
     let evidence = matching_evidence(&floors, &[early_ring, wand_too_shallow], false);
     assert_eq!(evidence.len(), 1);
-    assert_eq!(evidence[0].class_name.as_deref(), Some("RingOfWealth"));
+    assert_eq!(evidence[0].class_name(), Some("RingOfWealth"));
 }
 
 #[test]
@@ -74,7 +74,7 @@ fn alternative_variants_do_not_count_as_multiple_items() {
     let mut floor = exact_floor(3, &[("RingOfWealth", 2)]);
     let mut alternative = floor.items[0].variants[0].clone();
     alternative.name = "ring of wealth".into();
-    alternative.prediction = ItemPredictionKind::Baseline;
+    alternative.prediction = ItemPredictionKind::Variable;
     floor.items[0].variants.push(alternative);
     let constraints = [
         constraint("RingOfWealth", 3, 3),

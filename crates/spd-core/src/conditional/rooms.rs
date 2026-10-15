@@ -1,19 +1,21 @@
 use std::collections::BTreeMap;
 
+use spd_objects::RoomId;
+
 use crate::report::{FloorReport, ItemDependencyCondition, ItemSpawnCondition, PossibleRoom};
 
 use super::DiscoveredRoute;
 
 /// Adds a profile-conditioned room projection only when a replay actually
-/// changes the baseline room multiset. The ordered `FloorReport.rooms` field
-/// remains the no-extra-player-state baseline.
+/// changes the default-profile room multiset. The ordered `FloorReport.rooms`
+/// field remains the no-extra-player-state room list.
 pub(crate) fn merge_possible_rooms(
-    baseline: &mut [FloorReport],
-    baseline_condition: ItemSpawnCondition,
+    floors: &mut [FloorReport],
+    default_condition: ItemSpawnCondition,
     alternatives: &[(DiscoveredRoute, Vec<FloorReport>)],
 ) {
-    for floor in baseline {
-        let contexts = std::iter::once((&baseline_condition, &floor.rooms))
+    for floor in floors {
+        let contexts = std::iter::once((&default_condition, &floor.rooms))
             .chain(alternatives.iter().filter_map(|(route, floors)| {
                 (floor.depth <= route.max_depth)
                     .then(|| {
@@ -38,12 +40,12 @@ pub(crate) fn merge_possible_rooms(
     }
 }
 
-fn merge_contexts(contexts: &[(&ItemSpawnCondition, &Vec<String>)]) -> Vec<PossibleRoom> {
-    let mut present_in = BTreeMap::<(String, u32), Vec<usize>>::new();
+fn merge_contexts(contexts: &[(&ItemSpawnCondition, &Vec<RoomId>)]) -> Vec<PossibleRoom> {
+    let mut present_in = BTreeMap::<(RoomId, u32), Vec<usize>>::new();
     for (context_index, (_, rooms)) in contexts.iter().enumerate() {
-        for (class_name, quantity) in counts(rooms) {
+        for (room, quantity) in counts(rooms) {
             present_in
-                .entry((class_name, quantity))
+                .entry((room, quantity))
                 .or_default()
                 .push(context_index);
         }
@@ -51,8 +53,8 @@ fn merge_contexts(contexts: &[(&ItemSpawnCondition, &Vec<String>)]) -> Vec<Possi
 
     present_in
         .into_iter()
-        .map(|((class_name, quantity), present_in)| PossibleRoom {
-            class_name,
+        .map(|((room, quantity), present_in)| PossibleRoom {
+            room,
             quantity,
             spawn_conditions: if present_in.len() < contexts.len() {
                 simplify_profile_conditions(&present_in, contexts)
@@ -63,17 +65,17 @@ fn merge_contexts(contexts: &[(&ItemSpawnCondition, &Vec<String>)]) -> Vec<Possi
         .collect()
 }
 
-fn counts(rooms: &[String]) -> BTreeMap<String, u32> {
+fn counts(rooms: &[RoomId]) -> BTreeMap<RoomId, u32> {
     let mut result = BTreeMap::new();
     for room in rooms {
-        *result.entry(room.clone()).or_default() += 1;
+        *result.entry(*room).or_default() += 1;
     }
     result
 }
 
 fn simplify_profile_conditions(
     present_in: &[usize],
-    contexts: &[(&ItemSpawnCondition, &Vec<String>)],
+    contexts: &[(&ItemSpawnCondition, &Vec<RoomId>)],
 ) -> Vec<ItemSpawnCondition> {
     let mut clauses = Vec::new();
     let challenge_values = unique_dependencies(contexts, is_challenge);
@@ -108,7 +110,7 @@ fn simplify_profile_conditions(
 }
 
 fn unique_dependencies(
-    contexts: &[(&ItemSpawnCondition, &Vec<String>)],
+    contexts: &[(&ItemSpawnCondition, &Vec<RoomId>)],
     predicate: fn(&ItemDependencyCondition) -> bool,
 ) -> Vec<ItemDependencyCondition> {
     let mut result = Vec::new();
@@ -138,19 +140,19 @@ mod tests {
 
     #[test]
     fn repeated_room_type_retains_its_profile_specific_count() {
-        let baseline = vec!["EmptyRoom".into(), "EmptyRoom".into()];
-        let alternate = vec!["EmptyRoom".into(), "TunnelRoom".into()];
+        let plain_rooms = vec![RoomId::EmptyRoom, RoomId::EmptyRoom];
+        let alternate = vec![RoomId::EmptyRoom, RoomId::TunnelRoom];
         let plain = ItemSpawnCondition::default();
         let trinket = ItemSpawnCondition {
             all_of: vec![ItemDependencyCondition::Trinket { events: vec![] }],
         };
-        let rooms = merge_contexts(&[(&plain, &baseline), (&trinket, &alternate)]);
+        let rooms = merge_contexts(&[(&plain, &plain_rooms), (&trinket, &alternate)]);
 
         assert!(rooms.iter().any(|room| {
-            room.class_name == "EmptyRoom" && room.quantity == 2 && room.spawn_conditions.len() == 1
+            room.room == RoomId::EmptyRoom && room.quantity == 2 && room.spawn_conditions.len() == 1
         }));
         assert!(rooms.iter().any(|room| {
-            room.class_name == "TunnelRoom"
+            room.room == RoomId::TunnelRoom
                 && room.quantity == 1
                 && room.spawn_conditions.len() == 1
         }));

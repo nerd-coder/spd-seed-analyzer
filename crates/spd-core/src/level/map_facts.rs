@@ -1,5 +1,7 @@
 //! Structured renderer facts projected from room paint and `createItems`.
 
+use spd_objects::{BlobId, MobId, PlantId, TrapId};
+
 use crate::items::model::GeneratedItem;
 use crate::level::create_items::CreatedLoot;
 use crate::level::painter;
@@ -69,7 +71,7 @@ impl MapFacts {
             });
             mobs.push(MapMob {
                 cell: cell as u32,
-                class_name: class_name.to_string(),
+                mob: MobId::from_class_name_lossy(class_name),
             });
         }
 
@@ -144,7 +146,7 @@ impl MapFacts {
                 };
                 self.mobs.push(MapMob {
                     cell: cell as u32,
-                    class_name: class_name.to_string(),
+                    mob: MobId::from_class_name_lossy(class_name),
                 });
                 self.markers.push(MapMarker {
                     cell: cell as u32,
@@ -174,7 +176,7 @@ impl MapFacts {
     fn sort(&mut self) {
         self.heaps.sort_by_key(|heap| heap.cell);
         self.mobs.sort_by(|left, right| {
-            (left.cell, &left.class_name).cmp(&(right.cell, &right.class_name))
+            (left.cell, left.mob.class_name()).cmp(&(right.cell, right.mob.class_name()))
         });
         self.markers.sort_by_key(|marker| marker.cell);
     }
@@ -257,7 +259,7 @@ fn plants(map: &TerrainMap) -> Vec<MapPlant> {
         .filter_map(|(cell, plant)| {
             plant.map(|plant| MapPlant {
                 cell: cell as u32,
-                class_name: plant.class_name.to_string(),
+                plant: PlantId::from_class_name_lossy(plant.class_name),
                 image: plant.image,
             })
         })
@@ -279,20 +281,20 @@ fn blobs(map: &TerrainMap) -> Vec<MapBlob> {
                 .collect();
             cells.sort_by_key(|cell| cell.cell);
             MapBlob {
-                class_name: blob.class_name.to_string(),
+                blob: BlobId::from_class_name_lossy(blob.class_name),
                 volume: cells.iter().map(|cell| cell.value).sum(),
                 always_visible: blob.always_visible,
                 cells,
             }
         })
         .collect();
-    blobs.sort_by(|left, right| left.class_name.cmp(&right.class_name));
+    blobs.sort_by(|left, right| left.blob.class_name().cmp(right.blob.class_name()));
     blobs
 }
 
 fn heap_item(item: &GeneratedItem) -> MapHeapItem {
     MapHeapItem {
-        class_name: item.class_name.clone(),
+        item: crate::report::item_id(&item.class_name),
         quantity: item.quantity,
         level: item.level,
         cursed: item.cursed,
@@ -372,7 +374,7 @@ fn traps(map: &TerrainMap) -> Vec<MapTrap> {
                 let metadata = painter::trap_metadata(class_name);
                 MapTrap {
                     cell: cell as u32,
-                    class_name: class_name.to_string(),
+                    trap: TrapId::from_class_name_lossy(class_name),
                     // Toxic vents are revealed, permanently inactive traps
                     // painted on `Terrain.INACTIVE_TRAP`.
                     visible: map.map[cell] == terrain::TRAP

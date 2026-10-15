@@ -21,7 +21,7 @@ fn blob_projection_merges_seeded_cells_and_sorts_the_contract() {
         blobs(&map),
         [
             MapBlob {
-                class_name: "Alchemy".into(),
+                blob: spd_objects::BlobId::from_class_name_lossy("Alchemy"),
                 volume: 7,
                 always_visible: false,
                 cells: vec![
@@ -30,7 +30,7 @@ fn blob_projection_merges_seeded_cells_and_sorts_the_contract() {
                 ],
             },
             MapBlob {
-                class_name: "ToxicGas".into(),
+                blob: spd_objects::BlobId::from_class_name_lossy("ToxicGas"),
                 volume: 5,
                 always_visible: true,
                 cells: vec![
