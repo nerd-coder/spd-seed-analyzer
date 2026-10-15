@@ -173,7 +173,16 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
+ "spd-objects",
  "thiserror",
+]
+
+[[package]]
+name = "spd-objects"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
