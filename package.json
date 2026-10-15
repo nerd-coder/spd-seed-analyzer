@@ -18,6 +18,7 @@
     "preview": "bun run --filter spd-seed-analyzer-web preview",
     "design": "bun run --filter @spd-seed-analyzer/design dev",
     "build:design": "bun run --filter @spd-seed-analyzer/design build",
+    "test:web": "bun run --cwd web test",
     "test:map-render": "bun run --cwd tools/visual test:registry",
     "test:visual": "bun run build && bun run test:visual:only",
     "test:visual:only": "bun run --cwd tools/visual test",

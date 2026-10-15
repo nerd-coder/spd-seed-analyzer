@@ -13,6 +13,7 @@ import {
 } from 'react'
 import { AppFloatingAction } from '@/components/AppFloatingAction'
 import { FinderForm } from '@/components/finder/FinderForm'
+import { ScreenshotSeedSection } from '@/components/ScreenshotSeedSection'
 import { SupportedVersionAlert } from '@/components/SupportedVersionAlert'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -185,6 +186,9 @@ export function AppSidebar({ mode }: { mode: AppMode }) {
               </Field>
             </FieldGroup>
           </form>
+          <div className="mt-5">
+            <ScreenshotSeedSection active={mode === 'analyze'} />
+          </div>
           {formError ? (
             <Alert variant="destructive" className="mt-4">
               <AlertTitle>Error</AlertTitle>

@@ -29,6 +29,16 @@ export {
 } from './finder'
 export { $meta, loadSpdMeta, type SpdMeta } from './meta'
 export {
+  $screenshotScan,
+  analyzeScreenshotSeeds,
+  dismissScreenshotScan,
+  dropScreenshot,
+  hideScreenshotDropTarget,
+  type ScreenshotScan,
+  scanScreenshot,
+  showScreenshotDropTarget,
+} from './screenshot'
+export {
   $activeSeedId,
   $analyzing,
   $formError,

@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "deploy": "wrangler deploy",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "bun test tests"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
