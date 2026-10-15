@@ -1,3 +1,12 @@
+import type {
+  BlobId,
+  Enchantment,
+  ItemId,
+  MobId,
+  PlantId,
+  RoomId,
+  TrapId,
+} from '@/generated/game-ids'
 import type { WandmakerRewardSlot } from '@/lib/wandmaker-reward'
 import init, * as wasmBindings from '@/wasm/spd_wasm'
 
@@ -12,7 +21,7 @@ export type SeedInfo = {
 }
 
 export type IdentityEntry = {
-  item: string
+  item: ItemId
   appearance: string
 }
 
@@ -23,13 +32,14 @@ export type IdentityMaps = {
 }
 
 export type ItemVariant = {
-  name: string
+  /** Engine description, present only when `item` is absent. */
+  label?: string
   /** Number of identical items represented by this entry. */
   quantity: number
-  /** Java simple class name for icon lookup. */
-  class_name?: string | null
+  /** Concrete identity, when the entry has exactly one. */
+  item?: ItemId
   /** Ordered seed-determined identities when run history can shift a deck index. */
-  candidate_classes?: string[]
+  candidates?: ItemId[]
   category: string
   tier?: number | null
   tier_range?: { min: number; max: number } | null
@@ -39,7 +49,7 @@ export type ItemVariant = {
   cursed?: boolean | null
   /** Seed-determined enchantment or glyph, with any retention conditions. */
   enchantment?: ItemEnchantment | null
-  prediction: 'exact' | 'baseline' | 'constrained'
+  prediction: 'exact' | 'variable' | 'constrained'
   /** Alternative dependency clauses; any one clause may produce this variant. */
   spawn_conditions?: ItemSpawnCondition[]
   conditions?: ItemCondition[]
@@ -100,7 +110,7 @@ export type ItemCondition =
   | { type: 'runtime'; state_id: string }
 
 export type ItemEnchantment = {
-  type: string
+  type: Enchantment
   conditions: ItemCondition[]
 }
 
@@ -149,7 +159,7 @@ export type MapHeap = {
 }
 
 export type MapHeapItem = {
-  class: string
+  item: ItemId
   quantity: number
   level: number
   cursed: boolean
@@ -157,7 +167,7 @@ export type MapHeapItem = {
 
 export type MapMob = {
   cell: number
-  class: string
+  mob: MobId
 }
 
 export type MapTransition = {
@@ -174,7 +184,7 @@ export type MapTransition = {
 
 export type MapTrap = {
   cell: number
-  class: string
+  trap: TrapId
   visible: boolean
   active: boolean
   color: number
@@ -183,7 +193,7 @@ export type MapTrap = {
 
 export type MapPlant = {
   cell: number
-  class: string
+  plant: PlantId
   image: number
 }
 
@@ -193,7 +203,7 @@ export type MapBlobCell = {
 }
 
 export type MapBlob = {
-  class: string
+  blob: BlobId
   volume: number
   always_visible: boolean
   cells: MapBlobCell[]
@@ -203,12 +213,12 @@ export type FloorReport = {
   depth: number
   feeling?: string | null
   builder?: string | null
-  rooms?: string[]
+  rooms?: RoomId[]
   /** Alternate room counts produced by modeled player/trinket profiles. */
   possible_rooms?: PossibleRoom[]
   guaranteed_appearances?: GuaranteedAppearance[]
   initial_encounters?: InitialEncounter[]
-  /** Includes exact, constrained, and baseline-analysis entries. */
+  /** Includes exact, constrained, and gameplay-variable entries. */
   items: ItemGroup[]
   quests: QuestReport[]
   map?: FloorMap | null
@@ -217,7 +227,7 @@ export type FloorReport = {
 }
 
 export type PossibleRoom = {
-  class: string
+  room: RoomId
   quantity: number
   spawn_conditions?: ItemSpawnCondition[]
 }
@@ -235,24 +245,26 @@ export type BranchFloorReport = {
   access: {
     quest_id: string
     requires_acceptance: boolean
-    required_item?: string | null
+    required_item?: ItemId
   }
-  rooms: string[]
+  rooms: RoomId[]
   map?: FloorMap | null
   assumed_map?: FloorMap | null
 }
 
 export type InitialEncounter = {
-  class: string
-  name: string
+  mob: MobId
   quantity: number
   combat_rewards?: CombatReward[]
 }
 
 export type CombatReward = {
-  name: string
-  class_name?: string | null
+  item?: ItemId
   category: string
+  /** Upgrade level of a reward generated with the floor, when above zero. */
+  level?: number
+  cursed?: boolean
+  enchantment?: Enchantment
   prediction: 'guaranteed' | 'runtime_chance' | 'generated_with_floor'
   chance?: { numerator: number; denominator: number } | null
 }
@@ -282,7 +294,7 @@ export type QuestReport =
         target_rules: { spawn_depth: number; target: GhostTarget }[]
         rewards: QuestRewardSelection
       }
-      baseline: { target: GhostTarget }
+      variable: { target: GhostTarget }
     }
   | {
       type: 'old_wandmaker'
@@ -293,7 +305,7 @@ export type QuestReport =
         /** Wand 1 then wand 2. Absent when the reward draw did not run. */
         slots?: WandmakerRewardSlot[]
       }
-      baseline: { objective: WandmakerObjective }
+      variable: { objective: WandmakerObjective }
     }
   | {
       type: 'troll_blacksmith'
@@ -302,7 +314,7 @@ export type QuestReport =
         objective_options: BlacksmithObjective[]
         rewards: QuestRewardSelection
       }
-      baseline: { objective: BlacksmithObjective }
+      variable: { objective: BlacksmithObjective }
     }
   | {
       type: 'ambitious_imp'
@@ -312,13 +324,13 @@ export type QuestReport =
         slots?: ImpRewardSlot[]
         /**
          * True when no reachable deck drift changes any slot's upgrade or
-         * enchant, making every `baseline_level` a seed-only guarantee.
+         * enchant, making every slot `level` a seed-only guarantee.
          */
         upgrades_pinned?: boolean
         /** Scroll of Upgrade equivalents across all six options. */
         total_upgrade_value?: number
       }
-      baseline: { spawn_depth: number }
+      variable: { spawn_depth: number }
     }
 
 export type ImpSlotRole =
@@ -335,8 +347,8 @@ export type ImpLevelRule =
   | { type: 'transfer_upgrade'; transfer: number }
 
 export type ImpSlotCandidate = {
-  class_name: string
-  /** Deck-index offsets from the fresh baseline, nearest first. 0 is baseline. */
+  item: ItemId
+  /** Deck-index offsets from the seed draw, nearest first. 0 is the seed draw. */
   drifts: number[]
   weight: number
 }
@@ -344,24 +356,24 @@ export type ImpSlotCandidate = {
 export type ImpRewardSlot = {
   slot: number
   role: ImpSlotRole
-  baseline_class: string
+  /** The seed-drawn class. */
+  item: ItemId
   level_rule: ImpLevelRule
   enchanted: boolean
   /** The rolled upgrade. Pinned by the seed unless `upgrades_pinned` is false. */
-  baseline_level: number
+  level: number
   /** The rolled enchantment or glyph, pinned on the same stream as the level. */
-  baseline_enchantment?: string | null
+  enchantment?: Enchantment
   /** Set only when the class cannot vary (the plate armor slot). */
-  fixed_class?: string | null
+  fixed_item?: ItemId
   candidates?: ImpSlotCandidate[]
   /** Denominator for candidate weights. */
   scenario_count: number
 }
 
 export type GuaranteedAppearance = {
-  name: string
   kind: 'alchemy_pot'
-  source?: string | null
+  source?: RoomId
 }
 
 export type SeedReport = {
@@ -381,15 +393,15 @@ export type TrinketSelectionReport = {
   first_alchemy_pot_is_secret: boolean
   selection_depth: number
   first_effective_depth: number
-  catalyst_options: string[]
-  transmutation_sequence: string[]
+  catalyst_options: ItemId[]
+  transmutation_sequence: ItemId[]
 }
 
 export type SeedSearchMatchMode = 'any' | 'all'
 
 export type SeedSearchConstraint = {
   itemGroup: string
-  className?: string | null
+  item?: ItemId | null
   minLevel: number | null
   minDepth: number
   maxDepth: number
@@ -401,10 +413,11 @@ export type SeedSearchRequest = {
   floors: number
   constraints: SeedSearchConstraint[]
   matchMode: SeedSearchMatchMode
-  includeBaseline?: boolean
+  includeVariable?: boolean
   /**
    * Widen quest-reward matching to every class a deck-index shift can reach.
-   * A hit then means "reachable in some run", not "present in a fresh run".
+   * A hit then means "reachable in some run", not "present when gameplay is
+   * unchanged".
    */
   deepSearch?: boolean
   maxMatches: number
@@ -413,9 +426,10 @@ export type SeedSearchRequest = {
 export type SeedSearchEvidence = {
   constraintIndex: number
   itemGroup: string
-  className?: string | null
+  item?: ItemId
   depth: number
-  name: string
+  /** Present only when the matched entry has no single identity. */
+  label?: string
   level: number
   prediction: ItemVariant['prediction']
   source?: string | null
@@ -425,10 +439,10 @@ export type SeedSearchMatch = {
   seed: SeedInfo
   identities: IdentityMaps
   evidence: SeedSearchEvidence[]
-  baselineItems: SeedSearchBaselineItem[]
+  variableItems: SeedSearchVariableItem[]
 }
 
-export type SeedSearchBaselineItem = ItemVariant & {
+export type SeedSearchVariableItem = ItemVariant & {
   depth: number
   source?: string | null
 }

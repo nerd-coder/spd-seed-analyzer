@@ -1,5 +1,4 @@
 import { InfoIcon } from '@phosphor-icons/react'
-import { finderItemLabel } from '@/components/finder/finder-items'
 import { ItemBox } from '@/components/ItemBox'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,7 +11,9 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Progress } from '@/components/ui/progress'
+import { itemClassName } from '@/generated/game-ids'
 import { itemSprite, parseItemEnhancement } from '@/lib/item-kind'
+import { enchantmentName, itemLabel } from '@/lib/item-title'
 import type { ImpLevelRule, ImpRewardSlot, ImpSlotRole } from '@/lib/spd-wasm'
 
 const ROLE_LABEL: Record<ImpSlotRole, string> = {
@@ -30,10 +31,10 @@ function levelText(rule: ImpLevelRule): string {
     : `+${rule.transfer} transferred`
 }
 
-/** `+1`, `−2`, or `baseline` for the fresh/no-history draw. */
+/** `+1`, `−2`, or `seed draw` for the no-history draw. */
 function driftText(drifts: number[]): string {
   const parts = drifts.map((drift) =>
-    drift === 0 ? 'baseline' : `${drift > 0 ? '+' : '−'}${Math.abs(drift)}`
+    drift === 0 ? 'seed draw' : `${drift > 0 ? '+' : '−'}${Math.abs(drift)}`
   )
   return parts.join(' / ')
 }
@@ -46,13 +47,14 @@ function SlotRow({
   upgradesPinned: boolean
 }) {
   const candidates = slot.candidates ?? []
-  const fixed = slot.fixed_class
+  const fixed = slot.fixed_item
+  const enchantment = enchantmentName(slot.enchantment)
   // The artifact slot always transfers the same amount; only its cap-scaled
   // stored level differs by class, so show the transfer instead.
   const upgrade =
     slot.level_rule.type === 'transfer_upgrade'
       ? `+${slot.level_rule.transfer}`
-      : `+${slot.baseline_level}`
+      : `+${slot.level}`
 
   return (
     <li className="flex flex-col gap-1 border-t pt-2 first:border-t-0 first:pt-0">
@@ -71,24 +73,27 @@ function SlotRow({
         <span className="text-xs text-muted-foreground tabular-nums">
           of {levelText(slot.level_rule)}
         </span>
-        {slot.baseline_enchantment ? (
-          <Badge variant="secondary">{slot.baseline_enchantment}</Badge>
+        {enchantment ? (
+          <Badge variant="secondary">{enchantment}</Badge>
         ) : slot.enchanted ? (
           <Badge variant="secondary">
             {slot.role === 'armor' ? 'glyphed' : 'enchanted'}
           </Badge>
         ) : null}
-        {fixed ? <Badge variant="outline">always</Badge> : null}
+        {fixed != null ? <Badge variant="outline">always</Badge> : null}
       </div>
 
-      {fixed ? (
+      {fixed != null ? (
         <div className="flex items-center gap-2">
           <ItemBox
-            sprites={itemSprite({ className: fixed, category: slot.role })}
-            enhancement={parseItemEnhancement(slot.baseline_enchantment)}
-            title={finderItemLabel(fixed)}
+            sprites={itemSprite({
+              className: itemClassName(fixed),
+              category: slot.role,
+            })}
+            enhancement={parseItemEnhancement(enchantment)}
+            title={itemLabel(fixed)}
           />
-          <span className="text-sm">{finderItemLabel(fixed)}</span>
+          <span className="text-sm">{itemLabel(fixed)}</span>
           <span className="text-xs text-muted-foreground tabular-nums">
             100%
           </span>
@@ -97,33 +102,33 @@ function SlotRow({
         <ul className="flex flex-col gap-1">
           {candidates.map((candidate) => {
             const share = (100 * candidate.weight) / slot.scenario_count
-            const isBaseline = candidate.drifts.includes(0)
+            const isSeedDraw = candidate.drifts.includes(0)
             return (
               <li
-                key={candidate.class_name}
+                key={candidate.item}
                 className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2"
               >
                 <ItemBox
                   sprites={itemSprite({
-                    className: candidate.class_name,
+                    className: itemClassName(candidate.item),
                     category: slot.role,
                   })}
-                  enhancement={parseItemEnhancement(slot.baseline_enchantment)}
-                  title={finderItemLabel(candidate.class_name)}
+                  enhancement={parseItemEnhancement(enchantment)}
+                  title={itemLabel(candidate.item)}
                 />
                 <span className="flex min-w-0 flex-col gap-0.5">
                   <span className="flex min-w-0 flex-wrap items-baseline gap-1.5">
                     <span
                       className={
-                        isBaseline
+                        isSeedDraw
                           ? 'truncate text-sm font-medium'
                           : 'truncate text-sm'
                       }
                     >
-                      {finderItemLabel(candidate.class_name)}
+                      {itemLabel(candidate.item)}
                     </span>
-                    {isBaseline ? (
-                      <Badge variant="outline">fresh run</Badge>
+                    {isSeedDraw ? (
+                      <Badge variant="outline">seed draw</Badge>
                     ) : null}
                   </span>
                   <Progress value={share} className="h-1" />
@@ -189,7 +194,8 @@ export function ImpRewardDistribution({
             Each category draws in a fixed order set by the seed, so earlier
             play only changes which index the Imp lands on. These shares cover a
             ±{window} shift either way — they measure how stable a slot is, not
-            how often players see it. A fresh run gets the “fresh run” row.
+            how often players see it. Unchanged gameplay gets the “seed draw”
+            row.
           </PopoverDescription>
           <PopoverDescription>
             {upgradesPinned ? (

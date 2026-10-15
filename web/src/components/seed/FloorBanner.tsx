@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
-import { bossOf, floorStripUrl, regionOf } from '@/lib/regions'
+import { GameObject } from '@/components/GameObject'
+import { bossObjectId } from '@/lib/game-objects'
+import { floorStripUrl, regionOf } from '@/lib/regions'
 import { cn } from '@/lib/utils'
 
 /**
@@ -13,6 +15,7 @@ export function FloorBanner({
   title,
   headingLevel = 3,
   showDepth = true,
+  leading,
   meta,
   children,
   action,
@@ -23,9 +26,14 @@ export function FloorBanner({
   /** Defaults to `Floor {depth}`. */
   title?: string
   headingLevel?: 3 | 4
-  /** The region-colored depth block. Off for branches inside a quest card. */
+  /**
+   * The region-colored depth block and the floor's boss. Off for quest
+   * banners inside a floor.
+   */
   showDepth?: boolean
-  /** Short text after the title. Defaults to the region, and boss if any. */
+  /** Game object before the title, such as the quest NPC. */
+  leading?: ReactNode
+  /** Short text after the title. Defaults to the region; `null` hides it. */
   meta?: ReactNode
   /** Game marks after the title, such as the depth feeling or alchemy pots. */
   children?: ReactNode
@@ -33,8 +41,9 @@ export function FloorBanner({
   action?: ReactNode
 }) {
   const region = regionOf(depth)
-  const boss = bossOf(depth)
+  const boss = showDepth ? bossObjectId(depth) : undefined
   const Heading = headingLevel === 4 ? 'h4' : 'h3'
+  const metaText = meta === undefined ? region.name : meta
 
   return (
     <div className="flex h-14 w-full items-stretch overflow-hidden border-y border-border bg-black">
@@ -60,16 +69,22 @@ export function FloorBanner({
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-linear-to-r from-black/75 via-black/50 to-black/30"
         />
+        {leading ? (
+          <div className="relative flex shrink-0 items-center">{leading}</div>
+        ) : null}
         <div className="relative flex min-w-0 items-baseline gap-2.5">
           <Heading className="ink-outline font-pixel text-px-1 whitespace-nowrap text-white">
             {title ?? `Floor ${depth}`}
           </Heading>
-          <span className="truncate text-sm font-semibold text-white/85">
-            {meta ?? (boss ? `${region.name}, boss: ${boss}` : region.name)}
-          </span>
+          {metaText != null && metaText !== false ? (
+            <span className="truncate text-sm font-semibold text-white/85">
+              {metaText}
+            </span>
+          ) : null}
         </div>
-        {children ? (
+        {boss || children ? (
           <div className="relative flex min-w-0 items-center gap-2">
+            {boss ? <GameObject id={boss} /> : null}
             {children}
           </div>
         ) : null}

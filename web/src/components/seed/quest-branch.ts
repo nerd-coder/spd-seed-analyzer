@@ -1,3 +1,4 @@
+import type { GameObjectId } from '@/lib/game-objects'
 import type { BranchFloorReport, QuestReport } from '@/lib/spd-wasm'
 
 const QUEST_TITLES: Record<QuestReport['type'], string> = {
@@ -7,8 +8,19 @@ const QUEST_TITLES: Record<QuestReport['type'], string> = {
   ambitious_imp: 'Ambitious Imp',
 }
 
+const QUEST_NPCS: Record<QuestReport['type'], GameObjectId> = {
+  sad_ghost: 'Ghost',
+  old_wandmaker: 'Wandmaker',
+  troll_blacksmith: 'Blacksmith',
+  ambitious_imp: 'Imp',
+}
+
 export function questTitle(type: QuestReport['type']) {
   return QUEST_TITLES[type]
+}
+
+export function questNpc(type: QuestReport['type']) {
+  return QUEST_NPCS[type]
 }
 
 export function branchTitle(kind: BranchFloorReport['kind']) {

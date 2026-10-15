@@ -1,6 +1,7 @@
-import { finderItemLabel } from '@/components/finder/finder-items'
 import { ItemBox } from '@/components/ItemBox'
+import { type ItemId, itemClassName, RoomId } from '@/generated/game-ids'
 import { itemSprite } from '@/lib/item-kind'
+import { itemLabel, variantCandidateClasses } from '@/lib/item-title'
 import type {
   FloorReport,
   GuaranteedAppearance,
@@ -15,12 +16,13 @@ export function catalystOfferClasses(floors: readonly FloorReport[]): string[] {
   for (const floor of floors) {
     for (const group of floor.items) {
       for (const item of group.variants) {
+        const offers = variantCandidateClasses(item)
         if (
-          item.class_name === 'TrinketCatalyst' &&
-          item.candidate_classes &&
-          item.candidate_classes.length > 0
+          item.item != null &&
+          itemClassName(item.item) === 'TrinketCatalyst' &&
+          offers.length > 0
         ) {
-          return [...item.candidate_classes]
+          return offers
         }
       }
     }
@@ -37,15 +39,15 @@ export function isFirstAlchemyPot(
   if (appearance.kind !== 'alchemy_pot') return false
   if (depth !== selection.first_alchemy_pot_depth) return false
   const source = selection.first_alchemy_pot_is_secret
-    ? 'SecretLaboratoryRoom'
-    : 'LaboratoryRoom'
+    ? RoomId.SecretLaboratoryRoom
+    : RoomId.LaboratoryRoom
   return appearance.source === source
 }
 
 export function trinketOfferDetails(
   index: number,
   total: number,
-  sequence: readonly string[]
+  sequence: readonly ItemId[]
 ) {
   const choice = `Catalyst choice ${index + 1} of ${total}.`
   if (sequence.length === 0) return choice
@@ -55,13 +57,16 @@ export function trinketOfferDetails(
       <div className="flex flex-col gap-1">
         <p>Transmutation order</p>
         <div className="flex flex-wrap gap-px">
-          {sequence.map((className, orderIndex) => (
+          {sequence.map((item, orderIndex) => (
             <ItemBox
-              key={`${orderIndex}-${className}`}
+              key={`${orderIndex}-${item}`}
               scale={1}
               panel={false}
-              title={finderItemLabel(className)}
-              sprites={itemSprite({ className, category: 'trinket' })}
+              title={itemLabel(item)}
+              sprites={itemSprite({
+                className: itemClassName(item),
+                category: 'trinket',
+              })}
             />
           ))}
         </div>

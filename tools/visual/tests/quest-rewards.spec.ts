@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test'
+import { GAME_IDS } from './game-ids'
 
 const SEED = 'QUE-STB-ASE'
 
@@ -13,15 +14,15 @@ function collectBrowserErrors(page: Page) {
   return errors
 }
 
-async function installQuestReport(page: Page, includeBaselines: boolean) {
+async function installQuestReport(page: Page, includeVariable: boolean) {
   await page.addInitScript(
-    ({ includeBaselines, seed }) => {
+    ({ includeVariable, seed, ids: { Enchantment, ItemId, RoomId } }) => {
       const wandItems: Record<string, unknown>[] = [
         {
           source: 'Wandmaker.Quest',
           variants: [
             {
-              name: 'wand reward',
+              label: 'wand reward',
               quantity: 1,
               category: 'wand',
               level_range: { min: 1, max: 3 },
@@ -34,7 +35,7 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
           source: 'Wandmaker.Quest',
           variants: [
             {
-              name: 'wand reward',
+              label: 'wand reward',
               quantity: 1,
               category: 'wand',
               level_range: { min: 1, max: 3 },
@@ -49,7 +50,7 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
           source: 'Imp.Quest',
           variants: [
             {
-              name: 'artifact or ring',
+              label: 'artifact or ring',
               quantity: 1,
               category: 'artifact',
               cursed: false,
@@ -58,19 +59,18 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
           ],
         },
       ]
-      if (includeBaselines) {
+      if (includeVariable) {
         wandItems.push(
           {
             source: 'Wandmaker.Quest',
             variants: [
               {
-                name: 'wand of blast wave +2',
                 quantity: 1,
-                class_name: 'WandOfBlastWave',
+                item: ItemId.WandOfBlastWave,
                 category: 'wand',
                 level: 2,
                 cursed: false,
-                prediction: 'baseline',
+                prediction: 'variable',
               },
             ],
           },
@@ -78,13 +78,12 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
             source: 'Wandmaker.Quest',
             variants: [
               {
-                name: 'wand of corrosion +1',
                 quantity: 1,
-                class_name: 'WandOfCorrosion',
+                item: ItemId.WandOfCorrosion,
                 category: 'wand',
                 level: 1,
                 cursed: false,
-                prediction: 'baseline',
+                prediction: 'variable',
               },
             ],
           }
@@ -93,13 +92,12 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
           source: 'Imp.Quest',
           variants: [
             {
-              name: 'sandals of nature +2',
               quantity: 1,
-              class_name: 'SandalsOfNature',
+              item: ItemId.SandalsOfNature,
               category: 'artifact',
               level: 2,
               cursed: false,
-              prediction: 'baseline',
+              prediction: 'variable',
             },
           ],
         })
@@ -130,7 +128,7 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
             depth: 9,
             possible_rooms: [
               {
-                class: 'MassGraveRoom',
+                room: RoomId.MassGraveRoom,
                 quantity: 1,
                 spawn_conditions: [
                   {
@@ -150,7 +148,7 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
                 ],
               },
               {
-                class: 'RotGardenRoom',
+                room: RoomId.RotGardenRoom,
                 quantity: 1,
                 spawn_conditions: [
                   {
@@ -182,7 +180,7 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
                     selected_count: 1,
                   },
                 },
-                baseline: { objective: 'rotberry' },
+                variable: { objective: 'rotberry' },
               },
             ],
           },
@@ -204,34 +202,38 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
                     {
                       slot: 0,
                       role: 'artifact',
-                      baseline_class: 'SandalsOfNature',
+                      item: ItemId.SandalsOfNature,
                       level_rule: { type: 'transfer_upgrade', transfer: 5 },
                       enchanted: false,
-                      baseline_level: 2,
+                      level: 2,
                       scenario_count: 3,
                       candidates: [
                         {
-                          class_name: 'SandalsOfNature',
+                          item: ItemId.SandalsOfNature,
                           drifts: [0],
                           weight: 1,
                         },
                         {
-                          class_name: 'HornOfPlenty',
+                          item: ItemId.HornOfPlenty,
                           drifts: [-1],
                           weight: 1,
                         },
-                        { class_name: 'SkeletonKey', drifts: [1], weight: 1 },
+                        {
+                          item: ItemId.SkeletonKey,
+                          drifts: [1],
+                          weight: 1,
+                        },
                       ],
                     },
                     {
                       slot: 4,
                       role: 'armor',
-                      baseline_class: 'PlateArmor',
+                      item: ItemId.PlateArmor,
                       level_rule: { type: 'range', min: 2, max: 4 },
                       enchanted: true,
-                      baseline_level: 4,
-                      baseline_enchantment: 'Viscosity',
-                      fixed_class: 'PlateArmor',
+                      level: 4,
+                      enchantment: Enchantment.Viscosity,
+                      fixed_item: ItemId.PlateArmor,
                       scenario_count: 1,
                       candidates: [],
                     },
@@ -239,7 +241,7 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
                   upgrades_pinned: true,
                   total_upgrade_value: 21,
                 },
-                baseline: { spawn_depth: 19 },
+                variable: { spawn_depth: 19 },
               },
             ],
           },
@@ -272,12 +274,12 @@ async function installQuestReport(page: Page, includeBaselines: boolean) {
 
       Object.assign(window, { Worker: QuestFixtureWorker })
     },
-    { includeBaselines, seed: SEED }
+    { includeVariable, seed: SEED, ids: GAME_IDS }
   )
 }
 
-async function openQuestReport(page: Page, includeBaselines: boolean) {
-  await installQuestReport(page, includeBaselines)
+async function openQuestReport(page: Page, includeVariable: boolean) {
+  await installQuestReport(page, includeVariable)
   await page.addInitScript(() => {
     localStorage.clear()
     localStorage.setItem('spd-analyzer-mode', 'analyze')
@@ -291,7 +293,7 @@ async function openQuestReport(page: Page, includeBaselines: boolean) {
   ).toBeVisible()
 }
 
-test('quest cards prefer concrete baseline rewards', async ({ page }) => {
+test('quest cards prefer concrete variable rewards', async ({ page }) => {
   const browserErrors = collectBrowserErrors(page)
   await openQuestReport(page, true)
 
@@ -307,9 +309,10 @@ test('quest cards prefer concrete baseline rewards', async ({ page }) => {
 
   const wandmaker = page.locator('[data-quest-type="old_wandmaker"]')
   await expect(wandmaker.getByLabel('Rotberry', { exact: true })).toBeVisible()
-  await expect(wandmaker).not.toContainText('Baseline target')
-  await expect(wandmaker).not.toContainText('Fresh/no-history baseline')
-  await expect(wandmaker.getByText('Baseline rewards')).toBeVisible()
+  await expect(wandmaker).not.toContainText(/baseline/i)
+  await expect(
+    wandmaker.getByText('Rewards (vary with gameplay)')
+  ).toBeVisible()
   await expect(wandmaker.getByRole('listitem')).toHaveCount(2)
   await expect(wandmaker.getByText('wand reward', { exact: true })).toHaveCount(
     0
@@ -319,7 +322,7 @@ test('quest cards prefer concrete baseline rewards', async ({ page }) => {
   const imp = page.locator('[data-quest-type="ambitious_imp"]')
   await expect(imp).not.toContainText('Spawned on depth')
   await expect(imp.getByRole('img', { name: 'Imp', exact: true })).toBeVisible()
-  await expect(imp).not.toContainText('Fresh/no-history baseline')
+  await expect(imp).not.toContainText(/baseline/i)
   await expect(imp).not.toContainText(/monk|golem|token|cursed \+2/i)
   await expect(imp).not.toContainText('Keeping one of these six')
   await imp.getByRole('button', { name: 'About the Imp Statue' }).click()
@@ -360,9 +363,8 @@ test('quest cards prefer concrete baseline rewards', async ({ page }) => {
     .first()
     .getByRole('listitem')
   await expect(artifactRows).toHaveCount(3)
-  await expect(artifactRows.first()).toContainText('Sandals Of Nature')
-  await expect(artifactRows.first()).toContainText('fresh run')
-  await expect(artifactRows.first()).toContainText('baseline')
+  await expect(artifactRows.first()).toContainText('Sandals of Nature')
+  await expect(artifactRows.first()).toContainText('seed draw')
   await expect(artifactRows.nth(1)).toContainText('−1')
   await expect(artifactRows.nth(2)).toContainText('+1')
   // The plate slot has no deck, so it reports a single fixed class.
@@ -386,7 +388,7 @@ test('quest cards prefer concrete baseline rewards', async ({ page }) => {
   expect(browserErrors).toEqual([])
 })
 
-test('quest cards fall back to the universal reward entries without a baseline', async ({
+test('quest cards fall back to the universal reward entries without variable rewards', async ({
   page,
 }) => {
   const browserErrors = collectBrowserErrors(page)
@@ -394,7 +396,9 @@ test('quest cards fall back to the universal reward entries without a baseline',
 
   const wandmaker = page.locator('[data-quest-type="old_wandmaker"]')
   await expect(wandmaker.getByText('Rewards', { exact: true })).toBeVisible()
-  await expect(wandmaker.getByText('Baseline rewards')).toHaveCount(0)
+  await expect(wandmaker.getByText('Rewards (vary with gameplay)')).toHaveCount(
+    0
+  )
   await expect(
     wandmaker.getByLabel('wand reward', { exact: true })
   ).toHaveCount(2)

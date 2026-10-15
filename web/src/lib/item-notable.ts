@@ -1,3 +1,4 @@
+import { type ItemId, itemClassName } from '@/generated/game-ids'
 import { ItemClass, parseItemClass } from '@/lib/item-class'
 import { ItemCategory, parseItemCategory } from '@/lib/item-kind'
 
@@ -163,16 +164,17 @@ function notableClass(className: string | null | undefined) {
 
 /** Rings, wands, equipment, artifacts, and trinkets. */
 export function isNotableSpawn(item: {
-  name?: string
+  label?: string
   category: string
-  class_name?: string | null
-  candidate_classes?: string[]
+  item?: ItemId
+  candidates?: ItemId[]
 }) {
   if (notableCategory(item.category)) return true
-  if (item.name != null && /\bequipment\b/i.test(item.name)) return true
-  if (notableClass(item.class_name)) return true
+  if (item.label != null && /\bequipment\b/i.test(item.label)) return true
+  if (item.item != null && notableClass(itemClassName(item.item))) return true
   return (
-    item.candidate_classes?.some((className) => notableClass(className)) ??
-    false
+    item.candidates?.some((candidate) =>
+      notableClass(itemClassName(candidate))
+    ) ?? false
   )
 }

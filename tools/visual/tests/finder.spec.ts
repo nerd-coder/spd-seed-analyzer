@@ -63,7 +63,7 @@ test('finder keeps its form and reuses only result-less search tabs', async ({
   ).toHaveValue('111')
   await expect(page.getByLabel('Item 1 name')).toHaveValue('RingOfMight')
   await expect(
-    page.getByRole('switch', { name: 'Include fresh-baseline matches' })
+    page.getByRole('switch', { name: /include .*variable/i })
   ).toHaveCount(0)
 
   await startAndWait(page)
@@ -278,7 +278,7 @@ test('ongoing search survives reload', async ({ page }) => {
   await page
     .getByRole('spinbutton', { name: 'Start seed' })
     .fill('3293380032588')
-  await page.getByRole('spinbutton', { name: 'Candidates' }).fill('1000')
+  await page.getByRole('spinbutton', { name: 'Candidates' }).fill('100')
   await page.getByLabel('Item 1 depth').selectOption('4')
   await page.getByRole('spinbutton', { name: 'Results' }).fill('5')
   await page.getByLabel('Item 1 name').selectOption('RingOfWealth')

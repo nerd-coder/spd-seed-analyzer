@@ -1,14 +1,12 @@
-import { AlchemyPotIcon } from '@/components/AlchemyPotIcon'
-import { DepthIcon } from '@/components/DepthIcon'
 import { FloorMapDialog } from '@/components/FloorMapDialog'
-import { finderItemLabel } from '@/components/finder/finder-items'
+import { GameObject } from '@/components/GameObject'
 import { ItemBox } from '@/components/ItemBox'
 import { FloorBanner } from '@/components/seed/FloorBanner'
 import {
   FloorItemSections,
   visibleItemGroups,
 } from '@/components/seed/FloorItemSections'
-import { QuestBranchMap } from '@/components/seed/QuestBranchMap'
+import { QuestBanner } from '@/components/seed/QuestBanner'
 import { QuestCard } from '@/components/seed/QuestCard'
 import { branchObjectiveTarget } from '@/components/seed/QuestTarget'
 import {
@@ -20,7 +18,10 @@ import {
   isFirstAlchemyPot,
   trinketOfferDetails,
 } from '@/components/seed/trinket-offers'
+import { roomClassName } from '@/generated/game-ids'
+import { feelingObjectId } from '@/lib/game-objects'
 import { itemSprite } from '@/lib/item-kind'
+import { itemLabel } from '@/lib/item-title'
 import { formatItemSource } from '@/lib/labels'
 import type {
   FloorReport,
@@ -30,8 +31,10 @@ import type {
 } from '@/lib/spd-wasm'
 
 function alchemyPotLabel(appearance: GuaranteedAppearance) {
-  const source = formatItemSource(appearance.source)
-  return source ? `${appearance.name}, ${source}` : appearance.name
+  const source = formatItemSource(
+    appearance.source == null ? null : roomClassName(appearance.source)
+  )
+  return source ? `Alchemy pot, ${source}` : 'Alchemy pot'
 }
 
 export function FloorDetail({
@@ -78,14 +81,18 @@ export function FloorDetail({
           }
         >
           {floor.feeling && floor.feeling !== 'none' ? (
-            <DepthIcon feeling={floor.feeling} scale={4} />
+            <GameObject id={feelingObjectId(floor.feeling)} scale={4} />
           ) : null}
           {alchemyPots.map((appearance, index) => (
             <span
               key={`${appearance.source ?? appearance.kind}-${index}`}
               className="inline-flex items-center gap-1"
             >
-              <AlchemyPotIcon label={alchemyPotLabel(appearance)} />
+              <GameObject
+                id="AlchemyPot"
+                size={32}
+                label={alchemyPotLabel(appearance)}
+              />
               {index === offerPotIndex ? (
                 <span className="inline-flex items-center gap-0">
                   {offerClasses.map((className, offerIndex) => (
@@ -94,7 +101,7 @@ export function FloorDetail({
                       scale={1}
                       border
                       bg
-                      title={finderItemLabel(className)}
+                      title={itemLabel(className)}
                       sprites={itemSprite({
                         className,
                         category: 'trinket',
@@ -139,8 +146,9 @@ export function FloorDetail({
         {leftoverBranches.length > 0 && (
           <div className="space-y-2">
             {leftoverBranches.map((branch) => (
-              <QuestBranchMap
+              <QuestBanner
                 key={`${branch.id.depth}-${branch.id.branch}`}
+                depth={branch.id.depth}
                 branch={branch}
                 identities={identities}
                 title={branchTitle(branch.kind)}

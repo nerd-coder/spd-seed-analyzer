@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Field, FieldGroup, FieldLegend, FieldSet } from '@/components/ui/field'
 import { InputGroup } from '@/components/ui/input-group'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { itemClassName, itemIdFromClassName } from '@/generated/game-ids'
 import { itemSprite } from '@/lib/item-kind'
 import { upgradeLevelClass } from '@/lib/upgrade'
 import {
@@ -92,10 +93,12 @@ export function ConstraintEditor({
         {constraints.map((constraint, index) => {
           const uiGroup = fromCoreCategory(constraint.itemGroup)
           const itemsInGroup = itemsForGroup(uiGroup)
+          const className =
+            constraint.item != null ? itemClassName(constraint.item) : null
 
           // Use item level upgradeable logic if an item is selected, otherwise fallback to group logic
-          const upgradeable = constraint.className
-            ? isFinderItemUpgradeable(constraint.className)
+          const upgradeable = className
+            ? isFinderItemUpgradeable(className)
             : isFinderItemGroupUpgradeable(uiGroup)
 
           return (
@@ -112,16 +115,15 @@ export function ConstraintEditor({
                       border={false}
                       bg={false}
                       sprites={itemSprite({
-                        className: constraint.className,
-                        category: constraint.className
+                        className,
+                        category: className
                           ? undefined
                           : toCoreCategory(uiGroup),
                       })}
                       title={
-                        constraint.className
-                          ? itemsInGroup.find(
-                              (i) => i.className === constraint.className
-                            )?.label
+                        className
+                          ? itemsInGroup.find((i) => i.className === className)
+                              ?.label
                           : uiGroup
                       }
                     />
@@ -135,7 +137,7 @@ export function ConstraintEditor({
 
                         onUpdate(constraint.id, {
                           itemGroup: coreCategory,
-                          className: null,
+                          item: null,
                           minLevel: keptMinLevel(
                             newUiGroup,
                             constraint.minLevel
@@ -153,7 +155,7 @@ export function ConstraintEditor({
                   </div>
 
                   <NativeSelect
-                    value={constraint.className ?? 'any'}
+                    value={className ?? 'any'}
                     disabled={running}
                     aria-label={`Item ${index + 1} name`}
                     onChange={(event) => {
@@ -164,7 +166,7 @@ export function ConstraintEditor({
                         ? isFinderItemUpgradeable(newClassName)
                         : isFinderItemGroupUpgradeable(uiGroup)
                       onUpdate(constraint.id, {
-                        className: newClassName,
+                        item: itemIdFromClassName(newClassName) ?? null,
                         minLevel: upgradeableName
                           ? keptMinLevel(uiGroup, constraint.minLevel)
                           : null,

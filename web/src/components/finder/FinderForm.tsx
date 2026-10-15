@@ -21,6 +21,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { ItemId } from '@/generated/game-ids'
 import { $finderForm } from '@/stores/app'
 import { ConstraintEditor } from './ConstraintEditor'
 import { finderUpgradeLevels, fromCoreCategory } from './finder-items'
@@ -82,9 +83,7 @@ export function FinderForm({
     constraints.some(
       (constraint) =>
         !constraint.itemGroup ||
-        (constraint.className != null &&
-          (constraint.className.length === 0 ||
-            constraint.className.length > 128)) ||
+        constraint.item === ItemId.Unknown ||
         (constraint.minLevel !== null &&
           !finderUpgradeLevels(fromCoreCategory(constraint.itemGroup)).includes(
             constraint.minLevel
@@ -169,7 +168,7 @@ export function FinderForm({
         {
           id: nextConstraintId,
           itemGroup: 'ring',
-          className: 'RingOfWealth',
+          item: ItemId.RingOfWealth,
           minLevel: null,
           minDepth: 1,
           maxDepth: DEFAULT_FLOORS,
@@ -198,9 +197,9 @@ export function FinderForm({
       candidateCount: Number(candidateCount),
       floors: generationFloors(constraints),
       constraints: constraints.map(
-        ({ itemGroup, className, minLevel, minDepth, maxDepth }) => ({
+        ({ itemGroup, item, minLevel, minDepth, maxDepth }) => ({
           itemGroup,
-          className,
+          item,
           minLevel,
           minDepth: Number(minDepth),
           maxDepth: Number(maxDepth),
@@ -316,9 +315,9 @@ export function FinderForm({
                 </TooltipTrigger>
                 <TooltipContent>
                   Also match quest rewards a player&apos;s earlier history could
-                  shift into range, not just the fresh-run draw. Returns many
-                  more seeds, and a hit means &ldquo;reachable in some
-                  run&rdquo; rather than guaranteed.
+                  shift into range, not just the seed draw. Returns many more
+                  seeds, and a hit means &ldquo;reachable in some run&rdquo;
+                  rather than guaranteed.
                 </TooltipContent>
               </Tooltip>
             </div>

@@ -51,7 +51,7 @@ export function visibleItemGroups(items: ItemGroup[]) {
       ...group,
       variants: group.variants.filter(
         (item) =>
-          item.prediction !== 'baseline' ||
+          item.prediction !== 'variable' ||
           !exactItems.has(itemDisplayKey(item, group.source))
       ),
     }))
@@ -59,7 +59,7 @@ export function visibleItemGroups(items: ItemGroup[]) {
 }
 
 function itemDisplayKey(item: ItemVariant, source?: string | null) {
-  return JSON.stringify([item.class_name, item.level, source])
+  return JSON.stringify([item.item, item.level, source])
 }
 
 export function partitionFloorItems(items: ItemGroup[]) {

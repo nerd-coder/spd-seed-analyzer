@@ -1,9 +1,5 @@
 import { InfoIcon } from '@phosphor-icons/react'
-import {
-  filmFrames,
-  GameSprite,
-  type SpriteSheet,
-} from '@/components/GameSprite'
+import { GameObject, type GameObjectId } from '@/components/GameObject'
 import { ItemBox } from '@/components/ItemBox'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,107 +19,10 @@ import type {
   WandmakerObjective,
 } from '@/lib/spd-wasm'
 
-/** Longer edge of a quest-mob sprite, in CSS pixels. */
-const LONG_EDGE = 36
-
-/** Idle clip copied from the mob's `*Sprite` class. Repeated indices hold a pose. */
-type MobClip = {
-  sheet: SpriteSheet
-  frames: ReturnType<typeof filmFrames>
-  fps: number
-  textKey: string
-}
-
-function mobClip(
-  file: string,
-  sheetWidth: number,
-  sheetHeight: number,
-  frameWidth: number,
-  frameHeight: number,
-  indices: readonly number[],
-  fps: number
-) {
-  return {
-    sheet: {
-      url: `/assets/sprites/${file}`,
-      width: sheetWidth,
-      height: sheetHeight,
-    },
-    frames: filmFrames(sheetWidth, frameWidth, frameHeight, indices),
-    fps,
-  }
-}
-
-/** `FetidRatSprite` idle, 2 fps. */
-const FETID_RAT: MobClip = {
-  ...mobClip('rat.png', 256, 64, 16, 15, [32, 32, 32, 33], 2),
-  textKey: 'FetidRat',
-}
-
-/** `GnollTricksterSprite` idle, column 42, 2 fps. */
-const GNOLL_TRICKSTER: MobClip = {
-  ...mobClip('gnoll.png', 256, 64, 12, 15, [42, 42, 42, 43, 42, 42, 43, 43], 2),
-  textKey: 'GnollTrickster',
-}
-
-/** `GreatCrabSprite` idle, column 32, 5 fps. */
-const GREAT_CRAB: MobClip = {
-  ...mobClip('crab.png', 256, 64, 16, 16, [32, 33, 32, 34], 5),
-  textKey: 'GreatCrab',
-}
-
-/** `GnollGeomancerSprite` idle, 2 fps. The statue offset is not used here. */
-const GNOLL_GEOMANCER: MobClip = {
-  ...mobClip(
-    'gnoll_geomancer.png',
-    256,
-    32,
-    12,
-    16,
-    [0, 0, 0, 1, 0, 0, 1, 1],
-    2
-  ),
-  textKey: 'GnollGeomancer',
-}
-
-/**
- * Blue full-health cell. The spire's color is `Random.Int(3)` at spawn and
- * is not on the quest report, so the clip stays the blue frame.
- * `CrystalSpireSprite` idle is that one cell at 1 fps.
- */
-const CRYSTAL_SPIRE: MobClip = {
-  ...mobClip('crystal_spire.png', 128, 128, 29, 40, [0], 1),
-  textKey: 'CrystalSpire',
-}
-
-/** `ImpSprite` idle, 10 fps, 12×14 film on `sprites/imp.png`. */
-const IMP: MobClip = {
-  ...mobClip(
-    'imp.png',
-    64,
-    16,
-    12,
-    14,
-    [
-      0, 1, 2, 3, 0, 1, 2, 3, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 0, 1, 2, 3,
-      0, 1, 2, 3, 0, 1, 3, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 4, 4, 4, 4,
-      4, 4, 4, 4,
-    ],
-    10
-  ),
-  textKey: 'Imp',
-}
-
-const GHOST_FRAMES: Record<GhostTarget, MobClip> = {
-  fetid_rat: FETID_RAT,
-  gnoll_trickster: GNOLL_TRICKSTER,
-  great_crab: GREAT_CRAB,
-}
-
-const GHOST_LABELS: Record<GhostTarget, string> = {
-  fetid_rat: 'Fetid Rat',
-  gnoll_trickster: 'Gnoll Trickster',
-  great_crab: 'Great Crab',
+const GHOST_TARGETS: Record<GhostTarget, GameObjectId> = {
+  fetid_rat: 'FetidRat',
+  gnoll_trickster: 'GnollTrickster',
+  great_crab: 'GreatCrab',
 }
 
 const WANDMAKER_LABELS: Record<WandmakerObjective, string> = {
@@ -132,28 +31,17 @@ const WANDMAKER_LABELS: Record<WandmakerObjective, string> = {
   rotberry: 'Rotberry',
 }
 
-const BLACKSMITH_LABELS: Record<BlacksmithObjective, string> = {
-  crystal: 'Crystal',
-  gnoll: 'Gnoll',
+const BLACKSMITH_TARGETS: Record<
+  BlacksmithObjective,
+  { id: GameObjectId; label: string }
+> = {
+  crystal: { id: 'CrystalSpire', label: 'Crystal' },
+  gnoll: { id: 'GnollGeomancer', label: 'Gnoll' },
 }
 
 /** `ItemSpriteSheet.QUEST = xy(1, 30) = 464`. Dust is +1, ember is +3. */
 const CORPSE_DUST_INDEX = 465
 const ELEMENTAL_EMBERS_INDEX = 467
-
-function MobSprite({ clip, label }: { clip: MobClip; label: string }) {
-  return (
-    <GameSprite
-      sheet={clip.sheet}
-      frames={clip.frames}
-      fps={clip.fps}
-      size={LONG_EDGE}
-      label={label}
-      title={label}
-      textKey={clip.textKey}
-    />
-  )
-}
 
 function WandmakerTarget({ objective }: { objective: WandmakerObjective }) {
   const label = WANDMAKER_LABELS[objective]
@@ -182,12 +70,8 @@ function WandmakerTarget({ objective }: { objective: WandmakerObjective }) {
 }
 
 function BlacksmithTarget({ objective }: { objective: BlacksmithObjective }) {
-  return (
-    <MobSprite
-      clip={objective === 'crystal' ? CRYSTAL_SPIRE : GNOLL_GEOMANCER}
-      label={BLACKSMITH_LABELS[objective]}
-    />
-  )
+  const target = BLACKSMITH_TARGETS[objective]
+  return <GameObject id={target.id} label={target.label} />
 }
 
 /**
@@ -203,6 +87,7 @@ function ImpStatueNote() {
           variant="ghost"
           size="icon-xs"
           aria-label="About the Imp Statue"
+          className="text-white hover:text-white"
         >
           <InfoIcon />
         </Button>
@@ -221,31 +106,17 @@ function ImpStatueNote() {
   )
 }
 
-function ImpTarget() {
-  return (
-    <span className="inline-flex items-center gap-1">
-      <MobSprite clip={IMP} label="Imp" />
-      <ImpStatueNote />
-    </span>
-  )
-}
-
-/** Quest target image. */
+/** Quest target image. The Imp quest has none; its banner carries the statue note. */
 export function QuestTarget({ quest }: { quest: QuestReport }) {
   switch (quest.type) {
     case 'sad_ghost':
-      return (
-        <MobSprite
-          clip={GHOST_FRAMES[quest.baseline.target]}
-          label={GHOST_LABELS[quest.baseline.target]}
-        />
-      )
+      return <GameObject id={GHOST_TARGETS[quest.variable.target]} />
     case 'old_wandmaker':
-      return <WandmakerTarget objective={quest.baseline.objective} />
+      return <WandmakerTarget objective={quest.variable.objective} />
     case 'troll_blacksmith':
-      return <BlacksmithTarget objective={quest.baseline.objective} />
+      return <BlacksmithTarget objective={quest.variable.objective} />
     case 'ambitious_imp':
-      return <ImpTarget />
+      return <ImpStatueNote />
   }
 }
 

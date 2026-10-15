@@ -1,6 +1,7 @@
 /**
  * English examine-window `name` and `desc` for SPD v4.0.2 (`57a4e06a4`).
- * These are mobs, the alchemy pot, and level feelings, not item classes.
+ * These are mobs, NPCs, bosses, the alchemy pot, and level feelings, not item
+ * classes.
  * The geomancer text is the awake description.
  */
 type GameObjectText = {
@@ -65,16 +66,38 @@ const TEXTS: Record<string, GameObjectText> = {
     name: 'ambitious imp',
     desc: "This little red person look like an Imp. Imps are lesser demons, notable for their intelligence and not their strength.\n\nYou've only heard about demons in ancient folk tales though, which usually describe them as travelers from another world. You've never seen any evidence demons actually exist, but this Imp is clearly real and seems very happy to see you.",
   },
-}
-
-const FEELING_KEYS: Record<string, string> = {
-  chasm: 'FeelingChasm',
-  water: 'FeelingWater',
-  grass: 'FeelingGrass',
-  dark: 'FeelingDark',
-  large: 'FeelingLarge',
-  traps: 'FeelingTraps',
-  secrets: 'FeelingSecrets',
+  Ghost: {
+    name: 'sad ghost',
+    desc: 'The ghost is barely visible. It looks like a shapeless spot of faint light with a sorrowful face.',
+  },
+  Wandmaker: {
+    name: 'old wandmaker',
+    desc: 'This old yet hale gentleman wears a slightly confused expression. He is protected by a magic shield.',
+  },
+  Blacksmith: {
+    name: 'troll blacksmith',
+    desc: 'This troll blacksmith looks like all trolls look: he is tall and lean, and his skin resembles stone in both color and texture. The troll blacksmith is tinkering with disproportionally small tools.',
+  },
+  Goo: {
+    name: 'Goo',
+    desc: "Little is known about The Goo. It's quite possible that it is not even a creature, but rather a conglomerate of vile substances from the sewers that somehow gained basic intelligence. Regardless, dark magic is certainly what has allowed Goo to exist.\n\nIts gelatinous nature has let it absorb lots of dark energy, you feel a chill just from being near. If Goo is able to attack with this energy you won't live for long.",
+  },
+  Tengu: {
+    name: 'Tengu',
+    desc: 'A famous and enigmatic assassin, named for the mask grafted to his face.\n\nTengu is held down with large clasps on his wrists and knees, though he seems to have gotten rid of his chains long ago.\n\nHe will try to use traps, deceptive magic, and precise attacks to eliminate the only thing stopping his escape: you.',
+  },
+  DM300: {
+    name: 'DM-300',
+    desc: "The DM-300 is the largest and most powerful 'defense machine' that the dwarves ever built. Such an awesome machine is difficult to manufacture, so the dwarves only ever made a few to guard the entrances to their underground metropolis.\n\nIt is equipped with vents to jet its toxic exhaust fumes and a high power drill that it can use both to attack and disrupt the earth. DM-300 can also connect to an energy grid, further enhancing its power.",
+  },
+  DwarfKing: {
+    name: 'King of Dwarves',
+    desc: 'Many years ago one of the highest wizards in the dwarven court uncovered secrets which gave him tremendous power over life and death. He soon put this power to use, subjugating and corrupting his peers, his king, and eventually every dwarven citizen. Now he is king, ruler over a legion of undead subjects.\n\nThe King of Dwarves is an aggressive foe, who will attempt to surround and overwhelm his enemies with his horde of undead minions.',
+  },
+  YogDzewa: {
+    name: 'Yog-Dzewa',
+    desc: "Yog-Dzewa is an Old God; a great monstrosity which reaches into mortal worlds and devours them to fuel its endless growth. The dwarves must have attracted the attention of this cosmic horror while toying with dark magics, and have been trying to keep it contained ever since.\n\nYog-Dzewa originates from a dimension of raw magical chaos, and cannot bring its true form into this world. Instead it has created avatars and summoned demonic minions to do its bidding here.\n\nThis giant eye is the focal point of Yog-Dzewa's power in this world. While the eye itself is immobile, it is capable of shooting powerful beams of demonic magic and summoning a variety of minions to aid it.",
+  },
 }
 
 export function gameObjectText(
@@ -82,12 +105,4 @@ export function gameObjectText(
 ): GameObjectText | null {
   if (!key) return null
   return TEXTS[key] ?? null
-}
-
-/** Level-feeling examine key. `none` and unknown feelings have no window. */
-export function feelingTextKey(
-  feeling: string | null | undefined
-): string | undefined {
-  if (!feeling) return undefined
-  return FEELING_KEYS[feeling.toLowerCase()]
 }

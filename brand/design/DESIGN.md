@@ -175,8 +175,9 @@ fractional scale.
 
 - Motion answers an action: a pressed button drops 1px, a rail cell lifts on
   hover and stays lifted while selected, overlays fade and scale in 100ms.
-- No ambient or entrance animation. The game's enchantment glow is the one
-  exception, because it is information the game itself shows.
+- No ambient or entrance animation. The game's enchantment glow and the idle
+  clips of game objects (mobs, NPCs, bosses) are the exceptions, because the
+  game itself shows them.
 - `prefers-reduced-motion` collapses every animation and transition
   (`theme.css` base layer).
 
@@ -200,7 +201,7 @@ added to the stock set:
 |---|---|
 | `Sprite` | One crop from a game sprite sheet at a whole-number scale |
 | `ItemSlot` | Recessed 2× journal cell with tier-colored `+N`, stack count, enchantment frame, cursed frame, caption |
-| `FloorBanner` | Region-filled depth block, then the region's floor tiles darkened behind outlined white text |
+| `FloorBanner` | Region-filled depth block, then the region's floor tiles darkened behind outlined white text; a boss floor shows its boss sprite. A quest band reuses it without the depth block: NPC, quest name, target, and a map button when the quest has its own floor |
 | `DescentRail` | All 26 floors in five region bands; skull for a boss, square for a quest, one pip per notable item |
 | `FloorReport` | Banner, quest band, notable items, other items |
 

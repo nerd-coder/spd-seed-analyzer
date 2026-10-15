@@ -1,7 +1,8 @@
-import { finderItemLabel } from '@/components/finder/finder-items'
 import { ItemBox } from '@/components/ItemBox'
+import { itemClassName } from '@/generated/game-ids'
 import { appearanceDescription } from '@/lib/identity'
 import { ItemCategory, itemSprite } from '@/lib/item-kind'
+import { itemLabel } from '@/lib/item-title'
 import type { IdentityEntry, IdentityMaps } from '@/lib/spd-wasm'
 
 /** Journal cell at scale 3: 17×3 + 8px padding. */
@@ -17,13 +18,13 @@ function IdentityGrid({
   return (
     <div className="flex flex-wrap gap-0.5">
       {entries.map((e) => {
-        const name = finderItemLabel(e.item)
+        const name = itemLabel(e.item)
         const appearance = appearanceDescription(e.appearance)
         return (
           <ItemBox
             key={e.item}
             sprites={itemSprite({
-              className: e.item,
+              className: itemClassName(e.item),
               category,
               appearance: e.appearance,
             })}

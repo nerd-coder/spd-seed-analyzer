@@ -160,38 +160,6 @@ export function parseItemEnhancement(
   return undefined
 }
 
-function humanizeClass(name: string): string {
-  let out = ''
-  for (let index = 0; index < name.length; index += 1) {
-    const char = name.charAt(index)
-    const upper = char.toLocaleUpperCase()
-    if (index > 0 && char === upper && char !== char.toLocaleLowerCase()) {
-      out += ' '
-    }
-    out += index === 0 ? char.toLocaleLowerCase() : char
-  }
-  return out
-}
-
-/**
- * Enchantment prefixed onto a report title (`displacement mail Armor +1`).
- * The structured enchantment field is a separate, sometimes conditional, roll.
- */
-export function enhancementInItemName(
-  label: string,
-  className: string | null | undefined
-): ItemEnhancement | undefined {
-  if (!className) return undefined
-  const item = humanizeClass(className)
-  const head = (label.split(',')[0] ?? '').replace(/\s+[+-]\d+$/, '').trim()
-  if (!head.endsWith(item) || head.length === item.length) return undefined
-  const prefix = head.slice(0, head.length - item.length).trim()
-  for (const value of ENHANCEMENT_VALUES) {
-    if (humanizeClass(value) === prefix) return value as ItemEnhancement
-  }
-  return undefined
-}
-
 export function parseItemAppearance(
   value: string | null | undefined
 ): ItemAppearance | undefined {

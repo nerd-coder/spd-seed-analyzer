@@ -1,8 +1,9 @@
+import { GameObject } from '@/components/GameObject'
 import { FloorItemList } from '@/components/seed/FloorItemSections'
 import { ImpRewardDistribution } from '@/components/seed/ImpRewardDistribution'
-import { QuestBranchMap } from '@/components/seed/QuestBranchMap'
+import { QuestBanner } from '@/components/seed/QuestBanner'
 import { QuestTarget } from '@/components/seed/QuestTarget'
-import { questTitle } from '@/components/seed/quest-branch'
+import { questNpc, questTitle } from '@/components/seed/quest-branch'
 import { WandmakerRewardDistribution } from '@/components/seed/WandmakerRewardDistribution'
 import type {
   BranchFloorReport,
@@ -10,15 +11,14 @@ import type {
   ItemGroup,
   QuestReport,
 } from '@/lib/spd-wasm'
-import { cn } from '@/lib/utils'
 
-function prefersBaselineRewards(quest: QuestReport) {
+function prefersVariableRewards(quest: QuestReport) {
   return quest.type === 'old_wandmaker' || quest.type === 'ambitious_imp'
 }
 
-function rewardsHeading(quest: QuestReport, isBaseline: boolean) {
-  if (quest.type === 'ambitious_imp' || !isBaseline) return 'Rewards'
-  return 'Baseline rewards'
+function rewardsHeading(quest: QuestReport, isVariable: boolean) {
+  if (quest.type === 'ambitious_imp' || !isVariable) return 'Rewards'
+  return 'Rewards (vary with gameplay)'
 }
 
 export function QuestCard({
@@ -39,12 +39,12 @@ export function QuestCard({
     quest.type === 'ambitious_imp' ? (quest.contract.slots ?? []) : []
   const wandSlots =
     quest.type === 'old_wandmaker' ? (quest.contract.slots ?? []) : []
-  const baselineRewards = prefersBaselineRewards(quest)
-    ? groupsWithPrediction(rewards, 'baseline')
+  const variableRewards = prefersVariableRewards(quest)
+    ? groupsWithPrediction(rewards, 'variable')
     : []
-  const displayedRewards = baselineRewards.length
-    ? baselineRewards
-    : withoutPrediction(rewards, 'baseline')
+  const displayedRewards = variableRewards.length
+    ? variableRewards
+    : withoutPrediction(rewards, 'variable')
 
   const hasRewardBlock =
     displayedRewards.length > 0 || impSlots.length > 0 || wandSlots.length > 0
@@ -54,34 +54,21 @@ export function QuestCard({
     // lists without spending a hue the regions and loot tiers already own.
     <div
       data-quest-type={quest.type}
-      className={cn(
-        'flex flex-col overflow-hidden rounded-md border border-l-4 border-l-primary bg-accent/40',
-        branch ? null : 'gap-2 px-3 py-2.5'
-      )}
+      className="flex flex-col overflow-hidden rounded-md border border-l-4 border-l-primary bg-accent/40"
     >
-      {branch ? (
-        <QuestBranchMap
-          branch={branch}
-          identities={identities}
-          title={title}
-          target={<QuestTarget quest={quest} />}
-        />
-      ) : (
-        <>
-          <h4 className="font-semibold">{title}</h4>
-          <QuestTarget quest={quest} />
-        </>
-      )}
+      <QuestBanner
+        depth={depth}
+        title={title}
+        npc={<GameObject id={questNpc(quest.type)} />}
+        target={<QuestTarget quest={quest} />}
+        branch={branch}
+        identities={identities}
+      />
       {hasRewardBlock ? (
-        <div
-          className={cn(
-            'flex flex-col gap-2',
-            branch ? 'border-t px-3 py-2.5' : 'border-t pt-2.5'
-          )}
-        >
+        <div className="flex flex-col gap-2 border-t px-3 py-2.5">
           <div className="flex items-center gap-1">
             <p className="text-sm font-semibold">
-              {rewardsHeading(quest, baselineRewards.length > 0)}
+              {rewardsHeading(quest, variableRewards.length > 0)}
             </p>
             {impSlots.length > 0 ? (
               <ImpRewardDistribution
@@ -115,7 +102,7 @@ export function QuestCard({
   )
 }
 
-function groupsWithPrediction(groups: ItemGroup[], prediction: 'baseline') {
+function groupsWithPrediction(groups: ItemGroup[], prediction: 'variable') {
   return groups
     .map((group) => ({
       ...group,
@@ -126,7 +113,7 @@ function groupsWithPrediction(groups: ItemGroup[], prediction: 'baseline') {
     .filter((group) => group.variants.length > 0)
 }
 
-function withoutPrediction(groups: ItemGroup[], prediction: 'baseline') {
+function withoutPrediction(groups: ItemGroup[], prediction: 'variable') {
   return groups
     .map((group) => ({
       ...group,

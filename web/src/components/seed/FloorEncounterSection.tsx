@@ -12,23 +12,38 @@ import {
   ItemTitle,
 } from '@/components/ui/item'
 import { itemAppearance } from '@/lib/identity'
-import { itemSprite } from '@/lib/item-kind'
+import { itemSprite, parseItemEnhancement } from '@/lib/item-kind'
+import {
+  enchantmentName,
+  mobLabel,
+  variantClassName,
+  variantTitle,
+} from '@/lib/item-title'
 import type {
   CombatReward,
   IdentityMaps,
   InitialEncounter,
 } from '@/lib/spd-wasm'
 
+function rewardName(reward: CombatReward) {
+  const title = variantTitle({
+    ...reward,
+    label: `random ${reward.category}`,
+  })
+  return reward.cursed ? `cursed ${title}` : title
+}
+
 function rewardText(reward: CombatReward) {
+  const name = rewardName(reward)
   if (reward.prediction === 'runtime_chance' && reward.chance) {
     const percentage =
       (100 * reward.chance.numerator) / reward.chance.denominator
-    return `${percentage}% runtime chance: ${reward.name}`
+    return `${percentage}% runtime chance: ${name}`
   }
   if (reward.prediction === 'generated_with_floor') {
-    return `Carries ${reward.name}`
+    return `Carries ${name}`
   }
-  return `Drops ${reward.name}`
+  return `Drops ${name}`
 }
 
 function rewardBadge(reward: CombatReward) {
@@ -53,17 +68,21 @@ function EncounterReward({
   reward: CombatReward
   identities: IdentityMaps
 }) {
-  const item = { category: reward.category, class_name: reward.class_name }
+  const className = variantClassName(reward)
+  const item = { category: reward.category, class_name: className }
   return (
     <ItemDescription className="line-clamp-none flex flex-wrap items-center gap-1.5">
       <ItemBox
         scale={1}
         sprites={itemSprite({
-          className: reward.class_name,
+          className,
           category: reward.category,
           appearance: itemAppearance(item, identities),
         })}
-        title={reward.name}
+        enhancement={parseItemEnhancement(enchantmentName(reward.enchantment))}
+        cursed={reward.cursed === true}
+        level={reward.level ?? null}
+        title={rewardName(reward)}
       />
       <span>{rewardText(reward)}</span>
       {rewardBadge(reward)}
@@ -101,13 +120,13 @@ export function FloorEncounterSection({
       </div>
       <ItemGroup className="gap-1.5">
         {encounters.map((encounter) => (
-          <Item key={encounter.class} variant="muted" size="xs">
+          <Item key={encounter.mob} variant="muted" size="xs">
             <ItemMedia variant="icon">
               <PawPrintIcon aria-hidden />
             </ItemMedia>
             <ItemContent>
               <ItemTitle className="flex-wrap">
-                <ItemName name={encounter.name} />
+                <ItemName name={mobLabel(encounter.mob)} />
                 {encounter.quantity > 1 ? (
                   <span className="text-muted-foreground tabular-nums">
                     x{encounter.quantity}
@@ -117,7 +136,7 @@ export function FloorEncounterSection({
               {encounter.combat_rewards?.length ? (
                 encounter.combat_rewards.map((reward, index) => (
                   <EncounterReward
-                    key={`${reward.class_name ?? reward.name}-${index}`}
+                    key={`${reward.item ?? reward.category}-${index}`}
                     reward={reward}
                     identities={identities}
                   />

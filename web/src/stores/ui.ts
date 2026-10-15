@@ -4,6 +4,7 @@ import {
   type FinderNumericInput,
   randomStartSeed,
 } from '@/components/finder/finder-types'
+import { ItemId } from '@/generated/game-ids'
 import type { SeedSearchMatchMode } from '@/lib/spd-wasm'
 import { AppStore, persistentStore } from './store-utils'
 
@@ -32,7 +33,7 @@ export const $finderForm = new AppStore<FinderFormState>({
     {
       id: 1,
       itemGroup: 'ring',
-      className: 'RingOfWealth',
+      item: ItemId.RingOfWealth,
       minLevel: null,
       minDepth: 1,
       maxDepth: DEFAULT_FLOORS,

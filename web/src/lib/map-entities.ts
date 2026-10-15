@@ -1,3 +1,4 @@
+import { type ItemId, itemClassName, mobClassName } from '@/generated/game-ids'
 import { SHEET_COLS, TILE_PX } from '@/lib/dungeon-tile-visuals'
 import { ITEM_SHEET, resolveItemIconIndex } from '@/lib/item-icons'
 import { itemSpriteSize } from '@/lib/item-sprite-rects'
@@ -99,18 +100,16 @@ export function drawVisibleTraps(
   }
 }
 
-function appearanceFor(className: string, identities: IdentityMaps) {
+function appearanceFor(item: ItemId, identities: IdentityMaps) {
+  const className = itemClassName(item)
   if (className.startsWith('PotionOf')) {
-    return identities.potions.find((entry) => entry.item === className)
-      ?.appearance
+    return identities.potions.find((entry) => entry.item === item)?.appearance
   }
   if (className.startsWith('ScrollOf')) {
-    return identities.scrolls.find((entry) => entry.item === className)
-      ?.appearance
+    return identities.scrolls.find((entry) => entry.item === item)?.appearance
   }
   if (className.startsWith('RingOf')) {
-    return identities.rings.find((entry) => entry.item === className)
-      ?.appearance
+    return identities.rings.find((entry) => entry.item === item)?.appearance
   }
   return undefined
 }
@@ -126,8 +125,8 @@ function itemFrame(heap: MapHeap, identities: IdentityMaps) {
     const [width, height] = itemSpriteSize(0)
     return [0, width, height] as const
   }
-  const index = resolveItemIconIndex(item.class, {
-    appearance: appearanceFor(item.class, identities),
+  const index = resolveItemIconIndex(itemClassName(item.item), {
+    appearance: appearanceFor(item.item, identities),
   })
   const [width, height] = itemSpriteSize(index)
   return [index, width, height] as const
@@ -167,7 +166,7 @@ function drawMob(
   mob: MapMob,
   scale: number
 ) {
-  const frame = MOB_FRAMES[mob.class]
+  const frame = MOB_FRAMES[mobClassName(mob.mob)]
   if (!frame) return false
   const image = assets[frame.asset]
   const cellX = mob.cell % map.width
@@ -216,7 +215,7 @@ export function exactEntityCells(map: FloorMap) {
     item: new Set(map.heaps.map((heap) => heap.cell)),
     mob: new Set(
       map.mobs
-        .filter((mob) => MOB_FRAMES[mob.class] != null)
+        .filter((mob) => MOB_FRAMES[mobClassName(mob.mob)] != null)
         .map((mob) => mob.cell)
     ),
   }

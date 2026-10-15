@@ -1,5 +1,4 @@
 import { InfoIcon, QuestionIcon } from '@phosphor-icons/react'
-import { finderItemLabel } from '@/components/finder/finder-items'
 import { ItemBox } from '@/components/ItemBox'
 import { floorItemGroups } from '@/components/seed/floor-items'
 import { Button } from '@/components/ui/button'
@@ -12,11 +11,14 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { itemAppearance } from '@/lib/identity'
+import { itemSprite, parseItemEnhancement } from '@/lib/item-kind'
 import {
-  enhancementInItemName,
-  itemSprite,
-  parseItemEnhancement,
-} from '@/lib/item-kind'
+  enchantmentName,
+  itemLabel,
+  variantCandidateClasses,
+  variantClassName,
+  variantTitle,
+} from '@/lib/item-title'
 import type {
   FloorReport,
   IdentityMaps,
@@ -27,25 +29,25 @@ import type {
 const CURSED_SLOT_BACKGROUND =
   'color-mix(in oklch, var(--degraded) 22%, var(--muted))'
 
-function BaselineItemsPopover() {
+function VariableItemsPopover() {
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
           size="icon-xs"
-          aria-label="About fresh baseline items"
+          aria-label="About items that vary with gameplay"
         >
           <InfoIcon />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-80">
         <PopoverHeader>
-          <PopoverTitle>Fresh baseline items</PopoverTitle>
+          <PopoverTitle>Varies with gameplay</PopoverTitle>
           <PopoverDescription>
-            This is baseline analysis only. Player choices, trinkets,
-            challenges, or prior generation can change these items, so they are
-            not seed-wide guarantees.
+            These are the items this seed rolls when gameplay has not shifted
+            generation. Player choices, trinkets, challenges, or prior
+            generation can change them, so they are not seed-wide guarantees.
           </PopoverDescription>
         </PopoverHeader>
       </PopoverContent>
@@ -69,7 +71,7 @@ type FloorItemSlotModel = {
 function describedTitle(name: string, item: ItemVariant) {
   const extras = [
     item.cursed === true ? 'cursed' : null,
-    item.enchantment?.type ?? null,
+    enchantmentName(item.enchantment?.type) ?? null,
   ].filter((part): part is string => part != null)
   return extras.length > 0 ? `${name}, ${extras.join(', ')}` : name
 }
@@ -90,7 +92,7 @@ function slotFrom(
     level: item.level ?? null,
     cursed: item.cursed === true,
     unknown,
-    enchantment: item.enchantment?.type,
+    enchantment: enchantmentName(item.enchantment?.type),
     className,
     category: item.category,
     appearance: unknown ? undefined : itemAppearance(subject, identities),
@@ -103,27 +105,29 @@ function slotsForVariant(
   keyPrefix: string
 ) {
   // Catalyst offers render beside the first alchemy pot, not in this list.
-  if (item.class_name === 'TrinketCatalyst') {
+  const className = variantClassName(item)
+  if (className === 'TrinketCatalyst') {
     return [
       slotFrom(
         item,
         `${keyPrefix}-catalyst`,
-        describedTitle(item.name, item),
-        item.class_name,
+        describedTitle(variantTitle(item), item),
+        className,
         identities
       ),
     ]
   }
 
-  if (item.candidate_classes?.length) {
+  const candidates = variantCandidateClasses(item)
+  if (candidates.length > 0) {
     const slots: FloorItemSlotModel[] = []
-    for (const [index, className] of item.candidate_classes.entries()) {
+    for (const [index, candidate] of candidates.entries()) {
       slots.push(
         slotFrom(
           item,
-          `${keyPrefix}-${index}-${className}`,
-          describedTitle(finderItemLabel(className), item),
-          className,
+          `${keyPrefix}-${index}-${candidate}`,
+          describedTitle(itemLabel(candidate), item),
+          candidate,
           identities
         )
       )
@@ -131,7 +135,7 @@ function slotsForVariant(
     return slots
   }
 
-  if (item.name === 'artifact or ring') {
+  if (item.label === 'artifact or ring') {
     return [
       slotFrom(
         item,
@@ -148,18 +152,15 @@ function slotsForVariant(
     slotFrom(
       item,
       keyPrefix,
-      describedTitle(item.name, item),
-      item.class_name,
+      describedTitle(variantTitle(item), item),
+      className,
       identities
     ),
   ]
 }
 
 function FloorItemSlot({ slot }: { slot: FloorItemSlotModel }) {
-  const namedEnhancement = enhancementInItemName(slot.label, slot.className)
-  const enhancement = slot.cursed
-    ? (namedEnhancement ?? parseItemEnhancement(slot.enchantment))
-    : (parseItemEnhancement(slot.enchantment) ?? namedEnhancement)
+  const enhancement = parseItemEnhancement(slot.enchantment)
   return (
     <li className="shrink-0">
       <ItemBox
@@ -236,8 +237,8 @@ function ItemGroupSection({
   identities: IdentityMaps
   depth: number
 }) {
-  const baseline = items.some((group) =>
-    group.variants.some((item) => item.prediction === 'baseline')
+  const variable = items.some((group) =>
+    group.variants.some((item) => item.prediction === 'variable')
   )
   return (
     <div className="flex flex-col gap-2">
@@ -253,7 +254,7 @@ function ItemGroupSection({
             </>
           ) : null}
         </p>
-        {baseline ? <BaselineItemsPopover /> : null}
+        {variable ? <VariableItemsPopover /> : null}
       </div>
       {items.length > 0 ? (
         <FloorItemList items={items} identities={identities} depth={depth} />

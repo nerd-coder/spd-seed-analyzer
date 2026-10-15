@@ -8,6 +8,7 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { enchantmentClassName } from '@/generated/game-ids'
 import type {
   ItemCondition,
   ItemDependencyCondition,
@@ -204,8 +205,8 @@ export function EnchantmentConditionDetails({
         <PopoverHeader>
           <PopoverTitle>Enchantment conditions</PopoverTitle>
           <PopoverDescription>
-            {humanize(enchantment.type)} is retained when these requirements are
-            met.
+            {humanize(enchantmentClassName(enchantment.type))} is retained when
+            these requirements are met.
           </PopoverDescription>
         </PopoverHeader>
         <ul className="flex list-disc flex-col gap-1 pl-4 text-sm leading-relaxed">

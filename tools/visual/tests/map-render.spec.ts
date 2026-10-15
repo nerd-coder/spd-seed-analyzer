@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page, test } from '@playwright/test'
+import { GAME_IDS } from './game-ids'
 import {
   MAP_RENDER_FIXTURES,
   type MapRenderLevelIdentity,
@@ -22,7 +23,7 @@ type BrowserErrors = {
 }
 
 async function installSyntheticMapReport(page: Page) {
-  await page.addInitScript(() => {
+  await page.addInitScript(({ ItemId, RoomId, Enchantment }) => {
     const width = 20
     const height = 30
     const tiles = Array(width * height).fill(1)
@@ -33,14 +34,13 @@ async function installSyntheticMapReport(page: Page) {
       depth: index + 1,
       feeling: 'none',
       builder: 'loop',
-      rooms: ['SyntheticRoom'],
+      rooms: [RoomId.StandardRoom],
       guaranteed_appearances:
         index === 2
           ? [
               {
-                name: 'Alchemy pot',
                 kind: 'alchemy_pot',
-                source: 'LaboratoryRoom',
+                source: RoomId.LaboratoryRoom,
               },
             ]
           : [],
@@ -96,14 +96,13 @@ async function installSyntheticMapReport(page: Page) {
     ;(floors[3].items as unknown[]).push({
       variants: [
         {
-          name: 'Synthetic conditional item',
           quantity: 1,
-          class_name: 'ScrollOfTransmutation',
+          item: ItemId.ScrollOfTransmutation,
           category: 'scroll',
           level_range: { min: 0, max: 3 },
           cursed: true,
           enchantment: {
-            type: 'Blazing',
+            type: Enchantment.Blazing,
             conditions: [
               {
                 type: 'trinket',
@@ -142,15 +141,14 @@ async function installSyntheticMapReport(page: Page) {
     ;(floors[3].items as unknown[]).push({
       variants: [
         {
-          name: 'Trinket Catalyst',
           quantity: 1,
-          class_name: 'TrinketCatalyst',
+          item: ItemId.TrinketCatalyst,
           category: 'trinket',
-          candidate_classes: [
-            'MossyClump',
-            'MimicTooth',
-            'RatSkull',
-            'SaltCube',
+          candidates: [
+            ItemId.MossyClump,
+            ItemId.MimicTooth,
+            ItemId.RatSkull,
+            ItemId.SaltCube,
           ],
           prediction: 'exact',
         },
@@ -160,7 +158,7 @@ async function installSyntheticMapReport(page: Page) {
       source: 'SacrificeRoom',
       variants: [
         {
-          name: 'weapon reward',
+          label: 'weapon reward',
           quantity: 1,
           category: 'weapon',
           tier_range: { min: 2, max: 5 },
@@ -169,13 +167,13 @@ async function installSyntheticMapReport(page: Page) {
           prediction: 'constrained',
         },
         {
-          name: 'friendly sickle +2',
           quantity: 1,
-          class_name: 'Sickle',
+          item: ItemId.Sickle,
           category: 'weapon',
           level: 2,
           cursed: true,
-          prediction: 'baseline',
+          enchantment: { type: Enchantment.Friendly, conditions: [] },
+          prediction: 'variable',
         },
       ],
     })
@@ -196,21 +194,26 @@ async function installSyntheticMapReport(page: Page) {
         first_alchemy_pot_is_secret: false,
         selection_depth: 3,
         first_effective_depth: 4,
-        catalyst_options: ['MossyClump', 'MimicTooth', 'RatSkull', 'SaltCube'],
+        catalyst_options: [
+          ItemId.MossyClump,
+          ItemId.MimicTooth,
+          ItemId.RatSkull,
+          ItemId.SaltCube,
+        ],
         transmutation_sequence: [
-          'TrapMechanism',
-          'ParchmentScrap',
-          'PetrifiedSeed',
-          'ExoticCrystals',
-          'DimensionalSundial',
-          'ThirteenLeafClover',
-          'WondrousResin',
-          'EyeOfNewt',
-          'VialOfBlood',
-          'ShardOfOblivion',
-          'ChaoticCenser',
-          'FerretTuft',
-          'CrackedSpyglass',
+          ItemId.TrapMechanism,
+          ItemId.ParchmentScrap,
+          ItemId.PetrifiedSeed,
+          ItemId.ExoticCrystals,
+          ItemId.DimensionalSundial,
+          ItemId.ThirteenLeafClover,
+          ItemId.WondrousResin,
+          ItemId.EyeOfNewt,
+          ItemId.VialOfBlood,
+          ItemId.ShardOfOblivion,
+          ItemId.ChaoticCenser,
+          ItemId.FerretTuft,
+          ItemId.CrackedSpyglass,
         ],
       },
       floors,
@@ -239,7 +242,7 @@ async function installSyntheticMapReport(page: Page) {
       }
     }
     Object.assign(window, { Worker: VisualFixtureWorker })
-  })
+  }, GAME_IDS)
 }
 
 async function openAnalyzer(
@@ -681,7 +684,7 @@ test('Sad Ghost card shows only its resolved target', async ({ page }) => {
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
-test('Wandmaker outlook shows the fresh pair inside the deck window', async ({
+test('Wandmaker outlook shows the seed-draw pair inside the deck window', async ({
   page,
 }) => {
   const browserErrors = await openAnalyzer(page, 'AAA-AAA-AAA')
@@ -701,22 +704,22 @@ test('Wandmaker outlook shows the fresh pair inside the deck window', async ({
   await expect(
     page.getByText("Wand 1's +N is fixed by the seed.")
   ).toBeVisible()
-  await expect(page.getByText('fresh run').first()).toBeVisible()
+  await expect(page.getByText('seed draw').first()).toBeVisible()
 
   expect(browserErrors.console, 'browser console errors').toEqual([])
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
-test('Other items explains fresh baseline equipment rewards', async ({
+test('Other items explains gameplay-variable equipment rewards', async ({
   page,
 }) => {
   const browserErrors = await openAnalyzer(page, 'AAA-AAA-AAA')
   const info = page
-    .getByRole('button', { name: 'About fresh baseline items' })
+    .getByRole('button', { name: 'About items that vary with gameplay' })
     .first()
   await info.click()
   await expect(
-    page.getByText('Fresh baseline items', { exact: true })
+    page.getByText('Varies with gameplay', { exact: true })
   ).toBeVisible()
   await expect(
     page.getByText('not seed-wide guarantees', { exact: false })
@@ -726,11 +729,11 @@ test('Other items explains fresh baseline equipment rewards', async ({
   expect(browserErrors.page, 'uncaught page errors').toEqual([])
 })
 
-test('analyzer displays baseline items in their ordinary item group', async ({
+test('analyzer displays variable items in their ordinary item group', async ({
   page,
 }) => {
   const browserErrors = await openAnalyzer(page, 'RZN-LKU-EFS')
-  const baselineItem = page.getByRole('listitem').filter({
+  const variableItem = page.getByRole('listitem').filter({
     has: page.getByLabel(/dried Rose/i),
   })
   const notable = page
@@ -738,10 +741,10 @@ test('analyzer displays baseline items in their ordinary item group', async ({
     .first()
     .locator('../..')
 
-  await expect(page.getByText(/^Fresh baseline highlights/)).toHaveCount(0)
+  await expect(page.getByText(/^Varies with gameplay/)).toHaveCount(0)
   await expect(notable.getByLabel(/dried Rose/i)).toBeVisible()
-  await expect(baselineItem).toBeVisible()
-  await expect(baselineItem.getByLabel(/cursed/i)).toBeVisible()
+  await expect(variableItem).toBeVisible()
+  await expect(variableItem.getByLabel(/cursed/i)).toBeVisible()
   await expect(page.getByText('planning only', { exact: true })).toHaveCount(0)
 
   expect(browserErrors.console, 'browser console errors').toEqual([])
@@ -786,9 +789,6 @@ test('finder result displays only matched constraints', async ({ page }) => {
     .locator('[data-slot="item"]')
     .filter({ hasText: /ring of force/i })
   await expect(resultItem).toBeVisible()
-  await expect(
-    page.getByText('Fresh baseline highlights', { exact: true })
-  ).toHaveCount(0)
   await expect(page.getByText('planning only', { exact: true })).toHaveCount(0)
   await expect(page.getByText('Ring of Wealth +2')).toHaveCount(0)
 
@@ -796,7 +796,7 @@ test('finder result displays only matched constraints', async ({ page }) => {
   expect(errors.page, 'uncaught page errors').toEqual([])
 })
 
-test('finder includes Wandmaker fresh-baseline items by default', async ({
+test('finder includes Wandmaker gameplay-variable items by default', async ({
   page,
 }) => {
   const errors: BrowserErrors = { console: [], page: [] }
@@ -822,7 +822,7 @@ test('finder includes Wandmaker fresh-baseline items by default', async ({
   await page.getByLabel('Item 1 name').selectOption('WandOfDisintegration')
   await page.getByLabel('Item 1 upgrade level').selectOption('1')
   await expect(
-    page.getByRole('switch', { name: 'Include fresh-baseline matches' })
+    page.getByRole('switch', { name: /include .*variable/i })
   ).toHaveCount(0)
   await page.getByRole('button', { name: 'Find' }).click()
 
@@ -834,7 +834,7 @@ test('finder includes Wandmaker fresh-baseline items by default', async ({
     .filter({ hasText: /wand of disintegration/i })
   await expect(result).toContainText(/wand of disintegration/i)
   await expect(
-    result.getByText('Fresh baseline', { exact: true })
+    result.getByText('Varies with gameplay', { exact: true })
   ).toBeVisible()
 
   expect(errors.console, 'browser console errors').toEqual([])
@@ -858,7 +858,7 @@ test('floor items render as icon slots', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Rings' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Floor 1' })).toBeVisible()
   const syntheticItem = page.getByRole('listitem').filter({
-    has: page.getByLabel(/Synthetic conditional item/i),
+    has: page.getByLabel(/Scroll of Transmutation/i),
   })
   await expect(syntheticItem).toBeVisible()
   await expect(syntheticItem.getByLabel(/cursed/i)).toBeVisible()
@@ -876,7 +876,7 @@ test('floor items render as icon slots', async ({ page }) => {
     page.getByRole('button', { name: 'Show trinket transmutation rotation' })
   ).toHaveCount(0)
   await expect(
-    page.getByLabel('Trinket Catalyst', { exact: true })
+    page.getByLabel('Magical Catalyst', { exact: true })
   ).toBeVisible()
   const floor3 = page
     .getByRole('heading', { name: 'Floor 3', exact: true })
@@ -900,7 +900,7 @@ test('floor items render as icon slots', async ({ page }) => {
   await page.keyboard.press('Escape')
   await expect(offerDetail).toHaveCount(0)
   const sickle = page.getByRole('listitem').filter({
-    has: page.getByLabel(/friendly sickle \+2/i),
+    has: page.getByLabel(/sickle \+2/i),
   })
   await expect(sickle).toHaveCount(1)
   await expect(sickle).toContainText('+2')
@@ -911,7 +911,9 @@ test('floor items render as icon slots', async ({ page }) => {
   await expect(emptyNotable).toHaveCount(3)
   await expect(emptyNotable.first()).toHaveCSS('font-style', 'normal')
   await expect(page.getByText(/^Other items/)).toBeVisible()
-  await expect(page.getByText('Fresh baseline', { exact: true })).toHaveCount(0)
+  await expect(
+    page.getByText('Varies with gameplay', { exact: true })
+  ).toHaveCount(0)
   const floor1Banner = page
     .getByRole('heading', { name: 'Floor 1', exact: true })
     .locator('xpath=ancestor::section[1]')

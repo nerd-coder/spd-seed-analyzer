@@ -1,5 +1,4 @@
 import { InfoIcon } from '@phosphor-icons/react'
-import { finderItemLabel } from '@/components/finder/finder-items'
 import { ItemBox } from '@/components/ItemBox'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,13 +11,15 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Progress } from '@/components/ui/progress'
+import { itemClassName } from '@/generated/game-ids'
 import { ItemCategory, itemSprite } from '@/lib/item-kind'
+import { itemLabel } from '@/lib/item-title'
 import type { WandmakerRewardSlot } from '@/lib/spd-wasm'
 
-/** `+1`, `−2`, or `baseline` for the fresh/no-history draw. */
+/** `+1`, `−2`, or `seed draw` for the no-history draw. */
 function driftText(drifts: number[]): string {
   const parts = drifts.map((drift) =>
-    drift === 0 ? 'baseline' : `${drift > 0 ? '+' : '−'}${Math.abs(drift)}`
+    drift === 0 ? 'seed draw' : `${drift > 0 ? '+' : '−'}${Math.abs(drift)}`
   )
   return parts.join(' / ')
 }
@@ -32,7 +33,7 @@ function SlotRow({ slot }: { slot: WandmakerRewardSlot }) {
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
         <span className="text-sm font-semibold">{label}</span>
         <span className="text-sm font-semibold tabular-nums">
-          +{slot.baseline_level}
+          +{slot.level}
         </span>
       </div>
       <ul className="flex flex-col gap-1">
@@ -41,32 +42,32 @@ function SlotRow({ slot }: { slot: WandmakerRewardSlot }) {
             slot.scenario_count === 0
               ? 0
               : (100 * candidate.weight) / slot.scenario_count
-          const isBaseline = candidate.drifts.includes(0)
+          const isSeedDraw = candidate.drifts.includes(0)
           return (
             <li
-              key={candidate.class_name}
+              key={candidate.item}
               className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2"
             >
               <ItemBox
                 sprites={itemSprite({
-                  className: candidate.class_name,
+                  className: itemClassName(candidate.item),
                   category: ItemCategory.Wand,
                 })}
-                title={finderItemLabel(candidate.class_name)}
+                title={itemLabel(candidate.item)}
               />
               <span className="flex min-w-0 flex-col gap-0.5">
                 <span className="flex min-w-0 flex-wrap items-baseline gap-1.5">
                   <span
                     className={
-                      isBaseline
+                      isSeedDraw
                         ? 'truncate text-sm font-medium'
                         : 'truncate text-sm'
                     }
                   >
-                    {finderItemLabel(candidate.class_name)}
+                    {itemLabel(candidate.item)}
                   </span>
-                  {isBaseline ? (
-                    <Badge variant="outline">fresh run</Badge>
+                  {isSeedDraw ? (
+                    <Badge variant="outline">seed draw</Badge>
                   ) : null}
                 </span>
                 <Progress value={share} className="h-1" />
@@ -89,7 +90,7 @@ function SlotRow({ slot }: { slot: WandmakerRewardSlot }) {
  * Deck-index window for the Old Wandmaker's two ordered wand options.
  *
  * Shares are how many offsets in that window land on a class, not how often
- * players see the wand. The fresh row is the no-history pair.
+ * players see the wand. The seed-draw row is the no-history pair.
  */
 export function WandmakerRewardDistribution({
   slots,
@@ -122,9 +123,9 @@ export function WandmakerRewardDistribution({
             The two options are ordered. The player keeps one.
           </PopoverDescription>
           <PopoverDescription>
-            Shares are a ±{window} index window around the fresh draw, a
-            stability measure, not how often players see the wand. The fresh row
-            is the no-history pair.
+            Shares are a ±{window} index window around the seed draw, a
+            stability measure, not how often players see the wand. The seed-draw
+            row is the no-history pair.
           </PopoverDescription>
           <PopoverDescription>
             Wand 1's +N is fixed by the seed.{' '}

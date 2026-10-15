@@ -1,48 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { type ReactNode, useEffect, useRef, useState } from 'react'
 import {
   itemDetailAvailable,
   scheduleHideItemDetail,
   showItemDetail,
   togglePinItemDetail,
 } from '@/components/item-detail'
+import type { SpriteFrame, SpriteSheet } from '@/lib/game-objects'
 import { cn } from '@/lib/utils'
-
-/** One cell on a sprite sheet, in source pixels. */
-export type SpriteFrame = {
-  x: number
-  y: number
-  w: number
-  h: number
-}
-
-export type SpriteSheet = {
-  url: string
-  width: number
-  height: number
-}
-
-/**
- * TextureFilm index on a uniform grid. `cols` is integer division, matching
- * `TextureFilm(width, height)`.
- */
-export function filmFrames(
-  sheetWidth: number,
-  frameWidth: number,
-  frameHeight: number,
-  indices: readonly number[]
-): SpriteFrame[] {
-  const cols = Math.floor(sheetWidth / frameWidth)
-  return indices.map((index) => {
-    const col = index % cols
-    const row = Math.floor(index / cols)
-    return {
-      x: col * frameWidth,
-      y: row * frameHeight,
-      w: frameWidth,
-      h: frameHeight,
-    }
-  })
-}
 
 type Listener = (now: number) => void
 
@@ -119,6 +83,7 @@ export function GameSprite({
   title,
   className,
   textKey,
+  details,
 }: {
   sheet: SpriteSheet
   frames: readonly SpriteFrame[]
@@ -137,11 +102,13 @@ export function GameSprite({
    * shared description panel; click pins it.
    */
   textKey?: string
+  /** Analyzer notes, shown under the game description. */
+  details?: ReactNode
 }) {
   const index = useFrameIndex(frames.length, fps, loop)
   const anchorRef = useRef<HTMLButtonElement>(null)
   const cell = frames[Math.min(index, Math.max(frames.length - 1, 0))]
-  const detail = { className: textKey }
+  const detail = { className: textKey, details }
   const interactive = itemDetailAvailable(detail)
   if (!cell) return null
   const basis = frames[0] ?? cell

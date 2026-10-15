@@ -38,6 +38,7 @@ import {
 import { Progress } from '@/components/ui/progress'
 import { formatElapsed, useElapsedTime } from '@/hooks/useElapsedTime'
 import { itemSprite } from '@/lib/item-kind'
+import { variantClassName, variantTitle } from '@/lib/item-title'
 import { formatItemSource, isImpVaultPool } from '@/lib/labels'
 import type { SeedSearchMatch } from '@/lib/spd-wasm'
 import type { FinderRunState } from './finder-types'
@@ -119,25 +120,29 @@ function ResultCard({
           <ItemGroup className="gap-2">
             {match.evidence.map((evidence) => {
               const source = formatItemSource(evidence.source)
+              const title = variantTitle({
+                ...evidence,
+                category: evidence.itemGroup,
+              })
               return (
                 <Item
-                  key={`${evidence.constraintIndex}-${evidence.depth}-${evidence.className ?? evidence.itemGroup}`}
+                  key={`${evidence.constraintIndex}-${evidence.depth}-${evidence.item ?? evidence.itemGroup}`}
                   variant="muted"
                   size="sm"
                 >
                   <ItemMedia>
                     <ItemBox
                       sprites={itemSprite({
-                        className: evidence.className,
+                        className: variantClassName(evidence),
                         category: evidence.itemGroup,
                       })}
                       level={evidence.level}
-                      title={evidence.name}
+                      title={title}
                     />
                   </ItemMedia>
                   <ItemContent>
                     <ItemTitle>
-                      <ItemName name={evidence.name} />
+                      <ItemName name={title} />
                     </ItemTitle>
                     <ItemDescription>
                       Floor {evidence.depth}
@@ -146,8 +151,8 @@ function ResultCard({
                     </ItemDescription>
                   </ItemContent>
                   <ItemActions>
-                    {evidence.prediction === 'baseline' ? (
-                      <Badge variant="secondary">Fresh baseline</Badge>
+                    {evidence.prediction === 'variable' ? (
+                      <Badge variant="secondary">Varies with gameplay</Badge>
                     ) : null}
                     {isImpVaultPool(evidence.source) ? (
                       <Badge variant="outline">choose 1 of 6</Badge>
