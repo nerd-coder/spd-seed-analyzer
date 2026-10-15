@@ -12,7 +12,9 @@ import {
 } from '@/components/ui/popover'
 import { itemAppearance } from '@/lib/identity'
 import { itemSprite, parseItemEnhancement } from '@/lib/item-kind'
+import { formatItemLocation } from '@/lib/item-location'
 import {
+  enchantedTitle,
   enchantmentName,
   itemLabel,
   variantCandidateClasses,
@@ -69,11 +71,7 @@ type FloorItemSlotModel = {
 }
 
 function describedTitle(name: string, item: ItemVariant) {
-  const extras = [
-    item.cursed === true ? 'cursed' : null,
-    enchantmentName(item.enchantment?.type) ?? null,
-  ].filter((part): part is string => part != null)
-  return extras.length > 0 ? `${name}, ${extras.join(', ')}` : name
+  return enchantedTitle(name, enchantmentName(item.enchantment?.type))
 }
 
 function slotFrom(
@@ -159,7 +157,13 @@ function slotsForVariant(
   ]
 }
 
-function FloorItemSlot({ slot }: { slot: FloorItemSlotModel }) {
+function FloorItemSlot({
+  slot,
+  location,
+}: {
+  slot: FloorItemSlotModel
+  location: string | null
+}) {
   const enhancement = parseItemEnhancement(slot.enchantment)
   return (
     <li className="shrink-0">
@@ -177,6 +181,7 @@ function FloorItemSlot({ slot }: { slot: FloorItemSlotModel }) {
         cursed={slot.cursed}
         level={slot.level}
         title={slot.label}
+        location={location}
         bgColor={slot.cursed ? CURSED_SLOT_BACKGROUND : undefined}
       >
         {slot.unknown ? (
@@ -205,20 +210,21 @@ export function FloorItemList({
   identities: IdentityMaps
   depth: number
 }) {
-  const slots = items.flatMap((group, groupIndex) =>
-    group.variants.flatMap((item, variantIndex) =>
+  const slots = items.flatMap((group, groupIndex) => {
+    const location = formatItemLocation(group.source)
+    return group.variants.flatMap((item, variantIndex) =>
       slotsForVariant(
         item,
         identities,
         `${depth}-${groupIndex}-${variantIndex}`
-      )
+      ).map((slot) => ({ slot, location }))
     )
-  )
+  })
 
   return (
     <ul className="flex flex-wrap gap-1">
-      {slots.map((slot) => (
-        <FloorItemSlot key={slot.key} slot={slot} />
+      {slots.map(({ slot, location }) => (
+        <FloorItemSlot key={slot.key} slot={slot} location={location} />
       ))}
     </ul>
   )

@@ -71,6 +71,8 @@ type ItemBoxProps = {
    * Omit to hide that section.
    */
   details?: ReactNode
+  /** Where the item spawns, e.g. `Floor 3, Crystal vault`. */
+  location?: string | null
   /**
    * Hover and click open the game description. Default true.
    * Turn off when another control covers the slot.
@@ -360,6 +362,7 @@ export function ItemBox({
   title,
   textKey,
   details,
+  location,
   panel = true,
   className,
   children,
@@ -382,11 +385,14 @@ export function ItemBox({
     title,
     className: textKey ?? classNameForText,
     enhancement,
+    cursed,
+    location,
     details,
   }
   const interactive = panel && itemDetailAvailable(detail)
-  const label =
+  const name =
     title ?? (typeof caption === 'string' ? caption : undefined) ?? 'item'
+  const label = cursed ? `${name}, cursed` : name
   const anchorRef = useRef<HTMLButtonElement | HTMLSpanElement>(null)
 
   return (

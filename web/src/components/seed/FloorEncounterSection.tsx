@@ -14,6 +14,7 @@ import {
 import { itemAppearance } from '@/lib/identity'
 import { itemSprite, parseItemEnhancement } from '@/lib/item-kind'
 import {
+  enchantedTitle,
   enchantmentName,
   mobLabel,
   variantClassName,
@@ -25,11 +26,15 @@ import type {
   InitialEncounter,
 } from '@/lib/spd-wasm'
 
+function rewardTitle(reward: CombatReward) {
+  return enchantedTitle(
+    variantTitle({ ...reward, label: `random ${reward.category}` }),
+    enchantmentName(reward.enchantment)
+  )
+}
+
 function rewardName(reward: CombatReward) {
-  const title = variantTitle({
-    ...reward,
-    label: `random ${reward.category}`,
-  })
+  const title = rewardTitle(reward)
   return reward.cursed ? `cursed ${title}` : title
 }
 
@@ -82,7 +87,7 @@ function EncounterReward({
         enhancement={parseItemEnhancement(enchantmentName(reward.enchantment))}
         cursed={reward.cursed === true}
         level={reward.level ?? null}
-        title={rewardName(reward)}
+        title={rewardTitle(reward)}
       />
       <span>{rewardText(reward)}</span>
       {rewardBadge(reward)}

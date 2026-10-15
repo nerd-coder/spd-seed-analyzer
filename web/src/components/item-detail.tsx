@@ -5,6 +5,7 @@ import {
   useState,
   useSyncExternalStore,
 } from 'react'
+import { Badge } from '@/components/ui/badge'
 import type { ItemEnhancement } from '@/lib/item-kind'
 import { gameItemName, itemGameText } from '@/lib/item-text'
 
@@ -66,15 +67,19 @@ export type ItemDetailProps = {
   title?: string
   className?: string | null
   enhancement?: ItemEnhancement | null
+  cursed?: boolean
+  location?: string | null
   details?: ReactNode
 }
 
 export function itemDetailAvailable({
   className,
   enhancement,
+  location,
   details,
 }: ItemDetailProps): boolean {
   if (details != null && details !== false && details !== '') return true
+  if (location) return true
   if (itemGameText(className)) return true
   if (itemGameText(enhancement)) return true
   return false
@@ -84,31 +89,43 @@ export function ItemDetail({
   title,
   className,
   enhancement,
+  cursed = false,
+  location,
   details,
 }: ItemDetailProps) {
   const item = itemGameText(className)
   const enchantment = itemGameText(enhancement)
-  const heading = title ?? (item ? gameItemName(item.name) : 'Item')
-  const enchantmentName = enchantment
-    ? gameItemName(enchantment.name, item?.name)
-    : null
+  const heading =
+    title ??
+    (item
+      ? gameItemName(item.name)
+      : enchantment
+        ? gameItemName(enchantment.name)
+        : 'Item')
+  const descriptions = [item?.desc, enchantment?.desc].filter(
+    (desc): desc is string => Boolean(desc)
+  )
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="font-semibold text-popover-foreground">{heading}</p>
-      {item ? (
-        <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-          <GameText text={item.desc} />
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <p className="font-semibold text-popover-foreground">{heading}</p>
+        {cursed ? <Badge variant="destructive">Cursed</Badge> : null}
+      </div>
+      {descriptions.map((desc) => (
+        <p
+          key={desc}
+          className="whitespace-pre-wrap text-sm text-muted-foreground"
+        >
+          <GameText text={desc} />
         </p>
-      ) : null}
-      {enchantment && enchantmentName ? (
+      ))}
+      {location ? (
         <div className="flex flex-col gap-1 border-t pt-2">
-          <p className="font-semibold text-popover-foreground">
-            {enchantmentName}
+          <p className="text-sm font-semibold text-popover-foreground">
+            Where to find
           </p>
-          <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-            <GameText text={enchantment.desc} />
-          </p>
+          <p className="text-sm text-muted-foreground">{location}</p>
         </div>
       ) : null}
       {details != null && details !== false && details !== '' ? (

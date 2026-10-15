@@ -58,6 +58,20 @@ export function itemLabel(item: ItemId | string): string {
   return text ? titleCase(gameItemName(text.name)) : finderItemLabel(className)
 }
 
+/**
+ * Game `Weapon.name()` / `Armor.name()`: the enchantment template wraps the
+ * base name and the `+N` suffix stays last, e.g. `Polarized Quarterstaff +1`.
+ */
+export function enchantedTitle(
+  title: string,
+  enchantment: string | null | undefined
+): string {
+  const text = itemGameText(enchantment)
+  if (!text) return title
+  const [, base, level = ''] = title.match(/^(.*?)( \+\d+)?$/) ?? ['', title]
+  return titleCase(gameItemName(text.name, base)) + level
+}
+
 const MOB_TITLES: Record<string, string> = {
   Albino: 'Albino Rat',
   ArmoredStatue: 'Armored Statue',
