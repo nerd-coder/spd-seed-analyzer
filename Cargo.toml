@@ -4,6 +4,7 @@ members = [
     "crates/spd-objects",
     "crates/spd-core",
     "crates/spd-wasm",
+    "crates/spd-cli",
 ]
 
 [workspace.package]

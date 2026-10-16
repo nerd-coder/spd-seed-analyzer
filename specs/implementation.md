@@ -50,7 +50,26 @@ probes, or report projection; it stops at the deepest constraint and, in
 Match all mode, as soon as a closed depth window can no longer match. A parity
 test pins it to the full seed-only analysis.
 
+`spd_core::analyze_seed_exact` (CLI: `bun run analyze SEED [FLOORS] [--maps]
+[--pretty] [--full]`, crate `spd-cli`) is a concise exact projection under one
+declared default profile: no challenges, no trinkets, no items acquired outside
+level generation, default inventory. It reads the engine's internal per-floor
+items, so it has no `constrained`/`variable` entries; quest choose-one pools sit
+under `quests[].rewards`, and maps are RLE terrain plus traps, plants, and
+transitions. Tests pin that every public exact item appears in it. The public
+`SeedReport`, WASM, and web UI are unchanged.
+
+Default-profile floor lists pair blank room contracts with concrete Variable
+samples (RingRoom, Sacrifice, CrystalVault, labs, shops, …) so the UI can show
+the item instead of "?". Remaining blank stubs are branch-miss contracts
+(possible pool equipment, gold fallback, unused catalyst slot, SecretGarden)
+with no sample on this profile; the UI hides those.
+
 Next:
 
 1. Decide whether enchanted item titles should use the game's `%s` templates
    ("Friendly Sickle") instead of a separate enchantment tag.
+2. Public `SecretLaboratoryRoom` contract claims exactly 10 Energy Crystals;
+   Java drops two `IntRange(3, 5)` stacks (the exact report has the real sum).
+3. Consider exposing `analyze_seed_exact` through WASM if the web app should
+   offer the default-profile view.

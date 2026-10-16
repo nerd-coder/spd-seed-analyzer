@@ -181,12 +181,17 @@ pub(super) fn secret_laboratory(room: &Room, map: &mut TerrainMap) -> Vec<Placed
         map.map[cell] = ALCHEMY;
     }
 
+    let mut out = Vec::new();
     for _ in 0..2 {
         let cell = empty_sp_heap_cell(room, map);
         let mut crystal = GeneratedItem::new("EnergyCrystal", ItemCategory::Other);
         crystal.quantity = Random::int_range_inclusive(3, 5);
         crystal.source = Some("SecretLaboratoryRoom".into());
-        map.record_heap(cell, "heap", crystal);
+        map.record_heap(cell, "heap", crystal.clone());
+        out.push(PlacedLoot {
+            item: crystal,
+            heap_type: "heap",
+        });
     }
 
     // Iteration order is the pinned JVM HashMap key order used by
@@ -208,7 +213,6 @@ pub(super) fn secret_laboratory(room: &Room, map: &mut TerrainMap) -> Vec<Placed
     ];
     let mut chances = vec![4.0, 4.0, 4.0, 6.0, 4.0, 4.0, 1.0, 2.0, 3.0, 3.0, 3.0];
     let n = Random::int_range_inclusive(2, 3);
-    let mut out = Vec::new();
     for _ in 0..n {
         let cell = empty_sp_heap_cell(room, map);
         let choice = Random::chances(&chances) as usize;

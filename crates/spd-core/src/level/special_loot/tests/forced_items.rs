@@ -406,10 +406,14 @@ fn secret_laboratory_no_iron_key() {
     let loot = secret_laboratory(&room, &mut map);
     Random::pop_generator();
 
-    assert!((2..=3).contains(&loot.len()));
+    assert!((4..=5).contains(&loot.len()));
     assert!(loot
         .iter()
         .all(|p| p.item.source.as_deref() == Some("SecretLaboratoryRoom")));
+    assert!(loot
+        .iter()
+        .filter(|p| p.item.class_name == "EnergyCrystal")
+        .all(|p| (3..=5).contains(&p.item.quantity)));
     assert_eq!(
         map.known_heaps
             .iter()

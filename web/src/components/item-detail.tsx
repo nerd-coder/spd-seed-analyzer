@@ -6,6 +6,7 @@ import {
   useSyncExternalStore,
 } from 'react'
 import { Badge } from '@/components/ui/badge'
+import type { ItemContractSummary } from '@/lib/item-contract'
 import type { ItemEnhancement } from '@/lib/item-kind'
 import { gameItemName, itemGameText } from '@/lib/item-text'
 
@@ -69,6 +70,8 @@ export type ItemDetailProps = {
   enhancement?: ItemEnhancement | null
   cursed?: boolean
   location?: string | null
+  /** Constrained sibling shown when the slot is a variable sample. */
+  contract?: ItemContractSummary | null
   details?: ReactNode
 }
 
@@ -76,9 +79,11 @@ export function itemDetailAvailable({
   className,
   enhancement,
   location,
+  contract,
   details,
 }: ItemDetailProps): boolean {
   if (details != null && details !== false && details !== '') return true
+  if (contract && contract.facts.length > 0) return true
   if (location) return true
   if (itemGameText(className)) return true
   if (itemGameText(enhancement)) return true
@@ -91,6 +96,7 @@ export function ItemDetail({
   enhancement,
   cursed = false,
   location,
+  contract,
   details,
 }: ItemDetailProps) {
   const item = itemGameText(className)
@@ -126,6 +132,22 @@ export function ItemDetail({
             Where to find
           </p>
           <p className="text-sm text-muted-foreground">{location}</p>
+        </div>
+      ) : null}
+      {contract && contract.facts.length > 0 ? (
+        <div className="flex flex-col gap-1 border-t pt-2">
+          <p className="text-sm font-semibold text-popover-foreground">
+            Always true
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Gameplay can change the concrete item; these seed properties stay
+            fixed.
+          </p>
+          <ul className="flex list-disc flex-col gap-0.5 pl-4 text-sm text-muted-foreground">
+            {contract.facts.map((fact) => (
+              <li key={fact}>{fact}</li>
+            ))}
+          </ul>
         </div>
       ) : null}
       {details != null && details !== false && details !== '' ? (

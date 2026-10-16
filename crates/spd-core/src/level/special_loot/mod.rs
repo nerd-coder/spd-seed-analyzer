@@ -340,6 +340,7 @@ fn paint_special(
                 _ => match name {
                     "CryptRoom" => RoomLootRole::CryptArmor,
                     "StatueRoom" => RoomLootRole::StatueWeapon,
+                    "CrystalVaultRoom" => RoomLootRole::CrystalVaultPrize,
                     _ => RoomLootRole::RuntimeSensitive,
                 },
             };
@@ -358,6 +359,7 @@ fn paint_special(
                     let role = match name {
                         "CryptRoom" => RoomLootRole::CryptArmor,
                         "StatueRoom" => RoomLootRole::StatueWeapon,
+                        "CrystalVaultRoom" => RoomLootRole::CrystalVaultPrize,
                         _ => RoomLootRole::RuntimeSensitive,
                     };
                     item.provenance = ItemProvenance::Room(role);

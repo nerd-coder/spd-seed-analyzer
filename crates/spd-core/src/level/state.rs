@@ -176,6 +176,10 @@ pub struct LevelState {
     /// Internal parity evidence only; public output reports guaranteed spawns.
     #[doc(hidden)]
     pub initial_forced_items: Vec<GeneratedItem>,
+    /// Queue items `createItems` actually dropped after room callbacks
+    /// pulled their prizes, one entry per Java `itemsToSpawn` element.
+    #[doc(hidden)]
+    pub spawned_queue_items: Vec<GeneratedItem>,
     pub placed_items: Vec<GeneratedItem>,
     /// First placed-item index generated after a runtime-sensitive shop rare
     /// artifact call. Internal facts remain exact; public projection omits the
@@ -268,17 +272,19 @@ impl LevelState {
             self.placed_items
                 .iter()
                 .filter_map(variable_item_entry)
-                .filter(crate::report::is_variable_highlight)
                 .filter(|item| {
-                    self.depth > 1
-                        || !matches!(
-                            item.source.as_deref(),
-                            Some(
-                                "PoolRoom:equipment"
-                                    | "SuspiciousChestRoom:gold"
-                                    | "SuspiciousChestRoom:mimic_reward"
-                            )
-                        )
+                    // Compact/search stay selective; also publish room/shop
+                    // samples that clear blank "?" contracts in the floor list.
+                    (crate::report::is_variable_highlight(item) || is_floor_uncover_sample(item))
+                        && (self.depth > 1
+                            || !matches!(
+                                item.source.as_deref(),
+                                Some(
+                                    "PoolRoom:equipment"
+                                        | "SuspiciousChestRoom:gold"
+                                        | "SuspiciousChestRoom:mimic_reward"
+                                )
+                            ))
                 })
                 .collect()
         } else {
@@ -385,7 +391,8 @@ impl LevelState {
                 | ItemProvenance::Forced(_) => None,
             };
             // Bag presence and identity depend on inventory/limited-drop
-            // history. A single conditional constraint is added below.
+            // history. A concrete default-profile sample is published via the
+            // variable path when expose_variable_items is set.
             if shop_role == Some(ShopStockRole::ChooseBag) {
                 continue;
             }
@@ -639,47 +646,50 @@ impl LevelState {
             } else {
                 "ShopRoom"
             };
-            shop_items.push(ItemEntry {
-                name: "inventory-dependent bag stock".into(),
-                quantity: 1,
-                label: None,
-                item: None,
-                candidates: Vec::new(),
-                category: "other".into(),
-                tier: None,
-                tier_range: None,
-                level: None,
-                level_range: None,
-                cursed: None,
-                enchantment: None,
-                prediction: ItemPredictionKind::Constrained,
-                spawn_conditions: Vec::new(),
-                conditions: {
-                    let mut conditions = vec![
-                        ItemCondition::Inventory {
-                            requirement_id: "bag_stock".into(),
-                        },
-                        ItemCondition::Runtime {
-                            state_id: "limited_drop_history".into(),
-                        },
-                    ];
-                    if self.depth == 20 {
-                        conditions.push(ItemCondition::Quest {
-                            quest_id: "ambitious_imp".into(),
-                            depth: Some(self.depth as u32),
-                        });
-                    }
-                    conditions
-                },
-                notes: {
-                    let mut notes = vec!["A bag may be offered; its presence and identity depend on inventory and prior limited drops.".into()];
-                    if self.depth == 20 {
-                        notes.push(imp_shop_access_note().into());
-                    }
-                    notes
-                },
-                source: Some(shop_source.into()),
-            });
+            // Default-profile replay already published the concrete ChooseBag.
+            if !self.expose_variable_items {
+                shop_items.push(ItemEntry {
+                    name: "inventory-dependent bag stock".into(),
+                    quantity: 1,
+                    label: None,
+                    item: None,
+                    candidates: Vec::new(),
+                    category: "other".into(),
+                    tier: None,
+                    tier_range: None,
+                    level: None,
+                    level_range: None,
+                    cursed: None,
+                    enchantment: None,
+                    prediction: ItemPredictionKind::Constrained,
+                    spawn_conditions: Vec::new(),
+                    conditions: {
+                        let mut conditions = vec![
+                            ItemCondition::Inventory {
+                                requirement_id: "bag_stock".into(),
+                            },
+                            ItemCondition::Runtime {
+                                state_id: "limited_drop_history".into(),
+                            },
+                        ];
+                        if self.depth == 20 {
+                            conditions.push(ItemCondition::Quest {
+                                quest_id: "ambitious_imp".into(),
+                                depth: Some(self.depth as u32),
+                            });
+                        }
+                        conditions
+                    },
+                    notes: {
+                        let mut notes = vec!["A bag may be offered; its presence and identity depend on inventory and prior limited drops.".into()];
+                        if self.depth == 20 {
+                            notes.push(imp_shop_access_note().into());
+                        }
+                        notes
+                    },
+                    source: Some(shop_source.into()),
+                });
+            }
             shop_items.push(ItemEntry {
                 name: "Hourglass sand stock".into(),
                 quantity: 1,
@@ -726,9 +736,8 @@ impl LevelState {
             (&a.name, a.class_name(), &a.category).cmp(&(&b.name, b.class_name(), &b.category))
         });
         items.extend(shop_items);
-        // These are room-class contracts, not painter/map facts. Once the
-        // room selection is known, a later runtime-sensitive paint callback
-        // cannot make its guaranteed reward contract disappear.
+        // Room contracts before samples so Exact contract identities (honeypot,
+        // frost potion, …) suppress duplicate default-profile Variables.
         if !self.runtime_sensitive_rooms {
             for fact in &self.room_public_facts {
                 items.extend(fact.entries().into_iter().filter(|entry| {
@@ -763,19 +772,20 @@ impl LevelState {
                 }));
             }
         }
-        let mut items = merge_identical_items(items);
-        for variable in variable_items {
+        // Default-profile samples join contracts in group_item_entries.
+        for variable in &variable_items {
+            let variable_room = room_family(variable.source.as_deref());
             let already_projected = items.iter().any(|item| {
                 item.item == variable.item
-                    && item.source == variable.source
-                    && item.level == variable.level
-                    && item.cursed == variable.cursed
-                    && item.enchantment == variable.enchantment
+                    && item.item.is_some()
+                    && room_family(item.source.as_deref()) == variable_room
             });
             if !already_projected {
-                items.push(variable);
+                items.push(variable.clone());
             }
         }
+        let mut items = merge_identical_items(items);
+        items.retain(|entry| !entry.item.is_some_and(is_non_item));
         let exact_map = allow_map
             .then(|| self.layout_map.clone())
             .flatten()
@@ -842,6 +852,73 @@ fn is_blacklisted(item: &GeneratedItem) -> bool {
             | "CeremonialCandle"
             | "Pickaxe"
     )
+}
+
+/// Keys and lore/guide pages are level plumbing, not loot.
+fn is_non_item(id: spd_objects::ItemId) -> bool {
+    use spd_objects::ItemId;
+    matches!(
+        id,
+        ItemId::IronKey
+            | ItemId::GoldenKey
+            | ItemId::CrystalKey
+            | ItemId::AlchemyPage
+            | ItemId::GuidePage
+            | ItemId::DocumentPage
+            | ItemId::TornPage
+    )
+}
+
+fn room_family(source: Option<&str>) -> Option<&str> {
+    source.map(|source| source.split(':').next().unwrap_or(source))
+}
+
+/// Default-profile room/shop samples that clear blank constrained stubs.
+/// Quest samples stay on the highlight path; BlacksmithRoom stays constrained.
+fn is_floor_uncover_sample(item: &ItemEntry) -> bool {
+    let Some(source) = item.source.as_deref() else {
+        return false;
+    };
+    if source.contains("ShopRoom") {
+        return item.item.is_some();
+    }
+    let room = source.split(':').next().unwrap_or(source);
+    matches!(
+        room,
+        "RingRoom"
+            | "ArmoryRoom"
+            | "StudyRoom"
+            | "RitualRoom"
+            | "CryptRoom"
+            | "StatueRoom"
+            | "SacrificeRoom"
+            | "CrystalVaultRoom"
+            | "CrystalChoiceRoom"
+            | "CrystalPathRoom"
+            | "LaboratoryRoom"
+            | "LibraryRoom"
+            | "TreasuryRoom"
+            | "StorageRoom"
+            | "RunestoneRoom"
+            | "MagicalFireRoom"
+            | "ToxicGasRoom"
+            | "PitRoom"
+            | "SentryRoom"
+            | "TrapsRoom"
+            | "PoolRoom"
+            | "SuspiciousChestRoom"
+            | "GrassyGraveRoom"
+            | "SecretLibraryRoom"
+            | "SecretRunestoneRoom"
+            | "SecretArtilleryRoom"
+            | "SecretLaboratoryRoom"
+            | "SecretLarderRoom"
+            | "SecretHoardRoom"
+            | "SecretGardenRoom"
+            | "SecretMazeRoom"
+            | "SecretSummoningRoom"
+            | "SecretChestChasmRoom"
+    ) && item.item.is_some()
 }
 
 #[cfg(test)]

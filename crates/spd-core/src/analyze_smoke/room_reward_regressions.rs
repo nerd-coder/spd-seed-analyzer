@@ -10,12 +10,8 @@ fn floor_one_ring_room_contract_collapses_into_its_exact_forced_reward() {
         .filter(|item| item.source.as_deref() == Some("RingRoom"))
         .collect();
 
-    assert_eq!(ring_room_prizes.len(), 1);
-    assert_eq!(ring_room_prizes[0].class_name(), Some("IronKey"));
-    assert_eq!(
-        ring_room_prizes[0].prediction,
-        report::ItemPredictionKind::Exact
-    );
+    // The relocated forced prize is an Iron Key: level plumbing, not loot.
+    assert!(ring_room_prizes.is_empty());
     assert!(!floor.items.iter().any(|item| {
         item.name == "conditional guaranteed item" && item.source.as_deref() == Some("RingRoom")
     }));
@@ -32,6 +28,34 @@ fn floor_one_ring_room_contract_collapses_into_its_exact_forced_reward() {
         wealth_floor_drop.prediction,
         report::ItemPredictionKind::Exact
     );
+}
+
+#[test]
+fn keys_and_pages_never_reach_public_item_lists() {
+    const NON_ITEMS: [&str; 7] = [
+        "IronKey",
+        "GoldenKey",
+        "CrystalKey",
+        "AlchemyPage",
+        "GuidePage",
+        "DocumentPage",
+        "TornPage",
+    ];
+    for seed in ["HDN-UJD-MJF", "MWH-KAE-DHG", "GFX-PZH-DCH"] {
+        let report = analyze_seed(seed, 26).expect("analyze");
+        for floor in &report.floors {
+            for item in floor.item_variants() {
+                assert!(
+                    !item
+                        .class_name()
+                        .is_some_and(|class| NON_ITEMS.contains(&class)),
+                    "{seed} floor {} publishes {:?}",
+                    floor.depth,
+                    item.class_name()
+                );
+            }
+        }
+    }
 }
 
 #[test]
@@ -98,6 +122,46 @@ fn floor_two_room_contracts_pair_seed_constraints_with_variable_items() {
             })
             .count(),
         2
+    );
+}
+
+#[test]
+fn crystal_vault_pairs_contract_with_both_default_profile_prizes() {
+    let report = analyze_seed("HDN-UJD-MJF", 4).expect("analyze");
+    let floor = &report.floors[3];
+    let vault = floor
+        .items
+        .iter()
+        .find(|item| item.source.as_deref() == Some("CrystalVaultRoom"))
+        .expect("Crystal Vault");
+    assert_eq!(vault.variants.len(), 3);
+    assert_eq!(vault.variants[0].name, "two crystal-vault reward sources");
+    assert_eq!(
+        vault.variants[0].prediction,
+        report::ItemPredictionKind::Constrained
+    );
+    let samples: Vec<_> = vault
+        .variants
+        .iter()
+        .skip(1)
+        .map(|item| (item.class_name(), item.prediction, item.cursed, item.level))
+        .collect();
+    assert_eq!(
+        samples,
+        [
+            (
+                Some("UnstableSpellbook"),
+                report::ItemPredictionKind::Variable,
+                Some(false),
+                Some(0),
+            ),
+            (
+                Some("RingOfEvasion"),
+                report::ItemPredictionKind::Variable,
+                Some(true),
+                Some(0),
+            ),
+        ]
     );
 }
 

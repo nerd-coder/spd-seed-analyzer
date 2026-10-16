@@ -904,7 +904,16 @@ test('floor items render as icon slots', async ({ page }) => {
   })
   await expect(sickle).toHaveCount(1)
   await expect(sickle).toContainText('+2')
-  await expect(page.getByLabel(/weapon reward/i)).toBeVisible()
+  await expect(page.getByLabel(/weapon reward/i)).toHaveCount(0)
+  await sickle.getByLabel(/sickle \+2/i).click()
+  const sickleDetail = page.locator('[data-slot="item-detail"]')
+  await expect(sickleDetail).toContainText('Always true')
+  await expect(sickleDetail).toContainText(
+    'Gameplay can change the concrete item; these seed properties stay fixed.'
+  )
+  await expect(sickleDetail).toContainText('Tier 2–5')
+  await page.keyboard.press('Escape')
+  await expect(sickleDetail).toHaveCount(0)
   await expect(page.getByText('Guaranteed spawns')).toHaveCount(0)
   await expect(page.getByText('Floor loot')).toHaveCount(0)
   const emptyNotable = page.getByText('No notable items on this floor.')

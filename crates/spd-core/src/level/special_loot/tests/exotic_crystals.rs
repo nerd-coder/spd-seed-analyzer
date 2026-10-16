@@ -65,7 +65,10 @@ fn secret_lab_classes(seed: i64) -> Vec<String> {
     let mut map = paint_minimal(std::slice::from_ref(&room)).expect("secret lab map");
     let loot = secret_laboratory(&room, &mut map);
     Random::pop_generator();
-    loot.into_iter().map(|drop| drop.item.class_name).collect()
+    loot.into_iter()
+        .map(|drop| drop.item.class_name)
+        .filter(|class_name| class_name != "EnergyCrystal")
+        .collect()
 }
 
 fn secret_library_classes(seed: i64) -> Vec<String> {

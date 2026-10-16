@@ -6,6 +6,7 @@ pub mod builders;
 mod conditional;
 pub mod dungeon;
 pub mod dungeon_seed;
+pub mod exact;
 pub mod generator;
 pub mod geom;
 pub mod items;
@@ -20,6 +21,7 @@ pub mod search;
 pub mod trinkets;
 
 pub use dungeon_seed::{DungeonSeed, SeedError, FIRST_DAILY_DATE, TOTAL_SEEDS};
+pub use exact::{analyze_seed_exact, ExactOptions, ExactReport};
 pub use items::IdentityMaps;
 pub use java_random::JavaRandom;
 pub use random::Random;

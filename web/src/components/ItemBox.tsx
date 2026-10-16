@@ -11,6 +11,7 @@ import {
   showItemDetail,
   togglePinItemDetail,
 } from '@/components/item-detail'
+import type { ItemContractSummary } from '@/lib/item-contract'
 import {
   curseBorderColor,
   enhancementBorderColor,
@@ -71,6 +72,8 @@ type ItemBoxProps = {
    * Omit to hide that section.
    */
   details?: ReactNode
+  /** Constrained sibling facts for a gameplay-variable sample. */
+  contract?: ItemContractSummary | null
   /** Where the item spawns, e.g. `Floor 3, Crystal vault`. */
   location?: string | null
   /**
@@ -362,6 +365,7 @@ export function ItemBox({
   title,
   textKey,
   details,
+  contract,
   location,
   panel = true,
   className,
@@ -387,6 +391,7 @@ export function ItemBox({
     enhancement,
     cursed,
     location,
+    contract,
     details,
   }
   const interactive = panel && itemDetailAvailable(detail)

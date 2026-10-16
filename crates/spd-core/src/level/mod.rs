@@ -265,6 +265,7 @@ fn create_level_internal(
     let runtime_sensitive_feeling = runtime_sensitive_prebuild;
     let mut room_public_facts = Vec::new();
     let initial_forced_items = forced.clone();
+    let mut spawned_queue_items = Vec::new();
     let mut pre_items_rng_probe = Vec::new();
     let mut pre_mobs_rng_probe = Vec::new();
     let mut pre_paint_rng_probe = Vec::new();
@@ -307,6 +308,7 @@ fn create_level_internal(
                 build_ok,
                 forced_items: forced,
                 initial_forced_items,
+                spawned_queue_items: Vec::new(),
                 placed_items,
                 runtime_sensitive_placed_items_from,
                 runtime_sensitive_quests_from,
@@ -558,6 +560,7 @@ fn create_level_internal(
                         p.item.source.as_deref(),
                         Some("forced") | Some("items_to_spawn")
                     ) {
+                        spawned_queue_items.push(p.item.clone());
                         // Room paint may add to itemsToSpawn (e.g. Storage → PotionOfLiquidFlame).
                         // Keep those in the report if not already listed under forced.
                         if !forced.iter().any(|f| f.class_name == p.item.class_name) {
@@ -619,6 +622,7 @@ fn create_level_internal(
         build_ok,
         forced_items: forced,
         initial_forced_items,
+        spawned_queue_items,
         placed_items,
         runtime_sensitive_placed_items_from,
         runtime_sensitive_quests_from,
@@ -644,7 +648,8 @@ mod replay;
 
 pub use replay::{analyze_floors, analyze_floors_with_profile, analyze_layouts_with_profile};
 pub(crate) use replay::{
-    analyze_floors_with_profile_and_trinket_availability, first_trinket_availability, search_floors,
+    analyze_floors_with_profile_and_trinket_availability, first_trinket_availability,
+    replay_default_profile_states, search_floors,
 };
 
 #[cfg(test)]

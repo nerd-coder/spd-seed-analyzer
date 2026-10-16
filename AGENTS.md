@@ -12,6 +12,7 @@ Pinned game: SPD **v4.0.2** @ `57a4e06a4` — local clone often at `/Users/toan/
 | `crates/spd-core` | Pure Rust RNG + generation (no wasm) |
 | `crates/spd-objects` | Shared object id enums (items, mobs, rooms, …); source of truth for `web/src/generated/game-ids.ts` |
 | `crates/spd-wasm` | `wasm-bindgen` exports |
+| `crates/spd-cli` | `spd-analyze` CLI over `spd-core` |
 | `web/` | Vite app; `web/src/wasm/` is **generated** |
 | `web/public/assets/` | SPD assets (flat; tiles under `environment/`) |
 | `brand/design/` | Design system: tokens (`src/theme/theme.css`), restyled shadcn components, spec (`DESIGN.md`), preview app on port 5174 |
@@ -28,6 +29,7 @@ bun run deploy       # build + Cloudflare Worker SPA (wrangler)
 bun run design       # design-system preview (Vite, :5174)
 bun run build:design # type-check + build the design-system preview
 bun run test:rust    # cargo test -p spd-core
+bun run analyze SEED [FLOORS] [--maps] [--pretty] [--full] # exact default-profile JSON (spd-cli)
 bun run test:map-render # map-render fixture registry
 bun run test:visual  # build + Playwright Chromium pixel comparison
 bun run install:visual-browser # once: install Playwright Chromium

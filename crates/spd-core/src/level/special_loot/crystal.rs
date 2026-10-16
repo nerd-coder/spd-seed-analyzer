@@ -6,7 +6,7 @@ use super::DoorMap;
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::geom::Point;
-use crate::items::model::{GeneratedItem, ItemCategory};
+use crate::items::model::{GeneratedItem, ItemCategory, ItemProvenance, RoomLootRole};
 use crate::level::create_items::PlacedLoot;
 use crate::level::terrain::{TerrainMap, EMPTY, EMPTY_SP, LOCKED_DOOR, PEDESTAL, WALL};
 use crate::random::Random;
@@ -40,6 +40,8 @@ pub(super) fn crystal_vault(
     let mut i2 = take_prize(&mut prize_classes);
     i1.source = Some("CrystalVaultRoom".into());
     i2.source = Some("CrystalVaultRoom".into());
+    i1.provenance = ItemProvenance::Room(RoomLootRole::CrystalVaultPrize);
+    i2.provenance = ItemProvenance::Room(RoomLootRole::CrystalVaultPrize);
 
     // Pedestal placement: CIRCLE8 opposite pair, reject if Chebyshev-adjacent
     // to the entrance door. `Level.adjacent` treats all eight neighbours as

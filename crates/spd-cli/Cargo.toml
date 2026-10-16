@@ -1,0 +1,15 @@
+[package]
+name = "spd-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Command-line seed analysis for spd-core"
+
+[[bin]]
+name = "spd-analyze"
+path = "src/main.rs"
+
+[dependencies]
+spd-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

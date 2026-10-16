@@ -82,6 +82,9 @@ pub(crate) fn is_variable_highlight(item: &ItemEntry) -> bool {
         "CrystalChoiceRoom" | "CrystalChoiceRoom:hidden_reward" => {
             return matches!(item.category.as_str(), "ring" | "artifact" | "wand")
         }
+        "CrystalVaultRoom" | "CrystalVaultRoom:crystal_mimic" => {
+            return matches!(item.category.as_str(), "ring" | "artifact" | "wand")
+        }
         "SecretHoneypotRoom:bomb" | "GrassyGraveRoom:prize" => return true,
         "PitRoom" => {
             return matches!(
@@ -93,6 +96,7 @@ pub(crate) fn is_variable_highlight(item: &ItemEntry) -> bool {
             return true
         }
         "SecretRunestoneRoom" => return class_name == "StoneOfEnchantment",
+        "SacrificeRoom" | "CryptRoom" => return true,
         _ => {}
     }
     matches!(

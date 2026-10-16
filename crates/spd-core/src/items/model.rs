@@ -41,6 +41,8 @@ pub enum RoomLootRole {
     SuspiciousChestGold,
     SuspiciousChestMimicReward,
     CrystalChoiceHidden,
+    /// One of the two CrystalVault chest/mimic prizes (wand/ring/artifact).
+    CrystalVaultPrize,
     SecretHoneypotBomb,
     GrassyGravePrize,
     GrassyGraveGold,

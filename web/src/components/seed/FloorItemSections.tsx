@@ -1,6 +1,9 @@
 import { InfoIcon, QuestionIcon } from '@phosphor-icons/react'
 import { ItemBox } from '@/components/ItemBox'
-import { floorItemGroups } from '@/components/seed/floor-items'
+import {
+  floorItemGroups,
+  type VisibleItemGroup,
+} from '@/components/seed/floor-items'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -11,6 +14,10 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { itemAppearance } from '@/lib/identity'
+import {
+  type ItemContractSummary,
+  summarizeItemContract,
+} from '@/lib/item-contract'
 import { itemSprite, parseItemEnhancement } from '@/lib/item-kind'
 import { formatItemLocation } from '@/lib/item-location'
 import {
@@ -21,12 +28,7 @@ import {
   variantClassName,
   variantTitle,
 } from '@/lib/item-title'
-import type {
-  FloorReport,
-  IdentityMaps,
-  ItemGroup,
-  ItemVariant,
-} from '@/lib/spd-wasm'
+import type { FloorReport, IdentityMaps, ItemVariant } from '@/lib/spd-wasm'
 
 const CURSED_SLOT_BACKGROUND =
   'color-mix(in oklch, var(--degraded) 22%, var(--muted))'
@@ -68,6 +70,7 @@ type FloorItemSlotModel = {
   className?: string | null
   category?: string
   appearance?: string
+  contract?: ItemContractSummary | null
 }
 
 function describedTitle(name: string, item: ItemVariant) {
@@ -80,7 +83,8 @@ function slotFrom(
   label: string,
   className: string | null | undefined,
   identities: IdentityMaps,
-  unknown = false
+  unknown = false,
+  contract?: ItemContractSummary | null
 ): FloorItemSlotModel {
   const subject = { category: item.category, class_name: className }
   return {
@@ -94,13 +98,15 @@ function slotFrom(
     className,
     category: item.category,
     appearance: unknown ? undefined : itemAppearance(subject, identities),
+    contract,
   }
 }
 
 function slotsForVariant(
   item: ItemVariant,
   identities: IdentityMaps,
-  keyPrefix: string
+  keyPrefix: string,
+  contract?: ItemContractSummary | null
 ) {
   // Catalyst offers render beside the first alchemy pot, not in this list.
   const className = variantClassName(item)
@@ -111,7 +117,9 @@ function slotsForVariant(
         `${keyPrefix}-catalyst`,
         describedTitle(variantTitle(item), item),
         className,
-        identities
+        identities,
+        false,
+        contract
       ),
     ]
   }
@@ -126,7 +134,9 @@ function slotsForVariant(
           `${keyPrefix}-${index}-${candidate}`,
           describedTitle(itemLabel(candidate), item),
           candidate,
-          identities
+          identities,
+          false,
+          contract
         )
       )
     }
@@ -141,7 +151,8 @@ function slotsForVariant(
         'Unknown artifact or ring',
         null,
         identities,
-        true
+        true,
+        contract
       ),
     ]
   }
@@ -152,7 +163,9 @@ function slotsForVariant(
       keyPrefix,
       describedTitle(variantTitle(item), item),
       className,
-      identities
+      identities,
+      false,
+      contract
     ),
   ]
 }
@@ -182,6 +195,7 @@ function FloorItemSlot({
         level={slot.level}
         title={slot.label}
         location={location}
+        contract={slot.contract}
         bgColor={slot.cursed ? CURSED_SLOT_BACKGROUND : undefined}
       >
         {slot.unknown ? (
@@ -206,17 +220,24 @@ export function FloorItemList({
   identities,
   depth,
 }: {
-  items: ItemGroup[]
+  items: VisibleItemGroup[]
   identities: IdentityMaps
   depth: number
 }) {
   const slots = items.flatMap((group, groupIndex) => {
     const location = formatItemLocation(group.source)
+    const contract = group.contract
+      ? summarizeItemContract(group.contract)
+      : null
+    // Skip empty contracts (e.g. "two crystal-vault reward sources").
+    const usefulContract =
+      contract && contract.facts.length > 0 ? contract : null
     return group.variants.flatMap((item, variantIndex) =>
       slotsForVariant(
         item,
         identities,
-        `${depth}-${groupIndex}-${variantIndex}`
+        `${depth}-${groupIndex}-${variantIndex}`,
+        usefulContract
       ).map((slot) => ({ slot, location }))
     )
   })
@@ -238,7 +259,7 @@ function ItemGroupSection({
   depth,
 }: {
   label: string
-  items: ItemGroup[]
+  items: VisibleItemGroup[]
   empty?: string
   identities: IdentityMaps
   depth: number

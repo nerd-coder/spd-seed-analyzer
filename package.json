@@ -26,6 +26,7 @@
     "install:visual-browser": "bun run --cwd tools/visual install:browser",
     "install:visual-browser:ci": "bun run --cwd tools/visual install:browser:ci",
     "test:rust": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo test -p spd-objects -p spd-core",
+    "analyze": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q --release -p spd-cli --",
     "gen:ids": "PATH=\"$HOME/.cargo/bin:$PATH\" cargo run -q -p spd-objects --bin gen-ts",
     "check": "biome check",
     "check:fix": "biome check --fix",

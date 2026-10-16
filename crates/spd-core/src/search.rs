@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use spd_objects::ItemId;
 
 use crate::{
-    report::{ItemEntry, ItemPredictionKind},
+    report::{is_variable_highlight, ItemEntry, ItemPredictionKind},
     search_seed_floors, AnalyzeError, FloorReport, IdentityMaps, SeedInfo, TOTAL_SEEDS,
 };
 
@@ -249,7 +249,10 @@ pub fn search_seeds(request: &SeedSearchRequest) -> Result<SeedSearchResult, Sea
                         .items
                         .iter()
                         .flat_map(|group| &group.variants)
-                        .filter(|item| item.prediction == ItemPredictionKind::Variable)
+                        .filter(|item| {
+                            item.prediction == ItemPredictionKind::Variable
+                                && is_variable_highlight(item)
+                        })
                         .cloned()
                         .map(|item| VariableItemEvidence {
                             depth: floor.depth,
@@ -447,6 +450,11 @@ fn matching_item<'a>(
         .filter(|item| item.quantity > occurrence.copy_index)
         .find(|item| {
             if item.category != constraint.item_group {
+                return false;
+            }
+            // Floor-list uncover samples are display-only; search keeps the
+            // curated variable set.
+            if item.prediction == ItemPredictionKind::Variable && !is_variable_highlight(item) {
                 return false;
             }
 

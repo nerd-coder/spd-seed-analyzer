@@ -5,9 +5,15 @@
 import { isNotableSpawn } from '@/lib/item-notable'
 import type { FloorReport, ItemGroup, ItemVariant } from '@/lib/spd-wasm'
 
-function splitNotableItems(items: ItemGroup[]) {
-  const notable: ItemGroup[] = []
-  const other: ItemGroup[] = []
+/** Floor/quest group after preferring a variable sample over its contract. */
+export type VisibleItemGroup = ItemGroup & {
+  /** Constrained sibling kept for the item description panel. */
+  contract?: ItemVariant
+}
+
+function splitNotableItems(items: VisibleItemGroup[]) {
+  const notable: VisibleItemGroup[] = []
+  const other: VisibleItemGroup[] = []
   for (const group of items) {
     const notableVariants = group.variants.filter(isNotableSpawn)
     const otherVariants = group.variants.filter((item) => !isNotableSpawn(item))
@@ -38,7 +44,7 @@ function itemSection(
   return 'general'
 }
 
-export function visibleItemGroups(items: ItemGroup[]) {
+export function visibleItemGroups(items: ItemGroup[]): VisibleItemGroup[] {
   const exactItems = new Set(
     items.flatMap((group) =>
       group.variants
@@ -47,13 +53,42 @@ export function visibleItemGroups(items: ItemGroup[]) {
     )
   )
   return items
+    .map((group): VisibleItemGroup => {
+      // Room contracts ship constrained + variable siblings for one spawn.
+      // Show only the sample; keep the contract for the examine panel.
+      const contract = group.variants.find(
+        (item) => item.prediction === 'constrained'
+      )
+      const hasVariable = group.variants.some(
+        (item) => item.prediction === 'variable'
+      )
+      return {
+        ...group,
+        contract: hasVariable ? contract : undefined,
+        variants: group.variants.filter((item) => {
+          if (item.prediction === 'constrained' && hasVariable) {
+            return false
+          }
+          if (item.prediction === 'variable') {
+            return !exactItems.has(itemDisplayKey(item, group.source))
+          }
+          return true
+        }),
+      }
+    })
     .map((group) => ({
       ...group,
-      variants: group.variants.filter(
-        (item) =>
-          item.prediction !== 'variable' ||
-          !exactItems.has(itemDisplayKey(item, group.source))
-      ),
+      // Drop blank constrained stubs that never grew a concrete sample.
+      // Quest cards keep them as their universal reward fallback.
+      variants:
+        itemSection(group) === 'quest'
+          ? group.variants
+          : group.variants.filter(
+              (item) =>
+                item.item != null ||
+                (item.candidates?.length ?? 0) > 0 ||
+                item.prediction !== 'constrained'
+            ),
     }))
     .filter((group) => group.variants.length > 0)
 }
@@ -62,7 +97,7 @@ function itemDisplayKey(item: ItemVariant, source?: string | null) {
   return JSON.stringify([item.item, item.level, source])
 }
 
-export function partitionFloorItems(items: ItemGroup[]) {
+export function partitionFloorItems(items: VisibleItemGroup[]) {
   return {
     general: items.filter((item) => itemSection(item) === 'general'),
     guaranteed: items.filter((item) => itemSection(item) === 'guaranteed'),

@@ -28,6 +28,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
         build_ok: true,
         forced_items: vec![item("PotionOfStrength", "forced")],
         initial_forced_items: vec![item("PotionOfStrength", "forced")],
+        spawned_queue_items: vec![],
         placed_items: vec![
             item("PotionOfHealing", "chest:heap"),
             item("PotionOfMindVision", "mimic:mimic"),
@@ -223,6 +224,7 @@ fn empty_level_state(depth: i32) -> LevelState {
         build_ok: true,
         forced_items: vec![],
         initial_forced_items: vec![],
+        spawned_queue_items: vec![],
         placed_items: vec![],
         runtime_sensitive_placed_items_from: None,
         runtime_sensitive_quests_from: None,
@@ -359,6 +361,7 @@ fn room_reward_projection_hides_all_concrete_fields_and_deduplicates_counts() {
         build_ok: true,
         forced_items: vec![],
         initial_forced_items: vec![],
+        spawned_queue_items: vec![],
         placed_items: vec![],
         runtime_sensitive_placed_items_from: None,
         runtime_sensitive_quests_from: None,

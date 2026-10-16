@@ -1,6 +1,8 @@
 use super::conditions::{item_conditions, item_conditions_typed};
 use super::{is_blacklisted, is_unpublished_main_loot, sources::reported_source};
-use crate::items::model::{GeneratedItem, ItemProvenance, QuestRewardRole, RoomLootRole};
+use crate::items::model::{
+    GeneratedItem, ItemProvenance, QuestRewardRole, RoomLootRole, ShopStockRole,
+};
 use crate::report::{ItemEnchantment, ItemEntry, ItemPredictionKind};
 
 /// Project one concrete result that varies with gameplay. It is the item this
@@ -14,11 +16,41 @@ pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
                 | RoomLootRole::SuspiciousChestGold
                 | RoomLootRole::SuspiciousChestMimicReward
                 | RoomLootRole::CrystalChoiceHidden
+                | RoomLootRole::CrystalVaultPrize
                 | RoomLootRole::SecretHoneypotBomb
                 | RoomLootRole::GrassyGravePrize
+                | RoomLootRole::GrassyGraveGold
+                | RoomLootRole::RuntimeSensitive
+                | RoomLootRole::CryptArmor
+                | RoomLootRole::StatueWeapon
+        )
+    );
+    let quest_variable = matches!(
+        item.provenance,
+        ItemProvenance::Quest(
+            QuestRewardRole::GhostWeapon { .. }
+                | QuestRewardRole::WandmakerWand
+                | QuestRewardRole::ImpVaultOption { .. }
+                | QuestRewardRole::BlacksmithWeapon { .. }
+                | QuestRewardRole::BlacksmithMissile { .. }
+                | QuestRewardRole::BlacksmithArmor { .. }
+                | QuestRewardRole::BlacksmithRoomWeapon { .. }
+                | QuestRewardRole::BlacksmithRoomMissile { .. }
+        )
+    );
+    let shop_variable = matches!(
+        item.provenance,
+        ItemProvenance::Shop(
+            ShopStockRole::DeckWeapon { .. }
+                | ShopStockRole::DeckMissile { .. }
+                | ShopStockRole::ChooseBag
+                | ShopStockRole::DeckRareWand
+                | ShopStockRole::DeckRareRing
+                | ShopStockRole::DeckRareArtifactOrRing
         )
     );
     if item.source.is_none()
+        || !(room_variable || quest_variable || shop_variable)
         || (is_blacklisted(item) && !room_variable)
         || (is_unpublished_main_loot(item) && !room_variable)
         || item.provenance == ItemProvenance::Quest(QuestRewardRole::WandmakerPersisted)

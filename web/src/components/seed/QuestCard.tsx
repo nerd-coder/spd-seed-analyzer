@@ -1,5 +1,6 @@
 import { GameObject } from '@/components/GameObject'
 import { FloorItemList } from '@/components/seed/FloorItemSections'
+import type { VisibleItemGroup } from '@/components/seed/floor-items'
 import { ImpRewardDistribution } from '@/components/seed/ImpRewardDistribution'
 import { QuestBanner } from '@/components/seed/QuestBanner'
 import { QuestTarget } from '@/components/seed/QuestTarget'
@@ -102,18 +103,30 @@ export function QuestCard({
   )
 }
 
-function groupsWithPrediction(groups: ItemGroup[], prediction: 'variable') {
+function groupsWithPrediction(
+  groups: ItemGroup[],
+  prediction: 'variable'
+): VisibleItemGroup[] {
   return groups
-    .map((group) => ({
-      ...group,
-      variants: group.variants.filter(
-        (variant) => variant.prediction === prediction
-      ),
-    }))
+    .map((group) => {
+      const contract = group.variants.find(
+        (variant) => variant.prediction === 'constrained'
+      )
+      return {
+        ...group,
+        contract,
+        variants: group.variants.filter(
+          (variant) => variant.prediction === prediction
+        ),
+      }
+    })
     .filter((group) => group.variants.length > 0)
 }
 
-function withoutPrediction(groups: ItemGroup[], prediction: 'variable') {
+function withoutPrediction(
+  groups: ItemGroup[],
+  prediction: 'variable'
+): VisibleItemGroup[] {
   return groups
     .map((group) => ({
       ...group,

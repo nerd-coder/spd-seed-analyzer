@@ -145,6 +145,34 @@ pub(crate) fn search_floors(
     )
 }
 
+/// Raw per-floor states for the default profile (no challenges, no held
+/// trinket, no prior player history), in ascending depth order.
+pub(crate) fn replay_default_profile_states(
+    dungeon: &mut DungeonState,
+    max_floors: u32,
+    maps: bool,
+) -> Vec<LevelState> {
+    let profile = MapProfile::default();
+    dungeon.challenges = profile.challenge_mask();
+    dungeon.ghost_rewards_profiled =
+        !profile.has_unmodeled_generation_inputs() && profile.only_uses_mimic_tooth();
+    dungeon.expose_variable_items = true;
+    trinkets::reset(dungeon.seed);
+    let output = if maps {
+        LevelOutput::FULL
+    } else {
+        LevelOutput::ITEMS
+    };
+    (1..=max_floors.clamp(1, 26) as i32)
+        .map(|depth| {
+            dungeon.depth = depth;
+            dungeon.branch = 0;
+            trinkets::set_held(None);
+            create_level_internal(dungeon, true, output)
+        })
+        .collect()
+}
+
 /// Replays floors in ascending order. With `first_effective_trinket_depth`
 /// unknown, reports are held back until floors 1-4 reveal it.
 fn replay_floors(
