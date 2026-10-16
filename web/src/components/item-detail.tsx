@@ -47,7 +47,7 @@ function gameTextParts(text: string): TextPart[] {
   return parts
 }
 
-function GameText({ text }: { text: string }) {
+export function GameText({ text }: { text: string }) {
   const parts = gameTextParts(text.replaceAll('%%', '%'))
   return (
     <>

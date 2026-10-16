@@ -1,10 +1,12 @@
 # Floor layout certainty
 
-Target: **Shattered Pixel Dungeon v4.0.2 @ `57a4e06a4`**. Public maps follow
-`MAP-LAYOUT-GOAL`: painter-complete rooms, connections, doors, transitions,
-terrain, traps, plants, blobs, and custom tiles/carpets, captured before NPC,
-mob, heap, forced-item, or Guide Page population. A later floor can still
-depend on that hidden population when it mutates persistent generator state.
+Target: **Shattered Pixel Dungeon v4.0.2 @ `57a4e06a4`**. Public map layout
+follows `MAP-LAYOUT-GOAL`: painter-complete rooms, connections, doors,
+transitions, terrain, traps, plants, blobs, and custom tiles/carpets, captured
+before NPC, mob, heap, forced-item, or Guide Page population. Those populated
+entities are drawn on top and flagged in `uncertain_cells` when run history can
+change them. A later floor can still depend on that population when it mutates
+persistent generator state.
 
 This note is Java generation fact. A declared run profile is a player-facing
 description of challenges, held trinkets, and artifact events. It is not an

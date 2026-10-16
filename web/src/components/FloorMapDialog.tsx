@@ -1,8 +1,7 @@
 import { MapTrifoldIcon } from '@phosphor-icons/react'
 import { useMemo, useRef } from 'react'
 
-import { FloorMapCanvas } from '@/components/FloorMapCanvas'
-import { MapStage } from '@/components/MapStage'
+import { InteractiveFloorMap } from '@/components/InteractiveFloorMap'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -77,28 +76,19 @@ export function FloorMapDialog({
         <DialogHeader className="shrink-0 pr-14">
           <DialogTitle>{dialogTitle}</DialogTitle>
           <DialogDescription>
-            Layout only, before mobs and items. The {map.tileset} map is{' '}
-            {map.width}×{map.height} tiles; the discoverable crop is{' '}
-            {viewport.width}×{viewport.height}.
+            Items, mobs, and traps as generated for this seed. Hover or tap a
+            tile to inspect it; pulsing areas are hidden until searched.
           </DialogDescription>
         </DialogHeader>
         <div className="relative z-0 min-h-0 min-w-0 flex-1 overflow-hidden bg-black/80">
-          <MapStage
+          <InteractiveFloorMap
+            map={map}
+            identities={identities}
+            viewport={viewport}
+            rasterScale={rasterScale}
             contentWidth={contentWidth}
             contentHeight={contentHeight}
-            rasterScale={rasterScale}
-          >
-            {(zoom) => (
-              <FloorMapCanvas
-                map={map}
-                identities={identities}
-                scale={rasterScale}
-                displayScale={zoom}
-                canvasClassName="border-0"
-                animateWater
-              />
-            )}
-          </MapStage>
+          />
         </div>
       </DialogContent>
     </Dialog>

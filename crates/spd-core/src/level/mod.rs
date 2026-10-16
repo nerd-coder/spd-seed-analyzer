@@ -7,8 +7,10 @@ mod create_items;
 mod create_mobs;
 mod forced_drops;
 mod map_facts;
+mod map_hidden;
 mod maze;
 mod mining;
+mod mob_state;
 mod painter;
 pub mod patch;
 mod quest_rewards;
@@ -236,6 +238,9 @@ fn create_level_internal(
             }
         }
     }
+    for item in &mut items_to_spawn {
+        item.from_spawn_queue = true;
+    }
 
     let mut builder = None;
     let mut room_names = Vec::new();
@@ -314,6 +319,7 @@ fn create_level_internal(
                 runtime_sensitive_quests_from,
                 quests,
                 runtime_sensitive_map,
+                fresh_profile_floor_one,
                 runtime_sensitive_layout,
                 runtime_sensitive_rooms,
                 runtime_sensitive_feeling,
@@ -628,6 +634,7 @@ fn create_level_internal(
         runtime_sensitive_quests_from,
         quests,
         runtime_sensitive_map,
+        fresh_profile_floor_one,
         runtime_sensitive_layout,
         runtime_sensitive_rooms,
         runtime_sensitive_feeling,

@@ -393,6 +393,16 @@ export function raisedTerrainVisual(
   return null
 }
 
+/** Pinned `stitchWallOverhangTile`: the lower half of a door in a side wall. */
+function sidewaysDoorOverhang(tile: number) {
+  if (tile === Terrain.OPEN_DOOR) return WALL_OVERHANG + 16
+  if (tile === Terrain.DOOR) return WALL_OVERHANG + 20
+  if (tile === Terrain.LOCKED_DOOR || tile === Terrain.HERO_LKD_DR)
+    return WALL_OVERHANG + 24
+  if (tile === Terrain.CRYSTAL_DOOR) return WALL_OVERHANG + 28
+  return null
+}
+
 export function wallVisual(
   tiles: number[],
   variance: number[],
@@ -429,11 +439,12 @@ export function wallVisual(
     return DOOR_OVERHANG + 6
   if (below !== -1 && wallStitchable(below)) {
     let visual =
-      isMiningTileset(tileset) && below === Terrain.WALL_DECO
+      sidewaysDoorOverhang(tile) ??
+      (isMiningTileset(tileset) && below === Terrain.WALL_DECO
         ? WALL_OVERHANG + 4
         : below === Terrain.BOOKSHELF
           ? WALL_OVERHANG + 8
-          : WALL_OVERHANG
+          : WALL_OVERHANG)
     if (!wallStitchable(tileAt(tiles, width, cell, 1, 1))) visual += 1
     if (!wallStitchable(tileAt(tiles, width, cell, -1, 1))) visual += 2
     return visual

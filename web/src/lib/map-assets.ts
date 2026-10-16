@@ -1,22 +1,11 @@
 import { tilesetRegion } from '@/lib/dungeon-tile-visuals'
+import { mobSheetUrl } from '@/lib/map-mob-sprites'
 
-const MOB_ASSET_URLS = {
-  rat: '/assets/sprites/rat.png',
-  snake: '/assets/sprites/snake.png',
-  skeleton: '/assets/sprites/skeleton.png',
-  swarm: '/assets/sprites/swarm.png',
-  thief: '/assets/sprites/thief.png',
-  shopkeeper: '/assets/sprites/shopkeeper.png',
-  dm100: '/assets/sprites/dm100.png',
-  guard: '/assets/sprites/guard.png',
-  necromancer: '/assets/sprites/necromancer.png',
-} as const
+/** Mob sheets keyed by `MobSprite.sheet`; only sheets the map uses are loaded. */
+type MobAssets = Record<string, HTMLImageElement>
 
-export type MobAssetKey = keyof typeof MOB_ASSET_URLS
-
-type MobAssets = Record<MobAssetKey, HTMLImageElement>
-
-export type MapEntityAssets = MobAssets & {
+export type MapEntityAssets = {
+  mobs: MobAssets
   terrainFeatures: HTMLImageElement
   items: HTMLImageElement
 }
@@ -26,6 +15,9 @@ export type MapAssets = MapEntityAssets & {
   water: HTMLImageElement
   raisedTerrain: HTMLImageElement
   occlusionShadows: HTMLImageElement
+  specks: HTMLImageElement
+  /** `interfaces/icons.png`, for mob emotes. */
+  icons: HTMLImageElement
   customTiles: {
     prisonQuest: HTMLImageElement
     cavesQuest: HTMLImageElement
@@ -38,9 +30,11 @@ export type MapAssets = MapEntityAssets & {
   }
 }
 
+export const SPECKS_URL = '/assets/effects/specks.png'
+
 const imageCache = new Map<string, Promise<HTMLImageElement>>()
 
-function loadImage(url: string): Promise<HTMLImageElement> {
+export function loadImage(url: string): Promise<HTMLImageElement> {
   let promise = imageCache.get(url)
   if (!promise) {
     promise = new Promise((resolve, reject) => {
@@ -55,16 +49,19 @@ function loadImage(url: string): Promise<HTMLImageElement> {
   return promise
 }
 
-async function loadMobAssets(): Promise<MobAssets> {
+async function loadMobAssets(sheets: Iterable<string>): Promise<MobAssets> {
   const entries = await Promise.all(
-    Object.entries(MOB_ASSET_URLS).map(
-      async ([key, url]) => [key, await loadImage(url)] as const
+    [...new Set(sheets)].map(
+      async (sheet) => [sheet, await loadImage(mobSheetUrl(sheet))] as const
     )
   )
-  return Object.fromEntries(entries) as MobAssets
+  return Object.fromEntries(entries)
 }
 
-export async function loadMapAssets(tileset: string): Promise<MapAssets> {
+export async function loadMapAssets(
+  tileset: string,
+  mobSheets: Iterable<string> = []
+): Promise<MapAssets> {
   const region = tilesetRegion(tileset)
   const [
     tiles,
@@ -74,6 +71,8 @@ export async function loadMapAssets(tileset: string): Promise<MapAssets> {
     mobs,
     raisedTerrain,
     occlusionShadows,
+    specks,
+    icons,
     prisonQuest,
     cavesQuest,
     cityQuest,
@@ -87,9 +86,11 @@ export async function loadMapAssets(tileset: string): Promise<MapAssets> {
     loadImage('/assets/environment/terrain_features.png'),
     loadImage(`/assets/environment/water${region}.png`),
     loadImage('/assets/sprites/items.png'),
-    loadMobAssets(),
+    loadMobAssets(mobSheets),
     loadImage('/assets/environment/raised_terrain.png'),
     loadImage('/assets/environment/occlusion_shadows.png'),
+    loadImage(SPECKS_URL),
+    loadImage('/assets/interfaces/icons.png'),
     loadImage('/assets/environment/custom_tiles/prison_quest.png'),
     loadImage('/assets/environment/custom_tiles/caves_quest.png'),
     loadImage('/assets/environment/custom_tiles/city_quest.png'),
@@ -106,7 +107,9 @@ export async function loadMapAssets(tileset: string): Promise<MapAssets> {
     items,
     raisedTerrain,
     occlusionShadows,
-    ...mobs,
+    specks,
+    icons,
+    mobs,
     customTiles: {
       prisonQuest,
       cavesQuest,

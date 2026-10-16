@@ -6,6 +6,7 @@ import {
   wallVisual,
 } from '@/lib/dungeon-tile-visuals'
 import type { MapAssets } from '@/lib/map-assets'
+import { drawMobEmotes } from '@/lib/map-emotes'
 import {
   drawKnownEntities,
   drawVisibleTraps,
@@ -102,20 +103,32 @@ function drawMarkers(
   }
 }
 
-/** Build all non-water layers once; animated frames only composite this bitmap. */
-export function renderStaticMap(
+/** Terrain under and over the mob layer, so mobs can animate in between. */
+export type MapLayers = {
+  below: HTMLCanvasElement
+  above: HTMLCanvasElement
+}
+
+function layerCanvas(map: FloorMap, scale: number) {
+  const canvas = document.createElement('canvas')
+  canvas.width = map.width * TILE_PX * scale
+  canvas.height = map.height * TILE_PX * scale
+  const ctx = canvas.getContext('2d')
+  if (ctx) ctx.imageSmoothingEnabled = false
+  return [canvas, ctx] as const
+}
+
+/** Build all non-water layers once; animated frames only composite these. */
+export function renderMapLayers(
   assets: MapAssets,
   map: FloorMap,
   identities: IdentityMaps,
   scale: number,
   visibility: MarkerVisibility
-): HTMLCanvasElement {
-  const canvas = document.createElement('canvas')
-  canvas.width = map.width * TILE_PX * scale
-  canvas.height = map.height * TILE_PX * scale
-  const ctx = canvas.getContext('2d')
-  if (!ctx) return canvas
-  ctx.imageSmoothingEnabled = false
+): MapLayers {
+  const [below, ctx] = layerCanvas(map, scale)
+  const [above, top] = layerCanvas(map, scale)
+  if (!ctx || !top) return { below, above }
 
   const variance = map.tile_variance ?? []
   const hasDiscoverability = map.discoverable.length === map.tiles.length
@@ -155,7 +168,7 @@ export function renderStaticMap(
   drawCustomTiles(ctx, assets, map, map.custom_tiles, scale)
   drawVisibleTraps(ctx, assets, map, scale)
   drawKnownEntities(ctx, assets, map, identities, scale, visibility)
-  drawCustomTiles(ctx, assets, map, map.custom_terrain, scale)
+  drawCustomTiles(top, assets, map, map.custom_terrain, scale)
   for (let cell = 0; cell < map.tiles.length; cell++) {
     if (hasDiscoverability && !map.discoverable[cell]) continue
     const raised = raisedTerrainVisual(
@@ -165,19 +178,39 @@ export function renderStaticMap(
       map.tileset
     )
     if (raised != null) {
-      drawSheetTile(ctx, assets.raisedTerrain, raised, cell, map.width, scale)
+      drawSheetTile(top, assets.raisedTerrain, raised, cell, map.width, scale)
     }
   }
   for (let cell = 0; cell < map.tiles.length; cell++) {
     if (hasDiscoverability && !map.discoverable[cell]) continue
     const wall = wallVisual(map.tiles, variance, map.width, map.tileset, cell)
     if (wall != null)
-      drawSheetTile(ctx, assets.tiles, wall, cell, map.width, scale)
+      drawSheetTile(top, assets.tiles, wall, cell, map.width, scale)
   }
-  drawWallOcclusion(ctx, assets, map, scale)
-  drawCustomTiles(ctx, assets, map, map.custom_walls, scale)
-  drawMarkers(ctx, map, scale, visibility)
-  return canvas
+  drawWallOcclusion(top, assets, map, scale)
+  drawCustomTiles(top, assets, map, map.custom_walls, scale)
+  drawMarkers(top, map, scale, visibility)
+  if (visibility.mob) drawMobEmotes(top, assets.icons, map, scale, null)
+  return { below, above }
+}
+
+/** Both layers flattened, with mobs on their first idle frame. */
+export function renderStaticMap(
+  assets: MapAssets,
+  map: FloorMap,
+  identities: IdentityMaps,
+  scale: number,
+  visibility: MarkerVisibility
+): HTMLCanvasElement {
+  const { below, above } = renderMapLayers(
+    assets,
+    map,
+    identities,
+    scale,
+    visibility
+  )
+  below.getContext('2d')?.drawImage(above, 0, 0)
+  return below
 }
 
 function drawWater(
@@ -206,14 +239,43 @@ function drawWater(
   }
 }
 
+/** Concealed bitmap composited over hidden regions at per-region alpha. */
+export type ConcealOverlay = {
+  concealed: HTMLCanvasElement
+  paths: Path2D[]
+  alphas: number[]
+}
+
+/** Per-frame passes drawn in map pixels, between and over the static layers. */
+export type DynamicPasses = {
+  /** Between terrain and walls, like GameScene's `mobs` group. */
+  mobs?: (ctx: CanvasRenderingContext2D) => void
+  /** Over walls, like GameScene's `gases` blob emitters. */
+  effects?: (ctx: CanvasRenderingContext2D) => void
+}
+
+function inMapSpace(
+  ctx: CanvasRenderingContext2D,
+  viewport: MapViewport,
+  scale: number,
+  draw: (ctx: CanvasRenderingContext2D) => void
+) {
+  ctx.save()
+  ctx.translate(-viewport.x * TILE_PX * scale, -viewport.y * TILE_PX * scale)
+  draw(ctx)
+  ctx.restore()
+}
+
 /** Pinned GameScene water speed is 5 world pixels per second. */
 export function drawFloorMap(
   ctx: CanvasRenderingContext2D,
   assets: MapAssets,
-  staticMap: HTMLCanvasElement,
+  layers: MapLayers,
   scale: number,
   elapsedSeconds: number,
-  viewport: MapViewport
+  viewport: MapViewport,
+  overlay?: ConcealOverlay,
+  dynamic: DynamicPasses = {}
 ) {
   ctx.imageSmoothingEnabled = false
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
@@ -227,15 +289,30 @@ export function drawFloorMap(
     viewport.x * TILE_PX,
     viewport.y * TILE_PX
   )
-  ctx.drawImage(
-    staticMap,
-    viewport.x * TILE_PX * scale,
-    viewport.y * TILE_PX * scale,
-    viewport.width * TILE_PX * scale,
-    viewport.height * TILE_PX * scale,
-    0,
-    0,
-    ctx.canvas.width,
-    ctx.canvas.height
-  )
+  const drawLayer = (layer: HTMLCanvasElement) =>
+    ctx.drawImage(
+      layer,
+      viewport.x * TILE_PX * scale,
+      viewport.y * TILE_PX * scale,
+      viewport.width * TILE_PX * scale,
+      viewport.height * TILE_PX * scale,
+      0,
+      0,
+      ctx.canvas.width,
+      ctx.canvas.height
+    )
+  drawLayer(layers.below)
+  if (dynamic.mobs) inMapSpace(ctx, viewport, scale, dynamic.mobs)
+  drawLayer(layers.above)
+  if (dynamic.effects) inMapSpace(ctx, viewport, scale, dynamic.effects)
+  if (!overlay) return
+  overlay.paths.forEach((path, region) => {
+    const alpha = overlay.alphas[region] ?? 0
+    if (alpha <= 0) return
+    inMapSpace(ctx, viewport, scale, (ctx) => {
+      ctx.clip(path)
+      ctx.globalAlpha = alpha
+      ctx.drawImage(overlay.concealed, 0, 0)
+    })
+  })
 }

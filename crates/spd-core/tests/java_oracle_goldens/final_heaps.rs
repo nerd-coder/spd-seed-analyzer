@@ -577,10 +577,10 @@ fn depth_one_final_heaps_match_report_projection() {
         );
         if let Some(public_map) = &report.floors[0].map {
             assert!(
-                public_map.markers.is_empty()
-                    && public_map.heaps.is_empty()
-                    && public_map.mobs.is_empty(),
-                "public depth-one map must remain painter-only in {context}"
+                public_map.markers == map.markers
+                    && public_map.heaps == map.heaps
+                    && public_map.mobs == map.mobs,
+                "public depth-one map must publish the populated entities in {context}"
             );
         }
         assert_aaa_aad_public_report_facts(&fixture, expected_floor, &report.floors[0], &context);

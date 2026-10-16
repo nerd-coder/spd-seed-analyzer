@@ -71,6 +71,14 @@ pub struct FloorMap {
     /// Pinned custom wall overlays, ordered by their visual layer.
     #[serde(default)]
     pub custom_walls: Vec<MapCustomTile>,
+    /// Sorted entity cells whose heap or mob can differ with run history or
+    /// player state. Other entity cells are seed-exact for the profile.
+    #[serde(default)]
+    pub uncertain_cells: Vec<u32>,
+    /// Sorted non-wall cells reachable from the arrival point only through a
+    /// `SECRET_DOOR`, plus the secret doors themselves.
+    #[serde(default)]
+    pub hidden_cells: Vec<u32>,
     /// Internal provenance for cells whose main-loop loot facts depend on
     /// runtime-sensitive persistent Generator history. Never serialized.
     #[serde(skip)]
@@ -122,8 +130,45 @@ impl FloorMap {
         self.markers.clear();
         self.heaps.clear();
         self.mobs.clear();
+        self.uncertain_cells.clear();
         self.runtime_sensitive_loot_cells.clear();
         self.constrained_equipment_cells.clear();
+        self
+    }
+
+    /// Painter-complete layout plus the populated floor's heaps, mobs, and
+    /// markers. `all_uncertain` flags every entity when the floor's population
+    /// stream can diverge with run history; otherwise only the populated map's
+    /// runtime-sensitive cells are flagged (`skip_loot_cells` drops the
+    /// room-prize flags that a fresh floor-one profile pins).
+    pub(crate) fn with_entities_from(
+        mut self,
+        populated: &FloorMap,
+        all_uncertain: bool,
+        skip_loot_cells: bool,
+    ) -> Self {
+        self.markers = populated.markers.clone();
+        self.heaps = populated.heaps.clone();
+        self.mobs = populated.mobs.clone();
+        let mut uncertain: Vec<u32> = if all_uncertain {
+            self.heaps
+                .iter()
+                .map(|heap| heap.cell)
+                .chain(self.mobs.iter().map(|mob| mob.cell))
+                .chain(self.markers.iter().map(|marker| marker.cell))
+                .collect()
+        } else {
+            let loot = (!skip_loot_cells)
+                .then_some(populated.runtime_sensitive_loot_cells.iter())
+                .into_iter()
+                .flatten();
+            loot.chain(populated.constrained_equipment_cells.iter())
+                .copied()
+                .collect()
+        };
+        uncertain.sort_unstable();
+        uncertain.dedup();
+        self.uncertain_cells = uncertain;
         self
     }
 }
@@ -151,6 +196,16 @@ pub struct MapHeapItem {
 pub struct MapMob {
     pub cell: u32,
     pub mob: MobId,
+    pub state: MapMobState,
+}
+
+/// `Mob.state` when the level is created, before the hero arrives.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum MapMobState {
+    Sleeping,
+    Wandering,
+    Passive,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

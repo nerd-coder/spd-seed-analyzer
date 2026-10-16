@@ -10,6 +10,12 @@ and confirming travel.
 
 The overall analyzer remains partial.
 
+Main-path floor maps publish heaps, mobs, and loot markers with an inspect
+panel (hover/tap). `uncertain_cells` marks "May differ" entities: everything
+from depth 2 on, because run-history taint propagates from depth 1; depth 1 of
+a fresh run is exact. `hidden_cells` (secret-door-only areas) pulse on the
+canvas. Boss, vault, and mining maps remain layout-only.
+
 The Ambitious Imp quest panel reports each of the six take-out slots with its
 seed-independent guarantees and a candidate distribution over a +-3 deck-index
 window, seed draw first. The window is exact rather than sampled: a
@@ -73,3 +79,6 @@ Next:
    Java drops two `IntRange(3, 5)` stacks (the exact report has the real sum).
 3. Consider exposing `analyze_seed_exact` through WASM if the web app should
    offer the default-profile view.
+4. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
+   not actually depend on run history); publish entities on boss, vault, and
+   mining maps.

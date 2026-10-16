@@ -1,8 +1,9 @@
-import { type ItemId, itemClassName, mobClassName } from '@/generated/game-ids'
+import { type ItemId, itemClassName } from '@/generated/game-ids'
 import { SHEET_COLS, TILE_PX } from '@/lib/dungeon-tile-visuals'
 import { ITEM_SHEET, resolveItemIconIndex } from '@/lib/item-icons'
 import { itemSpriteSize } from '@/lib/item-sprite-rects'
-import type { MapEntityAssets, MobAssetKey } from '@/lib/map-assets'
+import type { MapEntityAssets } from '@/lib/map-assets'
+import { mobFrameAt, mobSourceRect, mobSprite } from '@/lib/map-mob-sprites'
 import type { FloorMap, IdentityMaps, MapHeap, MapMob } from '@/lib/spd-wasm'
 
 type Visibility = { item: boolean; mob: boolean }
@@ -14,39 +15,6 @@ const CONTAINER_FRAMES: Record<string, number> = {
   tomb: 34,
   skeleton: 32,
   remains: 33,
-}
-
-type MobFrame = {
-  asset: MobAssetKey
-  width: number
-  height: number
-  sourceX?: number
-  sourceY?: number
-}
-
-/** Pinned v4.0.2 idle frames from the matching Sprite classes. */
-const MOB_FRAMES: Record<string, MobFrame> = {
-  Rat: { asset: 'rat', width: 16, height: 15 },
-  Snake: { asset: 'snake', width: 12, height: 11 },
-  Skeleton: { asset: 'skeleton', width: 12, height: 15 },
-  Swarm: { asset: 'swarm', width: 16, height: 16 },
-  Thief: { asset: 'thief', width: 12, height: 13 },
-  // ShopkeeperSprite's idle animation starts on frame 1, then blinks to 0.
-  Shopkeeper: {
-    asset: 'shopkeeper',
-    width: 14,
-    height: 14,
-    sourceX: 14,
-  },
-  DM100: { asset: 'dm100', width: 16, height: 14 },
-  Guard: { asset: 'guard', width: 12, height: 16 },
-  // SpectralNecromancerSprite starts at frame 16, the second atlas row.
-  SpectralNecromancer: {
-    asset: 'necromancer',
-    width: 16,
-    height: 16,
-    sourceY: 16,
-  },
 }
 
 function validCell(map: FloorMap, cell: number) {
@@ -164,27 +132,37 @@ function drawMob(
   assets: MapEntityAssets,
   map: FloorMap,
   mob: MapMob,
-  scale: number
+  scale: number,
+  seconds: number | null
 ) {
-  const frame = MOB_FRAMES[mobClassName(mob.mob)]
-  if (!frame) return false
-  const image = assets[frame.asset]
+  const spriteDef = mobSprite(mob.mob)
+  const image = spriteDef && assets.mobs[spriteDef.sheet]
+  if (!spriteDef || !image) return false
+  const frame =
+    seconds == null ? undefined : mobFrameAt(spriteDef, seconds, mob.cell * 7)
+  const source = mobSourceRect(spriteDef, image, frame)
   const cellX = mob.cell % map.width
   const cellY = Math.floor(mob.cell / map.width)
-  const x = cellX * TILE_PX + (TILE_PX - frame.width) / 2
-  const y = (cellY + 1) * TILE_PX - frame.height - 6
+  // CharSprite.worldToCamera: centered, raised by 6/16 of a tile.
+  const x = cellX * TILE_PX + (TILE_PX - spriteDef.width) / 2
+  const y = (cellY + 1) * TILE_PX - spriteDef.height - 6
   ctx.drawImage(
     image,
-    frame.sourceX ?? 0,
-    frame.sourceY ?? 0,
-    frame.width,
-    frame.height,
+    source.x,
+    source.y,
+    spriteDef.width,
+    spriteDef.height,
     x * scale,
     y * scale,
-    frame.width * scale,
-    frame.height * scale
+    spriteDef.width * scale,
+    spriteDef.height * scale
   )
   return true
+}
+
+/** Sprite sheets needed to draw this map's mobs. */
+export function mapMobSheets(map: FloorMap): string[] {
+  return map.mobs.flatMap((mob) => mobSprite(mob.mob)?.sheet ?? [])
 }
 
 export function drawKnownEntities(
@@ -202,12 +180,31 @@ export function drawKnownEntities(
       drawHeap(ctx, assets.items, map, heap, identities, scale)
     }
   }
-  if (visibility.mob) {
-    for (const mob of map.mobs) {
-      if (!validCell(map, mob.cell) || !isDiscoverable(map, mob.cell)) continue
-      drawMob(ctx, assets, map, mob, scale)
-    }
+  if (visibility.mob) drawMobs(ctx, assets, map, scale, null)
+}
+
+/**
+ * Mobs on their idle clip `seconds` in, or on the clip's first frame when
+ * `seconds` is null (static renders and reduced motion).
+ */
+export function drawMobs(
+  ctx: CanvasRenderingContext2D,
+  assets: MapEntityAssets,
+  map: FloorMap,
+  scale: number,
+  seconds: number | null
+) {
+  for (const mob of map.mobs) {
+    if (!validCell(map, mob.cell) || !isDiscoverable(map, mob.cell)) continue
+    drawMob(ctx, assets, map, mob, scale, seconds)
   }
+}
+
+export function hasAnimatedMobs(map: FloorMap) {
+  return map.mobs.some((mob) => {
+    const spriteDef = mobSprite(mob.mob)
+    return spriteDef != null && spriteDef.fps > 0 && spriteDef.frames.length > 1
+  })
 }
 
 export function exactEntityCells(map: FloorMap) {
@@ -215,7 +212,7 @@ export function exactEntityCells(map: FloorMap) {
     item: new Set(map.heaps.map((heap) => heap.cell)),
     mob: new Set(
       map.mobs
-        .filter((mob) => MOB_FRAMES[mobClassName(mob.mob)] != null)
+        .filter((mob) => mobSprite(mob.mob) != null)
         .map((mob) => mob.cell)
     ),
   }

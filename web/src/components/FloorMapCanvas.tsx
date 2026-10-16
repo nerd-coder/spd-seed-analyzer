@@ -1,11 +1,24 @@
 import { useStore } from '@tanstack/react-store'
 import { useEffect, useMemo, useRef } from 'react'
 import { Terrain } from '@/lib/dungeon-tile-visuals'
+import { drawMobEmotes, hasSleepingMobs } from '@/lib/map-emotes'
+import { drawMobs, hasAnimatedMobs, mapMobSheets } from '@/lib/map-entities'
+import {
+  blackOutUnexplored,
+  concealAlpha,
+  concealedMap,
+  hiddenRegions,
+  regionPaths,
+  revealedMap,
+} from '@/lib/map-hidden'
+import { hasBlobEffects, ParticleField } from '@/lib/map-particles'
 import type { FloorMap, IdentityMaps } from '@/lib/spd-wasm'
 import {
+  type ConcealOverlay,
   drawFloorMap,
   loadMapAssets,
   mapViewport,
+  renderMapLayers,
   renderStaticMap,
   TILE_PX,
 } from '@/lib/tiles'
@@ -13,6 +26,10 @@ import { cn } from '@/lib/utils'
 import { createMapCanvasStore } from '@/stores/ui'
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)'
+/** Mobs are drawn per frame between the layers; heaps stay static. */
+const STATIC_ENTITIES = { item: true, mob: false }
+/** The concealed overlay holds mobs on their first idle frame. */
+const ALL_ENTITIES = { item: true, mob: true }
 
 function prefersReducedMotion() {
   return (
@@ -42,10 +59,13 @@ type Props = {
    * Cover the parent with CSS. Does not change `canvas.width` / `canvas.height`.
    */
   fill?: boolean
-  /** Animate the region water texture; disabled for thumbnails to avoid many RAF loops. */
+  /**
+   * Animate water, mob idles, blob particles, and the hidden-area pulse;
+   * disabled for thumbnails to avoid many RAF loops.
+   */
   animateWater?: boolean
-  showItems?: boolean
-  showMobs?: boolean
+  /** Hovered or pinned cell; its hidden region is shown revealed and still. */
+  focusCell?: number | null
 }
 
 export function FloorMapCanvas({
@@ -58,16 +78,18 @@ export function FloorMapCanvas({
   className,
   canvasClassName,
   animateWater = false,
-  showItems = false,
-  showMobs = false,
+  focusCell = null,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const focusRef = useRef<number | null>(focusCell)
+  const redrawRef = useRef<(() => void) | null>(null)
   const canvasStore = useMemo(
     () => createMapCanvasStore(prefersReducedMotion()),
     []
   )
   const { error, reducedMotion } = useStore(canvasStore)
   const viewport = useMemo(() => mapViewport(map), [map])
+  const hidden = useMemo(() => hiddenRegions(map), [map])
 
   const naturalW = viewport.width * TILE_PX * scale
   const naturalH = viewport.height * TILE_PX * scale
@@ -81,16 +103,18 @@ export function FloorMapCanvas({
   const shownW = Math.max(1, displayW * displayScale)
   const shownH = Math.max(1, displayH * displayScale)
   const hasWater = animateWater && map.tiles.includes(Terrain.WATER)
-  const visibleMarkerLabels = map.markers
-    .filter(
-      (marker) =>
-        (marker.kind === 'item' && showItems) ||
-        (marker.kind === 'mob' && showMobs)
-    )
-    .map((marker) => marker.label)
-  const markerDescription = visibleMarkerLabels.length
-    ? ` Visible markers: ${visibleMarkerLabels.join(', ')}.`
-    : ''
+  const hasHidden = hidden.regions.length > 0
+  const hasMotion = useMemo(
+    () => hasAnimatedMobs(map) || hasBlobEffects(map) || hasSleepingMobs(map),
+    [map]
+  )
+  const animating =
+    animateWater && (hasWater || hasHidden || hasMotion) && !reducedMotion
+
+  useEffect(() => {
+    focusRef.current = focusCell
+    redrawRef.current?.()
+  }, [focusCell])
 
   useEffect(() => {
     if (!animateWater) return
@@ -112,30 +136,74 @@ export function FloorMapCanvas({
     canvas.width = naturalW
     canvas.height = naturalH
 
-    loadMapAssets(map.tileset)
+    loadMapAssets(map.tileset, mapMobSheets(map))
       .then((assets) => {
         if (cancelled) return
         const ctx = canvas.getContext('2d')
         if (!ctx) return
-        const staticMap = renderStaticMap(assets, map, identities, scale, {
-          item: showItems,
-          mob: showMobs,
-        })
-        const started = performance.now()
-        const frame = (now: number) => {
-          if (cancelled) return
-          drawFloorMap(
-            ctx,
+        const layers = renderMapLayers(
+          assets,
+          hasHidden ? revealedMap(map) : map,
+          identities,
+          scale,
+          STATIC_ENTITIES
+        )
+        const particles = animating
+          ? ParticleField.forMap(map, assets.specks)
+          : null
+        let overlay: ConcealOverlay | undefined
+        if (hasHidden) {
+          const concealed = renderStaticMap(
             assets,
-            staticMap,
+            concealedMap(map, hidden.unexplored),
+            identities,
             scale,
-            (now - started) / 1000,
-            viewport
+            ALL_ENTITIES
           )
-          if (hasWater && !reducedMotion) {
-            requestId = requestAnimationFrame(frame)
+          blackOutUnexplored(concealed, map, hidden.unexplored, scale)
+          overlay = {
+            concealed,
+            paths: regionPaths(map, hidden.regions, scale),
+            alphas: hidden.regions.map(() => 0),
           }
         }
+        const started = performance.now()
+        let last = started
+        const paint = (now: number) => {
+          const seconds = (now - started) / 1000
+          particles?.step((now - last) / 1000)
+          last = now
+          if (overlay) {
+            const focused =
+              focusRef.current == null
+                ? undefined
+                : hidden.regionOf.get(focusRef.current)
+            const alpha = concealAlpha(seconds, animating)
+            overlay.alphas = hidden.regions.map((_, region) =>
+              region === focused ? 0 : alpha
+            )
+          }
+          drawFloorMap(ctx, assets, layers, scale, seconds, viewport, overlay, {
+            mobs: (layer) =>
+              drawMobs(layer, assets, map, scale, animating ? seconds : null),
+            effects: (layer) => {
+              particles?.draw(layer, scale)
+              drawMobEmotes(
+                layer,
+                assets.icons,
+                map,
+                scale,
+                animating ? seconds : null
+              )
+            },
+          })
+        }
+        const frame = (now: number) => {
+          if (cancelled) return
+          paint(now)
+          if (animating) requestId = requestAnimationFrame(frame)
+        }
+        redrawRef.current = animating ? null : () => paint(performance.now())
         frame(started)
       })
       .catch((e: unknown) => {
@@ -149,6 +217,7 @@ export function FloorMapCanvas({
 
     return () => {
       cancelled = true
+      redrawRef.current = null
       cancelAnimationFrame(requestId)
     }
   }, [
@@ -157,10 +226,9 @@ export function FloorMapCanvas({
     scale,
     naturalW,
     naturalH,
-    hasWater,
-    reducedMotion,
-    showItems,
-    showMobs,
+    hasHidden,
+    hidden,
+    animating,
     viewport,
     canvasStore,
   ])
@@ -185,12 +253,13 @@ export function FloorMapCanvas({
             fill && 'block h-full w-full',
             canvasClassName
           )}
+          data-map-canvas=""
           data-water-animation={
             hasWater && !reducedMotion ? 'running' : 'paused'
           }
+          data-hidden-regions={hidden.regions.length}
           role="img"
-          aria-label={`Shattered Pixel Dungeon floor map. ${map.heaps.length} exact heaps, ${map.mobs.length} exact mobs, ${map.traps.length} traps, and ${map.transitions.length} transitions.${markerDescription}`}
-          title={markerDescription.trim() || undefined}
+          aria-label={`Shattered Pixel Dungeon floor map. ${map.heaps.length} heaps, ${map.mobs.length} mobs, ${map.traps.length} traps, ${map.transitions.length} transitions, and ${hidden.regions.length} hidden areas.`}
           style={
             fill
               ? {

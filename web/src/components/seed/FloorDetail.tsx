@@ -1,6 +1,7 @@
 import { FloorMapDialog } from '@/components/FloorMapDialog'
 import { GameObject } from '@/components/GameObject'
 import { ItemBox } from '@/components/ItemBox'
+import { AlchemyBubbles } from '@/components/seed/AlchemyBubbles'
 import { FloorBanner } from '@/components/seed/FloorBanner'
 import {
   FloorItemSections,
@@ -88,11 +89,14 @@ export function FloorDetail({
               key={`${appearance.source ?? appearance.kind}-${index}`}
               className="inline-flex items-center gap-1"
             >
-              <GameObject
-                id="AlchemyPot"
-                size={32}
-                label={alchemyPotLabel(appearance)}
-              />
+              <span className="relative inline-flex">
+                <AlchemyBubbles scale={2} />
+                <GameObject
+                  id="AlchemyPot"
+                  size={32}
+                  label={alchemyPotLabel(appearance)}
+                />
+              </span>
               {index === offerPotIndex ? (
                 <span className="inline-flex items-center gap-0">
                   {offerClasses.map((className, offerIndex) => (

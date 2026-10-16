@@ -269,10 +269,55 @@ fn floor_one_room_mobs_keep_fixed_combat_rewards_non_positional() {
             ..
         }] if *item == spd_objects::ItemId::MysteryMeat
     ));
-    assert!(
-        floor.map.as_ref().is_some_and(|map| map.mobs.is_empty()),
-        "public map remains painter-only"
+    let map = floor.map.as_ref().expect("floor one map");
+    assert_eq!(
+        map.mobs
+            .iter()
+            .filter(|mob| mob.mob == spd_objects::MobId::Piranha)
+            .count(),
+        3,
+        "public map places the PoolRoom piranhas"
     );
+}
+
+#[test]
+fn public_maps_publish_entities_with_uncertainty_and_hidden_cells() {
+    let report = analyze_seed("GFX-PZH-DCH", 8).expect("analyze");
+    let mut saw_hidden = false;
+    for floor in &report.floors {
+        let Some(map) = floor.map.as_ref().or(floor.assumed_map.as_ref()) else {
+            continue;
+        };
+        let len = map.tiles.len() as u32;
+        let entity_cells: std::collections::BTreeSet<u32> = map
+            .heaps
+            .iter()
+            .map(|heap| heap.cell)
+            .chain(map.mobs.iter().map(|mob| mob.cell))
+            .chain(map.markers.iter().map(|marker| marker.cell))
+            .collect();
+        assert!(entity_cells.iter().all(|&cell| cell < len));
+        assert!(
+            map.uncertain_cells.windows(2).all(|pair| pair[0] < pair[1]),
+            "uncertain cells are sorted and unique"
+        );
+        assert!(
+            map.uncertain_cells
+                .iter()
+                .all(|cell| entity_cells.contains(cell)),
+            "only entity cells can be uncertain (floor {})",
+            floor.depth
+        );
+        assert!(map.hidden_cells.windows(2).all(|pair| pair[0] < pair[1]));
+        for &cell in &map.hidden_cells {
+            let tile = map.tiles[cell as usize];
+            assert!(tile != 4 && tile != 12, "hidden cells are never walls");
+        }
+        let secret_doors = map.tiles.iter().filter(|&&tile| tile == 16).count();
+        assert!(map.hidden_cells.len() >= secret_doors);
+        saw_hidden |= !map.hidden_cells.is_empty();
+    }
+    assert!(saw_hidden, "eight floors include at least one secret door");
 }
 
 #[test]

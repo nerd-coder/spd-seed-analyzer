@@ -131,6 +131,10 @@ export type FloorMap = {
   custom_tiles: MapCustomTile[]
   custom_terrain?: MapCustomTile[]
   custom_walls: MapCustomTile[]
+  /** Entity cells whose heap or mob can differ with run history. */
+  uncertain_cells?: number[]
+  /** Cells reachable only through a secret door, plus the doors. */
+  hidden_cells?: number[]
 }
 
 /** A pinned static `CustomTilemap` layer from the game level. */
@@ -165,9 +169,13 @@ export type MapHeapItem = {
   cursed: boolean
 }
 
+export type MapMobState = 'sleeping' | 'wandering' | 'passive'
+
 export type MapMob = {
   cell: number
   mob: MobId
+  /** `Mob.state` at level creation, before the hero arrives. */
+  state: MapMobState
 }
 
 export type MapTransition = {

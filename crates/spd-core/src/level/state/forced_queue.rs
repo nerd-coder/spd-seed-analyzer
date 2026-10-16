@@ -1,6 +1,6 @@
 //! Seed-only projection of the exact initial `itemsToSpawn` queue.
 
-use crate::items::model::{ForcedDropRole, GeneratedItem, ItemProvenance};
+use crate::items::model::{ForcedDropRole, GeneratedItem, ItemCategory, ItemProvenance};
 use crate::report::{ItemDependencyCondition, ItemEntry, ItemPredictionKind, ItemSpawnCondition};
 use crate::trinkets::Challenge;
 
@@ -177,4 +177,35 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
         ));
     }
     entries
+}
+
+/// Room source of a queued guaranteed spawn that a room's `findPrizeItem`
+/// pulled, e.g. `RingRoom:forced`.
+pub(super) fn relocating_room(item: &GeneratedItem) -> Option<&str> {
+    let source = item.source.as_deref()?;
+    let room = source.split(':').next()?;
+    (item.from_spawn_queue && room.ends_with("Room")).then_some(source)
+}
+
+/// Publish a relocated guaranteed spawn at its room so the floor list keeps
+/// the item's location.
+pub(super) fn locate_in_rooms<'a>(
+    entries: &mut [ItemEntry],
+    prizes: impl IntoIterator<Item = &'a GeneratedItem>,
+) {
+    for prize in prizes {
+        let Some(room) = relocating_room(prize) else {
+            continue;
+        };
+        let entry = entries.iter_mut().find(|entry| {
+            entry.source.as_deref() == Some("guaranteed floor spawn")
+                && match entry.class_name() {
+                    Some(class_name) => class_name == prize.class_name,
+                    None => entry.category == "food" && prize.category == ItemCategory::Food,
+                }
+        });
+        if let Some(entry) = entry {
+            entry.source = Some(room.into());
+        }
+    }
 }

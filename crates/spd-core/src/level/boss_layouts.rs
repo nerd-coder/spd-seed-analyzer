@@ -40,6 +40,8 @@ pub(super) fn fixed_layout(depth: i32) -> Option<FloorMap> {
         custom_tiles: Vec::new(),
         custom_terrain: Vec::new(),
         custom_walls: Vec::new(),
+        uncertain_cells: Vec::new(),
+        hidden_cells: Vec::new(),
         runtime_sensitive_loot_cells: Vec::new(),
         constrained_equipment_cells: Vec::new(),
     };

@@ -1,0 +1,546 @@
+{
+  "Acidic": {
+    "name": "acidic scorpio",
+    "desc": "These huge arachnid-like demonic creatures avoid close combat, preferring to fire crippling serrated spikes from long distances. This one appears to be dripping with corrosive ooze."
+  },
+  "Albino": {
+    "name": "albino rat",
+    "desc": "This is a rare breed of marsupial rat, with pure white fur and jagged teeth."
+  },
+  "ArmoredBrute": {
+    "name": "armored brute",
+    "desc": "The most senior gnoll brutes often wear powerful armor to show their status. The armor makes these brutes much more resilient to physical damage, and their greater discipline means they can rage for much longer before succumbing to their wounds."
+  },
+  "ArmoredStatue": {
+    "name": "armored statue",
+    "desc": "You would think that it's just another one of this dungeon's inanimate statues, but its red glowing eyes give it away.\n\nIt seems to be in great condition because of the armor it's wearing, it might be very hard to kill."
+  },
+  "Bandit": {
+    "name": "crazy bandit",
+    "desc": "An elite thief, distinguished by their more opulent purple robe. Despite their greater skill, they've become just as mindless as regular thieves.\n\nIn addition to stealing from you, crazed bandits will briefly blind, cripple, and poison you! They're much more likely to be carrying extra loot than a regular thief though."
+  },
+  "Bat": {
+    "name": "vampire bat",
+    "desc": "These brisk and tenacious inhabitants of the caves are much more dangerous than they seem. They replenish their health with each successful attack, which allows them to defeat much larger opponents."
+  },
+  "Bee": {
+    "name": "golden bee",
+    "desc": "Despite their small size, golden bees tend to protect their home fiercely. This one is very mad, better keep your distance."
+  },
+  "Blacksmith": {
+    "name": "troll blacksmith",
+    "desc": "This troll blacksmith looks like all trolls look: he is tall and lean, and his skin resembles stone in both color and texture. The troll blacksmith is tinkering with disproportionally small tools."
+  },
+  "Brute": {
+    "name": "gnoll brute",
+    "desc": "Brutes are the largest, strongest, and toughest of all gnolls. When mortally wounded, they go berserk, gaining temporary shielding and a large boost to damage."
+  },
+  "CausticSlime": {
+    "name": "caustic slime",
+    "desc": "This slime seems to have been tainted by the dark magic emanating from below. It has lost its usual green color, and drips with caustic ooze."
+  },
+  "Crab": {
+    "name": "sewer crab",
+    "desc": "These huge crabs are at the top of the food chain in the sewers. They are extremely fast and their thick carapace can withstand heavy blows."
+  },
+  "CrystalGuardian": {
+    "name": "crystal guardian",
+    "desc": "These large crystalline guardians almost look like statues, if it weren't for their bright glowing eyes. The hardened crystal they're made out of causes them to be sluggish but very tough, so _it's best to leave them to sleep in their crystal nest for as long as possible._\n\nDue to their size, crystal guardians will move much more slowly in enclosed spaces. They're also so durable that they're impossible to kill outright. They can be beaten down and temporarily disabled, but they'll just get back up again after a little while."
+  },
+  "CrystalMimic": {
+    "name": "crystal mimic",
+    "desc": "Mimics are magical creatures which can take any shape they wish. In dungeons they almost always choose a shape of a treasure chest, in order to lure in unsuspecting adventurers.\n\nCrystal mimics are trickier than their regular cousins, and prefer to avoid conflict while stealing loot. They will attempt to sprint away once discovered, and have the ability to reposition enemies when they attack."
+  },
+  "CrystalSpire": {
+    "name": "crystal spire",
+    "desc": "This gigantic spire of ultra hard crystal is probably the source of all the strange crystalline creatures in this cave. Your regular weapons are ineffective against it, so you'll need to use your pickaxe if you want to destroy it.\n\n_Make sure you're prepared before you start breaking it._ Such a big crystal is likely to take a while to mine through, and you probably won't be able to do it undisturbed. The spire itself may even have some means of defending itself as well. _Perhaps the spire's own attacks could be used against its minions._"
+  },
+  "CrystalWisp": {
+    "name": "crystal wisp",
+    "desc": "A small angry floating chunk of hardened crystal that's producing a bright glow. While not especially strong, crystal wisps will shoot a damaging beam of light at you if they have a clear shot.\n\nWisps are small enough to easily move through the various crystal outcroppings, but they aren't able to shoot through them."
+  },
+  "DemonSpawner": {
+    "name": "demon spawner",
+    "desc": "This twisting amalgam of dwarven flesh is responsible for creating ripper demons from the dwarves that have died in this region. Clearly the demons see no issue with using every resource they can against their enemies.\n\nWhile visually terrifying, demon spawners have no means of moving or directly defending themselves. Their considerable mass makes them hard to kill quickly however, and they will spawn ripper demons more quickly when they are under threat.\n\n_Demon spawners seem to be connected to some central source of demonic power. Killing them may weaken it._"
+  },
+  "DM100": {
+    "name": "DM-100",
+    "desc": "The DM-100 is an early model of dwarven 'defense machine' which was designed to protect dwarven miners in the caves below this prison. Their electrical shocks proved too weak however, and so they were gifted to the human city above. They went unused for years and eventually found their way to the prison, where the warden initially deemed them too cruel to use. However, as the prisoners became more unruly they became a necessity."
+  },
+  "DM200": {
+    "name": "DM-200",
+    "desc": "The DM-200 is the second generation of dwarven 'defense machine', which was designed to protect dwarven miners in the caves and city below. They are much larger and bulkier than their predecessors, and attack with devastating hydraulic fists.\n\nTheir increased size is also their primary weakness, as they are unable to fit into the narrow tunnels and doorways of the dungeon. The dwarves were able to compensate for the DM-200's lack of mobility by allowing them to vent their toxic exhaust fumes at distant enemies, or enemies they cannot reach."
+  },
+  "DM201": {
+    "name": "DM-201",
+    "desc": "The dwarves briefly experimented with more heavily emphasizing the DM-200's lack of mobility and created some DM models that are entirely stationary. The DM-201 is a retrofitted DM-200 which acts as a sentry turret that has no movement ability. In exchange for the lack of mobility, DM-201s have significantly more durability and attacking power.\n\nAs DM-201s have no engine to vent exhaust from, the dwarves instead outfitted them with corrosive gas grenades! DM-201s are careful with these grenades however, and will only lob them when attacked from a distance."
+  },
+  "DM300": {
+    "name": "DM-300",
+    "desc": "The DM-300 is the largest and most powerful 'defense machine' that the dwarves ever built. Such an awesome machine is difficult to manufacture, so the dwarves only ever made a few to guard the entrances to their underground metropolis.\n\nIt is equipped with vents to jet its toxic exhaust fumes and a high power drill that it can use both to attack and disrupt the earth. DM-300 can also connect to an energy grid, further enhancing its power."
+  },
+  "DwarfKing": {
+    "name": "King of Dwarves",
+    "desc": "Many years ago one of the highest wizards in the dwarven court uncovered secrets which gave him tremendous power over life and death. He soon put this power to use, subjugating and corrupting his peers, his king, and eventually every dwarven citizen. Now he is king, ruler over a legion of undead subjects.\n\nThe King of Dwarves is an aggressive foe, who will attempt to surround and overwhelm his enemies with his horde of undead minions."
+  },
+  "EbonyMimic": {
+    "name": "ebony mimic",
+    "desc": "Mimics are magical creatures which can take any shape they wish. In dungeons they almost always choose a shape of a treasure chest, in order to lure in unsuspecting adventurers.\n\nEbony mimics are stealthy mimics with the ability to make themselves almost invisible. They lurk on things that adventurers are likely to interact with, but do contain loot of their own as well. They aren't any tougher than a regular mimic once discovered, but their surprise bite is devastating."
+  },
+  "Eye": {
+    "name": "evil eye",
+    "desc": "Evil Eyes are floating balls of pent up demonic energy. While they are capable of melee combat, their true strength comes from their magic.\n\nAfter building energy for a short time an Evil Eye will unleash a devastating beam of energy called the _deathgaze._ Anything within the Evil Eye's sights will take tremendous damage, wise adventurers will run for cover."
+  },
+  "FetidRat": {
+    "name": "fetid rat",
+    "desc": "Something is clearly wrong with this rat. Its greasy black fur and rotting skin are very different from the healthy rats you've seen previously. Its pale green eyes make it seem especially menacing.\n\nThe rat carries a cloud of horrible stench with it, it's overpoweringly strong up close.\n\nDark ooze dribbles from the rat's mouth, it eats through the floor but seems to dissolve in water."
+  },
+  "FungalCore": {
+    "name": "fungal core",
+    "desc": "This gigantic mushroom must be the source of all the fungal activity in this cave."
+  },
+  "FungalSentry": {
+    "name": "fungal sentry",
+    "desc": "This especially tall mushroom acts as a point of defense for the larger fungal network living in this cave.\n\nIt is immobile, but will shoot precise blasts of poison at anything that gets within its line of sight. While the impact of these blasts is fairly weak, _they can stack up deadly amounts of poison very quickly._ While it can be killed, it's probably best to avoid it."
+  },
+  "FungalSpinner": {
+    "name": "fungal spinner",
+    "desc": "This cave spinner appears to be being controlled by a parasitic fungus. The fungus has also changed its abilities, replacing its web and venom sacks with fungal growth.\n\nThe fungal spinner will spit plant life at you instead of webs, spreading fungal vegetation and potentially rooting you. While it can't poison, the fungal spinner will gain substantial damage resistance if it is adjacent to any mushrooms."
+  },
+  "Ghost": {
+    "name": "sad ghost",
+    "desc": "The ghost is barely visible. It looks like a shapeless spot of faint light with a sorrowful face."
+  },
+  "Ghoul": {
+    "name": "dwarven ghoul",
+    "desc": "As dwarven society slowly began to collapse, and the current king of the dwarves seized absolute power, those who were weak or who resisted him were not treated well. As the king grew more adept at wielding dark magic, he bent these dwarves to his will, and now they make up the footsoldiers of his army.\n\nGhouls are not especially strong on their own, but always travel in groups and are much harder to kill in large numbers. _When a ghoul is defeated, it will rise again after a few turns as long as another ghoul is nearby._"
+  },
+  "Gnoll": {
+    "name": "gnoll scout",
+    "desc": "Gnolls are hyena-like humanoids. They dwell in sewers and dungeons, venturing up to raid the surface from time to time. Gnoll scouts are regular members of their pack, they are not as strong as brutes and not as intelligent as shamans."
+  },
+  "GnollExile": {
+    "name": "gnoll exile",
+    "desc": "This grey-furred gnoll has a large mark on its shoulder, denoting it as an exile. Gnolls are usually exiled from their society for ignoring orders or breaking laws. Exiles have to be strong and shrewd to survive, this one looks like it knows how to use the spear it's holding."
+  },
+  "GnollGeomancer": {
+    "name": "gnoll geomancer",
+    "desc": "This impressively tall senior gnoll must be the source of the various earth-moving magic around here, and the organizer of all the gnoll activity. Unlike the gnoll sappers in the area, the geomancer is quite adept with its magic, and cannot be damaged by thrown or falling rocks. It doesn't have any way to fight in melee combat though."
+  },
+  "GnollGuard": {
+    "name": "gnoll guard",
+    "desc": "A large and tough looking gnoll wielding a spear and a shield, but no helmet. These guards are likely brutes in training, roped into helping protect the mine from encroaching wildlife.\n\nThe gnoll guard is strong enough to wield the spear in one hand, but can't use it very well. _It will need fairly open space to attack at a distance, and will do notably less damage to you if you get up close._"
+  },
+  "GnollSapper": {
+    "name": "gnoll sapper",
+    "desc": "A small and weak but intelligent gnoll with pale fur and a satchel full of various gadgets. They are likely here to assist with prospecting and mining dark gold, and have a nearby guard for protection. They are capable of fighting, but their attacks are pitifully weak, no stronger than a gnoll scout.\n\nInstead of fighting directly, sappers prefer to use the various gadgets they have to make the rocky environment attack for them. They don't know earth-moving magic themselves though, and so are pretty likely to use their gadgets recklessly. _There should be lots of ways to use their attacks against them, or their guard._"
+  },
+  "GnollTrickster": {
+    "name": "gnoll trickster",
+    "desc": "A strange looking creature, even by gnoll standards. It hunches forward with a wicked grin, almost cradling the satchel hanging over its shoulder. Its eyes are wide with a strange mix of fear and excitement.\n\nThere is a large collection of poorly made darts in its satchel, they all seem to be tipped with various harmful substances."
+  },
+  "GoldenMimic": {
+    "name": "golden mimic",
+    "desc": "Mimics are magical creatures which can take any shape they wish. In dungeons they almost always choose a shape of a treasure chest, in order to lure in unsuspecting adventurers.\n\nGolden mimics are tougher mimics which try to attract the strongest adventurers. They have better loot, but are also much stronger than regular mimics."
+  },
+  "Golem": {
+    "name": "golem",
+    "desc": "Golems are an attempt to correct the previous flaws in dwarven machinery via the dwarves newfound use of magic. They are much more compact and efficient compared to the DM-300 while still being very deadly.\n\nWhile golems are still too large to fit into passageways, the dwarves have given them new magical abilities to compensate. Golems can teleport themselves between rooms, and teleport enemies to them when they are out of reach."
+  },
+  "Goo": {
+    "name": "Goo",
+    "desc": "Little is known about The Goo. It's quite possible that it is not even a creature, but rather a conglomerate of vile substances from the sewers that somehow gained basic intelligence. Regardless, dark magic is certainly what has allowed Goo to exist.\n\nIts gelatinous nature has let it absorb lots of dark energy, you feel a chill just from being near. If Goo is able to attack with this energy you won't live for long."
+  },
+  "GreatCrab": {
+    "name": "great crab",
+    "desc": "This crab is gigantic, even compared to other sewer crabs. Its blue shell is covered in cracks and barnacles, showing great age. It lumbers around slowly, barely keeping balance with its massive claw.\n\nWhile the crab only has one claw, its size easily compensates. The crab holds the claw in front of any threat, shielding itself behind an impenetrable wall of carapace. However, the crab cannot block attacks it doesn't see coming, or attacks from multiple enemies at once."
+  },
+  "Guard": {
+    "name": "prison guard",
+    "desc": "Once keepers of the prison, these guards have long since become no different than the inmates. They shamble like zombies, brainlessly roaming through the halls in search of anything out of place, like you!\n\nThey carry chains around their hip, possibly used to pull in enemies to close range."
+  },
+  "HermitCrab": {
+    "name": "hermit crab",
+    "desc": "For one reason or another, this sewer crab has decided to wear the broken upper part of a barrel on its head! The extra weight has slown it down to regular speed, but has also granted it considerably more defence. You think you can hear something bouncing around inside the barrel though..."
+  },
+  "Imp": {
+    "name": "ambitious imp",
+    "desc": "This little red person look like an Imp. Imps are lesser demons, notable for their intelligence and not their strength.\n\nYou've only heard about demons in ancient folk tales though, which usually describe them as travelers from another world. You've never seen any evidence demons actually exist, but this Imp is clearly real and seems very happy to see you."
+  },
+  "ImpShopkeeper": {
+    "name": "ambitious imp",
+    "desc": "The imp has set up a little shop on the border of the inner halls. It's nice to see a friendly face, but his prices certainly don't seem friendly."
+  },
+  "Mimic": {
+    "name": "mimic",
+    "desc": "Mimics are magical creatures which can take any shape they wish. In dungeons they almost always choose a shape of a treasure chest, in order to lure in unsuspecting adventurers.\n\nMimics have a nasty bite, but often hold more treasure than a regular chest."
+  },
+  "MirrorImage": {
+    "name": "mirror image",
+    "desc": "This illusion bears a close resemblance to you, even seeming to wield your current weapon and armor.\n\nMirror images will seek and attack enemies using their mimicked weapon, which behaves the same as yours, but deals less damage. They start out nearly invisible, but must take on a form that's more easily seen in order to attack.\n\nWhile their offensive power can be potent, mirror images have no durability, and will fade the moment they take damage."
+  },
+  "Monk": {
+    "name": "dwarf monk",
+    "desc": "These monks are fanatics, who have devoted themselves to protecting their king through physical might. So great is their devotion that they have totally surrendered their minds to their king, and now roam the dwarven city like mindless zombies.\n\nMonks rely solely on the art of hand-to-hand combat, and are able to use their unarmed fists both for offense and defense. When they become focused, monks will parry the next physical attack used against them, even if it was otherwise guaranteed to hit. Monks build focus more quickly while on the move, and more slowly when in direct combat."
+  },
+  "Necromancer": {
+    "name": "necromancer",
+    "desc": "These apprentice dark mages have flocked to the prison, as it is the perfect place to practise their evil craft.\n\nNecromancers will summon and empower skeletons to fight for them. Killing the necromancer will also kill the skeleton it summons."
+  },
+  "PhantomPiranha": {
+    "name": "phantom piranha",
+    "desc": "Phantom piranhas are a rare breed of piranha with magical abilities and eerie translucent bodies. They are capable of teleporting as they are being attacked, either to escape or to quickly get close to their enemy!\n\nWhile they are annoying to fight, their meat is prized for its magical properties."
+  },
+  "Piranha": {
+    "name": "giant piranha",
+    "desc": "These carnivorous fish are bred specifically to protect flooded areas. Their bite is deadly, so it's best to avoid confronting them directly."
+  },
+  "PrismaticImage": {
+    "name": "prismatic image",
+    "desc": "This shimmering illusion bears a close resemblance to you, even seeming to wield your current weapon and armor.\n\nPrismatic images will attempt to seek and draw focus from enemies, using their enhanced defense and health to protect you. While they do not have the same offensive power as mirror images, they have enhanced durability, including receiving benefits from your armor.\n\nWhen reduced to 0 hp, prismatic images will fade over several turns, and can still be healed during this time. When no enemies are present, prismatic images will fade and rejoin their master."
+  },
+  "Rat": {
+    "name": "marsupial rat",
+    "desc": "Marsupial rats are aggressive but rather weak denizens of the sewers. They have a nasty bite, but are only life threatening in large numbers."
+  },
+  "RatKing": {
+    "name": "rat king",
+    "desc": "This rat is a little bigger than a regular marsupial rat. It's wearing a tiny crown on its head."
+  },
+  "RipperDemon": {
+    "name": "ripper demon",
+    "desc": "These horrific creatures are the result of the many dwarven corpses in this region being put to use by demonic forces. Rippers are emaciated ghoulish creatures that resemble dwarves, but with broken bodies and long sharp claws made of bone.\n\nRipper demons are not particularly durable, but they are agile and dangerous. They are capable of leaping great distances to quickly reach targets before goring them with their claws."
+  },
+  "RotHeart": {
+    "name": "rot heart",
+    "desc": "A Rotberry's fruit is very unique. Instead of rotting away and providing nutrients, the fruit grows, hardens, and encompasses the seed. It provides protection for the internal organs which grow inside the fruit. This giant orb is referred to as the heart of an adult rotberry plant."
+  },
+  "RotLasher": {
+    "name": "rot lasher",
+    "desc": "The rot lasher is a part of a mature rotberry plant's root structure, and also their primary means of defense. Lashers are blind and stuck into the ground, but will violently assault any nearby threat after taking a moment to detect them. When there is no nearby enemies, they stand motionless, attempting to blend in with surrounding vegetation."
+  },
+  "Scorpio": {
+    "name": "scorpio",
+    "desc": "These huge arachnid-like demonic creatures avoid close combat, preferring to fire crippling serrated spikes from long distances."
+  },
+  "Senior": {
+    "name": "senior monk",
+    "desc": "These monks are fanatics, who have devoted themselves to protecting their king through physical might. So great is their devotion that they have totally surrendered their minds to their king, and now roam the dwarven city like mindless zombies.\n\nThis monk has mastered the art of hand-to-hand combat, and is able to gain focus while moving much more quickly than regular monks. When they become focused, monks will parry the next physical attack used against them, even if it was otherwise guaranteed to hit. Monks build focus more quickly while on the move, and more slowly when in direct combat."
+  },
+  "Shaman": {
+    "name": "gnoll shaman",
+    "desc": "Gnoll shamans are intelligent gnolls who use battle spells to compensate for their lack of might. They have a very respected position in gnoll society, despite their weaker strength."
+  },
+  "Sheep": {
+    "name": "sheep",
+    "desc": "This is a magic sheep. What's so magical about it? You can't kill it. It will stand there until it magically fades away, all the while chewing cud with a blank stare."
+  },
+  "Shopkeeper": {
+    "name": "shopkeeper",
+    "desc": "This stout guy looks more appropriate for a trade district in some large city than for a dungeon. His prices explain why he prefers to do business here."
+  },
+  "Skeleton": {
+    "name": "skeleton",
+    "desc": "Skeletons are composed of the bones of unlucky adventurers and inhabitants of the prison, animated by emanations of evil magic from the depths below. After they have been damaged enough, skeletons will disintegrate in an explosion of bones. The shrapnel from this explosion is harmful to anything nearby, but armor is very effective at mitigating it."
+  },
+  "Slime": {
+    "name": "slime",
+    "desc": "Slimes are strange, slightly magical creatures with a rubbery outer body and a liquid core. The city sewers provide them with an ample supply of water and nutrients.\n\nBecause of their elastic outer membrane, it is difficult to deal more than _6 damage_ to slimes from any one attack."
+  },
+  "Snake": {
+    "name": "sewer snake",
+    "desc": "These oversized serpents are capable of quickly slithering around blows, making them quite hard to hit. Magical attacks or surprise attacks are capable of catching them off-guard however.\n\nYou can perform a surprise attack by attacking while out of the snake's vision. One way is to let a snake chase you through a doorway and then _strike just after it moves into the door._"
+  },
+  "SpectralNecromancer": {
+    "name": "spectral necromancer",
+    "desc": "While Skeletons are a necromancer’s bread and butter, some prefer to look into other less corporeal minions. Spectral necromancers have chosen wraiths as their minion of choice!\n\nIndividual wraiths aren't as strong as skeletons, but these necromancers aren't afraid to summon a bunch of them!"
+  },
+  "Spinner": {
+    "name": "cave spinner",
+    "desc": "These greenish furry cave spiders try to avoid direct combat. Instead they prefer to wait in the distance while their victim struggles in their excreted cobweb, slowly dying from their venomous bite. They are capable of shooting their webs great distances, and will try to block whatever path their prey is taking."
+  },
+  "Statue": {
+    "name": "animated statue",
+    "desc": "You would think that it's just another one of this dungeon's inanimate statues, but its red glowing eyes give it away."
+  },
+  "Succubus": {
+    "name": "succubus",
+    "desc": "Succubi are shapeshifting demons that manipulate the minds of their prey. This one has taken the form of a pale gothic humanoid, perhaps to attract dwarven warlocks?\n\nSuccubi may temporarily charm their enemy when they attack, making their enemy unable to directly attack them. When succubi attack a charmed enemy, they will steal some of their life essence."
+  },
+  "Swarm": {
+    "name": "swarm of flies",
+    "desc": "The deadly swarm of flies buzzes angrily. Every non-magical attack will split it into two smaller but equally dangerous swarms."
+  },
+  "Tengu": {
+    "name": "Tengu",
+    "desc": "A famous and enigmatic assassin, named for the mask grafted to his face.\n\nTengu is held down with large clasps on his wrists and knees, though he seems to have gotten rid of his chains long ago.\n\nHe will try to use traps, deceptive magic, and precise attacks to eliminate the only thing stopping his escape: you."
+  },
+  "Thief": {
+    "name": "crazy thief",
+    "desc": "Though these inmates roam free of their cells, this place is still their prison. Over time, this place has taken their minds as well as their freedom. Long ago, these crazy thieves and bandits have forgotten who they are and why they steal.\n\nThese enemies are more likely to steal and run than they are to fight. Make sure to keep them in sight, or you might never see your stolen item again."
+  },
+  "TormentedSpirit": {
+    "name": "tormented spirit",
+    "desc": "Tormented spirits are otherwise good-natured spirits that have been afflicted by a curse. So long as they are cursed they will attack just like a wraith, and are more powerful as well!\n\nIt may be possible to cleanse the curse by using the right item while next to the spirit. If the curse is lifted the spirit will surely be grateful..."
+  },
+  "VaultBossElemental": {
+    "name": "greater elemental",
+    "desc": "Representing the pinnacle of dwarven summoning magic, this massive elemental's unstable power seems to be regulated by the equally impressive circle that summoned it. This gives it the ability to _swap forms!_ Each form has unique attacks, resistances, and weaknesses."
+  },
+  "VaultDM100": {
+    "name": "modified DM-100",
+    "desc": "These DM-100s look almost identical to ones you'd find in the prison, but with a bright teal glow coming from their eye. Probably they have been retrofitted to use some more modern dwarven power source.\n\nThey act just like regular DM-100s. Their ability to arc lightning at a distance is still present despite the power source change, and their cleaner condition makes them a bit more durable."
+  },
+  "VaultDM200": {
+    "name": "modified DM-200",
+    "desc": "These DM-200s look just like their counterparts from the caves, but with glowing teal eyes. They have probably been retrofitted with a more modern dwarven power source.\n\nJust like in their caves counterparts, these DM-200s are too large to fit into enclosed spaces, and are still capable of spewing gas."
+  },
+  "VaultLaser": {
+    "name": "disintegration sentry",
+    "desc": "These sentries fire rays of disintegration magic at regular or semi-random intervals. The beams look quite hazardous, but they always seem to go to the same place at least. It doesn't look like there's any way to resist the disintegration beams, so _you'll have to avoid them in some way_."
+  },
+  "VaultMirror": {
+    "name": "Strange Mirror",
+    "desc": "This large mirror is inscribed with various glowing dwarven runes, it hums gently but doesn't seem to actually reflect anything."
+  },
+  "VaultSentry": {
+    "name": "scanning sentry",
+    "desc": "These sentries scan the area in a pre-set pattern. They look quite hazardous, you'll surely be zapped if you are detected by the scan. The pattern can often be avoided, but the sentries also have to visually see you in order to detect you, so _anything that obscures vision is effective against them_."
+  },
+  "VaultShaman": {
+    "name": "captured shaman",
+    "desc": "These gnoll shamans are clearly from the caves, but have a strange metal mask that looks dwarven. The fit on the mask is extremely tight, and the shamans move in an awkward stilted manner. Is the mask made to control them?"
+  },
+  "VaultSkeleton": {
+    "name": "dwarven skeleton",
+    "desc": "These would look like normal skeletons from the prison if it weren't for their stunning amount of facial hair. It seems like some dwarves weren't above necromancy even before their new King took over.\n\nThey act just like regular skeletons, including exploding into bone shards on death. Paradoxically, their beards seem to offer them a little more protection too."
+  },
+  "VaultTokenDoor": {
+    "name": "strange door",
+    "desc": "This seemingly unlocked door won't budge, and has an unusual mechanism along its surface. There are ten indentations that look like some sort of flat diamond-shaped object would fit into them."
+  },
+  "Wandmaker": {
+    "name": "old wandmaker",
+    "desc": "This old yet hale gentleman wears a slightly confused expression. He is protected by a magic shield."
+  },
+  "Warlock": {
+    "name": "dwarf warlock",
+    "desc": "As the dwarves' interests shifted from engineering to arcane arts, warlocks came to power in the city. They started with elemental magic, but soon switched to demonology and necromancy. The strongest of these warlocks seized the throne of the dwarven city, and his cohorts were allowed to continue practising their dark magic, so long as they surrendered their free will to him.\n\nThese warlocks possess powerful disruptive magic, and are able to temporarily hinder the upgrade magic applied to your equipment. The more upgraded an item is, the more strongly it will be affected."
+  },
+  "Wraith": {
+    "name": "wraith",
+    "desc": "A wraith is a vengeful spirit of a sinner, whose grave or tomb was disturbed. Being an ethereal entity, it is very hard to hit with a regular weapon."
+  },
+  "YogDzewa": {
+    "name": "Yog-Dzewa",
+    "desc": "Yog-Dzewa is an Old God; a great monstrosity which reaches into mortal worlds and devours them to fuel its endless growth. The dwarves must have attracted the attention of this cosmic horror while toying with dark magics, and have been trying to keep it contained ever since.\n\nYog-Dzewa originates from a dimension of raw magical chaos, and cannot bring its true form into this world. Instead it has created avatars and summoned demonic minions to do its bidding here.\n\nThis giant eye is the focal point of Yog-Dzewa's power in this world. While the eye itself is immobile, it is capable of shooting powerful beams of demonic magic and summoning a variety of minions to aid it."
+  },
+  "ChaosElemental": {
+    "name": "chaos elemental",
+    "desc": "Elementals are chaotic creatures that are often created when powerful occult magic isn't properly controlled. Elementals have minimal intelligence, and are usually associated with a particular type of magic.\n\nChaos elementals are rare and dangerous elementals which haven't stabilized to a particular element. They will unleash wild unpredictable magic when they attack."
+  },
+  "FireElemental": {
+    "name": "fire elemental",
+    "desc": "Elementals are chaotic creatures that are often created when powerful occult magic isn't properly controlled. Elementals have minimal intelligence, and are usually associated with a particular type of magic.\n\nFire elementals are a common type of elemental which deals damage with fiery magic. They will set their target ablaze with melee attacks, and can occasionally shoot bolts of fire as well."
+  },
+  "FrostElemental": {
+    "name": "frost elemental",
+    "desc": "Elementals are chaotic creatures that are often created when powerful occult magic isn't properly controlled. Elementals have minimal intelligence, and are usually associated with a particular type of magic.\n\nFrost elementals are a common type of elemental which weakens enemies with chilling magic. They will chill their target with melee and occasional ranged attacks. Their magic is much more effective in water."
+  },
+  "ShockElemental": {
+    "name": "shock elemental",
+    "desc": "Elementals are chaotic creatures that are often created when powerful occult magic isn't properly controlled. Elementals have minimal intelligence, and are usually associated with a particular type of magic.\n\nShock elementals are a less common type of elemental which disrupts its enemies with electricity and flashes of light. In melee they will arc electricity to nearby enemies, and deal bonus damage to their primary target if they are in water. They will also occasionally focus a ranged blast of light at their target, temporarily blinding them."
+  },
+  "Sentry": {
+    "name": "red sentry",
+    "desc": "This blood-red sentry seems to be positioned here to guard the treasure at the other end of this room. It will fire beams of disintegration magic at you if you step in the area it defends.\n\nIt's immune to all harmful effects and can see through invisibility, but seems to take a while to charge up before it starts firing.\n\nSomehow the sentry only wants to fire on you, as if it knows that the denizens of the dungeon are no threat to the treasure."
+  },
+  "AlarmTrap": {
+    "name": "alarm trap",
+    "desc": "This trap seems to be tied to a loud alarm mechanism. Triggering it will likely alert everything on the level."
+  },
+  "BlazingTrap": {
+    "name": "blazing trap",
+    "desc": "Stepping on this trap will ignite a powerful chemical mixture, setting a wide area ablaze."
+  },
+  "BurningTrap": {
+    "name": "burning trap",
+    "desc": "Stepping on this trap will ignite a chemical mixture, setting the surrounding area aflame."
+  },
+  "ChillingTrap": {
+    "name": "chilling trap",
+    "desc": "When activated, chemicals in this trap will rapidly freeze the air around its location."
+  },
+  "ConfusionTrap": {
+    "name": "confusion gas trap",
+    "desc": "Triggering this trap will set a cloud of confusion gas loose within the immediate area."
+  },
+  "CorrosionTrap": {
+    "name": "corrosive gas trap",
+    "desc": "Triggering this trap will set a cloud of deadly acidic gas loose within the immediate area."
+  },
+  "CursingTrap": {
+    "name": "cursing trap",
+    "desc": "This trap contains the same malevolent magic found in cursed equipment. Triggering it will curse some items in the immediate area."
+  },
+  "DisarmingTrap": {
+    "name": "disarming trap",
+    "desc": "This trap contains very specific teleportation magic, which will warp the weapon of its victim to some other location."
+  },
+  "DisintegrationTrap": {
+    "name": "disintegration trap",
+    "desc": "When triggered, this trap will lance the nearest target with beams of disintegration, dealing significant damage and destroying items.\n\nThankfully the trigger mechanism isn't hidden."
+  },
+  "DistortionTrap": {
+    "name": "distortion trap",
+    "desc": "Built from strange magic of unknown origin, this trap will summon all manner of creatures to this location."
+  },
+  "ExplosiveTrap": {
+    "name": "explosive trap",
+    "desc": "This trap contains some powdered explosive and a trigger mechanism. Activating it will cause an explosion in the immediate area."
+  },
+  "FlashingTrap": {
+    "name": "flashing trap",
+    "desc": "On activation, this trap will ignite a potent flashing powder stored within, temporarily blinding, crippling, and injuring its victim.\n\nThe trap must have a large store of powder, as it can activate many times without breaking."
+  },
+  "FlockTrap": {
+    "name": "flock trap",
+    "desc": "Perhaps a joke from some amateur mage, triggering this trap will create a flock of magical sheep."
+  },
+  "FrostTrap": {
+    "name": "frost trap",
+    "desc": "When activated, chemicals in this trap will rapidly freeze the air in a wide range around its location."
+  },
+  "GatewayTrap": {
+    "name": "gateway trap",
+    "desc": "This special teleportation trap can activate an infinite numbers of times and always teleports to the same location."
+  },
+  "GeyserTrap": {
+    "name": "geyser trap",
+    "desc": "When triggered, this trap will cause a geyser of water to spew forth, damaging fiery enemies, knocking away all nearby characters, dousing fires, and converting the surrounding terrain to water."
+  },
+  "GnollRockfallTrap": {
+    "name": "gnoll rockfall trap",
+    "desc": "This rockfall trap is made with some form of magical assistance. When triggered, it will cause rocks to loosen and immediately fall from above in a 5x5 area around it. Due to the softer rocks in the area, it won't deal as much damage as a regular rockfall trap, but your armor also won't be effective against it. Rocks also won't fall in locations with an adjacent barricade, as they help hold the ceiling up.\n\n_This trap can't tell friend from foe, and so is just as harmful to the gnolls as it is to you._"
+  },
+  "GrimTrap": {
+    "name": "grim trap",
+    "desc": "Extremely powerful destructive magic is stored within this trap, enough to instantly kill all but the healthiest of heroes. Triggering it will send a ranged blast of lethal magic towards the nearest character.\n\nThankfully the trigger mechanism isn't hidden."
+  },
+  "GrippingTrap": {
+    "name": "gripping trap",
+    "desc": "This trap latches onto the feet of whoever trigger it, damaging them and slowing their movement.\n\nDue to its simple nature, this trap can activate many times without breaking."
+  },
+  "GuardianTrap": {
+    "name": "guardian trap",
+    "desc": "This trap is tied to a strange magical mechanism, which will summon guardians and alert all enemies on the floor."
+  },
+  "OozeTrap": {
+    "name": "ooze trap",
+    "desc": "This trap will splash out caustic ooze when activated, which will burn until it is washed away."
+  },
+  "PitfallTrap": {
+    "name": "pitfall trap",
+    "desc": "This trap is connected to a large trapdoor mechanism, and shortly after it is triggered anything near it will slip right through the ground and fall! It won't work in areas with especially solid floors though."
+  },
+  "PoisonDartTrap": {
+    "name": "poison dart trap",
+    "desc": "A small dart-blower must be hidden nearby, activating this trap will cause it to shoot a poisoned dart at the nearest target.\n\nThankfully the trigger mechanism isn't hidden."
+  },
+  "RockfallTrap": {
+    "name": "rockfall trap",
+    "desc": "This trap is connected to a series of loose rocks above, triggering it will cause them to come crashing down over the entire room! If the trap isn't in a specific room, rocks will fall in an area around the trap instead.\n\nThankfully the trigger mechanism isn't hidden."
+  },
+  "ShockingTrap": {
+    "name": "shocking trap",
+    "desc": "A mechanism with a large amount of energy stored into it. Triggering this trap will discharge that energy into a field around it."
+  },
+  "StormTrap": {
+    "name": "storm trap",
+    "desc": "A mechanism with a massive amount of energy stored into it. Triggering this trap will discharge that energy into a large electrical storm."
+  },
+  "SummoningTrap": {
+    "name": "summoning trap",
+    "desc": "Triggering this trap will summon a number of this area's monsters to this location."
+  },
+  "TeleportationTrap": {
+    "name": "teleportation trap",
+    "desc": "Whenever this trap is triggered, everything around it will be teleported to random locations on this floor."
+  },
+  "ToxicTrap": {
+    "name": "toxic gas trap",
+    "desc": "Triggering this trap will set a cloud of toxic gas loose within the surrounding area."
+  },
+  "WarpingTrap": {
+    "name": "warping trap",
+    "desc": "This trap is similar to a teleportation trap, but will also cause the hero to lose their knowledge of the floor's layout!"
+  },
+  "WeakeningTrap": {
+    "name": "weakening trap",
+    "desc": "Dark magic in this trap sucks the energy out of anything that comes into contact with it. Powerful enemies may resist the effect, however."
+  },
+  "WornDartTrap": {
+    "name": "worn dart trap",
+    "desc": "A small dart-blower must be hidden nearby, activating this trap will cause it to shoot at the nearest target.\n\nDue to its age it's not very harmful though, it isn't even hidden..."
+  },
+  "ToxicVent": {
+    "name": "toxic vent",
+    "desc": "A careless adventurer must have triggered this trap ages ago. Despite its inactive state, it's still spewing toxic gas into the room and shows no signs of stopping. You'll need some way to prevent damage from the gas if you want to explore this room."
+  },
+  "VaultFlameTrap": {
+    "name": "vault flame vent",
+    "desc": "This vent seems to be sending up bursts of green flame at regular intervals. You can see the flames starting to build just before it fires. The flames can usually be avoided, but _anything that lets you resist fire or area-bound effects_ is also effective."
+  },
+  "BlandfruitBush": {
+    "name": "blandfruit",
+    "desc": "Distant cousin of the rotberry, the pear-shaped produce of the blandfruit bush tastes like caked dust. The fruit is gross and unsubstantial but isn't poisonous. Perhaps it could be cooked."
+  },
+  "Blindweed": {
+    "name": "blindweed",
+    "desc": "Upon being touched a blindweed perishes in a bright flash of light. The flash is strong enough to disorient for several seconds."
+  },
+  "Earthroot": {
+    "name": "earthroot",
+    "desc": "When a creature touches an earthroot, its roots create a kind of immobile natural armor around it."
+  },
+  "Fadeleaf": {
+    "name": "fadeleaf",
+    "desc": "Touching a fadeleaf will teleport any creature to a random place on the current level."
+  },
+  "Firebloom": {
+    "name": "firebloom",
+    "desc": "When something touches a firebloom, it bursts into flames."
+  },
+  "Icecap": {
+    "name": "icecap",
+    "desc": "Upon being touched, an icecap lets out a puff of freezing pollen. The freezing effect is much stronger if the environment is wet."
+  },
+  "Mageroyal": {
+    "name": "mageroyal",
+    "desc": "The mageroyal's prickly flowers contain a chemical which is known for its properties as a strong neutralizing agent. Anything that steps in this plant will be cleansed of many negative effects."
+  },
+  "Rotberry": {
+    "name": "rotberry",
+    "desc": "The berries of a young rotberry shrub taste like sweet, sweet death. Over a few years, this rotberry shrub will grow into another rot heart. When trampled, a young rotberry will produce a small puff of toxic gas."
+  },
+  "Sorrowmoss": {
+    "name": "sorrowmoss",
+    "desc": "A sorrowmoss is a flower (not a moss) with razor-sharp petals, coated with a deadly venom."
+  },
+  "Starflower": {
+    "name": "starflower",
+    "desc": "A rare plant, starflower is said to grant holy power to whomever touches it."
+  },
+  "Stormvine": {
+    "name": "stormvine",
+    "desc": "Gravity affects the stormvine plant strangely, allowing its whispy blue tendrils to 'hang' on the air. Anything caught in the vine is affected by this, and becomes disoriented."
+  },
+  "Sungrass": {
+    "name": "sungrass",
+    "desc": "Sungrass is renowned for its sap's slow but effective healing properties."
+  },
+  "Swiftthistle": {
+    "name": "swiftthistle",
+    "desc": "When trampled, swiftthistle will briefly accelerate the flow of time around it, allowing the trampler to perform several actions instantly."
+  }
+}

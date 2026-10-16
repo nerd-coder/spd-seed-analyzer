@@ -72,6 +72,7 @@ impl MapFacts {
             mobs.push(MapMob {
                 cell: cell as u32,
                 mob: MobId::from_class_name_lossy(class_name),
+                state: super::mob_state::initial_state(class_name),
             });
         }
 
@@ -147,6 +148,7 @@ impl MapFacts {
                 self.mobs.push(MapMob {
                     cell: cell as u32,
                     mob: MobId::from_class_name_lossy(class_name),
+                    state: super::mob_state::initial_state(class_name),
                 });
                 self.markers.push(MapMarker {
                     cell: cell as u32,
@@ -206,6 +208,8 @@ impl MapFacts {
             custom_tiles: custom_tiles(map, depth),
             custom_terrain: map.custom_terrain.clone(),
             custom_walls: map.custom_walls.clone(),
+            uncertain_cells: Vec::new(),
+            hidden_cells: super::map_hidden::hidden_cells(&map.map, map.width),
             runtime_sensitive_loot_cells: self.runtime_sensitive_loot_cells,
             constrained_equipment_cells: self.constrained_equipment_cells,
         }

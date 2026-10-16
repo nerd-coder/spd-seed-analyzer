@@ -15,6 +15,7 @@ use super::Feeling;
 #[path = "state/forced_queue.rs"]
 mod forced_queue;
 use forced_queue::public_entries as forced_public_entries;
+use forced_queue::{locate_in_rooms, relocating_room};
 
 #[path = "state/conditions.rs"]
 mod conditions;
@@ -192,6 +193,9 @@ pub struct LevelState {
     pub quests: Vec<QuestReport>,
     #[doc(hidden)]
     pub runtime_sensitive_map: bool,
+    /// Depth one under a declared fresh profile: room prizes are seed-exact.
+    #[doc(hidden)]
+    pub fresh_profile_floor_one: bool,
     /// Builder and room metadata can depend on a pre-build player-state callback.
     #[doc(hidden)]
     pub runtime_sensitive_layout: bool,
@@ -271,6 +275,9 @@ impl LevelState {
         let variable_items: Vec<_> = if self.expose_variable_items {
             self.placed_items
                 .iter()
+                // A room prize pulled from the spawn queue is published as
+                // its guaranteed floor spawn, located at the room.
+                .filter(|item| relocating_room(item).is_none())
                 .filter_map(variable_item_entry)
                 .filter(|item| {
                     // Compact/search stay selective; also publish room/shop
@@ -313,6 +320,11 @@ impl LevelState {
                 !(entry.source.as_deref() == Some("guaranteed floor spawn")
                     && entry.class_name() == Some(prize.class_name.as_str()))
             });
+        }
+        // Deeper floors locate it at its default-profile room, like the
+        // assumed map and the variable room samples.
+        if self.depth > 1 && self.expose_variable_items {
+            locate_in_rooms(&mut items, &self.placed_items);
         }
         let mut shop_items = Vec::new();
         let mut has_shop = false;
@@ -786,12 +798,22 @@ impl LevelState {
         }
         let mut items = merge_identical_items(items);
         items.retain(|entry| !entry.item.is_some_and(is_non_item));
-        let exact_map = allow_map
-            .then(|| self.layout_map.clone())
-            .flatten()
-            .filter(|_| !self.runtime_sensitive_layout);
+        let public_map = || {
+            let layout = self.layout_map.clone()?;
+            Some(match self.map.as_ref() {
+                Some(populated) => layout.with_entities_from(
+                    populated,
+                    self.runtime_sensitive_map && !self.fresh_profile_floor_one,
+                    self.fresh_profile_floor_one,
+                ),
+                None => layout,
+            })
+        };
+        let exact_map = (allow_map && !self.runtime_sensitive_layout)
+            .then(public_map)
+            .flatten();
         let assumed_map = (allow_map && self.runtime_sensitive_layout)
-            .then(|| self.layout_map.clone())
+            .then(public_map)
             .flatten();
         let guaranteed_appearances =
             guaranteed_appearances(&self.rooms, !self.runtime_sensitive_rooms);
@@ -829,8 +851,8 @@ impl LevelState {
                 .runtime_sensitive_quests_from
                 .unwrap_or(self.quests.len())]
                 .to_vec(),
-            // Public maps are painter-complete floor layouts, captured before
-            // NPC, mob, and item population. Final entity maps remain internal.
+            // Painter-complete layout plus populated heaps and mobs; entities
+            // that run history can change are listed in `uncertain_cells`.
             map: exact_map,
             assumed_map,
             branches: Vec::new(),

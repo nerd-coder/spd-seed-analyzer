@@ -1,180 +1,114 @@
 import { type ItemId, itemClassName } from '@/generated/game-ids'
-import { ItemClass, parseItemClass } from '@/lib/item-class'
 import { ItemCategory, parseItemCategory } from '@/lib/item-kind'
 
-const NOTABLE_CATEGORIES = new Set<ItemCategory>([
-  ItemCategory.Weapon,
-  ItemCategory.Armor,
-  ItemCategory.Missile,
+/** Notable at any upgrade level. */
+const ALWAYS_CATEGORIES = new Set<ItemCategory>([
   ItemCategory.Wand,
   ItemCategory.Ring,
   ItemCategory.Artifact,
   ItemCategory.Trinket,
 ])
 
-/** Gear whose report category is `other` still belongs with equipment. */
-const NOTABLE_CLASSES = new Set<ItemClass>([
-  ItemClass.AlchemistsToolkit,
-  ItemClass.CapeOfThorns,
-  ItemClass.ChaliceOfBlood,
-  ItemClass.CloakOfShadows,
-  ItemClass.DriedRose,
-  ItemClass.EtherealChains,
-  ItemClass.HolyTome,
-  ItemClass.HornOfPlenty,
-  ItemClass.LloydsBeacon,
-  ItemClass.MasterThievesArmband,
-  ItemClass.SandalsOfNature,
-  ItemClass.TalismanOfForesight,
-  ItemClass.TimekeepersHourglass,
-  ItemClass.UnstableSpellbook,
-  ItemClass.AssassinsBlade,
-  ItemClass.BattleAxe,
-  ItemClass.Crossbow,
-  ItemClass.Cudgel,
-  ItemClass.Dagger,
-  ItemClass.Dirk,
-  ItemClass.Flail,
-  ItemClass.Gauntlet,
-  ItemClass.Glaive,
-  ItemClass.Gloves,
-  ItemClass.Greataxe,
-  ItemClass.Greatshield,
-  ItemClass.Greatsword,
-  ItemClass.HandAxe,
-  ItemClass.Katana,
-  ItemClass.Longsword,
-  ItemClass.Mace,
-  ItemClass.MagesStaff,
-  ItemClass.Quarterstaff,
-  ItemClass.Rapier,
-  ItemClass.RoundShield,
-  ItemClass.RunicBlade,
-  ItemClass.Sai,
-  ItemClass.Scimitar,
-  ItemClass.Shortsword,
-  ItemClass.Sickle,
-  ItemClass.Spear,
-  ItemClass.Sword,
-  ItemClass.WarHammer,
-  ItemClass.WarScythe,
-  ItemClass.Whip,
-  ItemClass.WornShortsword,
-  ItemClass.Pickaxe,
-  ItemClass.Bolas,
-  ItemClass.FishingSpear,
-  ItemClass.ForceCube,
-  ItemClass.HeavyBoomerang,
-  ItemClass.Javelin,
-  ItemClass.Kunai,
-  ItemClass.Shuriken,
-  ItemClass.ThrowingClub,
-  ItemClass.ThrowingHammer,
-  ItemClass.ThrowingKnife,
-  ItemClass.ThrowingSpear,
-  ItemClass.ThrowingSpike,
-  ItemClass.ThrowingStone,
-  ItemClass.Tomahawk,
-  ItemClass.Trident,
-  ItemClass.Dart,
-  ItemClass.RotDart,
-  ItemClass.IncendiaryDart,
-  ItemClass.AdrenalineDart,
-  ItemClass.HealingDart,
-  ItemClass.ChillingDart,
-  ItemClass.ShockingDart,
-  ItemClass.PoisonDart,
-  ItemClass.CleansingDart,
-  ItemClass.ParalyticDart,
-  ItemClass.HolyDart,
-  ItemClass.DisplacingDart,
-  ItemClass.BlindingDart,
-  ItemClass.ShatteredPot,
-  ItemClass.ClothArmor,
-  ItemClass.ClericArmor,
-  ItemClass.DuelistArmor,
-  ItemClass.HuntressArmor,
-  ItemClass.LeatherArmor,
-  ItemClass.MageArmor,
-  ItemClass.MailArmor,
-  ItemClass.PlateArmor,
-  ItemClass.RogueArmor,
-  ItemClass.ScaleArmor,
-  ItemClass.WarriorArmor,
-  ItemClass.WandOfBlastWave,
-  ItemClass.WandOfCorrosion,
-  ItemClass.WandOfCorruption,
-  ItemClass.WandOfDisintegration,
-  ItemClass.WandOfFireblast,
-  ItemClass.WandOfFrost,
-  ItemClass.WandOfLightning,
-  ItemClass.WandOfLivingEarth,
-  ItemClass.WandOfMagicMissile,
-  ItemClass.WandOfPrismaticLight,
-  ItemClass.WandOfRegrowth,
-  ItemClass.WandOfTransfusion,
-  ItemClass.WandOfWarding,
-  ItemClass.RingOfAccuracy,
-  ItemClass.RingOfArcana,
-  ItemClass.RingOfElements,
-  ItemClass.RingOfEnergy,
-  ItemClass.RingOfEvasion,
-  ItemClass.RingOfForce,
-  ItemClass.RingOfFuror,
-  ItemClass.RingOfHaste,
-  ItemClass.RingOfMight,
-  ItemClass.RingOfSharpshooting,
-  ItemClass.RingOfTenacity,
-  ItemClass.RingOfWealth,
-  ItemClass.TrinketCatalyst,
-  ItemClass.ChaoticCenser,
-  ItemClass.CrackedSpyglass,
-  ItemClass.DimensionalSundial,
-  ItemClass.ExoticCrystals,
-  ItemClass.EyeOfNewt,
-  ItemClass.FerretTuft,
-  ItemClass.MimicTooth,
-  ItemClass.MossyClump,
-  ItemClass.ParchmentScrap,
-  ItemClass.PetrifiedSeed,
-  ItemClass.RatSkull,
-  ItemClass.SaltCube,
-  ItemClass.ShardOfOblivion,
-  ItemClass.ThirteenLeafClover,
-  ItemClass.TrapMechanism,
-  ItemClass.VialOfBlood,
-  ItemClass.WondrousResin,
+/** Notable only at +1 or better. */
+const EQUIPMENT_CATEGORIES = new Set<ItemCategory>([
+  ItemCategory.Weapon,
+  ItemCategory.Armor,
+  ItemCategory.Missile,
 ])
 
-function notableCategory(category: string) {
-  const recognized = category
+/**
+ * Notable classes whose report category does not say so: progression
+ * consumables, and artifacts or trinkets reported as `other`.
+ */
+const ALWAYS_CLASSES = new Set<string>([
+  'PotionOfStrength',
+  'PotionOfExperience',
+  'ScrollOfUpgrade',
+  'ScrollOfTransmutation',
+  'StoneOfEnchantment',
+  'Stylus',
+  'AlchemistsToolkit',
+  'CapeOfThorns',
+  'ChaliceOfBlood',
+  'CloakOfShadows',
+  'DriedRose',
+  'EtherealChains',
+  'HolyTome',
+  'HornOfPlenty',
+  'LloydsBeacon',
+  'MasterThievesArmband',
+  'SandalsOfNature',
+  'TalismanOfForesight',
+  'TimekeepersHourglass',
+  'UnstableSpellbook',
+  'TrinketCatalyst',
+  'ChaoticCenser',
+  'CrackedSpyglass',
+  'DimensionalSundial',
+  'ExoticCrystals',
+  'EyeOfNewt',
+  'FerretTuft',
+  'MimicTooth',
+  'MossyClump',
+  'ParchmentScrap',
+  'PetrifiedSeed',
+  'RatSkull',
+  'SaltCube',
+  'ShardOfOblivion',
+  'ThirteenLeafClover',
+  'TrapMechanism',
+  'VialOfBlood',
+  'WondrousResin',
+])
+
+function categories(category: string) {
+  return category
     .split('/')
     .map((part) => parseItemCategory(part.trim()))
     .filter((part): part is ItemCategory => part != null)
+}
+
+function upgraded(item: {
+  level?: number | null
+  level_range?: { min: number; max: number } | null
+}) {
+  return Math.max(item.level ?? 0, item.level_range?.max ?? 0) >= 1
+}
+
+function notableCategory(category: string, isUpgraded: boolean) {
+  const parts = categories(category)
+  if (parts.length === 0) return false
+  if (parts.every((part) => ALWAYS_CATEGORIES.has(part))) return true
   return (
-    recognized.length > 0 &&
-    recognized.every((part) => NOTABLE_CATEGORIES.has(part))
+    isUpgraded &&
+    parts.every(
+      (part) => ALWAYS_CATEGORIES.has(part) || EQUIPMENT_CATEGORIES.has(part)
+    )
   )
 }
 
-function notableClass(className: string | null | undefined) {
-  const parsed = parseItemClass(className)
-  return parsed != null && NOTABLE_CLASSES.has(parsed)
+function notableClass(item: ItemId) {
+  return ALWAYS_CLASSES.has(itemClassName(item))
 }
 
-/** Rings, wands, equipment, artifacts, and trinkets. */
+/**
+ * Wands, rings, artifacts, trinkets, progression consumables (strength,
+ * experience, upgrade, transmutation, enchantment, stylus), and weapons,
+ * armor, or missiles at +1 or better.
+ */
 export function isNotableSpawn(item: {
   label?: string
   category: string
   item?: ItemId
   candidates?: ItemId[]
+  level?: number | null
+  level_range?: { min: number; max: number } | null
 }) {
-  if (notableCategory(item.category)) return true
-  if (item.label != null && /\bequipment\b/i.test(item.label)) return true
-  if (item.item != null && notableClass(itemClassName(item.item))) return true
-  return (
-    item.candidates?.some((candidate) =>
-      notableClass(itemClassName(candidate))
-    ) ?? false
-  )
+  const isUpgraded = upgraded(item)
+  if (notableCategory(item.category, isUpgraded)) return true
+  if (isUpgraded && item.label != null && /\bequipment\b/i.test(item.label)) {
+    return true
+  }
+  if (item.item != null && notableClass(item.item)) return true
+  return item.candidates?.some(notableClass) ?? false
 }

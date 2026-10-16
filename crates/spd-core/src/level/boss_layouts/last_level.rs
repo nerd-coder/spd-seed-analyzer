@@ -54,6 +54,8 @@ pub(super) fn build(
         custom_tiles: custom_tiles(),
         custom_terrain: Vec::new(),
         custom_walls: custom_walls(),
+        uncertain_cells: Vec::new(),
+        hidden_cells: Vec::new(),
         runtime_sensitive_loot_cells: Vec::new(),
         constrained_equipment_cells: Vec::new(),
     }

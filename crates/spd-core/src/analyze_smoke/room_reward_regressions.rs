@@ -126,6 +126,21 @@ fn floor_two_room_contracts_pair_seed_constraints_with_variable_items() {
 }
 
 #[test]
+fn room_prize_pulled_from_spawn_queue_is_published_once_at_its_room() {
+    let report = analyze_seed("HDN-UJD-MJF", 4).expect("analyze");
+    let floor = &report.floors[3];
+    let strength: Vec<_> = floor
+        .item_variants()
+        .filter(|item| item.class_name() == Some("PotionOfStrength"))
+        .map(|item| (item.source.as_deref(), item.prediction))
+        .collect();
+    assert_eq!(
+        strength,
+        [(Some("RingRoom:forced"), report::ItemPredictionKind::Exact)]
+    );
+}
+
+#[test]
 fn crystal_vault_pairs_contract_with_both_default_profile_prizes() {
     let report = analyze_seed("HDN-UJD-MJF", 4).expect("analyze");
     let floor = &report.floors[3];

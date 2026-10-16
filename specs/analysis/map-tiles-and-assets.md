@@ -2,7 +2,17 @@
 
 Target: **Shattered Pixel Dungeon v4.0.2 @ `57a4e06a4`**. Public maps follow
 `MAP-LAYOUT-GOAL`: painter-complete rooms, terrain, doors, transitions, traps,
-plants, blobs, and custom tiles/carpets. Not heaps, mobs, or NPCs.
+plants, blobs, and custom tiles/carpets, plus heaps, mobs, and loot markers on
+main-path floors. Mob idle animations (fps + frame sequence from each
+`*Sprite.java` `idle` clip) live in `web/src/lib/map-mob-sprites.ts`;
+names and descriptions in `web/src/lib/map-object-catalog.json`.
+Blob emitters (`Blob.use(BlobEmitter)` interval/particle per blob class) are
+ported in `web/src/lib/map-particles.ts`; they draw above walls like
+GameScene's gas layer. Reduced motion renders frame 0 and no particles.
+`MapMob.state` is the class initializer of `Mob.state` (default `SLEEPING`;
+`RegularLevel.createMobs` and map-mob room painters never change it), see
+`crates/spd-core/src/level/mob_state.rs`. Sleeping mobs get `EmoIcon.Sleep`
+(`Icons.SLEEP`, `icons.png` 7,88 9×8) above walls, like GameScene `emoicons`.
 
 Analyzer map drawing lives in `web/src/lib/tiles.ts`,
 `web/src/lib/dungeon-tile-visuals.ts`, `web/src/lib/tiles-overlays.ts`, and

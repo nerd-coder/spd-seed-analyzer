@@ -20,8 +20,8 @@ unprofiled seed-only contract is weaker:
   enchant policy) are seed-fixed given that depth;
 - concrete room identities, heap contents, and wandering mobs require
   that vault seed plus hero class (mirror only) and `DARKNESS` (torches);
-- public maps should show painter-complete layout, not heaps or wandering
-  mobs.
+- the public vault map is painter-complete layout only; unlike main-path
+  floors it does not publish heaps or wandering mobs.
 
 Vault generation uses `Generator.randomUsingDefaults` and direct
 constructors. It does **not** mutate main-dungeon category decks.

@@ -7,11 +7,11 @@ main-floor and Blacksmith mining branch cases come from
 `tools/visual/tests/map-render-fixtures.ts`; browser-rendered baselines are
 committed in `tools/visual/snapshots/`.
 
-The snapshots cover only the public structural-layout projection: room
-geometry, walls, traversable floor, doors, and entrances/exits. Entity-rich
-gameplay captures, quest branches other than Blacksmith mining levels,
-decoration, traps, plants, blobs, heaps, mobs, item placement, explored FOV,
-and animation state are product non-goals and are not visual-regression inputs.
+The snapshots cover the public map projection as rendered under reduced
+motion: layout, generated heaps and mobs, and hidden areas at their static
+half-concealed alpha. Quest branches other than Blacksmith mining levels,
+explored FOV, the inspect panel, and animation frames are not
+visual-regression inputs.
 
 ## First-time setup
 

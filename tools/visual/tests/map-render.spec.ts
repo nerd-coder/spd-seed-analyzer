@@ -155,6 +155,16 @@ async function installSyntheticMapReport(page: Page) {
       ],
     })
     ;(floors[3].items as unknown[]).push({
+      variants: [
+        {
+          quantity: 1,
+          item: ItemId.PotionOfHealing,
+          category: 'potion',
+          prediction: 'exact',
+        },
+      ],
+    })
+    ;(floors[3].items as unknown[]).push({
       source: 'SacrificeRoom',
       variants: [
         {
@@ -920,6 +930,9 @@ test('floor items render as icon slots', async ({ page }) => {
   await expect(emptyNotable).toHaveCount(3)
   await expect(emptyNotable.first()).toHaveCSS('font-style', 'normal')
   await expect(page.getByText(/^Other items/)).toBeVisible()
+  await expect(
+    floor4.getByLabel('Potion of Healing', { exact: true })
+  ).toBeVisible()
   await expect(
     page.getByText('Varies with gameplay', { exact: true })
   ).toHaveCount(0)

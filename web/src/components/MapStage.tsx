@@ -249,7 +249,8 @@ export function MapStage({
         aria-label="Floor map"
         className={cn(
           'relative size-full touch-none overflow-hidden select-none',
-          pannable ? 'cursor-grab active:cursor-grabbing' : 'cursor-zoom-in'
+          'cursor-default',
+          pannable && 'active:cursor-grabbing'
         )}
         data-testid="map-scroll-container"
         data-zoom={frame ? formatZoom(zoom) : undefined}

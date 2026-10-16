@@ -123,6 +123,10 @@ pub struct GeneratedItem {
     /// not from user-visible source strings.
     #[serde(skip)]
     pub provenance: ItemProvenance,
+    /// Queued in the initial `Level.itemsToSpawn` and published as a
+    /// guaranteed floor spawn; a room `findPrizeItem` pull only relocates it.
+    #[serde(skip)]
+    pub from_spawn_queue: bool,
 }
 
 impl GeneratedItem {
@@ -139,6 +143,7 @@ impl GeneratedItem {
             source: None,
             artifact_conditional: false,
             provenance: ItemProvenance::None,
+            from_spawn_queue: false,
         }
     }
 
