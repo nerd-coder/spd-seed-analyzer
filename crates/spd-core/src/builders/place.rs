@@ -47,6 +47,16 @@ pub fn angle_between_rooms(from: &Room, to: &Room) -> f32 {
 
 /// Maximum free space from a start point among colliding rooms.
 pub fn find_free_space(start: Point, collision: &[Room], max_size: i32) -> Rect {
+    find_free_space_among(start, collision, (0..collision.len()).collect(), max_size)
+}
+
+/// `find_free_space` over the `colliding` subset of `rooms`, in list order.
+fn find_free_space_among(
+    start: Point,
+    rooms: &[Room],
+    mut colliding: Vec<usize>,
+    max_size: i32,
+) -> Rect {
     let mut space = Rect {
         left: start.x - max_size,
         top: start.y - max_size,
@@ -54,10 +64,9 @@ pub fn find_free_space(start: Point, collision: &[Room], max_size: i32) -> Rect 
         bottom: start.y + max_size,
     };
 
-    let mut colliding: Vec<usize> = (0..collision.len()).collect();
     loop {
         colliding.retain(|&idx| {
-            let room = &collision[idx];
+            let room = &rooms[idx];
             if room.is_empty() {
                 return false;
             }
@@ -75,7 +84,7 @@ pub fn find_free_space(start: Point, collision: &[Room], max_size: i32) -> Rect 
         #[cfg(test)]
         let mut step_candidates = Vec::new();
         for &idx in &colliding {
-            let cur = &collision[idx];
+            let cur = &rooms[idx];
             let mut cur_diff = Point::new(0, 0);
             let mut inside = true;
             if start.x <= cur.left {
@@ -113,7 +122,7 @@ pub fn find_free_space(start: Point, collision: &[Room], max_size: i32) -> Rect 
         }
 
         if let Some(idx) = closest_room {
-            let closest = &collision[idx];
+            let closest = &rooms[idx];
             let mut w_diff = i32::MAX;
             if closest.left >= start.x {
                 w_diff = (space.right - closest.left) * (space.raw_height() + 1);
@@ -192,13 +201,8 @@ pub(super) fn place_room_excluding_next(
     next: usize,
     angle: f32,
 ) -> f32 {
-    let collision: Vec<_> = rooms
-        .iter()
-        .enumerate()
-        .filter(|(id, _)| *id != next)
-        .map(|(_, room)| room.clone())
-        .collect();
-    place_room_impl(rooms, Some(&collision), prev, next, angle, &mut |_| {})
+    let collision: Vec<_> = (0..rooms.len()).filter(|&id| id != next).collect();
+    place_room_impl(rooms, Some(collision), prev, next, angle, &mut |_| {})
 }
 
 /// Place a room while matching a Java caller that passes a narrower collision list.
@@ -209,8 +213,14 @@ pub(super) fn place_room_with_collision_ids(
     next: usize,
     angle: f32,
 ) -> f32 {
-    let collision: Vec<_> = collision_ids.iter().map(|&id| rooms[id].clone()).collect();
-    place_room_impl(rooms, Some(&collision), prev, next, angle, &mut |_| {})
+    place_room_impl(
+        rooms,
+        Some(collision_ids.to_vec()),
+        prev,
+        next,
+        angle,
+        &mut |_| {},
+    )
 }
 
 /// ShopRoom computes its minimum dimensions lazily from generated stock.
@@ -235,13 +245,19 @@ pub(super) fn place_room_with_collision_ids_and_prepare(
     angle: f32,
     prepare: &mut impl FnMut(&mut Room),
 ) -> f32 {
-    let collision: Vec<_> = collision_ids.iter().map(|&id| rooms[id].clone()).collect();
-    place_room_impl(rooms, Some(&collision), prev, next, angle, prepare)
+    place_room_impl(
+        rooms,
+        Some(collision_ids.to_vec()),
+        prev,
+        next,
+        angle,
+        prepare,
+    )
 }
 
 fn place_room_impl(
     rooms: &mut [Room],
-    collision: Option<&[Room]>,
+    collision: Option<Vec<usize>>,
     prev: usize,
     next: usize,
     mut angle: f32,
@@ -295,7 +311,8 @@ fn place_room_impl(
     // deliberately passes only the rooms already belonging to its loop.
     #[cfg(test)]
     free_space_trace::before_find(&rooms[prev], &rooms[next]);
-    let space = find_free_space(start, collision.unwrap_or(rooms), max_dim);
+    let collision = collision.unwrap_or_else(|| (0..rooms.len()).collect());
+    let space = find_free_space_among(start, rooms, collision, max_dim);
     prepare(&mut rooms[next]);
     if !rooms[next].set_size_with_limit(space.raw_width() + 1, space.raw_height() + 1) {
         return -1.0;
