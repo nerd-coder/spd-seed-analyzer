@@ -87,45 +87,44 @@ fn force_fill(generator: &mut JavaRandom, off: &mut [bool], w: i32, mut fill_dif
 /// One clustering pass: a cell fills when at least half of its in-bounds 3×3
 /// neighbourhood (itself included) is filled. Returns the fill-count change.
 ///
-/// Rolling per-row horizontal sums give the same counts as Java's per-cell
-/// neighbour checks without its edge branches.
+/// Per row: vertical 3-sums (out-of-map rows read as empty), then a 3-wide
+/// window. Same counts as Java's per-cell neighbour checks, but branch-free
+/// so the inner loops vectorize.
 fn smooth(off: &[bool], cur: &mut [bool], w: usize, h: usize) -> i32 {
-    let row_sums = |y: usize, sums: &mut [u8]| {
-        let row = &off[y * w..(y + 1) * w];
-        for x in 0..w {
-            let left = x > 0 && row[x - 1];
-            let right = x + 1 < w && row[x + 1];
-            sums[x] = left as u8 + row[x] as u8 + right as u8;
-        }
-    };
-    let mut above = vec![0u8; w];
-    let mut here = vec![0u8; w];
-    let mut below = vec![0u8; w];
-    row_sums(0, &mut here);
+    let empty = vec![false; w];
+    let mut columns = vec![0u8; w];
     let mut diff = 0;
     for y in 0..h {
-        if y + 1 < h {
-            row_sums(y + 1, &mut below);
+        let row = &off[y * w..(y + 1) * w];
+        let up = if y > 0 {
+            &off[(y - 1) * w..y * w]
+        } else {
+            &empty
+        };
+        let down = if y + 1 < h {
+            &off[(y + 1) * w..(y + 2) * w]
+        } else {
+            &empty
+        };
+        for (sum, ((&a, &b), &c)) in columns.iter_mut().zip(up.iter().zip(row).zip(down)) {
+            *sum = a as u8 + b as u8 + c as u8;
         }
-        let rows = 1 + (y > 0) as i32 + (y + 1 < h) as i32;
-        for x in 0..w {
-            let mut count = here[x] as i32;
-            if y > 0 {
-                count += above[x] as i32;
-            }
-            if y + 1 < h {
-                count += below[x] as i32;
-            }
-            let columns = 1 + (x > 0) as i32 + (x + 1 < w) as i32;
-            let pos = y * w + x;
-            let filled = 2 * count >= rows * columns;
-            cur[pos] = filled;
-            if filled != off[pos] {
-                diff += if filled { 1 } else { -1 };
-            }
+        let rows = 1 + (y > 0) as u8 + (y + 1 < h) as u8;
+        let out = &mut cur[y * w..(y + 1) * w];
+        let mut settle = |x: usize, count: u8, width: u8| {
+            let filled = 2 * count >= rows * width;
+            out[x] = filled;
+            diff += filled as i32 - row[x] as i32;
+        };
+        if w == 1 {
+            settle(0, columns[0], 1);
+            continue;
         }
-        std::mem::swap(&mut above, &mut here);
-        std::mem::swap(&mut here, &mut below);
+        settle(0, columns[0] + columns[1], 2);
+        for (x, window) in columns.windows(3).enumerate() {
+            settle(x + 1, window[0] + window[1] + window[2], 3);
+        }
+        settle(w - 1, columns[w - 2] + columns[w - 1], 2);
     }
     diff
 }
