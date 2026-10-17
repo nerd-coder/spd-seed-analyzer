@@ -1,5 +1,6 @@
 //! Serializable analysis report types.
 
+mod bit_mask;
 mod compact;
 mod quests;
 
@@ -38,8 +39,9 @@ pub struct FloorMap {
     pub tiles: Vec<u16>,
     /// SPD `DungeonTileSheet.setupVariance` values for deterministic tile alternates.
     pub tile_variance: Vec<u8>,
-    /// Pinned `Level.cleanWalls()` visibility mask, row-major and parallel to `tiles`.
-    #[serde(default)]
+    /// Pinned `Level.cleanWalls()` visibility mask, row-major and parallel to
+    /// `tiles`. Serialized as `0`/`1` to keep the per-cell payload small.
+    #[serde(default, with = "bit_mask")]
     pub discoverable: Vec<bool>,
     /// Exact cells known to the partial generator, including depth-one ambient mobs.
     #[serde(default)]

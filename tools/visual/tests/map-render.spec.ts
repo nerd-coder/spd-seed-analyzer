@@ -54,7 +54,7 @@ async function installSyntheticMapReport(page: Page) {
               tileset: 'sewers',
               tiles,
               tile_variance: [],
-              discoverable: Array(width * height).fill(true),
+              discoverable: Array(width * height).fill(1),
               markers: [],
               heaps: [],
               mobs: [],

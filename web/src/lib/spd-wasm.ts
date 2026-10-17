@@ -114,13 +114,17 @@ export type ItemEnchantment = {
   conditions: ItemCondition[]
 }
 
+/** Per-cell boolean mask sent as `0`/`1` numbers to keep reports small. */
+export type CellMask = ReadonlyArray<0 | 1>
+
 export type FloorMap = {
   width: number
   height: number
   tileset: string
   tiles: number[]
   tile_variance: number[]
-  discoverable: boolean[]
+  /** Per-cell `cleanWalls()` visibility, `1` = discoverable. */
+  discoverable: CellMask
   markers: MapMarker[]
   heaps: MapHeap[]
   mobs: MapMob[]

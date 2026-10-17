@@ -5,7 +5,7 @@ import {
   wallStitchable,
 } from '@/lib/dungeon-tile-visuals'
 import type { MapAssets } from '@/lib/map-assets'
-import type { FloorMap, MapCustomTile } from '@/lib/spd-wasm'
+import type { CellMask, FloorMap, MapCustomTile } from '@/lib/spd-wasm'
 
 const CLEARED = 0
 const DOOR_VERT = 6
@@ -108,7 +108,7 @@ export function occlusionVisual(
   tiles: number[],
   width: number,
   cell: number,
-  discoverable: boolean[]
+  discoverable: CellMask
 ): number | null {
   if (!insideMap(width, tiles.length, cell)) return null
   if (discoverable.length === tiles.length && !discoverable[cell]) return null

@@ -22,7 +22,9 @@ function validCell(map: FloorMap, cell: number) {
 }
 
 function isDiscoverable(map: FloorMap, cell: number) {
-  return map.discoverable.length !== map.tiles.length || map.discoverable[cell]
+  return (
+    map.discoverable.length !== map.tiles.length || map.discoverable[cell] === 1
+  )
 }
 
 function drawSheetTile(
