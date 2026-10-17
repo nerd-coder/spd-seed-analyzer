@@ -12,6 +12,7 @@ web/node_modules/
 web/dist/
 brand/design/dist/
 tools/visual/test-results/
+profile-report/
 *.local
 
 # OS / IDE

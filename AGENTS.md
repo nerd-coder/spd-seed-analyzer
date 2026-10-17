@@ -30,6 +30,7 @@ bun run design       # design-system preview (Vite, :5174)
 bun run build:design # type-check + build the design-system preview
 bun run test:rust    # cargo test -p spd-core
 bun run analyze SEED [FLOORS] [--maps] [--pretty] [--full] # exact default-profile JSON (spd-cli)
+bun run profile [--seeds N] [--no-wasm] [--open] # engine speed/heap/payload/WASM + hotspots → profile-report/index.html
 bun run test:map-render # map-render fixture registry
 bun run test:visual  # build + Playwright Chromium pixel comparison
 bun run install:visual-browser # once: install Playwright Chromium

@@ -13,6 +13,11 @@ edition = "2021"
 license = "GPL-3.0-or-later"
 repository = "https://github.com/NerdCoder/spd-seed-analyzer"
 
+# `bun run profile`: release codegen plus line tables for samplers.
+[profile.profiling]
+inherits = "release"
+debug = "line-tables-only"
+
 [workspace.dependencies]
 spd-core = { path = "crates/spd-core" }
 spd-objects = { path = "crates/spd-objects" }
