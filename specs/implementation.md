@@ -82,3 +82,6 @@ Next:
 4. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
    not actually depend on run history); publish entities on boss, vault, and
    mining maps.
+5. Performance (`bun run profile`): `patch::generate` (driven by
+   `setup_patch` retries in mining rooms) is ~25% of a full report; next
+   payload win is `tile_variance` (~100 KB of the ~560 KB 26-floor report).

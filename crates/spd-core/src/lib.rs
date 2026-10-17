@@ -102,7 +102,9 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
     );
     // Parity probes retain the latest replay trace for oracle inspection. Keep
     // that diagnostic state on the conservative finder projection rather than
-    // whichever conditional route happened to be discovered last.
+    // whichever conditional route happened to be discovered last. The replay
+    // is discarded, so only test builds (which read the traces) pay for it.
+    #[cfg(test)]
     let _ = analyze_seed_internal(input, floors, None)?;
     Ok(report)
 }

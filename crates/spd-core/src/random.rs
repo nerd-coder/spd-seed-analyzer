@@ -1,16 +1,16 @@
 //! Port of `com.watabou.utils.Random` — stack of `java.util.Random` generators.
 
-use std::cell::RefCell;
-use std::collections::VecDeque;
+use std::cell::{Cell, RefCell};
 
 use crate::java_random::JavaRandom;
 
+// The top of the watabou stack (`peekFirst`) lives in a `Cell` because every
+// draw touches it; push/pop are rare and move generators to and from `SAVED`,
+// whose first element is the base (`peekLast`). Const initializers keep the
+// hot path free of lazy-init checks.
 thread_local! {
-    static GENERATORS: RefCell<VecDeque<JavaRandom>> = RefCell::new({
-        let mut d = VecDeque::new();
-        d.push_back(JavaRandom::new_unseeded());
-        d
-    });
+    static ACTIVE: Cell<u64> = const { Cell::new(JavaRandom::new_unseeded().state()) };
+    static SAVED: RefCell<Vec<u64>> = const { RefCell::new(Vec::new()) };
 
     #[cfg(test)]
     static STACK_MUTATIONS: RefCell<(usize, usize)> = const { RefCell::new((0, 0)) };
@@ -22,30 +22,25 @@ pub struct Random;
 impl Random {
     /// Reset to a single unseeded base generator.
     pub fn reset_generators() {
-        GENERATORS.with(|g| {
-            let mut g = g.borrow_mut();
-            g.clear();
-            g.push_back(JavaRandom::new_unseeded());
-        });
+        SAVED.with(|saved| saved.borrow_mut().clear());
+        ACTIVE.with(|active| active.set(JavaRandom::new_unseeded().state()));
+    }
+
+    fn push(generator: JavaRandom) {
+        let previous = ACTIVE.with(|active| active.replace(generator.state()));
+        SAVED.with(|saved| saved.borrow_mut().push(previous));
+        #[cfg(test)]
+        STACK_MUTATIONS.with(|mutations| mutations.borrow_mut().0 += 1);
     }
 
     /// Push an unseeded generator.
     pub fn push_generator() {
-        GENERATORS.with(|g| {
-            g.borrow_mut().push_front(JavaRandom::new_unseeded());
-        });
-        #[cfg(test)]
-        STACK_MUTATIONS.with(|mutations| mutations.borrow_mut().0 += 1);
+        Self::push(JavaRandom::new_unseeded());
     }
 
     /// Push a generator seeded with `scramble_seed(seed)`.
     pub fn push_generator_seeded(seed: i64) {
-        let scrambled = Self::scramble_seed(seed);
-        GENERATORS.with(|g| {
-            g.borrow_mut().push_front(JavaRandom::new(scrambled));
-        });
-        #[cfg(test)]
-        STACK_MUTATIONS.with(|mutations| mutations.borrow_mut().0 += 1);
+        Self::push(JavaRandom::new(Self::scramble_seed(seed)));
     }
 
     /// MX3 scramble (Jon Maiga), matching SPD `Random.scrambleSeed`.
@@ -63,31 +58,47 @@ impl Random {
 
     /// Pop the top generator (must not pop the last one).
     pub fn pop_generator() {
-        GENERATORS.with(|g| {
-            let mut g = g.borrow_mut();
-            if g.len() <= 1 {
-                // Java reports exception but does not pop; we no-op.
-                return;
-            }
-            g.pop_front();
-            #[cfg(test)]
-            STACK_MUTATIONS.with(|mutations| mutations.borrow_mut().1 += 1);
-        });
+        // Java reports an exception but does not pop the base; we no-op.
+        let Some(previous) = SAVED.with(|saved| saved.borrow_mut().pop()) else {
+            return;
+        };
+        ACTIVE.with(|active| active.set(previous));
+        #[cfg(test)]
+        STACK_MUTATIONS.with(|mutations| mutations.borrow_mut().1 += 1);
     }
 
+    /// Run `f` on the top generator (`peekFirst`), or on the base (`peekLast`)
+    /// when `use_generator_stack` is false. `f` must not call back into `Random`.
     fn with_top<F, R>(use_generator_stack: bool, f: F) -> R
     where
         F: FnOnce(&mut JavaRandom) -> R,
     {
-        GENERATORS.with(|g| {
-            let mut g = g.borrow_mut();
-            // peekFirst = front (top of stack), peekLast = back (base)
-            if use_generator_stack {
-                f(g.front_mut().expect("generator stack empty"))
-            } else {
-                f(g.back_mut().expect("generator stack empty"))
+        let on_active = |f: F| {
+            ACTIVE.with(|active| {
+                let mut generator = JavaRandom::from_state(active.get());
+                let result = f(&mut generator);
+                active.set(generator.state());
+                result
+            })
+        };
+        if use_generator_stack {
+            return on_active(f);
+        }
+        SAVED.with(|saved| match saved.borrow_mut().first_mut() {
+            Some(base) => {
+                let mut generator = JavaRandom::from_state(*base);
+                let result = f(&mut generator);
+                *base = generator.state();
+                result
             }
+            None => on_active(f),
         })
+    }
+
+    /// Draw many values from the top generator with one stack lookup, for hot
+    /// loops. `f` must not call back into `Random`.
+    pub(crate) fn with_active<R>(f: impl FnOnce(&mut JavaRandom) -> R) -> R {
+        Self::with_top(true, f)
     }
 
     /// Uniform float in `[0, 1)`.
@@ -242,7 +253,7 @@ impl Random {
     /// Number of generators on the stack (for tests).
     #[cfg(test)]
     pub fn stack_len() -> usize {
-        GENERATORS.with(|g| g.borrow().len())
+        SAVED.with(|saved| saved.borrow().len()) + 1
     }
 
     /// Total successful pushes and pops on this thread (for draw-shape tests).

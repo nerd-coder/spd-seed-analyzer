@@ -18,19 +18,29 @@ pub struct JavaRandom {
 
 impl JavaRandom {
     /// Create a generator with the given seed (same as `new java.util.Random(seed)`).
-    pub fn new(seed: i64) -> Self {
-        let mut r = Self { seed: 0 };
-        r.set_seed(seed);
-        r
+    pub const fn new(seed: i64) -> Self {
+        Self {
+            seed: (seed as u64 ^ MULTIPLIER) & MASK,
+        }
     }
 
     /// Unseeded constructor matching `new java.util.Random()` is not used for analysis;
     /// provided for stack base generator compatibility.
-    pub fn new_unseeded() -> Self {
+    pub const fn new_unseeded() -> Self {
         // Java uses a unique seed from nanoTime; for deterministic analysis we only
         // use explicitly seeded generators. Base stack entry is never consulted
         // during seeded runs after pushGenerator(seed).
         Self::new(0)
+    }
+
+    /// Rebuild a generator from [`Self::state`].
+    pub(crate) const fn from_state(seed: u64) -> Self {
+        Self { seed }
+    }
+
+    /// Raw 48-bit LCG state, for compact storage in the generator stack.
+    pub(crate) const fn state(&self) -> u64 {
+        self.seed
     }
 
     /// `Random.setSeed(long)`.
