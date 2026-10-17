@@ -82,6 +82,10 @@ Next:
 4. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
    not actually depend on run history); publish entities on boss, vault, and
    mining maps.
-5. Performance (`bun run profile`): `patch::generate` (driven by
-   `setup_patch` retries in mining rooms) is ~25% of a full report; next
-   payload win is `tile_variance` (~100 KB of the ~560 KB 26-floor report).
+5. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
+   ~38 ms WASM. Remaining cost is spread thin; `patch::generate` (~25%) is
+   now mostly the parity-bound `next_float` fill draws. Measured but not
+   adopted: talc allocator (no WASM gain), `+simd128` (~7% WASM, drops
+   pre-16.4 Safari), and sharing the pre-trinket floor prefix across
+   trinket routes (~1–2 ms; routes split on ghost-reward profiling and need
+   trinket/RNG thread-local snapshots).
