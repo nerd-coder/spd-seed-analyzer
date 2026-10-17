@@ -87,7 +87,14 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
     );
     let mut alternatives = Vec::new();
     for route in routes {
-        let alternative = analyze_seed_internal(input, route.max_depth, Some(&route.profile))?;
+        // The trinket selection depends only on the seed: reuse it rather
+        // than regenerating floors 1-4 for every route.
+        let alternative = analyze_seed_with_selection(
+            input,
+            route.max_depth,
+            Some(&route.profile),
+            report.trinket_selection.clone(),
+        )?;
         alternatives.push((route, alternative.floors));
     }
     conditional::merge_possible_rooms(
@@ -154,9 +161,20 @@ fn analyze_seed_internal(
     profile: Option<&MapProfile>,
 ) -> Result<SeedReport, AnalyzeError> {
     let info = parse_seed(input)?;
+    let selection = TrinketSelectionReport::for_run(&init_run(info.numeric));
+    analyze_seed_with_selection(input, floors, profile, selection)
+}
+
+/// `analyze_seed_internal` with the seed's precomputed trinket selection.
+fn analyze_seed_with_selection(
+    input: &str,
+    floors: u32,
+    profile: Option<&MapProfile>,
+    trinket_selection: TrinketSelectionReport,
+) -> Result<SeedReport, AnalyzeError> {
+    let info = parse_seed(input)?;
     let floors = floors.clamp(1, 26);
     let run = init_run(info.numeric);
-    let trinket_selection = TrinketSelectionReport::for_run(&run);
     if let Some(profile) = profile {
         profile.validate(trinket_selection.first_effective_depth)?;
     }
