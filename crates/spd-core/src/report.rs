@@ -1,5 +1,6 @@
 //! Serializable analysis report types.
 
+mod base64_bytes;
 mod bit_mask;
 mod compact;
 mod quests;
@@ -37,7 +38,9 @@ pub struct FloorMap {
     pub tileset: String,
     /// Row-major SPD `Terrain` values
     pub tiles: Vec<u16>,
-    /// SPD `DungeonTileSheet.setupVariance` values for deterministic tile alternates.
+    /// SPD `DungeonTileSheet.setupVariance` values for deterministic tile
+    /// alternates. Serialized as a base64 string to keep the payload small.
+    #[serde(with = "base64_bytes")]
     pub tile_variance: Vec<u8>,
     /// Pinned `Level.cleanWalls()` visibility mask, row-major and parallel to
     /// `tiles`. Serialized as `0`/`1` to keep the per-cell payload small.

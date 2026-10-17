@@ -122,7 +122,8 @@ export type FloorMap = {
   height: number
   tileset: string
   tiles: number[]
-  tile_variance: number[]
+  /** Sent as base64; decoded by `analyzeSeed`. */
+  tile_variance: ArrayLike<number>
   /** Per-cell `cleanWalls()` visibility, `1` = discoverable. */
   discoverable: CellMask
   markers: MapMarker[]
@@ -493,7 +494,25 @@ export async function analyzeSeed(
   floors: number
 ): Promise<SeedReport> {
   await ensureWasm()
-  return wasmBindings.analyze_seed(input, floors) as SeedReport
+  const report = wasmBindings.analyze_seed(input, floors) as SeedReport
+  for (const floor of report.floors) {
+    decodeMaps(floor)
+    for (const branch of floor.branches ?? []) decodeMaps(branch)
+  }
+  return report
+}
+
+function decodeMaps(holder: {
+  map?: FloorMap | null
+  assumed_map?: FloorMap | null
+}) {
+  for (const map of [holder.map, holder.assumed_map]) {
+    if (map && typeof map.tile_variance === 'string') {
+      map.tile_variance = Uint8Array.from(atob(map.tile_variance), (char) =>
+        char.charCodeAt(0)
+      )
+    }
+  }
 }
 
 export async function searchSeeds(

@@ -268,7 +268,7 @@ function altEntry(visual: number, tileset: string) {
 const withAlt = (
   visual: number,
   cell: number,
-  variance: number[],
+  variance: ArrayLike<number>,
   tileset: string
 ) => {
   const entry = altEntry(visual, tileset)
@@ -287,7 +287,7 @@ const waterCanStitch = (tile: number, tileset: string) =>
 
 export function lowerVisual(
   tiles: number[],
-  variance: number[],
+  variance: ArrayLike<number>,
   width: number,
   tileset: string,
   cell: number
@@ -373,7 +373,7 @@ export function lowerVisual(
 /** Indices into `raised_terrain.png` (`RaisedTerrainTilemap`, 4 columns). */
 export function raisedTerrainVisual(
   tile: number,
-  variance: number[],
+  variance: ArrayLike<number>,
   cell: number,
   tileset: string
 ) {
@@ -405,7 +405,7 @@ function sidewaysDoorOverhang(tile: number) {
 
 export function wallVisual(
   tiles: number[],
-  variance: number[],
+  variance: ArrayLike<number>,
   width: number,
   tileset: string,
   cell: number
