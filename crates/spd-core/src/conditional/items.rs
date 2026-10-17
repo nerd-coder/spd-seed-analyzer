@@ -5,10 +5,12 @@ use crate::report::{
 
 use super::DiscoveredRoute;
 
+/// Consumes the alternative floors' items; run it after every other merge
+/// that reads them.
 pub(crate) fn merge_possible_items(
     floors: &mut [FloorReport],
     default_condition: ItemSpawnCondition,
-    alternatives: &[(DiscoveredRoute, Vec<FloorReport>)],
+    alternatives: &mut [(DiscoveredRoute, Vec<FloorReport>)],
 ) {
     for floor in floors {
         let (mut variable_items, default_items): (Vec<_>, Vec<_>) =
@@ -16,58 +18,48 @@ pub(crate) fn merge_possible_items(
                 .into_iter()
                 .flat_map(|group| group.variants)
                 .partition(|item| item.prediction == ItemPredictionKind::Variable);
-        let alternative_items = alternatives
-            .iter()
-            .filter_map(|(route, floors)| {
-                (floor.depth <= route.max_depth)
-                    .then(|| {
-                        floors
-                            .iter()
-                            .find(|candidate| candidate.depth == floor.depth)
-                    })
-                    .flatten()
-                    .map(|candidate| {
-                        let items = candidate
-                            .items
-                            .iter()
-                            .flat_map(|group| &group.variants)
-                            .filter(|item| item.prediction != ItemPredictionKind::Variable)
-                            .cloned()
-                            .collect::<Vec<_>>();
-                        (&route.condition, items)
-                    })
-            })
-            .collect::<Vec<_>>();
-        let contexts = std::iter::once((&default_condition, &default_items))
-            .chain(
-                alternative_items
-                    .iter()
-                    .map(|(condition, items)| (*condition, items)),
-            )
-            .collect::<Vec<_>>();
-        let mut entries = merge_contexts(&contexts);
+        let mut contexts = vec![(&default_condition, default_items)];
+        for (route, route_floors) in alternatives.iter_mut() {
+            if floor.depth > route.max_depth {
+                continue;
+            }
+            let Some(candidate) = route_floors
+                .iter_mut()
+                .find(|candidate| candidate.depth == floor.depth)
+            else {
+                continue;
+            };
+            let items = std::mem::take(&mut candidate.items)
+                .into_iter()
+                .flat_map(|group| group.variants)
+                .filter(|item| item.prediction != ItemPredictionKind::Variable)
+                .collect();
+            contexts.push((&route.condition, items));
+        }
+        let mut entries = merge_contexts(contexts);
         entries.append(&mut variable_items);
         floor.items = group_item_entries(entries);
     }
 }
 
-fn merge_contexts(contexts: &[(&ItemSpawnCondition, &Vec<ItemEntry>)]) -> Vec<ItemEntry> {
+fn merge_contexts(contexts: Vec<(&ItemSpawnCondition, Vec<ItemEntry>)>) -> Vec<ItemEntry> {
+    let (conditions, items): (Vec<_>, Vec<_>) = contexts.into_iter().unzip();
     let mut merged = Vec::<(ItemEntry, Vec<usize>)>::new();
-    for (context_index, (_, items)) in contexts.iter().enumerate() {
-        for item in *items {
+    for (context_index, items) in items.into_iter().enumerate() {
+        for item in items {
             if let Some((candidate, present_in)) =
                 merged.iter_mut().find(|(candidate, present_in)| {
-                    items_equivalent(candidate, item) && !present_in.contains(&context_index)
+                    items_equivalent(candidate, &item) && !present_in.contains(&context_index)
                 })
             {
-                for condition in &item.conditions {
-                    if !candidate.conditions.contains(condition) {
-                        candidate.conditions.push(condition.clone());
+                for condition in item.conditions {
+                    if !candidate.conditions.contains(&condition) {
+                        candidate.conditions.push(condition);
                     }
                 }
                 present_in.push(context_index);
             } else {
-                merged.push((item.clone(), vec![context_index]));
+                merged.push((item, vec![context_index]));
             }
         }
     }
@@ -75,9 +67,9 @@ fn merge_contexts(contexts: &[(&ItemSpawnCondition, &Vec<ItemEntry>)]) -> Vec<It
     merged
         .into_iter()
         .map(|(mut item, present_in)| {
-            if present_in.len() < contexts.len() {
+            if present_in.len() < conditions.len() {
                 let intrinsic = item.spawn_conditions.clone();
-                item.spawn_conditions = simplify_profile_conditions(&present_in, contexts)
+                item.spawn_conditions = simplify_profile_conditions(&present_in, &conditions)
                     .into_iter()
                     .flat_map(|profile| combine_conditions(&intrinsic, &profile))
                     .collect();
@@ -90,17 +82,17 @@ fn merge_contexts(contexts: &[(&ItemSpawnCondition, &Vec<ItemEntry>)]) -> Vec<It
 
 fn simplify_profile_conditions(
     present_in: &[usize],
-    contexts: &[(&ItemSpawnCondition, &Vec<ItemEntry>)],
+    conditions: &[&ItemSpawnCondition],
 ) -> Vec<ItemSpawnCondition> {
     let mut clauses = Vec::new();
-    let challenge_values = unique_dependencies(contexts, is_challenge);
-    let trinket_values = unique_dependencies(contexts, is_trinket);
+    let challenge_values = unique_dependencies(conditions, is_challenge);
+    let trinket_values = unique_dependencies(conditions, is_trinket);
 
     for dependency in challenge_values.into_iter().chain(trinket_values) {
-        let matching = contexts
+        let matching = conditions
             .iter()
             .enumerate()
-            .filter(|(_, (condition, _))| condition.all_of.contains(&dependency))
+            .filter(|(_, condition)| condition.all_of.contains(&dependency))
             .map(|(index, _)| index)
             .collect::<Vec<_>>();
         if !matching.is_empty() && matching.iter().all(|index| present_in.contains(index)) {
@@ -111,7 +103,7 @@ fn simplify_profile_conditions(
     }
 
     for index in present_in {
-        let profile = contexts[*index].0;
+        let profile = conditions[*index];
         if !clauses.iter().any(|clause| {
             clause
                 .all_of
@@ -125,13 +117,13 @@ fn simplify_profile_conditions(
 }
 
 fn unique_dependencies(
-    contexts: &[(&ItemSpawnCondition, &Vec<ItemEntry>)],
+    conditions: &[&ItemSpawnCondition],
     predicate: fn(&ItemDependencyCondition) -> bool,
 ) -> Vec<ItemDependencyCondition> {
     let mut result = Vec::new();
-    for dependency in contexts
+    for dependency in conditions
         .iter()
-        .flat_map(|(condition, _)| &condition.all_of)
+        .flat_map(|condition| &condition.all_of)
         .filter(|dependency| predicate(dependency))
     {
         if !result.contains(dependency) {

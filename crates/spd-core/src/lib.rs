@@ -98,7 +98,7 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
     conditional::merge_possible_items(
         &mut report.floors,
         conditional::default_condition(),
-        &alternatives,
+        &mut alternatives,
     );
     // Parity probes retain the latest replay trace for oracle inspection. Keep
     // that diagnostic state on the conservative finder projection rather than
