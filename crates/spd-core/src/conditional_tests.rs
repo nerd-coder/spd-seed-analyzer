@@ -86,6 +86,35 @@ fn transmutations_consume_exact_scrolls_in_order() {
 }
 
 #[test]
+fn route_replays_match_full_replays_for_items_and_rooms() {
+    let merge_inputs = |floors: &[FloorReport]| {
+        floors
+            .iter()
+            .map(|floor| serde_json::to_value((floor.depth, &floor.items, &floor.rooms)).unwrap())
+            .collect::<Vec<_>>()
+    };
+    let mut trinket_routes = 0;
+    for seed in 0..6 {
+        let input = seed.to_string();
+        let report = crate::analyze_seed_with_profile(&input, 26, &MapProfile::default()).unwrap();
+        let routes = discover_routes(&report.trinket_selection, &report.floors, 26);
+        for route in routes.iter().take(6) {
+            trinket_routes += usize::from(!route.profile.trinket_events.is_empty());
+            let fast = crate::analyze_route(&input, route, &report.trinket_selection).unwrap();
+            let full =
+                crate::analyze_seed_with_profile(&input, route.max_depth, &route.profile).unwrap();
+            assert_eq!(
+                merge_inputs(&fast),
+                merge_inputs(&full.floors),
+                "seed {seed} route {:?}",
+                route.profile
+            );
+        }
+    }
+    assert!(trinket_routes > 0, "covers at least one trinket route");
+}
+
+#[test]
 fn profile_conditions_are_structured_dependency_axes() {
     let profile = MapProfile {
         challenges: vec![Challenge::ForbiddenRunes],

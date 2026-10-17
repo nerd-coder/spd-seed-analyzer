@@ -87,15 +87,8 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
     );
     let mut alternatives = Vec::new();
     for route in routes {
-        // The trinket selection depends only on the seed: reuse it rather
-        // than regenerating floors 1-4 for every route.
-        let alternative = analyze_seed_with_selection(
-            input,
-            route.max_depth,
-            Some(&route.profile),
-            report.trinket_selection.clone(),
-        )?;
-        alternatives.push((route, alternative.floors));
+        let floors = analyze_route(input, &route, &report.trinket_selection)?;
+        alternatives.push((route, floors));
     }
     conditional::merge_possible_rooms(
         &mut report.floors,
@@ -155,26 +148,35 @@ pub(crate) fn analyze_seed_with_profile(
     analyze_seed_internal(input, floors, Some(profile))
 }
 
+/// Floors a conditional route contributes to the merged report: only items
+/// and rooms are read, so maps and side branches are skipped. The trinket
+/// selection depends only on the seed and is shared with the default replay.
+fn analyze_route(
+    input: &str,
+    route: &conditional::DiscoveredRoute,
+    selection: &TrinketSelectionReport,
+) -> Result<Vec<FloorReport>, AnalyzeError> {
+    let info = parse_seed(input)?;
+    route.profile.validate(selection.first_effective_depth)?;
+    let mut dungeon = dungeon_from_run(init_run(info.numeric));
+    dungeon.expose_variable_items = route.profile == MapProfile::default();
+    Ok(level::analyze_route_floors(
+        &mut dungeon,
+        route.max_depth.clamp(1, 26),
+        &route.profile,
+        selection.first_effective_depth,
+    ))
+}
+
 fn analyze_seed_internal(
     input: &str,
     floors: u32,
     profile: Option<&MapProfile>,
 ) -> Result<SeedReport, AnalyzeError> {
     let info = parse_seed(input)?;
-    let selection = TrinketSelectionReport::for_run(&init_run(info.numeric));
-    analyze_seed_with_selection(input, floors, profile, selection)
-}
-
-/// `analyze_seed_internal` with the seed's precomputed trinket selection.
-fn analyze_seed_with_selection(
-    input: &str,
-    floors: u32,
-    profile: Option<&MapProfile>,
-    trinket_selection: TrinketSelectionReport,
-) -> Result<SeedReport, AnalyzeError> {
-    let info = parse_seed(input)?;
     let floors = floors.clamp(1, 26);
     let run = init_run(info.numeric);
+    let trinket_selection = TrinketSelectionReport::for_run(&run);
     if let Some(profile) = profile {
         profile.validate(trinket_selection.first_effective_depth)?;
     }

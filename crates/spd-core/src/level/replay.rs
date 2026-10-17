@@ -121,6 +121,25 @@ pub(crate) fn analyze_floors_with_profile_and_trinket_availability(
     )
 }
 
+/// Item and room replay for a conditional route. Same generation as
+/// [`analyze_floors_with_profile_and_trinket_availability`], minus map
+/// projection, parity probes, and side branches, which route merges ignore.
+pub(crate) fn analyze_route_floors(
+    dungeon: &mut DungeonState,
+    max_floors: u32,
+    profile: &MapProfile,
+    first_effective_trinket_depth: u32,
+) -> Vec<FloorReport> {
+    replay_floors(
+        dungeon,
+        max_floors,
+        Some(profile),
+        Some(first_effective_trinket_depth),
+        LevelOutput::ITEMS,
+        |_| true,
+    )
+}
+
 /// Item-only replay for the seed finder, using the default profile.
 ///
 /// Generation still paints every floor (painting consumes the RNG later loot

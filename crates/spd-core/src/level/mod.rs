@@ -655,8 +655,8 @@ mod replay;
 
 pub use replay::{analyze_floors, analyze_floors_with_profile, analyze_layouts_with_profile};
 pub(crate) use replay::{
-    analyze_floors_with_profile_and_trinket_availability, first_trinket_availability,
-    replay_default_profile_states, search_floors,
+    analyze_floors_with_profile_and_trinket_availability, analyze_route_floors,
+    first_trinket_availability, replay_default_profile_states, search_floors,
 };
 
 #[cfg(test)]
