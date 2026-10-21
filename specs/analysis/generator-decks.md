@@ -65,7 +65,7 @@ branch **is**.
 | Grassy grave tomb | `GrassyGraveRoom.java:67` |
 | Mass grave (60%) | `MassGraveRoom.java:108` |
 | Secret summoning skeleton | `SecretSummoningRoom.java:53` |
-| Ordinary / golden / crystal-vault mimic prize (`useDecks=true`) | `Mimic.java:349` |
+| Ordinary / golden mimic prize (`useDecks=true`); a Crystal Mimic keeps the vault prize and draws nothing (`CrystalMimic.java:177-183`) | `Mimic.java:349` |
 | Shop rare, 1/10 (including Imp shop stock) | `ShopRoom.java:339`, `ImpShopRoom.java:66-67` |
 | Pit room main loot | `PitRoom.java:72` |
 | Crystal choice hidden prize | `CrystalChoiceRoom.java:122-126` |

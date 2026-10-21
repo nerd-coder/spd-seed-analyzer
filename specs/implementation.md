@@ -44,6 +44,20 @@ wands still stop at +4. The Deep search switch fills the seed-only Imp and Wandm
 the same class window so those quest rewards can be matched at all; it is off
 by default.
 
+The Trinket Catalyst picker sits on the seed's selection floor. Picking an
+offer calls `analyze_seed_with_trinket` (WASM export of the same name): the
+trinket is held at +3 from `first_effective_depth`, variable samples are
+published, and only Forbidden Runes stays a spawn condition. No pick is the
+merged `analyze_seed` report. Per-option `catalyst_option_effects` marks which
+trinkets the replay models (Mossy Clump, Trap Mechanism, Mimic Tooth, Rat
+Skull, Exotic Crystals); Parchment Scrap's equipment enchant rolls and Cracked
+Spyglass's extra loot are not modeled. The pick persists per seed in
+localStorage. Ebony mimics spawn on the map with a held Mimic Tooth (prize
+draws replayed for deck state, prize items not reported); on floor 2 their
+cell can depend on the unseeded entrance guide page, and is then left off the
+map. Java oracle fixtures cover Mimic Tooth +3 floors
+(`*-mimic-tooth-3-before-*.json`).
+
 Every public object is a numeric id from `crates/spd-objects` (items,
 enchantments, mobs, rooms, traps, plants, blobs). `bun run gen:ids` writes
 `web/src/generated/game-ids.ts`; a Rust test fails when it drifts. Id lists are
@@ -73,16 +87,19 @@ with no sample on this profile; the UI hides those.
 
 Next:
 
-1. Decide whether enchanted item titles should use the game's `%s` templates
+1. HDN-UJD-MJF floor 4 room paint ends two RNG draws short of Java with or
+   without a trinket (its Mimic Tooth fixture is skipped in
+   `trinket_fixtures_replay_exact_profiled_floor_state`).
+2. Decide whether enchanted item titles should use the game's `%s` templates
    ("Friendly Sickle") instead of a separate enchantment tag.
-2. Public `SecretLaboratoryRoom` contract claims exactly 10 Energy Crystals;
+3. Public `SecretLaboratoryRoom` contract claims exactly 10 Energy Crystals;
    Java drops two `IntRange(3, 5)` stacks (the exact report has the real sum).
-3. Consider exposing `analyze_seed_exact` through WASM if the web app should
+4. Consider exposing `analyze_seed_exact` through WASM if the web app should
    offer the default-profile view.
-4. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
+5. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
    not actually depend on run history); publish entities on boss, vault, and
    mining maps.
-5. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
+6. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
    ~38 ms WASM. Remaining cost is spread thin; `patch::generate` (~25%) is
    now mostly the parity-bound `next_float` fill draws. Measured but not
    adopted: talc allocator (no WASM gain), `+simd128` (~7% WASM, drops

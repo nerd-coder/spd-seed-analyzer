@@ -198,8 +198,11 @@ For a fixed profile, each deck-drawn class is index-keyed (§1). No `Ring`
 subclass overrides `Ring.random()` (`Ring.java:259`), so a RING slot's
 class is decoupled from its later floor-stream level roll. Across playable
 routes, spawn depth, deck indices, and the WEP/MIS coin flip are not
-seed-only: Mimic Tooth changes levelgen mimic prizes; Rat Skull can add a
-deck-using Crystal Mimic prize; earlier map/challenge paths can change
+seed-only: Mimic Tooth changes levelgen mimic prizes; Rat Skull and Mimic
+Tooth can turn the Crystal Vault's second chest into a Crystal Mimic, which
+keeps the vault prize and draws nothing (`CrystalMimic.java:177-183`; Java
+oracle `aaa-aaa-bnk-final-heaps-floor-3-mimic-tooth-3-before-2.json` fails
+when a mimic prize is replayed there); earlier map/challenge paths can change
 levelgen draw sites; before `Imp.Quest.spawn`, branch 0 cases 7–13 draw
 both feeling floats and a Mossy hit skips only `TrapMechanism.getNextFeeling()`
 without touching the main stream (`Level.java:287-290`,
