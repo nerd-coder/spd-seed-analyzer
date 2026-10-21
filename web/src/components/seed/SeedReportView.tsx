@@ -2,10 +2,17 @@ import { useRef } from 'react'
 import { AutomaticOutcomes } from '@/components/seed/AutomaticOutcomes'
 import { DescentRail } from '@/components/seed/DescentRail'
 import { IdentitiesPanel } from '@/components/seed/IdentitiesPanel'
+import type { TrinketChoice } from '@/components/seed/trinket-offers'
 import { stuckBottom, useCurrentFloor } from '@/hooks/useCurrentFloor'
 import type { SeedReport } from '@/lib/spd-wasm'
 
-export function SeedReportView({ report }: { report: SeedReport }) {
+export function SeedReportView({
+  report,
+  trinketChoice,
+}: {
+  report: SeedReport
+  trinketChoice: TrinketChoice
+}) {
   const containerRef = useRef<HTMLDivElement>(null)
   const railRef = useRef<HTMLElement>(null)
   const current = useCurrentFloor(containerRef, railRef)
@@ -36,7 +43,7 @@ export function SeedReportView({ report }: { report: SeedReport }) {
         />
       ) : null}
       <IdentitiesPanel identities={report.identities} />
-      <AutomaticOutcomes report={report} />
+      <AutomaticOutcomes report={report} trinketChoice={trinketChoice} />
     </div>
   )
 }

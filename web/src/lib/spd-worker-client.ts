@@ -15,7 +15,8 @@ function createWorker() {
 
 export function analyzeSeedInWorker(
   input: string,
-  floors: number
+  floors: number,
+  trinket: string | null
 ): WorkerTask<SeedReport> {
   const worker = createWorker()
   let rejectTask: (reason: Error) => void = () => {}
@@ -36,6 +37,7 @@ export function analyzeSeedInWorker(
       type: 'analyze',
       input,
       floors,
+      trinket,
     } satisfies SpdWorkerRequest)
   })
   return {

@@ -1,7 +1,7 @@
 /**
  * Seed session lifecycle: open tabs, analyze, rehydrate, close.
  *
- * Persisted: open seed inputs, active tab id.
+ * Persisted: open seed inputs, active tab id, per-seed trinket choice.
  * Ephemeral: draft input, session runtime (reports), analyzing, form error.
  */
 
@@ -9,6 +9,7 @@ import { isCompleteCanonicalSeed } from '@/lib/canonical-seed'
 import type { SeedReport } from '@/lib/spd-wasm'
 import { analyzeSeedInWorker, type WorkerTask } from '@/lib/spd-worker-client'
 import { AppStore, derivedStore, persistentStore } from './store-utils'
+import { setTrinketChoice, trinketChoiceFor } from './trinket-choices'
 
 // —— keys / limits ————————————————————————————————————————————————
 
@@ -40,6 +41,8 @@ export type SeedSession = {
   input: string
   status: SessionStatus
   report: SeedReport | null
+  /** Catalyst trinket class held at +3 for this report; null is no trinket. */
+  trinket: string | null
   error: string | null
   startedAt: number | null
   finishedAt: number | null
@@ -157,13 +160,15 @@ function patchSession(id: string, patch: Partial<SeedSession>) {
 }
 
 async function runAnalyze(id: string, input: string): Promise<boolean> {
+  const trinket = trinketChoiceFor(id)
   patchSession(id, {
     status: 'loading',
+    trinket,
     error: null,
     startedAt: Date.now(),
     finishedAt: null,
   })
-  const task = analyzeSeedInWorker(input, ANALYZE_FLOORS)
+  const task = analyzeSeedInWorker(input, ANALYZE_FLOORS, trinket)
   analyzeTasks.get(id)?.cancel()
   analyzeTasks.set(id, task)
   try {
@@ -206,6 +211,7 @@ export function setActiveSeed(id: string | null) {
  */
 export function closeSeedSession(id: string) {
   closedIds.add(id)
+  setTrinketChoice(id, null)
   analyzeTasks.get(id)?.cancel()
   analyzeTasks.delete(id)
   const prev = $sessions.get()
@@ -227,6 +233,25 @@ export function cancelSeedAnalysis(id: string) {
   analyzeTasks.delete(id)
   patchSession(id, { status: 'cancelled', error: null, finishedAt: Date.now() })
   $analyzing.set(analyzeTasks.size > 0)
+}
+
+/**
+ * Hold a Catalyst trinket (class name) for later floors of a seed, or clear
+ * it with null, and regenerate. The previous report stays visible meanwhile.
+ */
+export async function selectTrinket(
+  id: string,
+  trinket: string | null
+): Promise<void> {
+  const session = $sessions.get().find((item) => item.id === id)
+  if (!session || trinketChoiceFor(id) === trinket) return
+  setTrinketChoice(id, trinket)
+  $analyzing.set(true)
+  try {
+    await runAnalyze(id, session.input)
+  } finally {
+    $analyzing.set(analyzeTasks.size > 0)
+  }
 }
 
 async function analyzeSeedInputInternal(
@@ -260,6 +285,7 @@ async function analyzeSeedInputInternal(
   while (nextSessions.length >= MAX_SAVED_SEEDS) {
     const oldest = nextSessions[0]
     closedIds.add(oldest.id)
+    setTrinketChoice(oldest.id, null)
     nextSessions = nextSessions.slice(1)
   }
 
@@ -268,6 +294,7 @@ async function analyzeSeedInputInternal(
     input,
     status: 'loading',
     report: null,
+    trinket: null,
     error: null,
     startedAt: Date.now(),
     finishedAt: null,
@@ -338,6 +365,7 @@ export function startSessionRehydrate(): () => void {
       input,
       status: 'pending' as const,
       report: null,
+      trinket: null,
       error: null,
       startedAt: null,
       finishedAt: null,

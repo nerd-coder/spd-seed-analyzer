@@ -1,6 +1,5 @@
 import { FloorMapDialog } from '@/components/FloorMapDialog'
 import { GameObject } from '@/components/GameObject'
-import { ItemBox } from '@/components/ItemBox'
 import { AlchemyBubbles } from '@/components/seed/AlchemyBubbles'
 import { FloorBanner } from '@/components/seed/FloorBanner'
 import {
@@ -15,14 +14,14 @@ import {
   matchingQuestBranch,
   unclaimedBranches,
 } from '@/components/seed/quest-branch'
+import { TrinketChoiceBand } from '@/components/seed/TrinketChoiceBand'
 import {
-  isFirstAlchemyPot,
-  trinketOfferDetails,
+  HeldTrinketChip,
+  HeldTrinketContext,
+  type TrinketChoice,
 } from '@/components/seed/trinket-offers'
 import { roomClassName } from '@/generated/game-ids'
 import { feelingObjectId } from '@/lib/game-objects'
-import { itemSprite } from '@/lib/item-kind'
-import { itemLabel } from '@/lib/item-title'
 import { formatItemSource } from '@/lib/labels'
 import type {
   FloorReport,
@@ -43,11 +42,13 @@ export function FloorDetail({
   identities,
   trinketSelection,
   offerClasses,
+  trinketChoice,
 }: {
   floor: FloorReport
   identities: IdentityMaps
   trinketSelection: TrinketSelectionReport
   offerClasses: readonly string[]
+  trinketChoice: TrinketChoice
 }) {
   const displayedMap = floor.map ?? floor.assumed_map ?? null
   const visibleItems = visibleItemGroups(floor.items)
@@ -55,41 +56,45 @@ export function FloorDetail({
   const alchemyPots = (floor.guaranteed_appearances ?? []).filter(
     (appearance) => appearance.kind === 'alchemy_pot'
   )
-  const offerPotIndex = alchemyPots.findIndex((appearance) =>
-    isFirstAlchemyPot(appearance, floor.depth, trinketSelection)
-  )
+  const showsChoice =
+    offerClasses.length > 0 && floor.depth === trinketSelection.selection_depth
+  const held =
+    trinketChoice.held != null &&
+    floor.depth >= trinketSelection.first_effective_depth
+      ? trinketChoice.held
+      : null
 
   return (
-    <section data-floor-depth={floor.depth}>
-      {/* Sticky below the seed tabs and the floor strip; z-10 keeps it under both. */}
-      <div
-        className="sticky z-10"
-        style={{
-          top: 'calc(var(--seed-tabs-height, 3rem) + var(--descent-rail-height, 0px))',
-        }}
-      >
-        <FloorBanner
-          depth={floor.depth}
-          tileset={displayedMap?.tileset}
-          action={
-            displayedMap ? (
-              <FloorMapDialog
-                map={displayedMap}
-                identities={identities}
-                depth={floor.depth}
-              />
-            ) : null
-          }
+    <HeldTrinketContext value={held}>
+      <section data-floor-depth={floor.depth}>
+        {/* Sticky below the seed tabs and the floor strip; z-10 keeps it under both. */}
+        <div
+          className="sticky z-10"
+          style={{
+            top: 'calc(var(--seed-tabs-height, 3rem) + var(--descent-rail-height, 0px))',
+          }}
         >
-          {floor.feeling && floor.feeling !== 'none' ? (
-            <GameObject id={feelingObjectId(floor.feeling)} scale={4} />
-          ) : null}
-          {alchemyPots.map((appearance, index) => (
-            <span
-              key={`${appearance.source ?? appearance.kind}-${index}`}
-              className="inline-flex items-center gap-1"
-            >
-              <span className="relative inline-flex">
+          <FloorBanner
+            depth={floor.depth}
+            tileset={displayedMap?.tileset}
+            action={
+              displayedMap ? (
+                <FloorMapDialog
+                  map={displayedMap}
+                  identities={identities}
+                  depth={floor.depth}
+                />
+              ) : null
+            }
+          >
+            {floor.feeling && floor.feeling !== 'none' ? (
+              <GameObject id={feelingObjectId(floor.feeling)} scale={4} />
+            ) : null}
+            {alchemyPots.map((appearance, index) => (
+              <span
+                key={`${appearance.source ?? appearance.kind}-${index}`}
+                className="relative inline-flex"
+              >
                 <AlchemyBubbles scale={2} />
                 <GameObject
                   id="AlchemyPot"
@@ -97,71 +102,57 @@ export function FloorDetail({
                   label={alchemyPotLabel(appearance)}
                 />
               </span>
-              {index === offerPotIndex ? (
-                <span className="inline-flex items-center gap-0">
-                  {offerClasses.map((className, offerIndex) => (
-                    <ItemBox
-                      key={className}
-                      scale={1}
-                      border
-                      bg
-                      title={itemLabel(className)}
-                      sprites={itemSprite({
-                        className,
-                        category: 'trinket',
-                      })}
-                      details={trinketOfferDetails(
-                        offerIndex,
-                        offerClasses.length,
-                        trinketSelection.transmutation_sequence
-                      )}
-                    />
-                  ))}
-                </span>
-              ) : null}
-            </span>
-          ))}
-        </FloorBanner>
-      </div>
+            ))}
+            {held ? <HeldTrinketChip trinket={held} /> : null}
+          </FloorBanner>
+        </div>
 
-      <div className="flex flex-col gap-4 px-4 py-4">
-        {floor.quests && floor.quests.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-semibold">Quests</h4>
+        <div className="flex flex-col gap-4 px-4 py-4">
+          {showsChoice ? (
+            <TrinketChoiceBand
+              offers={offerClasses}
+              selection={trinketSelection}
+              choice={trinketChoice}
+            />
+          ) : null}
+          {floor.quests && floor.quests.length > 0 && (
             <div className="space-y-2">
-              {floor.quests.map((q, i) => (
-                <QuestCard
-                  key={`${floor.depth}-quest-${i}`}
-                  quest={q}
-                  rewards={visibleItems.filter(
-                    (item) => item.source === q.contract.rewards.item_source
-                  )}
+              <h4 className="text-sm font-semibold">Quests</h4>
+              <div className="space-y-2">
+                {floor.quests.map((q, i) => (
+                  <QuestCard
+                    key={`${floor.depth}-quest-${i}`}
+                    quest={q}
+                    rewards={visibleItems.filter(
+                      (item) => item.source === q.contract.rewards.item_source
+                    )}
+                    identities={identities}
+                    depth={floor.depth}
+                    branch={matchingQuestBranch(q, floor.branches)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          <FloorItemSections floor={floor} identities={identities} />
+
+          {leftoverBranches.length > 0 && (
+            <div className="space-y-2">
+              {leftoverBranches.map((branch) => (
+                <QuestBanner
+                  key={`${branch.id.depth}-${branch.id.branch}`}
+                  depth={branch.id.depth}
+                  branch={branch}
                   identities={identities}
-                  depth={floor.depth}
-                  branch={matchingQuestBranch(q, floor.branches)}
+                  title={branchTitle(branch.kind)}
+                  target={branchObjectiveTarget(branch)}
                 />
               ))}
             </div>
-          </div>
-        )}
-
-        <FloorItemSections floor={floor} identities={identities} />
-
-        {leftoverBranches.length > 0 && (
-          <div className="space-y-2">
-            {leftoverBranches.map((branch) => (
-              <QuestBanner
-                key={`${branch.id.depth}-${branch.id.branch}`}
-                depth={branch.id.depth}
-                branch={branch}
-                identities={identities}
-                title={branchTitle(branch.kind)}
-                target={branchObjectiveTarget(branch)}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
+          )}
+        </div>
+      </section>
+    </HeldTrinketContext>
   )
 }

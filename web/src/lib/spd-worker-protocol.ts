@@ -5,7 +5,7 @@ import type {
 } from '@/lib/spd-wasm'
 
 export type SpdWorkerRequest =
-  | { type: 'analyze'; input: string; floors: number }
+  | { type: 'analyze'; input: string; floors: number; trinket: string | null }
   | { type: 'search'; request: SeedSearchRequest }
 
 export type SpdWorkerResponse =

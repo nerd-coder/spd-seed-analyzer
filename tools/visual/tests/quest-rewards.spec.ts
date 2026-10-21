@@ -121,6 +121,7 @@ async function installQuestReport(page: Page, includeVariable: boolean) {
           selection_depth: 3,
           first_effective_depth: 4,
           catalyst_options: [],
+          catalyst_option_effects: [],
           transmutation_sequence: [],
         },
         floors: [

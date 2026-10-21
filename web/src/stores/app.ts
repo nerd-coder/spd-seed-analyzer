@@ -55,6 +55,7 @@ export {
   normalizeSeedInput,
   type SeedSession,
   type SessionStatus,
+  selectTrinket,
   sessionIdFor,
   setActiveSeed,
   setSeedInput,

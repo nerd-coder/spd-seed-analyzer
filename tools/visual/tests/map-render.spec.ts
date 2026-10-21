@@ -210,6 +210,7 @@ async function installSyntheticMapReport(page: Page) {
           ItemId.RatSkull,
           ItemId.SaltCube,
         ],
+        catalyst_option_effects: ['modeled', 'modeled', 'modeled', 'none'],
         transmutation_sequence: [
           ItemId.TrapMechanism,
           ItemId.ParchmentScrap,
@@ -894,21 +895,39 @@ test('floor items render as icon slots', async ({ page }) => {
   const floor4 = page
     .getByRole('heading', { name: 'Floor 4', exact: true })
     .locator('xpath=ancestor::section[1]')
-  const mossy = floor3.getByLabel('Mossy Clump', { exact: true })
+  const choice = floor3.locator('[data-trinket-choice]')
+  const mossy = choice.getByRole('radio', { name: 'Mossy Clump' })
   await expect(mossy).toBeVisible()
-  await expect(mossy).toHaveCSS('width', '25px')
-  await expect(floor3.getByLabel('Mimic Tooth', { exact: true })).toBeVisible()
-  await expect(floor4.getByLabel('Mossy Clump', { exact: true })).toHaveCount(0)
-  await mossy.click()
-  const offerDetail = page.locator('[data-slot="item-detail"]')
-  await expect(offerDetail).toContainText('Catalyst choice 1 of 4.')
-  await expect(offerDetail).toContainText('Transmutation order')
-  const order = offerDetail.locator('[data-slot="item-box"]')
+  await expect(mossy).toHaveAttribute('aria-checked', 'false')
+  await expect(mossy.locator('[data-slot="item-box"]')).toHaveCSS(
+    'width',
+    '59px'
+  )
+  await expect(choice.getByRole('radio', { name: 'Mimic Tooth' })).toBeVisible()
+  await expect(
+    choice.getByRole('radio', { name: 'No trinket' })
+  ).toHaveAttribute('aria-checked', 'true')
+  await expect(floor4.locator('[data-trinket-choice]')).toHaveCount(0)
+  const order = choice.locator(
+    '[data-transmutation-order] [data-slot="item-box"]'
+  )
   await expect(order).toHaveCount(13)
   await expect(order.first()).toHaveAttribute('aria-label', 'Trap Mechanism')
   await expect(order.nth(1)).toHaveAttribute('aria-label', 'Parchment Scrap')
-  await page.keyboard.press('Escape')
-  await expect(offerDetail).toHaveCount(0)
+  await mossy.click()
+  await expect(mossy).toHaveAttribute('aria-checked', 'true')
+  await expect(
+    floor4.getByRole('button', {
+      name: 'Generated with Mossy Clump +3. Change trinket',
+    })
+  ).toBeVisible()
+  await expect(
+    floor3.getByRole('button', { name: /^Generated with/ })
+  ).toHaveCount(0)
+  await choice.getByRole('radio', { name: 'No trinket' }).click()
+  await expect(
+    page.getByRole('button', { name: /^Generated with/ })
+  ).toHaveCount(0)
   const sickle = page.getByRole('listitem').filter({
     has: page.getByLabel(/sickle \+2/i),
   })

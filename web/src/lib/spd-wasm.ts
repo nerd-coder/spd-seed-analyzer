@@ -407,8 +407,13 @@ export type TrinketSelectionReport = {
   selection_depth: number
   first_effective_depth: number
   catalyst_options: ItemId[]
+  /** Index-aligned with `catalyst_options`. */
+  catalyst_option_effects: TrinketGenerationEffect[]
   transmutation_sequence: ItemId[]
 }
+
+/** Whether holding a trinket changes generated floors, and whether it is modeled. */
+export type TrinketGenerationEffect = 'modeled' | 'unmodeled' | 'none'
 
 export type SeedSearchMatchMode = 'any' | 'all'
 
@@ -489,12 +494,18 @@ export async function parseSeed(input: string): Promise<SeedInfo> {
   return wasmBindings.parse_seed(input) as SeedInfo
 }
 
+/** `trinket` is a Catalyst option class name held at +3; null is the default report. */
 export async function analyzeSeed(
   input: string,
-  floors: number
+  floors: number,
+  trinket: string | null = null
 ): Promise<SeedReport> {
   await ensureWasm()
-  const report = wasmBindings.analyze_seed(input, floors) as SeedReport
+  const report = (
+    trinket == null
+      ? wasmBindings.analyze_seed(input, floors)
+      : wasmBindings.analyze_seed_with_trinket(input, floors, trinket)
+  ) as SeedReport
   for (const floor of report.floors) {
     decodeMaps(floor)
     for (const branch of floor.branches ?? []) decodeMaps(branch)

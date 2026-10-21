@@ -1,12 +1,17 @@
-import { forwardRef } from 'react'
+import { forwardRef, useContext } from 'react'
 
 import { GameText, ItemDetail } from '@/components/item-detail'
+import {
+  HeldTrinketContext,
+  PICKED_TRINKET_LEVEL,
+} from '@/components/seed/trinket-offers'
 import { Badge } from '@/components/ui/badge'
 import {
   mobClassName,
   plantClassName,
   trapClassName,
 } from '@/generated/game-ids'
+import { itemLabel } from '@/lib/item-title'
 import {
   itemClass,
   itemTitle,
@@ -105,6 +110,7 @@ type Props = {
 export const MapInspectPanel = forwardRef<HTMLDivElement, Props>(
   function MapInspectPanel({ inspection, pinned, style }, ref) {
     const { entries, uncertain, hidden, secretDoor } = inspection
+    const heldTrinket = useContext(HeldTrinketContext)
     return (
       <div
         ref={ref}
@@ -143,8 +149,9 @@ export const MapInspectPanel = forwardRef<HTMLDivElement, Props>(
         ))}
         {uncertain ? (
           <p className="border-t pt-2 text-xs text-muted-foreground">
-            Shown as generated for a fresh run with no trinkets. Items found or
-            trinkets held before this floor can change what spawns here.
+            {heldTrinket
+              ? `Shown as generated with ${itemLabel(heldTrinket)} +${PICKED_TRINKET_LEVEL} held. Items found before this floor can change what spawns here.`
+              : 'Shown as generated for a fresh run with no trinkets. Items found or trinkets held before this floor can change what spawns here.'}
           </p>
         ) : null}
       </div>

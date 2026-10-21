@@ -1,10 +1,11 @@
+import { createContext } from 'react'
 import { ItemBox } from '@/components/ItemBox'
-import { type ItemId, itemClassName, RoomId } from '@/generated/game-ids'
+import { itemClassName } from '@/generated/game-ids'
 import { itemSprite } from '@/lib/item-kind'
 import { itemLabel, variantCandidateClasses } from '@/lib/item-title'
 import type {
   FloorReport,
-  GuaranteedAppearance,
+  TrinketGenerationEffect,
   TrinketSelectionReport,
 } from '@/lib/spd-wasm'
 
@@ -30,47 +31,72 @@ export function catalystOfferClasses(floors: readonly FloorReport[]): string[] {
   return []
 }
 
-/** The seed's first alchemy pot, matched by depth and laboratory source. */
-export function isFirstAlchemyPot(
-  appearance: GuaranteedAppearance,
-  depth: number,
-  selection: TrinketSelectionReport
-) {
-  if (appearance.kind !== 'alchemy_pot') return false
-  if (depth !== selection.first_alchemy_pot_depth) return false
-  const source = selection.first_alchemy_pot_is_secret
-    ? RoomId.SecretLaboratoryRoom
-    : RoomId.LaboratoryRoom
-  return appearance.source === source
+/** Upgrade level the analyzer holds a picked trinket at (engine `PICKED_LEVEL`). */
+export const PICKED_TRINKET_LEVEL = 3
+
+/**
+ * Trinket class a floor (and its branch maps) was generated with; null when
+ * the floor is the no-trinket replay.
+ */
+export const HeldTrinketContext = createContext<string | null>(null)
+
+/** The player's Catalyst pick for one seed session. */
+export type TrinketChoice = {
+  /** Held trinket class; null shows every outcome as a condition. */
+  held: string | null
+  /** A regenerated report is on its way. */
+  busy: boolean
+  select: (trinket: string | null) => void
 }
 
-export function trinketOfferDetails(
-  index: number,
-  total: number,
-  sequence: readonly ItemId[]
-) {
-  const choice = `Catalyst choice ${index + 1} of ${total}.`
-  if (sequence.length === 0) return choice
+export function trinketEffect(
+  className: string,
+  selection: TrinketSelectionReport
+): TrinketGenerationEffect {
+  const index = selection.catalyst_options.findIndex(
+    (item) => itemClassName(item) === className
+  )
+  return selection.catalyst_option_effects[index] ?? 'unmodeled'
+}
+
+export function trinketEffectLabel(effect: TrinketGenerationEffect) {
+  switch (effect) {
+    case 'modeled':
+      return 'Changes later floors'
+    case 'unmodeled':
+      return 'Changes floors, not modeled'
+    case 'none':
+      return 'No effect on floors'
+  }
+}
+
+/** Banner mark for floors generated with the held trinket; jumps to the pick. */
+export function HeldTrinketChip({ trinket }: { trinket: string }) {
+  const label = `Generated with ${itemLabel(trinket)} +${PICKED_TRINKET_LEVEL}. Change trinket`
   return (
-    <>
-      <p>{choice}</p>
-      <div className="flex flex-col gap-1">
-        <p>Transmutation order</p>
-        <div className="flex flex-wrap gap-px">
-          {sequence.map((item, orderIndex) => (
-            <ItemBox
-              key={`${orderIndex}-${item}`}
-              scale={1}
-              panel={false}
-              title={itemLabel(item)}
-              sprites={itemSprite({
-                className: itemClassName(item),
-                category: 'trinket',
-              })}
-            />
-          ))}
-        </div>
-      </div>
-    </>
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      className="inline-flex cursor-pointer items-center gap-1 rounded-sm px-1 outline-none hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-ring"
+      onClick={() => {
+        const reduce = window.matchMedia(
+          '(prefers-reduced-motion: reduce)'
+        ).matches
+        document.querySelector('[data-trinket-choice]')?.scrollIntoView({
+          block: 'center',
+          behavior: reduce ? 'auto' : 'smooth',
+        })
+      }}
+    >
+      <ItemBox
+        scale={1}
+        panel={false}
+        sprites={itemSprite({ className: trinket, category: 'trinket' })}
+      />
+      <span className="text-sm font-semibold text-white/85">
+        +{PICKED_TRINKET_LEVEL}
+      </span>
+    </button>
   )
 }

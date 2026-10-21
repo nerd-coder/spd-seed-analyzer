@@ -1,5 +1,8 @@
 import { FloorDetail } from '@/components/seed/FloorDetail'
-import { catalystOfferClasses } from '@/components/seed/trinket-offers'
+import {
+  catalystOfferClasses,
+  type TrinketChoice,
+} from '@/components/seed/trinket-offers'
 import type {
   FloorReport,
   IdentityMaps,
@@ -10,10 +13,12 @@ export function FloorsSection({
   floors,
   identities,
   trinketSelection,
+  trinketChoice,
 }: {
   floors: FloorReport[]
   identities: IdentityMaps
   trinketSelection: TrinketSelectionReport
+  trinketChoice: TrinketChoice
 }) {
   if (floors.length === 0) return null
 
@@ -38,6 +43,7 @@ export function FloorsSection({
             identities={identities}
             trinketSelection={trinketSelection}
             offerClasses={offerClasses}
+            trinketChoice={trinketChoice}
           />
         ))}
       </div>

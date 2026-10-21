@@ -3,12 +3,17 @@ import { SeedReportView } from '@/components/seed/SeedReportView'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { formatElapsed, useElapsedTime } from '@/hooks/useElapsedTime'
-import { cancelSeedAnalysis, type SeedSession } from '@/stores/app'
+import {
+  cancelSeedAnalysis,
+  type SeedSession,
+  selectTrinket,
+} from '@/stores/app'
 
 export function SessionPane({ session }: { session: SeedSession }) {
   const loading = session.status === 'pending' || session.status === 'loading'
   const elapsed = useElapsedTime(session.startedAt, loading)
-  if (loading) {
+  // A trinket pick regenerates in place; keep the previous report on screen.
+  if (loading && !session.report) {
     return (
       <div className="flex min-h-48 flex-col items-center justify-center gap-2 py-12">
         <SpinnerGapIcon className="text-muted-foreground size-6 animate-spin" />
@@ -59,7 +64,16 @@ export function SessionPane({ session }: { session: SeedSession }) {
   if (session.report) {
     return (
       <div className="relative">
-        <SeedReportView report={session.report} />
+        <SeedReportView
+          report={session.report}
+          trinketChoice={{
+            held: session.trinket,
+            busy: loading,
+            select: (trinket) => {
+              void selectTrinket(session.id, trinket)
+            },
+          }}
+        />
       </div>
     )
   }
