@@ -143,6 +143,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
             custom_walls: vec![],
             uncertain_cells: vec![],
             hidden_cells: vec![],
+            concealed_cells: vec![],
             runtime_sensitive_loot_cells: runtime_cells,
             constrained_equipment_cells: vec![],
         }),

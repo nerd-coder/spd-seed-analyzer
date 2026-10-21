@@ -124,11 +124,11 @@ impl TrinketKind {
             | Self::TrapMechanism
             | Self::MimicTooth
             | Self::RatSkull
-            | Self::ExoticCrystals => TrinketGenerationEffect::Modeled,
+            | Self::ExoticCrystals
+            | Self::CrackedSpyglass => TrinketGenerationEffect::Modeled,
             // Weapon/armor enchant rolls (`Weapon.java:442-445`,
-            // `Armor.java:674-677`) and extra hidden loot
-            // (`RegularLevel.java:681`).
-            Self::ParchmentScrap | Self::CrackedSpyglass => TrinketGenerationEffect::Unmodeled,
+            // `Armor.java:674-677`).
+            Self::ParchmentScrap => TrinketGenerationEffect::Unmodeled,
             _ => TrinketGenerationEffect::None,
         }
     }

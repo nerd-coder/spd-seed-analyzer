@@ -70,17 +70,6 @@ impl MapProfile {
                 .challenges
                 .iter()
                 .any(|challenge| matches!(challenge, Challenge::BarrenLand))
-            || self.trinket_events.iter().any(|event| {
-                matches!(
-                    event.action,
-                    TrinketEventAction::Acquired {
-                        trinket: TrinketKind::CrackedSpyglass,
-                        ..
-                    } | TrinketEventAction::Transmuted {
-                        trinket: TrinketKind::CrackedSpyglass
-                    }
-                )
-            })
     }
 
     pub(crate) fn validate(&self, first_effective_depth: u32) -> Result<(), ProfileError> {

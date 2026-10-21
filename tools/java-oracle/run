@@ -32,6 +32,10 @@ rat_skull_before_depth=""
 mimic_tooth_depth=""
 mimic_tooth_level=""
 mimic_tooth_before_depth=""
+trinket_name=""
+trinket_depth=""
+trinket_level=""
+trinket_before_depth=""
 
 usage() {
 	cat >&2 <<'EOF'
@@ -39,6 +43,7 @@ Usage: tools/java-oracle/run [--source PATH] [--output FILE]
                              [--depth 1 | --final-heaps-depth 1..26 [--challenge barren-land|forbidden-runes|badder-bosses] |
                              --rat-skull-final-heaps-depth DEPTH LEVEL BEFORE_DEPTH |
                              --mimic-tooth-final-heaps-depth DEPTH LEVEL BEFORE_DEPTH |
+                             --trinket-final-heaps-depth NAME DEPTH LEVEL BEFORE_DEPTH |
                              --figure-eight-trace DEPTH | --free-space-trace DEPTH | --halls-paint-trace DEPTH |
                              --caves-boss-patch | --mining-level DEPTH crystal|gnoll | --vault-level DEPTH |
                              --generator-deck-rollover | --generator-lifecycle | --imp-ring-deck | --quest-npc-placement |
@@ -68,7 +73,8 @@ With --vault-level, directly forces branch-1 VaultLevel at city depths 17-19 and
 records RING/WAND/ARTIFACT.dropped around create(). RING.dropped stays flat.
 With --rat-skull-final-heaps-depth or --mimic-tooth-final-heaps-depth, runs the
 final-heaps contract with that trinket (LEVEL 0-3) held in the hero backpack for
-every generated floor at or after BEFORE_DEPTH.
+every generated floor at or after BEFORE_DEPTH. --trinket-final-heaps-depth does
+the same for NAME (rat-skull, mimic-tooth, or cracked-spyglass).
 EOF
 }
 
@@ -175,6 +181,14 @@ while (($# > 0)); do
 			mimic_tooth_before_depth="$4"
 			shift 4
 			;;
+		--trinket-final-heaps-depth)
+			[[ $# -ge 5 ]] || { usage; exit 2; }
+			trinket_name="$2"
+			trinket_depth="$3"
+			trinket_level="$4"
+			trinket_before_depth="$5"
+			shift 5
+			;;
 		-h|--help)
 			usage
 			exit 0
@@ -248,6 +262,13 @@ if [[ -n "$mimic_tooth_before_depth" && (! "$mimic_tooth_before_depth" =~ ^[0-9]
 	echo "Mimic Tooth before depth must be 1 through 26" >&2
 	exit 2
 fi
+if [[ -n "$trinket_depth" && ! ("$trinket_name" =~ ^(rat-skull|mimic-tooth|cracked-spyglass)$
+	&& "$trinket_depth" =~ ^[0-9]+$ && "$trinket_depth" -ge 1 && "$trinket_depth" -le 26
+	&& "$trinket_level" =~ ^[0-3]$
+	&& "$trinket_before_depth" =~ ^[0-9]+$ && "$trinket_before_depth" -ge 1 && "$trinket_before_depth" -le 26) ]]; then
+	echo "Trinket oracle needs NAME rat-skull|mimic-tooth|cracked-spyglass, DEPTH 1-26, LEVEL 0-3, BEFORE_DEPTH 1-26" >&2
+	exit 2
+fi
 selected_contracts=0
 [[ -n "$depth" ]] && ((selected_contracts += 1))
 [[ -n "$final_heaps_depth" ]] && ((selected_contracts += 1))
@@ -266,6 +287,7 @@ selected_contracts=0
 [[ -n "$vault_level_depth" ]] && ((selected_contracts += 1))
 [[ -n "$rat_skull_depth" ]] && ((selected_contracts += 1))
 [[ -n "$mimic_tooth_depth" ]] && ((selected_contracts += 1))
+[[ -n "$trinket_depth" ]] && ((selected_contracts += 1))
 if ((selected_contracts > 1)); then
 	echo "Choose only one oracle contract" >&2
 	exit 2
@@ -372,6 +394,12 @@ if [[ -n "$mimic_tooth_depth" ]]; then
 	gradle_args+=(-PoracleMimicToothDepth="$mimic_tooth_depth")
 	gradle_args+=(-PoracleMimicToothLevel="$mimic_tooth_level")
 	gradle_args+=(-PoracleMimicToothBeforeDepth="$mimic_tooth_before_depth")
+fi
+if [[ -n "$trinket_depth" ]]; then
+	gradle_args+=(-PoracleTrinketName="$trinket_name")
+	gradle_args+=(-PoracleTrinketDepth="$trinket_depth")
+	gradle_args+=(-PoracleTrinketLevel="$trinket_level")
+	gradle_args+=(-PoracleTrinketBeforeDepth="$trinket_before_depth")
 fi
 gradle_args+=(:core:javaOracleDump)
 

@@ -53,7 +53,7 @@ export type MapInspection = {
   entries: MapInspectEntry[]
   /** Run history can change this cell's heap or mob. */
   uncertain: boolean
-  /** Behind a secret door, or a hidden trap. */
+  /** Behind a secret door, a hidden trap, or a concealed entity. */
   hidden: boolean
   secretDoor: boolean
 }
@@ -93,7 +93,10 @@ export function inspectCell(map: FloorMap, cell: number): MapInspection {
     cell,
     entries,
     uncertain: map.uncertain_cells?.includes(cell) ?? false,
-    hidden: hiddenCell || hiddenTrap,
+    hidden:
+      hiddenCell ||
+      hiddenTrap ||
+      (map.concealed_cells?.includes(cell) ?? false),
     secretDoor: hiddenCell && map.tiles[cell] === Terrain.SECRET_DOOR,
   }
 }

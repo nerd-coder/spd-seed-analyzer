@@ -140,6 +140,8 @@ export type FloorMap = {
   uncertain_cells?: number[]
   /** Cells reachable only through a secret door, plus the doors. */
   hidden_cells?: number[]
+  /** Entities seen only after searching: Ebony Mimics, Cracked Spyglass loot. */
+  concealed_cells?: number[]
 }
 
 /** A pinned static `CustomTilemap` layer from the game level. */

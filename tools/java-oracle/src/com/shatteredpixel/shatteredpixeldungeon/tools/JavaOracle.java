@@ -33,7 +33,7 @@ public final class JavaOracle {
 	public static void main(String[] args) {
 		if (args.length < 1 || args.length > 6) {
 			System.err.println(
-					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH [challenge barren-land|forbidden-runes|badder-bosses | rat-skull|mimic-tooth LEVEL BEFORE_DEPTH] | mining-level DEPTH crystal|gnoll | vault-level DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection | secret-library-order | secret-laboratory-order]");
+					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH [challenge barren-land|forbidden-runes|badder-bosses | rat-skull|mimic-tooth|cracked-spyglass LEVEL BEFORE_DEPTH] | mining-level DEPTH crystal|gnoll | vault-level DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection | secret-library-order | secret-laboratory-order]");
 			System.exit(2);
 		}
 
@@ -53,7 +53,8 @@ public final class JavaOracle {
 				&& "challenge".equals(args[3])
 				&& "badder-bosses".equals(args[4]);
 		boolean trinketFinalHeaps = finalHeaps && args.length == 6
-				&& ("rat-skull".equals(args[3]) || "mimic-tooth".equals(args[3]));
+				&& ("rat-skull".equals(args[3]) || "mimic-tooth".equals(args[3])
+						|| "cracked-spyglass".equals(args[3]));
 		boolean generatorDeckRollover =
 				args.length == 2 && "generator-deck-rollover".equals(args[1]);
 		boolean generatorLifecycle =

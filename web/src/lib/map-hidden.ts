@@ -2,8 +2,9 @@ import { Terrain, TILE_PX } from '@/lib/dungeon-tile-visuals'
 import type { FloorMap } from '@/lib/spd-wasm'
 
 /**
- * Areas a player must search for: rooms behind secret doors, the doors, and
- * hidden traps. Each region fades as one unit and is revealed as one unit.
+ * Areas a player must search for: rooms behind secret doors, the doors,
+ * hidden traps, and concealed entities. Each region fades as one unit and is
+ * revealed as one unit.
  */
 export type HiddenRegions = {
   /** Cell index → region index. */
@@ -108,6 +109,12 @@ export function hiddenRegions(map: FloorMap): HiddenRegions {
     regions.push([trap.cell])
   }
 
+  for (const cell of map.concealed_cells ?? []) {
+    if (regionOf.has(cell)) continue
+    regionOf.set(cell, regions.length)
+    regions.push([cell])
+  }
+
   return { regionOf, regions, unexplored }
 }
 
@@ -126,13 +133,21 @@ export function revealedMap(map: FloorMap): FloorMap {
   }
 }
 
-/** The floor before searching: unexplored space reads as solid wall. */
+/**
+ * The floor before searching: unexplored space reads as solid wall and
+ * concealed entities are absent.
+ */
 export function concealedMap(map: FloorMap, unexplored: Set<number>): FloorMap {
+  const concealed = new Set(map.concealed_cells ?? [])
+  const shown = ({ cell }: { cell: number }) => !concealed.has(cell)
   return {
     ...map,
     tiles: map.tiles.map((tile, cell) =>
       unexplored.has(cell) ? Terrain.WALL : tile
     ),
+    heaps: map.heaps.filter(shown),
+    mobs: map.mobs.filter(shown),
+    markers: map.markers.filter(shown),
   }
 }
 

@@ -27,6 +27,8 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.CrackedSpyglass;
+import com.watabou.utils.Reflection;
 import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.MimicTooth;
 import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.RatSkull;
 import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.Trinket;
@@ -96,7 +98,7 @@ final class FloorOracle {
 	}
 
 	/**
-	 * Holds {@code trinket} ("rat-skull" or "mimic-tooth") at {@code trinketLevel}
+	 * Holds {@code trinket} ("rat-skull", "mimic-tooth", or "cracked-spyglass") at {@code trinketLevel}
 	 * in the hero backpack for every generated floor at or after
 	 * {@code trinketBeforeDepth}. A null trinket holds nothing.
 	 */
@@ -312,7 +314,7 @@ final class FloorOracle {
 		}
 		Class<? extends Trinket> type = trinketClass(heldTrinket);
 		if (Dungeon.hero.belongings.getItem(type) == null) {
-			Trinket trinket = "mimic-tooth".equals(heldTrinket) ? new MimicTooth() : new RatSkull();
+			Trinket trinket = (Trinket) Reflection.newInstance(type);
 			trinket.level(heldTrinketLevel);
 			trinket.identify();
 			Dungeon.hero.belongings.backpack.items.add(trinket);
@@ -324,6 +326,8 @@ final class FloorOracle {
 			return RatSkull.class;
 		} else if ("mimic-tooth".equals(trinket)) {
 			return MimicTooth.class;
+		} else if ("cracked-spyglass".equals(trinket)) {
+			return CrackedSpyglass.class;
 		}
 		throw new IllegalArgumentException("Unsupported held trinket: " + trinket);
 	}

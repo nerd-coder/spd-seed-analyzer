@@ -722,6 +722,7 @@ fn trinket_fixtures_replay_exact_profiled_floor_state() {
         let trinket = match fixture.input.trinket.as_deref() {
             Some("rat-skull") => spd_core::TrinketKind::RatSkull,
             Some("mimic-tooth") => spd_core::TrinketKind::MimicTooth,
+            Some("cracked-spyglass") => spd_core::TrinketKind::CrackedSpyglass,
             Some(other) => panic!("{name}: unsupported oracle trinket {other}"),
             None => continue,
         };

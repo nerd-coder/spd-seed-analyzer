@@ -77,7 +77,8 @@ export function InteractiveFloorMap({
   const [hover, setHover] = useState<Focus | null>(null)
   const [pinned, setPinned] = useState<Focus | null>(null)
   const hiddenCells = useMemo(
-    () => new Set([...(map.hidden_cells ?? [])]),
+    () =>
+      new Set([...(map.hidden_cells ?? []), ...(map.concealed_cells ?? [])]),
     [map]
   )
 

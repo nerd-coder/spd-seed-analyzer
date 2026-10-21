@@ -84,6 +84,10 @@ pub struct FloorMap {
     /// `SECRET_DOOR`, plus the secret doors themselves.
     #[serde(default)]
     pub hidden_cells: Vec<u32>,
+    /// Sorted entity cells the hero sees only after searching: Ebony Mimics
+    /// and Cracked Spyglass loot (`Heap.hidden`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub concealed_cells: Vec<u32>,
     /// Internal provenance for cells whose main-loop loot facts depend on
     /// runtime-sensitive persistent Generator history. Never serialized.
     #[serde(skip)]
@@ -136,6 +140,7 @@ impl FloorMap {
         self.heaps.clear();
         self.mobs.clear();
         self.uncertain_cells.clear();
+        self.concealed_cells.clear();
         self.runtime_sensitive_loot_cells.clear();
         self.constrained_equipment_cells.clear();
         self
@@ -155,6 +160,7 @@ impl FloorMap {
         self.markers = populated.markers.clone();
         self.heaps = populated.heaps.clone();
         self.mobs = populated.mobs.clone();
+        self.concealed_cells = populated.concealed_cells.clone();
         let mut uncertain: Vec<u32> = if all_uncertain {
             self.heaps
                 .iter()

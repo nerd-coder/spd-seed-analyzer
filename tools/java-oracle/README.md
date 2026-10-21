@@ -177,6 +177,11 @@ these commands (stdout is the default when `--output` is omitted):
 ./tools/java-oracle/run --mimic-tooth-final-heaps-depth 6 3 2 \
   --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-6-mimic-tooth-3-before-2.json \
   HKT-JZN-XQQ
+for depth in 2 3 4; do
+  ./tools/java-oracle/run --trinket-final-heaps-depth cracked-spyglass "$depth" 3 2 \
+    --output "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-$depth-cracked-spyglass-3-before-2.json" \
+    AAA-AAA-AAA
+done
 ./tools/java-oracle/run --mimic-tooth-final-heaps-depth 2 3 2 \
   --output tools/java-oracle/fixtures/aaa-aaa-bmt-final-heaps-floor-2-mimic-tooth-3-before-2.json \
   AAA-AAA-BMT

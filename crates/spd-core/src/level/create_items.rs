@@ -7,6 +7,9 @@ use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
 
+/// Cracked Spyglass loot: `drop(...).hidden = true` (`RegularLevel.java:681-689`).
+pub(crate) const SPYGLASS_SOURCE: &str = "cracked_spyglass";
+
 #[derive(Debug, Clone)]
 pub struct PlacedLoot {
     pub item: GeneratedItem,
@@ -237,16 +240,21 @@ pub fn create_items_main(
     Random::pop_generator();
 
     Random::push_generator_seeded(Random::long());
-    let items = (Random::float() + 0.0) as i32;
+    let items = (Random::float() + crate::level::trinkets::spyglass_extra_loot_chance()) as i32;
     for _ in 0..items {
-        let mut it = dungeon.generator.random_using_defaults_any(dungeon.depth);
-        it.source = Some("hidden".into());
+        let cell = random_drop_cell(rooms, &mut room_order, map, &mut occupied);
+        let cell = (cell >= 0).then_some(cell as usize);
+        if let Some(cell) = cell {
+            flatten_grass(map, cell);
+        }
+        let mut item = dungeon.generator.random_using_defaults_any(dungeon.depth);
+        item.source = Some(SPYGLASS_SOURCE.into());
         out.push(CreatedLoot {
             loot: PlacedLoot {
-                item: it,
-                heap_type: "hidden",
+                item,
+                heap_type: "heap",
             },
-            cell: None,
+            cell,
         });
     }
     Random::pop_generator();

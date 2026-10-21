@@ -19,6 +19,7 @@ pub(super) struct MapFacts {
     pub heaps: Vec<MapHeap>,
     pub mobs: Vec<MapMob>,
     pub markers: Vec<MapMarker>,
+    concealed_cells: Vec<u32>,
     runtime_sensitive_loot_cells: Vec<u32>,
     constrained_equipment_cells: Vec<u32>,
 }
@@ -120,6 +121,7 @@ impl MapFacts {
             heaps,
             mobs,
             markers,
+            concealed_cells: Vec::new(),
             runtime_sensitive_loot_cells,
             constrained_equipment_cells,
         }
@@ -138,6 +140,11 @@ impl MapFacts {
             crate::items::model::ItemProvenance::Forced(_)
         ) {
             self.runtime_sensitive_loot_cells.push(cell as u32);
+        }
+        if loot.heap_type == "ebony_mimic"
+            || loot.item.source.as_deref() == Some(super::create_items::SPYGLASS_SOURCE)
+        {
+            self.concealed_cells.push(cell as u32);
         }
         match loot.heap_type {
             "mimic" | "golden_mimic" | "ebony_mimic" => {
@@ -192,6 +199,8 @@ impl MapFacts {
             (left.cell, left.mob.class_name()).cmp(&(right.cell, right.mob.class_name()))
         });
         self.markers.sort_by_key(|marker| marker.cell);
+        self.concealed_cells.sort_unstable();
+        self.concealed_cells.dedup();
     }
 
     pub(crate) fn into_floor_map(
@@ -221,6 +230,7 @@ impl MapFacts {
             custom_walls: map.custom_walls.clone(),
             uncertain_cells: Vec::new(),
             hidden_cells: super::map_hidden::hidden_cells(&map.map, map.width),
+            concealed_cells: self.concealed_cells,
             runtime_sensitive_loot_cells: self.runtime_sensitive_loot_cells,
             constrained_equipment_cells: self.constrained_equipment_cells,
         }

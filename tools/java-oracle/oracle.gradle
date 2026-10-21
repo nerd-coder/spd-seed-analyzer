@@ -49,6 +49,10 @@ gradle.beforeProject { project ->
 		def mimicToothDepth = gradle.startParameter.projectProperties['oracleMimicToothDepth']
 		def mimicToothLevel = gradle.startParameter.projectProperties['oracleMimicToothLevel']
 		def mimicToothBeforeDepth = gradle.startParameter.projectProperties['oracleMimicToothBeforeDepth']
+		def trinketName = gradle.startParameter.projectProperties['oracleTrinketName']
+		def trinketDepth = gradle.startParameter.projectProperties['oracleTrinketDepth']
+		def trinketLevel = gradle.startParameter.projectProperties['oracleTrinketLevel']
+		def trinketBeforeDepth = gradle.startParameter.projectProperties['oracleTrinketBeforeDepth']
         if (sourceDir == null || seed == null) {
             throw new GradleException('javaOracleDump requires oracleSourceDir and oracleSeed')
         }
@@ -132,6 +136,9 @@ gradle.beforeProject { project ->
 			}
 			if (mimicToothDepth != null) {
 				args('final-heaps', mimicToothDepth, 'mimic-tooth', mimicToothLevel, mimicToothBeforeDepth)
+			}
+			if (trinketDepth != null) {
+				args('final-heaps', trinketDepth, trinketName, trinketLevel, trinketBeforeDepth)
 			}
         }
     }

@@ -156,6 +156,14 @@ pub fn ebony_mimic_chance() -> f32 {
     })
 }
 
+/// `CrackedSpyglass.extraLootChance()` for the currently held profile.
+pub fn spyglass_extra_loot_chance() -> f32 {
+    STATE.with(|state| {
+        level(state.borrow().held, TrinketKind::CrackedSpyglass)
+            .map_or(0.0, |level| 0.375 * f32::from(level + 1))
+    })
+}
+
 /// `RatSkull.exoticChanceMultiplier()` for the currently held profile.
 pub fn exotic_chance_multiplier() -> f32 {
     STATE.with(|state| {

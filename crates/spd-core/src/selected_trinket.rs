@@ -90,6 +90,8 @@ mod tests {
             for floor in &report.floors {
                 if let Some(ebony) = carried(floor, "EbonyMimic") {
                     assert_eq!(ebony.items.len(), 3, "seed {seed} floor {}", floor.depth);
+                    let map = floor.map.as_ref().or(floor.assumed_map.as_ref()).unwrap();
+                    assert!(map.concealed_cells.contains(&ebony.cell), "seed {seed}");
                     let listed: Vec<_> = floor
                         .items
                         .iter()
@@ -140,6 +142,40 @@ mod tests {
             }
         }
         assert!(saw_ebony, "no offered Mimic Tooth produced an ebony mimic");
+    }
+
+    #[test]
+    fn cracked_spyglass_places_concealed_extra_loot() {
+        let seed = (0..40)
+            .find(|&seed| {
+                TrinketSelectionReport::for_run(&init_run(seed))
+                    .catalyst_options
+                    .iter()
+                    .any(|item| item.class_name() == "CrackedSpyglass")
+            })
+            .expect("a seed offering Cracked Spyglass");
+        let report =
+            analyze_seed_with_trinket(&seed.to_string(), 8, Some(TrinketKind::CrackedSpyglass))
+                .unwrap();
+        let from = report.trinket_selection.first_effective_depth;
+        for floor in &report.floors {
+            let map = floor.map.as_ref().or(floor.assumed_map.as_ref()).unwrap();
+            if floor.depth < from || floor.depth % 5 == 0 {
+                assert!(map.concealed_cells.is_empty(), "floor {}", floor.depth);
+                continue;
+            }
+            // `(int)(Random.Float() + 1.5)` at +3: one or two extra heaps.
+            assert!(
+                (1..=2).contains(&map.concealed_cells.len()),
+                "seed {seed} floor {}: {:?}",
+                floor.depth,
+                map.concealed_cells
+            );
+            for cell in &map.concealed_cells {
+                assert!(map.heaps.iter().any(|heap| heap.cell == *cell
+                    && heap.items[0].source.as_deref() == Some("cracked_spyglass")));
+            }
+        }
     }
 
     #[test]

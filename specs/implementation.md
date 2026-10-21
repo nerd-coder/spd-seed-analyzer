@@ -59,8 +59,12 @@ trinket is held at +3 from `first_effective_depth`, variable samples are
 published, and only Forbidden Runes stays a spawn condition. No pick is the
 merged `analyze_seed` report. Per-option `catalyst_option_effects` marks which
 trinkets the replay models (Mossy Clump, Trap Mechanism, Mimic Tooth, Rat
-Skull, Exotic Crystals); Parchment Scrap's equipment enchant rolls and Cracked
-Spyglass's extra loot are not modeled. The pick persists per seed in
+Skull, Exotic Crystals, Cracked Spyglass); Parchment Scrap's equipment enchant
+rolls are not modeled. Cracked Spyglass's hidden extra loot is placed only in
+the picked-trinket replay (oracle fixtures `*-cracked-spyglass-3-before-2.json`);
+the merged default report does not enumerate Spyglass routes. Map
+`concealed_cells` (Ebony Mimics, Spyglass loot) fade with the hidden-area
+pulse. The pick persists per seed in
 localStorage. Mimic carried items are on the floor list and the map inspect
 panel: the converted heap item, the generated prize, and the Mimic Tooth
 extra when one is held. Ebony mimics (Mimic Tooth only) carry the prize,
