@@ -164,12 +164,17 @@ fn project_map(
     }
     floor_map.runtime_sensitive_loot_cells.clear();
     floor_map.constrained_equipment_cells.clear();
-    let mut uncertain: Vec<u32> = facts.uncertain.iter().map(|&c| c as u32).collect();
-    uncertain.sort_unstable();
-    uncertain.dedup();
-    floor_map.uncertain_cells = uncertain;
+    floor_map.uncertain_cells = sorted_cells(&facts.uncertain);
+    floor_map.per_run_cells = sorted_cells(&facts.per_run);
     floor_map.sentry_scans = sentries::project(map, &facts.sentries);
     floor_map
+}
+
+fn sorted_cells(cells: &[usize]) -> Vec<u32> {
+    let mut sorted: Vec<u32> = cells.iter().map(|&c| c as u32).collect();
+    sorted.sort_unstable();
+    sorted.dedup();
+    sorted
 }
 
 #[cfg(test)]

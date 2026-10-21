@@ -53,6 +53,8 @@ export type MapInspection = {
   entries: MapInspectEntry[]
   /** Run history can change this cell's heap or mob. */
   uncertain: boolean
+  /** Differs on every run, even with the same history (unseeded shuffle). */
+  perRun: boolean
   /** Behind a secret door, a hidden trap, or a concealed entity. */
   hidden: boolean
   secretDoor: boolean
@@ -93,6 +95,7 @@ export function inspectCell(map: FloorMap, cell: number): MapInspection {
     cell,
     entries,
     uncertain: map.uncertain_cells?.includes(cell) ?? false,
+    perRun: map.per_run_cells?.includes(cell) ?? false,
     hidden:
       hiddenCell ||
       hiddenTrap ||

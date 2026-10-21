@@ -135,6 +135,7 @@ impl Drops<'_> {
         };
         if is_shuffled_consumable(&item) {
             facts.uncertain.push(cell);
+            facts.per_run.push(cell);
         }
         self.map.record_heap(cell, HEAP, item);
         if matches!(self.map.map[cell], HIGH_GRASS | FURROWED_GRASS) {

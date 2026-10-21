@@ -26,6 +26,8 @@ pub(super) struct PaintFacts {
     /// Heaps whose identity is not seed-determined: Imp rewards (route) and
     /// JDK-shuffled consumables (per run).
     pub uncertain: Vec<usize>,
+    /// Subset of `uncertain` that varies every run (unseeded shuffle).
+    pub per_run: Vec<usize>,
     pub sentries: Vec<SentrySpec>,
 }
 
@@ -72,6 +74,7 @@ impl PaintCtx<'_> {
     pub(super) fn drop(&mut self, cell: usize, heap_type: &'static str, item: GeneratedItem) {
         if loot::is_shuffled_consumable(&item) {
             self.facts.uncertain.push(cell);
+            self.facts.per_run.push(cell);
         }
         self.map.record_heap(cell, heap_type, item);
     }

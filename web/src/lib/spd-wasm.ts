@@ -138,6 +138,8 @@ export type FloorMap = {
   custom_walls: MapCustomTile[]
   /** Entity cells whose heap or mob can differ with run history. */
   uncertain_cells?: number[]
+  /** Subset of `uncertain_cells` that differs on every run (unseeded shuffle). */
+  per_run_cells?: number[]
   /** Cells reachable only through a secret door, plus the doors. */
   hidden_cells?: number[]
   /** Entities seen only after searching: Ebony Mimics, Cracked Spyglass loot. */

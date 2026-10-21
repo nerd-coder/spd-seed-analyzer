@@ -216,6 +216,11 @@ fn assert_vault_fixture(json: &str) {
     dungeon.imp.spawned = true;
     let generated = generate(&mut dungeon, true).expect("vault rooms");
     let map = generated.report.map.as_ref().expect("public vault map");
+    assert!(!map.per_run_cells.is_empty());
+    assert!(map
+        .per_run_cells
+        .iter()
+        .all(|cell| map.uncertain_cells.contains(cell)));
 
     assert_eq!(generated.dropped_before, [0, 0, 0]);
     assert_eq!(generated.dropped_after, [0, 0, 0]);

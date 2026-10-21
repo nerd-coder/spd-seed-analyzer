@@ -43,6 +43,7 @@ pub(super) fn fixed_layout(depth: i32) -> Option<FloorMap> {
         uncertain_cells: Vec::new(),
         hidden_cells: Vec::new(),
         concealed_cells: Vec::new(),
+        per_run_cells: Vec::new(),
         sentry_scans: Vec::new(),
         runtime_sensitive_loot_cells: Vec::new(),
         constrained_equipment_cells: Vec::new(),

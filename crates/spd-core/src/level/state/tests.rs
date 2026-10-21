@@ -144,6 +144,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
             uncertain_cells: vec![],
             hidden_cells: vec![],
             concealed_cells: vec![],
+            per_run_cells: Vec::new(),
             sentry_scans: vec![],
             runtime_sensitive_loot_cells: runtime_cells,
             constrained_equipment_cells: vec![],

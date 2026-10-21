@@ -80,6 +80,10 @@ pub struct FloorMap {
     /// player state. Other entity cells are seed-exact for the profile.
     #[serde(default)]
     pub uncertain_cells: Vec<u32>,
+    /// Sorted subset of `uncertain_cells` that differs on every run, even
+    /// with the same history: vault consumables placed by an unseeded shuffle.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub per_run_cells: Vec<u32>,
     /// Sorted non-wall cells reachable from the arrival point only through a
     /// `SECRET_DOOR`, plus the secret doors themselves.
     #[serde(default)]
