@@ -34,6 +34,13 @@ const T3_TREASURE: [&str; 3] = [
     "VaultHardLaserTreasureRoom",
 ];
 
+/// `instanceof VaultTreasureRoom`.
+pub(super) fn is_treasure(name: &str) -> bool {
+    [T1_TREASURE, T2_TREASURE, T3_TREASURE]
+        .iter()
+        .any(|tier| tier.contains(&name))
+}
+
 pub(super) fn init() -> Vec<Room> {
     let mut rooms = vec![vault_room(
         "VaultEntranceRoom",

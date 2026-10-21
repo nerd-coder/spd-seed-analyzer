@@ -16,13 +16,13 @@ from depth 2 on, because run-history taint propagates from depth 1; depth 1 of
 a fresh run is exact. `hidden_cells` (secret-door-only areas) pulse on the
 canvas. Boss maps remain layout-only.
 
-Vault and mining maps publish the room-painted mobs and heaps, matching the
-Java oracle's `createMobs` snapshot (`fixtures/{vault,mining}` `mobs`/`heaps`).
-Vault "May differ" cells are the Imp reward pedestals (route) and consumables
-from `setupConsumables`, whose `Collections.shuffle` is unseeded JDK RNG; the
-leading Potion of Healing in tiers 0–2 stays exact. Not placed yet: vault
-`createItems` (leftover `itemsToSpawn`, extra Potion of Healing) and mining
-`createMobs`/`createItems` (wisps/guards, food, torch).
+Vault maps publish room-painted entities plus `VaultLevel.createItems`
+(leftover `itemsToSpawn`, Darkness torches, extra Potion of Healing), matching
+the Java oracle snapshot taken after `createItems`. Vault "May differ" cells are
+the Imp reward pedestals (route) and consumables from `setupConsumables`, whose
+`Collections.shuffle` is unseeded JDK RNG; the leading Potion of Healing in
+tiers 0–2 stays exact. Mining maps publish room-painted entities (oracle
+snapshot at `createMobs`); mining `createMobs`/`createItems` are not placed yet.
 
 The Ambitious Imp quest panel reports each of the six take-out slots with its
 seed-independent guarantees and a candidate distribution over a +-3 deck-index
@@ -106,7 +106,7 @@ Next:
    offer the default-profile view.
 4. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
    not actually depend on run history); publish entities on boss maps and
-   port the vault/mining `createMobs`/`createItems` population.
+   port the mining `createMobs`/`createItems` population.
 5. Fix pre-existing breakage: `bun run analyze` needs `--bin spd-analyze` now
    that `spd-cli` has two binaries; the finder visual test "item name is set
    to any" expects Ring of Elements but gets the floor-4 Crystal vault Ring of

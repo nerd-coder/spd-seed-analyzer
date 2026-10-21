@@ -8,6 +8,7 @@ mod final_room;
 mod geometry;
 mod hallway;
 mod hazards;
+mod items;
 mod loot;
 mod mobs;
 mod paint;
@@ -42,8 +43,7 @@ pub(crate) struct VaultLayout {
 }
 
 /// Forced branch-1 vault at `dungeon.depth`: painter-complete layout plus the
-/// mobs and heaps the room painters place. `VaultLevel.createItems` leftovers
-/// are not placed yet. Callers that share a run `DungeonState` must clone
+/// mobs and heaps the room painters and `VaultLevel.createItems` place. Callers that share a run `DungeonState` must clone
 /// first: usingDefaults draws must not leak into later main-path floors.
 pub(crate) fn generate(dungeon: &mut DungeonState, expose_map: bool) -> Option<VaultLayout> {
     let depth = dungeon.depth;
@@ -96,6 +96,7 @@ fn generate_on_stream(
     doors::paint(&mut map, &room_list, &order, &mut doors, depth);
     environment::paint(&mut map, &room_list, &order, &doors, depth);
     map.recompute_passable();
+    items::create_items(&mut map, &room_list, &order, dungeon, &mut facts);
 
     #[cfg(test)]
     let dropped_after = dropped_triple(&dungeon.generator);

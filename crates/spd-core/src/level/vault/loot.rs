@@ -116,9 +116,9 @@ pub(super) fn queue_floor_loot(dungeon: &mut DungeonState) -> VaultGen {
         let loot = gen.create_equipment(dungeon, 0);
         dungeon.items_to_spawn.push(loot);
     }
-    dungeon
-        .items_to_spawn
-        .push(GeneratedItem::new("Dart", ItemCategory::Missile));
+    let mut dart = GeneratedItem::new("Dart", ItemCategory::Missile);
+    dart.quantity = 2; // `Dart.defaultQuantity()`
+    dungeon.items_to_spawn.push(dart);
     setup_consumables(&mut gen.consumables);
     for _ in 0..5 {
         dungeon.items_to_spawn.push(gen.create_consumable(0));

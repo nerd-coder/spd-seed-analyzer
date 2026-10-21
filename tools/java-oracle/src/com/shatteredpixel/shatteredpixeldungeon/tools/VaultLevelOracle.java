@@ -28,7 +28,7 @@ import java.util.List;
 
 /**
  * Forces a branch-1 VaultLevel and records RING/WAND/ARTIFACT.dropped plus
- * painter-complete layout at createMobs.
+ * painter-complete layout plus room and createItems entities.
  *
  * Vault equipment uses {@code Generator.randomUsingDefaults} only, so RING.dropped
  * (and ARTIFACT, which the vault never draws) must stay flat.
@@ -335,9 +335,11 @@ final class VaultLevelOracle {
 		}
 	}
 
+	/** VaultLevel.createMobs is a no-op, so the snapshot follows createItems. */
 	private static final class RecordingVaultLevel extends VaultLevel {
 		@Override
-		protected void createMobs() {
+		protected void createItems() {
+			super.createItems();
 			throw new FloorOracle.SnapshotComplete();
 		}
 	}
