@@ -143,6 +143,7 @@ export const CLASS_ICON: Record<string, number> = {
   EnergyCrystal: 19,
   Food: 437,
   Gold: 18,
+  GoldenKey: 56,
   GuidePage: 496,
   Honeypot: 53,
   ShatteredPot: 54,
