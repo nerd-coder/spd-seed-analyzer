@@ -49,10 +49,13 @@ pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
                 | ShopStockRole::DeckRareArtifactOrRing
         )
     );
+    // Main-loop and treasury mimics carry seed-generated prizes. Room prizes
+    // that already have their own provenance stay on that path.
+    let mimic_drop = !room_variable && is_mimic_carried_source(item.source.as_deref());
     if item.source.is_none()
-        || !(room_variable || quest_variable || shop_variable)
+        || !(room_variable || quest_variable || shop_variable || mimic_drop)
         || (is_blacklisted(item) && !room_variable)
-        || (is_unpublished_main_loot(item) && !room_variable)
+        || (is_unpublished_main_loot(item) && !room_variable && !mimic_drop)
         || item.provenance == ItemProvenance::Quest(QuestRewardRole::WandmakerPersisted)
     {
         return None;
@@ -138,5 +141,15 @@ pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
         conditions: item_conditions_typed(quest_role, false),
         notes,
         source,
+    })
+}
+
+/// `mimic`, `golden_mimic`, and `ebony_mimic` sources, including `mimic:mimic`.
+pub(super) fn is_mimic_carried_source(source: Option<&str>) -> bool {
+    source.is_some_and(|source| {
+        matches!(
+            source.rsplit(':').next(),
+            Some("mimic" | "golden_mimic" | "ebony_mimic")
+        )
     })
 }

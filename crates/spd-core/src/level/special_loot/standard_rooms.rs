@@ -7,7 +7,7 @@ use crate::generator::Category;
 use crate::geom::Point;
 use crate::items::model::{GeneratedItem, ItemCategory, ItemProvenance, RoomLootRole};
 use crate::items::randomize::randomize_item;
-use crate::level::create_items::PlacedLoot;
+use crate::level::create_items::{mimic_carried_items, MimicPrize, PlacedLoot};
 use crate::level::terrain::{TerrainMap, PEDESTAL};
 use crate::random::Random;
 use crate::rooms::room::Room;
@@ -120,28 +120,31 @@ fn suspicious_chest(
             map.mob_occupied[cell] = true;
             map.known_mobs[cell] = Some("Mimic");
         }
-        prize.source = Some("SuspiciousChestRoom:mimic".into());
-        let mut reward = mimic_reward(dungeon);
-        reward.source = Some("SuspiciousChestRoom:mimic".into());
-        tag_room_item_as(
-            &mut prize,
-            if gold_fallback {
-                RoomLootRole::SuspiciousChestGold
-            } else {
-                RoomLootRole::RuntimeSensitive
-            },
-        );
-        tag_room_item_as(&mut reward, RoomLootRole::SuspiciousChestMimicReward);
-        vec![
-            PlacedLoot {
-                item: prize,
+        let carried = mimic_carried_items(dungeon, vec![prize], true, MimicPrize::Ordinary);
+        let mut out = Vec::new();
+        for (index, mut item) in carried.into_iter().enumerate() {
+            item.source = Some("SuspiciousChestRoom:mimic".into());
+            tag_room_item_as(
+                &mut item,
+                if index == 0 {
+                    if gold_fallback {
+                        RoomLootRole::SuspiciousChestGold
+                    } else {
+                        RoomLootRole::RuntimeSensitive
+                    }
+                } else {
+                    RoomLootRole::SuspiciousChestMimicReward
+                },
+            );
+            if let Some(cell) = map.point_to_cell(center.x, center.y) {
+                map.record_mob_loot(cell, item.clone());
+            }
+            out.push(PlacedLoot {
+                item,
                 heap_type: "mimic",
-            },
-            PlacedLoot {
-                item: reward,
-                heap_type: "mimic",
-            },
-        ]
+            });
+        }
+        out
     } else {
         prize.source = Some("SuspiciousChestRoom".into());
         tag_room_item_as(
@@ -157,31 +160,6 @@ fn suspicious_chest(
             heap_type: "chest",
         }]
     }
-}
-
-/// `Mimic.generatePrize(true)`; analyzer runs have no item-blocking challenges.
-fn mimic_reward(dungeon: &mut DungeonState) -> GeneratedItem {
-    let reward = match Random::int_max(5) {
-        0 => {
-            let mut gold = GeneratedItem::new("Gold", ItemCategory::Gold);
-            randomize_item(&mut gold, dungeon.depth);
-            gold
-        }
-        1 => dungeon
-            .generator
-            .random_missile(dungeon.depth / 5, false, dungeon.depth),
-        2 => dungeon
-            .generator
-            .random_armor(dungeon.depth / 5, dungeon.depth),
-        3 => dungeon
-            .generator
-            .random_weapon(dungeon.depth / 5, false, dungeon.depth),
-        _ => dungeon
-            .generator
-            .random_category(Category::Ring, dungeon.depth),
-    };
-    crate::level::create_items::burn_mimic_tooth_extra_reward(dungeon);
-    reward
 }
 
 #[cfg(test)]

@@ -202,6 +202,9 @@ pub struct MapMob {
     pub cell: u32,
     pub mob: MobId,
     pub state: MapMobState,
+    /// Items this mob drops when defeated. Empty for mobs that carry nothing.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub items: Vec<MapHeapItem>,
 }
 
 /// `Mob.state` when the level is created, before the hero arrives.
@@ -682,6 +685,15 @@ fn room_group_key(source: Option<&str>) -> Option<&str> {
     if source.contains("ShopRoom") || source.contains("Quest") {
         return None;
     }
+    // Each mimic carries several items. They are separate spawns, not
+    // alternate projections of one room contract.
+    if source.ends_with(":mimic")
+        || source.ends_with(":golden_mimic")
+        || source.ends_with(":ebony_mimic")
+        || source.ends_with(":crystal_mimic")
+    {
+        return None;
+    }
     // Keep distinct contracts that share a room but describe different spawns.
     match source {
         "PoolRoom:equipment"
@@ -691,7 +703,6 @@ fn room_group_key(source: Option<&str>) -> Option<&str> {
         | "SecretHoneypotRoom:bomb"
         | "GrassyGraveRoom:prize"
         | "GrassyGraveRoom:gold_tombs" => Some(source),
-        "CrystalVaultRoom:crystal_mimic" => Some("CrystalVaultRoom"),
         other if other.contains("Room") => Some(other.split(':').next().unwrap_or(other)),
         _ => None,
     }

@@ -262,6 +262,7 @@ mod tests {
             plant_occupied: vec![false; len],
             known_plants: vec![None; len],
             known_mobs: vec![None; len],
+            mob_loot: vec![Vec::new(); len],
             heap_occupied: vec![false; len],
             heap_order: Vec::new(),
             known_heaps: vec![None; len],

@@ -57,51 +57,42 @@ pub fn create_items_main(
         }
         flatten_grass(map, cell as usize);
 
-        // Heap type
-        let heap_type;
-        match Random::int_max(20) {
-            0 => {
-                heap_type = "skeleton";
-            }
+        // Heap type. Mimic arms `continue` after recording the carried items.
+        let heap_type = match Random::int_max(20) {
+            0 => "skeleton",
             1..=4 => {
                 // Regular chests gain 25 percentage points for each +1x
                 // Mimic Tooth multiplier beyond the normal rate.
                 let mimic_chance = (crate::level::trinkets::mimic_chance_multiplier() - 1.0) / 4.0;
                 if Random::float() < mimic_chance {
-                    let _ = generate_mimic_prize(dungeon);
-                    burn_mimic_tooth_extra_reward(dungeon);
-                    to_drop.source = Some("mimic".into());
-                    out.push(CreatedLoot {
-                        loot: PlacedLoot {
-                            item: to_drop,
-                            heap_type: "mimic",
-                        },
-                        cell: Some(cell as usize),
-                    });
+                    emit_mimic(
+                        dungeon,
+                        &mut out,
+                        cell as usize,
+                        "mimic",
+                        to_drop,
+                        MimicPrize::Ordinary,
+                    );
                     continue;
                 }
-                heap_type = "chest";
+                "chest"
             }
             5 => {
                 if dungeon.depth > 1 {
-                    let _ = generate_mimic_prize(dungeon);
-                    burn_mimic_tooth_extra_reward(dungeon);
-                    to_drop.source = Some("mimic".into());
-                    out.push(CreatedLoot {
-                        loot: PlacedLoot {
-                            item: to_drop,
-                            heap_type: "mimic",
-                        },
-                        cell: Some(cell as usize),
-                    });
+                    emit_mimic(
+                        dungeon,
+                        &mut out,
+                        cell as usize,
+                        "mimic",
+                        to_drop,
+                        MimicPrize::Ordinary,
+                    );
                     continue;
                 }
-                heap_type = "chest";
+                "chest"
             }
-            _ => {
-                heap_type = "heap";
-            }
-        }
+            _ => "heap",
+        };
         // locked chest upgrade path
         let upgradable = matches!(
             to_drop.category,
@@ -119,12 +110,15 @@ pub fn create_items_main(
         {
             let mimic_chance = 0.1 * crate::level::trinkets::mimic_chance_multiplier();
             if dungeon.depth > 1 && Random::float() < mimic_chance {
-                let mut reward = generate_mimic_prize(dungeon);
-                burn_mimic_tooth_extra_reward(dungeon);
-                golden_mimic_postprocess(&mut to_drop);
-                golden_mimic_postprocess(&mut reward);
-                to_drop.source = Some("golden_mimic".into());
-                heap_type = "golden_mimic";
+                emit_mimic(
+                    dungeon,
+                    &mut out,
+                    cell as usize,
+                    "golden_mimic",
+                    to_drop,
+                    MimicPrize::Golden,
+                );
+                continue;
             } else {
                 heap_type = "locked_chest";
                 // Java appends the matching key to itemsToSpawn immediately;
@@ -227,7 +221,18 @@ pub fn create_items_main(
 
     Random::push_generator_seeded(Random::long());
     if Random::float() < crate::level::trinkets::ebony_mimic_chance() {
-        ebony::spawn(dungeon, rooms, map, &out);
+        if let Some((cell, items)) = ebony::spawn(dungeon, rooms, map, &out) {
+            for mut item in items {
+                item.source = Some("ebony_mimic".into());
+                out.push(CreatedLoot {
+                    loot: PlacedLoot {
+                        item,
+                        heap_type: "ebony_mimic",
+                    },
+                    cell: Some(cell),
+                });
+            }
+        }
     }
     Random::pop_generator();
 
@@ -249,11 +254,26 @@ pub fn create_items_main(
     out
 }
 
-/// `Mimic.spawnAt(...).generatePrize(true)` for an ordinary main-loop mimic.
-/// The carried reward is not a floor heap, but its Generator/deck mutations
-/// affect every later `randomDropCell` shuffle and must remain in lifecycle.
-fn generate_mimic_prize(dungeon: &mut DungeonState) -> GeneratedItem {
-    generate_base_mimic_prize(dungeon, true)
+/// One mimic's carried items, each tagged with `heap_type` so the report can
+/// say which mimic drops them. The seed item's previous source is replaced.
+fn emit_mimic(
+    dungeon: &mut DungeonState,
+    out: &mut Vec<CreatedLoot>,
+    cell: usize,
+    heap_type: &'static str,
+    seed: GeneratedItem,
+    kind: MimicPrize,
+) {
+    let mut items = mimic_carried_items(dungeon, vec![seed], true, kind);
+    for item in &mut items {
+        item.source = Some(heap_type.into());
+    }
+    for item in items {
+        out.push(CreatedLoot {
+            loot: PlacedLoot { item, heap_type },
+            cell: Some(cell),
+        });
+    }
 }
 
 /// `Mimic.generatePrize(useDecks)` base reward, before trinket extras.
@@ -284,39 +304,6 @@ pub(super) fn generate_base_mimic_prize(
             .generator
             .random_using_defaults(crate::generator::Category::Ring, dungeon.depth),
         _ => unreachable!("Random.Int(5) stays in range"),
-    }
-}
-
-/// A Mimic Tooth makes every spawned mimic generate one additional default
-/// reward. It does not touch seeded Generator decks, but it advances the
-/// active floor RNG and must happen before quest NPC generation.
-pub(crate) fn burn_mimic_tooth_extra_reward(dungeon: &mut DungeonState) {
-    if crate::level::trinkets::has_mimic_tooth() {
-        let _ = dungeon.generator.random_using_defaults_any(dungeon.depth);
-    }
-}
-
-/// `GoldenMimic.generatePrize`: normalize both carried items after adding the
-/// mandatory base-Mimic reward. Each eligible +0 item rolls independently for
-/// a +1 upgrade on the active floor generator.
-fn golden_mimic_postprocess(item: &mut GeneratedItem) {
-    if !matches!(
-        item.category,
-        ItemCategory::Weapon
-            | ItemCategory::Armor
-            | ItemCategory::Missile
-            | ItemCategory::Wand
-            | ItemCategory::Ring
-            | ItemCategory::Artifact
-    ) {
-        return;
-    }
-    if item.cursed && matches!(item.category, ItemCategory::Weapon | ItemCategory::Armor) {
-        item.enchantment = None;
-    }
-    item.cursed = false;
-    if item.category != ItemCategory::Artifact && item.level == 0 && Random::int_max(2) == 0 {
-        item.level += 1;
     }
 }
 
@@ -411,6 +398,9 @@ fn random_drop_cell(
 }
 
 mod ebony;
+mod prize;
+
+pub(crate) use prize::{mimic_carried_items, MimicPrize};
 
 #[cfg(test)]
 mod tests;

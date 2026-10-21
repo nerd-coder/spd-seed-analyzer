@@ -132,6 +132,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
                 cell: 9,
                 mob: spd_objects::MobId::Mimic,
                 state: crate::report::MapMobState::Passive,
+                items: Vec::new(),
             }],
             transitions: vec![],
             traps: vec![],

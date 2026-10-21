@@ -281,8 +281,11 @@ impl LevelState {
                 .filter_map(variable_item_entry)
                 .filter(|item| {
                     // Compact/search stay selective; also publish room/shop
-                    // samples that clear blank "?" contracts in the floor list.
-                    (crate::report::is_variable_highlight(item) || is_floor_uncover_sample(item))
+                    // samples that clear blank "?" contracts, and every
+                    // non-gold item a mimic carries.
+                    (crate::report::is_variable_highlight(item)
+                        || is_floor_uncover_sample(item)
+                        || variable::is_mimic_carried_source(item.source.as_deref()))
                         && (self.depth > 1
                             || !matches!(
                                 item.source.as_deref(),

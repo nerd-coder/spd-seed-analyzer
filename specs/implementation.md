@@ -52,11 +52,14 @@ merged `analyze_seed` report. Per-option `catalyst_option_effects` marks which
 trinkets the replay models (Mossy Clump, Trap Mechanism, Mimic Tooth, Rat
 Skull, Exotic Crystals); Parchment Scrap's equipment enchant rolls and Cracked
 Spyglass's extra loot are not modeled. The pick persists per seed in
-localStorage. Ebony mimics spawn on the map with a held Mimic Tooth (prize
-draws replayed for deck state, prize items not reported); on floor 2 their
-cell can depend on the unseeded entrance guide page, and is then left off the
-map. Java oracle fixtures cover Mimic Tooth +3 floors
-(`*-mimic-tooth-3-before-*.json`).
+localStorage. Mimic carried items are on the floor list and the map inspect
+panel: the converted heap item, the generated prize, and the Mimic Tooth
+extra when one is held. Ebony mimics (Mimic Tooth only) carry the prize,
+the tooth extra, and one more default item, each uncursed and at least +1.
+Crystal mimics keep the uncursed vault prize and lose it if they escape.
+On floor 2 an ebony mimic's cell can depend on the unseeded entrance guide
+page, and is then left off the map. Java oracle fixtures cover Mimic Tooth
++3 floors (`*-mimic-tooth-3-before-*.json`).
 
 Every public object is a numeric id from `crates/spd-objects` (items,
 enchantments, mobs, rooms, traps, plants, blobs). `bun run gen:ids` writes

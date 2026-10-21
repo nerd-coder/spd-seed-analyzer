@@ -66,6 +66,8 @@ pub(super) fn crystal_vault(
         "crystal_chest"
     };
     if second_heap == "crystal_mimic" {
+        // `CrystalMimic.generatePrize` only clears the curse on the vault prize.
+        i2.cursed = false;
         i2.source = Some("CrystalVaultRoom:crystal_mimic".into());
     }
 
@@ -86,6 +88,7 @@ pub(super) fn crystal_vault(
     if second_heap == "crystal_mimic" {
         map.mob_occupied[second_cell] = true;
         map.known_mobs[second_cell] = Some("CrystalMimic");
+        map.record_mob_loot(second_cell, i2.clone());
     } else {
         map.record_heap(second_cell, "crystal_chest", i2.clone());
     }

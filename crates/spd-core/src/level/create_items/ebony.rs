@@ -4,7 +4,7 @@
 //! stream is untouched. The prize still matters: `randomUsingDefaults()` can
 //! draw an artifact and consume the artifact deck for later floors.
 
-use super::{generate_base_mimic_prize, CreatedLoot};
+use super::{mimic_carried_items, CreatedLoot, MimicPrize};
 use crate::builders::int_map::IntMap;
 use crate::dungeon::DungeonState;
 use crate::level::terrain::{TerrainMap, DOOR, EXIT};
@@ -17,14 +17,14 @@ fn is_mob(heap_type: &str) -> bool {
     matches!(heap_type, "mimic" | "golden_mimic")
 }
 
-/// Called after the ebony roll succeeded; places the mimic on `map` when its
-/// cell is determined by the seed.
+/// Called after the ebony roll succeeded. Returns the cell and carried items
+/// when the cell is seed-determined.
 pub(super) fn spawn(
     dungeon: &mut DungeonState,
     rooms: &[Room],
     map: &mut TerrainMap,
     created: &[CreatedLoot],
-) {
+) -> Option<(usize, Vec<crate::items::model::GeneratedItem>)> {
     let mob_at = |cell: usize| {
         map.mob_occupied[cell]
             || created
@@ -52,8 +52,8 @@ pub(super) fn spawn(
 
     if unplaced_page {
         let _ = Random::int_max(candidates.len() as i32 + 1);
-        generate_prize(dungeon);
-        return;
+        let _ = mimic_carried_items(dungeon, Vec::new(), false, MimicPrize::Ebony);
+        return None;
     }
 
     if candidates.is_empty() {
@@ -66,12 +66,11 @@ pub(super) fn spawn(
         }
     }
 
-    let Some(&cell) = Random::element(&candidates) else {
-        return;
-    };
-    generate_prize(dungeon);
+    let &cell = Random::element(&candidates)?;
+    let items = mimic_carried_items(dungeon, Vec::new(), false, MimicPrize::Ebony);
     map.mob_occupied[cell] = true;
     map.known_mobs[cell] = Some("EbonyMimic");
+    Some((cell, items))
 }
 
 /// `Level.heaps` at this point: room-paint heaps, then createItems drops, in
@@ -108,12 +107,4 @@ fn in_special_room(rooms: &[Room], map: &TerrainMap, cell: usize) -> bool {
                 RoomKind::Special | RoomKind::Secret | RoomKind::Shop
             )
         })
-}
-
-/// `EbonyMimic.generatePrize(false)`: the base reward without decks, the
-/// Mimic Tooth extra item, then the ebony extra item.
-fn generate_prize(dungeon: &mut DungeonState) {
-    let _ = generate_base_mimic_prize(dungeon, false);
-    let _ = dungeon.generator.random_using_defaults_any(dungeon.depth);
-    let _ = dungeon.generator.random_using_defaults_any(dungeon.depth);
 }

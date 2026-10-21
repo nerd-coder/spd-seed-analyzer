@@ -105,6 +105,9 @@ pub struct TerrainMap {
     pub(crate) known_plants: Vec<Option<KnownPlant>>,
     /// Exact known mob identity for room-painted and ambient cells.
     pub known_mobs: Vec<Option<&'static str>>,
+    /// Items a room-painted mob carries, parallel to `map`. Main-loop mimics
+    /// attach theirs later, when their drop cell is known.
+    pub(crate) mob_loot: Vec<Vec<GeneratedItem>>,
     /// Cells occupied by heaps placed during room paint.
     pub heap_occupied: Vec<bool>,
     /// Room-paint heap cells in Java `heaps.put` order (`IntMap` iteration
@@ -164,6 +167,10 @@ impl TerrainMap {
             self.heap_order.push(cell);
         }
         self.heap_occupied[cell] = true;
+    }
+
+    pub(crate) fn record_mob_loot(&mut self, cell: usize, item: GeneratedItem) {
+        self.mob_loot[cell].push(item);
     }
 
     pub(crate) fn record_heap(
@@ -547,6 +554,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
         plant_occupied,
         known_plants,
         known_mobs,
+        mob_loot: vec![Vec::new(); len],
         heap_occupied,
         heap_order: Vec::new(),
         known_heaps,

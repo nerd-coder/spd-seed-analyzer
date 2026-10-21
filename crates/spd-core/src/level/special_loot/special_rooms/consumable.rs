@@ -5,7 +5,7 @@ use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::items::randomize::randomize_item;
-use crate::level::create_items::PlacedLoot;
+use crate::level::create_items::{mimic_carried_items, MimicPrize, PlacedLoot};
 use crate::level::terrain::{TerrainMap, EMPTY, EMPTY_SP, STATUE, WALL};
 use crate::random::Random;
 use crate::rooms::room::Room;
@@ -87,24 +87,24 @@ pub fn treasury_prizes_on_map(
                 g
             });
         let cell = treasury_drop_cell(room, map, true);
-        let heap_type = if heap_chest && dungeon.depth > 1 && Random::float() < mimic_chance {
-            burn_mimic_prize(dungeon);
-            item.source = Some("TreasuryRoom:mimic".into());
+        if heap_chest && dungeon.depth > 1 && Random::float() < mimic_chance {
             map.mob_occupied[cell] = true;
             map.known_mobs[cell] = Some("Mimic");
-            "mimic"
-        } else {
-            item.source = Some("TreasuryRoom".into());
-            if heap_chest {
-                "chest"
-            } else {
-                "heap"
+            let carried = mimic_carried_items(dungeon, vec![item], true, MimicPrize::Ordinary);
+            for mut carried in carried {
+                carried.source = Some("TreasuryRoom:mimic".into());
+                map.record_mob_loot(cell, carried.clone());
+                out.push(PlacedLoot {
+                    item: carried,
+                    heap_type: "mimic",
+                });
             }
-        };
-        if !matches!(heap_type, "mimic" | "golden_mimic") {
+        } else {
+            let heap_type = if heap_chest { "chest" } else { "heap" };
+            item.source = Some("TreasuryRoom".into());
             map.record_heap(cell, heap_type, item.clone());
+            out.push(PlacedLoot { item, heap_type });
         }
-        out.push(PlacedLoot { item, heap_type });
     }
     if !heap_chest {
         for _ in 0..6 {
@@ -120,39 +120,6 @@ pub fn treasury_prizes_on_map(
     // TreasuryRoom.java:76 — IronKey pushed after the small gold piles
     items_to_spawn.push(GeneratedItem::new("IronKey", ItemCategory::Other));
     out
-}
-
-/// `Mimic.spawnAt(...).generatePrize(true)`. The held extra reward is a
-/// combat drop, so it is not public seed-analysis output, but generation
-/// advances both the main stream and the relevant item deck here.
-fn burn_mimic_prize(dungeon: &mut DungeonState) {
-    match Random::int_max(5) {
-        0 => {
-            let mut gold = GeneratedItem::new("Gold", ItemCategory::Gold);
-            randomize_item(&mut gold, dungeon.depth);
-        }
-        1 => {
-            dungeon
-                .generator
-                .random_missile(dungeon.depth / 5, false, dungeon.depth);
-        }
-        2 => {
-            dungeon
-                .generator
-                .random_armor(dungeon.depth / 5, dungeon.depth);
-        }
-        3 => {
-            dungeon
-                .generator
-                .random_weapon(dungeon.depth / 5, false, dungeon.depth);
-        }
-        _ => {
-            dungeon
-                .generator
-                .random_category(Category::Ring, dungeon.depth);
-        }
-    }
-    crate::level::create_items::burn_mimic_tooth_extra_reward(dungeon);
 }
 
 fn treasury_drop_cell(room: &Room, map: &TerrainMap, reject_occupied: bool) -> usize {

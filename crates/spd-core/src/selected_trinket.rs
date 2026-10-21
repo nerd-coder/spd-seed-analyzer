@@ -62,6 +62,87 @@ mod tests {
     }
 
     #[test]
+    fn mimic_tooth_reports_carried_drops_including_ebony() {
+        use crate::report::FloorReport;
+
+        fn carried<'a>(floor: &'a FloorReport, mob: &str) -> Option<&'a crate::report::MapMob> {
+            floor
+                .map
+                .as_ref()
+                .or(floor.assumed_map.as_ref())
+                .and_then(|map| map.mobs.iter().find(|entry| entry.class_name() == mob))
+        }
+
+        let mut saw_ebony = false;
+        for seed in 0..24 {
+            let selection = TrinketSelectionReport::for_run(&crate::init_run(seed));
+            let offered = selection
+                .catalyst_options
+                .iter()
+                .any(|item| item.class_name() == "MimicTooth");
+            if !offered {
+                continue;
+            }
+            let report =
+                analyze_seed_with_trinket(&seed.to_string(), 8, Some(TrinketKind::MimicTooth))
+                    .unwrap();
+            let tooth_from = report.trinket_selection.first_effective_depth;
+            for floor in &report.floors {
+                if let Some(ebony) = carried(floor, "EbonyMimic") {
+                    assert_eq!(ebony.items.len(), 3, "seed {seed} floor {}", floor.depth);
+                    let listed: Vec<_> = floor
+                        .items
+                        .iter()
+                        .filter(|group| {
+                            group
+                                .source
+                                .as_deref()
+                                .is_some_and(|source| source.contains("ebony_mimic"))
+                        })
+                        .flat_map(|group| group.variants.iter())
+                        .filter_map(|item| item.class_name().map(str::to_string))
+                        .collect();
+                    for item in &ebony.items {
+                        let class_name = item.class_name();
+                        if matches!(
+                            class_name,
+                            "Gold" | "Dewdrop" | "IronKey" | "GoldenKey" | "CrystalKey"
+                        ) {
+                            continue;
+                        }
+                        assert!(
+                            listed.iter().any(|listed| listed == class_name),
+                            "seed {seed} floor {} missing {class_name} in {listed:?}",
+                            floor.depth
+                        );
+                    }
+                    saw_ebony = true;
+                }
+                if let Some(crystal) = carried(floor, "CrystalMimic") {
+                    assert_eq!(crystal.items.len(), 1, "seed {seed}");
+                    assert!(!crystal.items[0].cursed);
+                }
+                if floor.depth >= tooth_from {
+                    for mob in ["Mimic", "GoldenMimic"] {
+                        if let Some(mimic) = carried(floor, mob) {
+                            assert_eq!(
+                                mimic.items.len(),
+                                3,
+                                "seed {seed} {mob} floor {}",
+                                floor.depth
+                            );
+                        }
+                    }
+                }
+            }
+            if saw_ebony {
+                break;
+            }
+        }
+        assert!(saw_ebony, "no offered Mimic Tooth produced an ebony mimic");
+    }
+
+    #[test]
     fn no_selection_is_the_merged_default_report() {
         let default = serde_json::to_value(analyze_seed("7", 6).unwrap()).unwrap();
         let none = serde_json::to_value(analyze_seed_with_trinket("7", 6, None).unwrap()).unwrap();

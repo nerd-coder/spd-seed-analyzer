@@ -73,6 +73,7 @@ impl MapFacts {
                 cell: cell as u32,
                 mob: MobId::from_class_name_lossy(class_name),
                 state: super::mob_state::initial_state(class_name),
+                items: map.mob_loot[cell].iter().map(heap_item).collect(),
             });
         }
 
@@ -139,26 +140,36 @@ impl MapFacts {
             self.runtime_sensitive_loot_cells.push(cell as u32);
         }
         match loot.heap_type {
-            "mimic" | "golden_mimic" => {
-                let class_name = if loot.heap_type == "mimic" {
-                    "Mimic"
-                } else {
-                    "GoldenMimic"
+            "mimic" | "golden_mimic" | "ebony_mimic" => {
+                let class_name = match loot.heap_type {
+                    "golden_mimic" => "GoldenMimic",
+                    "ebony_mimic" => "EbonyMimic",
+                    _ => "Mimic",
                 };
-                self.mobs.push(MapMob {
-                    cell: cell as u32,
-                    mob: MobId::from_class_name_lossy(class_name),
-                    state: super::mob_state::initial_state(class_name),
-                });
-                self.markers.push(MapMarker {
-                    cell: cell as u32,
-                    kind: MapMarkerKind::Mob,
-                    label: if class_name == "GoldenMimic" {
-                        "Golden Mimic".to_string()
-                    } else {
-                        class_name.to_string()
-                    },
-                });
+                let item = heap_item(&loot.item);
+                if let Some(mob) = self
+                    .mobs
+                    .iter_mut()
+                    .find(|mob| mob.cell == cell as u32 && mob.class_name() == class_name)
+                {
+                    mob.items.push(item);
+                } else {
+                    self.mobs.push(MapMob {
+                        cell: cell as u32,
+                        mob: MobId::from_class_name_lossy(class_name),
+                        state: super::mob_state::initial_state(class_name),
+                        items: vec![item],
+                    });
+                    self.markers.push(MapMarker {
+                        cell: cell as u32,
+                        kind: MapMarkerKind::Mob,
+                        label: match class_name {
+                            "GoldenMimic" => "Golden Mimic".to_string(),
+                            "EbonyMimic" => "Ebony Mimic".to_string(),
+                            _ => class_name.to_string(),
+                        },
+                    });
+                }
             }
             heap_type => {
                 self.heaps.push(MapHeap {
