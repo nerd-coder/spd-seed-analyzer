@@ -1,8 +1,9 @@
 //! WASM bindings for `spd-core`.
 
 use spd_core::{
-    analyze_seed as core_analyze, parse_seed as core_parse, search_seeds as core_search,
-    AnalyzeError, SearchError, SeedError, SeedSearchRequest,
+    analyze_seed as core_analyze, analyze_seed_with_trinket as core_analyze_with_trinket,
+    parse_seed as core_parse, search_seeds as core_search, AnalyzeError, SearchError, SeedError,
+    SeedSearchRequest, TrinketKind,
 };
 use wasm_bindgen::prelude::*;
 
@@ -43,6 +44,24 @@ pub fn parse_seed(input: &str) -> Result<JsValue, JsValue> {
 #[wasm_bindgen]
 pub fn analyze_seed(input: &str, floors: u32) -> Result<JsValue, JsValue> {
     let report = core_analyze(input, floors).map_err(analyze_err)?;
+    json_value(&report)
+}
+
+/// Analyze a seed with a Catalyst trinket (class name, e.g. `MossyClump`) held
+/// at +3 from the first floor it can influence. `None` matches `analyze_seed`.
+#[wasm_bindgen]
+pub fn analyze_seed_with_trinket(
+    input: &str,
+    floors: u32,
+    trinket: Option<String>,
+) -> Result<JsValue, JsValue> {
+    let trinket = trinket
+        .map(|class_name| {
+            TrinketKind::from_class_name(&class_name)
+                .ok_or_else(|| JsValue::from_str(&format!("unknown trinket: {class_name}")))
+        })
+        .transpose()?;
+    let report = core_analyze_with_trinket(input, floors, trinket).map_err(analyze_err)?;
     json_value(&report)
 }
 

@@ -11,6 +11,14 @@ fn selection(options: &[&str], sequence: &[&str]) -> TrinketSelectionReport {
             .iter()
             .map(|value| spd_objects::ItemId::from_class_name_lossy(value))
             .collect(),
+        catalyst_option_effects: options
+            .iter()
+            .map(|value| {
+                TrinketKind::from_class_name(value)
+                    .unwrap()
+                    .generation_effect()
+            })
+            .collect(),
         transmutation_sequence: sequence
             .iter()
             .map(|value| spd_objects::ItemId::from_class_name_lossy(value))

@@ -111,11 +111,40 @@ impl TrinketKind {
         }
     }
 
-    pub(crate) fn from_class_name(class_name: &str) -> Option<Self> {
+    pub fn from_class_name(class_name: &str) -> Option<Self> {
         Self::ALL
             .into_iter()
             .find(|trinket| trinket.class_name() == class_name)
     }
+
+    /// How holding this trinket changes first generation of later floors.
+    pub const fn generation_effect(self) -> TrinketGenerationEffect {
+        match self {
+            Self::MossyClump
+            | Self::TrapMechanism
+            | Self::MimicTooth
+            | Self::RatSkull
+            | Self::ExoticCrystals => TrinketGenerationEffect::Modeled,
+            // Weapon/armor enchant rolls (`Weapon.java:442-445`,
+            // `Armor.java:674-677`) and extra hidden loot
+            // (`RegularLevel.java:681`).
+            Self::ParchmentScrap | Self::CrackedSpyglass => TrinketGenerationEffect::Unmodeled,
+            _ => TrinketGenerationEffect::None,
+        }
+    }
+}
+
+/// Whether a held trinket changes floor generation, and whether the replay
+/// models that change.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum TrinketGenerationEffect {
+    /// The replay applies the trinket to later floors.
+    Modeled,
+    /// The trinket changes generation, but the replay does not apply it yet.
+    Unmodeled,
+    /// Only runtime behaviour depends on the trinket.
+    None,
 }
 
 /// Artifacts that can be present in the pinned generator's unique artifact deck.

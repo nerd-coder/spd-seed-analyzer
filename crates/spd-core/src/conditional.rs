@@ -23,6 +23,22 @@ pub(crate) fn default_condition() -> ItemSpawnCondition {
     condition_for_profile(&MapProfile::default())
 }
 
+/// Base condition and alternatives for a report pinned to the player's
+/// `profile`: only the Forbidden Runes challenge stays open.
+pub(crate) fn pinned_profile_routes(
+    profile: &MapProfile,
+    floors_requested: u32,
+) -> (ItemSpawnCondition, Vec<DiscoveredRoute>) {
+    let forbidden_runes = MapProfile {
+        challenges: vec![Challenge::ForbiddenRunes],
+        ..profile.clone()
+    };
+    (
+        condition_for_profile(profile),
+        vec![route(forbidden_runes, floors_requested)],
+    )
+}
+
 pub(crate) fn discover_routes(
     selection: &TrinketSelectionReport,
     floors: &[FloorReport],

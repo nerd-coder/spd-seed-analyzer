@@ -11,7 +11,7 @@ use crate::run::{dungeon_from_run, RunState};
 pub(crate) use model::ActiveTrinket;
 pub use model::{
     ArtifactEvent, ArtifactEventAction, ArtifactKind, Challenge, ClaimState, MapProfile,
-    TrinketEvent, TrinketEventAction, TrinketKind,
+    TrinketEvent, TrinketEventAction, TrinketGenerationEffect, TrinketKind,
 };
 pub use validation::ProfileError;
 
@@ -26,6 +26,8 @@ pub struct TrinketSelectionReport {
     pub first_effective_depth: u32,
     /// The Catalyst's four seed-determined choices (TRINKET draws 0–3).
     pub catalyst_options: Vec<spd_objects::ItemId>,
+    /// Generation effect of each catalyst option, index-aligned.
+    pub catalyst_option_effects: Vec<TrinketGenerationEffect>,
     /// Successive first-deck transmutation results (TRINKET draws 4–16).
     pub transmutation_sequence: Vec<spd_objects::ItemId>,
 }
@@ -50,11 +52,48 @@ impl TrinketSelectionReport {
                 .iter()
                 .map(|class| crate::report::item_id(class))
                 .collect(),
+            catalyst_option_effects: deck[..4]
+                .iter()
+                .map(|class| {
+                    TrinketKind::from_class_name(class).map_or(
+                        TrinketGenerationEffect::Unmodeled,
+                        TrinketKind::generation_effect,
+                    )
+                })
+                .collect(),
             transmutation_sequence: deck[4..]
                 .iter()
                 .map(|class| crate::report::item_id(class))
                 .collect(),
         }
+    }
+
+    /// Upgrade level of a trinket picked in the analyzer.
+    pub const PICKED_LEVEL: u8 = 3;
+
+    /// The player takes `trinket` from the Catalyst and holds it at
+    /// [`Self::PICKED_LEVEL`] from the first floor it can influence.
+    pub(crate) fn catalyst_profile(
+        &self,
+        trinket: TrinketKind,
+    ) -> Result<MapProfile, ProfileError> {
+        if !self
+            .catalyst_options
+            .iter()
+            .any(|option| option.class_name() == trinket.class_name())
+        {
+            return Err(ProfileError::TrinketNotOffered(trinket));
+        }
+        Ok(MapProfile {
+            trinket_events: vec![TrinketEvent {
+                before_depth: self.first_effective_depth,
+                action: TrinketEventAction::Acquired {
+                    trinket,
+                    min_upgrades: Some(Self::PICKED_LEVEL),
+                },
+            }],
+            ..MapProfile::default()
+        })
     }
 }
 

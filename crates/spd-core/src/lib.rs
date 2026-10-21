@@ -18,6 +18,7 @@ pub mod report;
 pub mod rooms;
 pub mod run;
 pub mod search;
+mod selected_trinket;
 pub mod trinkets;
 
 pub use dungeon_seed::{DungeonSeed, SeedError, FIRST_DAILY_DATE, TOTAL_SEEDS};
@@ -40,9 +41,11 @@ pub use search::{
     SeedSearchRequest, SeedSearchResult, VariableItemEvidence, MAX_SEARCH_CANDIDATES,
     MAX_SEARCH_CONSTRAINTS, MAX_SEARCH_FLOORS, MAX_SEARCH_MATCHES,
 };
+pub use selected_trinket::analyze_seed_with_trinket;
 pub use trinkets::{
     ArtifactEvent, ArtifactEventAction, ArtifactKind, Challenge, ClaimState, MapProfile,
-    ProfileError, TrinketEvent, TrinketEventAction, TrinketKind, TrinketSelectionReport,
+    ProfileError, TrinketEvent, TrinketEventAction, TrinketGenerationEffect, TrinketKind,
+    TrinketSelectionReport,
 };
 
 /// Pinned SPD version this port targets (from local clone at scaffold time).
@@ -174,15 +177,35 @@ fn analyze_seed_internal(
     profile: Option<&MapProfile>,
 ) -> Result<SeedReport, AnalyzeError> {
     let info = parse_seed(input)?;
-    let floors = floors.clamp(1, 26);
     let run = init_run(info.numeric);
     let trinket_selection = TrinketSelectionReport::for_run(&run);
+    let expose_variable_items = profile.is_some_and(|profile| profile == &MapProfile::default());
+    analyze_run(
+        info,
+        run,
+        trinket_selection,
+        floors,
+        profile,
+        expose_variable_items,
+    )
+}
+
+/// Replays `run` under `profile`. Variable items carry a concrete sample only
+/// when `expose_variable_items` is set: the profile is the player's own.
+fn analyze_run(
+    info: SeedInfo,
+    run: RunState,
+    trinket_selection: TrinketSelectionReport,
+    floors: u32,
+    profile: Option<&MapProfile>,
+    expose_variable_items: bool,
+) -> Result<SeedReport, AnalyzeError> {
+    let floors = floors.clamp(1, 26);
     if let Some(profile) = profile {
         profile.validate(trinket_selection.first_effective_depth)?;
     }
     let mut dungeon = dungeon_from_run(run);
-    dungeon.expose_variable_items =
-        profile.is_some_and(|profile| profile == &MapProfile::default());
+    dungeon.expose_variable_items = expose_variable_items;
     let identities = dungeon.identities.clone();
     let mut floor_reports = level::analyze_floors_with_profile_and_trinket_availability(
         &mut dungeon,

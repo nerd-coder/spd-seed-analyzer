@@ -192,6 +192,8 @@ pub enum ProfileError {
     ArtifactEventsOutOfOrder,
     #[error("an external artifact event cannot occur before the first floor is generated")]
     ArtifactBeforeFirstFloor,
+    #[error("the Trinket Catalyst does not offer {0:?} on this seed")]
+    TrinketNotOffered(TrinketKind),
     #[error("Parchment Scrap's claim level must be between +0 and +3")]
     ParchmentLevelOutOfRange,
 }
