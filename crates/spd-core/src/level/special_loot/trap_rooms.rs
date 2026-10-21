@@ -289,6 +289,25 @@ pub(super) fn burn_sacrifice_center_offset(rooms: &[Room], ri: usize, doors: &Do
     }
 }
 
+/// `SecretHoneypotRoom.placeItem`: `Room.random()` until the cell holds no
+/// heap, then drop.
+fn place_honeypot_item(
+    room: &Room,
+    map: &mut TerrainMap,
+    occupied: &mut Vec<(i32, i32)>,
+    item: &GeneratedItem,
+) {
+    let placed = occupied.len();
+    burn_drop_pos(room, occupied);
+    if occupied.len() == placed {
+        return;
+    }
+    let (x, y) = occupied[placed];
+    if let Some(cell) = map.point_to_cell(x, y) {
+        map.record_heap(cell, "heap", item.clone());
+    }
+}
+
 /// `SecretHoneypotRoom.paint` — shattered pot (geom) + honeypot + Bomb.random().
 pub(super) fn secret_honeypot(
     rooms: &[Room],
@@ -297,9 +316,6 @@ pub(super) fn secret_honeypot(
     doors: &DoorMap,
 ) -> Vec<PlacedLoot> {
     let room = &rooms[ri];
-    // Java drops the shattered pot before `paintGrass`. It therefore blocks a
-    // grass-height roll at its cell, even though the pot itself is not a
-    // portable analyzer result with a stable public position.
     let center = room.as_rect().center_room();
     let entrance = room
         .connected
@@ -311,32 +327,36 @@ pub(super) fn secret_honeypot(
     let broken_pot_cell = map
         .point_to_cell(broken_pot.x, broken_pot.y)
         .expect("SecretHoneypotRoom shattered pot is on the map");
-    map.mark_heap(broken_pot_cell);
 
-    // Bee spawn does not consume loot RNG.
     let mut out = Vec::new();
     let mut occupied = vec![(broken_pot.x, broken_pot.y)];
 
-    // Shattered pot reported as Honeypot.ShatteredPot for identity
     let mut shattered = GeneratedItem::new("ShatteredPot", ItemCategory::Other);
     shattered.source = Some("SecretHoneypotRoom".into());
+    map.record_heap(broken_pot_cell, "heap", shattered.clone());
     out.push(PlacedLoot {
         item: shattered,
         heap_type: "heap",
     });
 
-    burn_drop_pos(room, &mut occupied);
+    // The Bee guards the shattered pot; its spawn draws nothing.
+    map.mob_occupied[broken_pot_cell] = true;
+    map.known_mobs[broken_pot_cell] = Some("Bee");
+
     let mut honey = GeneratedItem::new("Honeypot", ItemCategory::Other);
     honey.source = Some("SecretHoneypotRoom".into());
+    place_honeypot_item(room, map, &mut occupied, &honey);
     out.push(PlacedLoot {
         item: honey,
         heap_type: "heap",
     });
 
-    burn_drop_pos(room, &mut occupied);
+    // `placeItem(new Bomb().random(), level)`: the argument's Int(4) is drawn
+    // before the placement rolls.
     let mut bomb = bomb_random();
     bomb.source = Some("SecretHoneypotRoom".into());
     bomb.provenance = ItemProvenance::Room(RoomLootRole::SecretHoneypotBomb);
+    place_honeypot_item(room, map, &mut occupied, &bomb);
     out.push(PlacedLoot {
         item: bomb,
         heap_type: "heap",

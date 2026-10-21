@@ -90,7 +90,9 @@ fn floor_two_room_contracts_pair_seed_constraints_with_variable_items() {
         honeypot_bomb.variants[1].prediction,
         report::ItemPredictionKind::Variable
     );
-    assert_eq!(honeypot_bomb.variants[1].class_name(), Some("Bomb"));
+    // Java oracle `mwh-kae-dhg-final-heaps-floor-2.json`: `Bomb.random()` is
+    // drawn before `placeItem` rolls its cell.
+    assert_eq!(honeypot_bomb.variants[1].class_name(), Some("DoubleBomb"));
 
     let grave_prize = floor
         .items
