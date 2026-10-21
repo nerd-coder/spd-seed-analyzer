@@ -107,11 +107,7 @@ Next:
    offer the default-profile view.
 4. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
    not actually depend on run history); publish entities on boss maps.
-5. Fix pre-existing breakage: `bun run analyze` needs `--bin spd-analyze` now
-   that `spd-cli` has two binaries; the finder visual test "item name is set
-   to any" expects Ring of Elements but gets the floor-4 Crystal vault Ring of
-   Accuracy (fails since before `094be51`).
-6. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
+5. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
    ~38 ms WASM. Remaining cost is spread thin; `patch::generate` (~25%) is
    now mostly the parity-bound `next_float` fill draws. Measured but not
    adopted: talc allocator (no WASM gain), `+simd128` (~7% WASM, drops

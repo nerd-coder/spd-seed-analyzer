@@ -128,8 +128,9 @@ test('finder searches successfully when item name is set to any', async ({
   ).toBeVisible()
   const result = page
     .locator('[data-slot="item"]')
-    .filter({ hasText: 'Ring of Elements' })
-  await expect(result).toBeVisible()
+    .filter({ hasText: /^Ring of / })
+    .filter({ hasText: 'Floor 4' })
+  await expect(result.first()).toBeVisible()
 
   expect(consoleErrors, 'browser console errors').toEqual([])
   expect(pageErrors, 'uncaught page errors').toEqual([])

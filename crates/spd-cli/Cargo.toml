@@ -4,6 +4,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 description = "Command-line seed analysis for spd-core"
+default-run = "spd-analyze"
 
 [[bin]]
 name = "spd-analyze"
