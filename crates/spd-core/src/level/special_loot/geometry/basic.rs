@@ -1,5 +1,6 @@
 //! Basic special-room terrain painters.
 
+use super::map_simple_image;
 use crate::geom::Point;
 use crate::level::painter::DoorMap;
 use crate::level::terrain::{
@@ -382,21 +383,18 @@ pub(super) fn paint_ambitious_imp(
     fill_wh(map, room.left + 3, room.top + 1, 3, 7, CUSTOM_DECO_EMPTY);
     crate::level::carpet::add_city(map, room.left + 1, room.top + 3, 7, 3, depth, &[]);
     crate::level::carpet::add_city(map, room.left + 3, room.top + 1, 3, 7, depth, &[]);
+    // `city_quest.png` is 256px wide, so `mapSimpleImage` steps 16 tiles per row.
     map.record_custom_tile(
         "QuestEntrance",
         "city_quest",
         (center.x - 2, center.y - 2, 5, 5),
-        (0..25)
-            .map(|index| (index % 5 + (index / 5) * 8) as i16)
-            .collect(),
+        map_simple_image(5, 5, 0, 0, 256),
     );
     map.record_custom_tile(
         "EntranceBarrier",
         "city_quest",
         (center.x - 1, center.y - 1, 3, 3),
-        (0..9)
-            .map(|index| (5 + index % 3 + (1 + index / 3) * 8) as i16)
-            .collect(),
+        map_simple_image(3, 3, 5, 1, 256),
     );
     set(map, center, crate::level::terrain::EXIT);
     if let Some(cell) = map.point_to_cell(center.x, center.y) {

@@ -72,6 +72,13 @@ export function drawCustomTiles(
   for (const layer of layers ?? []) {
     const image = customTileImage(assets, layer.texture)
     if (!image || layer.width <= 0) continue
+    // `EntranceBarrier.update` pulses `0.3 + 0.3*sin(time)`. Layers are baked,
+    // so the still uses the middle of that range and leaves the pit visible.
+    const gate = layer.class === 'EntranceBarrier'
+    if (gate) {
+      ctx.save()
+      ctx.globalAlpha *= 0.45
+    }
     for (let index = 0; index < layer.static_data.length; index++) {
       const visual = layer.static_data[index]
       if (visual == null || visual < 0) continue
@@ -86,6 +93,7 @@ export function drawCustomTiles(
         continue
       drawSheetTile(ctx, image, visual, cell, map.width, scale)
     }
+    if (gate) ctx.restore()
   }
 }
 

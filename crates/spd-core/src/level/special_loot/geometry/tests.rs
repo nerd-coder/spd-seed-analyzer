@@ -51,6 +51,33 @@ fn connected_room(name: &str, width: i32, height: i32) -> (Vec<Room>, DoorMap) {
 }
 
 #[test]
+fn ambitious_imp_entrance_reads_the_256px_city_quest_sheet() {
+    let (rooms, doors) = connected_room("AmbitiousImpRoom", 9, 9);
+    let mut map = terrain::paint_minimal(&rooms).expect("map");
+    let _ = paint_at_depth(&mut map, &rooms[0], 0, &doors, 17);
+    let entrance = map
+        .custom_tiles
+        .iter()
+        .find(|layer| layer.class_name == "QuestEntrance")
+        .expect("entrance");
+    let barrier = map
+        .custom_tiles
+        .iter()
+        .find(|layer| layer.class_name == "EntranceBarrier")
+        .expect("barrier");
+    assert_eq!(
+        entrance.static_data,
+        map_simple_image(5, 5, 0, 0, 256),
+        "5×5 portal, 16 tiles per row"
+    );
+    assert_eq!(
+        barrier.static_data,
+        map_simple_image(3, 3, 5, 1, 256),
+        "3×3 gate over the pit"
+    );
+}
+
+#[test]
 fn pit_repaints_special_floor_and_places_one_well() {
     let (rooms, doors) = connected_room("PitRoom", 7, 8);
     let mut map = terrain::paint_minimal(&rooms).expect("map");
