@@ -153,6 +153,42 @@ fn custom_tile(
 }
 
 impl TerrainMap {
+    /// A `width`×`height` map of `tile` with no painted entities.
+    pub(crate) fn filled(width: i32, height: i32, tile: i32) -> Self {
+        let len = (width * height) as usize;
+        let mut map = Self {
+            width,
+            height,
+            origin_x: 0,
+            origin_y: 0,
+            map: vec![tile; len],
+            passable: Vec::new(),
+            water_allowed: vec![true; len],
+            grass_allowed: vec![true; len],
+            trap_allowed: vec![true; len],
+            item_allowed: vec![true; len],
+            character_allowed: vec![true; len],
+            mob_occupied: vec![false; len],
+            plant_occupied: vec![false; len],
+            known_plants: vec![None; len],
+            known_mobs: vec![None; len],
+            mob_loot: vec![Vec::new(); len],
+            heap_occupied: vec![false; len],
+            heap_order: Vec::new(),
+            known_heaps: vec![None; len],
+            known_blobs: Vec::new(),
+            trap_destroys_items: vec![false; len],
+            trap_names: vec![None; len],
+            branch_exits: Vec::new(),
+            branch_entrances: Vec::new(),
+            custom_tiles: Vec::new(),
+            custom_terrain: Vec::new(),
+            custom_walls: Vec::new(),
+        };
+        map.recompute_passable();
+        map
+    }
+
     pub fn len(&self) -> usize {
         self.map.len()
     }

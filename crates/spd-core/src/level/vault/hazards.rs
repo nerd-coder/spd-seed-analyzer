@@ -5,6 +5,7 @@ use crate::random::Random;
 
 use super::geometry;
 use super::paint::{PaintCtx, HEAP};
+use super::sentries;
 
 pub(super) fn paint_cross(ctx: &mut PaintCtx<'_>, ri: usize) {
     let room = ctx.room(ri).clone();
@@ -13,7 +14,7 @@ pub(super) fn paint_cross(ctx: &mut PaintCtx<'_>, ri: usize) {
     geometry::fill_insets(ctx.map, &room, 1, 4, 1, 4, EMPTY);
     let c = geometry::center(&room);
     geometry::set(ctx.map, c.x, c.y, PEDESTAL);
-    ctx.place_npc(ctx.point_cell(c), "VaultSentry");
+    ctx.place_sentry(sentries::cross(ctx.point_cell(c), ctx.width()));
     ctx.set_regular_doors(ri);
 }
 
@@ -25,8 +26,8 @@ pub(super) fn paint_circle(ctx: &mut PaintCtx<'_>, ri: usize) {
     geometry::fill_insets(ctx.map, &room, 1, 4, 1, 4, EMPTY);
     let c = geometry::center(&room);
     geometry::set(ctx.map, c.x, c.y, PEDESTAL);
-    ctx.place_npc(ctx.point_cell(c), "VaultSentry");
-    let _ = Random::int_max(3);
+    let variant = Random::int_max(3);
+    ctx.place_sentry(sentries::circle(ctx.point_cell(c), ctx.width(), variant));
     ctx.set_regular_doors(ri);
     for door in ctx.door_points(ri) {
         geometry::draw_inside(ctx.map, &room, door, 4, EMPTY);

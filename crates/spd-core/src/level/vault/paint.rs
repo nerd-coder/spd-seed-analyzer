@@ -12,6 +12,7 @@ use crate::items::model::{GeneratedItem, ItemCategory};
 use super::geometry;
 use super::loot::{self, VaultGen};
 use super::mobs::VaultMob;
+use super::sentries::SentrySpec;
 use super::{combat, entrance, final_room, hallway, hazards, tokens, treasure};
 
 pub(super) const HEAP: &str = "heap";
@@ -25,6 +26,7 @@ pub(super) struct PaintFacts {
     /// Heaps whose identity is not seed-determined: Imp rewards (route) and
     /// JDK-shuffled consumables (per run).
     pub uncertain: Vec<usize>,
+    pub sentries: Vec<SentrySpec>,
 }
 
 pub(super) struct PaintCtx<'a> {
@@ -84,6 +86,11 @@ impl PaintCtx<'_> {
 
     pub(super) fn place_npc(&mut self, cell: usize, class_name: &'static str) {
         geometry::occupy_mob(self.map, cell, class_name);
+    }
+
+    pub(super) fn place_sentry(&mut self, spec: SentrySpec) {
+        self.place_npc(spec.cell, "VaultSentry");
+        self.facts.sentries.push(spec);
     }
 
     pub(super) fn place_enemy(&mut self, cell: usize, mob: VaultMob, wandering: bool) {

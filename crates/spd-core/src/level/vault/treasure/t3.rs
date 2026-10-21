@@ -8,6 +8,7 @@ use super::super::geometry;
 use super::super::hazards::place_laser;
 use super::super::mobs::VaultMob;
 use super::super::paint::{PaintCtx, CHEST, HEAP};
+use super::super::sentries;
 
 pub(in crate::level::vault) fn paint_many_scans(ctx: &mut PaintCtx<'_>, ri: usize) {
     let room = ctx.room(ri).clone();
@@ -28,13 +29,13 @@ pub(in crate::level::vault) fn paint_many_scans(ctx: &mut PaintCtx<'_>, ri: usiz
         ctx.cell(c.x, room.bottom - 1),
         ctx.cell(room.right - 1, room.bottom - 1),
     ];
+    let center = ctx.cell(c.x, c.y);
     for &cell in &corners {
         if geometry::true_distance(ctx.map, cell, door_cell) >= 2.0 {
-            ctx.place_npc(cell, "VaultSentry");
+            ctx.place_sentry(sentries::many_scans(cell, center));
         }
     }
     geometry::set(ctx.map, c.x, c.y, PEDESTAL);
-    let center = ctx.cell(c.x, c.y);
     let treasure = ctx.create_equipment(3);
     ctx.drop(center, CHEST, treasure);
     let n8 = geometry::neighbours8(w);

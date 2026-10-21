@@ -6,6 +6,7 @@ use crate::random::Random;
 use super::super::geometry;
 use super::super::hazards::place_laser;
 use super::super::paint::{PaintCtx, CHEST, HEAP};
+use super::super::sentries;
 
 const LEFT: i32 = 0;
 const UP: i32 = 1;
@@ -238,7 +239,20 @@ pub(in crate::level::vault) fn paint_circle_scan(ctx: &mut PaintCtx<'_>, ri: usi
     geometry::draw_inside(ctx.map, &room, entrance, 3, EMPTY);
     let c = geometry::center(&room);
     geometry::set(ctx.map, c.x, c.y, PEDESTAL);
-    ctx.place_npc(ctx.point_cell(c), "VaultSentry");
+    let clockwise = if entrance.x == room.left {
+        entrance.y >= c.y
+    } else if entrance.y == room.top {
+        entrance.x < c.x
+    } else if entrance.x == room.right {
+        entrance.y < c.y
+    } else {
+        entrance.x >= c.x
+    };
+    ctx.place_sentry(sentries::circle_scan(
+        ctx.point_cell(c),
+        ctx.width(),
+        clockwise,
+    ));
 
     let treasure = if entrance.x == room.left {
         geometry::set(ctx.map, c.x + 2, c.y, WALL);

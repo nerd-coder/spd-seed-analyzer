@@ -1,5 +1,6 @@
 //! Headless level generation.
 
+mod ballistica;
 mod boss_layouts;
 mod build;
 pub(crate) mod carpet;

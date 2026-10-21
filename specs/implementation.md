@@ -21,7 +21,10 @@ Vault maps publish room-painted entities plus `VaultLevel.createItems`
 the Java oracle snapshot taken after `createItems`. Vault "May differ" cells are
 the Imp reward pedestals (route) and consumables from `setupConsumables`, whose
 `Collections.shuffle` is unseeded JDK RNG; the leading Potion of Healing in
-tiers 0–2 stays exact. Mining maps publish room-painted entities plus
+tiers 0–2 stays exact. Vault `sentry_scans` replay each `VaultSentry` scan
+cycle (`Ballistica` + `ConeAOE` on the final map) as animated `CheckedCell`
+flashes; the sentry's own field-of-view filter is not modeled, and
+`VaultLaser` beams are not drawn. Mining maps publish room-painted entities plus
 `MiningLevel.createMobs` (Crystal Wisps / Gnoll Guards) and `createItems`
 (food, Darkness torch), matching the oracle snapshot after `createItems`.
 

@@ -88,6 +88,9 @@ pub struct FloorMap {
     /// and Cracked Spyglass loot (`Heap.hidden`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub concealed_cells: Vec<u32>,
+    /// Imp vault `VaultSentry` scan patterns, in mob placement order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub sentry_scans: Vec<MapSentryScan>,
     /// Internal provenance for cells whose main-loop loot facts depend on
     /// runtime-sensitive persistent Generator history. Never serialized.
     #[serde(skip)]
@@ -98,6 +101,15 @@ pub struct FloorMap {
     #[serde(skip)]
     #[doc(hidden)]
     pub constrained_equipment_cells: Vec<u32>,
+}
+
+/// One sentry's scan cycle. It scans on turns 1, 1 + `cooldown`, …, using
+/// `steps` in order; each step lists the cells that scan checks.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct MapSentryScan {
+    pub cell: u32,
+    pub cooldown: u32,
+    pub steps: Vec<Vec<u32>>,
 }
 
 /// A pinned Java `CustomTilemap` layer, including its resolved source tiles.

@@ -13,6 +13,7 @@ mod loot;
 mod mobs;
 mod paint;
 mod rooms;
+mod sentries;
 mod tokens;
 mod treasure;
 
@@ -167,6 +168,7 @@ fn project_map(
     uncertain.sort_unstable();
     uncertain.dedup();
     floor_map.uncertain_cells = uncertain;
+    floor_map.sentry_scans = sentries::project(map, &facts.sentries);
     floor_map
 }
 
@@ -190,38 +192,7 @@ fn shift_rooms(rooms: &mut [Room], padding: i32) {
 fn blank_map(rooms: &[Room], padding: i32) -> Option<TerrainMap> {
     let right = rooms.iter().map(|room| room.right).max()? + padding;
     let bottom = rooms.iter().map(|room| room.bottom).max()? + padding;
-    let width = right + 1;
-    let height = bottom + 1;
-    let len = (width * height) as usize;
-    Some(TerrainMap {
-        width,
-        height,
-        origin_x: 0,
-        origin_y: 0,
-        map: vec![WALL; len],
-        passable: vec![false; len],
-        water_allowed: vec![true; len],
-        grass_allowed: vec![true; len],
-        trap_allowed: vec![true; len],
-        item_allowed: vec![true; len],
-        character_allowed: vec![true; len],
-        mob_occupied: vec![false; len],
-        plant_occupied: vec![false; len],
-        known_plants: vec![None; len],
-        known_mobs: vec![None; len],
-        mob_loot: vec![Vec::new(); len],
-        heap_occupied: vec![false; len],
-        heap_order: Vec::new(),
-        known_heaps: vec![None; len],
-        known_blobs: Vec::new(),
-        trap_destroys_items: vec![false; len],
-        trap_names: vec![None; len],
-        branch_exits: Vec::new(),
-        branch_entrances: Vec::new(),
-        custom_tiles: Vec::new(),
-        custom_terrain: Vec::new(),
-        custom_walls: Vec::new(),
-    })
+    Some(TerrainMap::filled(right + 1, bottom + 1, WALL))
 }
 
 #[cfg(test)]

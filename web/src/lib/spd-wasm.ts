@@ -142,6 +142,18 @@ export type FloorMap = {
   hidden_cells?: number[]
   /** Entities seen only after searching: Ebony Mimics, Cracked Spyglass loot. */
   concealed_cells?: number[]
+  /** Imp vault sentry scans; omitted when the floor has none. */
+  sentry_scans?: MapSentryScan[]
+}
+
+/**
+ * One `VaultSentry` scan cycle: it scans on turns 1, 1 + `cooldown`, …,
+ * using `steps` in order. Each step lists the cells that scan checks.
+ */
+export type MapSentryScan = {
+  cell: number
+  cooldown: number
+  steps: number[][]
 }
 
 /** A pinned static `CustomTilemap` layer from the game level. */

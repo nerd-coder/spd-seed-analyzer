@@ -12,6 +12,7 @@ import {
   revealedMap,
 } from '@/lib/map-hidden'
 import { hasBlobEffects, ParticleField } from '@/lib/map-particles'
+import { drawSentryScans, hasSentryScans } from '@/lib/map-scans'
 import type { FloorMap, IdentityMaps } from '@/lib/spd-wasm'
 import {
   type ConcealOverlay,
@@ -105,7 +106,11 @@ export function FloorMapCanvas({
   const hasWater = animateWater && map.tiles.includes(Terrain.WATER)
   const hasHidden = hidden.regions.length > 0
   const hasMotion = useMemo(
-    () => hasAnimatedMobs(map) || hasBlobEffects(map) || hasSleepingMobs(map),
+    () =>
+      hasAnimatedMobs(map) ||
+      hasBlobEffects(map) ||
+      hasSleepingMobs(map) ||
+      hasSentryScans(map),
     [map]
   )
   const animating =
@@ -188,6 +193,7 @@ export function FloorMapCanvas({
               drawMobs(layer, assets, map, scale, animating ? seconds : null),
             effects: (layer) => {
               particles?.draw(layer, scale)
+              if (animating) drawSentryScans(layer, map, scale, seconds)
               drawMobEmotes(
                 layer,
                 assets.icons,
