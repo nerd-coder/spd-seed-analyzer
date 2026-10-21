@@ -24,7 +24,10 @@ fn ambient_mob_rotation_includes_standard_room_subclass_roles() {
         spawn_room(4, RoomKind::Special, 4),
     ];
 
-    assert_eq!(spawn_room_indices(&rooms), [0, 1, 1, 2, 3]);
+    assert_eq!(
+        spawn_room_indices(&rooms, &[0, 1, 2, 3, 4], |room| room.size_factor),
+        [0, 1, 1, 2, 3]
+    );
 }
 
 fn recover_state_after_first_int(probe: &[i32]) -> u64 {

@@ -6,13 +6,22 @@ mod rotation;
 #[cfg(test)]
 mod tests;
 
-use crate::level::terrain::{self, TerrainMap, ENTRANCE, ENTRANCE_SP, EXIT, GRASS, HIGH_GRASS};
+use crate::level::terrain::{
+    self, TerrainMap, ENTRANCE, ENTRANCE_SP, EXIT, FURROWED_GRASS, GRASS, HIGH_GRASS,
+};
 use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
 
 use navigation::{distance_limited, shadow_cast};
-use rotation::{next_mob, MobKind};
+use rotation::next_mob;
+
+/// A mob the population loop places: map label and `Char.Property.LARGE`.
+#[derive(Clone, Copy)]
+struct Spawn {
+    label: &'static str,
+    large: bool,
+}
 
 /// Runs the pinned population path. Exact final parity still depends on every
 /// preceding builder, painter, and quest hook reaching the same state.
@@ -22,12 +31,6 @@ pub(crate) fn create_regular(
     rooms: &[Room],
     map: &mut TerrainMap,
 ) -> bool {
-    let entrance_room = rooms
-        .iter()
-        .find(|room| room.is_entrance() && !room.is_empty());
-    let Some(entrance_room) = entrance_room else {
-        return false;
-    };
     let Some(entrance_cell) = map
         .map
         .iter()
@@ -35,12 +38,88 @@ pub(crate) fn create_regular(
     else {
         return false;
     };
-
     // RegularLevel.createMobs calls mobLimit before collecting and shuffling
     // the weighted StandardRoom list.
-    let mut remaining = mob_limit(depth, large_feeling);
+    let remaining = mob_limit(depth, large_feeling);
+    let order: Vec<usize> = (0..rooms.len()).collect();
+    let spawn_rooms = spawn_room_indices(rooms, &order, |room| room.size_factor);
+    let mut rotation = Vec::new();
+    populate(
+        depth,
+        rooms,
+        map,
+        entrance_cell,
+        remaining,
+        spawn_rooms,
+        || {
+            let mob = next_mob(depth, &mut rotation);
+            Spawn {
+                label: mob.label(),
+                large: mob.is_large(),
+            }
+        },
+    )
+}
 
-    let mut spawn_rooms = spawn_room_indices(rooms);
+/// `RegularLevel.createMobs` on a `MiningLevel`: one fewer mob than usual and
+/// `MiningLevel.createMob` (no champion roll). `order` is Java `level.rooms`.
+pub(crate) fn create_mining(
+    depth: i32,
+    rooms: &[Room],
+    order: &[usize],
+    map: &mut TerrainMap,
+    entrance_cell: usize,
+    crystal: bool,
+) -> bool {
+    let remaining = mob_limit(depth, false) - 1;
+    // MineLargeRoom and MineGiantRoom spawn their own enemies, so weigh 1.
+    let spawn_rooms = spawn_room_indices(rooms, order, |room| {
+        if matches!(room.name.as_str(), "MineLargeRoom" | "MineGiantRoom") {
+            1
+        } else {
+            room.size_factor
+        }
+    });
+    populate(
+        depth,
+        rooms,
+        map,
+        entrance_cell,
+        remaining,
+        spawn_rooms,
+        || {
+            if crystal {
+                // `CrystalWisp()` picks its sprite colour.
+                let _ = Random::int_max(3);
+                Spawn {
+                    label: "CrystalWisp",
+                    large: false,
+                }
+            } else {
+                Spawn {
+                    label: "GnollGuard",
+                    large: false,
+                }
+            }
+        },
+    )
+}
+
+fn populate(
+    depth: i32,
+    rooms: &[Room],
+    map: &mut TerrainMap,
+    entrance_cell: usize,
+    mut remaining: i32,
+    mut spawn_rooms: Vec<usize>,
+    mut create_mob: impl FnMut() -> Spawn,
+) -> bool {
+    let entrance_room = rooms
+        .iter()
+        .find(|room| room.is_entrance() && !room.is_empty());
+    let Some(entrance_room) = entrance_room else {
+        return false;
+    };
     if spawn_rooms.is_empty() {
         return false;
     }
@@ -59,42 +138,30 @@ pub(crate) fn create_regular(
     }
     let entrance_distance = distance_limited(map, entrance_cell, &entrance_walkable, 8);
 
-    let mut rotation = Vec::new();
     let mut room_cursor = 0usize;
-    let mut current_mob = None;
+    let mut current_mob: Option<Spawn> = None;
     let mut failed_placements = 0usize;
     while remaining > 0 {
-        if current_mob.is_none() {
-            current_mob = Some(next_mob(depth, &mut rotation));
-        }
+        let mob = *current_mob.get_or_insert_with(&mut create_mob);
         let room_index = spawn_rooms[room_cursor % spawn_rooms.len()];
         room_cursor += 1;
         let room = &rooms[room_index];
-        if let Some(cell) = find_position(
-            room,
-            current_mob.expect("mob exists"),
-            map,
-            &entrance_fov,
-            &entrance_distance,
-        ) {
+        if let Some(cell) = find_position(room, mob, map, &entrance_fov, &entrance_distance) {
             failed_placements = 0;
-            let mob = current_mob.take().expect("mob is present while placing");
+            current_mob = None;
             place_mob(map, cell, mob);
             remaining -= 1;
 
             // Java may immediately place one more mob in the same room. A
             // failed second placement retains that mob for the next room.
             if depth > 1 && remaining > 0 && Random::int_max(4) == 0 {
-                current_mob = Some(next_mob(depth, &mut rotation));
-                if let Some(cell) = find_position(
-                    room,
-                    current_mob.expect("second mob exists"),
-                    map,
-                    &entrance_fov,
-                    &entrance_distance,
-                ) {
-                    let mob = current_mob.take().expect("second mob is present");
-                    place_mob(map, cell, mob);
+                let second = create_mob();
+                current_mob = Some(second);
+                if let Some(cell) =
+                    find_position(room, second, map, &entrance_fov, &entrance_distance)
+                {
+                    current_mob = None;
+                    place_mob(map, cell, second);
                     remaining -= 1;
                 }
             }
@@ -113,7 +180,7 @@ pub(crate) fn create_regular(
     }
 
     for cell in 0..map.len() {
-        if map.mob_occupied[cell] && map.map[cell] == HIGH_GRASS {
+        if map.mob_occupied[cell] && matches!(map.map[cell], HIGH_GRASS | FURROWED_GRASS) {
             map.map[cell] = GRASS;
         }
     }
@@ -124,9 +191,14 @@ pub(crate) fn create_regular(
 /// `mobSpawnWeight()` before shuffling. The regular entrance/exit hierarchy
 /// extends `StandardRoom`: an entrance has weight one, while an exit retains
 /// its size-category weight.
-fn spawn_room_indices(rooms: &[Room]) -> Vec<usize> {
+fn spawn_room_indices(
+    rooms: &[Room],
+    order: &[usize],
+    size_weight: impl Fn(&Room) -> i32,
+) -> Vec<usize> {
     let mut spawn_rooms = Vec::new();
-    for (index, room) in rooms.iter().enumerate() {
+    for &index in order {
+        let room = &rooms[index];
         // `EntranceRoom` / `ExitRoom` inherit `StandardRoom` in pinned SPD.
         // The Rust model stores their role separately, so preserve their
         // inherited Java spawn weights explicitly.
@@ -137,7 +209,7 @@ fn spawn_room_indices(rooms: &[Room]) -> Vec<usize> {
             let weight = if room.is_entrance() {
                 1
             } else {
-                room.size_factor.max(0)
+                size_weight(room).max(0)
             };
             for _ in 0..weight {
                 spawn_rooms.push(index);
@@ -161,7 +233,7 @@ fn mob_limit(depth: i32, large_feeling: bool) -> i32 {
 
 fn find_position(
     room: &Room,
-    mob: MobKind,
+    mob: Spawn,
     map: &TerrainMap,
     entrance_fov: &[bool],
     entrance_distance: &[i32],
@@ -182,7 +254,7 @@ fn find_position(
                 || map.plant_occupied[cell]
                 || map.map[cell] == EXIT
                 || map.trap_names[cell].is_some()
-                || (mob.is_large() && !map.is_open_space(cell))
+                || (mob.large && !map.is_open_space(cell))
         });
         if !invalid {
             return (tries >= 0).then_some(cell.expect("valid cell"));
@@ -193,7 +265,7 @@ fn find_position(
     }
 }
 
-fn place_mob(map: &mut TerrainMap, cell: usize, mob: MobKind) {
+fn place_mob(map: &mut TerrainMap, cell: usize, mob: Spawn) {
     map.mob_occupied[cell] = true;
-    map.known_mobs[cell] = Some(mob.label());
+    map.known_mobs[cell] = Some(mob.label);
 }

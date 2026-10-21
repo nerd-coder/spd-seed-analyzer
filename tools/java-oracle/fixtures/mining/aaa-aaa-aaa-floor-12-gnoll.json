@@ -2904,13 +2904,18 @@
     }
   ],
   "mobs": [
+    { "cell": 601, "class": "GnollGuard", "state": "sleeping" },
+    { "cell": 702, "class": "GnollGuard", "state": "sleeping" },
     { "cell": 761, "class": "GnollGeomancer", "state": "sleeping" },
     { "cell": 772, "class": "GnollSapper", "state": "sleeping" },
     { "cell": 820, "class": "GnollGuard", "state": "sleeping" },
     { "cell": 1092, "class": "GnollSapper", "state": "sleeping" },
     { "cell": 1093, "class": "GnollGuard", "state": "sleeping" },
+    { "cell": 1136, "class": "GnollGuard", "state": "sleeping" },
     { "cell": 1261, "class": "GnollGuard", "state": "sleeping" },
-    { "cell": 1311, "class": "GnollSapper", "state": "sleeping" }
+    { "cell": 1283, "class": "GnollGuard", "state": "sleeping" },
+    { "cell": 1311, "class": "GnollSapper", "state": "sleeping" },
+    { "cell": 1651, "class": "GnollGuard", "state": "sleeping" }
   ],
   "heaps": [
     {
@@ -2925,6 +2930,18 @@
       "type": "chest",
       "items": [
         { "class": "DarkGold", "quantity": 4, "level": 0, "cursed": false }
+      ]
+    },
+    {
+      "cell": 602,
+      "type": "heap",
+      "items": [{ "class": "Food", "quantity": 1, "level": 0, "cursed": false }]
+    },
+    {
+      "cell": 1480,
+      "type": "heap",
+      "items": [
+        { "class": "Pasty", "quantity": 1, "level": 0, "cursed": false }
       ]
     }
   ]

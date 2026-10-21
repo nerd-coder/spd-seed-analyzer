@@ -4,6 +4,7 @@ mod doors;
 mod entrance;
 mod environment;
 mod geometry;
+mod population;
 mod rooms;
 
 use crate::builders;
@@ -125,8 +126,16 @@ pub(crate) fn generate(dungeon: &DungeonState, expose_map: bool) -> Option<Minin
         .iter()
         .map(|room| spd_objects::RoomId::from_class_name_lossy(&room.class_name))
         .collect();
-    // Room-painted quest mobs and dark-gold chests; `createMobs`/`createItems`
-    // are not replayed for the mine yet.
+    #[cfg(test)]
+    let floor_rng_tail = Random::peek_ints(8);
+    population::populate(
+        &mut map,
+        &room_list,
+        &order,
+        dungeon,
+        depth,
+        objective == BlacksmithQuestType::Crystal,
+    );
     let mut floor_map = MapFacts::from_room_paint(&map).into_floor_map(&map, depth, 1, depth_seed);
     floor_map.tileset = match objective {
         BlacksmithQuestType::Crystal => "caves_crystal",
@@ -134,8 +143,6 @@ pub(crate) fn generate(dungeon: &DungeonState, expose_map: bool) -> Option<Minin
         BlacksmithQuestType::Fungi => unreachable!(),
     }
     .into();
-    #[cfg(test)]
-    let floor_rng_tail = Random::peek_ints(8);
     Random::pop_generator();
 
     Some(MiningLayout {

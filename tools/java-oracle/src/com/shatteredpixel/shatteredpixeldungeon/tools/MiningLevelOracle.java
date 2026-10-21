@@ -28,7 +28,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Captures a forced-objective MiningLevel immediately before mob population. */
+/** Captures a forced-objective MiningLevel after createItems, probing the RNG before createMobs. */
 final class MiningLevelOracle {
 
 	private MiningLevelOracle() {
@@ -56,13 +56,15 @@ final class MiningLevelOracle {
 		// Dungeon.newLevel keeps this null until Level.create returns.
 		Dungeon.level = null;
 		Actor.clear();
-		List<Integer> floorRngTail = new ArrayList<>();
+		// A committed fixture must not depend on the user's bones.dat; at this
+		// pin Dungeon.daily is consulted during generation only by Bones.
+		Dungeon.daily = true;
 		try {
 			level.create();
 		} catch (FloorOracle.SnapshotComplete expected) {
-			// Painter-complete: Level.create has built flags but has not populated mobs or items.
-			for (int index = 0; index < 8; index++) floorRngTail.add(Random.Int());
+			// createMobs and createItems have run; floor_rng_tail was probed before createMobs.
 		} finally {
+			Dungeon.daily = false;
 			Random.resetGenerators();
 		}
 
@@ -79,12 +81,12 @@ final class MiningLevelOracle {
 		json.append("  \"branch\": 1,\n");
 		json.append("  \"width\": ").append(level.width()).append(",\n");
 		json.append("  \"height\": ").append(level.height()).append(",\n");
-		appendRooms(json, "rooms", level.rooms());
+		appendRooms(json, "rooms", RecordingMiningLevel.levelRooms);
 		appendRooms(json, "paint_rooms", RecordingMiningLevel.paintRooms);
 		appendCheckpoints(json, RecordingMiningLevel.roomCheckpoints);
 		appendValues(json, "post_doors_rng", RecordingMiningLevel.postDoorsRng);
 		appendValues(json, "pre_decoration_terrain", RecordingMiningLevel.preDecorationTerrain);
-		appendValues(json, "floor_rng_tail", floorRngTail);
+		appendValues(json, "floor_rng_tail", RecordingMiningLevel.floorRngTail);
 		appendValues(json, "terrain", visual.terrain);
 		appendValues(json, "discoverable", visual.discoverable);
 		json.append("  \"transitions\": [\n");
@@ -211,6 +213,8 @@ final class MiningLevelOracle {
 		private static List<Integer> preDecorationTerrain = List.of();
 		private static List<Room> paintRooms = List.of();
 		private static List<RoomCheckpoint> roomCheckpoints = new ArrayList<>();
+		private static List<Integer> floorRngTail = List.of();
+		private static List<Room> levelRooms = List.of();
 
 		@Override
 		protected ArrayList<Room> initRooms() {
@@ -247,6 +251,15 @@ final class MiningLevelOracle {
 
 		@Override
 		protected void createMobs() {
+			floorRngTail = FigureEightTraceOracle.probe();
+			// randomDropCell reshuffles level.rooms in place.
+			levelRooms = new ArrayList<>(rooms);
+			super.createMobs();
+		}
+
+		@Override
+		protected void createItems() {
+			super.createItems();
 			throw new FloorOracle.SnapshotComplete();
 		}
 	}

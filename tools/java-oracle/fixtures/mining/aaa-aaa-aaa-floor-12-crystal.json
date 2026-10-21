@@ -2848,10 +2848,22 @@
     }
   ],
   "mobs": [
+    { "cell": 381, "class": "CrystalWisp", "state": "sleeping" },
     { "cell": 724, "class": "CrystalGuardian", "state": "sleeping" },
     { "cell": 809, "class": "CrystalSpire", "state": "passive" },
     { "cell": 1091, "class": "CrystalGuardian", "state": "sleeping" },
-    { "cell": 1313, "class": "CrystalGuardian", "state": "sleeping" }
+    { "cell": 1189, "class": "CrystalWisp", "state": "sleeping" },
+    { "cell": 1193, "class": "CrystalWisp", "state": "sleeping" },
+    { "cell": 1219, "class": "CrystalWisp", "state": "sleeping" },
+    { "cell": 1313, "class": "CrystalGuardian", "state": "sleeping" },
+    { "cell": 1496, "class": "CrystalWisp", "state": "sleeping" },
+    { "cell": 1547, "class": "CrystalWisp", "state": "sleeping" }
   ],
-  "heaps": []
+  "heaps": [
+    {
+      "cell": 1654,
+      "type": "heap",
+      "items": [{ "class": "Food", "quantity": 1, "level": 0, "cursed": false }]
+    }
+  ]
 }

@@ -21,8 +21,9 @@ Vault maps publish room-painted entities plus `VaultLevel.createItems`
 the Java oracle snapshot taken after `createItems`. Vault "May differ" cells are
 the Imp reward pedestals (route) and consumables from `setupConsumables`, whose
 `Collections.shuffle` is unseeded JDK RNG; the leading Potion of Healing in
-tiers 0–2 stays exact. Mining maps publish room-painted entities (oracle
-snapshot at `createMobs`); mining `createMobs`/`createItems` are not placed yet.
+tiers 0–2 stays exact. Mining maps publish room-painted entities plus
+`MiningLevel.createMobs` (Crystal Wisps / Gnoll Guards) and `createItems`
+(food, Darkness torch), matching the oracle snapshot after `createItems`.
 
 The Ambitious Imp quest panel reports each of the six take-out slots with its
 seed-independent guarantees and a candidate distribution over a +-3 deck-index
@@ -105,8 +106,7 @@ Next:
 3. Consider exposing `analyze_seed_exact` through WASM if the web app should
    offer the default-profile view.
 4. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
-   not actually depend on run history); publish entities on boss maps and
-   port the mining `createMobs`/`createItems` population.
+   not actually depend on run history); publish entities on boss maps.
 5. Fix pre-existing breakage: `bun run analyze` needs `--bin spd-analyze` now
    that `spd-cli` has two binaries; the finder visual test "item name is set
    to any" expects Ring of Elements but gets the floor-4 Crystal vault Ring of
