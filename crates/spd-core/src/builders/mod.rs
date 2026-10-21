@@ -3,7 +3,7 @@
 mod connection;
 mod figure_eight;
 mod grid;
-mod int_map;
+pub(crate) mod int_map;
 mod loop_builder;
 mod place;
 mod regular;

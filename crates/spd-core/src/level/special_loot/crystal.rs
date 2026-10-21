@@ -57,13 +57,10 @@ pub(super) fn crystal_vault(
     // Rat Skull is half-effective here; Mimic Tooth has full effect.
     let mimic_chance = crate::level::trinkets::exotic_chance(0.1)
         * crate::level::trinkets::mimic_chance_multiplier();
+    // `CrystalMimic.generatePrize` keeps the vault prize and draws nothing:
+    // it overrides the base reward and the Mimic Tooth extra item
+    // (`CrystalMimic.java:177-183`).
     let second_heap = if Random::float() < mimic_chance {
-        // Keep the established tooth-free baseline lifecycle unchanged. A
-        // held Tooth makes this branch profile-relevant, so replay the mimic's
-        // hidden rewards before the Ghost callback.
-        if crate::level::trinkets::has_mimic_tooth() {
-            super::special_rooms::burn_mimic_prize(dungeon);
-        }
         "crystal_mimic"
     } else {
         "crystal_chest"

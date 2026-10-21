@@ -107,6 +107,9 @@ pub struct TerrainMap {
     pub known_mobs: Vec<Option<&'static str>>,
     /// Cells occupied by heaps placed during room paint.
     pub heap_occupied: Vec<bool>,
+    /// Room-paint heap cells in Java `heaps.put` order (`IntMap` iteration
+    /// depends on it).
+    pub(crate) heap_order: Vec<usize>,
     /// Exact room-painted heap facts retained for the structured map report.
     pub(crate) known_heaps: Vec<Option<KnownHeap>>,
     /// Active room-painted blobs retained for the structured map report.
@@ -155,13 +158,21 @@ impl TerrainMap {
         self.map.is_empty()
     }
 
+    /// A heap now occupies `cell`; a new cell extends the insertion order.
+    pub(crate) fn mark_heap(&mut self, cell: usize) {
+        if !self.heap_occupied[cell] {
+            self.heap_order.push(cell);
+        }
+        self.heap_occupied[cell] = true;
+    }
+
     pub(crate) fn record_heap(
         &mut self,
         cell: usize,
         heap_type: &'static str,
         item: GeneratedItem,
     ) {
-        self.heap_occupied[cell] = true;
+        self.mark_heap(cell);
         if let Some(heap) = &mut self.known_heaps[cell] {
             heap.items.push(item);
         } else {
@@ -537,6 +548,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
         known_plants,
         known_mobs,
         heap_occupied,
+        heap_order: Vec::new(),
         known_heaps,
         known_blobs,
         trap_destroys_items,

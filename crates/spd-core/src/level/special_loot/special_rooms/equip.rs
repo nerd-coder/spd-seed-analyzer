@@ -77,7 +77,7 @@ pub fn armory_prizes_on_map(
     let mut prize_cats = [1.0f32, 1.0, 1.0, 1.0];
     for _ in 0..n {
         let cell = armory_drop_cell(room, map);
-        map.heap_occupied[cell] = true;
+        map.mark_heap(cell);
         let index = Random::chances(&prize_cats).max(0) as usize;
         prize_cats[index] = 0.0;
         let mut item = match index {

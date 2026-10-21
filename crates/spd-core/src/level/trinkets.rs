@@ -148,6 +148,14 @@ pub fn mimic_chance_multiplier() -> f32 {
     })
 }
 
+/// `MimicTooth.ebonyMimicChance()` for the currently held profile.
+pub fn ebony_mimic_chance() -> f32 {
+    STATE.with(|state| {
+        level(state.borrow().held, TrinketKind::MimicTooth)
+            .map_or(0.0, |level| 0.125 + 0.125 * f32::from(level))
+    })
+}
+
 /// `RatSkull.exoticChanceMultiplier()` for the currently held profile.
 pub fn exotic_chance_multiplier() -> f32 {
     STATE.with(|state| {

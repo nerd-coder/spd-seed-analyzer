@@ -89,7 +89,7 @@ pub(super) fn paint_pool(
     set(map, pedestal, PEDESTAL);
     let cell = map.point_to_cell(pedestal.x, pedestal.y);
     if let Some(cell) = cell {
-        map.heap_occupied[cell] = true;
+        map.mark_heap(cell);
         map.item_allowed[cell] = false;
     }
     cell

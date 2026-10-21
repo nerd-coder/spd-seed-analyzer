@@ -46,7 +46,7 @@ pub(super) fn paint(
                 room.left + best_cell as i32 % width,
                 room.top + best_cell as i32 / width,
             ) {
-                map.heap_occupied[prize_cell] = true;
+                map.mark_heap(prize_cell);
                 return Some(prize_cell);
             }
         }

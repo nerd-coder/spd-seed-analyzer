@@ -44,7 +44,7 @@ pub(super) fn painter_h(room: &Room) -> i32 {
 }
 
 pub(super) fn occupy_heap(map: &mut TerrainMap, cell: usize) {
-    map.heap_occupied[cell] = true;
+    map.mark_heap(cell);
 }
 
 pub(super) fn occupy_mob(map: &mut TerrainMap, cell: usize) {

@@ -85,7 +85,7 @@ pub(crate) fn paint(
     let prize_cell = map
         .point_to_cell(prize_pos.x, prize_pos.y)
         .expect("TrapsRoom prize cell is on map");
-    map.heap_occupied[prize_cell] = true;
+    map.mark_heap(prize_cell);
 
     let mut prize = generate_prize(dungeon, items_to_spawn);
     let consumed_forced = prize.source.as_deref() == Some("forced");

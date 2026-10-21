@@ -125,7 +125,7 @@ pub fn treasury_prizes_on_map(
 /// `Mimic.spawnAt(...).generatePrize(true)`. The held extra reward is a
 /// combat drop, so it is not public seed-analysis output, but generation
 /// advances both the main stream and the relevant item deck here.
-pub(crate) fn burn_mimic_prize(dungeon: &mut DungeonState) {
+fn burn_mimic_prize(dungeon: &mut DungeonState) {
     match Random::int_max(5) {
         0 => {
             let mut gold = GeneratedItem::new("Gold", ItemCategory::Gold);

@@ -1,15 +1,15 @@
 //! libGDX 1.14 `IntMap` used by watabou `SparseArray.keyArray()`.
 //!
 //! GridBuilder picks the next neighbour with `keys[Random.Int(keys.length)]`,
-//! so iteration order must match Fibonacci hashing + linear probing, not
-//! insertion order.
+//! and `Level.heaps.valueList()` walks the same table, so iteration order must
+//! match Fibonacci hashing + linear probing, not insertion order.
 
-#![allow(dead_code)] // used by GridBuilder; analyze wiring is PR 4
+#![allow(dead_code)]
 
 const FIBONACCI: u64 = 0x9E3779B97F4A7C15;
 const LOAD_FACTOR: f32 = 0.8;
 
-pub(super) struct IntMap<V> {
+pub(crate) struct IntMap<V> {
     key_table: Vec<i32>,
     value_table: Vec<Option<V>>,
     zero_value: Option<V>,
@@ -21,7 +21,7 @@ pub(super) struct IntMap<V> {
 }
 
 impl<V> IntMap<V> {
-    pub(super) fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self::with_capacity(51)
     }
 
@@ -59,7 +59,7 @@ impl<V> IntMap<V> {
         }
     }
 
-    pub(super) fn put(&mut self, key: i32, value: V) {
+    pub(crate) fn put(&mut self, key: i32, value: V) {
         if key == 0 {
             self.zero_value = Some(value);
             if !self.has_zero_value {
@@ -82,7 +82,7 @@ impl<V> IntMap<V> {
         }
     }
 
-    pub(super) fn get(&self, key: i32) -> Option<&V> {
+    pub(crate) fn get(&self, key: i32) -> Option<&V> {
         if key == 0 {
             return self.zero_value.as_ref().filter(|_| self.has_zero_value);
         }
@@ -94,7 +94,7 @@ impl<V> IntMap<V> {
         }
     }
 
-    pub(super) fn contains_key(&self, key: i32) -> bool {
+    pub(crate) fn contains_key(&self, key: i32) -> bool {
         if key == 0 {
             self.has_zero_value
         } else {
@@ -103,7 +103,7 @@ impl<V> IntMap<V> {
     }
 
     /// `SparseArray.keyArray()` — table order, zero-key first when present.
-    pub(super) fn key_array(&self) -> Vec<i32> {
+    pub(crate) fn key_array(&self) -> Vec<i32> {
         let mut keys = Vec::with_capacity(self.size as usize);
         if self.has_zero_value {
             keys.push(0);

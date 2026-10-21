@@ -226,7 +226,9 @@ pub fn create_items_main(
     Random::pop_generator();
 
     Random::push_generator_seeded(Random::long());
-    let _ = Random::float(); // ebony mimic
+    if Random::float() < crate::level::trinkets::ebony_mimic_chance() {
+        ebony::spawn(dungeon, rooms, map, &out);
+    }
     Random::pop_generator();
 
     Random::push_generator_seeded(Random::long());
@@ -251,6 +253,14 @@ pub fn create_items_main(
 /// The carried reward is not a floor heap, but its Generator/deck mutations
 /// affect every later `randomDropCell` shuffle and must remain in lifecycle.
 fn generate_mimic_prize(dungeon: &mut DungeonState) -> GeneratedItem {
+    generate_base_mimic_prize(dungeon, true)
+}
+
+/// `Mimic.generatePrize(useDecks)` base reward, before trinket extras.
+pub(super) fn generate_base_mimic_prize(
+    dungeon: &mut DungeonState,
+    use_decks: bool,
+) -> GeneratedItem {
     match Random::int_max(5) {
         0 => {
             let mut gold = GeneratedItem::new("Gold", ItemCategory::Gold);
@@ -260,16 +270,19 @@ fn generate_mimic_prize(dungeon: &mut DungeonState) -> GeneratedItem {
         }
         1 => dungeon
             .generator
-            .random_missile(dungeon.depth / 5, false, dungeon.depth),
+            .random_missile(dungeon.depth / 5, !use_decks, dungeon.depth),
         2 => dungeon
             .generator
             .random_armor(dungeon.depth / 5, dungeon.depth),
         3 => dungeon
             .generator
-            .random_weapon(dungeon.depth / 5, false, dungeon.depth),
-        4 => dungeon
+            .random_weapon(dungeon.depth / 5, !use_decks, dungeon.depth),
+        4 if use_decks => dungeon
             .generator
             .random_category(crate::generator::Category::Ring, dungeon.depth),
+        4 => dungeon
+            .generator
+            .random_using_defaults(crate::generator::Category::Ring, dungeon.depth),
         _ => unreachable!("Random.Int(5) stays in range"),
     }
 }
@@ -396,6 +409,8 @@ fn random_drop_cell(
     }
     -1
 }
+
+mod ebony;
 
 #[cfg(test)]
 mod tests;

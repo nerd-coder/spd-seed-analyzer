@@ -70,7 +70,7 @@ pub(super) fn magical_fire_prizes(
                 continue;
             };
             if map.map[cell] == EMPTY_SP && !map.heap_occupied[cell] {
-                map.heap_occupied[cell] = true;
+                map.mark_heap(cell);
                 prize_cell = Some(cell);
                 break;
             }
@@ -311,7 +311,7 @@ pub(super) fn secret_honeypot(
     let broken_pot_cell = map
         .point_to_cell(broken_pot.x, broken_pot.y)
         .expect("SecretHoneypotRoom shattered pot is on the map");
-    map.heap_occupied[broken_pot_cell] = true;
+    map.mark_heap(broken_pot_cell);
 
     // Bee spawn does not consume loot RNG.
     let mut out = Vec::new();

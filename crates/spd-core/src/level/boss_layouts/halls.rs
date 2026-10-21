@@ -206,6 +206,7 @@ fn blank_map() -> terrain::TerrainMap {
         known_plants: vec![None; len],
         known_mobs: vec![None; len],
         heap_occupied: vec![false; len],
+        heap_order: Vec::new(),
         known_heaps: vec![None; len],
         known_blobs: Vec::new(),
         trap_destroys_items: vec![false; len],
