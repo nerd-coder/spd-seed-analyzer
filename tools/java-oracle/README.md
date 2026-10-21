@@ -120,6 +120,10 @@ these commands (stdout is the default when `--output` is omitted):
   --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-7.json HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 8 \
   --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-8.json HKT-JZN-XQQ
+./tools/java-oracle/run --final-heaps-depth 2 \
+  --output tools/java-oracle/fixtures/mwh-kae-dhg-final-heaps-floor-2.json MWH-KAE-DHG
+./tools/java-oracle/run --final-heaps-depth 4 \
+  --output tools/java-oracle/fixtures/hdn-ujd-mjf-final-heaps-floor-4.json HDN-UJD-MJF
 ./tools/java-oracle/run --final-heaps-depth 11 \
   --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-11.json AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 12 \

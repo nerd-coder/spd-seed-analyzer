@@ -718,11 +718,6 @@ fn trinket_fixtures_replay_exact_profiled_floor_state() {
         let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
             continue;
         };
-        // Room paint on this floor lands two draws short of Java with or
-        // without a trinket; skipped until that paint gap is fixed.
-        if name == "hdn-ujd-mjf-final-heaps-floor-4-mimic-tooth-3-before-3.json" {
-            continue;
-        }
         let fixture = read_fixture(&path);
         let trinket = match fixture.input.trinket.as_deref() {
             Some("rat-skull") => spd_core::TrinketKind::RatSkull,
