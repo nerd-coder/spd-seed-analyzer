@@ -43,12 +43,9 @@ pub(super) fn painter_h(room: &Room) -> i32 {
     room.bottom - room.top
 }
 
-pub(super) fn occupy_heap(map: &mut TerrainMap, cell: usize) {
-    map.mark_heap(cell);
-}
-
-pub(super) fn occupy_mob(map: &mut TerrainMap, cell: usize) {
+pub(super) fn occupy_mob(map: &mut TerrainMap, cell: usize, class_name: &'static str) {
     map.mob_occupied[cell] = true;
+    map.known_mobs[cell] = Some(class_name);
 }
 
 pub(super) fn chebyshev(map: &TerrainMap, a: usize, b: usize) -> i32 {

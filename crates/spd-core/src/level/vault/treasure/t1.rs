@@ -4,7 +4,8 @@ use crate::level::terrain::{EMPTY, EMPTY_SP, PEDESTAL, STATUE, WALL};
 use crate::random::Random;
 
 use super::super::geometry;
-use super::super::paint::PaintCtx;
+use super::super::hazards::place_laser;
+use super::super::paint::{PaintCtx, CHEST, HEAP};
 
 const LEFT: i32 = 0;
 const UP: i32 = 1;
@@ -210,8 +211,8 @@ fn laser_pair_vertical(
     _w: i32,
     second_row: i32,
 ) {
-    geometry::set(ctx.map, x, area_top - 1, PEDESTAL);
-    geometry::set(ctx.map, x, area_top + second_row, PEDESTAL);
+    place_laser(ctx, x, area_top - 1);
+    place_laser(ctx, x, area_top + second_row);
 }
 
 fn laser_pair_horizontal(
@@ -222,8 +223,8 @@ fn laser_pair_horizontal(
     _w: i32,
     second_row: i32,
 ) {
-    geometry::set(ctx.map, area_left - 1, y, PEDESTAL);
-    geometry::set(ctx.map, area_left + second_row, y, PEDESTAL);
+    place_laser(ctx, area_left - 1, y);
+    place_laser(ctx, area_left + second_row, y);
 }
 
 pub(in crate::level::vault) fn paint_circle_scan(ctx: &mut PaintCtx<'_>, ri: usize) {
@@ -237,6 +238,7 @@ pub(in crate::level::vault) fn paint_circle_scan(ctx: &mut PaintCtx<'_>, ri: usi
     geometry::draw_inside(ctx.map, &room, entrance, 3, EMPTY);
     let c = geometry::center(&room);
     geometry::set(ctx.map, c.x, c.y, PEDESTAL);
+    ctx.place_npc(ctx.point_cell(c), "VaultSentry");
 
     let treasure = if entrance.x == room.left {
         geometry::set(ctx.map, c.x + 2, c.y, WALL);
@@ -332,9 +334,12 @@ pub(in crate::level::vault) fn paint_circle_scan(ctx: &mut PaintCtx<'_>, ri: usi
 
 fn drop_t1_triple(ctx: &mut PaintCtx<'_>, rect: (i32, i32, i32, i32)) {
     // First cell is drawn before createEquipment; a spent-tier refill would steal that Int().
-    let first = ctx.occupy_random_rect(rect.0, rect.1, rect.2, rect.3, &[]);
-    ctx.create_equipment(1);
-    ctx.find_t2_solve_or_consumable(1);
-    let second = ctx.occupy_random_rect(rect.0, rect.1, rect.2, rect.3, &[first]);
-    ctx.occupy_random_rect(rect.0, rect.1, rect.2, rect.3, &[first, second]);
+    let first = ctx.random_rect_cell(rect);
+    let treasure = ctx.create_equipment(1);
+    ctx.drop(first, CHEST, treasure);
+    let solve = ctx.find_t2_solve_or_consumable(1);
+    let second = ctx.random_free_rect_cell(rect);
+    ctx.drop(second, HEAP, solve);
+    let third = ctx.random_free_rect_cell(rect);
+    ctx.drop_new(third, "DwarfToken");
 }

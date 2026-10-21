@@ -5,7 +5,7 @@ use crate::level::terrain::{BOOKSHELF, EMPTY, EMPTY_SP, PEDESTAL, WALL};
 use crate::random::Random;
 
 use super::super::geometry;
-use super::super::paint::PaintCtx;
+use super::super::paint::{PaintCtx, CHEST, HEAP};
 
 pub(in crate::level::vault) fn paint_single_enemy(ctx: &mut PaintCtx<'_>, ri: usize) {
     let room = ctx.room(ri).clone();
@@ -14,7 +14,7 @@ pub(in crate::level::vault) fn paint_single_enemy(ctx: &mut PaintCtx<'_>, ri: us
     let entrance = ctx.entrance_door(ri);
     geometry::draw_inside(ctx.map, &room, entrance, 3, EMPTY);
 
-    let _ = ctx.create_t2_mob();
+    let mob = ctx.create_t2_mob();
     let mut enemy = ctx.point_cell(geometry::center(&room)) as i32;
     let w = ctx.width();
     let treasure = if entrance.x == room.left {
@@ -34,9 +34,9 @@ pub(in crate::level::vault) fn paint_single_enemy(ctx: &mut PaintCtx<'_>, ri: us
         enemy -= w;
         pos
     };
-    ctx.create_equipment(2);
-    ctx.occupy_heap(treasure as usize);
-    ctx.occupy_mob(enemy as usize);
+    let item = ctx.create_equipment(2);
+    ctx.drop(treasure as usize, CHEST, item);
+    ctx.place_enemy(enemy as usize, mob, false);
 
     let n4 = geometry::neighbours4(w);
     let offset = loop {
@@ -50,8 +50,8 @@ pub(in crate::level::vault) fn paint_single_enemy(ctx: &mut PaintCtx<'_>, ri: us
             break cell as usize;
         }
     };
-    ctx.create_consumable(2);
-    ctx.occupy_heap(offset);
+    let consumable = ctx.create_consumable(2);
+    ctx.drop(offset, HEAP, consumable);
     ctx.set_regular_doors(ri);
 }
 
@@ -96,14 +96,22 @@ pub(in crate::level::vault) fn paint_bookcase(ctx: &mut PaintCtx<'_>, ri: usize)
     };
     geometry::set_cell(ctx.map, first, PEDESTAL);
     geometry::set_cell(ctx.map, second, PEDESTAL);
-    ctx.find_prize_any();
-    ctx.occupy_heap(first);
-    ctx.create_equipment(2);
-    ctx.occupy_heap(second);
-    ctx.find_t3_solve_or_consumable(2);
+    if let Some(prize) = ctx.find_prize_any() {
+        ctx.drop(first, HEAP, prize);
+    }
+    let treasure = ctx.create_equipment(2);
+    ctx.drop(second, CHEST, treasure);
+    let solve = ctx.find_t3_solve_or_consumable(2);
     let n8 = geometry::neighbours8(w);
-    ctx.occupy_heap((second as i32 + n8[Random::int_max(8) as usize]) as usize);
-    ctx.occupy_heap((second as i32 + n8[Random::int_max(8) as usize]) as usize);
+    ctx.drop(
+        (second as i32 + n8[Random::int_max(8) as usize]) as usize,
+        HEAP,
+        solve,
+    );
+    ctx.drop_new(
+        (second as i32 + n8[Random::int_max(8) as usize]) as usize,
+        "DwarfToken",
+    );
     ctx.add_item_to_spawn("PotionOfLiquidFlame", ItemCategory::Potion);
     geometry::draw_inside(ctx.map, &room, entrance, 2, EMPTY_SP);
 }
@@ -136,8 +144,8 @@ pub(in crate::level::vault) fn paint_flames(ctx: &mut PaintCtx<'_>, ri: usize) {
     geometry::set_cell(ctx.map, positions[idx - 1] as usize, PEDESTAL);
     geometry::set_cell(ctx.map, positions[idx] as usize, PEDESTAL);
     geometry::set_cell(ctx.map, positions[idx + 1] as usize, PEDESTAL);
-    ctx.create_equipment(2);
-    ctx.occupy_heap(positions[idx] as usize);
+    let treasure = ctx.create_equipment(2);
+    ctx.drop(positions[idx] as usize, CHEST, treasure);
 
     for x in room.left + 2..=room.right - 2 {
         for y in room.top + 2..=room.bottom - 2 {
@@ -160,10 +168,14 @@ pub(in crate::level::vault) fn paint_flames(ctx: &mut PaintCtx<'_>, ri: usize) {
         EMPTY,
     );
 
-    ctx.find_t3_solve_or_consumable(2);
-    let _ = Random::int_max(2);
-    ctx.occupy_heap(positions[idx - 1] as usize);
-    ctx.occupy_heap(positions[idx + 1] as usize);
+    let solve = ctx.find_t3_solve_or_consumable(2);
+    let (solve_at, token_at) = if Random::int_max(2) == 0 {
+        (positions[idx - 1], positions[idx + 1])
+    } else {
+        (positions[idx + 1], positions[idx - 1])
+    };
+    ctx.drop(solve_at as usize, HEAP, solve);
+    ctx.drop_new(token_at as usize, "DwarfToken");
     ctx.add_item_to_spawn("PotionOfPurity", ItemCategory::Potion);
     ctx.set_regular_doors(ri);
 }

@@ -7,9 +7,25 @@ use crate::level::terrain::TerrainMap;
 use crate::random::Random;
 use crate::rooms::room::Room;
 
+use crate::items::model::{GeneratedItem, ItemCategory};
+
 use super::geometry;
-use super::loot::{self, VaultGen, VaultMob};
+use super::loot::{self, VaultGen};
+use super::mobs::VaultMob;
 use super::{combat, entrance, final_room, hallway, hazards, tokens, treasure};
+
+pub(super) const HEAP: &str = "heap";
+pub(super) const CHEST: &str = "chest";
+
+/// Placement facts the public map needs beyond `TerrainMap`.
+#[derive(Debug, Default)]
+pub(super) struct PaintFacts {
+    /// Mobs the room sets to `WANDERING`; others keep their class state.
+    pub wandering: Vec<usize>,
+    /// Heaps whose identity is not seed-determined: Imp rewards (route) and
+    /// JDK-shuffled consumables (per run).
+    pub uncertain: Vec<usize>,
+}
 
 pub(super) struct PaintCtx<'a> {
     pub map: &'a mut TerrainMap,
@@ -17,6 +33,7 @@ pub(super) struct PaintCtx<'a> {
     pub doors: &'a mut DoorMap,
     pub dungeon: &'a mut DungeonState,
     pub gen: &'a mut VaultGen,
+    pub facts: &'a mut PaintFacts,
 }
 
 impl PaintCtx<'_> {
@@ -49,12 +66,31 @@ impl PaintCtx<'_> {
         }
     }
 
-    pub(super) fn occupy_heap(&mut self, cell: usize) {
-        geometry::occupy_heap(self.map, cell);
+    /// `level.drop(item, cell).type = heap_type`; a second drop joins the heap.
+    pub(super) fn drop(&mut self, cell: usize, heap_type: &'static str, item: GeneratedItem) {
+        if loot::is_shuffled_consumable(&item) {
+            self.facts.uncertain.push(cell);
+        }
+        self.map.record_heap(cell, heap_type, item);
     }
 
-    pub(super) fn occupy_mob(&mut self, cell: usize) {
-        geometry::occupy_mob(self.map, cell);
+    pub(super) fn drop_new(&mut self, cell: usize, class_name: &str) {
+        self.drop(
+            cell,
+            HEAP,
+            GeneratedItem::new(class_name, ItemCategory::Other),
+        );
+    }
+
+    pub(super) fn place_npc(&mut self, cell: usize, class_name: &'static str) {
+        geometry::occupy_mob(self.map, cell, class_name);
+    }
+
+    pub(super) fn place_enemy(&mut self, cell: usize, mob: VaultMob, wandering: bool) {
+        geometry::occupy_mob(self.map, cell, mob.class_name());
+        if wandering {
+            self.facts.wandering.push(cell);
+        }
     }
 
     pub(super) fn create_mob(&mut self) -> VaultMob {
@@ -97,48 +133,40 @@ impl PaintCtx<'_> {
         (enemy, returned)
     }
 
-    pub(super) fn create_equipment(&mut self, tier: usize) {
-        let _ = self.gen.create_equipment(self.dungeon, tier);
+    pub(super) fn create_equipment(&mut self, tier: usize) -> GeneratedItem {
+        self.gen.create_equipment(self.dungeon, tier)
     }
 
-    pub(super) fn create_consumable(&mut self, tier: usize) {
-        let _ = self.gen.create_consumable(tier);
+    pub(super) fn create_consumable(&mut self, tier: usize) -> GeneratedItem {
+        self.gen.create_consumable(tier)
     }
 
-    pub(super) fn find_prize_any(&mut self) {
-        let _ = loot::find_prize_any(&mut self.dungeon.items_to_spawn);
+    pub(super) fn find_prize_any(&mut self) -> Option<GeneratedItem> {
+        loot::find_prize_any(&mut self.dungeon.items_to_spawn)
     }
 
-    pub(super) fn find_t2_solve_or_consumable(&mut self, fallback_tier: usize) {
-        if self
-            .gen
-            .find_t2_solve(&mut self.dungeon.items_to_spawn)
-            .is_none()
-        {
-            self.create_consumable(fallback_tier);
+    pub(super) fn find_prize_equipable(&mut self) -> Option<GeneratedItem> {
+        loot::find_prize_equipable(&mut self.dungeon.items_to_spawn)
+    }
+
+    pub(super) fn find_t2_solve_or_consumable(&mut self, fallback_tier: usize) -> GeneratedItem {
+        match self.gen.find_t2_solve(&mut self.dungeon.items_to_spawn) {
+            Some(item) => item,
+            None => self.create_consumable(fallback_tier),
         }
     }
 
-    pub(super) fn find_t3_solve_or_consumable(&mut self, fallback_tier: usize) {
-        if self
-            .gen
-            .find_t3_solve(&mut self.dungeon.items_to_spawn)
-            .is_none()
-        {
-            self.create_consumable(fallback_tier);
+    pub(super) fn find_t3_solve_or_consumable(&mut self, fallback_tier: usize) -> GeneratedItem {
+        match self.gen.find_t3_solve(&mut self.dungeon.items_to_spawn) {
+            Some(item) => item,
+            None => self.create_consumable(fallback_tier),
         }
     }
 
-    pub(super) fn add_item_to_spawn(
-        &mut self,
-        class_name: &str,
-        category: crate::items::model::ItemCategory,
-    ) {
+    pub(super) fn add_item_to_spawn(&mut self, class_name: &str, category: ItemCategory) {
         self.dungeon
             .items_to_spawn
-            .push(crate::items::model::GeneratedItem::new(
-                class_name, category,
-            ));
+            .push(GeneratedItem::new(class_name, category));
     }
 
     pub(super) fn create_t2_mob(&mut self) -> VaultMob {
@@ -152,20 +180,19 @@ impl PaintCtx<'_> {
             .expect("vault treasure rooms have one door")
     }
 
-    pub(super) fn occupy_random_rect(
-        &mut self,
-        left: i32,
-        top: i32,
-        right: i32,
-        bottom: i32,
-        skip: &[usize],
-    ) -> usize {
+    /// `level.pointToCell(Random.element(rect.getPoints()))`.
+    pub(super) fn random_rect_cell(&self, rect: (i32, i32, i32, i32)) -> usize {
+        let (left, top, right, bottom) = rect;
+        let p = *Random::element(&geometry::rect_points(left, top, right, bottom))
+            .expect("treasure rect");
+        self.point_cell(p)
+    }
+
+    /// Redraws `random_rect_cell` while `level.heaps.get(cell) != null`.
+    pub(super) fn random_free_rect_cell(&self, rect: (i32, i32, i32, i32)) -> usize {
         loop {
-            let p = *Random::element(&geometry::rect_points(left, top, right, bottom))
-                .expect("treasure rect");
-            let cell = self.point_cell(p);
-            if !skip.contains(&cell) {
-                self.occupy_heap(cell);
+            let cell = self.random_rect_cell(rect);
+            if !self.map.heap_occupied[cell] {
                 return cell;
             }
         }
@@ -178,6 +205,7 @@ pub(super) fn paint_rooms(
     doors: &mut DoorMap,
     dungeon: &mut DungeonState,
     gen: &mut VaultGen,
+    facts: &mut PaintFacts,
 ) -> Vec<usize> {
     let mut order: Vec<usize> = (0..rooms.len()).collect();
     Random::shuffle_list(&mut order);
@@ -189,6 +217,7 @@ pub(super) fn paint_rooms(
             doors,
             dungeon,
             gen,
+            facts,
         };
         paint_one(&mut ctx, ri);
     }

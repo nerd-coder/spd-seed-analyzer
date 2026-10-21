@@ -14,7 +14,15 @@ Main-path floor maps publish heaps, mobs, and loot markers with an inspect
 panel (hover/tap). `uncertain_cells` marks "May differ" entities: everything
 from depth 2 on, because run-history taint propagates from depth 1; depth 1 of
 a fresh run is exact. `hidden_cells` (secret-door-only areas) pulse on the
-canvas. Boss, vault, and mining maps remain layout-only.
+canvas. Boss maps remain layout-only.
+
+Vault and mining maps publish the room-painted mobs and heaps, matching the
+Java oracle's `createMobs` snapshot (`fixtures/{vault,mining}` `mobs`/`heaps`).
+Vault "May differ" cells are the Imp reward pedestals (route) and consumables
+from `setupConsumables`, whose `Collections.shuffle` is unseeded JDK RNG; the
+leading Potion of Healing in tiers 0–2 stays exact. Not placed yet: vault
+`createItems` (leftover `itemsToSpawn`, extra Potion of Healing) and mining
+`createMobs`/`createItems` (wisps/guards, food, torch).
 
 The Ambitious Imp quest panel reports each of the six take-out slots with its
 seed-independent guarantees and a candidate distribution over a +-3 deck-index
@@ -97,9 +105,13 @@ Next:
 3. Consider exposing `analyze_seed_exact` through WASM if the web app should
    offer the default-profile view.
 4. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
-   not actually depend on run history); publish entities on boss, vault, and
-   mining maps.
-5. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
+   not actually depend on run history); publish entities on boss maps and
+   port the vault/mining `createMobs`/`createItems` population.
+5. Fix pre-existing breakage: `bun run analyze` needs `--bin spd-analyze` now
+   that `spd-cli` has two binaries; the finder visual test "item name is set
+   to any" expects Ring of Elements but gets the floor-4 Crystal vault Ring of
+   Accuracy (fails since before `094be51`).
+6. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
    ~38 ms WASM. Remaining cost is spread thin; `patch::generate` (~25%) is
    now mostly the parity-bound `next_float` fill draws. Measured but not
    adopted: talc allocator (no WASM gain), `+simd128` (~7% WASM, drops

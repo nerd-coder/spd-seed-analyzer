@@ -21,6 +21,101 @@ struct Fixture {
     transitions: Vec<crate::report::MapTransition>,
     custom_tiles: Vec<FixtureLayer>,
     custom_terrain: Vec<FixtureLayer>,
+    mobs: Vec<FixtureMob>,
+    heaps: Vec<FixtureHeap>,
+}
+
+#[derive(Deserialize)]
+struct FixtureMob {
+    cell: u32,
+    #[serde(rename = "class")]
+    class_name: String,
+    state: crate::report::MapMobState,
+}
+
+#[derive(Deserialize)]
+struct FixtureHeap {
+    cell: u32,
+    #[serde(rename = "type")]
+    heap_type: String,
+    items: Vec<FixtureHeapItem>,
+}
+
+#[derive(Deserialize)]
+struct FixtureHeapItem {
+    #[serde(rename = "class")]
+    class_name: String,
+    quantity: i32,
+    level: i32,
+    cursed: bool,
+}
+
+/// Room-painted mobs and heaps match Java's snapshot at `createMobs`. Heaps in
+/// `uncertain_cells` (JDK-shuffled consumables) compare everything but identity.
+fn assert_vault_entities(map: &crate::report::FloorMap, expected: &Fixture) {
+    use spd_objects::{ItemId, MobId};
+    let identity = |cell: u32, id: ItemId| (!map.uncertain_cells.contains(&cell)).then_some(id);
+    let mut actual_mobs: Vec<_> = map
+        .mobs
+        .iter()
+        .map(|mob| (mob.cell, mob.mob, mob.state))
+        .collect();
+    actual_mobs.sort_by_key(|mob| mob.0);
+    let expected_mobs: Vec<_> = expected
+        .mobs
+        .iter()
+        .map(|mob| {
+            let id = MobId::from_class_name(&mob.class_name)
+                .unwrap_or_else(|| panic!("unknown mob {}", mob.class_name));
+            (mob.cell, id, mob.state)
+        })
+        .collect();
+    assert_eq!(actual_mobs, expected_mobs, "vault mobs");
+
+    let mut actual_heaps: Vec<_> = map
+        .heaps
+        .iter()
+        .map(|heap| {
+            let items: Vec<_> = heap
+                .items
+                .iter()
+                .map(|item| {
+                    let id = identity(heap.cell, item.item);
+                    (id, item.quantity, item.level, item.cursed)
+                })
+                .collect();
+            (heap.cell, heap.heap_type.to_lowercase(), items)
+        })
+        .collect();
+    actual_heaps.sort_by_key(|heap| heap.0);
+    let expected_heaps: Vec<_> = expected
+        .heaps
+        .iter()
+        .map(|heap| {
+            let items: Vec<_> = heap
+                .items
+                .iter()
+                .map(|item| {
+                    let id = ItemId::from_class_name(&item.class_name)
+                        .unwrap_or_else(|| panic!("unknown item {}", item.class_name));
+                    (
+                        identity(heap.cell, id),
+                        item.quantity,
+                        item.level,
+                        item.cursed,
+                    )
+                })
+                .collect();
+            (heap.cell, heap.heap_type.clone(), items)
+        })
+        .collect();
+    assert_eq!(actual_heaps, expected_heaps, "vault heaps");
+    assert!(
+        map.uncertain_cells
+            .iter()
+            .all(|cell| map.heaps.iter().any(|heap| heap.cell == *cell)),
+        "every uncertain vault cell holds a heap"
+    );
 }
 
 #[derive(Deserialize)]
@@ -163,8 +258,7 @@ fn assert_vault_fixture(json: &str) {
 
     assert_eq!(map.width, expected.width);
     assert_eq!(map.height, expected.height);
-    assert_eq!(map.mobs, Vec::new(), "public vault map has no mobs");
-    assert_eq!(map.heaps, Vec::new(), "public vault map has no heaps");
+    assert_vault_entities(map, &expected);
     assert_terrain(&map.tiles, &expected.terrain);
     assert_eq!(map.discoverable, expected.discoverable);
     assert_eq!(map.transitions, expected.transitions);
@@ -324,8 +418,23 @@ fn report_serializes_branch_schema_and_reciprocal_transition() {
     assert_eq!(branch.access.required_item, None);
     assert_eq!(branch.objective, "Vault");
     let branch_map = branch.map.as_ref().expect("configured default-profile map");
-    assert!(branch_map.mobs.is_empty());
-    assert!(branch_map.heaps.is_empty());
+    assert!(branch_map
+        .mobs
+        .iter()
+        .any(|mob| mob.mob == spd_objects::MobId::VaultTokenDoor));
+    let statue = branch_map
+        .heaps
+        .iter()
+        .find(|heap| heap.items[0].item == spd_objects::ItemId::ImpStatue)
+        .expect("imp statue heap");
+    assert!(!branch_map.uncertain_cells.contains(&statue.cell));
+    assert!(
+        branch_map.heaps.iter().any(|heap| {
+            branch_map.uncertain_cells.contains(&heap.cell)
+                && heap.items[0].item.class_name().starts_with("Ring")
+        }),
+        "Imp reward rings sit on uncertain final pedestals"
+    );
     let return_transition = branch_map
         .transitions
         .iter()

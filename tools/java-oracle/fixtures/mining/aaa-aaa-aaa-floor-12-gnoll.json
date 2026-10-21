@@ -2902,5 +2902,30 @@
         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1
       ]
     }
+  ],
+  "mobs": [
+    { "cell": 761, "class": "GnollGeomancer", "state": "sleeping" },
+    { "cell": 772, "class": "GnollSapper", "state": "sleeping" },
+    { "cell": 820, "class": "GnollGuard", "state": "sleeping" },
+    { "cell": 1092, "class": "GnollSapper", "state": "sleeping" },
+    { "cell": 1093, "class": "GnollGuard", "state": "sleeping" },
+    { "cell": 1261, "class": "GnollGuard", "state": "sleeping" },
+    { "cell": 1311, "class": "GnollSapper", "state": "sleeping" }
+  ],
+  "heaps": [
+    {
+      "cell": 265,
+      "type": "chest",
+      "items": [
+        { "class": "DarkGold", "quantity": 5, "level": 0, "cursed": false }
+      ]
+    },
+    {
+      "cell": 336,
+      "type": "chest",
+      "items": [
+        { "class": "DarkGold", "quantity": 4, "level": 0, "cursed": false }
+      ]
+    }
   ]
 }

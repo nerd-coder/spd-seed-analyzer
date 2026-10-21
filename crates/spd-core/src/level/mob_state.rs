@@ -11,7 +11,9 @@ pub(crate) fn initial_state(class_name: &str) -> MapMobState {
         "Statue" | "ArmoredStatue" | "Mimic" | "GoldenMimic" | "EbonyMimic" | "CrystalMimic"
         | "Pylon" | "CrystalSpire" | "FungalCore" | "GnollExile" | "RotHeart" | "DemonSpawner"
         | "NPC" | "Shopkeeper" | "ImpShopkeeper" | "Wandmaker" | "Blacksmith" | "Imp"
-        | "Sentry" | "Sheep" => MapMobState::Passive,
+        | "Sentry" | "Sheep" | "VaultSentry" | "VaultLaser" | "VaultMirror" | "VaultTokenDoor" => {
+            MapMobState::Passive
+        }
         // `state = WANDERING` initializers; `RotLasher` and `FungalSentry`
         // replace `WANDERING` with their stationary `Waiting` state.
         "Ghost" | "Bee" | "FetidRat" | "GnollTrickster" | "GreatCrab" | "Wraith" | "RotLasher"

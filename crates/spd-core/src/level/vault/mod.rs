@@ -9,6 +9,7 @@ mod geometry;
 mod hallway;
 mod hazards;
 mod loot;
+mod mobs;
 mod paint;
 mod rooms;
 mod tokens;
@@ -40,10 +41,10 @@ pub(crate) struct VaultLayout {
     pub rooms: Vec<LevelRoomFact>,
 }
 
-/// Forced branch-1 vault at `dungeon.depth`. Painter-complete layout only.
-/// Occupancy RNG still runs for stream parity; mobs/heaps are stripped from
-/// the public map. Callers that share a run `DungeonState` must clone first:
-/// usingDefaults draws must not leak into later main-path floors.
+/// Forced branch-1 vault at `dungeon.depth`: painter-complete layout plus the
+/// mobs and heaps the room painters place. `VaultLevel.createItems` leftovers
+/// are not placed yet. Callers that share a run `DungeonState` must clone
+/// first: usingDefaults draws must not leak into later main-path floors.
 pub(crate) fn generate(dungeon: &mut DungeonState, expose_map: bool) -> Option<VaultLayout> {
     let depth = dungeon.depth;
     if !dungeon.imp.spawned || !(17..=19).contains(&depth) {
@@ -88,7 +89,10 @@ fn generate_on_stream(
     shift_rooms(&mut room_list, PAINT_PADDING);
     let mut map = blank_map(&room_list, PAINT_PADDING)?;
     let mut doors = DoorMap::new();
-    let order = paint::paint_rooms(&mut map, &room_list, &mut doors, dungeon, &mut gen);
+    let mut facts = paint::PaintFacts::default();
+    let order = paint::paint_rooms(
+        &mut map, &room_list, &mut doors, dungeon, &mut gen, &mut facts,
+    );
     doors::paint(&mut map, &room_list, &order, &mut doors, depth);
     environment::paint(&mut map, &room_list, &order, &doors, depth);
     map.recompute_passable();
@@ -109,9 +113,7 @@ fn generate_on_stream(
         .iter()
         .map(|room| spd_objects::RoomId::from_class_name_lossy(&room.class_name))
         .collect();
-    let floor_map = MapFacts::from_room_paint(&map)
-        .into_floor_map(&map, depth, 1, depth_seed)
-        .into_layout_only();
+    let floor_map = project_map(&map, depth, depth_seed, &facts);
 
     Some(VaultLayout {
         report: BranchFloorReport {
@@ -141,6 +143,30 @@ fn generate_on_stream(
         #[cfg(test)]
         rooms,
     })
+}
+
+/// Room-painted entities with the vault's per-placement mob states. Vault
+/// loot is deck-free; the Imp reward pedestals vary by route and shuffled
+/// consumables vary per run.
+fn project_map(
+    map: &TerrainMap,
+    depth: i32,
+    depth_seed: i64,
+    facts: &paint::PaintFacts,
+) -> crate::report::FloorMap {
+    let mut floor_map = MapFacts::from_room_paint(map).into_floor_map(map, depth, 1, depth_seed);
+    for mob in &mut floor_map.mobs {
+        if facts.wandering.contains(&(mob.cell as usize)) {
+            mob.state = crate::report::MapMobState::Wandering;
+        }
+    }
+    floor_map.runtime_sensitive_loot_cells.clear();
+    floor_map.constrained_equipment_cells.clear();
+    let mut uncertain: Vec<u32> = facts.uncertain.iter().map(|&c| c as u32).collect();
+    uncertain.sort_unstable();
+    uncertain.dedup();
+    floor_map.uncertain_cells = uncertain;
+    floor_map
 }
 
 #[cfg(test)]

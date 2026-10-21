@@ -8,77 +8,10 @@ use crate::items::enchants::{random_armor_glyph, random_weapon_enchant};
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::random::Random;
 
+use super::mobs::{VaultMob, T1_MOBS, T2_MOBS, T3_MOBS};
+
 const BANNED_WANDS: &[&str] = &["WandOfRegrowth", "WandOfTransfusion", "WandOfCorruption"];
 const BANNED_RINGS: &[&str] = &["RingOfWealth", "RingOfMight", "RingOfForce"];
-
-const T1_MOBS: [VaultMob; 2] = [VaultMob::Skeleton, VaultMob::Dm100];
-const T2_MOBS: [VaultMob; 3] = [VaultMob::Shaman, VaultMob::Dm200, VaultMob::Ghoul];
-const T3_MOBS: [VaultMob; 2] = [VaultMob::Elemental, VaultMob::Golem];
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(super) enum VaultMob {
-    Skeleton,
-    Dm100,
-    Shaman,
-    Dm200,
-    Ghoul,
-    /// Queued `VaultElemental.class` before `VaultElemental.random()`.
-    Elemental,
-    FireElemental,
-    FrostElemental,
-    ShockElemental,
-    Golem,
-}
-
-impl VaultMob {
-    pub(super) fn large(self) -> bool {
-        matches!(self, Self::Golem | Self::Dm200)
-    }
-
-    pub(super) fn tier(self) -> usize {
-        match self {
-            Self::Skeleton | Self::Dm100 => 1,
-            Self::Shaman | Self::Dm200 | Self::Ghoul => 2,
-            Self::Elemental
-            | Self::FireElemental
-            | Self::FrostElemental
-            | Self::ShockElemental
-            | Self::Golem => 3,
-        }
-    }
-
-    fn ctor_rng(self) {
-        match self {
-            Self::Golem | Self::Dm200 => {
-                let _ = Random::int_max(2);
-            }
-            Self::Shaman => {
-                let _ = Random::int_max(5);
-            }
-            Self::FireElemental | Self::FrostElemental | Self::ShockElemental => {
-                let _ = Random::normal_int_range(3, 5);
-            }
-            _ => {}
-        }
-    }
-
-    fn resolve(self) -> Self {
-        let resolved = if self == Self::Elemental {
-            let roll = Random::float();
-            if roll < 0.4 {
-                Self::FireElemental
-            } else if roll < 0.8 {
-                Self::FrostElemental
-            } else {
-                Self::ShockElemental
-            }
-        } else {
-            self
-        };
-        resolved.ctor_rng();
-        resolved
-    }
-}
 
 struct EquipmentPool {
     by_tier: [Vec<Option<GeneratedItem>>; 4],
@@ -407,7 +340,7 @@ fn setup_consumables(consumables: &mut [Vec<GeneratedItem>; 4]) {
                 ItemCategory::Potion,
             ),
             named(
-                one_of(&["Mageroyal$Seed", "Icecap$Seed", "Stormvine$Seed"]),
+                one_of(&["MageroyalSeed", "IcecapSeed", "StormvineSeed"]),
                 ItemCategory::Seed,
             ),
             named(
@@ -419,6 +352,7 @@ fn setup_consumables(consumables: &mut [Vec<GeneratedItem>; 4]) {
                 ItemCategory::Stone,
             ),
         ];
+        mark_shuffled(&mut consumables[0]);
         // JDK `Collections.shuffle` is unseeded; do not touch the watabou stream.
         consumables[0].insert(0, named("PotionOfHealing", ItemCategory::Potion));
     }
@@ -429,7 +363,7 @@ fn setup_consumables(consumables: &mut [Vec<GeneratedItem>; 4]) {
                 ItemCategory::Potion,
             ),
             named(
-                one_of(&["Firebloom$Seed", "Sorrowmoss$Seed", "Blindweed$Seed"]),
+                one_of(&["FirebloomSeed", "SorrowmossSeed", "BlindweedSeed"]),
                 ItemCategory::Seed,
             ),
             named(
@@ -445,6 +379,7 @@ fn setup_consumables(consumables: &mut [Vec<GeneratedItem>; 4]) {
                 ItemCategory::Stone,
             ),
         ];
+        mark_shuffled(&mut consumables[1]);
         consumables[1].insert(0, named("PotionOfHealing", ItemCategory::Potion));
     }
     if consumables[2].is_empty() {
@@ -454,7 +389,7 @@ fn setup_consumables(consumables: &mut [Vec<GeneratedItem>; 4]) {
                 ItemCategory::Potion,
             ),
             named(
-                one_of(&["Swiftthistle$Seed", "Sungrass$Seed"]),
+                one_of(&["SwiftthistleSeed", "SungrassSeed"]),
                 ItemCategory::Seed,
             ),
             named(
@@ -466,6 +401,7 @@ fn setup_consumables(consumables: &mut [Vec<GeneratedItem>; 4]) {
                 ItemCategory::Stone,
             ),
         ];
+        mark_shuffled(&mut consumables[2]);
         consumables[2].insert(0, named("PotionOfHealing", ItemCategory::Potion));
     }
     if consumables[3].is_empty() {
@@ -475,7 +411,7 @@ fn setup_consumables(consumables: &mut [Vec<GeneratedItem>; 4]) {
                 ItemCategory::Potion,
             ),
             named(
-                one_of(&["Earthroot$Seed", "Starflower$Seed"]),
+                one_of(&["EarthrootSeed", "StarflowerSeed"]),
                 ItemCategory::Seed,
             ),
             named(
@@ -489,7 +425,22 @@ fn setup_consumables(consumables: &mut [Vec<GeneratedItem>; 4]) {
             named("PotionOfHealing", ItemCategory::Potion),
         ];
         // JDK shuffle of T3; watabou stream already consumed by oneOf.
+        mark_shuffled(&mut consumables[3]);
     }
+}
+
+/// `Collections.shuffle` uses an unseeded JDK `Random`, so which of these
+/// classes a draw returns is not seed-determined. Each item carries the pool.
+fn mark_shuffled(items: &mut [GeneratedItem]) {
+    let pool: Vec<String> = items.iter().map(|item| item.class_name.clone()).collect();
+    for item in items {
+        item.candidate_classes = pool.clone();
+    }
+}
+
+/// True when the item came from a JDK-shuffled consumable pool.
+pub(super) fn is_shuffled_consumable(item: &GeneratedItem) -> bool {
+    !item.candidate_classes.is_empty()
 }
 
 fn one_of(names: &[&str]) -> String {

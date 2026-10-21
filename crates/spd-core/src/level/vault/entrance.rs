@@ -82,27 +82,15 @@ pub(super) fn paint(ctx: &mut PaintCtx<'_>, ri: usize) {
     let ofs = if furthest.x == c.x { 1 } else { ctx.width() };
     let base = ctx.point_cell(furthest) as i32;
     let add_torch = ctx.dungeon.challenges & DARKNESS != 0;
-    match Random::int_max(3) {
-        0 => {
-            if add_torch {
-                ctx.occupy_heap((base - ofs) as usize);
-            }
-            ctx.occupy_heap(base as usize);
-            ctx.occupy_heap((base + ofs) as usize);
-        }
-        1 => {
-            ctx.occupy_heap((base - ofs) as usize);
-            if add_torch {
-                ctx.occupy_heap(base as usize);
-            }
-            ctx.occupy_heap((base + ofs) as usize);
-        }
-        _ => {
-            ctx.occupy_heap((base - ofs) as usize);
-            ctx.occupy_heap(base as usize);
-            if add_torch {
-                ctx.occupy_heap((base + ofs) as usize);
-            }
+    let torch_slot = Random::int_max(3);
+    for (slot, cell) in [base - ofs, base, base + ofs].into_iter().enumerate() {
+        let class_name = if slot as i32 == torch_slot {
+            "Torch"
+        } else {
+            "VaultBeacon"
+        };
+        if class_name == "VaultBeacon" || add_torch {
+            ctx.drop_new(cell as usize, class_name);
         }
     }
 

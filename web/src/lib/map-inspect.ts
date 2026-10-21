@@ -26,6 +26,8 @@ const TEXT_FALLBACK: Record<string, string> = {
   RedShaman: 'Shaman',
   BlueShaman: 'Shaman',
   PurpleShaman: 'Shaman',
+  VaultGhoul: 'Ghoul',
+  VaultGolem: 'Golem',
 }
 
 const HEAP_PLACES: Record<string, string> = {

@@ -5,8 +5,7 @@ use crate::level::terrain::{EMPTY, WALL};
 use crate::random::Random;
 
 use super::geometry;
-use super::loot;
-use super::paint::PaintCtx;
+use super::paint::{PaintCtx, HEAP};
 
 pub(super) fn paint(ctx: &mut PaintCtx<'_>, ri: usize) {
     let room = ctx.room(ri).clone();
@@ -84,15 +83,15 @@ pub(super) fn paint(ctx: &mut PaintCtx<'_>, ri: usize) {
     if loot_positions.is_empty() {
         loot_positions.push(ctx.point_cell(c));
     }
-    if loot::find_prize_equipable(&mut ctx.dungeon.items_to_spawn).is_some() {
-        ctx.occupy_heap(loot_positions[0]);
+    if let Some(prize) = ctx.find_prize_equipable() {
+        ctx.drop(loot_positions[0], HEAP, prize);
     }
 
     let near_entrance = ctx.next_to_entrance(ri);
-    let (_enemy, returned) = ctx.create_spawn_mob(near_entrance, false);
+    let (enemy, returned) = ctx.create_spawn_mob(near_entrance, false);
     ctx.return_mobs(returned);
     let _ = Random::int_max(2);
-    ctx.occupy_mob(ctx.point_cell(c));
+    ctx.place_enemy(ctx.point_cell(c), enemy, true);
 
     ctx.set_regular_doors(ri);
     for door in ctx.door_points(ri) {

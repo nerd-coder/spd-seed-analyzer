@@ -4,7 +4,7 @@ use crate::level::terrain::{EMPTY, PEDESTAL, WALL};
 use crate::random::Random;
 
 use super::geometry;
-use super::paint::PaintCtx;
+use super::paint::{PaintCtx, HEAP};
 
 pub(super) fn paint_cross(ctx: &mut PaintCtx<'_>, ri: usize) {
     let room = ctx.room(ri).clone();
@@ -13,6 +13,7 @@ pub(super) fn paint_cross(ctx: &mut PaintCtx<'_>, ri: usize) {
     geometry::fill_insets(ctx.map, &room, 1, 4, 1, 4, EMPTY);
     let c = geometry::center(&room);
     geometry::set(ctx.map, c.x, c.y, PEDESTAL);
+    ctx.place_npc(ctx.point_cell(c), "VaultSentry");
     ctx.set_regular_doors(ri);
 }
 
@@ -24,6 +25,7 @@ pub(super) fn paint_circle(ctx: &mut PaintCtx<'_>, ri: usize) {
     geometry::fill_insets(ctx.map, &room, 1, 4, 1, 4, EMPTY);
     let c = geometry::center(&room);
     geometry::set(ctx.map, c.x, c.y, PEDESTAL);
+    ctx.place_npc(ctx.point_cell(c), "VaultSentry");
     let _ = Random::int_max(3);
     ctx.set_regular_doors(ri);
     for door in ctx.door_points(ri) {
@@ -44,11 +46,12 @@ pub(super) fn paint_lasers(ctx: &mut PaintCtx<'_>, ri: usize) {
         if geometry::terrain_at(ctx.map, x, room.top + 1) == WALL
             && geometry::terrain_at(ctx.map, x, room.bottom - 1) == WALL
         {
-            if Random::int_max(2) == 0 {
-                geometry::set(ctx.map, x, room.top + 1, PEDESTAL);
+            let y = if Random::int_max(2) == 0 {
+                room.top + 1
             } else {
-                geometry::set(ctx.map, x, room.bottom - 1, PEDESTAL);
-            }
+                room.bottom - 1
+            };
+            place_laser(ctx, x, y);
             let after = Random::int_range_inclusive(7, 9);
             let _ = Random::int_range_inclusive(1, after);
         }
@@ -57,15 +60,22 @@ pub(super) fn paint_lasers(ctx: &mut PaintCtx<'_>, ri: usize) {
         if geometry::terrain_at(ctx.map, room.left + 1, y) == WALL
             && geometry::terrain_at(ctx.map, room.right - 1, y) == WALL
         {
-            if Random::int_max(2) == 0 {
-                geometry::set(ctx.map, room.left + 1, y, PEDESTAL);
+            let x = if Random::int_max(2) == 0 {
+                room.left + 1
             } else {
-                geometry::set(ctx.map, room.right - 1, y, PEDESTAL);
-            }
+                room.right - 1
+            };
+            place_laser(ctx, x, y);
             let after = Random::int_range_inclusive(7, 9);
             let _ = Random::int_range_inclusive(1, after);
         }
     }
+}
+
+/// `VaultLaser` on the pedestal it is painted onto.
+pub(super) fn place_laser(ctx: &mut PaintCtx<'_>, x: i32, y: i32) {
+    geometry::set(ctx.map, x, y, PEDESTAL);
+    ctx.place_npc(ctx.cell(x, y), "VaultLaser");
 }
 
 pub(super) fn paint_alternating_fire(ctx: &mut PaintCtx<'_>, ri: usize) {
@@ -75,8 +85,8 @@ pub(super) fn paint_alternating_fire(ctx: &mut PaintCtx<'_>, ri: usize) {
     ctx.set_regular_doors(ri);
     let c = geometry::center(&room);
     geometry::set(ctx.map, c.x, c.y, PEDESTAL);
-    ctx.create_equipment(0);
-    ctx.occupy_heap(ctx.point_cell(c));
+    let prize = ctx.create_equipment(0);
+    ctx.drop(ctx.point_cell(c), HEAP, prize);
     let mut alternate = false;
     for x in room.left + 2..=room.right - 2 {
         for y in room.top + 2..=room.bottom - 2 {

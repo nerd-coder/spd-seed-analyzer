@@ -2846,5 +2846,12 @@
         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1
       ]
     }
-  ]
+  ],
+  "mobs": [
+    { "cell": 724, "class": "CrystalGuardian", "state": "sleeping" },
+    { "cell": 809, "class": "CrystalSpire", "state": "passive" },
+    { "cell": 1091, "class": "CrystalGuardian", "state": "sleeping" },
+    { "cell": 1313, "class": "CrystalGuardian", "state": "sleeping" }
+  ],
+  "heaps": []
 }

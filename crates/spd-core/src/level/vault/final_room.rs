@@ -7,7 +7,7 @@ use crate::level::terrain::{
 use crate::random::Random;
 
 use super::geometry::{self, CITY_PEDESTAL, CITY_QUEST_TEX};
-use super::paint::PaintCtx;
+use super::paint::{PaintCtx, HEAP};
 
 pub(super) fn paint(ctx: &mut PaintCtx<'_>, ri: usize) {
     let room = ctx.room(ri).clone();
@@ -133,18 +133,18 @@ pub(super) fn paint(ctx: &mut PaintCtx<'_>, ri: usize) {
         geometry::set_cell(ctx.map, cell as usize, PEDESTAL);
     }
 
-    // Center pedestal keeps the ImpStatue heap off the public map.
     let statue = treasure_spots.remove(3) as usize;
-    ctx.occupy_heap(statue);
+    ctx.drop_new(statue, "ImpStatue");
     Random::shuffle_list(&mut treasure_spots);
-    let rewards = ctx.dungeon.imp.reward_options.len();
-    for _ in 0..rewards {
+    let rewards = std::mem::take(&mut ctx.dungeon.imp.reward_options);
+    for reward in rewards {
         if treasure_spots.is_empty() {
             break;
         }
-        ctx.occupy_heap(treasure_spots.remove(0) as usize);
+        let cell = treasure_spots.remove(0) as usize;
+        ctx.drop(cell, HEAP, reward);
+        ctx.facts.uncertain.push(cell);
     }
-    ctx.dungeon.imp.reward_options.clear();
     ctx.dungeon.imp.pending_options.clear();
 
     let (tx, ty, tw, th) = (

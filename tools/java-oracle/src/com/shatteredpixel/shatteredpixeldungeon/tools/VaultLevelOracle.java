@@ -129,6 +129,10 @@ final class VaultLevelOracle {
 		appendCustom(json, level.customTiles, level);
 		json.append("  ],\n  \"custom_terrain\": [\n");
 		appendCustom(json, level.customTerrain, level);
+		json.append("  ],\n  \"mobs\": [\n");
+		LevelEntitiesJson.appendMobs(json, level);
+		json.append("  ],\n  \"heaps\": [\n");
+		LevelEntitiesJson.appendHeaps(json, level);
 		json.append("  ]\n}\n");
 		return json.toString();
 	}

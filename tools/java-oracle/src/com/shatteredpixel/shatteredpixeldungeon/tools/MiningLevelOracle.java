@@ -101,8 +101,11 @@ final class MiningLevelOracle {
 		JavaOracle.appendCustomTiles(json, visual.customTerrain);
 		json.append("  ],\n");
 		appendLayers(json, "custom_walls", level.customWalls);
-		json.setLength(json.length() - 2);
-		return json.append("\n}\n").toString();
+		json.append("  \"mobs\": [\n");
+		LevelEntitiesJson.appendMobs(json, level);
+		json.append("  ],\n  \"heaps\": [\n");
+		LevelEntitiesJson.appendHeaps(json, level);
+		return json.append("  ]\n}\n").toString();
 	}
 
 	private static void forceObjective(int objective) {

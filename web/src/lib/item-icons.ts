@@ -202,6 +202,11 @@ export const CLASS_ICON: Record<string, number> = {
   StoneOfIntuition: 346,
   StoneOfShock: 347,
 
+  // Quest items (Blacksmith mine, Imp vault)
+  DarkGold: 469,
+  DwarfToken: 470,
+  ImpStatue: 474,
+  VaultBeacon: 425,
   // Trinkets
   ChaoticCenser: 286,
   CrackedSpyglass: 288,

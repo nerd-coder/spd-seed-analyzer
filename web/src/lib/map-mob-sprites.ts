@@ -174,6 +174,27 @@ const MOB_SPRITES: Record<string, MobSprite> = {
   FungalSentry: sprite('fungal_sentry', 18, 18, 0, [0]),
   FungalSpinner: sprite('fungal_spinner', 16, 16, 10, SPIN),
   FungalCore: sprite('fungal_core', 27, 27, 0, [0]),
+  VaultSkeleton: sprite('skeleton', 12, 16, 12, SKELETON, 21),
+  VaultDM100: sprite('dm100', 16, 14, 1, [0, 1], 16),
+  VaultShaman: sprite('shaman', 12, 15, 2, SHIFT, 63),
+  VaultDM200: sprite('dm200', 21, 18, 10, [0, 1], 24),
+  VaultGhoul: sprite('ghoul', 12, 14, 2, BLINK),
+  VaultGolem: sprite('golem', 17, 19, 4, [0, 1]),
+  VaultSentry: sprite('sentry', 8, 15, 0, [1]),
+  VaultLaser: sprite('sentry', 8, 15, 0, [2]),
+  VaultMirror: sprite('vault_mirror', 16, 23, 15, [
+    ...hold(0, 48),
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+  ]),
+  VaultTokenDoor: sprite('vault_tokens_door', 16, 16, 0, [0]),
 }
 
 export function mobSprite(mob: MobId): MobSprite | undefined {

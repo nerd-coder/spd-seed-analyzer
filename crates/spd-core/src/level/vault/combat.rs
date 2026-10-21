@@ -5,7 +5,7 @@ use crate::level::terrain::{EMPTY, EMPTY_SP, STATUE, WALL};
 use crate::random::Random;
 
 use super::geometry;
-use super::paint::PaintCtx;
+use super::paint::{PaintCtx, CHEST, HEAP};
 
 pub(super) fn paint_ring(ctx: &mut PaintCtx<'_>, ri: usize) {
     let room = ctx.room(ri).clone();
@@ -14,7 +14,7 @@ pub(super) fn paint_ring(ctx: &mut PaintCtx<'_>, ri: usize) {
     geometry::fill_margin(ctx.map, &room, 4, WALL);
     ctx.set_regular_doors(ri);
     let near_entrance = ctx.next_to_entrance(ri);
-    let (_enemy, returned) = ctx.create_spawn_mob(near_entrance, false);
+    let (enemy, returned) = ctx.create_spawn_mob(near_entrance, false);
     let clockwise = Random::int_max(2) == 0;
     let idx = Random::int_max(4) as usize;
     let wander = if clockwise {
@@ -32,7 +32,7 @@ pub(super) fn paint_ring(ctx: &mut PaintCtx<'_>, ri: usize) {
             ctx.cell(room.left + 2, room.top + 2),
         ]
     };
-    ctx.occupy_mob(wander[idx]);
+    ctx.place_enemy(wander[idx], enemy, true);
     ctx.return_mobs(returned);
 }
 
@@ -55,7 +55,7 @@ pub(super) fn paint_rings(ctx: &mut PaintCtx<'_>, ri: usize) {
             break cell;
         }
     };
-    ctx.occupy_mob(pos);
+    ctx.place_enemy(pos, enemy, true);
     let mut wander = [
         ctx.cell(room.left + 1, room.top + 1),
         ctx.cell(room.left + 1, room.top + 5),
@@ -68,7 +68,6 @@ pub(super) fn paint_rings(ctx: &mut PaintCtx<'_>, ri: usize) {
         ctx.cell(room.left + 9, room.top + 9),
     ];
     Random::shuffle(&mut wander);
-    let _ = enemy;
     ctx.return_mobs(returned);
 }
 
@@ -83,15 +82,15 @@ pub(super) fn paint_long_rings(ctx: &mut PaintCtx<'_>, ri: usize) {
         geometry::fill_insets(ctx.map, &room, 4, 8, 4, 8, EMPTY);
     }
     let c = geometry::center(&room);
-    if loot::find_prize_equipable(&mut ctx.dungeon.items_to_spawn).is_some() {
-        ctx.occupy_heap(ctx.point_cell(c));
+    if let Some(prize) = ctx.find_prize_equipable() {
+        ctx.drop(ctx.point_cell(c), HEAP, prize);
     }
     for _ in 0..2 {
-        let _ = ctx.create_mob();
+        let enemy = ctx.create_mob();
         let mut prev = -1i32;
         let first = random_wander(ctx, &room, prev);
         prev = first as i32;
-        ctx.occupy_mob(first);
+        ctx.place_enemy(first, enemy, true);
         for _ in 1..20 {
             prev = random_wander(ctx, &room, prev) as i32;
         }
@@ -175,9 +174,9 @@ pub(super) fn paint_enemy_center(ctx: &mut PaintCtx<'_>, ri: usize) {
         ]
     };
     let idx = Random::int_max(4) as usize;
-    ctx.occupy_mob(wander[idx]);
-    ctx.create_equipment(enemy.tier());
-    ctx.occupy_heap(ctx.point_cell(c));
+    ctx.place_enemy(wander[idx], enemy, true);
+    let treasure = ctx.create_equipment(enemy.tier());
+    ctx.drop(ctx.point_cell(c), CHEST, treasure);
 }
 
 pub(super) fn paint_quadrants(ctx: &mut PaintCtx<'_>, ri: usize) {
@@ -205,8 +204,8 @@ pub(super) fn paint_quadrants(ctx: &mut PaintCtx<'_>, ri: usize) {
         let (enemy, returned) = ctx.create_spawn_mob(near_entrance, false);
         ctx.return_mobs(returned);
         let corner = *Random::element(&spawn).expect("spawn");
-        ctx.occupy_mob(ctx.point_cell(corner));
-        ctx.create_equipment(enemy.tier());
+        ctx.place_enemy(ctx.point_cell(corner), enemy, true);
+        let item = ctx.create_equipment(enemy.tier());
         let mut treasure = ctx.point_cell(corner) as i32;
         treasure += if corner.x < c.x { -1 } else { 1 };
         treasure += if corner.y < c.y {
@@ -214,7 +213,7 @@ pub(super) fn paint_quadrants(ctx: &mut PaintCtx<'_>, ri: usize) {
         } else {
             ctx.width()
         };
-        ctx.occupy_heap(treasure as usize);
+        ctx.drop(treasure as usize, CHEST, item);
     }
 }
 
@@ -276,10 +275,8 @@ pub(super) fn paint_simple_enemy(ctx: &mut PaintCtx<'_>, ri: usize) {
     for mob in returned {
         ctx.return_mob(mob);
     }
-    ctx.create_equipment(enemy.tier());
-    ctx.occupy_heap(treasure_pos);
+    let treasure = ctx.create_equipment(enemy.tier());
+    ctx.drop(treasure_pos, CHEST, treasure);
     ctx.set_regular_doors(ri);
-    ctx.occupy_mob(enemy_pos);
+    ctx.place_enemy(enemy_pos, enemy, false);
 }
-
-use super::loot;

@@ -4,7 +4,7 @@ use crate::level::terrain::{EMPTY, EMPTY_SP, LOCKED_DOOR, REGION_DECO_ALT, WALL}
 use crate::random::Random;
 
 use super::geometry::{self, CITY_PEDESTAL_TL, CITY_PEDESTAL_TR, CITY_QUEST_TEX};
-use super::paint::PaintCtx;
+use super::paint::{PaintCtx, HEAP};
 
 pub(super) fn paint(ctx: &mut PaintCtx<'_>, ri: usize) {
     let room = ctx.room(ri).clone();
@@ -111,28 +111,28 @@ pub(super) fn paint(ctx: &mut PaintCtx<'_>, ri: usize) {
     );
 
     geometry::set(ctx.map, c.x, c.y + 3, LOCKED_DOOR);
+    ctx.place_npc(ctx.cell(c.x, c.y + 3), "VaultTokenDoor");
     ctx.map.record_custom_tile(
         "TokenDoorFloor",
         CITY_QUEST_TEX,
         (c.x, c.y + 3, 1, 1),
         Vec::new(),
     );
-    // VaultTokenDoor / VaultMirror are NPCs; consume mirror reward RNG only.
+    // The mirror's reward depends on hero class; only its stream seed is levelgen RNG.
     let seed = Random::long();
     Random::push_generator_seeded(seed);
     Random::pop_generator();
+    ctx.place_npc(ctx.cell(c.x, c.y - 1), "VaultMirror");
 
-    if Random::int_max(2) == 0 {
-        ctx.create_equipment(3);
-        ctx.occupy_heap(ctx.cell(c.x - 2, c.y));
-        ctx.create_consumable(3);
-        ctx.occupy_heap(ctx.cell(c.x + 2, c.y));
+    let (equipment_x, consumable_x) = if Random::int_max(2) == 0 {
+        (c.x - 2, c.x + 2)
     } else {
-        ctx.create_equipment(3);
-        ctx.occupy_heap(ctx.cell(c.x + 2, c.y));
-        ctx.create_consumable(3);
-        ctx.occupy_heap(ctx.cell(c.x - 2, c.y));
-    }
+        (c.x + 2, c.x - 2)
+    };
+    let equipment = ctx.create_equipment(3);
+    ctx.drop(ctx.cell(equipment_x, c.y), HEAP, equipment);
+    let consumable = ctx.create_consumable(3);
+    ctx.drop(ctx.cell(consumable_x, c.y), HEAP, consumable);
 
     let mut returned = Vec::new();
     let enemy = loop {
@@ -151,8 +151,7 @@ pub(super) fn paint(ctx: &mut PaintCtx<'_>, ri: usize) {
         ctx.cell(c.x + 4, c.y),
         ctx.cell(c.x, c.y + 4),
     ];
-    ctx.occupy_mob(wander[idx]);
-    let _ = enemy;
+    ctx.place_enemy(wander[idx], enemy, true);
     for mob in returned {
         ctx.return_mob(mob);
     }
