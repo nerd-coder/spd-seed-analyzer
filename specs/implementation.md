@@ -87,19 +87,16 @@ with no sample on this profile; the UI hides those.
 
 Next:
 
-1. HDN-UJD-MJF floor 4 room paint ends two RNG draws short of Java with or
-   without a trinket (its Mimic Tooth fixture is skipped in
-   `trinket_fixtures_replay_exact_profiled_floor_state`).
-2. Decide whether enchanted item titles should use the game's `%s` templates
+1. Decide whether enchanted item titles should use the game's `%s` templates
    ("Friendly Sickle") instead of a separate enchantment tag.
-3. Public `SecretLaboratoryRoom` contract claims exactly 10 Energy Crystals;
+2. Public `SecretLaboratoryRoom` contract claims exactly 10 Energy Crystals;
    Java drops two `IntRange(3, 5)` stacks (the exact report has the real sum).
-4. Consider exposing `analyze_seed_exact` through WASM if the web app should
+3. Consider exposing `analyze_seed_exact` through WASM if the web app should
    offer the default-profile view.
-5. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
+4. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
    not actually depend on run history); publish entities on boss, vault, and
    mining maps.
-6. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
+5. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
    ~38 ms WASM. Remaining cost is spread thin; `patch::generate` (~25%) is
    now mostly the parity-bound `next_float` fill draws. Measured but not
    adopted: talc allocator (no WASM gain), `+simd128` (~7% WASM, drops
