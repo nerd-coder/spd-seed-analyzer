@@ -33,7 +33,7 @@ public final class JavaOracle {
 	public static void main(String[] args) {
 		if (args.length < 1 || args.length > 6) {
 			System.err.println(
-					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH [challenge barren-land|forbidden-runes|badder-bosses | rat-skull LEVEL BEFORE_DEPTH] | mining-level DEPTH crystal|gnoll | vault-level DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection | secret-library-order | secret-laboratory-order]");
+					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH [challenge barren-land|forbidden-runes|badder-bosses | rat-skull|mimic-tooth LEVEL BEFORE_DEPTH] | mining-level DEPTH crystal|gnoll | vault-level DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection | secret-library-order | secret-laboratory-order]");
 			System.exit(2);
 		}
 
@@ -52,7 +52,8 @@ public final class JavaOracle {
 				&& args.length == 5
 				&& "challenge".equals(args[3])
 				&& "badder-bosses".equals(args[4]);
-		boolean ratSkullFinalHeaps = args.length == 6 && "rat-skull".equals(args[3]);
+		boolean trinketFinalHeaps = finalHeaps && args.length == 6
+				&& ("rat-skull".equals(args[3]) || "mimic-tooth".equals(args[3]));
 		boolean generatorDeckRollover =
 				args.length == 2 && "generator-deck-rollover".equals(args[1]);
 		boolean generatorLifecycle =
@@ -87,7 +88,8 @@ public final class JavaOracle {
 					inputSeed, numericSeed, Integer.parseInt(args[2])));
 			return;
 		}
-		if (args.length == 4 || (args.length == 5 && !barrenLand && !forbiddenRunes && !badderBosses)) {
+		if (args.length == 4 || (args.length == 5 && !barrenLand && !forbiddenRunes && !badderBosses)
+				|| (args.length == 6 && !trinketFinalHeaps)) {
 			System.err.println("Unknown oracle contract: " + args[1]);
 			System.exit(2);
 		}
@@ -182,8 +184,8 @@ public final class JavaOracle {
 				Potion.initColors();
 				Ring.initGems();
 			} else if (finalHeaps) {
-				finalFloor = ratSkullFinalHeaps
-						? FloorOracle.generateFinalHeaps(numericSeed, depth, false,
+				finalFloor = trinketFinalHeaps
+						? FloorOracle.generateFinalHeaps(numericSeed, depth, null, args[3],
 								Integer.parseInt(args[4]), Integer.parseInt(args[5]))
 					: FloorOracle.generateFinalHeaps(numericSeed, depth,
 							(barrenLand ? "barren-land" : forbiddenRunes ? "forbidden-runes" : badderBosses ? "badder-bosses" : null),

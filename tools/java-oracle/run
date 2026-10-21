@@ -29,12 +29,16 @@ vault_level_depth=""
 rat_skull_depth=""
 rat_skull_level=""
 rat_skull_before_depth=""
+mimic_tooth_depth=""
+mimic_tooth_level=""
+mimic_tooth_before_depth=""
 
 usage() {
 	cat >&2 <<'EOF'
 Usage: tools/java-oracle/run [--source PATH] [--output FILE]
                              [--depth 1 | --final-heaps-depth 1..26 [--challenge barren-land|forbidden-runes|badder-bosses] |
                              --rat-skull-final-heaps-depth DEPTH LEVEL BEFORE_DEPTH |
+                             --mimic-tooth-final-heaps-depth DEPTH LEVEL BEFORE_DEPTH |
                              --figure-eight-trace DEPTH | --free-space-trace DEPTH | --halls-paint-trace DEPTH |
                              --caves-boss-patch | --mining-level DEPTH crystal|gnoll | --vault-level DEPTH |
                              --generator-deck-rollover | --generator-lifecycle | --imp-ring-deck | --quest-npc-placement |
@@ -62,6 +66,9 @@ With --mining-level, directly forces the named Blacksmith objective and captures
 the branch-1 MiningLevel at the createMobs boundary. This is not a natural roll.
 With --vault-level, directly forces branch-1 VaultLevel at city depths 17-19 and
 records RING/WAND/ARTIFACT.dropped around create(). RING.dropped stays flat.
+With --rat-skull-final-heaps-depth or --mimic-tooth-final-heaps-depth, runs the
+final-heaps contract with that trinket (LEVEL 0-3) held in the hero backpack for
+every generated floor at or after BEFORE_DEPTH.
 EOF
 }
 
@@ -161,6 +168,13 @@ while (($# > 0)); do
 			rat_skull_before_depth="$4"
 			shift 4
 			;;
+		--mimic-tooth-final-heaps-depth)
+			[[ $# -ge 4 ]] || { usage; exit 2; }
+			mimic_tooth_depth="$2"
+			mimic_tooth_level="$3"
+			mimic_tooth_before_depth="$4"
+			shift 4
+			;;
 		-h|--help)
 			usage
 			exit 0
@@ -222,6 +236,18 @@ if [[ -n "$rat_skull_before_depth" && (! "$rat_skull_before_depth" =~ ^[0-9]+$ |
 	echo "Rat Skull before depth must be 1 through 26" >&2
 	exit 2
 fi
+if [[ -n "$mimic_tooth_depth" && (! "$mimic_tooth_depth" =~ ^[0-9]+$ || "$mimic_tooth_depth" -lt 1 || "$mimic_tooth_depth" -gt 26) ]]; then
+	echo "The Mimic Tooth oracle supports depths 1 through 26" >&2
+	exit 2
+fi
+if [[ -n "$mimic_tooth_level" && (! "$mimic_tooth_level" =~ ^[0-3]$) ]]; then
+	echo "Mimic Tooth level must be 0 through 3" >&2
+	exit 2
+fi
+if [[ -n "$mimic_tooth_before_depth" && (! "$mimic_tooth_before_depth" =~ ^[0-9]+$ || "$mimic_tooth_before_depth" -lt 1 || "$mimic_tooth_before_depth" -gt 26) ]]; then
+	echo "Mimic Tooth before depth must be 1 through 26" >&2
+	exit 2
+fi
 selected_contracts=0
 [[ -n "$depth" ]] && ((selected_contracts += 1))
 [[ -n "$final_heaps_depth" ]] && ((selected_contracts += 1))
@@ -239,6 +265,7 @@ selected_contracts=0
 [[ -n "$mining_level_depth" ]] && ((selected_contracts += 1))
 [[ -n "$vault_level_depth" ]] && ((selected_contracts += 1))
 [[ -n "$rat_skull_depth" ]] && ((selected_contracts += 1))
+[[ -n "$mimic_tooth_depth" ]] && ((selected_contracts += 1))
 if ((selected_contracts > 1)); then
 	echo "Choose only one oracle contract" >&2
 	exit 2
@@ -340,6 +367,11 @@ if [[ -n "$rat_skull_depth" ]]; then
 	gradle_args+=(-PoracleRatSkullDepth="$rat_skull_depth")
 	gradle_args+=(-PoracleRatSkullLevel="$rat_skull_level")
 	gradle_args+=(-PoracleRatSkullBeforeDepth="$rat_skull_before_depth")
+fi
+if [[ -n "$mimic_tooth_depth" ]]; then
+	gradle_args+=(-PoracleMimicToothDepth="$mimic_tooth_depth")
+	gradle_args+=(-PoracleMimicToothLevel="$mimic_tooth_level")
+	gradle_args+=(-PoracleMimicToothBeforeDepth="$mimic_tooth_before_depth")
 fi
 gradle_args+=(:core:javaOracleDump)
 

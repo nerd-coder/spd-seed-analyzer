@@ -27,7 +27,9 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.MimicTooth;
 import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.RatSkull;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.Trinket;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
 import com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel;
@@ -52,8 +54,9 @@ import java.lang.reflect.Field;
 
 /** Runs the pinned depth-one SewerLevel and records stable item facts. */
 final class FloorOracle {
-	private static int ratSkullLevel = -1;
-	private static int ratSkullBeforeDepth = Integer.MAX_VALUE;
+	private static String heldTrinket = null;
+	private static int heldTrinketLevel = -1;
+	private static int heldTrinketBeforeDepth = Integer.MAX_VALUE;
 
 	private FloorOracle() {
 	}
@@ -88,8 +91,23 @@ final class FloorOracle {
 
 	static FinalFloorFacts generateFinalHeaps(long seed, int depth, String challenge,
 			int ratLevel, int ratBeforeDepth) {
-		ratSkullLevel = ratLevel;
-		ratSkullBeforeDepth = ratBeforeDepth;
+		return generateFinalHeaps(seed, depth, challenge,
+				ratLevel >= 0 ? "rat-skull" : null, ratLevel, ratBeforeDepth);
+	}
+
+	/**
+	 * Holds {@code trinket} ("rat-skull" or "mimic-tooth") at {@code trinketLevel}
+	 * in the hero backpack for every generated floor at or after
+	 * {@code trinketBeforeDepth}. A null trinket holds nothing.
+	 */
+	static FinalFloorFacts generateFinalHeaps(long seed, int depth, String challenge,
+			String trinket, int trinketLevel, int trinketBeforeDepth) {
+		if (trinket != null) {
+			trinketClass(trinket);
+		}
+		heldTrinket = trinket;
+		heldTrinketLevel = trinket != null ? trinketLevel : -1;
+		heldTrinketBeforeDepth = trinket != null ? trinketBeforeDepth : Integer.MAX_VALUE;
 		initializeFreshRun(seed);
 		if ("barren-land".equals(challenge)) {
 			Dungeon.challenges = Challenges.NO_HERBALISM;
@@ -99,7 +117,7 @@ final class FloorOracle {
 			Dungeon.challenges = Challenges.STRONGER_BOSSES;
 		}
 		generatePriorFloors(depth);
-		equipRatSkull(depth);
+		equipHeldTrinket(depth);
 		// A committed seed fixture must not depend on the user's bones.dat. At
 		// this pin, Dungeon.daily is consulted during generation only by Bones.
 		Dungeon.daily = true;
@@ -274,28 +292,40 @@ final class FloorOracle {
 		try {
 			for (int depth = 1; depth < targetDepth; depth++) {
 				Dungeon.depth = depth;
-				equipRatSkull(depth);
+				equipHeldTrinket(depth);
 				Dungeon.level = Dungeon.newLevel();
 			}
 		} finally {
 			Dungeon.daily = false;
 		}
 		Dungeon.depth = targetDepth;
-		equipRatSkull(targetDepth);
+		equipHeldTrinket(targetDepth);
 		// Dungeon.newLevel clears the previous floor before target creation. Probe
 		// subclasses call Level.create directly, so mirror that boundary here.
 		Dungeon.level = null;
 		Actor.clear();
 	}
 
-	private static void equipRatSkull(int depth) {
-		if (ratSkullLevel >= 0 && depth >= ratSkullBeforeDepth
-				&& Dungeon.hero.belongings.getItem(RatSkull.class) == null) {
-			RatSkull skull = new RatSkull();
-			skull.level(ratSkullLevel);
-			skull.identify();
-			Dungeon.hero.belongings.backpack.items.add(skull);
+	private static void equipHeldTrinket(int depth) {
+		if (heldTrinket == null || depth < heldTrinketBeforeDepth) {
+			return;
 		}
+		Class<? extends Trinket> type = trinketClass(heldTrinket);
+		if (Dungeon.hero.belongings.getItem(type) == null) {
+			Trinket trinket = "mimic-tooth".equals(heldTrinket) ? new MimicTooth() : new RatSkull();
+			trinket.level(heldTrinketLevel);
+			trinket.identify();
+			Dungeon.hero.belongings.backpack.items.add(trinket);
+		}
+	}
+
+	private static Class<? extends Trinket> trinketClass(String trinket) {
+		if ("rat-skull".equals(trinket)) {
+			return RatSkull.class;
+		} else if ("mimic-tooth".equals(trinket)) {
+			return MimicTooth.class;
+		}
+		throw new IllegalArgumentException("Unsupported held trinket: " + trinket);
 	}
 
 	static void markTargetFloorGenerated(int depth) {
@@ -448,9 +478,9 @@ final class FloorOracle {
 			this.customTerrain = layoutFacts.customTerrain;
 			this.customWalls = layoutFacts.customWalls;
 			this.challenge = challenge;
-			this.trinket = ratSkullLevel >= 0 ? "rat-skull" : null;
-			this.trinketLevel = ratSkullLevel >= 0 ? ratSkullLevel : null;
-			this.trinketBeforeDepth = ratSkullLevel >= 0 ? ratSkullBeforeDepth : null;
+			this.trinket = heldTrinket;
+			this.trinketLevel = heldTrinket != null ? heldTrinketLevel : null;
+			this.trinketBeforeDepth = heldTrinket != null ? heldTrinketBeforeDepth : null;
 		}
 	}
 

@@ -41,6 +41,8 @@ From the analyzer repository root:
 ./tools/java-oracle/run --final-heaps-depth 7 HKT-JZN-XQQ
 ./tools/java-oracle/run --final-heaps-depth 8 HKT-JZN-XQQ
 ./tools/java-oracle/run --sacrifice-reward HKT-JZN-XQQ
+./tools/java-oracle/run --rat-skull-final-heaps-depth 6 3 6 AAA-AAA-AAA
+./tools/java-oracle/run --mimic-tooth-final-heaps-depth 4 3 3 HDN-UJD-MJF
 ./tools/java-oracle/run --final-heaps-depth 9 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 11 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 12 AAA-AAA-AAA
@@ -138,6 +140,54 @@ these commands (stdout is the default when `--output` is omitted):
   --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-21.json AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 22 \
   --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-22.json AAA-AAA-AAA
+./tools/java-oracle/run --rat-skull-final-heaps-depth 6 3 6 \
+  --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-6-rat-skull-3-before-6.json \
+  AAA-AAA-AAA
+./tools/java-oracle/run --rat-skull-final-heaps-depth 7 3 6 \
+  --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-7-rat-skull-3-before-6.json \
+  AAA-AAA-AAA
+./tools/java-oracle/run --mimic-tooth-final-heaps-depth 3 3 3 \
+  --output tools/java-oracle/fixtures/hdn-ujd-mjf-final-heaps-floor-3-mimic-tooth-3-before-3.json \
+  HDN-UJD-MJF
+./tools/java-oracle/run --mimic-tooth-final-heaps-depth 4 3 3 \
+  --output tools/java-oracle/fixtures/hdn-ujd-mjf-final-heaps-floor-4-mimic-tooth-3-before-3.json \
+  HDN-UJD-MJF
+./tools/java-oracle/run --mimic-tooth-final-heaps-depth 2 3 2 \
+  --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-2-mimic-tooth-3-before-2.json \
+  AAA-AAA-AAA
+./tools/java-oracle/run --mimic-tooth-final-heaps-depth 3 3 2 \
+  --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-3-mimic-tooth-3-before-2.json \
+  AAA-AAA-AAA
+./tools/java-oracle/run --mimic-tooth-final-heaps-depth 4 3 2 \
+  --output tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-4-mimic-tooth-3-before-2.json \
+  AAA-AAA-AAA
+./tools/java-oracle/run --mimic-tooth-final-heaps-depth 2 3 2 \
+  --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-2-mimic-tooth-3-before-2.json \
+  HKT-JZN-XQQ
+./tools/java-oracle/run --mimic-tooth-final-heaps-depth 3 3 2 \
+  --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-3-mimic-tooth-3-before-2.json \
+  HKT-JZN-XQQ
+./tools/java-oracle/run --mimic-tooth-final-heaps-depth 4 3 2 \
+  --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-4-mimic-tooth-3-before-2.json \
+  HKT-JZN-XQQ
+./tools/java-oracle/run --mimic-tooth-final-heaps-depth 6 3 2 \
+  --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-6-mimic-tooth-3-before-2.json \
+  HKT-JZN-XQQ
+./tools/java-oracle/run --mimic-tooth-final-heaps-depth 2 3 2 \
+  --output tools/java-oracle/fixtures/aaa-aaa-bmt-final-heaps-floor-2-mimic-tooth-3-before-2.json \
+  AAA-AAA-BMT
+./tools/java-oracle/run --mimic-tooth-final-heaps-depth 3 3 2 \
+  --output tools/java-oracle/fixtures/aaa-aaa-bmt-final-heaps-floor-3-mimic-tooth-3-before-2.json \
+  AAA-AAA-BMT
+./tools/java-oracle/run --mimic-tooth-final-heaps-depth 2 3 2 \
+  --output tools/java-oracle/fixtures/aaa-aaa-bnk-final-heaps-floor-2-mimic-tooth-3-before-2.json \
+  AAA-AAA-BNK
+./tools/java-oracle/run --mimic-tooth-final-heaps-depth 3 3 2 \
+  --output tools/java-oracle/fixtures/aaa-aaa-bnk-final-heaps-floor-3-mimic-tooth-3-before-2.json \
+  AAA-AAA-BNK
+./tools/java-oracle/run --mimic-tooth-final-heaps-depth 4 3 2 \
+  --output tools/java-oracle/fixtures/aaa-aaa-bmy-final-heaps-floor-4-mimic-tooth-3-before-2.json \
+  AAA-AAA-BMY
 ./tools/java-oracle/run --generator-deck-rollover \
   --output tools/java-oracle/fixtures/generator/aaa-aaa-aaa-food-rollover.json \
   AAA-AAA-AAA
@@ -178,6 +228,15 @@ sets the minimum Imp quest flags (`spawned`/`given`), constructs `VaultLevel`,
 and records `RING`/`WAND`/`ARTIFACT.dropped` around `create()`. Vault equipment
 uses `randomUsingDefaults` only, so `RING.dropped` stays flat. This is not a
 natural Imp-quest entry.
+
+`--rat-skull-final-heaps-depth DEPTH LEVEL BEFORE_DEPTH` and
+`--mimic-tooth-final-heaps-depth DEPTH LEVEL BEFORE_DEPTH` run the final-heaps
+contract with an identified `RatSkull` or `MimicTooth` of `LEVEL` (0-3) added
+to the hero backpack before every generated floor at or after `BEFORE_DEPTH`,
+including the target floor. Floors before `BEFORE_DEPTH` generate without it.
+The fixture `input` records `trinket` (`rat-skull` or `mimic-tooth`),
+`trinket_level`, and `trinket_before_depth`. Like the other committed fixtures,
+they are emitted raw and then Biome-formatted (`bun x biome format --write`).
 
 `--final-heaps-depth` accepts every depth from 1 through 26 and always emits
 the additive render fields. The AAA-AAA-AAA,
