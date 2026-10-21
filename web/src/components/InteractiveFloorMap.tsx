@@ -197,6 +197,8 @@ export function InteractiveFloorMap({
       {showPanel && panelFocus && root ? (
         <MapInspectPanel
           inspection={inspection}
+          identities={identities}
+          tileset={map.tileset}
           pinned={pinned != null}
           style={panelStyle(panelFocus, root.clientWidth, root.clientHeight)}
         />

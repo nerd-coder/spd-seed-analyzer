@@ -181,6 +181,8 @@ export type MapMob = {
   mob: MobId
   /** `Mob.state` at level creation, before the hero arrives. */
   state: MapMobState
+  /** Items this mob drops when defeated. */
+  items?: MapHeapItem[]
 }
 
 export type MapTransition = {

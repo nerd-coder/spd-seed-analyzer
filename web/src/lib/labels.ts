@@ -18,6 +18,7 @@ const SOURCE_LABELS: Record<string, string> = {
   mimic: 'Mimic',
   golden_mimic: 'Golden mimic',
   crystal_mimic: 'Crystal mimic',
+  ebony_mimic: 'Ebony mimic',
   skeleton: 'Skeleton',
   tomb: 'Tomb',
   statue: 'Statue',

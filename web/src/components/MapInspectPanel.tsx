@@ -1,6 +1,13 @@
-import { forwardRef, useContext } from 'react'
+import { forwardRef, type ReactNode, useContext } from 'react'
 
 import { GameText, ItemDetail } from '@/components/item-detail'
+import {
+  ItemPortrait,
+  MobPortrait,
+  PlantPortrait,
+  StairPortrait,
+  TrapPortrait,
+} from '@/components/map-inspect-art'
 import {
   HeldTrinketContext,
   PICKED_TRINKET_LEVEL,
@@ -23,7 +30,7 @@ import {
   transitionTitle,
   trapTitle,
 } from '@/lib/map-inspect'
-import type { MapMobState } from '@/lib/spd-wasm'
+import type { IdentityMaps, MapMobState } from '@/lib/spd-wasm'
 import { cn } from '@/lib/utils'
 
 const MOB_STATE_NOTE: Record<MapMobState, string | null> = {
@@ -54,25 +61,97 @@ function ObjectSection({
   )
 }
 
-function EntrySection({ entry }: { entry: MapInspectEntry }) {
+function PictureRow({
+  picture,
+  children,
+}: {
+  picture?: ReactNode
+  children: ReactNode
+}) {
+  if (!picture) return children
+  return (
+    <div className="flex items-start gap-3">
+      <div className="shrink-0">{picture}</div>
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  )
+}
+
+function EntrySection({
+  entry,
+  identities,
+  tileset,
+}: {
+  entry: MapInspectEntry
+  identities: IdentityMaps
+  tileset: string
+}) {
   switch (entry.kind) {
-    case 'item':
+    case 'item': {
+      const title = itemTitle(entry.item)
       return (
-        <ItemDetail
-          title={itemTitle(entry.item)}
-          className={itemClass(entry.item)}
-          cursed={entry.item.cursed}
-          location={entry.place}
-        />
+        <PictureRow
+          picture={
+            <ItemPortrait
+              item={entry.item}
+              title={title}
+              identities={identities}
+            />
+          }
+        >
+          <ItemDetail
+            title={title}
+            className={itemClass(entry.item)}
+            cursed={entry.item.cursed}
+            location={entry.place}
+          />
+        </PictureRow>
       )
-    case 'mob':
+    }
+    case 'mob': {
+      const drops = entry.mob.items ?? []
+      const crystal = mobClassName(entry.mob.mob) === 'CrystalMimic'
+      const title = mobTitle(entry.mob)
       return (
-        <ObjectSection
-          title={mobTitle(entry.mob)}
-          note={MOB_STATE_NOTE[entry.mob.state]}
-          desc={objectText(mobClassName(entry.mob.mob))?.desc}
-        />
+        <div className="flex flex-col gap-2">
+          <PictureRow
+            picture={<MobPortrait mob={entry.mob.mob} label={title} />}
+          >
+            <ObjectSection
+              title={title}
+              note={MOB_STATE_NOTE[entry.mob.state]}
+              desc={objectText(mobClassName(entry.mob.mob))?.desc}
+            />
+          </PictureRow>
+          {drops.map((item, index) => {
+            const dropTitle = itemTitle(item)
+            return (
+              <PictureRow
+                key={`${itemClass(item)}-${index}`}
+                picture={
+                  <ItemPortrait
+                    item={item}
+                    title={dropTitle}
+                    identities={identities}
+                  />
+                }
+              >
+                <ItemDetail
+                  title={dropTitle}
+                  className={itemClass(item)}
+                  cursed={item.cursed}
+                  location={
+                    crystal
+                      ? 'Drops when defeated. Lost if the mimic escapes.'
+                      : 'Drops when defeated.'
+                  }
+                />
+              </PictureRow>
+            )
+          })}
+        </div>
       )
+    }
     case 'loot':
       return (
         <ObjectSection
@@ -80,35 +159,64 @@ function EntrySection({ entry }: { entry: MapInspectEntry }) {
           note="Room loot whose exact item is not modeled at this tile."
         />
       )
-    case 'trap':
+    case 'trap': {
+      const title = trapTitle(entry.trap)
       return (
-        <ObjectSection
-          title={trapTitle(entry.trap)}
-          note={entry.trap.active ? null : 'Inactive.'}
-          desc={objectText(trapClassName(entry.trap.trap))?.desc}
-        />
+        <PictureRow picture={<TrapPortrait trap={entry.trap} label={title} />}>
+          <ObjectSection
+            title={title}
+            note={entry.trap.active ? null : 'Inactive.'}
+            desc={objectText(trapClassName(entry.trap.trap))?.desc}
+          />
+        </PictureRow>
       )
-    case 'plant':
+    }
+    case 'plant': {
+      const title = plantTitle(entry.plant)
       return (
-        <ObjectSection
-          title={plantTitle(entry.plant)}
-          desc={objectText(plantClassName(entry.plant.plant))?.desc}
-        />
+        <PictureRow
+          picture={<PlantPortrait plant={entry.plant} label={title} />}
+        >
+          <ObjectSection
+            title={title}
+            desc={objectText(plantClassName(entry.plant.plant))?.desc}
+          />
+        </PictureRow>
       )
-    case 'transition':
-      return <ObjectSection title={transitionTitle(entry.transition)} />
+    }
+    case 'transition': {
+      const title = transitionTitle(entry.transition)
+      return (
+        <PictureRow
+          picture={
+            <StairPortrait
+              tileset={tileset}
+              type={entry.transition.type}
+              label={title}
+            />
+          }
+        >
+          <ObjectSection title={title} />
+        </PictureRow>
+      )
+    }
   }
 }
 
 type Props = {
   inspection: MapInspection
+  identities: IdentityMaps
+  tileset: string
   pinned: boolean
   style?: React.CSSProperties
 }
 
 /** Description panel for one map tile: everything generated on it. */
 export const MapInspectPanel = forwardRef<HTMLDivElement, Props>(
-  function MapInspectPanel({ inspection, pinned, style }, ref) {
+  function MapInspectPanel(
+    { inspection, identities, tileset, pinned, style },
+    ref
+  ) {
     const { entries, uncertain, hidden, secretDoor } = inspection
     const heldTrinket = useContext(HeldTrinketContext)
     return (
@@ -144,7 +252,11 @@ export const MapInspectPanel = forwardRef<HTMLDivElement, Props>(
             key={`${entry.kind}-${index}`}
             className={cn(index > 0 && 'border-t pt-2')}
           >
-            <EntrySection entry={entry} />
+            <EntrySection
+              entry={entry}
+              identities={identities}
+              tileset={tileset}
+            />
           </div>
         ))}
         {uncertain ? (

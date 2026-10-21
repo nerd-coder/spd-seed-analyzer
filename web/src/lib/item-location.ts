@@ -60,6 +60,7 @@ const SPOTS: Record<string, string> = {
   mimic: 'carried by a mimic',
   golden_mimic: 'carried by a golden mimic',
   crystal_mimic: 'carried by a crystal mimic',
+  ebony_mimic: 'carried by an ebony mimic',
   statue: 'carried by an animated statue',
   sacrificial: 'on the sacrificial altar',
   mimic_reward: 'dropped when the mimic is killed',
@@ -95,6 +96,7 @@ export function formatItemLocation(
     .filter((part) => part !== room)
     .map((part) => SPOTS[part])
     .filter((spot): spot is string => spot != null)
+    .filter((spot, index, all) => spot !== all[index - 1])
   if (room) return [ROOMS[room], ...spots].join(', ')
   if (spots.length === 0) return null
   const text = spots.join(', ')
