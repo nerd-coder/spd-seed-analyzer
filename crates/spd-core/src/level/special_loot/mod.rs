@@ -268,7 +268,15 @@ fn paint_special(
             dungeon.challenges & Challenge::BarrenLand.mask() != 0,
         ),
         "MagicWellRoom" => gardens::magic_well(room, map, items_to_spawn),
-        "SecretWellRoom" => gardens::secret_well(),
+        "SecretWellRoom" => {
+            let entrance = room
+                .connected
+                .first()
+                .and_then(|&other| doors.get(ri, other))
+                .map(|door| crate::geom::Point::new(door.x, door.y))
+                .expect("SecretWellRoom has one entrance");
+            gardens::secret_well(room, map, entrance)
+        }
         "PitRoom" => pit_secrets::pit_prizes(dungeon, room, map),
         "SecretMazeRoom" => {
             let prize = pit_secrets::secret_maze_prize(dungeon);

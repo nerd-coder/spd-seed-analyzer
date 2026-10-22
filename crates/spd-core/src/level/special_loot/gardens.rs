@@ -1,9 +1,10 @@
 //! Garden and magic-well special room prizes.
 
 use super::placement::burn_drop_pos;
+use crate::geom::Point;
 use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::level::create_items::PlacedLoot;
-use crate::level::terrain::{TerrainMap, EMPTY, GRASS, HIGH_GRASS, WALL, WELL};
+use crate::level::terrain::{TerrainMap, CHASM, EMPTY, GRASS, HIGH_GRASS, WALL, WELL};
 use crate::random::Random;
 use crate::rooms::room::Room;
 
@@ -242,18 +243,51 @@ pub(super) fn magic_well(
     Vec::new()
 }
 
-/// `SecretWellRoom.paint` — Awareness/Health well (no key).
-pub(super) fn secret_well() -> Vec<PlacedLoot> {
-    secret_well_type("SecretWellRoom")
-}
+/// `SecretWellRoom.paint` — chasm-ringed Awareness/Health well facing the
+/// hidden entrance (no key).
+pub(super) fn secret_well(room: &Room, map: &mut TerrainMap, entrance: Point) -> Vec<PlacedLoot> {
+    fill(map, room.left, room.top, room.right, room.bottom, WALL);
+    let well = if entrance.x == room.left {
+        Point::new(room.right - 2, entrance.y)
+    } else if entrance.x == room.right {
+        Point::new(room.left + 2, entrance.y)
+    } else if entrance.y == room.top {
+        Point::new(entrance.x, room.bottom - 2)
+    } else {
+        Point::new(entrance.x, room.top + 2)
+    };
+    fill(map, well.x - 1, well.y - 1, well.x + 1, well.y + 1, CHASM);
+    fill(
+        map,
+        entrance.x.min(well.x),
+        entrance.y.min(well.y),
+        entrance.x.max(well.x),
+        entrance.y.max(well.y),
+        EMPTY,
+    );
+    let well_cell = map
+        .point_to_cell(well.x, well.y)
+        .expect("SecretWellRoom well lies on map");
+    map.map[well_cell] = WELL;
+    map.character_allowed[well_cell] = false;
 
-fn secret_well_type(source: &str) -> Vec<PlacedLoot> {
-    let waters = ["WaterOfAwareness", "WaterOfHealth"];
-    let class = *Random::one_of(&waters);
+    let class = *Random::one_of(&["WaterOfAwareness", "WaterOfHealth"]);
+    // Java `WellWater` instance initializer sets `alwaysVisible = true`.
+    map.record_blob_cell(class, true, well_cell, 1);
     let mut item = GeneratedItem::new(class, ItemCategory::Other);
-    item.source = Some(source.into());
+    item.source = Some("SecretWellRoom".into());
     vec![PlacedLoot {
         item,
         heap_type: "well",
     }]
+}
+
+fn fill(map: &mut TerrainMap, left: i32, top: i32, right: i32, bottom: i32, terrain: i32) {
+    for y in top..=bottom {
+        for x in left..=right {
+            if let Some(cell) = map.point_to_cell(x, y) {
+                map.map[cell] = terrain;
+            }
+        }
+    }
 }

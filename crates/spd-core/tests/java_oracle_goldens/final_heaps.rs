@@ -1067,3 +1067,6 @@ mod floor_eight;
 
 #[path = "final_heaps/challenges.rs"]
 mod challenges;
+
+#[path = "final_heaps/secret_well.rs"]
+mod secret_well;
