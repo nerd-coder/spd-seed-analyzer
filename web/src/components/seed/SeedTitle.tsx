@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { GameWindow } from '@/components/GameWindow'
 import { Button } from '@/components/ui/button'
 import type { SeedInfo } from '@/lib/spd-wasm'
+import { cn } from '@/lib/utils'
 
 const COPIED_MS = 2000
 
@@ -50,7 +51,22 @@ export function SeedTitle({ seed }: { seed: SeedInfo }) {
             ) : (
               <CopyIcon data-icon="inline-start" />
             )}
-            {copied ? 'Copied' : 'Copy seed'}
+            {/* Both labels share one cell so the button keeps the wider width. */}
+            <span className="grid">
+              <span
+                className={cn('col-start-1 row-start-1', copied && 'invisible')}
+              >
+                Copy seed
+              </span>
+              <span
+                className={cn(
+                  'col-start-1 row-start-1',
+                  !copied && 'invisible'
+                )}
+              >
+                Copied
+              </span>
+            </span>
           </Button>
         </div>
       </GameWindow>
