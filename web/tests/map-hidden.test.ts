@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { Terrain } from '@/lib/dungeon-tile-visuals'
-import { concealedMap } from '@/lib/map-hidden'
+import { concealedMap, revealedMap } from '@/lib/map-hidden'
 import type { FloorMap } from '@/lib/spd-wasm'
 
 describe('concealedMap', () => {
@@ -53,5 +53,24 @@ describe('concealedMap', () => {
       5, -1, 7, 8, -1, 10,
     ])
     expect(map.custom_walls[0]?.static_data).toEqual([5, 6, 7, 8, 9, 10])
+  })
+})
+
+describe('revealedMap', () => {
+  test('opens the door under a found concealed mob', () => {
+    const map = {
+      width: 3,
+      height: 1,
+      tiles: [Terrain.DOOR, Terrain.DOOR, Terrain.SECRET_DOOR],
+      mobs: [{ cell: 1, mob: 0, state: 'passive' }],
+      traps: [],
+      concealed_cells: [1],
+    } as unknown as FloorMap
+
+    expect(revealedMap(map).tiles).toEqual([
+      Terrain.DOOR,
+      Terrain.OPEN_DOOR,
+      Terrain.DOOR,
+    ])
   })
 })

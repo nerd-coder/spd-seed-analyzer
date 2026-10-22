@@ -118,16 +118,25 @@ export function hiddenRegions(map: FloorMap): HiddenRegions {
   return { regionOf, regions, unexplored }
 }
 
-/** The floor as if every secret door and hidden trap had been found. */
+/**
+ * The floor as if every secret door and hidden trap had been found. A
+ * concealed mob on a door opens it once found (`EbonyMimic.stopHiding`).
+ */
 export function revealedMap(map: FloorMap): FloorMap {
+  const concealed = new Set(map.concealed_cells ?? [])
+  const concealedMobs = new Set(
+    map.mobs.filter((mob) => concealed.has(mob.cell)).map((mob) => mob.cell)
+  )
   return {
     ...map,
-    tiles: map.tiles.map((tile) =>
+    tiles: map.tiles.map((tile, cell) =>
       tile === Terrain.SECRET_DOOR
         ? Terrain.DOOR
         : tile === Terrain.SECRET_TRAP
           ? Terrain.TRAP
-          : tile
+          : tile === Terrain.DOOR && concealedMobs.has(cell)
+            ? Terrain.OPEN_DOOR
+            : tile
     ),
     traps: map.traps.map((trap) => ({ ...trap, visible: true })),
   }
