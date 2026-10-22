@@ -123,8 +123,8 @@ running text.
 
 | Utility | Size | Line height | Use |
 |---|---|---|---|
-| `text-px-4` | 81.92px | 80px | The seed at the top of a report |
-| `text-px-3` | 61.44px | 60px | Page titles |
+| `text-px-4` | 81.92px | 80px | Hero display only; nothing in the report uses it |
+| `text-px-3` | 61.44px | 60px | Page titles, the seed at the top of a report (`text-px-2` on phones) |
 | `text-px-2` | 40.96px | 48px | Section titles, depth numbers |
 | `text-px-1` | 20.48px | 24px | Subsections, dialog and card titles, slot labels |
 
@@ -231,7 +231,9 @@ details or the finder. The report itself uses bands and rules, not cards.
   here mirrors the shared ones for the preview. Change a shared component in
   both places. `cn()` is identical in both `lib/utils.ts` files.
 - The game pieces are the app's own data-driven components, styled to this
-  spec: `ItemBox` (item slot), `seed/FloorBanner`, and `seed/DescentRail`.
+  spec: `ItemBox` (item slot), `seed/FloorBanner`, `seed/DescentRail`, and
+  `GameWindow`, the game's `Chrome.Type.WINDOW` nine-patch at 2× around the
+  report's seed. The frame is game art, so its contents use Torchlit tokens.
   In the app the descent rail is a compact sticky strip under the seed tabs:
   region names move into each floor's tooltip, clicking a floor scrolls to
   it, and the floor being read is outlined. Floor banners stick beneath it
