@@ -904,9 +904,7 @@ test('floor items render as icon slots', async ({ page }) => {
     '59px'
   )
   await expect(choice.getByRole('radio', { name: 'Mimic Tooth' })).toBeVisible()
-  await expect(
-    choice.getByRole('radio', { name: 'No trinket' })
-  ).toHaveAttribute('aria-checked', 'true')
+  await expect(choice.getByRole('radio', { checked: true })).toHaveCount(0)
   await expect(floor4.locator('[data-trinket-choice]')).toHaveCount(0)
   const order = choice.locator(
     '[data-transmutation-order] [data-slot="item-box"]'
@@ -924,7 +922,8 @@ test('floor items render as icon slots', async ({ page }) => {
   await expect(
     floor3.getByRole('button', { name: /^Generated with/ })
   ).toHaveCount(0)
-  await choice.getByRole('radio', { name: 'No trinket' }).click()
+  await mossy.click()
+  await expect(mossy).toHaveAttribute('aria-checked', 'false')
   await expect(
     page.getByRole('button', { name: /^Generated with/ })
   ).toHaveCount(0)
