@@ -129,8 +129,8 @@ function drawHeap(
   )
 }
 
-/** Faint `EbonyMimic` on the concealed layer; revealed, it shows fully. */
-export const LURKING_OPACITY = 0.15
+/** `MimicSprite.Ebony.hideMimic` alpha; revealed, it shows fully. */
+export const LURKING_OPACITY = 0.2
 
 /**
  * Hidden ebony mimics are drawn over walls so a door's sideways top does
