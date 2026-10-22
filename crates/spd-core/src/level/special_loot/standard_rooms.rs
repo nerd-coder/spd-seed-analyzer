@@ -155,6 +155,9 @@ fn suspicious_chest(
                 RoomLootRole::RuntimeSensitive
             },
         );
+        if let Some(cell) = map.point_to_cell(center.x, center.y) {
+            map.record_heap(cell, "chest", prize.clone());
+        }
         vec![PlacedLoot {
             item: prize,
             heap_type: "chest",
