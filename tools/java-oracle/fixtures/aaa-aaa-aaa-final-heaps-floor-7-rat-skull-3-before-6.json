@@ -2902,7 +2902,13 @@
           "cell": 1409,
           "heap_type": "heap",
           "items": [
-            { "class": "Scimitar", "quantity": 1, "level": 1, "cursed": true }
+            {
+              "class": "Scimitar",
+              "quantity": 1,
+              "level": 1,
+              "cursed": true,
+              "enchantment": "Wondrous"
+            }
           ]
         },
         {
@@ -2948,7 +2954,13 @@
               "cursed": false
             },
             { "class": "Food", "quantity": 1, "level": 0, "cursed": false },
-            { "class": "Sickle", "quantity": 1, "level": 0, "cursed": true }
+            {
+              "class": "Sickle",
+              "quantity": 1,
+              "level": 0,
+              "cursed": true,
+              "enchantment": "Polarized"
+            }
           ]
         },
         {

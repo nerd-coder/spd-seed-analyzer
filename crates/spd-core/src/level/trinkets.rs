@@ -93,6 +93,41 @@ pub fn consumable_exotic_chance() -> f32 {
     }
 }
 
+/// `ParchmentScrap.enchantChanceMultiplier(level)`; -1 is no trinket.
+pub fn parchment_enchant_multiplier(level: i32) -> f32 {
+    match level {
+        0 => 2.0,
+        1 => 4.0,
+        2 => 7.0,
+        3 => 10.0,
+        _ => 1.0,
+    }
+}
+
+/// `ParchmentScrap.curseChanceMultiplier(level)`; -1 is no trinket.
+pub fn parchment_curse_multiplier(level: i32) -> f32 {
+    match level {
+        0 => 1.5,
+        1 => 2.0,
+        2 => 1.0,
+        3 => 0.0,
+        _ => 1.0,
+    }
+}
+
+/// A quest's stored enchantment test, `roll > base * enchantChanceMultiplier()`
+/// clearing it. With Parchment Scrap held the outcome is fixed; without it,
+/// the second value is the lowest Parchment level that would have kept it.
+pub fn parchment_retention(base: f32, roll: f32) -> (bool, Option<i8>) {
+    let held = trinket_level(TrinketKind::ParchmentScrap);
+    let kept = roll <= base * parchment_enchant_multiplier(held);
+    if kept || held >= 0 {
+        return (kept, None);
+    }
+    let minimum = (0..=3).find(|&level| roll <= base * parchment_enchant_multiplier(level));
+    (false, minimum.map(|level| level as i8))
+}
+
 fn override_chance(level: Option<u8>) -> f32 {
     level.map_or(0.0, |level| 0.25 + 0.25 * f32::from(level))
 }

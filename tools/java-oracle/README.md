@@ -189,6 +189,11 @@ for depth in 2 3 4; do
     --output "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-$depth-cracked-spyglass-3-before-2.json" \
     AAA-AAA-AAA
 done
+for depth in 4 6 7; do
+  ./tools/java-oracle/run --trinket-final-heaps-depth parchment-scrap "$depth" 3 3 \
+    --output "tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-$depth-parchment-scrap-3-before-3.json" \
+    HKT-JZN-XQQ
+done
 ./tools/java-oracle/run --mimic-tooth-final-heaps-depth 2 3 2 \
   --output tools/java-oracle/fixtures/aaa-aaa-bmt-final-heaps-floor-2-mimic-tooth-3-before-2.json \
   AAA-AAA-BMT
@@ -468,7 +473,10 @@ blob concentrations retain stable render-facing Java facts and are sorted for
 deterministic comparison. Heaps are ordered by ascending row-major `cell`;
 each `items` array keeps the Java `Heap.items` stack order. `heap_type` is the
 lower-case stable form of SPD's `Heap.Type`. Item class, quantity, true level,
-and curse state are kept without localization. Gold, keys, and every other
+and curse state are kept without localization. Weapons and armor with an
+enchantment or glyph (curses included) also carry its simple class name as
+`enchantment`; fixtures generated before that field existed omit it. The
+trinket fixtures record it. Gold, keys, and every other
 heap item generated within
 the stated deterministic scope remain in this contract; nothing is filtered
 for UI convenience. `final_mobs` is likewise cell-sorted and uses Java simple

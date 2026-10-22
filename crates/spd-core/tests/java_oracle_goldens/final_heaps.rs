@@ -723,6 +723,7 @@ fn trinket_fixtures_replay_exact_profiled_floor_state() {
             Some("rat-skull") => spd_core::TrinketKind::RatSkull,
             Some("mimic-tooth") => spd_core::TrinketKind::MimicTooth,
             Some("cracked-spyglass") => spd_core::TrinketKind::CrackedSpyglass,
+            Some("parchment-scrap") => spd_core::TrinketKind::ParchmentScrap,
             Some(other) => panic!("{name}: unsupported oracle trinket {other}"),
             None => continue,
         };
@@ -827,8 +828,48 @@ fn trinket_fixtures_replay_exact_profiled_floor_state() {
             only_rust.is_empty() && only_java.is_empty(),
             format!("\n  only rust {only_rust:?}\n  only java {only_java:?}"),
         );
+        let mut rust_enchantments: Vec<_> = map
+            .heaps
+            .iter()
+            .flat_map(|heap| {
+                heap.items.iter().filter_map(move |item| {
+                    let enchantment = item.enchantment?;
+                    Some((
+                        heap.cell,
+                        item.class_name().to_string(),
+                        enchantment.class_name().to_string(),
+                    ))
+                })
+            })
+            .collect();
+        let mut java_enchantments = oracle_heap_enchantments(&path);
+        rust_enchantments.sort();
+        java_enchantments.sort();
+        check(
+            "enchantments",
+            rust_enchantments == java_enchantments,
+            format!("\n  rust {rust_enchantments:?}\n  java {java_enchantments:?}"),
+        );
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
+/// `(cell, item class, enchantment class)` for every enchanted final heap
+/// item. Trinket fixtures record weapon enchantments and armor glyphs.
+fn oracle_heap_enchantments(path: &std::path::Path) -> Vec<(u32, String, String)> {
+    let json: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(path).expect("fixture")).expect("json");
+    let mut out = Vec::new();
+    for heap in json["floors"][0]["final_heaps"].as_array().expect("heaps") {
+        let cell = heap["cell"].as_u64().expect("cell") as u32;
+        for item in heap["items"].as_array().expect("items") {
+            if let Some(enchantment) = item["enchantment"].as_str() {
+                let class_name = item["class"].as_str().expect("class");
+                out.push((cell, class_name.to_string(), enchantment.to_string()));
+            }
+        }
+    }
+    out
 }
 
 #[test]

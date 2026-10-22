@@ -6,7 +6,7 @@ import type { MobId } from '@/generated/game-ids'
 import { filmFrames, type SpriteSheet } from '@/lib/game-objects'
 import { itemAppearance } from '@/lib/identity'
 import { itemSprite } from '@/lib/item-kind'
-import { itemClass } from '@/lib/map-inspect'
+import { itemClass, itemEnhancement } from '@/lib/map-inspect'
 import { mobSheetUrl, mobSprite } from '@/lib/map-mob-sprites'
 import type {
   IdentityMaps,
@@ -209,6 +209,7 @@ export function ItemPortrait({
       panel={false}
       title={title}
       cursed={item.cursed}
+      enhancement={itemEnhancement(item)}
       level={item.level}
       sprites={itemSprite({
         className,

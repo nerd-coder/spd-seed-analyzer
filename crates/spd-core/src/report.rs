@@ -253,6 +253,9 @@ pub struct MapHeapItem {
     pub quantity: i32,
     pub level: i32,
     pub cursed: bool,
+    /// Weapon enchantment or armor glyph, curses included.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub enchantment: Option<Enchantment>,
     /// Internal generation provenance for parity checks; never serialized.
     #[doc(hidden)]
     #[serde(skip)]

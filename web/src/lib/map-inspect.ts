@@ -5,7 +5,13 @@ import {
   trapClassName,
 } from '@/generated/game-ids'
 import { Terrain } from '@/lib/dungeon-tile-visuals'
-import { itemLabel, mobLabel } from '@/lib/item-title'
+import { type ItemEnhancement, parseItemEnhancement } from '@/lib/item-kind'
+import {
+  enchantedTitle,
+  enchantmentName,
+  itemLabel,
+  mobLabel,
+} from '@/lib/item-title'
 import catalog from '@/lib/map-object-catalog.json'
 import type {
   FloorMap,
@@ -126,11 +132,20 @@ export function mobTitle(mob: MapMob): string {
 }
 
 export function itemTitle(item: MapHeapItem): string {
-  const title = itemLabel(item.item)
   const level =
     item.level > 0 ? ` +${item.level}` : item.level < 0 ? ` ${item.level}` : ''
+  const title = enchantedTitle(
+    `${itemLabel(item.item)}${level}`,
+    enchantmentName(item.enchantment)
+  )
   const quantity = item.quantity > 1 ? `${item.quantity}× ` : ''
-  return `${quantity}${title}${level}`
+  return `${quantity}${title}`
+}
+
+export function itemEnhancement(
+  item: MapHeapItem
+): ItemEnhancement | undefined {
+  return parseItemEnhancement(enchantmentName(item.enchantment))
 }
 
 export function itemClass(item: MapHeapItem): string {

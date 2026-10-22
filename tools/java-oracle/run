@@ -74,7 +74,7 @@ records RING/WAND/ARTIFACT.dropped around create(). RING.dropped stays flat.
 With --rat-skull-final-heaps-depth or --mimic-tooth-final-heaps-depth, runs the
 final-heaps contract with that trinket (LEVEL 0-3) held in the hero backpack for
 every generated floor at or after BEFORE_DEPTH. --trinket-final-heaps-depth does
-the same for NAME (rat-skull, mimic-tooth, or cracked-spyglass).
+the same for NAME (rat-skull, mimic-tooth, cracked-spyglass, or parchment-scrap).
 EOF
 }
 
@@ -262,11 +262,11 @@ if [[ -n "$mimic_tooth_before_depth" && (! "$mimic_tooth_before_depth" =~ ^[0-9]
 	echo "Mimic Tooth before depth must be 1 through 26" >&2
 	exit 2
 fi
-if [[ -n "$trinket_depth" && ! ("$trinket_name" =~ ^(rat-skull|mimic-tooth|cracked-spyglass)$
+if [[ -n "$trinket_depth" && ! ("$trinket_name" =~ ^(rat-skull|mimic-tooth|cracked-spyglass|parchment-scrap)$
 	&& "$trinket_depth" =~ ^[0-9]+$ && "$trinket_depth" -ge 1 && "$trinket_depth" -le 26
 	&& "$trinket_level" =~ ^[0-3]$
 	&& "$trinket_before_depth" =~ ^[0-9]+$ && "$trinket_before_depth" -ge 1 && "$trinket_before_depth" -le 26) ]]; then
-	echo "Trinket oracle needs NAME rat-skull|mimic-tooth|cracked-spyglass, DEPTH 1-26, LEVEL 0-3, BEFORE_DEPTH 1-26" >&2
+	echo "Trinket oracle needs NAME rat-skull|mimic-tooth|cracked-spyglass|parchment-scrap, DEPTH 1-26, LEVEL 0-3, BEFORE_DEPTH 1-26" >&2
 	exit 2
 fi
 selected_contracts=0

@@ -1418,7 +1418,8 @@
               "class": "LeatherArmor",
               "quantity": 1,
               "level": 0,
-              "cursed": true
+              "cursed": true,
+              "enchantment": "Displacement"
             }
           ]
         },

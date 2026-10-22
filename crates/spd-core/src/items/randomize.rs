@@ -2,24 +2,29 @@
 
 use super::enchants;
 use super::model::{GeneratedItem, ItemCategory};
+use crate::level::trinkets;
 use crate::random::Random;
+use crate::TrinketKind;
 
 /// Apply type-specific randomization after the item class is chosen.
 pub fn randomize_item(item: &mut GeneratedItem, dungeon_depth: i32) {
     randomize_item_with_parchment(item, dungeon_depth, None);
 }
 
-/// Apply item randomization with an explicit Parchment Scrap level.
+/// Apply item randomization with an explicit Parchment Scrap level. `None`
+/// reads the held trinket.
 pub fn randomize_item_with_parchment(
     item: &mut GeneratedItem,
     dungeon_depth: i32,
     parchment_scrap_level: Option<i32>,
 ) {
+    let parchment = || {
+        parchment_scrap_level
+            .unwrap_or_else(|| trinkets::trinket_level(TrinketKind::ParchmentScrap))
+    };
     match item.category {
-        ItemCategory::Weapon | ItemCategory::Missile => {
-            randomize_weapon(item, parchment_scrap_level)
-        }
-        ItemCategory::Armor => randomize_armor(item),
+        ItemCategory::Weapon | ItemCategory::Missile => randomize_weapon(item, parchment()),
+        ItemCategory::Armor => randomize_armor(item, parchment()),
         ItemCategory::Wand => randomize_wand(item),
         ItemCategory::Ring => randomize_ring(item),
         ItemCategory::Artifact => randomize_artifact(item),
@@ -29,8 +34,8 @@ pub fn randomize_item_with_parchment(
     }
 }
 
-fn randomize_weapon(item: &mut GeneratedItem, parchment_scrap_level: Option<i32>) {
-    // +0: 75%, +1: 20%, +2: 5%
+/// `Weapon/Armor.random()` upgrade roll: +0 75%, +1 20%, +2 5%.
+fn roll_equipment_level() -> i32 {
     let mut n = 0;
     if Random::int_max(4) == 0 {
         n += 1;
@@ -38,22 +43,19 @@ fn randomize_weapon(item: &mut GeneratedItem, parchment_scrap_level: Option<i32>
             n += 1;
         }
     }
-    item.level = n;
+    n
+}
+
+fn randomize_weapon(item: &mut GeneratedItem, parchment_level: i32) {
+    item.level = roll_equipment_level();
 
     // Separate RNG so parchment scrap variance doesn't affect levelgen stream
     Random::push_generator_seeded(Random::long());
     let effect_roll = Random::float();
-    let (curse_multiplier, enchant_multiplier) = match parchment_scrap_level {
-        Some(0) => (1.5, 2.0),
-        Some(1) => (2.0, 4.0),
-        Some(2) => (1.0, 7.0),
-        Some(3) => (0.0, 10.0),
-        _ => (1.0, 1.0),
-    };
-    if effect_roll < 0.3 * curse_multiplier {
+    if effect_roll < 0.3 * trinkets::parchment_curse_multiplier(parchment_level) {
         item.enchantment = Some(enchants::random_weapon_curse(None).to_string());
         item.cursed = true;
-    } else if effect_roll >= 1.0 - 0.1 * enchant_multiplier {
+    } else if effect_roll >= 1.0 - 0.1 * trinkets::parchment_enchant_multiplier(parchment_level) {
         item.enchantment = Some(enchants::random_weapon_enchant(None).to_string());
     }
     Random::pop_generator();
@@ -64,22 +66,15 @@ fn randomize_weapon(item: &mut GeneratedItem, parchment_scrap_level: Option<i32>
     }
 }
 
-fn randomize_armor(item: &mut GeneratedItem) {
-    let mut n = 0;
-    if Random::int_max(4) == 0 {
-        n += 1;
-        if Random::int_max(5) == 0 {
-            n += 1;
-        }
-    }
-    item.level = n;
+fn randomize_armor(item: &mut GeneratedItem, parchment_level: i32) {
+    item.level = roll_equipment_level();
 
     Random::push_generator_seeded(Random::long());
     let effect_roll = Random::float();
-    if effect_roll < 0.3 {
+    if effect_roll < 0.3 * trinkets::parchment_curse_multiplier(parchment_level) {
         item.enchantment = Some(enchants::random_armor_curse(None).to_string());
         item.cursed = true;
-    } else if effect_roll >= 1.0 - 0.15 {
+    } else if effect_roll >= 1.0 - 0.15 * trinkets::parchment_enchant_multiplier(parchment_level) {
         item.enchantment = Some(enchants::random_armor_glyph(None).to_string());
     }
     Random::pop_generator();

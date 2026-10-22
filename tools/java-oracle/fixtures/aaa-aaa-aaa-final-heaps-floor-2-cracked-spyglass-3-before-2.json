@@ -2291,6 +2291,13 @@
           ]
         },
         {
+          "cell": 1098,
+          "heap_type": "heap",
+          "items": [
+            { "class": "GuidePage", "quantity": 1, "level": 0, "cursed": false }
+          ]
+        },
+        {
           "cell": 1127,
           "heap_type": "tomb",
           "items": [
@@ -2315,17 +2322,16 @@
           ]
         },
         {
-          "cell": 1204,
-          "heap_type": "heap",
-          "items": [
-            { "class": "GuidePage", "quantity": 1, "level": 0, "cursed": false }
-          ]
-        },
-        {
           "cell": 1370,
           "heap_type": "tomb",
           "items": [
-            { "class": "MailArmor", "quantity": 1, "level": 1, "cursed": true }
+            {
+              "class": "MailArmor",
+              "quantity": 1,
+              "level": 1,
+              "cursed": true,
+              "enchantment": "Displacement"
+            }
           ]
         },
         {

@@ -326,6 +326,10 @@ fn heap_item(item: &GeneratedItem) -> MapHeapItem {
         quantity: item.quantity,
         level: item.level,
         cursed: item.cursed,
+        enchantment: item
+            .enchantment
+            .as_deref()
+            .map(spd_objects::Enchantment::from_class_name_lossy),
         source: item.source.clone(),
     }
 }

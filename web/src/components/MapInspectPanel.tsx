@@ -21,6 +21,7 @@ import {
 import { itemLabel } from '@/lib/item-title'
 import {
   itemClass,
+  itemEnhancement,
   itemTitle,
   type MapInspectEntry,
   type MapInspection,
@@ -103,6 +104,7 @@ function EntrySection({
             title={title}
             className={itemClass(entry.item)}
             cursed={entry.item.cursed}
+            enhancement={itemEnhancement(entry.item)}
             location={entry.place}
           />
         </PictureRow>
@@ -140,6 +142,7 @@ function EntrySection({
                   title={dropTitle}
                   className={itemClass(item)}
                   cursed={item.cursed}
+                  enhancement={itemEnhancement(item)}
                   location={
                     crystal
                       ? 'Drops when defeated. Lost if the mimic escapes.'

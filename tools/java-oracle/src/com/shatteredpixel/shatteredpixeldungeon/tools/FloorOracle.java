@@ -29,8 +29,11 @@ import com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.Scroll;
 import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.CrackedSpyglass;
 import com.watabou.utils.Reflection;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
 import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.MimicTooth;
+import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.ParchmentScrap;
 import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.RatSkull;
+import com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.trinkets.Trinket;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Document;
 import com.shatteredpixel.shatteredpixeldungeon.levels.Level;
@@ -126,7 +129,7 @@ final class FloorOracle {
 	}
 
 	/**
-	 * Holds {@code trinket} ("rat-skull", "mimic-tooth", or "cracked-spyglass") at {@code trinketLevel}
+	 * Holds {@code trinket} ("rat-skull", "mimic-tooth", "cracked-spyglass", or "parchment-scrap") at {@code trinketLevel}
 	 * in the hero backpack for every generated floor at or after
 	 * {@code trinketBeforeDepth}. A null trinket holds nothing.
 	 */
@@ -352,6 +355,8 @@ final class FloorOracle {
 			return MimicTooth.class;
 		} else if ("cracked-spyglass".equals(trinket)) {
 			return CrackedSpyglass.class;
+		} else if ("parchment-scrap".equals(trinket)) {
+			return ParchmentScrap.class;
 		}
 		throw new IllegalArgumentException("Unsupported held trinket: " + trinket);
 	}
@@ -406,8 +411,15 @@ final class FloorOracle {
 	}
 
 	private static ItemFact itemFact(Item item) {
+		Object enchantment = null;
+		if (item instanceof Weapon) {
+			enchantment = ((Weapon) item).enchantment;
+		} else if (item instanceof Armor) {
+			enchantment = ((Armor) item).glyph;
+		}
 		return new ItemFact(
-				item.getClass().getSimpleName(), item.quantity(), item.trueLevel(), item.cursed);
+				item.getClass().getSimpleName(), item.quantity(), item.trueLevel(), item.cursed,
+				enchantment == null ? null : enchantment.getClass().getSimpleName());
 	}
 
 	static final class FloorFacts {
@@ -425,12 +437,19 @@ final class FloorOracle {
 		final int quantity;
 		final int level;
 		final boolean cursed;
+		/** Weapon enchantment or armor glyph class; null when absent. */
+		final String enchantment;
 
 		ItemFact(String itemClass, int quantity, int level, boolean cursed) {
+			this(itemClass, quantity, level, cursed, null);
+		}
+
+		ItemFact(String itemClass, int quantity, int level, boolean cursed, String enchantment) {
 			this.itemClass = itemClass;
 			this.quantity = quantity;
 			this.level = level;
 			this.cursed = cursed;
+			this.enchantment = enchantment;
 		}
 	}
 

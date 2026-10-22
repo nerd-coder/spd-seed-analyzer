@@ -8,7 +8,7 @@ use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::items::enchants;
 use crate::items::model::{GeneratedItem, ItemCategory, ItemProvenance, QuestRewardRole};
-use crate::level::TerrainMap;
+use crate::level::{trinkets, TerrainMap};
 use crate::random::Random;
 use crate::rooms::room::Room;
 
@@ -177,24 +177,16 @@ fn generate_rewards(dungeon: &mut DungeonState) -> (GeneratedItem, GeneratedItem
     // Always generate enchant+glyph first so the roll count is constant.
     let enchant = enchants::random_weapon_enchant(None).to_string();
     let glyph = enchants::random_armor_glyph(None).to_string();
-    weapon.potential_enchantment = Some(enchant.clone());
-    armor.potential_enchantment = Some(glyph.clone());
-    // 20% base chance (no ParchmentScrap trinket)
     let enchant_roll = Random::float();
-    if enchant_roll <= 0.2 {
-        weapon.enchantment = Some(enchant);
-        armor.enchantment = Some(glyph);
+    let (kept, minimum_parchment_level) = trinkets::parchment_retention(0.2, enchant_roll);
+    if kept {
+        weapon.enchantment = Some(enchant.clone());
+        armor.enchantment = Some(glyph.clone());
     }
-
-    let minimum_parchment_level = if enchant_roll <= 0.2 {
-        None
-    } else if enchant_roll <= 0.4 {
-        Some(0)
-    } else if enchant_roll <= 0.8 {
-        Some(1)
-    } else {
-        Some(2)
-    };
+    if kept || minimum_parchment_level.is_some() {
+        weapon.potential_enchantment = Some(enchant);
+        armor.potential_enchantment = Some(glyph);
+    }
 
     weapon.source = Some("Ghost.Quest".into());
     armor.source = Some("Ghost.Quest".into());

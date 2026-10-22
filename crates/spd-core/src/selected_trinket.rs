@@ -40,6 +40,10 @@ pub fn analyze_seed_with_trinket(
 }
 
 #[cfg(test)]
+#[path = "selected_trinket/parchment_tests.rs"]
+mod parchment_tests;
+
+#[cfg(test)]
 mod tests {
     use super::*;
     use crate::{ProfileError, TrinketGenerationEffect};

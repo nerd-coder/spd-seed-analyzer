@@ -82,6 +82,31 @@ Direct `Enchantment.random()` / `Glyph.random()` / no-arg `enchant()` /
 `inscribe()` use the **ambient** generator (the floor stream during
 `Level.create()`), not the parchment-isolated one.
 
+### Holding Parchment Scrap while floors generate
+
+The held level is read when each floor is generated. It never changes the
+number of floor-stream draws, so layouts, mobs, and heap cells and classes are
+identical to the no-trinket replay:
+
+- The curse/enchant roll sits inside the pushed generator above.
+- Code that branches on the result draws nothing extra at generated levels.
+  Sacrifice and Crypt `upgrade()` only uncursed prizes. Pool, sentry, traps,
+  maze, and golden/ebony mimics clear curses with `enchant(null)` /
+  `inscribe(null)`. `Weapon.upgrade()` draws only for a curse enchant
+  (`Int(3)`, `Weapon.java:391-392`) or at +4 and above (`:395`). Generated
+  weapons are at most +2.
+- Sad Ghost and Troll Blacksmith always draw both effects and the keep roll.
+  The held level only changes which result is kept.
+
+Identities can still change downstream. Imp weapons and vault equipment call
+`enchant()` / `inscribe()`, which ignore the previous effect's class. Parchment
+changes that previous effect, so it can change the floor-stream pick. Sacrifice
+and Crypt prizes skip the free upgrade when the isolated roll curses them.
+
+Evidence: oracle fixtures `hkt-jzn-xqq-final-heaps-floor-{4,6,7}-parchment-scrap-3-before-3.json`
+hold Parchment +3 from floor 3 and record heap enchantments. The Rust profiled
+replay matches every heap, mob, RNG probe, and enchantment.
+
 ## Generation sites
 
 | Site | What is rolled | Stream |

@@ -33,7 +33,7 @@ public final class JavaOracle {
 	public static void main(String[] args) {
 		if (args.length < 1 || args.length > 6) {
 			System.err.println(
-					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH [challenge NAME[,NAME...]|all | rat-skull|mimic-tooth|cracked-spyglass LEVEL BEFORE_DEPTH] | mining-level DEPTH crystal|gnoll | vault-level DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection | secret-library-order | secret-laboratory-order]");
+					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH [challenge NAME[,NAME...]|all | rat-skull|mimic-tooth|cracked-spyglass|parchment-scrap LEVEL BEFORE_DEPTH] | mining-level DEPTH crystal|gnoll | vault-level DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection | secret-library-order | secret-laboratory-order]");
 			System.exit(2);
 		}
 
@@ -47,7 +47,8 @@ public final class JavaOracle {
 				? args[4] : null;
 		boolean trinketFinalHeaps = finalHeaps && args.length == 6
 				&& ("rat-skull".equals(args[3]) || "mimic-tooth".equals(args[3])
-						|| "cracked-spyglass".equals(args[3]));
+						|| "cracked-spyglass".equals(args[3])
+						|| "parchment-scrap".equals(args[3]));
 		boolean generatorDeckRollover =
 				args.length == 2 && "generator-deck-rollover".equals(args[1]);
 		boolean generatorLifecycle =
@@ -569,7 +570,12 @@ public final class JavaOracle {
 						.append(escape(item.itemClass)).append("\",\n");
 				json.append(indent).append("  \"quantity\": ").append(item.quantity).append(",\n");
 				json.append(indent).append("  \"level\": ").append(item.level).append(",\n");
-				json.append(indent).append("  \"cursed\": ").append(item.cursed).append('\n');
+				json.append(indent).append("  \"cursed\": ").append(item.cursed);
+				if (item.enchantment != null) {
+					json.append(",\n").append(indent).append("  \"enchantment\": \"")
+							.append(escape(item.enchantment)).append('"');
+				}
+				json.append('\n');
 				json.append(indent).append('}');
 			}
 			if (index + 1 < items.size()) {
@@ -597,6 +603,9 @@ public final class JavaOracle {
 				.append("\", \"quantity\": ").append(item.quantity)
 				.append(", \"level\": ").append(item.level)
 				.append(", \"cursed\": ").append(item.cursed);
+		if (item.enchantment != null) {
+			json.append(", \"enchantment\": \"").append(escape(item.enchantment)).append('"');
+		}
 	}
 
 	private static void appendIdentities(

@@ -172,31 +172,19 @@ fn generate_rewards(
     let enchant = enchants::random_weapon_enchant(None).to_string();
     let glyph = enchants::random_armor_glyph(None).to_string();
     let enchant_roll = Random::float();
-    let minimum_parchment_level = if enchant_roll <= 0.3 {
-        None
-    } else if enchant_roll <= 0.6 {
-        Some(0)
-    } else {
-        Some(1)
-    };
-    let mut smith_enchant = Some(enchant.clone());
-    let mut smith_glyph = Some(glyph.clone());
-    if minimum_parchment_level.is_some() {
-        smith_enchant = None;
-        smith_glyph = None;
-    }
+    let (kept, minimum_parchment_level) =
+        crate::level::trinkets::parchment_retention(0.3, enchant_roll);
+    let smith_enchant = kept.then(|| enchant.clone());
+    let smith_glyph = kept.then(|| glyph.clone());
+    let potential = kept || minimum_parchment_level.is_some();
 
     for item in &mut rewards {
         let tier = crate::generator::equipment_tier_for_class(&item.class_name)
             .expect("blacksmith equipment has a tier");
         item.potential_enchantment = match item.category {
             crate::items::model::ItemCategory::Weapon
-            | crate::items::model::ItemCategory::Missile => {
-                smith_enchant.clone().or_else(|| Some(enchant.clone()))
-            }
-            crate::items::model::ItemCategory::Armor => {
-                smith_glyph.clone().or_else(|| Some(glyph.clone()))
-            }
+            | crate::items::model::ItemCategory::Missile => potential.then(|| enchant.clone()),
+            crate::items::model::ItemCategory::Armor => potential.then(|| glyph.clone()),
             _ => None,
         };
         item.provenance = crate::items::model::ItemProvenance::Quest(match item.category {

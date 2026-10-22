@@ -76,9 +76,14 @@ offer calls `analyze_seed_with_trinket` (WASM export of the same name): the
 trinket is held at +3 from `first_effective_depth`, variable samples are
 published, and only Forbidden Runes stays a spawn condition unless challenges
 are declared. No pick is the merged `analyze_seed` report. Per-option `catalyst_option_effects` marks which
-trinkets the replay models (Mossy Clump, Trap Mechanism, Mimic Tooth, Rat
-Skull, Exotic Crystals, Cracked Spyglass); Parchment Scrap's equipment enchant
-rolls are not modeled. Cracked Spyglass's hidden extra loot is placed only in
+trinkets the replay models: Mossy Clump, Trap Mechanism, Mimic Tooth, Rat
+Skull, Exotic Crystals, Cracked Spyglass, and Parchment Scrap. Every other
+trinket only changes play. Parchment Scrap changes only the isolated
+curse/enchant roll of weapons, missiles, and armor, plus the Ghost and
+Blacksmith keep test, so layouts stay identical. Oracle fixtures
+`*-parchment-scrap-3-before-3.json` pin heap enchantments. Map heap items
+publish their enchantment or glyph, which the inspect panel shows in the
+title. Cracked Spyglass's hidden extra loot is placed only in
 the picked-trinket replay (oracle fixtures `*-cracked-spyglass-3-before-2.json`);
 the merged default report does not enumerate Spyglass routes. Map
 `concealed_cells` (Ebony Mimics, Spyglass loot) fade with the hidden-area

@@ -207,6 +207,8 @@ export type MapHeapItem = {
   quantity: number
   level: number
   cursed: boolean
+  /** Weapon enchantment or armor glyph, curses included. */
+  enchantment?: Enchantment
 }
 
 export type MapMobState = 'sleeping' | 'wandering' | 'passive'
