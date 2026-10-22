@@ -1,5 +1,5 @@
 import { Terrain, TILE_PX } from '@/lib/dungeon-tile-visuals'
-import type { FloorMap } from '@/lib/spd-wasm'
+import type { FloorMap, MapCustomTile } from '@/lib/spd-wasm'
 
 /**
  * Areas a player must search for: rooms behind secret doors, the doors,
@@ -145,10 +145,34 @@ export function concealedMap(map: FloorMap, unexplored: Set<number>): FloorMap {
     tiles: map.tiles.map((tile, cell) =>
       unexplored.has(cell) ? Terrain.WALL : tile
     ),
+    custom_tiles: maskCustomLayers(map, map.custom_tiles, (cell) =>
+      unexplored.has(cell)
+    ),
+    // Overhangs draw one row above the tile they belong to.
+    custom_walls: maskCustomLayers(
+      map,
+      map.custom_walls,
+      (cell) => unexplored.has(cell) || unexplored.has(cell + map.width)
+    ),
     heaps: map.heaps.filter(shown),
     mobs: map.mobs.filter(shown),
     markers: map.markers.filter(shown),
   }
+}
+
+function maskCustomLayers(
+  map: FloorMap,
+  layers: MapCustomTile[] | undefined,
+  masked: (cell: number) => boolean
+): MapCustomTile[] {
+  return (layers ?? []).map((layer) => ({
+    ...layer,
+    static_data: layer.static_data.map((visual, index) => {
+      const x = layer.x + (index % layer.width)
+      const y = layer.y + Math.floor(index / layer.width)
+      return masked(y * map.width + x) ? -1 : visual
+    }),
+  }))
 }
 
 /** Black out unexplored cells on the concealed layer, like the void. */
