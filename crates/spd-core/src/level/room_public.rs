@@ -14,6 +14,9 @@ pub struct RoomPublicFact {
     pub room: String,
     depth: i32,
     grassy_grave_rewards: Option<u32>,
+    /// Seeded Energy Crystal total; `None` when an earlier painter callback
+    /// can shift the RNG with player state.
+    energy_crystals: Option<i32>,
 }
 
 impl RoomPublicFact {
@@ -22,7 +25,12 @@ impl RoomPublicFact {
             room: room.into(),
             depth,
             grassy_grave_rewards: None,
+            energy_crystals: None,
         })
+    }
+
+    pub fn set_energy_crystals(&mut self, total: i32) {
+        self.energy_crystals = Some(total);
     }
 
     pub fn for_room(room: &Room, depth: i32) -> Option<Self> {
@@ -46,6 +54,7 @@ impl RoomPublicFact {
                 name: name.into(),
                 label: None,
                 quantity: 1,
+                quantity_range: None,
                 item: None,
                 candidates: Vec::new(),
                 category: category.into(),
@@ -119,7 +128,13 @@ impl RoomPublicFact {
             match entry.name.as_str() {
                 "two Energy Crystal stacks" => {
                     entry.name = "Energy Crystal".into();
-                    entry.quantity = 10;
+                    match self.energy_crystals {
+                        Some(total) => entry.quantity = total,
+                        None => {
+                            entry.quantity = 6;
+                            entry.quantity_range = Some(NumericRange { min: 6, max: 10 });
+                        }
+                    }
                 }
                 "5 Energy Crystals" => {
                     entry.name = "Energy Crystal".into();
@@ -155,6 +170,7 @@ fn larder_entries(depth: i32) -> Vec<ItemEntry> {
             name: class_name.into(),
             label: None,
             quantity: count,
+            quantity_range: None,
             item: Some(crate::report::item_id(class_name)),
             candidates: Vec::new(),
             category: "food".into(),

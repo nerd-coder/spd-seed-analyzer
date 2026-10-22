@@ -121,10 +121,9 @@ pub fn special_room_loot(
         // `RingRoom` only calls `placeCenterDetail` when both dimensions are
         // at least 10. Smaller instances are ring-shaped geometry with no
         // reward callback, so they must not emit an item contract.
+        let mut fact = None;
         if room.name != "RingRoom" || standard_paint.center_loot.is_some() {
-            if let Some(fact) = super::room_public::RoomPublicFact::for_room(room, dungeon.depth) {
-                room_public_facts.push(fact);
-            }
+            fact = super::room_public::RoomPublicFact::for_room(room, dungeon.depth);
         }
         let mut standard_loot = standard_rooms::paint_center_loot(
             dungeon,
@@ -148,6 +147,16 @@ pub fn special_room_loot(
                     geometry_prize_cell,
                     items_to_spawn,
                 );
+                if let Some(fact) = fact.as_mut().filter(|_| {
+                    room.name == "SecretLaboratoryRoom" && first_sensitive_loot_index.is_none()
+                }) {
+                    fact.set_energy_crystals(
+                        loot.iter()
+                            .filter(|placed| placed.item.class_name == "EnergyCrystal")
+                            .map(|placed| placed.item.quantity)
+                            .sum(),
+                    );
+                }
                 out.append(&mut loot);
             }
             RoomKind::Standard
@@ -171,6 +180,7 @@ pub fn special_room_loot(
             }
             _ => {}
         }
+        room_public_facts.extend(fact);
         rng_checkpoints.push(RoomPaintRngCheckpoint {
             room: room.name.clone(),
             rng: Random::peek_ints(8),

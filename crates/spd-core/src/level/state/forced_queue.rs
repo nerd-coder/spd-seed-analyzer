@@ -8,6 +8,7 @@ fn constrained_spawn_entry(name: &str, class_name: &str, category: &str) -> Item
     ItemEntry {
         name: name.into(),
         quantity: 1,
+        quantity_range: None,
         label: None,
         item: Some(crate::report::item_id(class_name)),
         candidates: Vec::new(),
@@ -35,6 +36,7 @@ fn guaranteed_spawn_entry(name: &str, class_name: &str, category: &str) -> ItemE
     ItemEntry {
         name: name.into(),
         quantity: 1,
+        quantity_range: None,
         label: None,
         item: Some(crate::report::item_id(class_name)),
         candidates: Vec::new(),
@@ -82,6 +84,7 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
         vec![ItemEntry {
             name: "food".into(),
             quantity: 1,
+            quantity_range: None,
             label: None,
             item: None,
             candidates: Vec::new(),
@@ -118,6 +121,7 @@ pub(super) fn public_entries(depth: i32, initial: &[GeneratedItem]) -> Vec<ItemE
         entries.push(ItemEntry {
             name: "food".into(),
             quantity: 1,
+            quantity_range: None,
             label: None,
             item: None,
             candidates: Vec::new(),

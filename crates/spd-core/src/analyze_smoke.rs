@@ -550,6 +550,7 @@ fn no_op_spawn_dependencies_are_not_serialized() {
     let item = crate::report::ItemEntry {
         name: "test".into(),
         quantity: 1,
+        quantity_range: None,
         label: None,
         item: None,
         candidates: Vec::new(),

@@ -5,6 +5,7 @@ fn exact_item(name: &str, class_name: &str, quantity: i32, level: i32) -> ItemEn
     ItemEntry {
         name: name.into(),
         quantity,
+        quantity_range: None,
         label: None,
         item: Some(spd_objects::ItemId::from_class_name_lossy(class_name)),
         candidates: Vec::new(),

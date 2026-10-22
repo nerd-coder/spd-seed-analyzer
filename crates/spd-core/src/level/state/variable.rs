@@ -118,6 +118,7 @@ pub(super) fn item_entry(item: &GeneratedItem) -> Option<ItemEntry> {
     Some(ItemEntry {
         name: public_name,
         quantity: item.quantity.max(1),
+        quantity_range: None,
         label: None,
         item: Some(crate::report::item_id(&item.class_name)),
         candidates: crate::report::item_ids(&candidate_classes),

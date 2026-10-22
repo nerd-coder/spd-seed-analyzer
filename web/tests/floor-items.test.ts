@@ -78,4 +78,17 @@ describe('visibleItemGroups', () => {
     expect(visible[0]?.variants).toHaveLength(1)
     expect(visible[0]?.contract).toBeUndefined()
   })
+
+  test('summarizes a seeded quantity range', () => {
+    expect(
+      summarizeItemContract({
+        quantity: 6,
+        quantity_range: { min: 6, max: 10 },
+        item: 66,
+        category: 'other',
+        cursed: false,
+        prediction: 'exact',
+      }).facts
+    ).toEqual(['Quantity 6–10', 'Uncursed'])
+  })
 })

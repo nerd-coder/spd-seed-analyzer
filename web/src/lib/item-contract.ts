@@ -21,6 +21,11 @@ export function summarizeItemContract(
   contract: ItemVariant
 ): ItemContractSummary {
   const facts: string[] = []
+  if (contract.quantity_range) {
+    facts.push(
+      rangeLabel('Quantity', contract.quantity_range, (value) => String(value))
+    )
+  }
   if (contract.cursed === true) facts.push('Cursed')
   else if (contract.cursed === false) facts.push('Uncursed')
   if (contract.tier_range) {

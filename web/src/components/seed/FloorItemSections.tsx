@@ -62,7 +62,7 @@ function VariableItemsPopover() {
 type FloorItemSlotModel = {
   key: string
   label: string
-  quantity: number
+  quantity: string | null
   level: number | null
   cursed: boolean
   unknown: boolean
@@ -87,10 +87,15 @@ function slotFrom(
   contract?: ItemContractSummary | null
 ): FloorItemSlotModel {
   const subject = { category: item.category, class_name: className }
+  const range = item.quantity_range
   return {
     key,
     label,
-    quantity: item.quantity,
+    quantity: range
+      ? `${range.min}–${range.max}`
+      : item.quantity > 1
+        ? String(item.quantity)
+        : null,
     level: item.level ?? null,
     cursed: item.cursed === true,
     unknown,
@@ -205,7 +210,7 @@ function FloorItemSlot({
             className="text-foreground pointer-events-none absolute inset-0 m-auto size-7"
           />
         ) : null}
-        {slot.quantity > 1 ? (
+        {slot.quantity ? (
           <span className="ink-outline font-pixel text-px-1 pointer-events-none absolute -top-0.5 left-0.5 leading-[20px] text-[#f0c040]">
             {slot.quantity}
           </span>
@@ -237,7 +242,8 @@ export function FloorItemList({
         item,
         identities,
         `${depth}-${groupIndex}-${variantIndex}`,
-        usefulContract
+        usefulContract ??
+          (item.quantity_range ? summarizeItemContract(item) : null)
       ).map((slot) => ({ slot, location }))
     )
   })

@@ -108,6 +108,19 @@ fn merge_identical_items(items: Vec<ItemEntry>) -> Vec<ItemEntry> {
             })
         });
         if let Some(Some(existing)) = matching {
+            if existing.quantity_range.is_some() || item.quantity_range.is_some() {
+                let bounds = |entry: &ItemEntry| {
+                    entry.quantity_range.unwrap_or(NumericRange {
+                        min: entry.quantity,
+                        max: entry.quantity,
+                    })
+                };
+                let (a, b) = (bounds(existing), bounds(&item));
+                existing.quantity_range = Some(NumericRange {
+                    min: a.min.saturating_add(b.min),
+                    max: a.max.saturating_add(b.max),
+                });
+            }
             existing.quantity = existing.quantity.saturating_add(item.quantity);
         } else {
             merged.push(item);
@@ -567,6 +580,7 @@ impl LevelState {
                     exact_name
                 },
                 quantity: item.quantity.max(1),
+                quantity_range: None,
                 label: None,
                 item: (!constrained).then(|| crate::report::item_id(&item.class_name)),
                 candidates: crate::report::item_ids(&candidate_classes),
@@ -666,6 +680,7 @@ impl LevelState {
                 shop_items.push(ItemEntry {
                     name: "inventory-dependent bag stock".into(),
                     quantity: 1,
+                    quantity_range: None,
                     label: None,
                     item: None,
                     candidates: Vec::new(),
@@ -708,6 +723,7 @@ impl LevelState {
             shop_items.push(ItemEntry {
                 name: "Hourglass sand stock".into(),
                 quantity: 1,
+                quantity_range: None,
                 label: None,
                 item: Some(spd_objects::ItemId::SandBag),
                 candidates: Vec::new(),

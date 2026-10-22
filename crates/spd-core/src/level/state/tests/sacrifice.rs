@@ -132,6 +132,7 @@ fn floor_one_sacrifice_reward_is_an_exact_seed_fact() {
             crate::report::ItemEntry {
                 name: "corrupting mace +1".into(),
                 quantity: 1,
+                quantity_range: None,
                 label: None,
                 item: Some(spd_objects::ItemId::Mace),
                 candidates: Vec::new(),

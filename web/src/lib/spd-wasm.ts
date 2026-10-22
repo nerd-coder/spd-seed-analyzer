@@ -36,6 +36,8 @@ export type ItemVariant = {
   label?: string
   /** Number of identical items represented by this entry. */
   quantity: number
+  /** Total-count bounds when the seed fixes only a range (`quantity` is the minimum). */
+  quantity_range?: { min: number; max: number } | null
   /** Concrete identity, when the entry has exactly one. */
   item?: ItemId
   /** Ordered seed-determined identities when run history can shift a deck index. */

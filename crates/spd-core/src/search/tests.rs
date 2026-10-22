@@ -129,6 +129,7 @@ fn exact_floor(depth: u32, classes: &[(&str, i32)]) -> crate::FloorReport {
                 crate::report::ItemEntry {
                     name: (*class_name).into(),
                     quantity: 1,
+                    quantity_range: None,
                     label: None,
                     item: Some(spd_objects::ItemId::from_class_name_lossy(class_name)),
                     candidates: Vec::new(),
@@ -302,6 +303,7 @@ fn constrained_runtime_sensitive_items_never_match_exact_searches() {
         items: vec![crate::report::ItemEntry {
             name: "weapon reward".into(),
             quantity: 1,
+            quantity_range: None,
             label: None,
             item: None,
             candidates: Vec::new(),
@@ -341,6 +343,7 @@ fn category_only_imp_ring_never_matches_an_exact_ring_search() {
         crate::report::ItemEntry {
             name: "ring reward".into(),
             quantity: 1,
+            quantity_range: None,
             label: None,
             item: None,
             candidates: Vec::new(),
@@ -375,6 +378,7 @@ fn conditional_floor_loot_candidates_keep_levels_for_search() {
         crate::report::ItemEntry {
             name: "long sword +2".into(),
             quantity: 1,
+            quantity_range: None,
             label: None,
             item: None,
             candidates: vec![spd_objects::ItemId::Longsword],
@@ -752,6 +756,7 @@ fn constrained_shop_stock_never_matches_its_internal_concrete_class() {
         items: vec![crate::report::ItemEntry {
             name: "weapon stock".into(),
             quantity: 1,
+            quantity_range: None,
             label: None,
             item: None,
             candidates: Vec::new(),
@@ -861,6 +866,7 @@ fn any_item_in_category_matches_exact_and_upgraded_items() {
         crate::report::ItemEntry {
             name: "Ring of Wealth +1".into(),
             quantity: 1,
+            quantity_range: None,
             label: None,
             item: Some(spd_objects::ItemId::RingOfWealth),
             candidates: Vec::new(),

@@ -518,6 +518,10 @@ pub struct ItemEntry {
     /// Number of identical items represented by this entry.
     #[serde(default = "default_item_quantity")]
     pub quantity: i32,
+    /// Inclusive total-count bounds when the seed fixes only a range;
+    /// `quantity` is then the minimum.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub quantity_range: Option<NumericRange>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub item: Option<ItemId>,
     /// Ordered seed-determined identities when run history can shift a deck index.

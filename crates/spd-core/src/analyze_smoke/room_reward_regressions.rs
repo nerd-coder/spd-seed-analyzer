@@ -263,3 +263,49 @@ fn floor_one_public_catalyst_copies_seed_offers() {
     }
     assert!(seen > 0, "expected a depth-1 catalyst among 40 seeds");
 }
+
+#[test]
+fn secret_laboratory_reports_its_seeded_energy_crystal_total() {
+    for (seed, depth, total) in [
+        ("GVF-RLC-LDK", 14, 10),
+        ("AAA-AAA-AAA", 17, 8),
+        ("GFX-PZH-DCH", 12, 7),
+    ] {
+        let report = analyze_seed(seed, depth).expect("analyze");
+        let floor = &report.floors[depth as usize - 1];
+        let crystals: Vec<_> = floor
+            .items
+            .iter()
+            .filter(|item| item.class_name() == Some("EnergyCrystal"))
+            .collect();
+        assert_eq!(crystals.len(), 1, "{seed} d{depth}");
+        assert_eq!(crystals[0].quantity, total, "{seed} d{depth}");
+        assert_eq!(crystals[0].quantity_range, None, "{seed} d{depth}");
+        let heap_total: i32 = floor
+            .map
+            .as_ref()
+            .or(floor.assumed_map.as_ref())
+            .expect("map")
+            .heaps
+            .iter()
+            .flat_map(|heap| &heap.items)
+            .filter(|item| item.source.as_deref() == Some("SecretLaboratoryRoom"))
+            .filter(|item| item.item == report::item_id("EnergyCrystal"))
+            .map(|item| item.quantity)
+            .sum();
+        assert_eq!(heap_total, total, "{seed} d{depth}");
+    }
+
+    // A history-sensitive room paints first, so only the 3–5 per-stack bound holds.
+    let report = analyze_seed("HDN-UJD-MJF", 2).expect("analyze");
+    let crystal = report.floors[1]
+        .items
+        .iter()
+        .find(|item| item.class_name() == Some("EnergyCrystal"))
+        .expect("Energy Crystal contract");
+    assert_eq!(crystal.quantity, 6);
+    assert_eq!(
+        crystal.quantity_range,
+        Some(report::NumericRange { min: 6, max: 10 })
+    );
+}

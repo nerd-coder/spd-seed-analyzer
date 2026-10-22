@@ -123,15 +123,13 @@ Next:
 
 1. Decide whether enchanted item titles should use the game's `%s` templates
    ("Friendly Sickle") instead of a separate enchantment tag.
-2. Public `SecretLaboratoryRoom` contract claims exactly 10 Energy Crystals;
-   Java drops two `IntRange(3, 5)` stacks (the exact report has the real sum).
-3. Consider exposing `analyze_seed_exact` through WASM if the web app should
+2. Consider exposing `analyze_seed_exact` through WASM if the web app should
    offer the default-profile view.
-4. FVX-YTN-SLC's default replay drifts from Java at floors 16-17 (floor 16
+3. FVX-YTN-SLC's default replay drifts from Java at floors 16-17 (floor 16
    cell 197).
-5. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
+4. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
    not actually depend on run history); publish entities on boss maps.
-6. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
+5. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
    ~38 ms WASM. Remaining cost is spread thin; `patch::generate` (~25%) is
    now mostly the parity-bound `next_float` fill draws. Measured but not
    adopted: talc allocator (no WASM gain), `+simd128` (~7% WASM, drops
