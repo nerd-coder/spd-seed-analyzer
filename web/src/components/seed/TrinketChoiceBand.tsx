@@ -11,8 +11,6 @@ import { itemSprite } from '@/lib/item-kind'
 import { itemLabel } from '@/lib/item-title'
 import type { TrinketSelectionReport } from '@/lib/spd-wasm'
 
-const NONE = 'none'
-
 function heldNote(
   held: string | null,
   selection: TrinketSelectionReport
@@ -20,6 +18,9 @@ function heldNote(
   const from = selection.first_effective_depth
   if (held == null) {
     return `Floors ${from}+ show every supported trinket outcome as a condition.`
+  }
+  if (trinketEffect(held, selection) === 'none') {
+    return `Floors ${from}+ are generated without a trinket that changes floors.`
   }
   switch (trinketEffect(held, selection)) {
     case 'modeled':
@@ -41,6 +42,11 @@ export function TrinketChoiceBand({
   selection: TrinketSelectionReport
   choice: TrinketChoice
 }) {
+  const playOnly = offers.filter(
+    (className) => trinketEffect(className, selection) === 'none'
+  )
+  const value =
+    choice.held == null || playOnly.includes(choice.held) ? '' : choice.held
   return (
     <div
       data-trinket-choice
@@ -51,7 +57,8 @@ export function TrinketChoiceBand({
         <h4 className="text-sm font-semibold">Trinket Catalyst</h4>
         <p className="text-muted-foreground text-sm">
           Pick the trinket you take to regenerate floors{' '}
-          {selection.first_effective_depth}+ with it held.
+          {selection.first_effective_depth}+ with it held. Press it again to
+          show every outcome.
         </p>
       </div>
 
@@ -60,13 +67,13 @@ export function TrinketChoiceBand({
         variant="outline"
         spacing={2}
         className="flex-wrap items-stretch"
-        value={choice.held ?? NONE}
+        value={value}
         disabled={choice.busy}
         aria-label="Trinket to take from the Catalyst"
-        onValueChange={(value) => {
-          // Radix clears a single group when the pressed item is pressed again.
-          if (value === '' || value === (choice.held ?? NONE)) return
-          choice.select(value === NONE ? null : value)
+        onValueChange={(next) => {
+          // Pressing the held trinket again clears it to no trinket.
+          if (next === value) return
+          choice.select(next === '' ? null : next)
         }}
       >
         {offers.map((className) => (
@@ -74,6 +81,7 @@ export function TrinketChoiceBand({
             key={className}
             value={className}
             aria-label={itemLabel(className)}
+            disabled={playOnly.includes(className)}
             className="h-auto w-32 cursor-pointer flex-col justify-start gap-1 px-2 py-2 whitespace-normal"
           >
             <ItemBox
@@ -89,16 +97,6 @@ export function TrinketChoiceBand({
             </span>
           </ToggleGroupItem>
         ))}
-        <ToggleGroupItem
-          value={NONE}
-          aria-label="No trinket"
-          className="h-auto w-32 cursor-pointer flex-col justify-center gap-1 px-2 py-2 whitespace-normal"
-        >
-          <span className="text-foreground">No trinket</span>
-          <span className="text-muted-foreground text-center text-xs font-normal leading-tight">
-            Every outcome
-          </span>
-        </ToggleGroupItem>
       </ToggleGroup>
 
       <p className="text-muted-foreground text-sm" aria-live="polite">
