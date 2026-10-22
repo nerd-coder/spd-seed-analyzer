@@ -3,6 +3,9 @@ use super::*;
 #[path = "analyze_smoke/room_reward_regressions.rs"]
 mod room_reward_regressions;
 
+#[path = "analyze_smoke/map_terrain.rs"]
+mod map_terrain;
+
 #[test]
 fn analyze_seed_smoke() {
     let r = analyze_seed("GFX-PZH-DCH", 4).expect("analyze");

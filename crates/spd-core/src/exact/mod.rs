@@ -176,7 +176,15 @@ fn exact_floor(state: &LevelState, options: ExactOptions) -> ExactFloor {
         quests,
         map: options
             .maps
-            .then(|| state.layout_map.as_ref().map(ExactMap::from_floor_map))
+            .then(|| {
+                state.layout_map.as_ref().map(|layout| {
+                    let mut layout = layout.clone();
+                    if let Some(populated) = &state.map {
+                        layout.flatten_grass_under_entities(populated);
+                    }
+                    ExactMap::from_floor_map(&layout)
+                })
+            })
             .flatten(),
     }
 }

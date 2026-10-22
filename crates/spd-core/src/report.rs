@@ -193,6 +193,7 @@ impl FloorMap {
         self.markers = populated.markers.clone();
         self.heaps = populated.heaps.clone();
         self.mobs = populated.mobs.clone();
+        self.flatten_grass_under_entities(populated);
         self.concealed_cells = populated.concealed_cells.clone();
         let mut uncertain: Vec<u32> = if all_uncertain {
             self.heaps
@@ -214,6 +215,28 @@ impl FloorMap {
         uncertain.dedup();
         self.uncertain_cells = uncertain;
         self
+    }
+
+    /// `createMobs` / `createItems` set tall grass under each placed mob or
+    /// drop to `GRASS`; keep that terrain wherever the entity is published.
+    pub(crate) fn flatten_grass_under_entities(&mut self, populated: &FloorMap) {
+        use crate::level::{FURROWED_GRASS, GRASS, HIGH_GRASS};
+        let cells = populated
+            .heaps
+            .iter()
+            .map(|heap| heap.cell)
+            .chain(populated.mobs.iter().map(|mob| mob.cell));
+        for cell in cells {
+            let cell = cell as usize;
+            let (Some(tile), Some(&after)) = (self.tiles.get_mut(cell), populated.tiles.get(cell))
+            else {
+                continue;
+            };
+            if matches!(i32::from(*tile), HIGH_GRASS | FURROWED_GRASS) && i32::from(after) == GRASS
+            {
+                *tile = after;
+            }
+        }
     }
 }
 
