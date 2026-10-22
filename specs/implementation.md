@@ -117,8 +117,12 @@ declared default profile: no challenges, no trinkets, no items acquired outside
 level generation, default inventory. It reads the engine's internal per-floor
 items, so it has no `constrained`/`variable` entries; quest choose-one pools sit
 under `quests[].rewards`, and maps are RLE terrain plus traps, plants, and
-transitions. Tests pin that every public exact item appears in it. The public
-`SeedReport`, WASM, and web UI are unchanged.
+transitions. Tests pin that every public exact item appears in it. It stays a
+CLI/test projection and is deliberately not exported through WASM: it drops
+the `constrained`/`variable` distinction, so a web view would present
+player-dependent outcomes as fixed (SEED-ANALYSIS, NO-CLAIM). The web report
+already shows the default profile through Variable samples and "May differ"
+labels.
 
 Default-profile floor lists pair blank room contracts with concrete Variable
 samples (RingRoom, Sacrifice, CrystalVault, labs, shops, …) so the UI can show
@@ -128,11 +132,9 @@ with no sample on this profile; the UI hides those.
 
 Next:
 
-1. Consider exposing `analyze_seed_exact` through WASM if the web app should
-   offer the default-profile view.
-2. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
+1. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
    not actually depend on run history); publish entities on boss maps.
-3. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
+2. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
    ~38 ms WASM. Remaining cost is spread thin; `patch::generate` (~25%) is
    now mostly the parity-bound `next_float` fill draws. Measured but not
    adopted: talc allocator (no WASM gain), `+simd128` (~7% WASM, drops
