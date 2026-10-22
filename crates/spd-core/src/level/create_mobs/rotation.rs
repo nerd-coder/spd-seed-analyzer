@@ -95,7 +95,8 @@ impl MobKind {
     }
 }
 
-pub(super) fn next_mob(depth: i32, rotation: &mut Vec<MobKind>) -> MobKind {
+/// The next rotation mob and its `ChampionEnemy.rollForChampion` buff roll.
+pub(super) fn next_mob(depth: i32, rotation: &mut Vec<MobKind>) -> (MobKind, i32) {
     if rotation.is_empty() {
         *rotation = standard_rotation(depth);
         add_rare_mob(depth, rotation);
@@ -115,8 +116,7 @@ pub(super) fn next_mob(depth: i32, rotation: &mut Vec<MobKind>) -> MobKind {
     burn_constructor_draws(mob);
     // `ChampionEnemy.rollForChampion` always rolls, even when the challenge is
     // disabled and no champion can be attached.
-    let _ = Random::int_max(6);
-    mob
+    (mob, Random::int_max(6))
 }
 
 pub(super) fn standard_rotation(depth: i32) -> Vec<MobKind> {

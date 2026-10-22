@@ -2,21 +2,28 @@ use super::*;
 
 use std::ffi::OsStr;
 
-/// Replays FVX-YTN-SLC with all nine challenges through `fixture`'s floor and
-/// compares painted terrain, mobs, and seed-determined heaps with the oracle.
+use spd_core::Challenge;
+
+/// Replays FVX-YTN-SLC with all nine challenges through `fixture`'s floor.
 fn assert_all_challenge_floor(fixture_name: &str) {
+    assert_challenge_floor(fixture_name, "all", &Challenge::ALL);
+}
+
+/// Replays `fixture`'s seed with `challenges` through its floor and compares
+/// painted terrain, mobs, and seed-determined heaps with the oracle.
+fn assert_challenge_floor(fixture_name: &str, oracle_flag: &str, challenges: &[Challenge]) {
     let name = OsStr::new(fixture_name);
     let path = fixture_paths()
         .into_iter()
         .find(|path| path.file_name().is_some_and(|file| file == name))
         .unwrap_or_else(|| panic!("missing {fixture_name}"));
     let fixture = read_fixture(&path);
-    assert_eq!(fixture.input.challenge.as_deref(), Some("all"));
+    assert_eq!(fixture.input.challenge.as_deref(), Some(oracle_flag));
     let expected = fixture.floors.first().expect("oracle floor facts");
     let context = format!("{fixture_name} floor {}", expected.depth);
 
     let profile = spd_core::MapProfile {
-        challenges: spd_core::Challenge::ALL.to_vec(),
+        challenges: challenges.to_vec(),
         ..spd_core::MapProfile::default()
     };
     let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
@@ -54,10 +61,12 @@ fn assert_all_challenge_floor(fixture_name: &str) {
         .map(|(&java, &rust)| if (java, rust) == (16, 5) { 5 } else { java })
         .collect();
     assert_eq!(map.tiles, terrain, "{context} terrain");
-    assert!(
-        map.plants.is_empty(),
-        "{context}: Barren Land couches no plants"
-    );
+    if challenges.contains(&Challenge::BarrenLand) {
+        assert!(
+            map.plants.is_empty(),
+            "{context}: Barren Land couches no plants"
+        );
+    }
 
     let actual_mobs: Vec<_> = map
         .mobs
@@ -89,6 +98,7 @@ fn assert_all_challenge_floor(fixture_name: &str) {
                 .collect(),
         })
         .filter(not_guide_page)
+        .map(merge_gold)
         .collect();
     // A Suspicious Chest prize drawn from the spawn queue stays unpublished;
     // its chest sits on the room's center pedestal.
@@ -109,12 +119,30 @@ fn assert_all_challenge_floor(fixture_name: &str) {
         .cloned()
         .collect();
     assert_eq!(actual_heaps, expected_heaps, "{context} heaps");
-    assert!(
-        actual_heaps
-            .iter()
-            .any(|heap| heap.items.iter().any(|item| item.class_name == "Torch")),
-        "{context}: Into Darkness places a torch"
-    );
+    if challenges.contains(&Challenge::IntoDarkness) {
+        assert!(
+            actual_heaps
+                .iter()
+                .any(|heap| heap.items.iter().any(|item| item.class_name == "Torch")),
+            "{context}: Into Darkness places a torch"
+        );
+    }
+}
+
+/// `Heap.drop` merges gold piles dropped on one cell; the map lists each pile.
+fn merge_gold(mut heap: OracleHeap) -> OracleHeap {
+    let mut items: Vec<OracleItem> = Vec::new();
+    for item in heap.items {
+        match items
+            .iter_mut()
+            .find(|kept| item.class_name == "Gold" && kept.class_name == "Gold")
+        {
+            Some(gold) => gold.quantity += item.quantity,
+            None => items.push(item),
+        }
+    }
+    heap.items = items;
+    heap
 }
 
 /// Forbidden Runes drops floor 2's queued Scroll of Upgrade, shifting every
@@ -124,13 +152,26 @@ fn fvx_floor_two_all_challenges_matches_oracle() {
     assert_all_challenge_floor("fvx-ytn-slc-final-heaps-floor-2-all-challenges.json");
 }
 
-/// Champion Enemies is unmodeled: a Giant champion moves later mob placement
-/// once one rolls, so deeper floors are not compared.
+/// The oracle's champion counter follows an unplayed run. These floors roll
+/// no possible Giant outside open space, so the replay matches it anyway.
 #[test]
 fn fvx_later_floors_all_challenges_match_oracle() {
     for depth in [4, 8, 12] {
         assert_all_challenge_floor(&format!(
             "fvx-ytn-slc-final-heaps-floor-{depth}-all-challenges.json"
         ));
+    }
+}
+
+/// Floor 1's first mob is a champion (`Dungeon.init` sets the counter to 1).
+/// On these seeds it is a LARGE Giant that has to move to open space.
+#[test]
+fn floor_one_giant_champion_matches_oracle() {
+    for seed in ["aaa-aaa-acv", "aaa-aaa-aes"] {
+        assert_challenge_floor(
+            &format!("{seed}-final-heaps-floor-1-champion-enemies.json"),
+            "champion-enemies",
+            &[Challenge::ChampionEnemies],
+        );
     }
 }

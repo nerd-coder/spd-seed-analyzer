@@ -27,6 +27,7 @@ use crate::dungeon::DungeonState;
 use crate::generator::Category;
 use crate::items::model::{ForcedDropRole, GeneratedItem, ItemCategory, ItemProvenance};
 use crate::random::Random;
+use crate::trinkets::Challenge;
 use crate::MapProfile;
 
 pub use create_items::PlacedLoot;
@@ -531,16 +532,22 @@ fn create_level_internal(
                     runtime_sensitive_quests_from = None;
                 }
 
-                let _ambient_mobs_consumed = if dungeon.regular_level() {
-                    create_mobs::create_regular(
-                        dungeon.depth,
-                        feeling == Feeling::Large,
-                        &population_rooms,
-                        &mut map,
-                    )
-                } else {
-                    false
-                };
+                let champions = create_mobs::ChampionCounter::for_floor(
+                    dungeon.challenges & Challenge::ChampionEnemies.mask() != 0,
+                    dungeon.depth,
+                );
+                let population = create_mobs::create_regular(
+                    dungeon.depth,
+                    feeling == Feeling::Large,
+                    champions,
+                    &population_rooms,
+                    &mut map,
+                );
+                if population.may_differ {
+                    runtime_sensitive_map = true;
+                    runtime_sensitive_placed_items_from.get_or_insert(placed_items.len());
+                    dungeon.public_generation_tainted = true;
+                }
 
                 if output.maps
                     && matches!(dungeon.depth, 1..=4 | 6..=9 | 11..=14 | 16..=19 | 21..=24)

@@ -65,8 +65,8 @@ declared challenges are never spawn conditions, and choices persist per seed
 in localStorage. Forbidden Runes, Barren Land, Into Darkness (floor torch,
 `RegularLevel.java:472-490`) and Badder Bosses are replayed and match
 all-challenge oracle fixtures on FVX-YTN-SLC floors 2/4/8/12. Champion
-Enemies is unmodeled: its reports drop to the conservative projection (no
-maps).
+Enemies is replayed exactly on floor 1 (oracle floor-1 Giant fixtures); later
+floors mark entities uncertain when a possible Giant sits outside open space.
 
 The Trinket Catalyst picker sits on the seed's selection floor. Picking an
 offer calls `analyze_seed_with_trinket` (WASM export of the same name): the
@@ -124,10 +124,8 @@ Next:
    Java drops two `IntRange(3, 5)` stacks (the exact report has the real sum).
 3. Consider exposing `analyze_seed_exact` through WASM if the web app should
    offer the default-profile view.
-4. Champion Enemies: publish the painter-complete layout with every entity
-   in `uncertain_cells` instead of hiding maps (layout precedes
-   `createMobs`). Separately, FVX-YTN-SLC's default replay drifts from Java
-   at floors 16-17 (floor 16 cell 197).
+4. FVX-YTN-SLC's default replay drifts from Java at floors 16-17 (floor 16
+   cell 197).
 5. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
    not actually depend on run history); publish entities on boss maps.
 6. Performance (`bun run profile`): a 26-floor report is ~24 ms native,

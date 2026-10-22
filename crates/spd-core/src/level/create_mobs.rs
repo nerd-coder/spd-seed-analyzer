@@ -1,10 +1,13 @@
 //! Pinned `RegularLevel.createMobs` for supported non-boss floors.
 
+mod champion;
 mod navigation;
 mod rotation;
 
 #[cfg(test)]
 mod tests;
+
+pub(crate) use champion::ChampionCounter;
 
 use crate::level::terrain::{
     self, TerrainMap, ENTRANCE, ENTRANCE_SP, EXIT, FURROWED_GRASS, GRASS, HIGH_GRASS,
@@ -13,6 +16,7 @@ use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
 
+use champion::GiantState;
 use navigation::{distance_limited, shadow_cast};
 use rotation::next_mob;
 
@@ -21,6 +25,18 @@ use rotation::next_mob;
 struct Spawn {
     label: &'static str,
     large: bool,
+    /// An unknown champion counter could make this mob a `LARGE` Giant.
+    maybe_large: bool,
+}
+
+/// Outcome of one floor's `createMobs`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub(crate) struct Population {
+    /// Every mob found a legal cell.
+    pub complete: bool,
+    /// A possible Giant champion sits outside open space, so Java may have
+    /// placed it elsewhere and drawn different RNG for the rest of the floor.
+    pub may_differ: bool,
 }
 
 /// Runs the pinned population path. Exact final parity still depends on every
@@ -28,15 +44,16 @@ struct Spawn {
 pub(crate) fn create_regular(
     depth: i32,
     large_feeling: bool,
+    mut champions: ChampionCounter,
     rooms: &[Room],
     map: &mut TerrainMap,
-) -> bool {
+) -> Population {
     let Some(entrance_cell) = map
         .map
         .iter()
         .position(|&tile| tile == ENTRANCE || tile == ENTRANCE_SP)
     else {
-        return false;
+        return Population::default();
     };
     // RegularLevel.createMobs calls mobLimit before collecting and shuffling
     // the weighted StandardRoom list.
@@ -52,10 +69,12 @@ pub(crate) fn create_regular(
         remaining,
         spawn_rooms,
         || {
-            let mob = next_mob(depth, &mut rotation);
+            let (mob, roll) = next_mob(depth, &mut rotation);
+            let giant = champions.roll(mob, roll, depth);
             Spawn {
                 label: mob.label(),
-                large: mob.is_large(),
+                large: mob.is_large() || giant == GiantState::Yes,
+                maybe_large: giant == GiantState::Maybe,
             }
         },
     )
@@ -88,21 +107,21 @@ pub(crate) fn create_mining(
         remaining,
         spawn_rooms,
         || {
-            if crystal {
+            let label = if crystal {
                 // `CrystalWisp()` picks its sprite colour.
                 let _ = Random::int_max(3);
-                Spawn {
-                    label: "CrystalWisp",
-                    large: false,
-                }
+                "CrystalWisp"
             } else {
-                Spawn {
-                    label: "GnollGuard",
-                    large: false,
-                }
+                "GnollGuard"
+            };
+            Spawn {
+                label,
+                large: false,
+                maybe_large: false,
             }
         },
     )
+    .complete
 }
 
 fn populate(
@@ -113,15 +132,16 @@ fn populate(
     mut remaining: i32,
     mut spawn_rooms: Vec<usize>,
     mut create_mob: impl FnMut() -> Spawn,
-) -> bool {
+) -> Population {
+    let mut population = Population::default();
     let entrance_room = rooms
         .iter()
         .find(|room| room.is_entrance() && !room.is_empty());
     let Some(entrance_room) = entrance_room else {
-        return false;
+        return population;
     };
     if spawn_rooms.is_empty() {
-        return false;
+        return population;
     }
     Random::shuffle_list(&mut spawn_rooms);
 
@@ -149,7 +169,7 @@ fn populate(
         if let Some(cell) = find_position(room, mob, map, &entrance_fov, &entrance_distance) {
             failed_placements = 0;
             current_mob = None;
-            place_mob(map, cell, mob);
+            population.may_differ |= place_mob(map, cell, mob);
             remaining -= 1;
 
             // Java may immediately place one more mob in the same room. A
@@ -161,7 +181,7 @@ fn populate(
                     find_position(room, second, map, &entrance_fov, &entrance_distance)
                 {
                     current_mob = None;
-                    place_mob(map, cell, second);
+                    population.may_differ |= place_mob(map, cell, second);
                     remaining -= 1;
                 }
             }
@@ -174,7 +194,7 @@ fn populate(
             // fully painted and validity-checked like the pinned game.
             // One traversal gives every weighted room 31 placement probes.
             if failed_placements >= spawn_rooms.len() {
-                return false;
+                return population;
             }
         }
     }
@@ -184,7 +204,8 @@ fn populate(
             map.map[cell] = GRASS;
         }
     }
-    true
+    population.complete = true;
+    population
 }
 
 /// Java `RegularLevel.createMobs` duplicates each `StandardRoom` according to
@@ -265,7 +286,11 @@ fn find_position(
     }
 }
 
-fn place_mob(map: &mut TerrainMap, cell: usize, mob: Spawn) {
+/// Places `mob` and reports whether a Giant could not have stood there. A
+/// `LARGE` check only rejects more probes, so an open-space cell is the one
+/// Java picks either way.
+fn place_mob(map: &mut TerrainMap, cell: usize, mob: Spawn) -> bool {
     map.mob_occupied[cell] = true;
     map.known_mobs[cell] = Some(mob.label);
+    mob.maybe_large && !map.is_open_space(cell)
 }

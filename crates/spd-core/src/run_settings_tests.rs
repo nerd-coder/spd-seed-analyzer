@@ -76,8 +76,9 @@ fn into_darkness_places_a_torch_on_regular_floors() {
 }
 
 #[test]
-fn champion_enemies_stays_conservative() {
+fn every_generation_challenge_is_modeled() {
     let modeled = [
+        Challenge::ChampionEnemies,
         Challenge::ForbiddenRunes,
         Challenge::BarrenLand,
         Challenge::IntoDarkness,
@@ -88,15 +89,23 @@ fn champion_enemies_stays_conservative() {
             challenges: vec![challenge],
             ..MapProfile::default()
         };
-        assert_eq!(
-            profile.has_unmodeled_generation_inputs(),
-            challenge == Challenge::ChampionEnemies,
-            "{challenge:?}"
-        );
+        assert!(!profile.has_unmodeled_generation_inputs(), "{challenge:?}");
         assert_eq!(
             challenge.generation_effect() == crate::ChallengeEffect::Modeled,
             modeled.contains(&challenge),
             "{challenge:?}"
         );
+    }
+}
+
+#[test]
+fn champion_runs_publish_every_floor_map() {
+    let report =
+        analyze_seed_for_run(NINE_CHALLENGE_SEED, 6, None, &[Challenge::ChampionEnemies]).unwrap();
+    let first = &report.floors[0];
+    let map = first.map.as_ref().expect("floor 1 champion is seeded");
+    assert!(map.uncertain_cells.is_empty());
+    for depth in 2..=6 {
+        displayed_map(&report, depth);
     }
 }

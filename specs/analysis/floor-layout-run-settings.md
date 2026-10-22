@@ -154,6 +154,20 @@ shifts. `Dungeon.mobsToChampion` also counts runtime spawns
 seed-determined. Measured with the oracle on FVX-YTN-SLC: of the nine bits,
 only `champion-enemies` changes the floor-17 heaps.
 
+What stays seeded (`level/create_mobs/champion.rs`):
+
+- `Dungeon.init` sets `mobsToChampion = 1` before floor 1 (`Dungeon.java:237`),
+  so floor 1's first unblocked mob is a champion with its rolled buff. A Giant
+  there is placed as `LARGE`. Oracle fixtures
+  `aaa-aaa-{acv,aes}-final-heaps-floor-1-champion-enemies.json` move such a
+  Giant to open space; the replay matches terrain, mobs, and heaps.
+- Later floors know only the buff roll. A mob rolls Giant (`Random.Int(6) == 3`)
+  and is not blocked (Crab/HermitCrab ≤3, Thief/Bandit ≤4, Guard ≤7, Bat ≤9,
+  `ChampionEnemy.java:111-115`): a `LARGE` check only rejects more probes, so a
+  placement on an open-space cell is identical either way. Only a possible
+  Giant placed outside open space marks the floor's entities and later
+  generation as uncertain.
+
 ## Trinkets and artifacts
 
 Layout-affecting trinkets, given class, `buffedLvl()`, and instance identity:
@@ -186,7 +200,8 @@ and the depth-20 Imp shop before City decoration.
 
 - Rat Skull, Cracked Spyglass, and Barren Land when those profile fields are
   unset.
-- Every entity on a floor generated with Champion Enemies.
+- Every entity on a floor after floor 1 where a possible Giant champion sits
+  outside open space (Champion Enemies).
 - Any undeclared acquire / upgrade / transmute timing.
 - Floor 1 tutorial hidden entrance doors (`SPDSettings.intro()`) and floor 2
   guidebook hiding (`RegularPainter.java:268-275`).

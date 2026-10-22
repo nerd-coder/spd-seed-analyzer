@@ -143,13 +143,7 @@ export function ChallengePicker({
               <span className="text-foreground leading-tight">
                 {challenge.name}
               </span>
-              <span
-                className={
-                  challenge.modeled
-                    ? 'text-muted-foreground text-xs font-normal leading-tight'
-                    : 'text-warning text-xs font-normal leading-tight'
-                }
-              >
+              <span className="text-muted-foreground text-xs font-normal leading-tight">
                 {challenge.effect}
               </span>
             </span>
@@ -162,10 +156,10 @@ export function ChallengePicker({
           {choice.busy ? 'Regenerating floors…' : statusNote(choice.enabled)}
         </p>
         {champions && !choice.busy ? (
-          <p className="text-warning">
-            Hostile champions changes where monsters and items land, and the
-            analyzer does not model that yet. Floor maps are hidden and only
-            items the seed still decides are listed.
+          <p className="text-muted-foreground">
+            Floor 1's champion is set by the seed. Deeper champions depend on
+            how many monsters spawned before, so a giant one can move monsters
+            and loot; those spots are marked "May differ".
           </p>
         ) : null}
         <p className="text-muted-foreground">

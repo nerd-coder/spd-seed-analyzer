@@ -54,12 +54,13 @@ impl Challenge {
             // A torch per floor (`RegularLevel.java:472-490`).
             | Self::IntoDarkness
             // Floor 15 exposed-wire chance (`CavesBossLevel.java:131`).
-            | Self::BadderBosses => ChallengeEffect::Modeled,
+            | Self::BadderBosses
             // A Giant champion is LARGE (`Char.properties`), which changes
             // `createMobs` placement (`Level.java:542`, `RegularLevel.java:275`).
-            // Which mob is a champion after floor 1 counts runtime spawns
-            // (`ChampionEnemy.java:94-121`).
-            Self::ChampionEnemies => ChallengeEffect::Unmodeled,
+            // After floor 1 the champion counter also counts runtime spawns
+            // (`ChampionEnemy.java:94-121`); those floors mark their entities
+            // as uncertain.
+            | Self::ChampionEnemies => ChallengeEffect::Modeled,
             Self::OnDiet
             | Self::FaithIsMyArmor
             | Self::Pharmacophobia

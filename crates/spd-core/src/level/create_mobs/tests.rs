@@ -119,7 +119,7 @@ fn rotation_labels(depth: i32, len: usize) -> Vec<&'static str> {
     Random::push_generator_seeded(1);
     let mut rotation = Vec::new();
     let mut labels: Vec<_> = (0..len)
-        .map(|_| next_mob(depth, &mut rotation).label())
+        .map(|_| next_mob(depth, &mut rotation).0.label())
         .collect();
     labels.sort_unstable();
     Random::reset_generators();
@@ -227,4 +227,38 @@ fn regular_mob_limit_uses_pinned_large_feeling_rounding() {
     assert_eq!(large, (normal as f32 * 1.33).ceil() as i32);
     assert_eq!(mob_limit(1, true), 8);
     Random::reset_generators();
+}
+
+#[test]
+fn floor_one_champions_the_first_eligible_mob() {
+    use super::champion::GiantState;
+    use super::ChampionCounter;
+
+    let mut counter = ChampionCounter::for_floor(true, 1);
+    assert_eq!(counter.roll(MobKind::Rat, 3, 1), GiantState::Yes);
+    // The counter refills to 8 on floor 1, so the next seven mobs stay plain.
+    for _ in 0..7 {
+        assert_eq!(counter.roll(MobKind::Rat, 3, 1), GiantState::No);
+    }
+    assert_eq!(counter.roll(MobKind::Snake, 3, 1), GiantState::Yes);
+
+    // A blocked class passes the champion on, but still counts down.
+    let mut counter = ChampionCounter::for_floor(true, 1);
+    assert_eq!(counter.roll(MobKind::Crab, 3, 1), GiantState::No);
+    assert_eq!(counter.roll(MobKind::Rat, 0, 1), GiantState::No);
+    assert_eq!(counter, ChampionCounter::Known(7.0));
+}
+
+#[test]
+fn later_floors_only_suspect_unblocked_giant_rolls() {
+    use super::champion::GiantState;
+    use super::ChampionCounter;
+
+    let mut counter = ChampionCounter::for_floor(true, 4);
+    assert_eq!(counter.roll(MobKind::Gnoll, 3, 4), GiantState::Maybe);
+    assert_eq!(counter.roll(MobKind::Gnoll, 2, 4), GiantState::No);
+    assert_eq!(counter.roll(MobKind::Bandit, 3, 4), GiantState::No);
+    assert_eq!(counter.roll(MobKind::Bandit, 3, 5), GiantState::Maybe);
+    let mut off = ChampionCounter::for_floor(false, 1);
+    assert_eq!(off.roll(MobKind::Rat, 3, 1), GiantState::No);
 }

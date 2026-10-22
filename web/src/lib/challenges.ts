@@ -10,8 +10,6 @@ export type GenerationChallenge = {
   name: string
   /** What the challenge changes in generated floors. */
   effect: string
-  /** The analyzer replays it exactly; otherwise later floors may differ. */
-  modeled: boolean
   art: ChallengeArt
 }
 
@@ -24,35 +22,30 @@ export const GENERATION_CHALLENGES: readonly GenerationChallenge[] = [
     id: 'barren_land',
     name: 'Barren land',
     effect: 'Removes the plants',
-    modeled: true,
     art: { kind: 'item', className: 'SungrassSeed', category: 'seed' },
   },
   {
     id: 'into_darkness',
     name: 'Into darkness',
     effect: 'Adds a torch to each floor',
-    modeled: true,
     art: { kind: 'item', className: 'Torch', category: 'other' },
   },
   {
     id: 'forbidden_runes',
     name: 'Forbidden runes',
     effect: 'Removes half the upgrade scrolls; later drops move',
-    modeled: true,
     art: { kind: 'item', className: 'ScrollOfUpgrade', category: 'scroll' },
   },
   {
     id: 'champion_enemies',
     name: 'Hostile champions',
-    effect: 'Moves monsters and items; not modeled yet',
-    modeled: false,
+    effect: 'Giant champions need open space, moving later spawns',
     art: { kind: 'object', id: 'Rat' },
   },
   {
     id: 'badder_bosses',
     name: 'Badder bosses',
     effect: 'Twice the exposed wires on floor 15',
-    modeled: true,
     art: { kind: 'object', id: 'DM300' },
   },
 ]
