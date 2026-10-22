@@ -56,9 +56,9 @@ export function TrinketChoiceBand({
       <div className="space-y-1">
         <h4 className="text-sm font-semibold">Trinket Catalyst</h4>
         <p className="text-muted-foreground text-sm">
-          Pick the trinket you take to regenerate floors{' '}
-          {selection.first_effective_depth}+ with it held. Press it again to
-          show every outcome.
+          The Catalyst offers these trinkets. Some change floors{' '}
+          {selection.first_effective_depth}+; select the one you take to apply
+          it, or press it again to clear.
         </p>
       </div>
 
