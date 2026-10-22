@@ -33,25 +33,18 @@ public final class JavaOracle {
 	public static void main(String[] args) {
 		if (args.length < 1 || args.length > 6) {
 			System.err.println(
-					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH [challenge barren-land|forbidden-runes|badder-bosses | rat-skull|mimic-tooth|cracked-spyglass LEVEL BEFORE_DEPTH] | mining-level DEPTH crystal|gnoll | vault-level DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection | secret-library-order | secret-laboratory-order]");
+					"Usage: JavaOracle SEED [DEPTH | final-heaps DEPTH [challenge NAME[,NAME...]|all | rat-skull|mimic-tooth|cracked-spyglass LEVEL BEFORE_DEPTH] | mining-level DEPTH crystal|gnoll | vault-level DEPTH | generator-deck-rollover | generator-lifecycle | shop-bag-selection | secret-library-order | secret-laboratory-order]");
 			System.exit(2);
 		}
 
 		String inputSeed = args[0];
 		long numericSeed = DungeonSeed.convertFromText(inputSeed);
 		boolean finalHeaps = args.length >= 3 && "final-heaps".equals(args[1]);
-		boolean barrenLand = finalHeaps
+		String challenge = finalHeaps
 				&& args.length == 5
 				&& "challenge".equals(args[3])
-				&& "barren-land".equals(args[4]);
-		boolean forbiddenRunes = finalHeaps
-				&& args.length == 5
-				&& "challenge".equals(args[3])
-				&& "forbidden-runes".equals(args[4]);
-		boolean badderBosses = finalHeaps
-				&& args.length == 5
-				&& "challenge".equals(args[3])
-				&& "badder-bosses".equals(args[4]);
+				&& FloorOracle.challengeMask(args[4]) != 0
+				? args[4] : null;
 		boolean trinketFinalHeaps = finalHeaps && args.length == 6
 				&& ("rat-skull".equals(args[3]) || "mimic-tooth".equals(args[3])
 						|| "cracked-spyglass".equals(args[3]));
@@ -89,7 +82,7 @@ public final class JavaOracle {
 					inputSeed, numericSeed, Integer.parseInt(args[2])));
 			return;
 		}
-		if (args.length == 4 || (args.length == 5 && !barrenLand && !forbiddenRunes && !badderBosses)
+		if (args.length == 4 || (args.length == 5 && challenge == null)
 				|| (args.length == 6 && !trinketFinalHeaps)) {
 			System.err.println("Unknown oracle contract: " + args[1]);
 			System.exit(2);
@@ -189,8 +182,7 @@ public final class JavaOracle {
 						? FloorOracle.generateFinalHeaps(numericSeed, depth, null, args[3],
 								Integer.parseInt(args[4]), Integer.parseInt(args[5]))
 					: FloorOracle.generateFinalHeaps(numericSeed, depth,
-							(barrenLand ? "barren-land" : forbiddenRunes ? "forbidden-runes" : badderBosses ? "badder-bosses" : null),
-							-1, Integer.MAX_VALUE);
+							challenge, -1, Integer.MAX_VALUE);
 			} else {
 				floor = FloorOracle.generate(numericSeed);
 			}

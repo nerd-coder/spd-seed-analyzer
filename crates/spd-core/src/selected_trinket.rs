@@ -27,7 +27,8 @@ pub fn analyze_seed_with_trinket(
     let profile = selection.catalyst_profile(trinket)?;
     let mut report = analyze_run(info, run, selection, floors, Some(&profile), true)?;
 
-    let (base, routes) = conditional::pinned_profile_routes(&profile, report.floors_requested);
+    let (base, routes) =
+        conditional::pinned_profile_routes(&profile, report.floors_requested, false);
     let mut alternatives = Vec::new();
     for route in routes {
         let floors = analyze_route(input, &route, &report.trinket_selection)?;

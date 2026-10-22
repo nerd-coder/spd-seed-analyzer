@@ -43,6 +43,42 @@ impl Challenge {
             Self::BadderBosses => 256,
         }
     }
+
+    /// How enabling this challenge changes first generation of floors.
+    pub const fn generation_effect(self) -> ChallengeEffect {
+        match self {
+            // Every second queued Scroll of Upgrade (`Level.java:238`).
+            Self::ForbiddenRunes
+            // Plants are not couched (`Level.java:1068`).
+            | Self::BarrenLand
+            // A torch per floor (`RegularLevel.java:472-490`).
+            | Self::IntoDarkness
+            // Floor 15 exposed-wire chance (`CavesBossLevel.java:131`).
+            | Self::BadderBosses => ChallengeEffect::Modeled,
+            // A Giant champion is LARGE (`Char.properties`), which changes
+            // `createMobs` placement (`Level.java:542`, `RegularLevel.java:275`).
+            // Which mob is a champion after floor 1 counts runtime spawns
+            // (`ChampionEnemy.java:94-121`).
+            Self::ChampionEnemies => ChallengeEffect::Unmodeled,
+            Self::OnDiet
+            | Self::FaithIsMyArmor
+            | Self::Pharmacophobia
+            | Self::SwarmIntelligence => ChallengeEffect::None,
+        }
+    }
+}
+
+/// Whether a challenge changes floor generation, and whether the replay
+/// models that change.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum ChallengeEffect {
+    /// The replay applies the challenge.
+    Modeled,
+    /// The challenge changes generation in ways the seed alone cannot fix.
+    Unmodeled,
+    /// Only play changes.
+    None,
 }
 
 /// All trinkets in the pinned game's first trinket deck.

@@ -10,6 +10,7 @@ const SOURCE_LABELS: Record<string, string> = {
   heap: 'Floor drop',
   hidden: 'Hidden',
   cracked_spyglass: 'Cracked Spyglass (hidden)',
+  into_darkness: 'Into Darkness torch',
 
   // Heap types (createItems + special rooms)
   chest: 'Chest',

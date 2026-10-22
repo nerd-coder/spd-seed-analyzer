@@ -1,8 +1,9 @@
 //! WASM bindings for `spd-core`.
 
 use spd_core::{
-    analyze_seed as core_analyze, analyze_seed_with_trinket as core_analyze_with_trinket,
-    parse_seed as core_parse, search_seeds as core_search, AnalyzeError, SearchError, SeedError,
+    analyze_seed as core_analyze, analyze_seed_for_run as core_analyze_for_run,
+    analyze_seed_with_trinket as core_analyze_with_trinket, parse_seed as core_parse,
+    search_seeds as core_search, AnalyzeError, Challenge, SearchError, SeedError,
     SeedSearchRequest, TrinketKind,
 };
 use wasm_bindgen::prelude::*;
@@ -62,6 +63,28 @@ pub fn analyze_seed_with_trinket(
         })
         .transpose()?;
     let report = core_analyze_with_trinket(input, floors, trinket).map_err(analyze_err)?;
+    json_value(&report)
+}
+
+/// Analyze a seed for a run with `challenges` enabled (snake_case names, e.g.
+/// `forbidden_runes`) and an optional Catalyst trinket class name. An empty
+/// list matches `analyze_seed_with_trinket`.
+#[wasm_bindgen]
+pub fn analyze_seed_for_run(
+    input: &str,
+    floors: u32,
+    trinket: Option<String>,
+    challenges: JsValue,
+) -> Result<JsValue, JsValue> {
+    let trinket = trinket
+        .map(|class_name| {
+            TrinketKind::from_class_name(&class_name)
+                .ok_or_else(|| JsValue::from_str(&format!("unknown trinket: {class_name}")))
+        })
+        .transpose()?;
+    let challenges: Vec<Challenge> = serde_wasm_bindgen::from_value(challenges)
+        .map_err(|e| JsValue::from_str(&format!("invalid challenges: {e}")))?;
+    let report = core_analyze_for_run(input, floors, trinket, &challenges).map_err(analyze_err)?;
     json_value(&report)
 }
 

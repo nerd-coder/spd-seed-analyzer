@@ -58,6 +58,8 @@ From the analyzer repository root:
 ./tools/java-oracle/run --final-heaps-depth 20 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 25 AAA-AAA-AAA
 ./tools/java-oracle/run --final-heaps-depth 26 AAA-AAA-AAA
+./tools/java-oracle/run --final-heaps-depth 2 --challenge forbidden-runes,into-darkness FVX-YTN-SLC
+./tools/java-oracle/run --final-heaps-depth 2 --challenge all FVX-YTN-SLC
 ./tools/java-oracle/run --figure-eight-trace 21 AAA-AAA-AAA
 ./tools/java-oracle/run --halls-paint-trace 23 AAA-AAA-AAA
 ./tools/java-oracle/run --halls-paint-trace 16 GFX-PZH-DCH
@@ -177,6 +179,11 @@ these commands (stdout is the default when `--output` is omitted):
 ./tools/java-oracle/run --mimic-tooth-final-heaps-depth 6 3 2 \
   --output tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-6-mimic-tooth-3-before-2.json \
   HKT-JZN-XQQ
+for depth in 2 4 8 12; do
+  ./tools/java-oracle/run --final-heaps-depth "$depth" --challenge all \
+    --output "tools/java-oracle/fixtures/fvx-ytn-slc-final-heaps-floor-$depth-all-challenges.json" \
+    FVX-YTN-SLC
+done
 for depth in 2 3 4; do
   ./tools/java-oracle/run --trinket-final-heaps-depth cracked-spyglass "$depth" 3 2 \
     --output "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-$depth-cracked-spyglass-3-before-2.json" \
@@ -405,7 +412,11 @@ or 6 through 9 first runs `Dungeon.newLevel()` for every preceding floor, then
 creates the target region-appropriate level. The oracle snapshots
 `level.heaps` and `level.mobs` only after `Level.create()` returns (build,
 painter, mob pass, and `createItems` have all run). The oracle uses a fresh
-Warrior hero with no challenges and a fresh in-memory preference store. The
+Warrior hero with no challenges and a fresh in-memory preference store.
+`--challenge NAME[,NAME...]` (or `all`) sets `Dungeon.challenges` first, using
+kebab-case names: `on-diet`, `faith-is-my-armor`, `pharmacophobia`,
+`barren-land`, `swarm-intelligence`, `into-darkness`, `forbidden-runes`,
+`champion-enemies`, `badder-bosses`. The
 intro page is marked read and the intro prompt disabled because SPD
 intentionally places its early Guidebook with an unseeded generator; that
 meta/tutorial heap is outside this seed-deterministic contract. The oracle also

@@ -1064,3 +1064,6 @@ mod floor_seven;
 
 #[path = "final_heaps/floor_eight.rs"]
 mod floor_eight;
+
+#[path = "final_heaps/challenges.rs"]
+mod challenges;

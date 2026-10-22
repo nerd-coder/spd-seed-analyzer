@@ -91,6 +91,34 @@ final class FloorOracle {
 				ratLevel, ratBeforeDepth);
 	}
 
+	/**
+	 * Comma-separated challenge names ("barren-land,into-darkness") or "all"
+	 * to the game's challenge mask. Returns 0 when any name is unknown.
+	 */
+	static int challengeMask(String challenges) {
+		if ("all".equals(challenges)) {
+			int mask = 0;
+			for (int bit : Challenges.MASKS) mask |= bit;
+			return mask;
+		}
+		int mask = 0;
+		for (String name : challenges.split(",")) {
+			switch (name) {
+				case "on-diet": mask |= Challenges.NO_FOOD; break;
+				case "faith-is-my-armor": mask |= Challenges.NO_ARMOR; break;
+				case "pharmacophobia": mask |= Challenges.NO_HEALING; break;
+				case "barren-land": mask |= Challenges.NO_HERBALISM; break;
+				case "swarm-intelligence": mask |= Challenges.SWARM_INTELLIGENCE; break;
+				case "into-darkness": mask |= Challenges.DARKNESS; break;
+				case "forbidden-runes": mask |= Challenges.NO_SCROLLS; break;
+				case "champion-enemies": mask |= Challenges.CHAMPION_ENEMIES; break;
+				case "badder-bosses": mask |= Challenges.STRONGER_BOSSES; break;
+				default: return 0;
+			}
+		}
+		return mask;
+	}
+
 	static FinalFloorFacts generateFinalHeaps(long seed, int depth, String challenge,
 			int ratLevel, int ratBeforeDepth) {
 		return generateFinalHeaps(seed, depth, challenge,
@@ -111,12 +139,8 @@ final class FloorOracle {
 		heldTrinketLevel = trinket != null ? trinketLevel : -1;
 		heldTrinketBeforeDepth = trinket != null ? trinketBeforeDepth : Integer.MAX_VALUE;
 		initializeFreshRun(seed);
-		if ("barren-land".equals(challenge)) {
-			Dungeon.challenges = Challenges.NO_HERBALISM;
-		} else if ("forbidden-runes".equals(challenge)) {
-			Dungeon.challenges = Challenges.NO_SCROLLS;
-		} else if ("badder-bosses".equals(challenge)) {
-			Dungeon.challenges = Challenges.STRONGER_BOSSES;
+		if (challenge != null) {
+			Dungeon.challenges = challengeMask(challenge);
 		}
 		generatePriorFloors(depth);
 		equipHeldTrinket(depth);

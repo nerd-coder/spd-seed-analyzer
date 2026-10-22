@@ -1,6 +1,8 @@
 //! Profile validation and first-generation state resolution.
 
-use super::{ActiveTrinket, Challenge, MapProfile, TrinketEventAction, TrinketKind};
+use super::{
+    ActiveTrinket, Challenge, ChallengeEffect, MapProfile, TrinketEventAction, TrinketKind,
+};
 
 impl MapProfile {
     pub(crate) fn challenge_mask(&self) -> i32 {
@@ -69,7 +71,7 @@ impl MapProfile {
             || self
                 .challenges
                 .iter()
-                .any(|challenge| matches!(challenge, Challenge::BarrenLand))
+                .any(|challenge| challenge.generation_effect() == ChallengeEffect::Unmodeled)
     }
 
     pub(crate) fn validate(&self, first_effective_depth: u32) -> Result<(), ProfileError> {

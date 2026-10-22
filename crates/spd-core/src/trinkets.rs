@@ -10,8 +10,8 @@ use crate::run::{dungeon_from_run, RunState};
 
 pub(crate) use model::ActiveTrinket;
 pub use model::{
-    ArtifactEvent, ArtifactEventAction, ArtifactKind, Challenge, ClaimState, MapProfile,
-    TrinketEvent, TrinketEventAction, TrinketGenerationEffect, TrinketKind,
+    ArtifactEvent, ArtifactEventAction, ArtifactKind, Challenge, ChallengeEffect, ClaimState,
+    MapProfile, TrinketEvent, TrinketEventAction, TrinketGenerationEffect, TrinketKind,
 };
 pub use validation::ProfileError;
 

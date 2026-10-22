@@ -144,6 +144,16 @@ Nine bits exist (`Challenges.java:30-38`). Only these alter initial layout:
 On Hunger, Faith Is My Armor, Pharmacophobia, Swarm Intelligence, and Champion
 Enemies have no initial painter-complete terrain hook.
 
+Champion Enemies still changes initial entities. `Level.createMob` calls
+`ChampionEnemy.rollForChampion` (`Level.java:542`), whose `Random` calls are
+constant (`ChampionEnemy.java:98`), but a Giant champion is `LARGE`
+(`Char.java:1411-1413`), so `createMobs` placement retries differ
+(`RegularLevel.java:275`) and every later level-creation draw on that floor
+shifts. `Dungeon.mobsToChampion` also counts runtime spawns
+(`ChampionEnemy.java:95,109-119`), so which mob champions after floor 1 is not
+seed-determined. Measured with the oracle on FVX-YTN-SLC: of the nine bits,
+only `champion-enemies` changes the floor-17 heaps.
+
 ## Trinkets and artifacts
 
 Layout-affecting trinkets, given class, `buffedLvl()`, and instance identity:
@@ -176,6 +186,7 @@ and the depth-20 Imp shop before City decoration.
 
 - Rat Skull, Cracked Spyglass, and Barren Land when those profile fields are
   unset.
+- Every entity on a floor generated with Champion Enemies.
 - Any undeclared acquire / upgrade / transmute timing.
 - Floor 1 tutorial hidden entrance doors (`SPDSettings.intro()`) and floor 2
   guidebook hiding (`RegularPainter.java:268-275`).

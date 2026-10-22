@@ -1,13 +1,14 @@
 /**
  * Seed session lifecycle: open tabs, analyze, rehydrate, close.
  *
- * Persisted: open seed inputs, active tab id, per-seed trinket choice.
+ * Persisted: open seed inputs, active tab id, per-seed trinket and challenges.
  * Ephemeral: draft input, session runtime (reports), analyzing, form error.
  */
 
 import { isCompleteCanonicalSeed } from '@/lib/canonical-seed'
-import type { SeedReport } from '@/lib/spd-wasm'
+import type { Challenge, SeedReport } from '@/lib/spd-wasm'
 import { analyzeSeedInWorker, type WorkerTask } from '@/lib/spd-worker-client'
+import { challengeChoiceFor, setChallengeChoice } from './challenge-choices'
 import { AppStore, derivedStore, persistentStore } from './store-utils'
 import { setTrinketChoice, trinketChoiceFor } from './trinket-choices'
 
@@ -43,6 +44,8 @@ export type SeedSession = {
   report: SeedReport | null
   /** Catalyst trinket class held at +3 for this report; null is no trinket. */
   trinket: string | null
+  /** Enabled generation-affecting challenges for this report. */
+  challenges: Challenge[]
   error: string | null
   startedAt: number | null
   finishedAt: number | null
@@ -161,14 +164,16 @@ function patchSession(id: string, patch: Partial<SeedSession>) {
 
 async function runAnalyze(id: string, input: string): Promise<boolean> {
   const trinket = trinketChoiceFor(id)
+  const challenges = challengeChoiceFor(id)
   patchSession(id, {
     status: 'loading',
     trinket,
+    challenges,
     error: null,
     startedAt: Date.now(),
     finishedAt: null,
   })
-  const task = analyzeSeedInWorker(input, ANALYZE_FLOORS, trinket)
+  const task = analyzeSeedInWorker(input, ANALYZE_FLOORS, trinket, challenges)
   analyzeTasks.get(id)?.cancel()
   analyzeTasks.set(id, task)
   try {
@@ -212,6 +217,7 @@ export function setActiveSeed(id: string | null) {
 export function closeSeedSession(id: string) {
   closedIds.add(id)
   setTrinketChoice(id, null)
+  setChallengeChoice(id, [])
   analyzeTasks.get(id)?.cancel()
   analyzeTasks.delete(id)
   const prev = $sessions.get()
@@ -254,6 +260,27 @@ export async function selectTrinket(
   }
 }
 
+/**
+ * Set the run's enabled challenges for a seed and regenerate. The previous
+ * report stays visible meanwhile.
+ */
+export async function selectChallenges(
+  id: string,
+  challenges: readonly Challenge[]
+): Promise<void> {
+  const session = $sessions.get().find((item) => item.id === id)
+  if (!session) return
+  const previous = challengeChoiceFor(id)
+  setChallengeChoice(id, challenges)
+  if (challengeChoiceFor(id).join() === previous.join()) return
+  $analyzing.set(true)
+  try {
+    await runAnalyze(id, session.input)
+  } finally {
+    $analyzing.set(analyzeTasks.size > 0)
+  }
+}
+
 async function analyzeSeedInputInternal(
   rawInput: string,
   clearDraftOnCreate: boolean
@@ -286,6 +313,7 @@ async function analyzeSeedInputInternal(
     const oldest = nextSessions[0]
     closedIds.add(oldest.id)
     setTrinketChoice(oldest.id, null)
+    setChallengeChoice(oldest.id, [])
     nextSessions = nextSessions.slice(1)
   }
 
@@ -295,6 +323,7 @@ async function analyzeSeedInputInternal(
     status: 'loading',
     report: null,
     trinket: null,
+    challenges: [],
     error: null,
     startedAt: Date.now(),
     finishedAt: null,
@@ -366,6 +395,7 @@ export function startSessionRehydrate(): () => void {
       status: 'pending' as const,
       report: null,
       trinket: null,
+      challenges: [],
       error: null,
       startedAt: null,
       finishedAt: null,

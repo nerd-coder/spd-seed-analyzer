@@ -6,9 +6,12 @@ use crate::level::terrain::{TerrainMap, EXIT, FURROWED_GRASS, GRASS, HIGH_GRASS,
 use crate::random::Random;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
+use crate::trinkets::Challenge;
 
 /// Cracked Spyglass loot: `drop(...).hidden = true` (`RegularLevel.java:681-689`).
 pub(crate) const SPYGLASS_SOURCE: &str = "cracked_spyglass";
+/// Into Darkness floor torch (`RegularLevel.java:472-490`).
+pub(crate) const DARKNESS_TORCH_SOURCE: &str = "into_darkness";
 
 #[derive(Debug, Clone)]
 pub struct PlacedLoot {
@@ -185,8 +188,27 @@ pub fn create_items_main(
         }
     }
 
-    // Separate generators for bones/torch/rose/guide — consume Long seeds
+    // Separate generators for torch/bones/rose/rations/guide — consume Long seeds
     Random::push_generator_seeded(Random::long());
+    if dungeon.challenges & Challenge::IntoDarkness.mask() != 0 {
+        let torches = if feeling_large { 2 } else { 1 };
+        for _ in 0..torches {
+            let cell = random_drop_cell(rooms, &mut room_order, map, &mut occupied);
+            let cell = (cell >= 0).then_some(cell as usize);
+            if let Some(cell) = cell {
+                flatten_grass(map, cell);
+            }
+            let mut torch = GeneratedItem::new("Torch", ItemCategory::Other);
+            torch.source = Some(DARKNESS_TORCH_SOURCE.into());
+            out.push(CreatedLoot {
+                loot: PlacedLoot {
+                    item: torch,
+                    heap_type: "heap",
+                },
+                cell,
+            });
+        }
+    }
     Random::pop_generator();
 
     Random::push_generator_seeded(Random::long());

@@ -57,11 +57,22 @@ wands still stop at +4. The Deep search switch fills the seed-only Imp and Wandm
 the same class window so those quest rewards can be matched at all; it is off
 by default.
 
+Each report opens with a run header: the seed in the pixel font with a copy
+button, and toggles for the five challenges that change generated floors
+(`Challenge::generation_effect`). Toggling calls `analyze_seed_for_run`
+(WASM export of the same name) with the trinket pick and challenge list;
+declared challenges are never spawn conditions, and choices persist per seed
+in localStorage. Forbidden Runes, Barren Land, Into Darkness (floor torch,
+`RegularLevel.java:472-490`) and Badder Bosses are replayed and match
+all-challenge oracle fixtures on FVX-YTN-SLC floors 2/4/8/12. Champion
+Enemies is unmodeled: its reports drop to the conservative projection (no
+maps).
+
 The Trinket Catalyst picker sits on the seed's selection floor. Picking an
 offer calls `analyze_seed_with_trinket` (WASM export of the same name): the
 trinket is held at +3 from `first_effective_depth`, variable samples are
-published, and only Forbidden Runes stays a spawn condition. No pick is the
-merged `analyze_seed` report. Per-option `catalyst_option_effects` marks which
+published, and only Forbidden Runes stays a spawn condition unless challenges
+are declared. No pick is the merged `analyze_seed` report. Per-option `catalyst_option_effects` marks which
 trinkets the replay models (Mossy Clump, Trap Mechanism, Mimic Tooth, Rat
 Skull, Exotic Crystals, Cracked Spyglass); Parchment Scrap's equipment enchant
 rolls are not modeled. Cracked Spyglass's hidden extra loot is placed only in
@@ -113,9 +124,13 @@ Next:
    Java drops two `IntRange(3, 5)` stacks (the exact report has the real sum).
 3. Consider exposing `analyze_seed_exact` through WASM if the web app should
    offer the default-profile view.
-4. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
+4. Champion Enemies: publish the painter-complete layout with every entity
+   in `uncertain_cells` instead of hiding maps (layout precedes
+   `createMobs`). Separately, FVX-YTN-SLC's default replay drifts from Java
+   at floors 16-17 (floor 16 cell 197).
+5. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
    not actually depend on run history); publish entities on boss maps.
-5. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
+6. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
    ~38 ms WASM. Remaining cost is spread thin; `patch::generate` (~25%) is
    now mostly the parity-bound `next_float` fill draws. Measured but not
    adopted: talc allocator (no WASM gain), `+simd128` (~7% WASM, drops

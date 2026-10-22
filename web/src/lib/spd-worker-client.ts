@@ -1,4 +1,5 @@
 import type {
+  Challenge,
   SeedReport,
   SeedSearchRequest,
   SeedSearchResult,
@@ -16,7 +17,8 @@ function createWorker() {
 export function analyzeSeedInWorker(
   input: string,
   floors: number,
-  trinket: string | null
+  trinket: string | null,
+  challenges: readonly Challenge[]
 ): WorkerTask<SeedReport> {
   const worker = createWorker()
   let rejectTask: (reason: Error) => void = () => {}
@@ -38,6 +40,7 @@ export function analyzeSeedInWorker(
       input,
       floors,
       trinket,
+      challenges: [...challenges],
     } satisfies SpdWorkerRequest)
   })
   return {

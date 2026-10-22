@@ -20,35 +20,44 @@ pub(crate) struct DiscoveredRoute {
 }
 
 pub(crate) fn default_condition() -> ItemSpawnCondition {
-    condition_for_profile(&MapProfile::default())
+    condition_for_profile(&MapProfile::default(), false)
 }
 
 /// Base condition and alternatives for a report pinned to the player's
-/// `profile`: only the Forbidden Runes challenge stays open.
+/// `profile`. With undeclared challenges only Forbidden Runes stays open;
+/// declared challenges leave nothing open.
 pub(crate) fn pinned_profile_routes(
     profile: &MapProfile,
     floors_requested: u32,
+    challenges_declared: bool,
 ) -> (ItemSpawnCondition, Vec<DiscoveredRoute>) {
+    let base = condition_for_profile(profile, challenges_declared);
+    if challenges_declared {
+        return (base, Vec::new());
+    }
     let forbidden_runes = MapProfile {
         challenges: vec![Challenge::ForbiddenRunes],
         ..profile.clone()
     };
-    (
-        condition_for_profile(profile),
-        vec![route(forbidden_runes, floors_requested)],
-    )
+    (base, vec![route(forbidden_runes, floors_requested, false)])
 }
 
+/// Trinket routes to merge into a report. `declared` is the player's
+/// challenge list; `None` keeps Forbidden Runes open as a condition.
 pub(crate) fn discover_routes(
     selection: &TrinketSelectionReport,
     floors: &[FloorReport],
     floors_requested: u32,
+    declared: Option<&[Challenge]>,
 ) -> Vec<DiscoveredRoute> {
-    let forbidden_profile = MapProfile {
-        challenges: vec![Challenge::ForbiddenRunes],
-        ..MapProfile::default()
-    };
-    let mut routes = vec![route(forbidden_profile, floors_requested)];
+    let mut routes = Vec::new();
+    if declared.is_none() {
+        let forbidden_profile = MapProfile {
+            challenges: vec![Challenge::ForbiddenRunes],
+            ..MapProfile::default()
+        };
+        routes.push(route(forbidden_profile, floors_requested, false));
+    }
 
     let scope_end = floors_requested.min(VERIFIED_DEPTH);
     if selection.first_effective_depth > scope_end {
@@ -76,42 +85,48 @@ pub(crate) fn discover_routes(
                 previous_level = level;
             }
 
-            for forbidden_runes in [false, true] {
+            let challenge_sets = match declared {
+                Some(challenges) => vec![challenges.to_vec()],
+                None => vec![Vec::new(), vec![Challenge::ForbiddenRunes]],
+            };
+            for challenges in challenge_sets {
                 let profile = MapProfile {
-                    challenges: forbidden_runes
-                        .then_some(Challenge::ForbiddenRunes)
-                        .into_iter()
-                        .collect(),
+                    challenges,
                     trinket_events: events.clone(),
                     ..MapProfile::default()
                 };
-                routes.push(route(profile, scope_end));
+                routes.push(route(profile, scope_end, declared.is_some()));
             }
         }
     }
     routes
 }
 
-fn route(profile: MapProfile, max_depth: u32) -> DiscoveredRoute {
+fn route(profile: MapProfile, max_depth: u32, challenges_declared: bool) -> DiscoveredRoute {
     DiscoveredRoute {
-        condition: condition_for_profile(&profile),
+        condition: condition_for_profile(&profile, challenges_declared),
         profile,
         max_depth,
     }
 }
 
-fn condition_for_profile(profile: &MapProfile) -> ItemSpawnCondition {
-    ItemSpawnCondition {
-        all_of: vec![
-            ItemDependencyCondition::Challenge {
-                challenge: Challenge::ForbiddenRunes,
-                enabled: profile.challenges.contains(&Challenge::ForbiddenRunes),
-            },
-            ItemDependencyCondition::Trinket {
-                events: profile.trinket_events.clone(),
-            },
-        ],
+/// Spawn condition for items seen under `profile`. Declared challenges are
+/// the player's own, so they never appear as conditions.
+pub(crate) fn condition_for_profile(
+    profile: &MapProfile,
+    challenges_declared: bool,
+) -> ItemSpawnCondition {
+    let mut all_of = Vec::new();
+    if !challenges_declared {
+        all_of.push(ItemDependencyCondition::Challenge {
+            challenge: Challenge::ForbiddenRunes,
+            enabled: profile.challenges.contains(&Challenge::ForbiddenRunes),
+        });
     }
+    all_of.push(ItemDependencyCondition::Trinket {
+        events: profile.trinket_events.clone(),
+    });
+    ItemSpawnCondition { all_of }
 }
 
 #[derive(Debug, Clone)]

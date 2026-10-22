@@ -1,11 +1,18 @@
 import type {
+  Challenge,
   SeedReport,
   SeedSearchRequest,
   SeedSearchResult,
 } from '@/lib/spd-wasm'
 
 export type SpdWorkerRequest =
-  | { type: 'analyze'; input: string; floors: number; trinket: string | null }
+  | {
+      type: 'analyze'
+      input: string
+      floors: number
+      trinket: string | null
+      challenges: Challenge[]
+    }
   | { type: 'search'; request: SeedSearchRequest }
 
 export type SpdWorkerResponse =

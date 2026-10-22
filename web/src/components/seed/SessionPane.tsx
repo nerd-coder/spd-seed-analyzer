@@ -6,6 +6,7 @@ import { formatElapsed, useElapsedTime } from '@/hooks/useElapsedTime'
 import {
   cancelSeedAnalysis,
   type SeedSession,
+  selectChallenges,
   selectTrinket,
 } from '@/stores/app'
 
@@ -71,6 +72,13 @@ export function SessionPane({ session }: { session: SeedSession }) {
             busy: loading,
             select: (trinket) => {
               void selectTrinket(session.id, trinket)
+            },
+          }}
+          challengeChoice={{
+            enabled: session.challenges,
+            busy: loading,
+            select: (challenges) => {
+              void selectChallenges(session.id, challenges)
             },
           }}
         />

@@ -105,7 +105,7 @@ fn route_replays_match_full_replays_for_items_and_rooms() {
     for seed in 0..6 {
         let input = seed.to_string();
         let report = crate::analyze_seed_with_profile(&input, 26, &MapProfile::default()).unwrap();
-        let routes = discover_routes(&report.trinket_selection, &report.floors, 26);
+        let routes = discover_routes(&report.trinket_selection, &report.floors, 26, None);
         for route in routes.iter().take(6) {
             trinket_routes += usize::from(!route.profile.trinket_events.is_empty());
             let fast = crate::analyze_route(&input, route, &report.trinket_selection).unwrap();
@@ -135,7 +135,12 @@ fn profile_conditions_are_structured_dependency_axes() {
         }],
         ..MapProfile::default()
     };
-    let condition = condition_for_profile(&profile);
+    let declared = condition_for_profile(&profile, true);
+    assert!(matches!(
+        declared.all_of.as_slice(),
+        [ItemDependencyCondition::Trinket { .. }]
+    ));
+    let condition = condition_for_profile(&profile, false);
     assert_eq!(condition.all_of.len(), 2);
     assert!(matches!(
         condition.all_of[0],

@@ -512,17 +512,23 @@ export async function parseSeed(input: string): Promise<SeedInfo> {
   return wasmBindings.parse_seed(input) as SeedInfo
 }
 
-/** `trinket` is a Catalyst option class name held at +3; null is the default report. */
+/**
+ * `trinket` is a Catalyst option class name held at +3; `challenges` are the
+ * run's enabled challenges. Neither set is the default report.
+ */
 export async function analyzeSeed(
   input: string,
   floors: number,
-  trinket: string | null = null
+  trinket: string | null = null,
+  challenges: readonly Challenge[] = []
 ): Promise<SeedReport> {
   await ensureWasm()
   const report = (
-    trinket == null
+    trinket == null && challenges.length === 0
       ? wasmBindings.analyze_seed(input, floors)
-      : wasmBindings.analyze_seed_with_trinket(input, floors, trinket)
+      : wasmBindings.analyze_seed_for_run(input, floors, trinket ?? undefined, [
+          ...challenges,
+        ])
   ) as SeedReport
   for (const floor of report.floors) {
     decodeMaps(floor)

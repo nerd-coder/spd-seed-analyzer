@@ -9,6 +9,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { enchantmentClassName } from '@/generated/game-ids'
+import { challengeName } from '@/lib/challenges'
 import type {
   ItemCondition,
   ItemDependencyCondition,
@@ -26,7 +27,7 @@ function humanize(value: string): string {
 
 function dependencyDescription(condition: ItemDependencyCondition): string {
   if (condition.type === 'challenge') {
-    return `${humanize(condition.challenge)} is ${condition.enabled ? 'enabled' : 'disabled'}`
+    return `${challengeName(condition.challenge)} is ${condition.enabled ? 'enabled' : 'disabled'}`
   }
 
   if (condition.type === 'artifact') {
@@ -63,7 +64,7 @@ function dependencyDescription(condition: ItemDependencyCondition): string {
 
 function conditionDescription(condition: ItemCondition): string {
   if (condition.type === 'challenge') {
-    return `${humanize(condition.challenge)} is ${condition.enabled ? 'enabled' : 'disabled'}`
+    return `${challengeName(condition.challenge)} is ${condition.enabled ? 'enabled' : 'disabled'}`
   }
   if (condition.type === 'trinket' || condition.type === 'artifact') {
     return dependencyDescription(condition)
@@ -93,7 +94,7 @@ function spawnSummary(conditions: ItemSpawnCondition[]): string {
     if (requirements.length === 1) {
       const [requirement] = requirements
       if (requirement.type === 'challenge') {
-        return `${humanize(requirement.challenge)} ${requirement.enabled ? 'enabled' : 'disabled'}`
+        return `${challengeName(requirement.challenge)} ${requirement.enabled ? 'enabled' : 'disabled'}`
       }
       return dependencyDescription(requirement)
     }

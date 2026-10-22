@@ -17,6 +17,7 @@ pub mod random;
 pub mod report;
 pub mod rooms;
 pub mod run;
+mod run_settings;
 pub mod search;
 mod selected_trinket;
 pub mod trinkets;
@@ -36,6 +37,7 @@ pub use report::{
     TrollBlacksmithQuestContract, TrollBlacksmithQuestVariable, WandmakerObjective,
 };
 pub use run::{dungeon_from_run, init_run, RunState};
+pub use run_settings::analyze_seed_for_run;
 pub use search::{
     search_seeds, ItemConstraint, ItemMatchEvidence, MatchMode, SearchError, SeedMatch,
     SeedSearchRequest, SeedSearchResult, VariableItemEvidence, MAX_SEARCH_CANDIDATES,
@@ -43,9 +45,9 @@ pub use search::{
 };
 pub use selected_trinket::analyze_seed_with_trinket;
 pub use trinkets::{
-    ArtifactEvent, ArtifactEventAction, ArtifactKind, Challenge, ClaimState, MapProfile,
-    ProfileError, TrinketEvent, TrinketEventAction, TrinketGenerationEffect, TrinketKind,
-    TrinketSelectionReport,
+    ArtifactEvent, ArtifactEventAction, ArtifactKind, Challenge, ChallengeEffect, ClaimState,
+    MapProfile, ProfileError, TrinketEvent, TrinketEventAction, TrinketGenerationEffect,
+    TrinketKind, TrinketSelectionReport,
 };
 
 /// Pinned SPD version this port targets (from local clone at scaffold time).
@@ -87,6 +89,7 @@ pub fn analyze_seed(input: &str, floors: u32) -> Result<SeedReport, AnalyzeError
         &report.trinket_selection,
         &report.floors,
         report.floors_requested,
+        None,
     );
     let mut alternatives = Vec::new();
     for route in routes {

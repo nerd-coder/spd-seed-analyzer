@@ -44,6 +44,12 @@ export const STAIRS_ICONS: Record<string, IconFrame> = {
   secrets: { x: 112, y: 64, w: 15, h: 16 },
 }
 
+/** Challenge mark (`Icons.CHALLENGE_COLOR` / `CHALLENGE_GREY`, 15×12). */
+export const CHALLENGE_ICONS = {
+  on: { x: 144, y: 32, w: 15, h: 12 },
+  off: { x: 144, y: 16, w: 15, h: 12 },
+} as const satisfies Record<string, IconFrame>
+
 /** Journal notes icon (`Icons.ALCHEMY`, 16×16). */
 export const ALCHEMY_ICON: IconFrame = { x: 96, y: 48, w: 16, h: 16 }
 

@@ -73,7 +73,8 @@ context.onmessage = async (event: MessageEvent<SpdWorkerRequest>) => {
       const report = await analyzeSeed(
         event.data.input,
         event.data.floors,
-        event.data.trinket
+        event.data.trinket,
+        event.data.challenges
       )
       post({ type: 'analysis-complete', report })
       return
