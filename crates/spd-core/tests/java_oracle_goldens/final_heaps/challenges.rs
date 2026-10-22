@@ -77,9 +77,16 @@ fn assert_challenge_floor(fixture_name: &str, oracle_flag: &str, challenges: &[C
         })
         .collect();
     assert_eq!(actual_mobs, expected.final_mobs, "{context} mobs");
-    // Guide pages depend on the player's journal, not the seed.
-    let not_guide_page =
-        |heap: &OracleHeap| heap.items.iter().all(|item| item.class_name != "GuidePage");
+    // Guide pages depend on the player's journal, not the seed. Equal-score
+    // `ShopRoom.ChooseBag` ties follow JVM identity-hash iteration.
+    let seed_determined = |heap: &OracleHeap| {
+        heap.items.iter().all(|item| {
+            !matches!(
+                item.class_name.as_str(),
+                "GuidePage" | "MagicalHolster" | "ScrollHolder" | "PotionBandolier" | "VelvetPouch"
+            )
+        })
+    };
     let actual_heaps: Vec<_> = map
         .heaps
         .iter()
@@ -90,14 +97,15 @@ fn assert_challenge_floor(fixture_name: &str, oracle_flag: &str, challenges: &[C
                 .items
                 .iter()
                 .map(|item| OracleItem {
-                    class_name: item.class_name().to_string(),
+                    // The oracle names nested `Plant.Seed` classes "Seed".
+                    class_name: normalize_oracle_class(item.class_name()).to_string(),
                     quantity: item.quantity,
                     level: item.level,
                     cursed: item.cursed,
                 })
                 .collect(),
         })
-        .filter(not_guide_page)
+        .filter(seed_determined)
         .map(merge_gold)
         .collect();
     // A Suspicious Chest prize drawn from the spawn queue stays unpublished;
@@ -115,7 +123,7 @@ fn assert_challenge_floor(fixture_name: &str, oracle_flag: &str, challenges: &[C
     let expected_heaps: Vec<_> = expected
         .final_heaps
         .iter()
-        .filter(|heap| not_guide_page(heap) && !unpublished_suspicious_chest(heap))
+        .filter(|heap| seed_determined(heap) && !unpublished_suspicious_chest(heap))
         .cloned()
         .collect();
     assert_eq!(actual_heaps, expected_heaps, "{context} heaps");
@@ -173,5 +181,18 @@ fn floor_one_giant_champion_matches_oracle() {
             "champion-enemies",
             &[Challenge::ChampionEnemies],
         );
+    }
+}
+
+/// Barren Land on garden-heavy floors: Plants and Garden rooms (floor 2),
+/// a Rot Garden (floor 8), and a Caves Secret Garden (floor 11).
+#[test]
+fn garden_floors_with_barren_land_match_oracle() {
+    for fixture in [
+        "aaa-aaa-aan-final-heaps-floor-2-barren-land.json",
+        "aaa-aaa-aag-final-heaps-floor-8-barren-land.json",
+        "aaa-aaa-aac-final-heaps-floor-11-barren-land.json",
+    ] {
+        assert_challenge_floor(fixture, "barren-land", &[Challenge::BarrenLand]);
     }
 }

@@ -135,7 +135,11 @@ Nine bits exist (`Challenges.java:30-38`). Only these alter initial layout:
   item or return null (`Level.java:827-855`).
 - **Barren Land** (`NO_HERBALISM`): `Level.plant` still does the grass/RNG
   work, then returns null (`Level.java:1051-1069`). Plants are part of the
-  public layout.
+  public layout. Its only other hook, `Challenges.isItemBlocked`, blocks
+  Dewdrops, which floor generation never creates (`Challenges.java:71-78`).
+  Oracle fixtures `aaa-aaa-{aan,aag,aac}-final-heaps-floor-{2,8,11}-barren-land.json`
+  (Plants/Garden, Rot Garden, Caves Secret Garden) match terrain, mobs, and
+  heaps.
 - **Badder Bosses** (`STRONGER_BOSSES`): depth 15 inactive-trap chance is 1/4
   instead of 1/8 (`CavesBossLevel.java:126-133`).
 - **Darkness**: `viewDistance` 2 (`Level.java:158`). Extra torches are isolated
