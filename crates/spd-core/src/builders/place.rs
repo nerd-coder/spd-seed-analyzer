@@ -22,6 +22,16 @@ pub fn gate(min: f32, value: f32, max: f32) -> f32 {
     }
 }
 
+/// `Math.round`: ties round toward positive infinity, unlike `f64::round`.
+fn java_round(value: f64) -> i32 {
+    let floor = value.floor();
+    (if value - floor >= 0.5 {
+        floor + 1.0
+    } else {
+        floor
+    }) as i32
+}
+
 pub fn angle_between_points(from: (f32, f32), to: (f32, f32)) -> f32 {
     // Java evaluates the PointF division as `float` before widening the
     // result to the local `double` slope.
@@ -278,17 +288,17 @@ fn place_room_impl(
 
     let (direction, mut start) = if m.abs() >= 1.0 {
         if !(90.0..=270.0).contains(&angle) {
-            let x = ((rooms[prev].top as f64 - b) / m).round() as i32;
+            let x = java_round((rooms[prev].top as f64 - b) / m);
             (DIR_TOP, Point::new(x, rooms[prev].top))
         } else {
-            let x = ((rooms[prev].bottom as f64 - b) / m).round() as i32;
+            let x = java_round((rooms[prev].bottom as f64 - b) / m);
             (DIR_BOTTOM, Point::new(x, rooms[prev].bottom))
         }
     } else if angle < 180.0 {
-        let y = (m * rooms[prev].right as f64 + b).round() as i32;
+        let y = java_round(m * rooms[prev].right as f64 + b);
         (DIR_RIGHT, Point::new(rooms[prev].right, y))
     } else {
-        let y = (m * rooms[prev].left as f64 + b).round() as i32;
+        let y = java_round(m * rooms[prev].left as f64 + b);
         (DIR_LEFT, Point::new(rooms[prev].left, y))
     };
 
@@ -332,23 +342,23 @@ fn place_room_impl(
         } else {
             ((ty as f64 - b) / m) as f32
         };
-        let nx = (tx - (nw - 1) as f32 / 2.0).round() as i32;
+        let nx = java_round((tx - (nw - 1) as f32 / 2.0) as f64);
         let ny = pt - (nh - 1);
         rooms[next].set_pos(nx, ny);
     } else if direction == DIR_BOTTOM {
         let ty = pb as f32 + (nh - 1) as f32 / 2.0;
         let tx = ((ty as f64 - b) / m) as f32;
-        let nx = (tx - (nw - 1) as f32 / 2.0).round() as i32;
+        let nx = java_round((tx - (nw - 1) as f32 / 2.0) as f64);
         rooms[next].set_pos(nx, pb);
     } else if direction == DIR_RIGHT {
         let tx = pr as f32 + (nw - 1) as f32 / 2.0;
         let ty = (m * tx as f64 + b) as f32;
-        let ny = (ty - (nh - 1) as f32 / 2.0).round() as i32;
+        let ny = java_round((ty - (nh - 1) as f32 / 2.0) as f64);
         rooms[next].set_pos(pr, ny);
     } else {
         let tx = pl as f32 - (nw - 1) as f32 / 2.0;
         let ty = (m * tx as f64 + b) as f32;
-        let ny = (ty - (nh - 1) as f32 / 2.0).round() as i32;
+        let ny = java_round((ty - (nh - 1) as f32 / 2.0) as f64);
         rooms[next].set_pos(pl - (nw - 1), ny);
     }
 

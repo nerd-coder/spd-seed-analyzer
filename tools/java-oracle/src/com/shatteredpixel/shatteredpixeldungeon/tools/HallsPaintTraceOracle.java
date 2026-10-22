@@ -49,9 +49,9 @@ final class HallsPaintTraceOracle {
 	}
 
 	static String generate(long seed, int depth) {
-		if ((depth < 2 || depth > 4) && (depth < 6 || depth > 9) && depth != 12 && (depth < 16 || depth > 19)
-				&& (depth < 21 || depth > 24)) {
-			throw new IllegalArgumentException("Paint trace supports regular Sewer depths 2 through 4, Prison depths 6 through 9, depth 12, regular City depths 16 through 19, or regular Halls depths 21 through 24");
+		if ((depth < 2 || depth > 4) && (depth < 6 || depth > 9) && (depth < 11 || depth > 14)
+				&& (depth < 16 || depth > 19) && (depth < 21 || depth > 24)) {
+			throw new IllegalArgumentException("Paint trace supports regular Sewer depths 2 through 4, Prison depths 6 through 9, regular Caves depths 11 through 14, regular City depths 16 through 19, or regular Halls depths 21 through 24");
 		}
 		FloorOracle.initializeFreshRun(seed);
 		FloorOracle.generatePriorFloors(depth);
@@ -74,7 +74,7 @@ final class HallsPaintTraceOracle {
 		try {
 			if (depth <= 4) new TraceSewerLevel().create();
 			else if (depth <= 9) new TracePrisonLevel().create();
-			else if (depth == 12) new TraceCavesLevel().create();
+			else if (depth <= 14) new TraceCavesLevel().create();
 			else if (depth <= 19) new TraceCityLevel().create();
 			else new TraceHallsLevel().create();
 		} catch (FloorOracle.SnapshotComplete expected) {
@@ -326,14 +326,25 @@ final class HallsPaintTraceOracle {
 	private static final class TraceCavesLevel extends CavesLevel {
 		@Override protected Builder builder() {
 			Builder selected = super.builder();
-			if (!(selected instanceof LoopBuilder)) return selected;
+			if (selected instanceof LoopBuilder) {
+				TraceHallsLevel.builderKind = "LoopBuilder";
+				try {
+					Field intensity = LoopBuilder.class.getDeclaredField("curveIntensity");
+					Field offset = LoopBuilder.class.getDeclaredField("curveOffset");
+					intensity.setAccessible(true);
+					offset.setAccessible(true);
+					return new TraceLoopBuilder().setLoopShape(
+							2, intensity.getFloat(selected), offset.getFloat(selected));
+				} catch (ReflectiveOperationException error) {
+					throw new AssertionError(error);
+				}
+			}
+			if (!(selected instanceof FigureEightBuilder)) return selected;
+			TraceHallsLevel.builderKind = "FigureEightBuilder";
 			try {
-				Field intensity = LoopBuilder.class.getDeclaredField("curveIntensity");
-				Field offset = LoopBuilder.class.getDeclaredField("curveOffset");
+				Field intensity = FigureEightBuilder.class.getDeclaredField("curveIntensity");
 				intensity.setAccessible(true);
-				offset.setAccessible(true);
-				return new TraceLoopBuilder().setLoopShape(
-						2, intensity.getFloat(selected), offset.getFloat(selected));
+				return new TraceBuilder().setLoopShape(2, intensity.getFloat(selected), 0f);
 			} catch (ReflectiveOperationException error) {
 				throw new AssertionError(error);
 			}

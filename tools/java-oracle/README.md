@@ -184,6 +184,14 @@ for depth in 2 4 8 12; do
     --output "tools/java-oracle/fixtures/fvx-ytn-slc-final-heaps-floor-$depth-all-challenges.json" \
     FVX-YTN-SLC
 done
+for depth in 12 13 14 16; do
+  ./tools/java-oracle/run --final-heaps-depth "$depth" \
+    --output "tools/java-oracle/fixtures/fvx-ytn-slc-final-heaps-floor-$depth.json" \
+    FVX-YTN-SLC
+done
+./tools/java-oracle/run --halls-paint-trace 13 \
+  --output tools/java-oracle/fixtures/traces/fvx-ytn-slc-floor-13-caves-builder.json \
+  FVX-YTN-SLC
 for depth in 2 3 4; do
   ./tools/java-oracle/run --trinket-final-heaps-depth cracked-spyglass "$depth" 3 2 \
     --output "tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-$depth-cracked-spyglass-3-before-2.json" \

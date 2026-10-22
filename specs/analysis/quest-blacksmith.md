@@ -21,6 +21,14 @@ The strongest fixed-profile generation contract is:
   size-category roll even though the room later enforces minimum dimensions 8
   (`Blacksmith.java:347-354`, `StandardRoom.java:34-54,73-89`,
   `BlacksmithRoom.java:44-51`);
+- the smithy refuses the floor exit only when it is the caller:
+  `BlacksmithRoom.canConnect(Room)` overrides the instance method that
+  `Room.connect` invokes on itself (`Room.java:270-278`,
+  `BlacksmithRoom.java:126-133`), so `exit.connect(smithy)` from builder
+  placement succeeds. Verified by FVX-YTN-SLC floor 13, whose first
+  LoopBuilder attempt places the exit beside the smithy
+  (`traces/fvx-ytn-slc-floor-13-caves-builder.json`). `DemonSpawnerRoom`,
+  `RatKingRoom`, and `MassGraveRoom` overrides are caller-only the same way;
 - Crystal and Gnoll are the only reachable types, selected uniformly with
   `Random.IntRange(1, 2)`. Fungi exists as type 3 in code and in mining-branch
   switches, but is explicitly incomplete and excluded from the roll

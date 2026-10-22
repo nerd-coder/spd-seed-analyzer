@@ -1,0 +1,196 @@
+{
+  "depth": 13,
+  "build_attempts": [
+    {
+      "attempt": 0,
+      "start_rng": [
+        -1365246523, -1351767479, -1194316367, 716632864, 871972222, 1316219145,
+        1382721204, -838331816
+      ],
+      "end_rng": [
+        -1157830112, 1396689803, -1878627055, 351135848, -1022150973,
+        -1289010741, 1083577660, -1908320592
+      ],
+      "success": true,
+      "rooms": [
+        { "class": "BlacksmithRoom", "bounds": [-5, 27, 4, 34] },
+        { "class": "LaboratoryRoom", "bounds": [-3, 15, 5, 20] },
+        { "class": "FissureRoom", "bounds": [-16, 20, -8, 24] },
+        { "class": "RegionDecoBridgeRoom", "bounds": [-13, 3, 0, 15] },
+        { "class": "CavesFissureRoom", "bounds": [10, 32, 19, 40] },
+        { "class": "CaveRoom", "bounds": [-19, 30, -12, 38] },
+        { "class": "RegionDecoBridgeEntranceRoom", "bounds": [0, 0, 8, 8] },
+        { "class": "TrapsRoom", "bounds": [5, 11, 10, 17] },
+        { "class": "GrassyGraveRoom", "bounds": [-5, 22, 3, 27] },
+        { "class": "CavesFissureExitRoom", "bounds": [-12, 24, -5, 32] },
+        { "class": "RegionDecoBridgeRoom", "bounds": [10, 10, 17, 15] },
+        { "class": "TunnelRoom", "bounds": [8, 2, 12, 10] },
+        { "class": "WalkwayRoom", "bounds": [10, 15, 17, 23] },
+        { "class": "TunnelRoom", "bounds": [4, 23, 13, 30] },
+        { "class": "WalkwayRoom", "bounds": [-14, 15, -9, 20] },
+        { "class": "TunnelRoom", "bounds": [4, 32, 10, 36] },
+        { "class": "RingTunnelRoom", "bounds": [-8, 15, -3, 22] }
+      ]
+    }
+  ],
+  "builder_kind": "LoopBuilder",
+  "pre_shuffle_rooms": null,
+  "pre_mobs_rng": null,
+  "pre_items_rng": null,
+  "pre_trap_rng": [],
+  "post_trap_capture_rng": [],
+  "trap_candidates": [],
+  "trap_non_hall_cells": [],
+  "crystal_vaults": [],
+  "drops": [],
+  "blacksmith_state": {
+    "rewards": [
+      { "class": "Greataxe", "level": 0, "quantity": 1 },
+      { "class": "RunicBlade", "level": 0, "quantity": 1 },
+      { "class": "ForceCube", "level": 0, "quantity": 3 },
+      { "class": "PlateArmor", "level": 0, "quantity": 1 }
+    ],
+    "enchant": null,
+    "glyph": null
+  },
+  "generator_state": {
+    "using_first_deck": true,
+    "category_probs": [
+      0.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+      0.0, 0.0, 0.0, 8.0, 1.0, 7.0, 1.0, 8.0
+    ],
+    "categories": [
+      {
+        "probs": [
+          1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+          1.0, 1.0, 1.0
+        ],
+        "using_2nd_probs": false,
+        "seed": 1976912854303681120,
+        "dropped": 0
+      },
+      { "probs": [], "using_2nd_probs": false, "seed": null, "dropped": 0 },
+      {
+        "probs": [2.0, 0.0, 2.0, 2.0, 2.0, 2.0],
+        "using_2nd_probs": false,
+        "seed": -1003743353945802032,
+        "dropped": 0
+      },
+      {
+        "probs": [2.0, 1.0, 1.0, 2.0, 1.0, 0.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": 8529250885526147575,
+        "dropped": 5
+      },
+      {
+        "probs": [1.0, 2.0, 1.0, 2.0, 1.0, 1.0],
+        "using_2nd_probs": false,
+        "seed": -6510324254750660107,
+        "dropped": 4
+      },
+      {
+        "probs": [2.0, 2.0, 2.0, 2.0, 1.0, 2.0, 2.0],
+        "using_2nd_probs": false,
+        "seed": -6708974193528990631,
+        "dropped": 1
+      },
+      {
+        "probs": [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0],
+        "using_2nd_probs": false,
+        "seed": -6544115087078964605,
+        "dropped": 0
+      },
+      {
+        "probs": [1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": null,
+        "dropped": 0
+      },
+      { "probs": [], "using_2nd_probs": false, "seed": null, "dropped": 0 },
+      {
+        "probs": [3.0, 3.0, 3.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": -2324740553363330464,
+        "dropped": 0
+      },
+      {
+        "probs": [3.0, 2.0, 3.0],
+        "using_2nd_probs": false,
+        "seed": 6934072963842448386,
+        "dropped": 1
+      },
+      {
+        "probs": [1.0, 3.0, 1.0],
+        "using_2nd_probs": false,
+        "seed": -8209553719060380713,
+        "dropped": 4
+      },
+      {
+        "probs": [3.0, 3.0, 3.0],
+        "using_2nd_probs": false,
+        "seed": -5433131778649887078,
+        "dropped": 0
+      },
+      {
+        "probs": [3.0, 3.0, 3.0],
+        "using_2nd_probs": false,
+        "seed": -5290442501275599062,
+        "dropped": 0
+      },
+      {
+        "probs": [
+          3.0, 3.0, 3.0, 2.0, 2.0, 2.0, 3.0, 2.0, 3.0, 3.0, 3.0, 3.0, 3.0
+        ],
+        "using_2nd_probs": false,
+        "seed": 4706198321748636650,
+        "dropped": 4
+      },
+      {
+        "probs": [2.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 2.0, 3.0, 2.0, 3.0],
+        "using_2nd_probs": false,
+        "seed": -919598530901628835,
+        "dropped": 3
+      },
+      {
+        "probs": [
+          1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0
+        ],
+        "using_2nd_probs": false,
+        "seed": -8740067910343982824,
+        "dropped": 3
+      },
+      {
+        "probs": [0.0, 0.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": 5009742542340617023,
+        "dropped": 10
+      },
+      {
+        "probs": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "using_2nd_probs": true,
+        "seed": -1572268469137448765,
+        "dropped": 15
+      },
+      {
+        "probs": [0.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 1.0],
+        "using_2nd_probs": false,
+        "seed": 3591239024687563070,
+        "dropped": 0
+      },
+      {
+        "probs": [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": -2898997176729247683,
+        "dropped": 13
+      },
+      {
+        "probs": [0.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 1.0, 2.0, 1.0, 2.0, 0.0],
+        "using_2nd_probs": false,
+        "seed": 451246888772550413,
+        "dropped": 4
+      },
+      { "probs": [1.0], "using_2nd_probs": false, "seed": null, "dropped": 0 }
+    ]
+  },
+  "checkpoints": []
+}

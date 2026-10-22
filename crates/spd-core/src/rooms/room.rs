@@ -416,25 +416,18 @@ pub fn can_connect_rooms(a: &Room, b: &Room, rooms: &[Room]) -> bool {
     if (a.is_exit() && b.is_entrance()) || (a.is_entrance() && b.is_exit()) {
         return false;
     }
-    // DemonSpawnerRoom.connect rejects the floor exit in pinned SPD.
-    if (a.name == "DemonSpawnerRoom" && b.is_exit())
-        || (b.name == "DemonSpawnerRoom" && a.is_exit())
-    {
+    // Java's room overrides below run only on the caller (`a.connect(b)`),
+    // so the other room connecting to them is not rejected.
+    if a.name == "DemonSpawnerRoom" && b.is_exit() {
         return false;
     }
-    if (a.name == "BlacksmithRoom" && b.is_exit()) || (b.name == "BlacksmithRoom" && a.is_exit()) {
+    if a.name == "BlacksmithRoom" && b.is_exit() {
         return false;
     }
-    // RatKingRoom never connects directly to SewerBossEntranceRoom.
-    if (a.name == "RatKingRoom" && b.name == "SewerBossEntranceRoom")
-        || (b.name == "RatKingRoom" && a.name == "SewerBossEntranceRoom")
-    {
+    if a.name == "RatKingRoom" && b.name == "SewerBossEntranceRoom" {
         return false;
     }
     if a.name == "MassGraveRoom" && entrance_within_three_hops(b, rooms) {
-        return false;
-    }
-    if b.name == "MassGraveRoom" && entrance_within_three_hops(a, rooms) {
         return false;
     }
     if a.name == "VaultFinalRoom" && entrance_within_three_hops(b, rooms) {
@@ -716,7 +709,8 @@ mod tests {
             entrance.clone(),
         ];
         assert!(!can_connect_rooms(&too_close[0], &too_close[1], &too_close));
-        assert!(!can_connect_rooms(&too_close[1], &too_close[0], &too_close));
+        // `MassGraveRoom.canConnect(Room)` only runs when the grave is the caller.
+        assert!(can_connect_rooms(&too_close[1], &too_close[0], &too_close));
 
         second.connected = vec![2, 4];
         third.connected = vec![3, 5];

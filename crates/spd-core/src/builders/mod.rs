@@ -410,6 +410,61 @@ mod tests {
         );
     }
 
+    /// The floor-13 smithy loop places the exit next to `BlacksmithRoom`.
+    /// Java only rejects that pair when the smithy calls `connect`, so the
+    /// first attempt succeeds.
+    #[test]
+    fn fvx_floor_thirteen_exit_may_connect_to_the_smithy() {
+        use crate::level::create_level_partial;
+        use crate::run::{dungeon_from_run, init_run};
+
+        #[derive(Deserialize)]
+        struct BuilderTrace {
+            builder_kind: String,
+            build_attempts: Vec<OracleAttempt>,
+        }
+
+        #[derive(Deserialize)]
+        struct OracleAttempt {
+            start_rng: Vec<i32>,
+            end_rng: Vec<i32>,
+            success: bool,
+        }
+
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(
+            "../../tools/java-oracle/fixtures/traces/fvx-ytn-slc-floor-13-caves-builder.json",
+        );
+        let oracle: BuilderTrace = serde_json::from_str(
+            &fs::read_to_string(&path).expect("read Java floor-13 builder fixture"),
+        )
+        .expect("parse Java floor-13 builder fixture");
+        assert_eq!(oracle.builder_kind, "LoopBuilder");
+
+        let seed = crate::parse_seed("FVX-YTN-SLC").expect("valid seed");
+        let mut dungeon = dungeon_from_run(init_run(seed.numeric));
+        for depth in 1..=13 {
+            dungeon.depth = depth;
+            let _ = create_level_partial(&mut dungeon);
+        }
+        let actual = LAST_LOOP_TRACE.with(|trace| trace.borrow().clone());
+        let actual: Vec<_> = actual
+            .iter()
+            .map(|attempt| {
+                (
+                    attempt.start_rng_probe.clone(),
+                    attempt.end_rng_probe.clone(),
+                    attempt.success,
+                )
+            })
+            .collect();
+        let expected: Vec<_> = oracle
+            .build_attempts
+            .into_iter()
+            .map(|attempt| (attempt.start_rng, attempt.end_rng, attempt.success))
+            .collect();
+        assert_eq!(actual, expected);
+    }
+
     #[test]
     fn aaa_floor_twenty_one_matches_java_attempt_boundaries() {
         use crate::level::create_level_partial;

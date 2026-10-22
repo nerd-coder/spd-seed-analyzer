@@ -4,24 +4,40 @@ use std::ffi::OsStr;
 
 #[test]
 fn aaa_floor_sixteen_matches_room_classes_and_normalized_bounds() {
-    let name = OsStr::new("aaa-aaa-aaa-final-heaps-floor-16.json");
+    assert_floor_matches_oracle("aaa-aaa-aaa-final-heaps-floor-16.json");
+}
+
+/// FVX-YTN-SLC's floor-13 exit room connects to the smithy, which Java allows
+/// (`BlacksmithRoom.canConnect` only runs on the smithy's own `connect`). A
+/// rejected pair there rebuilt floor 13 and shifted every later floor's
+/// Generator decks. Floors 12 and 14 also cover a Suspicious Chest prize chest.
+#[test]
+fn fvx_caves_and_city_floors_match_java_final_state() {
+    for depth in [12, 13, 14, 16] {
+        assert_floor_matches_oracle(&format!("fvx-ytn-slc-final-heaps-floor-{depth}.json"));
+    }
+}
+
+fn assert_floor_matches_oracle(fixture_name: &str) {
+    let name = OsStr::new(fixture_name);
     let path = fixture_paths()
         .into_iter()
         .find(|path| path.file_name().is_some_and(|file| file == name))
-        .expect("missing AAA floor-16 fixture");
+        .unwrap_or_else(|| panic!("missing {fixture_name}"));
     let fixture = read_fixture(&path);
-    let expected = fixture.floors.first().expect("floor-16 oracle facts");
+    let expected = fixture.floors.first().expect("oracle floor facts");
+    let depth = expected.depth as i32;
 
     let mut dungeon = dungeon_from_run(init_run(fixture.input.numeric));
     let mut actual = None;
-    for depth in 1_i32..=16 {
-        dungeon.depth = depth;
+    for replay_depth in 1_i32..=depth {
+        dungeon.depth = replay_depth;
         actual = Some(create_level_partial(&mut dungeon));
     }
-    let actual = actual.expect("floor-16 replay");
+    let actual = actual.expect("floor replay");
     let mut rooms = actual.rooms.clone();
     rooms.sort();
-    assert_eq!(rooms, expected.rooms, "floor-16 room classes");
+    assert_eq!(rooms, expected.rooms, "{fixture_name} room classes");
 
     let bounds: Vec<_> = actual
         .room_bounds
@@ -34,23 +50,24 @@ fn aaa_floor_sixteen_matches_room_classes_and_normalized_bounds() {
             bottom: room.bottom,
         })
         .collect();
-    assert_eq!(bounds, expected.room_bounds, "floor-16 normalized bounds");
+    assert_eq!(
+        bounds, expected.room_bounds,
+        "{fixture_name} normalized bounds"
+    );
     assert_eq!(
         actual.pre_paint_rng_probe, expected.pre_paint_rng,
-        "floor-16 pre-paint RNG boundary"
+        "{fixture_name} pre-paint RNG boundary"
     );
     assert_eq!(
         actual.pre_mobs_rng_probe, expected.pre_mobs_rng,
-        "floor-16 pre-mobs RNG boundary"
+        "{fixture_name} pre-mobs RNG boundary"
     );
     assert_eq!(
         actual.pre_items_rng_probe, expected.pre_items_rng,
-        "floor-16 pre-items RNG boundary"
+        "{fixture_name} pre-items RNG boundary"
     );
-    let mobs: Vec<_> = actual
-        .map
-        .as_ref()
-        .expect("floor-16 map")
+    let map = actual.map.as_ref().expect("regular floor map");
+    let mobs: Vec<_> = map
         .mobs
         .iter()
         .map(|mob| OracleMob {
@@ -58,11 +75,8 @@ fn aaa_floor_sixteen_matches_room_classes_and_normalized_bounds() {
             class_name: mob.class_name().to_string(),
         })
         .collect();
-    assert_eq!(mobs, expected.final_mobs, "floor-16 final mobs");
-    let heaps: Vec<_> = actual
-        .map
-        .as_ref()
-        .expect("floor-16 map")
+    assert_eq!(mobs, expected.final_mobs, "{fixture_name} final mobs");
+    let heaps: Vec<_> = map
         .heaps
         .iter()
         .map(|heap| OracleHeap {
@@ -80,7 +94,7 @@ fn aaa_floor_sixteen_matches_room_classes_and_normalized_bounds() {
                 .collect(),
         })
         .collect();
-    assert_eq!(heaps, expected.final_heaps, "floor-16 final heaps");
+    assert_eq!(heaps, expected.final_heaps, "{fixture_name} final heaps");
 }
 
 #[derive(Debug, serde::Deserialize)]

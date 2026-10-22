@@ -87,5 +87,6 @@ fn blacksmith_does_not_connect_to_exit() {
     exit.bottom = 0;
     let blocked = [smith, exit];
     assert!(!can_connect_rooms(&blocked[0], &blocked[1], &blocked));
-    assert!(!can_connect_rooms(&blocked[1], &blocked[0], &blocked));
+    // `BlacksmithRoom.canConnect(Room)` only runs when the smithy is the caller.
+    assert!(can_connect_rooms(&blocked[1], &blocked[0], &blocked));
 }
