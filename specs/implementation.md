@@ -100,7 +100,9 @@ page, and is then left off the map. Java oracle fixtures cover Mimic Tooth
 Every public object is a numeric id from `crates/spd-objects` (items,
 enchantments, mobs, rooms, traps, plants, blobs). `bun run gen:ids` writes
 `web/src/generated/game-ids.ts`; a Rust test fails when it drifts. Id lists are
-append-only. The UI composes titles from ids, levels, curses, and enchantments.
+append-only. The UI composes titles from ids, levels, curses, and enchantments;
+a known enchantment or glyph always wraps the item name with the game's `%s`
+template ("Blazing Javelin", "Plate Armor of Brimstone"), never a separate tag.
 Items whose concrete result depends on gameplay carry `prediction: "variable"`
 and keep their seed-drawn value.
 
@@ -126,13 +128,11 @@ with no sample on this profile; the UI hides those.
 
 Next:
 
-1. Decide whether enchanted item titles should use the game's `%s` templates
-   ("Friendly Sickle") instead of a separate enchantment tag.
-2. Consider exposing `analyze_seed_exact` through WASM if the web app should
+1. Consider exposing `analyze_seed_exact` through WASM if the web app should
    offer the default-profile view.
-3. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
+2. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
    not actually depend on run history); publish entities on boss maps.
-4. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
+3. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
    ~38 ms WASM. Remaining cost is spread thin; `patch::generate` (~25%) is
    now mostly the parity-bound `next_float` fill draws. Measured but not
    adopted: talc allocator (no WASM gain), `+simd128` (~7% WASM, drops

@@ -13,7 +13,7 @@ import {
 import { Progress } from '@/components/ui/progress'
 import { itemClassName } from '@/generated/game-ids'
 import { itemSprite, parseItemEnhancement } from '@/lib/item-kind'
-import { enchantmentName, itemLabel } from '@/lib/item-title'
+import { enchantedTitle, enchantmentName, itemLabel } from '@/lib/item-title'
 import type { ImpLevelRule, ImpRewardSlot, ImpSlotRole } from '@/lib/spd-wasm'
 
 const ROLE_LABEL: Record<ImpSlotRole, string> = {
@@ -73,9 +73,7 @@ function SlotRow({
         <span className="text-xs text-muted-foreground tabular-nums">
           of {levelText(slot.level_rule)}
         </span>
-        {enchantment ? (
-          <Badge variant="secondary">{enchantment}</Badge>
-        ) : slot.enchanted ? (
+        {enchantment == null && slot.enchanted ? (
           <Badge variant="secondary">
             {slot.role === 'armor' ? 'glyphed' : 'enchanted'}
           </Badge>
@@ -91,9 +89,11 @@ function SlotRow({
               category: slot.role,
             })}
             enhancement={parseItemEnhancement(enchantment)}
-            title={itemLabel(fixed)}
+            title={enchantedTitle(itemLabel(fixed), enchantment)}
           />
-          <span className="text-sm">{itemLabel(fixed)}</span>
+          <span className="text-sm">
+            {enchantedTitle(itemLabel(fixed), enchantment)}
+          </span>
           <span className="text-xs text-muted-foreground tabular-nums">
             100%
           </span>
@@ -114,7 +114,7 @@ function SlotRow({
                     category: slot.role,
                   })}
                   enhancement={parseItemEnhancement(enchantment)}
-                  title={itemLabel(candidate.item)}
+                  title={enchantedTitle(itemLabel(candidate.item), enchantment)}
                 />
                 <span className="flex min-w-0 flex-col gap-0.5">
                   <span className="flex min-w-0 flex-wrap items-baseline gap-1.5">
@@ -125,7 +125,7 @@ function SlotRow({
                           : 'truncate text-sm'
                       }
                     >
-                      {itemLabel(candidate.item)}
+                      {enchantedTitle(itemLabel(candidate.item), enchantment)}
                     </span>
                     {isSeedDraw ? (
                       <Badge variant="outline">seed draw</Badge>
