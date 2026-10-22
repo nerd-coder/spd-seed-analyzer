@@ -140,10 +140,12 @@ with no sample on this profile; the UI hides those.
 
 Next:
 
-1. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
-   ~38 ms WASM. Remaining cost is spread thin; `patch::generate` (~25%) is
-   now mostly the parity-bound `next_float` fill draws. Measured but not
-   adopted: talc allocator (no WASM gain), `+simd128` (~7% WASM, drops
-   pre-16.4 Safari), and sharing the pre-trinket floor prefix across
-   trinket routes (~1–2 ms; routes split on ghost-reward profiling and need
-   trinket/RNG thread-local snapshots).
+1. Performance (`bun run profile`): a 26-floor report is ~22.5 ms native,
+   ~37 ms WASM; the default replay is ~55% and the ~7 trinket-route
+   replays ~45%. `patch::generate` (~17%) is mostly the parity-bound
+   `next_float` fill draws. Measured but not adopted: talc allocator (no
+   WASM gain), `+simd128` (~7% WASM, drops pre-16.4 Safari), sharing the
+   pre-trinket floor prefix across routes (~1–2 ms; routes split on
+   ghost-reward profiling and need trinket/RNG thread-local snapshots), and
+   micro-changes that measured slower (compact free-space rects, hoisted
+   maze RNG, reused `smooth` buffers).

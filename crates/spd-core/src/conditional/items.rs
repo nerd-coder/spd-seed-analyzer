@@ -45,13 +45,17 @@ pub(crate) fn merge_possible_items(
 fn merge_contexts(contexts: Vec<(&ItemSpawnCondition, Vec<ItemEntry>)>) -> Vec<ItemEntry> {
     let (conditions, items): (Vec<_>, Vec<_>) = contexts.into_iter().unzip();
     let mut merged = Vec::<(ItemEntry, Vec<usize>)>::new();
+    let mut keys = Vec::<ItemEntry>::new();
     for (context_index, items) in items.into_iter().enumerate() {
         for item in items {
-            if let Some((candidate, present_in)) =
-                merged.iter_mut().find(|(candidate, present_in)| {
-                    items_equivalent(candidate, &item) && !present_in.contains(&context_index)
-                })
-            {
+            let key = equivalence_key(&item);
+            let found = keys
+                .iter()
+                .zip(&merged)
+                .position(|(candidate, (_, present_in))| {
+                    *candidate == key && !present_in.contains(&context_index)
+                });
+            if let Some((candidate, present_in)) = found.map(|index| &mut merged[index]) {
                 for condition in item.conditions {
                     if !candidate.conditions.contains(&condition) {
                         candidate.conditions.push(condition);
@@ -59,6 +63,7 @@ fn merge_contexts(contexts: Vec<(&ItemSpawnCondition, Vec<ItemEntry>)>) -> Vec<I
                 }
                 present_in.push(context_index);
             } else {
+                keys.push(key);
                 merged.push((item, vec![context_index]));
             }
         }
@@ -188,16 +193,12 @@ fn deduplicate_conditions(conditions: &mut Vec<ItemSpawnCondition>) {
     *conditions = unique;
 }
 
-fn items_equivalent(left: &ItemEntry, right: &ItemEntry) -> bool {
-    let mut left = left.clone();
-    let mut right = right.clone();
-    left.source = None;
-    right.source = None;
-    left.spawn_conditions.clear();
-    right.spawn_conditions.clear();
-    left.conditions.clear();
-    right.conditions.clear();
-    left.notes.clear();
-    right.notes.clear();
-    left == right
+/// `item` without the fields that may differ between equivalent entries.
+fn equivalence_key(item: &ItemEntry) -> ItemEntry {
+    let mut key = item.clone();
+    key.source = None;
+    key.spawn_conditions.clear();
+    key.conditions.clear();
+    key.notes.clear();
+    key
 }

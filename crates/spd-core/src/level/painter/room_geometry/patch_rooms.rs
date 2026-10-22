@@ -1,7 +1,5 @@
 //! SPD `PatchRoom` geometry for the first standard-room painter slice.
 
-use std::collections::VecDeque;
-
 use crate::level::patch;
 use crate::level::terrain::{
     TerrainMap, CHASM, EMBERS, EMPTY, ENTRANCE, EXIT, INACTIVE_TRAP, REGION_DECO, SECRET_TRAP,
@@ -141,36 +139,39 @@ fn all_open_cells_reachable(mask: &[bool], width: i32, start: usize) -> bool {
     if start >= mask.len() || mask[start] {
         return false;
     }
-    let height = mask.len() as i32 / width;
-    let mut reached = vec![false; mask.len()];
-    let mut queue = VecDeque::from([start]);
-    reached[start] = true;
-
-    while let Some(cell) = queue.pop_front() {
-        let x = cell as i32 % width;
-        let y = cell as i32 / width;
-        for dy in -1..=1 {
-            for dx in -1..=1 {
-                if dx == 0 && dy == 0 {
-                    continue;
-                }
-                let nx = x + dx;
-                let ny = y + dy;
-                if nx < 0 || ny < 0 || nx >= width || ny >= height {
-                    continue;
-                }
-                let next = (nx + ny * width) as usize;
-                if !mask[next] && !reached[next] {
-                    reached[next] = true;
-                    queue.push_back(next);
-                }
-            }
+    let width = width as usize;
+    let height = mask.len() / width;
+    // A blocked border row/column removes per-neighbour bounds checks.
+    let padded = width + 2;
+    let mut open = vec![false; padded * (height + 2)];
+    let mut remaining = 0usize;
+    for (y, row) in mask.chunks_exact(width).enumerate() {
+        let base = (y + 1) * padded + 1;
+        for (x, &filled) in row.iter().enumerate() {
+            open[base + x] = !filled;
+            remaining += usize::from(!filled);
         }
     }
-
-    mask.iter()
-        .zip(reached)
-        .all(|(&filled, seen)| filled || seen)
+    let p = padded as isize;
+    let offsets = [-p - 1, -p, -p + 1, -1, 1, p - 1, p, p + 1];
+    let first = (start / width + 1) * padded + start % width + 1;
+    open[first] = false;
+    remaining -= 1;
+    let mut stack = vec![first];
+    while let Some(cell) = stack.pop() {
+        for offset in offsets {
+            let next = cell.wrapping_add_signed(offset);
+            if open[next] {
+                open[next] = false;
+                remaining -= 1;
+                stack.push(next);
+            }
+        }
+        if remaining == 0 {
+            return true;
+        }
+    }
+    remaining == 0
 }
 
 pub(crate) fn clean_diagonal_edges(mask: &mut [bool], width: i32) {
