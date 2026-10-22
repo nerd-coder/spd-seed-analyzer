@@ -11,10 +11,18 @@ and confirming travel.
 The overall analyzer remains partial.
 
 Main-path floor maps publish heaps, mobs, and loot markers with an inspect
-panel (hover/tap). `uncertain_cells` marks "May differ" entities: everything
-from depth 2 on, because run-history taint propagates from depth 1; depth 1 of
-a fresh run is exact. `hidden_cells` (secret-door-only areas) pulse on the
-canvas. Boss maps remain layout-only.
+panel (hover/tap). `uncertain_cells` marks "May differ" per entity: only
+entities recorded on a level stream that may have desynced (a levelgen
+artifact draw after depth 1, any deck draw once an earlier floor desynced, a
+history-dependent quest roll) or placed by player-dependent logic (shop stock,
+the createItems tail after rose/rations, Champion Giants). Rules and evidence:
+`specs/generator-decks.md` §11 "Map entity certainty"; a perturbation test
+replays runtime artifact draws and asserts exact entities do not move. Sewer
+floors are mostly exact; from the first shop floor on most seeds flag nearly
+everything. `hidden_cells` (secret-door-only areas) pulse on the canvas. Boss
+maps publish their level-creation entities (Goo, Rat King and gold; prison
+cages and IronKey; Pylons; the Amulet), always exact
+(`specs/analysis/boss-floor-entities.md`).
 
 Vault maps publish room-painted entities plus `VaultLevel.createItems`
 (leftover `itemsToSpawn`, Darkness torches, extra Potion of Healing), matching
@@ -132,9 +140,7 @@ with no sample on this profile; the UI hides those.
 
 Next:
 
-1. Narrow map `uncertain_cells` per entity (most later-floor mobs and heaps do
-   not actually depend on run history); publish entities on boss maps.
-2. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
+1. Performance (`bun run profile`): a 26-floor report is ~24 ms native,
    ~38 ms WASM. Remaining cost is spread thin; `patch::generate` (~25%) is
    now mostly the parity-bound `next_float` fill draws. Measured but not
    adopted: talc allocator (no WASM gain), `+simd128` (~7% WASM, drops

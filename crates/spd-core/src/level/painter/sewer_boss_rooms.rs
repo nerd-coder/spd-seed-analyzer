@@ -1,9 +1,9 @@
 //! Pinned SPD SewerBoss room painters.
 //!
-//! Mob and heap placement is omitted from the public map, but paint-time
-//! random calls (RatKing gold) stay on the stream.
+//! Goo, the Rat King, and its gold are placed while painting.
 
 use crate::geom::Point;
+use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::level::carpet;
 use crate::level::terrain::{
     TerrainMap, CUSTOM_DECO, EMPTY, EMPTY_SP, ENTRANCE, LOCKED_EXIT, WALL, WALL_DECO, WATER,
@@ -76,7 +76,7 @@ fn paint_diamond(map: &mut TerrainMap, room: &Room, ri: usize, doors: &DoorMap) 
     }
     paint_cross_water(map, room);
     reject_later_water(map, room);
-    let _boss_position = room.as_rect().center_room();
+    place_goo(map, room);
 }
 
 fn paint_walled(map: &mut TerrainMap, room: &Room) {
@@ -99,7 +99,7 @@ fn paint_walled(map: &mut TerrainMap, room: &Room) {
     }
     paint_cross_water(map, room);
     reject_later_water(map, room);
-    let _boss_position = room.as_rect().center_room();
+    place_goo(map, room);
 }
 
 fn paint_thin_pillars(map: &mut TerrainMap, room: &Room, ri: usize, doors: &DoorMap) {
@@ -142,7 +142,7 @@ fn paint_thin_pillars(map: &mut TerrainMap, room: &Room, ri: usize, doors: &Door
         WALL,
     );
     fill_perimeter_paths(map, room, ri, doors, EMPTY_SP);
-    let _boss_position = room.as_rect().center_room();
+    place_goo(map, room);
 }
 
 fn paint_thick_pillars(map: &mut TerrainMap, room: &Room, ri: usize, doors: &DoorMap) {
@@ -159,7 +159,15 @@ fn paint_thick_pillars(map: &mut TerrainMap, room: &Room, ri: usize, doors: &Doo
         fill_rect(map, x, y, pw + 1, ph + 1, WALL);
     }
     fill_perimeter_paths(map, room, ri, doors, EMPTY_SP);
-    let _boss_position = room.as_rect().center_room();
+    place_goo(map, room);
+}
+
+/// `Goo boss.pos = level.pointToCell(center())` after the room paint.
+fn place_goo(map: &mut TerrainMap, room: &Room) {
+    let center = room.as_rect().center_room();
+    if let Some(cell) = map.point_to_cell(center.x, center.y) {
+        map.place_mob(cell, "Goo");
+    }
 }
 
 const RAT_KING_TEX: &str = "rat_king_room";
@@ -203,16 +211,19 @@ fn paint_rat_king(map: &mut TerrainMap, room: &Room, ri: usize, doors: &DoorMap)
 
     if let Some(cell) = center_cell {
         map.mob_occupied[cell] = true;
+        map.place_mob(cell, "RatKing");
     }
 
-    // Java Rect.getPoints is column-major. Heaps stay off the public map.
+    // Java Rect.getPoints is column-major.
     for x in room.left..=room.right {
         for y in room.top..=room.bottom {
             let Some(cell) = map.point_to_cell(x, y) else {
                 continue;
             };
             if Some(cell) != center_cell && matches!(map.map[cell], EMPTY | EMPTY_SP) {
-                let _gold = Random::int_range_inclusive(5, 20);
+                let mut gold = GeneratedItem::new("Gold", ItemCategory::Gold);
+                gold.quantity = Random::int_range_inclusive(5, 20);
+                map.record_heap(cell, "heap", gold);
             }
         }
     }

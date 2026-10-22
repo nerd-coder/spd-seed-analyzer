@@ -366,24 +366,7 @@ impl TerrainMap {
 
     /// Approximate SPD `Terrain.SOLID` flag for painted tiles.
     pub fn is_solid(&self, cell: usize) -> bool {
-        matches!(
-            self.map[cell],
-            WALL | WALL_DECO
-                | CRYSTAL_DOOR
-                | STATUE
-                | STATUE_SP
-                | BOOKSHELF
-                | DOOR
-                | BARRICADE
-                | LOCKED_DOOR
-                | SECRET_DOOR
-                | REGION_DECO
-                | REGION_DECO_ALT
-                | CUSTOM_DECO
-                | CUSTOM_DECO_WTR
-                | MINE_CRYSTAL
-                | MINE_BOULDER
-        )
+        is_solid_tile(self.map[cell])
     }
 
     pub fn is_los_blocking(&self, cell: usize) -> bool {
@@ -624,6 +607,28 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
         custom_walls: Vec::new(),
         may_differ: Vec::new(),
     })
+}
+
+/// Approximate SPD `Terrain.SOLID` flag for a painted tile.
+pub(crate) fn is_solid_tile(tile: i32) -> bool {
+    matches!(
+        tile,
+        WALL | WALL_DECO
+            | CRYSTAL_DOOR
+            | STATUE
+            | STATUE_SP
+            | BOOKSHELF
+            | DOOR
+            | BARRICADE
+            | LOCKED_DOOR
+            | SECRET_DOOR
+            | REGION_DECO
+            | REGION_DECO_ALT
+            | CUSTOM_DECO
+            | CUSTOM_DECO_WTR
+            | MINE_CRYSTAL
+            | MINE_BOULDER
+    )
 }
 
 #[cfg(test)]

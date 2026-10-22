@@ -2,12 +2,15 @@
 
 use crate::dungeon::DungeonState;
 use crate::generator::Category;
+use crate::items::model::{GeneratedItem, ItemCategory};
 use crate::level::{map_facts, terrain};
 use crate::random::Random;
-use crate::report::{FloorMap, MapCustomTile};
+use crate::report::{FloorMap, MapCustomTile, MapHeap};
 
 const WIDTH: usize = 16;
 const HEIGHT: usize = 64;
+/// `LastLevel.AMULET_POS`: `12*WIDTH + MID`.
+const AMULET_POS: u32 = 12 * WIDTH as u32 + 8;
 
 pub(super) fn build(
     dungeon: &mut DungeonState,
@@ -45,7 +48,14 @@ pub(super) fn build(
         // entrance wall row stays on ordinary `Level.cleanWalls` discoverability.
         discoverable,
         markers: Vec::new(),
-        heaps: Vec::new(),
+        heaps: vec![MapHeap {
+            cell: AMULET_POS,
+            heap_type: "heap".into(),
+            items: vec![map_facts::heap_item(&GeneratedItem::new(
+                "Amulet",
+                ItemCategory::Other,
+            ))],
+        }],
         mobs: Vec::new(),
         transitions: super::transitions(26),
         traps: Vec::new(),

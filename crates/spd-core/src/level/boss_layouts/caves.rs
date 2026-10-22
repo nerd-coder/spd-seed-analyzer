@@ -21,6 +21,9 @@ pub(super) fn last_pre_items_rng() -> Vec<i32> {
     LAST_PRE_ITEMS_RNG.with(|probe| probe.borrow().clone())
 }
 
+/// `CavesBossLevel.pylonPositions` as `(x, y)`.
+const PYLON_POSITIONS: [(i32, i32); 4] = [(4, 13), (28, 13), (4, 37), (28, 37)];
+
 pub(super) fn build(dungeon: &mut DungeonState, depth_seed: i64) -> Option<FloorMap> {
     let mut map = blank_map(WIDTH, HEIGHT);
     // Java's `Rect(14, 13, 19, 14)` is right/bottom exclusive.
@@ -88,9 +91,9 @@ pub(super) fn build(dungeon: &mut DungeonState, depth_seed: i64) -> Option<Floor
 
     // `Level.create` invokes `createMobs` before `createItems`. Each of the
     // four `Pylon` instances initializes `targetNeighbor = Random.Int(8)`.
-    // The layout projection omits mobs, but must retain this outer-stream use.
-    for _ in 0..4 {
+    for (x, y) in PYLON_POSITIONS {
         Random::int_max(8);
+        map.place_mob((x + y * WIDTH) as usize, "Pylon");
     }
 
     #[cfg(test)]
@@ -104,9 +107,16 @@ pub(super) fn build(dungeon: &mut DungeonState, depth_seed: i64) -> Option<Floor
         };
     }
 
-    let mut floor = map_facts::MapFacts::from_room_paint(&map)
-        .into_floor_map(&map, 15, dungeon.branch, depth_seed)
-        .into_layout_only();
+    let populated = map_facts::MapFacts::from_room_paint(&map).into_floor_map(
+        &map,
+        15,
+        dungeon.branch,
+        depth_seed,
+    );
+    let mut floor = populated
+        .clone()
+        .into_layout_only()
+        .with_entities_from(&populated);
     floor.transitions = vec![
         transition(16 + 2 * WIDTH, "REGULAR_EXIT", (14, 0, 18, 2), 16),
         transition(16 + 25 * WIDTH, "REGULAR_ENTRANCE", (16, 25, 16, 25), 14),

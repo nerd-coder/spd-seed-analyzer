@@ -69,9 +69,16 @@ pub(super) fn build(dungeon: &mut DungeonState, depth_seed: i64) -> Option<Floor
         };
     }
 
-    let mut floor = map_facts::MapFacts::from_room_paint(&map)
-        .into_floor_map(&map, 5, dungeon.branch, depth_seed)
-        .into_layout_only();
+    let populated = map_facts::MapFacts::from_room_paint(&map).into_floor_map(
+        &map,
+        5,
+        dungeon.branch,
+        depth_seed,
+    );
+    let mut floor = populated
+        .clone()
+        .into_layout_only()
+        .with_entities_from(&populated);
     floor.transitions = sewer_transitions(&map);
     Some(floor)
 }

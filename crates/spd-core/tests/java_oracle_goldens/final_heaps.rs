@@ -1083,7 +1083,16 @@ fn aaa_floor_fifteen_badder_bosses_matches_caves_layout_and_rng() {
         actual_transitions,
         *expected.transitions.as_ref().expect("Caves transitions")
     );
-    assert!(map.mobs.is_empty(), "public boss layout omits runtime mobs");
+    let mut mobs: Vec<_> = map
+        .mobs
+        .iter()
+        .map(|mob| OracleMob {
+            cell: mob.cell,
+            class_name: mob.class_name().to_string(),
+        })
+        .collect();
+    mobs.sort_by_key(|mob| mob.cell);
+    assert_eq!(mobs, expected.final_mobs, "Badder Bosses pylons");
 }
 
 #[path = "final_heaps/runestone.rs"]

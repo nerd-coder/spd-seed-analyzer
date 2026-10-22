@@ -299,7 +299,7 @@ fn blobs(map: &TerrainMap) -> Vec<MapBlob> {
     blobs
 }
 
-fn heap_item(item: &GeneratedItem) -> MapHeapItem {
+pub(crate) fn heap_item(item: &GeneratedItem) -> MapHeapItem {
     MapHeapItem {
         item: crate::report::item_id(&item.class_name),
         quantity: item.quantity,

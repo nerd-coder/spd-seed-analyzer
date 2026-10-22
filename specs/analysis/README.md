@@ -22,6 +22,7 @@ Public reports follow **SEED-ANALYSIS**, **SPAWN-PRESENCE**, and
 | [quest-sad-ghost.md](quest-sad-ghost.md) | Ghost spawn depths, pre-rolled pair, Parchment keep test |
 | [quest-wandmaker.md](quest-wandmaker.md) | Wandmaker spawn, WAND deck + `undoDrop`, Mass Grave / Ritual paint order |
 | [quest-blacksmith.md](quest-blacksmith.md) | Smith pool, Crystal/Gnoll, mining gold-in-room |
+| [boss-floor-entities.md](boss-floor-entities.md) | Goo/Rat King/gold, prison cages and IronKey, Pylons, Amulet |
 | [floor-layout-run-settings.md](floor-layout-run-settings.md) | Painter-complete facts vs declared profile |
 | [level-feelings.md](level-feelings.md) | `Int(14)` feelings, Mossy Clump / Trap Mechanism decks |
 | [daily-runs.md](daily-runs.md) | Daily seed formula; first Daily is `2026-04-01` |
