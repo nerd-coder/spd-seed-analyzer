@@ -1,11 +1,10 @@
 import { TILE_PX } from '@/lib/dungeon-tile-visuals'
 import type { FloorMap, MapSentryScan } from '@/lib/spd-wasm'
+import { TURN_SECONDS } from '@/lib/vault-schedule'
 
 /** `CheckedCell`: a solid 0xFF55AAFF square, as in the game. */
 const CHECKED_COLOR = '#55aaff'
 const START_ALPHA = 0.8
-/** Displayed game turn length; the game advances turns as the hero acts. */
-const TURN_SECONDS = 0.5
 /** Longest CheckedCell life: the 7-tile scan delay plus the fade. */
 const MAX_LIFE = START_ALPHA + 0.4
 

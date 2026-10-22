@@ -59,6 +59,7 @@ pub(super) fn build(
         concealed_cells: Vec::new(),
         per_run_cells: Vec::new(),
         sentry_scans: Vec::new(),
+        laser_beams: Vec::new(),
         runtime_sensitive_loot_cells: Vec::new(),
         constrained_equipment_cells: Vec::new(),
     }

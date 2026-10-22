@@ -24,8 +24,11 @@ the Imp reward pedestals (route) and consumables from `setupConsumables`, whose
 their own panel note); the leading Potion of Healing in
 tiers 0–2 stays exact. Vault `sentry_scans` replay each `VaultSentry` scan
 cycle (`Ballistica` + `ConeAOE` on the final map) as animated `CheckedCell`
-flashes; the sentry's own field-of-view filter is not modeled, and
-`VaultLaser` beams are not drawn. Mining maps publish room-painted entities plus
+flashes; the sentry's own field-of-view filter is not modeled. `laser_beams`
+carry each firing `VaultLaser`'s cooldowns and `STOP_SOLID` path, drawn as
+`DeathRay` beams with `TargetedCell` warnings; flame vents burn and warn from
+their packed `VaultFlameTraps` cooldowns, all on the sentry turn clock.
+Mining maps publish room-painted entities plus
 `MiningLevel.createMobs` (Crystal Wisps / Gnoll Guards) and `createItems`
 (food, Darkness torch), matching the oracle snapshot after `createItems`.
 

@@ -18,6 +18,8 @@ export type MapAssets = MapEntityAssets & {
   specks: HTMLImageElement
   /** `interfaces/icons.png`, for mob emotes. */
   icons: HTMLImageElement
+  /** `effects/effects.png`, for laser beams. */
+  effects: HTMLImageElement
   customTiles: {
     prisonQuest: HTMLImageElement
     cavesQuest: HTMLImageElement
@@ -73,6 +75,7 @@ export async function loadMapAssets(
     occlusionShadows,
     specks,
     icons,
+    effects,
     prisonQuest,
     cavesQuest,
     cityQuest,
@@ -91,6 +94,7 @@ export async function loadMapAssets(
     loadImage('/assets/environment/occlusion_shadows.png'),
     loadImage(SPECKS_URL),
     loadImage('/assets/interfaces/icons.png'),
+    loadImage('/assets/effects/effects.png'),
     loadImage('/assets/environment/custom_tiles/prison_quest.png'),
     loadImage('/assets/environment/custom_tiles/caves_quest.png'),
     loadImage('/assets/environment/custom_tiles/city_quest.png'),
@@ -109,6 +113,7 @@ export async function loadMapAssets(
     occlusionShadows,
     specks,
     icons,
+    effects,
     mobs,
     customTiles: {
       prisonQuest,

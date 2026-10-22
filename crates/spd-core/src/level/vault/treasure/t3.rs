@@ -5,7 +5,7 @@ use crate::level::terrain::{EMPTY_SP, PEDESTAL, WALL};
 use crate::random::Random;
 
 use super::super::geometry;
-use super::super::hazards::place_laser;
+use super::super::lasers::LaserSpec;
 use super::super::mobs::VaultMob;
 use super::super::paint::{PaintCtx, CHEST, HEAP};
 use super::super::sentries;
@@ -114,14 +114,12 @@ pub(in crate::level::vault) fn paint_hard_laser(ctx: &mut PaintCtx<'_>, ri: usiz
         geometry::fill_wh(ctx.map, room.left + 1, area_top, 9, 5, EMPTY_SP);
         if entrance.x == room.left {
             for x in ((room.left + 2)..(room.right - 1)).rev() {
-                place_laser(ctx, x, area_top);
-                place_laser(ctx, x, area_top + 4);
+                hard_laser_pair(ctx, (x, area_top), (x, area_top + 4), room.right - x);
             }
             (room.right - 1, area_top, room.right - 1, area_top + 4)
         } else {
             for x in (room.left + 2)..(room.right - 1) {
-                place_laser(ctx, x, area_top);
-                place_laser(ctx, x, area_top + 4);
+                hard_laser_pair(ctx, (x, area_top), (x, area_top + 4), x - room.left);
             }
             (room.left + 1, area_top, room.left + 1, area_top + 4)
         }
@@ -130,14 +128,12 @@ pub(in crate::level::vault) fn paint_hard_laser(ctx: &mut PaintCtx<'_>, ri: usiz
         geometry::fill_wh(ctx.map, area_left, room.top + 1, 5, 9, EMPTY_SP);
         if entrance.y == room.top {
             for y in ((room.top + 2)..(room.bottom - 1)).rev() {
-                place_laser(ctx, area_left, y);
-                place_laser(ctx, area_left + 4, y);
+                hard_laser_pair(ctx, (area_left, y), (area_left + 4, y), room.bottom - y);
             }
             (area_left, room.bottom - 1, area_left + 4, room.bottom - 1)
         } else {
             for y in (room.top + 2)..(room.bottom - 1) {
-                place_laser(ctx, area_left, y);
-                place_laser(ctx, area_left + 4, y);
+                hard_laser_pair(ctx, (area_left, y), (area_left + 4, y), y - room.top);
             }
             (area_left, room.top + 1, area_left + 4, room.top + 1)
         }
@@ -160,4 +156,14 @@ pub(in crate::level::vault) fn paint_hard_laser(ctx: &mut PaintCtx<'_>, ri: usiz
     let third = ctx.random_free_rect_cell(item_place);
     ctx.drop_new(third, "DwarfToken");
     ctx.add_item_to_spawn("StoneOfBlink", ItemCategory::Stone);
+}
+
+/// Six shots then a 2-turn cooldown, aimed at the visual-only far laser.
+fn hard_laser_pair(ctx: &mut PaintCtx<'_>, near: (i32, i32), far: (i32, i32), cooldown: i32) {
+    let cell = ctx.cell(near.0, near.1);
+    let step = if near.0 == far.0 { ctx.width() } else { 1 };
+    let target = (cell as i32 + step) as usize;
+    let spec = LaserSpec::gauntlet(cell, target, cooldown, 2, 6);
+    ctx.place_laser(near.0, near.1, Some(spec));
+    ctx.place_laser(far.0, far.1, None);
 }

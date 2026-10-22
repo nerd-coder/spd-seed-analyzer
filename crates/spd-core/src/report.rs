@@ -95,6 +95,9 @@ pub struct FloorMap {
     /// Imp vault `VaultSentry` scan patterns, in mob placement order.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub sentry_scans: Vec<MapSentryScan>,
+    /// Imp vault `VaultLaser` firing schedules; visual-only lasers are omitted.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub laser_beams: Vec<MapLaserBeam>,
     /// Internal provenance for cells whose main-loop loot facts depend on
     /// runtime-sensitive persistent Generator history. Never serialized.
     #[serde(skip)]
@@ -114,6 +117,20 @@ pub struct MapSentryScan {
     pub cell: u32,
     pub cooldown: u32,
     pub steps: Vec<Vec<u32>>,
+}
+
+/// One laser's schedule. It fires on turn `cooldown` (1-based), then `shots`
+/// consecutive turns per cycle with `interval` turns from the last shot to the
+/// next; `warning` targets `path` on the turn before each shot.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct MapLaserBeam {
+    pub cell: u32,
+    pub cooldown: u32,
+    pub interval: u32,
+    pub shots: u32,
+    pub warning: bool,
+    /// Beam cells after the laser, ending at the collision cell.
+    pub path: Vec<u32>,
 }
 
 /// A pinned Java `CustomTilemap` layer, including its resolved source tiles.

@@ -4,7 +4,7 @@ use crate::level::terrain::{EMPTY, EMPTY_SP, PEDESTAL, STATUE, WALL};
 use crate::random::Random;
 
 use super::super::geometry;
-use super::super::hazards::place_laser;
+use super::super::lasers::LaserSpec;
 use super::super::paint::{PaintCtx, CHEST, HEAP};
 use super::super::sentries;
 
@@ -162,18 +162,17 @@ pub(in crate::level::vault) fn paint_laser(ctx: &mut PaintCtx<'_>, ri: usize) {
     geometry::fill_room(ctx.map, &room, WALL);
     let entrance = ctx.entrance_door(ri);
     ctx.set_regular_doors(ri);
-    let w = ctx.width();
     let item_place = if entrance.x == room.left || entrance.x == room.right {
         let area_top = geometry::gate(room.top + 2, entrance.y - 2, room.bottom - 6);
         geometry::fill_wh(ctx.map, room.left + 1, area_top, 9, 5, EMPTY);
         if entrance.x == room.left {
             for x in ((room.left + 2)..(room.right - 1)).rev() {
-                laser_pair_vertical(ctx, x, area_top, room.right - x, w, 5);
+                laser_pair_vertical(ctx, x, area_top, room.right - x, 5);
             }
             (room.right - 1, area_top, room.right - 1, area_top + 4)
         } else {
             for x in (room.left + 2)..(room.right - 1) {
-                laser_pair_vertical(ctx, x, area_top, x - room.left, w, 5);
+                laser_pair_vertical(ctx, x, area_top, x - room.left, 5);
             }
             (room.left + 1, area_top, room.left + 1, area_top + 4)
         }
@@ -182,12 +181,12 @@ pub(in crate::level::vault) fn paint_laser(ctx: &mut PaintCtx<'_>, ri: usize) {
         geometry::fill_wh(ctx.map, area_left, room.top + 1, 5, 9, EMPTY);
         if entrance.y == room.top {
             for y in ((room.top + 2)..(room.bottom - 1)).rev() {
-                laser_pair_horizontal(ctx, area_left, y, room.bottom - y, w, 5);
+                laser_pair_horizontal(ctx, area_left, y, room.bottom - y, 5);
             }
             (area_left, room.bottom - 1, area_left + 4, room.bottom - 1)
         } else {
             for y in (room.top + 2)..(room.bottom - 1) {
-                laser_pair_horizontal(ctx, area_left, y, y - room.top, w, 5);
+                laser_pair_horizontal(ctx, area_left, y, y - room.top, 5);
             }
             (area_left, room.top + 1, area_left + 4, room.top + 1)
         }
@@ -204,28 +203,32 @@ pub(in crate::level::vault) fn paint_laser(ctx: &mut PaintCtx<'_>, ri: usize) {
     drop_t1_triple(ctx, item_place);
 }
 
+/// The far laser of each pair is visual only (`curCooldown = Integer.MAX_VALUE`).
 fn laser_pair_vertical(
     ctx: &mut PaintCtx<'_>,
     x: i32,
     area_top: i32,
-    _cooldown: i32,
-    _w: i32,
+    cooldown: i32,
     second_row: i32,
 ) {
-    place_laser(ctx, x, area_top - 1);
-    place_laser(ctx, x, area_top + second_row);
+    let cell = ctx.cell(x, area_top - 1);
+    let target = (cell as i32 + ctx.width()) as usize;
+    let spec = LaserSpec::gauntlet(cell, target, cooldown, 3, 1);
+    ctx.place_laser(x, area_top - 1, Some(spec));
+    ctx.place_laser(x, area_top + second_row, None);
 }
 
 fn laser_pair_horizontal(
     ctx: &mut PaintCtx<'_>,
     area_left: i32,
     y: i32,
-    _cooldown: i32,
-    _w: i32,
+    cooldown: i32,
     second_row: i32,
 ) {
-    place_laser(ctx, area_left - 1, y);
-    place_laser(ctx, area_left + second_row, y);
+    let cell = ctx.cell(area_left - 1, y);
+    let spec = LaserSpec::gauntlet(cell, cell + 1, cooldown, 3, 1);
+    ctx.place_laser(area_left - 1, y, Some(spec));
+    ctx.place_laser(area_left + second_row, y, None);
 }
 
 pub(in crate::level::vault) fn paint_circle_scan(ctx: &mut PaintCtx<'_>, ri: usize) {

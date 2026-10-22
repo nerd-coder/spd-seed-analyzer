@@ -1,6 +1,13 @@
 import { blobClassName } from '@/generated/game-ids'
 import { TILE_PX } from '@/lib/dungeon-tile-visuals'
 import type { FloorMap } from '@/lib/spd-wasm'
+import {
+  decodeFlameTrap,
+  type FlameTrap,
+  flameFires,
+  flameWarns,
+  TURN_SECONDS,
+} from '@/lib/vault-schedule'
 
 /**
  * Blob emitters from pinned v4.0.2 `Blob.use(BlobEmitter)`: each tick emits
@@ -56,7 +63,18 @@ type Particle = {
   left: number
 }
 
-type Emitter = { def: EmitterDef; cells: number[]; time: number }
+/** `traps[i]` gates `cells[i]` to the turns its blob holds volume. */
+type Emitter = {
+  def: EmitterDef
+  cells: number[]
+  time: number
+  traps?: FlameTrap[]
+}
+
+/** `CellEmitter.get(cell).start(ElmoParticle.FACTORY, 0.02f, 10)` on a burn. */
+type Burst = { cells: number[]; time: number; left: number }
+const BURST_INTERVAL = 0.02
+const BURST_QUANTITY = 10
 
 function rand(min: number, max: number) {
   return min + Math.random() * (max - min)
@@ -168,7 +186,10 @@ export function hasBlobEffects(map: FloorMap) {
 /** Live blob particles for one floor, simulated in map pixels. */
 export class ParticleField {
   private emitters: Emitter[] = []
+  private bursts: Burst[] = []
   private particles: Particle[] = []
+  private clock = 0
+  private turn = 0
   private toxic: HTMLCanvasElement | null = null
   private width: number
   private specks: HTMLImageElement
@@ -178,23 +199,37 @@ export class ParticleField {
     this.specks = specks
   }
 
-  private add(def: EmitterDef, cells: number[]) {
+  private add(def: EmitterDef, cells: number[], traps?: FlameTrap[]) {
     if (cells.length === 0) return
-    this.emitters.push({ def, cells, time: rand(0, def.interval) })
+    this.emitters.push({ def, cells, time: rand(0, def.interval), traps })
   }
 
   static forMap(map: FloorMap, specks: HTMLImageElement) {
     const field = new ParticleField(map.width, specks)
     const discoverable = map.discoverable.length === map.tiles.length
     for (const blob of map.blobs) {
-      const def = BLOB_EMITTERS[blobClassName(blob.blob)]
+      const name = blobClassName(blob.blob)
+      const def = BLOB_EMITTERS[name]
       if (!def) continue
+      const cells = blob.cells.filter(
+        (cell) =>
+          cell.value > 0 && (!discoverable || map.discoverable[cell.cell])
+      )
+      if (name !== 'VaultFlameTraps') {
+        field.add(
+          def,
+          cells.map((cell) => cell.cell)
+        )
+        continue
+      }
+      const vents = cells.flatMap((cell) => {
+        const trap = decodeFlameTrap(cell.value)
+        return trap ? [{ cell: cell.cell, trap }] : []
+      })
       field.add(
         def,
-        blob.cells
-          .filter((cell) => cell.value > 0)
-          .map((cell) => cell.cell)
-          .filter((cell) => !discoverable || map.discoverable[cell])
+        vents.map((vent) => vent.cell),
+        vents.map((vent) => vent.trap)
       )
     }
     return field
@@ -212,8 +247,18 @@ export class ParticleField {
     return this.emitters.length > 0
   }
 
-  step(dt: number) {
+  /**
+   * Advance by `dt`. `seconds` is the shared map clock, so scheduled vents
+   * stay on the same turns as lasers and sentry scans.
+   */
+  step(dt: number, seconds?: number) {
     const elapsed = Math.min(dt, 0.1)
+    this.clock = seconds ?? this.clock + elapsed
+    const turn = Math.floor(this.clock / TURN_SECONDS)
+    if (turn !== this.turn) {
+      this.turn = turn
+      this.startBursts(turn)
+    }
     for (const emitter of this.emitters) {
       emitter.time += elapsed
       while (emitter.time > emitter.def.interval) {
@@ -221,6 +266,15 @@ export class ParticleField {
         this.emit(emitter)
       }
     }
+    for (const burst of this.bursts) {
+      burst.time += elapsed
+      while (burst.time > BURST_INTERVAL && burst.left > 0) {
+        burst.time -= BURST_INTERVAL
+        burst.left--
+        this.emitCells('elmo', burst.cells, [0, 0, 1, 1])
+      }
+    }
+    this.bursts = this.bursts.filter((burst) => burst.left > 0)
     for (const p of this.particles) {
       p.vy += p.ay * elapsed
       p.y += p.vy * elapsed
@@ -230,12 +284,33 @@ export class ParticleField {
     this.particles = this.particles.filter((p) => p.left > 0)
   }
 
-  private emit({ def, cells }: Emitter) {
-    const [left, top, right, bottom] = def.bound ?? [0, 0, 1, 1]
+  /** Vents that burn on `turn`, per `VaultFlameTraps.evolve`. */
+  private startBursts(turn: number) {
+    for (const { cells, traps } of this.emitters) {
+      if (!traps) continue
+      const burning = cells.filter((_, i) => flameFires(traps[i], turn))
+      if (burning.length) {
+        this.bursts.push({ cells: burning, time: 0, left: BURST_QUANTITY })
+      }
+    }
+  }
+
+  private emit({ def, cells, traps }: Emitter) {
+    const live = traps
+      ? cells.filter((_, i) => flameWarns(traps[i], this.turn))
+      : cells
+    this.emitCells(def.kind, live, def.bound ?? [0, 0, 1, 1])
+  }
+
+  private emitCells(
+    kind: Kind,
+    cells: number[],
+    [left, top, right, bottom]: readonly [number, number, number, number]
+  ) {
     for (const cell of cells) {
       const x = (cell % this.width) + rand(left, right)
       const y = Math.floor(cell / this.width) + rand(top, bottom)
-      this.particles.push(spawn(def.kind, x * TILE_PX, y * TILE_PX))
+      this.particles.push(spawn(kind, x * TILE_PX, y * TILE_PX))
     }
   }
 

@@ -11,6 +11,7 @@ import {
   regionPaths,
   revealedMap,
 } from '@/lib/map-hidden'
+import { drawLaserBeams, hasLaserBeams } from '@/lib/map-lasers'
 import { hasBlobEffects, ParticleField } from '@/lib/map-particles'
 import { drawSentryScans, hasSentryScans } from '@/lib/map-scans'
 import type { FloorMap, IdentityMaps } from '@/lib/spd-wasm'
@@ -110,7 +111,8 @@ export function FloorMapCanvas({
       hasAnimatedMobs(map) ||
       hasBlobEffects(map) ||
       hasSleepingMobs(map) ||
-      hasSentryScans(map),
+      hasSentryScans(map) ||
+      hasLaserBeams(map),
     [map]
   )
   const animating =
@@ -176,7 +178,7 @@ export function FloorMapCanvas({
         let last = started
         const paint = (now: number) => {
           const seconds = (now - started) / 1000
-          particles?.step((now - last) / 1000)
+          particles?.step((now - last) / 1000, seconds)
           last = now
           if (overlay) {
             const focused =
@@ -193,7 +195,17 @@ export function FloorMapCanvas({
               drawMobs(layer, assets, map, scale, animating ? seconds : null),
             effects: (layer) => {
               particles?.draw(layer, scale)
-              if (animating) drawSentryScans(layer, map, scale, seconds)
+              if (animating) {
+                drawSentryScans(layer, map, scale, seconds)
+                drawLaserBeams(
+                  layer,
+                  assets.effects,
+                  assets.icons,
+                  map,
+                  scale,
+                  seconds
+                )
+              }
               drawMobEmotes(
                 layer,
                 assets.icons,

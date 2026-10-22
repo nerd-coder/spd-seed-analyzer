@@ -146,6 +146,23 @@ export type FloorMap = {
   concealed_cells?: number[]
   /** Imp vault sentry scans; omitted when the floor has none. */
   sentry_scans?: MapSentryScan[]
+  /** Imp vault laser schedules; visual-only lasers are omitted. */
+  laser_beams?: MapLaserBeam[]
+}
+
+/**
+ * One `VaultLaser`: it fires on turn `cooldown`, `shots` turns in a row per
+ * cycle, then waits `interval` turns from the last shot to the next. With
+ * `warning`, `path` is targeted on the turn before each shot.
+ */
+export type MapLaserBeam = {
+  cell: number
+  cooldown: number
+  interval: number
+  shots: number
+  warning: boolean
+  /** Beam cells after the laser, ending at the collision cell. */
+  path: number[]
 }
 
 /**

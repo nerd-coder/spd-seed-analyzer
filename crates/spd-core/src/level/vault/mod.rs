@@ -9,6 +9,7 @@ mod geometry;
 mod hallway;
 mod hazards;
 mod items;
+mod lasers;
 mod loot;
 mod mobs;
 mod paint;
@@ -167,6 +168,7 @@ fn project_map(
     floor_map.uncertain_cells = sorted_cells(&facts.uncertain);
     floor_map.per_run_cells = sorted_cells(&facts.per_run);
     floor_map.sentry_scans = sentries::project(map, &facts.sentries);
+    floor_map.laser_beams = lasers::project(map, &facts.lasers);
     floor_map
 }
 

@@ -3,13 +3,14 @@
 use crate::dungeon::DungeonState;
 use crate::geom::Point;
 use crate::level::painter::{place_doors_for_room, DoorMap, DoorType};
-use crate::level::terrain::TerrainMap;
+use crate::level::terrain::{TerrainMap, PEDESTAL};
 use crate::random::Random;
 use crate::rooms::room::Room;
 
 use crate::items::model::{GeneratedItem, ItemCategory};
 
 use super::geometry;
+use super::lasers::LaserSpec;
 use super::loot::{self, VaultGen};
 use super::mobs::VaultMob;
 use super::sentries::SentrySpec;
@@ -29,6 +30,7 @@ pub(super) struct PaintFacts {
     /// Subset of `uncertain` that varies every run (unseeded shuffle).
     pub per_run: Vec<usize>,
     pub sentries: Vec<SentrySpec>,
+    pub lasers: Vec<LaserSpec>,
 }
 
 pub(super) struct PaintCtx<'a> {
@@ -94,6 +96,13 @@ impl PaintCtx<'_> {
     pub(super) fn place_sentry(&mut self, spec: SentrySpec) {
         self.place_npc(spec.cell, "VaultSentry");
         self.facts.sentries.push(spec);
+    }
+
+    /// `VaultLaser` on the pedestal it is painted onto; `None` never fires.
+    pub(super) fn place_laser(&mut self, x: i32, y: i32, spec: Option<LaserSpec>) {
+        geometry::set(self.map, x, y, PEDESTAL);
+        self.place_npc(self.cell(x, y), "VaultLaser");
+        self.facts.lasers.extend(spec);
     }
 
     pub(super) fn place_enemy(&mut self, cell: usize, mob: VaultMob, wandering: bool) {

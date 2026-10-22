@@ -4,6 +4,7 @@ use crate::level::terrain::{EMPTY, PEDESTAL, WALL};
 use crate::random::Random;
 
 use super::geometry;
+use super::lasers::LaserSpec;
 use super::paint::{PaintCtx, HEAP};
 use super::sentries;
 
@@ -43,40 +44,40 @@ pub(super) fn paint_lasers(ctx: &mut PaintCtx<'_>, ri: usize) {
     }
     ctx.set_regular_doors(ri);
 
+    let w = ctx.width();
     for x in room.left + 2..=room.right - 2 {
         if geometry::terrain_at(ctx.map, x, room.top + 1) == WALL
             && geometry::terrain_at(ctx.map, x, room.bottom - 1) == WALL
         {
-            let y = if Random::int_max(2) == 0 {
-                room.top + 1
+            let (y, step) = if Random::int_max(2) == 0 {
+                (room.top + 1, w)
             } else {
-                room.bottom - 1
+                (room.bottom - 1, -w)
             };
-            place_laser(ctx, x, y);
-            let after = Random::int_range_inclusive(7, 9);
-            let _ = Random::int_range_inclusive(1, after);
+            place_room_laser(ctx, x, y, step);
         }
     }
     for y in room.top + 2..=room.bottom - 2 {
         if geometry::terrain_at(ctx.map, room.left + 1, y) == WALL
             && geometry::terrain_at(ctx.map, room.right - 1, y) == WALL
         {
-            let x = if Random::int_max(2) == 0 {
-                room.left + 1
+            let (x, step) = if Random::int_max(2) == 0 {
+                (room.left + 1, 1)
             } else {
-                room.right - 1
+                (room.right - 1, -1)
             };
-            place_laser(ctx, x, y);
-            let after = Random::int_range_inclusive(7, 9);
-            let _ = Random::int_range_inclusive(1, after);
+            place_room_laser(ctx, x, y, step);
         }
     }
 }
 
-/// `VaultLaser` on the pedestal it is painted onto.
-pub(super) fn place_laser(ctx: &mut PaintCtx<'_>, x: i32, y: i32) {
-    geometry::set(ctx.map, x, y, PEDESTAL);
-    ctx.place_npc(ctx.cell(x, y), "VaultLaser");
+/// `afterShotCooldown = IntRange(7, 9)`, then `curCooldown = IntRange(1, after)`.
+fn place_room_laser(ctx: &mut PaintCtx<'_>, x: i32, y: i32, step: i32) {
+    let cell = ctx.cell(x, y);
+    let after = Random::int_range_inclusive(7, 9);
+    let cur = Random::int_range_inclusive(1, after);
+    let target = (cell as i32 + step) as usize;
+    ctx.place_laser(x, y, Some(LaserSpec::room(cell, target, cur, after)));
 }
 
 pub(super) fn paint_alternating_fire(ctx: &mut PaintCtx<'_>, ri: usize) {

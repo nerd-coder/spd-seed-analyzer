@@ -233,6 +233,7 @@ impl MapFacts {
             concealed_cells: self.concealed_cells,
             per_run_cells: Vec::new(),
             sentry_scans: Vec::new(),
+            laser_beams: Vec::new(),
             runtime_sensitive_loot_cells: self.runtime_sensitive_loot_cells,
             constrained_equipment_cells: self.constrained_equipment_cells,
         }
