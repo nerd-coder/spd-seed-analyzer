@@ -9,6 +9,19 @@ export type MobSprite = {
   /** `MovieClip.Animation` frame rate; 0 holds the first frame. */
   fps: number
   frames: readonly number[]
+  /** `CharSprite.perspectiveRaise` in pixels. */
+  raise: number
+  /** Still frame while a passive mob hides in plain sight. */
+  hidingFrame?: number
+}
+
+function mimic(offset: number, hidingFrame?: number): MobSprite {
+  return {
+    ...sprite('mimic', 16, 16, 5, MIMIC, offset),
+    // MimicSprite drops one pixel of raise for its hiding border.
+    raise: 5,
+    hidingFrame: hidingFrame == null ? undefined : hidingFrame + offset,
+  }
 }
 
 function sprite(
@@ -25,6 +38,7 @@ function sprite(
     height,
     fps,
     frames: frames.map((frame) => frame + offset),
+    raise: 6,
   }
 }
 
@@ -138,10 +152,11 @@ const MOB_SPRITES: Record<string, MobSprite> = {
   DemonSpawner: sprite('spawner', 16, 16, 8, [...Array(16).keys()]),
   Statue: sprite('statue', 12, 15, 2, STAND),
   ArmoredStatue: sprite('statue', 12, 15, 2, STAND),
-  Mimic: sprite('mimic', 16, 16, 5, MIMIC),
-  GoldenMimic: sprite('mimic', 16, 16, 5, MIMIC, 16),
-  CrystalMimic: sprite('mimic', 16, 16, 5, MIMIC, 32),
-  EbonyMimic: sprite('mimic', 16, 16, 5, MIMIC, 48),
+  Mimic: mimic(0),
+  GoldenMimic: mimic(16),
+  CrystalMimic: mimic(32),
+  // `MimicSprite.advancedHiding`.
+  EbonyMimic: mimic(48, 0),
   Piranha: sprite('piranha', 12, 16, 8, PIRANHA),
   PhantomPiranha: sprite('piranha', 12, 16, 8, PIRANHA, 21),
   RotHeart: sprite('rot_heart', 16, 16, 0, [0]),

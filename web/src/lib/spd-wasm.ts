@@ -218,6 +218,8 @@ export type MapMob = {
   state: MapMobState
   /** Items this mob drops when defeated. */
   items?: MapHeapItem[]
+  /** Render-only sprite alpha set by the concealed map layer; never sent by WASM. */
+  opacity?: number
 }
 
 export type MapTransition = {

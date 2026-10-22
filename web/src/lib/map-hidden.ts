@@ -1,4 +1,5 @@
 import { Terrain, TILE_PX } from '@/lib/dungeon-tile-visuals'
+import { isLurkingMob, LURKING_OPACITY } from '@/lib/map-entities'
 import type { FloorMap, MapCustomTile } from '@/lib/spd-wasm'
 
 /**
@@ -109,34 +110,26 @@ export function hiddenRegions(map: FloorMap): HiddenRegions {
     regions.push([trap.cell])
   }
 
+  // Raised entity sprites overlap the row above their cell.
   for (const cell of map.concealed_cells ?? []) {
     if (regionOf.has(cell)) continue
     regionOf.set(cell, regions.length)
-    regions.push([cell])
+    regions.push(cell >= map.width ? [cell, cell - map.width] : [cell])
   }
 
   return { regionOf, regions, unexplored }
 }
 
-/**
- * The floor as if every secret door and hidden trap had been found. A
- * concealed mob on a door opens it once found (`EbonyMimic.stopHiding`).
- */
+/** The floor as if every secret door and hidden trap had been found. */
 export function revealedMap(map: FloorMap): FloorMap {
-  const concealed = new Set(map.concealed_cells ?? [])
-  const concealedMobs = new Set(
-    map.mobs.filter((mob) => concealed.has(mob.cell)).map((mob) => mob.cell)
-  )
   return {
     ...map,
-    tiles: map.tiles.map((tile, cell) =>
+    tiles: map.tiles.map((tile) =>
       tile === Terrain.SECRET_DOOR
         ? Terrain.DOOR
         : tile === Terrain.SECRET_TRAP
           ? Terrain.TRAP
-          : tile === Terrain.DOOR && concealedMobs.has(cell)
-            ? Terrain.OPEN_DOOR
-            : tile
+          : tile
     ),
     traps: map.traps.map((trap) => ({ ...trap, visible: true })),
   }
@@ -144,7 +137,7 @@ export function revealedMap(map: FloorMap): FloorMap {
 
 /**
  * The floor before searching: unexplored space reads as solid wall and
- * concealed entities are absent.
+ * concealed entities are absent, except lurking mobs drawn faintly.
  */
 export function concealedMap(map: FloorMap, unexplored: Set<number>): FloorMap {
   const concealed = new Set(map.concealed_cells ?? [])
@@ -164,7 +157,13 @@ export function concealedMap(map: FloorMap, unexplored: Set<number>): FloorMap {
       (cell) => unexplored.has(cell) || unexplored.has(cell + map.width)
     ),
     heaps: map.heaps.filter(shown),
-    mobs: map.mobs.filter(shown),
+    mobs: map.mobs.flatMap((mob) =>
+      shown(mob)
+        ? [mob]
+        : isLurkingMob(mob)
+          ? [{ ...mob, opacity: LURKING_OPACITY }]
+          : []
+    ),
     markers: map.markers.filter(shown),
   }
 }

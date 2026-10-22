@@ -9,6 +9,7 @@ import type { MapAssets } from '@/lib/map-assets'
 import { drawMobEmotes } from '@/lib/map-emotes'
 import {
   drawKnownEntities,
+  drawLurkingMobs,
   drawVisibleTraps,
   exactEntityCells,
 } from '@/lib/map-entities'
@@ -189,6 +190,7 @@ export function renderMapLayers(
   }
   drawWallOcclusion(top, assets, map, scale)
   drawCustomTiles(top, assets, map, map.custom_walls, scale)
+  drawLurkingMobs(top, assets, map, scale)
   drawMarkers(top, map, scale, visibility)
   if (visibility.mob) drawMobEmotes(top, assets.icons, map, scale, null)
   return { below, above }

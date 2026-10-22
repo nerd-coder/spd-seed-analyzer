@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'bun:test'
+import { mobIdFromClassName } from '@/generated/game-ids'
 import { Terrain } from '@/lib/dungeon-tile-visuals'
-import { concealedMap, revealedMap } from '@/lib/map-hidden'
+import { LURKING_OPACITY } from '@/lib/map-entities'
+import { concealedMap, hiddenRegions, revealedMap } from '@/lib/map-hidden'
 import type { FloorMap } from '@/lib/spd-wasm'
 
 describe('concealedMap', () => {
@@ -56,21 +58,34 @@ describe('concealedMap', () => {
   })
 })
 
-describe('revealedMap', () => {
-  test('opens the door under a found concealed mob', () => {
+describe('lurking ebony mimic', () => {
+  test('stays faint on a closed door before searching', () => {
+    const ebony = mobIdFromClassName('EbonyMimic')
     const map = {
       width: 3,
-      height: 1,
-      tiles: [Terrain.DOOR, Terrain.DOOR, Terrain.SECRET_DOOR],
-      mobs: [{ cell: 1, mob: 0, state: 'passive' }],
+      height: 2,
+      tiles: [
+        Terrain.WALL,
+        Terrain.WALL,
+        Terrain.WALL,
+        Terrain.EMPTY,
+        Terrain.DOOR,
+        Terrain.EMPTY,
+      ],
+      heaps: [],
+      mobs: [{ cell: 4, mob: ebony, state: 'passive' }],
+      markers: [],
       traps: [],
-      concealed_cells: [1],
+      custom_tiles: [],
+      custom_walls: [],
+      concealed_cells: [4],
     } as unknown as FloorMap
 
-    expect(revealedMap(map).tiles).toEqual([
-      Terrain.DOOR,
-      Terrain.OPEN_DOOR,
-      Terrain.DOOR,
+    expect(revealedMap(map).tiles[4]).toBe(Terrain.DOOR)
+    expect(revealedMap(map).mobs[0]?.opacity).toBeUndefined()
+    expect(concealedMap(map, new Set()).mobs).toEqual([
+      { cell: 4, mob: ebony, state: 'passive', opacity: LURKING_OPACITY },
     ])
+    expect(hiddenRegions(map).regions).toEqual([[4, 1]])
   })
 })

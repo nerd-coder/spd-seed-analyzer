@@ -1,4 +1,4 @@
-import { type ItemId, itemClassName } from '@/generated/game-ids'
+import { type ItemId, itemClassName, mobClassName } from '@/generated/game-ids'
 import { SHEET_COLS, TILE_PX } from '@/lib/dungeon-tile-visuals'
 import { ITEM_SHEET, resolveItemIconIndex } from '@/lib/item-icons'
 import { itemSpriteSize } from '@/lib/item-sprite-rects'
@@ -129,6 +129,17 @@ function drawHeap(
   )
 }
 
+/** Faint `EbonyMimic` on the concealed layer; revealed, it shows fully. */
+export const LURKING_OPACITY = 0.15
+
+/**
+ * Hidden ebony mimics are drawn over walls so a door's sideways top does
+ * not cover them.
+ */
+export function isLurkingMob(mob: MapMob) {
+  return mobClassName(mob.mob) === 'EbonyMimic' && mob.state === 'passive'
+}
+
 function drawMob(
   ctx: CanvasRenderingContext2D,
   assets: MapEntityAssets,
@@ -140,14 +151,21 @@ function drawMob(
   const spriteDef = mobSprite(mob.mob)
   const image = spriteDef && assets.mobs[spriteDef.sheet]
   if (!spriteDef || !image) return false
+  const faint = mob.opacity != null && mob.opacity < 1
   const frame =
-    seconds == null ? undefined : mobFrameAt(spriteDef, seconds, mob.cell * 7)
+    faint && spriteDef.hidingFrame != null
+      ? spriteDef.hidingFrame
+      : seconds == null
+        ? undefined
+        : mobFrameAt(spriteDef, seconds, mob.cell * 7)
   const source = mobSourceRect(spriteDef, image, frame)
   const cellX = mob.cell % map.width
   const cellY = Math.floor(mob.cell / map.width)
-  // CharSprite.worldToCamera: centered, raised by 6/16 of a tile.
+  // CharSprite.worldToCamera: centered, raised by perspectiveRaise.
   const x = cellX * TILE_PX + (TILE_PX - spriteDef.width) / 2
-  const y = (cellY + 1) * TILE_PX - spriteDef.height - 6
+  const y = (cellY + 1) * TILE_PX - spriteDef.height - spriteDef.raise
+  ctx.save()
+  if (mob.opacity != null) ctx.globalAlpha *= mob.opacity
   ctx.drawImage(
     image,
     source.x,
@@ -159,6 +177,7 @@ function drawMob(
     spriteDef.width * scale,
     spriteDef.height * scale
   )
+  ctx.restore()
   return true
 }
 
@@ -198,7 +217,21 @@ export function drawMobs(
 ) {
   for (const mob of map.mobs) {
     if (!validCell(map, mob.cell) || !isDiscoverable(map, mob.cell)) continue
+    if (isLurkingMob(mob)) continue
     drawMob(ctx, assets, map, mob, scale, seconds)
+  }
+}
+
+/** Lurking mobs on their still frame, drawn over the wall layer. */
+export function drawLurkingMobs(
+  ctx: CanvasRenderingContext2D,
+  assets: MapEntityAssets,
+  map: FloorMap,
+  scale: number
+) {
+  for (const mob of map.mobs) {
+    if (!validCell(map, mob.cell) || !isDiscoverable(map, mob.cell)) continue
+    if (isLurkingMob(mob)) drawMob(ctx, assets, map, mob, scale, null)
   }
 }
 
