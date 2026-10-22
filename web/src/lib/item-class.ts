@@ -113,6 +113,7 @@ export const ItemClass = {
   EnergyCrystal: 'EnergyCrystal',
   Food: 'Food',
   Gold: 'Gold',
+  GoldenKey: 'GoldenKey',
   GuidePage: 'GuidePage',
   Honeypot: 'Honeypot',
   ShatteredPot: 'ShatteredPot',
@@ -138,6 +139,11 @@ export const ItemClass = {
   TrinketCatalyst: 'TrinketCatalyst',
   VelvetPouch: 'VelvetPouch',
   Waterskin: 'Waterskin',
+
+  DarkGold: 'DarkGold',
+  DwarfToken: 'DwarfToken',
+  ImpStatue: 'ImpStatue',
+  VaultBeacon: 'VaultBeacon',
 
   BlindweedSeed: 'BlindweedSeed',
   EarthrootSeed: 'EarthrootSeed',

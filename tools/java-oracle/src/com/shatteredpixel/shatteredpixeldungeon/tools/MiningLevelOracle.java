@@ -194,7 +194,8 @@ final class MiningLevelOracle {
 			for (int x = 0; x < layer.tileW; x++) {
 				int cell = y * layer.tileW + x;
 				if ("QuestExit".equals(name)) {
-					map.add(8 + x + y * 8);
+					// `QuestExit.create`: `mapSimpleImage(0, 1, 64)` on 16 px tiles.
+					map.add(4 + x + y * 4);
 				} else if ("BorderTopDarken".equals(name)) {
 					map.add(1);
 				} else if ("BorderWallsDarken".equals(name)) {

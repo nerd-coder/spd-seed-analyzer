@@ -29,7 +29,7 @@ pub(super) fn paint(map: &mut TerrainMap, room: &Room, depth: i32) {
         "QuestExit",
         "environment/custom_tiles/caves_quest.png",
         (entrance.x - 1, entrance.y - 1, 3, 3),
-        vec![8, 9, 10, 16, 17, 18, 24, 25, 26],
+        vec![4, 5, 6, 8, 9, 10, 12, 13, 14],
     );
     let _ = depth;
 }
