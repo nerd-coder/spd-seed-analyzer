@@ -212,7 +212,7 @@ fn valid_plant_pos(
 
 fn place_plant(map: &mut TerrainMap, cell: usize, label: &'static str) {
     map.mob_occupied[cell] = true;
-    map.known_mobs[cell] = Some(label);
+    map.place_mob(cell, label);
     map.map[cell] = GRASS;
 }
 

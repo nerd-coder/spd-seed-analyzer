@@ -43,6 +43,9 @@ impl GhostType {
 #[derive(Debug, Clone, Default)]
 pub struct GhostQuestState {
     pub spawned: bool,
+    /// A spawn attempt ran on a run-history dependent stream, so whether
+    /// (and where) this quest spawned is not seed-determined.
+    pub history_dependent: bool,
     pub quest_type: Option<GhostType>,
     pub depth: i32,
 }
@@ -69,12 +72,16 @@ pub fn try_spawn_ghost(
     if dungeon.depth < 1 || dungeon.depth > 4 {
         return None;
     }
+    if dungeon.ghost.history_dependent {
+        Random::taint_stream();
+    }
     if dungeon.ghost.spawned {
         return None;
     }
     if dungeon.depth <= 1 {
         return None;
     }
+    dungeon.ghost.history_dependent |= Random::stream_tainted();
     // Random.Int(5 - depth) == 0
     if Random::int_max(5 - dungeon.depth) != 0 {
         return None;

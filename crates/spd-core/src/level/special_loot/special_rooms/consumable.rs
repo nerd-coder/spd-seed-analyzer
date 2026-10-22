@@ -89,7 +89,7 @@ pub fn treasury_prizes_on_map(
         let cell = treasury_drop_cell(room, map, true);
         if heap_chest && dungeon.depth > 1 && Random::float() < mimic_chance {
             map.mob_occupied[cell] = true;
-            map.known_mobs[cell] = Some("Mimic");
+            map.place_mob(cell, "Mimic");
             let carried = mimic_carried_items(dungeon, vec![item], true, MimicPrize::Ordinary);
             for mut carried in carried {
                 carried.source = Some("TreasuryRoom:mimic".into());

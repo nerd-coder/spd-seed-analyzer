@@ -134,6 +134,11 @@ fn create_level_internal(
         configured_profile && dungeon.depth == 1 && !inherited_public_taint;
     let depth_seed = dungeon.seed_cur_depth();
     Random::push_generator_seeded(depth_seed);
+    // A fresh per-depth stream is exact until a history-dependent draw.
+    Random::clear_stream_taint();
+    dungeon
+        .generator
+        .begin_level(dungeon.depth > 1 || dungeon.branch != 0);
 
     let mut forced = Vec::new();
     let mut feeling = Feeling::None;
@@ -178,6 +183,7 @@ fn create_level_internal(
         );
         if challenge_sensitive_upgrade_queue {
             dungeon.public_generation_tainted = true;
+            Random::taint_stream();
         }
         if dungeon.as_needed() {
             dungeon.limited.arcane_styli += 1;
@@ -237,6 +243,9 @@ fn create_level_internal(
                 _ => {
                     runtime_sensitive_prebuild = !configured_profile;
                     dungeon.public_generation_tainted |= !configured_profile;
+                    if !configured_profile {
+                        Random::taint_stream();
+                    }
                     feeling = trinkets::override_default_feeling();
                 }
             }
@@ -306,6 +315,7 @@ fn create_level_internal(
     if dungeon.regular_level() {
         let shop = dungeon.shop_on_level();
         let Some(mut floor) = build::regular_rooms(dungeon, feeling, shop) else {
+            dungeon.generator.end_level();
             Random::pop_generator();
             return LevelState {
                 depth: dungeon.depth,
@@ -538,6 +548,8 @@ fn create_level_internal(
                     dungeon.challenges & Challenge::ChampionEnemies.mask() != 0,
                     dungeon.depth,
                 );
+                let mobs_before = (dungeon.challenges & Challenge::ChampionEnemies.mask() != 0)
+                    .then(|| map.known_mobs.clone());
                 let population = create_mobs::create_regular(
                     dungeon.depth,
                     feeling == Feeling::Large,
@@ -546,6 +558,16 @@ fn create_level_internal(
                     &mut map,
                 );
                 if population.may_differ {
+                    // A possible Giant champion outside open space changes
+                    // placement retries for the whole population.
+                    let before = mobs_before.unwrap_or_default();
+                    let placed = map.known_mobs.iter().zip(&before).enumerate();
+                    let placed: Vec<_> = placed
+                        .filter(|(_, (after, before))| after.is_some() && before.is_none())
+                        .map(|(cell, _)| cell)
+                        .collect();
+                    map.may_differ.extend(placed);
+                    Random::taint_stream();
                     runtime_sensitive_map = true;
                     runtime_sensitive_placed_items_from.get_or_insert(placed_items.len());
                     dungeon.public_generation_tainted = true;
@@ -626,6 +648,7 @@ fn create_level_internal(
         room_bounds.sort();
     }
 
+    dungeon.generator.end_level();
     Random::pop_generator();
 
     LevelState {
@@ -676,3 +699,7 @@ mod map_report_tests;
 #[cfg(test)]
 #[path = "id_sweep_tests.rs"]
 mod id_sweep_tests;
+
+#[cfg(test)]
+#[path = "history_tests.rs"]
+mod history_tests;

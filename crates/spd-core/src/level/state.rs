@@ -129,16 +129,6 @@ fn merge_identical_items(items: Vec<ItemEntry>) -> Vec<ItemEntry> {
     merged
 }
 
-pub(super) fn is_runtime_sensitive_main_loot(item: &GeneratedItem) -> bool {
-    is_runtime_sensitive_loot_source(item.source.as_deref())
-}
-
-pub(super) fn is_runtime_sensitive_loot_source(source: Option<&str>) -> bool {
-    source
-        .and_then(|source| source.rsplit(':').next())
-        .is_some_and(|origin| matches!(origin, "heap" | "mimic" | "golden_mimic"))
-}
-
 fn is_unpublished_main_loot(item: &GeneratedItem) -> bool {
     item.source
         .as_deref()
@@ -820,11 +810,7 @@ impl LevelState {
         let public_map = || {
             let layout = self.layout_map.clone()?;
             Some(match self.map.as_ref() {
-                Some(populated) => layout.with_entities_from(
-                    populated,
-                    self.runtime_sensitive_map && !self.fresh_profile_floor_one,
-                    self.fresh_profile_floor_one,
-                ),
+                Some(populated) => layout.with_entities_from(populated),
                 None => layout,
             })
         };

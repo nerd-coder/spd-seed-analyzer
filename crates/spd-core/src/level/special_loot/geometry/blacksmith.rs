@@ -47,7 +47,7 @@ pub fn paint(
         .point_to_cell(npc_x, npc_y)
         .expect("Blacksmith NPC is on map");
     map.mob_occupied[npc_cell] = true;
-    map.known_mobs[npc_cell] = Some("Blacksmith");
+    map.place_mob(npc_cell, "Blacksmith");
 
     set(map, npc_x + 1, npc_y, CUSTOM_DECO_WTR);
     set(map, npc_x + 1, npc_y - 1, CUSTOM_DECO);

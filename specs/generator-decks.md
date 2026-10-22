@@ -407,3 +407,35 @@ the counter, so the artifact gate is one monotone flag. Other player-state
 hooks can still change which generation path reaches that draw; the quest
 audits track those separately. The concrete index for a fixed profile is
 pinned by replaying that profile.
+
+### Map entity certainty (stream taint)
+
+The public map marks an entity "May differ" exactly when it is recorded on a
+level stream that may have desynced. Rules, each forced by a pinned-source fact:
+
+- Every level after the first is generated after play, so any levelgen
+  ARTIFACT draw at depth > 1 (or on a branch) taints the rest of that level
+  stream (UnstableSpellbook cost / exhaustion above).
+- A tainted level may make a different number of draws from every deck, so
+  every later level treats all deck positions as unknown. Then any
+  `Generator.random()` taints (category costs differ), and so does any
+  category draw: callers re-roll on identity, e.g. `CrystalPathRoom`
+  duplicate rejection (`CrystalPathRoom.java:255-280`).
+- Quest spawn state is cross-floor. The Ghost rolls in `createMobs`
+  (`SewerLevel.java:139-142`, `Ghost.java:304-312`), after paint, so a
+  tainted floor can flip it, and every later sewer attempt then consumes
+  differently. Rust records a per-quest `history_dependent` flag when a roll
+  runs on a tainted stream and taints later attempts of that quest. Wandmaker,
+  Blacksmith and Imp roll in `initRooms` (`PrisonLevel.java:85`,
+  `CavesLevel.java:91`, `CityLevel.java:193`), before any levelgen draw on
+  their floor, and get the same flag.
+- Player-state cells stay uncertain independently: shop stock (hourglass
+  sandbags and `ChooseBag`), the depth > 1 `createItems` tail after
+  rose/rations, possible Champion Giants, and the Forbidden Runes upgrade
+  queue.
+
+Method: `level/history_tests.rs` replays seeds with 1–25 runtime artifact
+draws injected before depths 2–17 and asserts every exact heap and mob is
+unchanged. Over 40 seeds, sewer floors 2–4 keep ~66% of entities exact; from
+the first shop floor on almost every entity is "May differ", because some
+earlier levelgen artifact draw is nearly always reachable.

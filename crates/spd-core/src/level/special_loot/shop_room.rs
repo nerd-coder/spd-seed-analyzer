@@ -20,7 +20,7 @@ pub(super) fn paint(
     let center = room.as_rect().center_room();
     if let Some(cell) = map.point_to_cell(center.x, center.y) {
         map.mob_occupied[cell] = true;
-        map.known_mobs[cell] = Some("Shopkeeper");
+        map.place_mob(cell, "Shopkeeper");
     }
 
     let Some(entrance) = room
@@ -74,6 +74,10 @@ fn place_items(map: &mut TerrainMap, room: &Room, entrance: Point, items: &[Gene
                 map.map[cell] = GRASS;
             }
             map.record_heap(cell, "for_sale", item.clone());
+            // A held Timekeeper's Hourglass adds sand bags before the stock
+            // shuffle and `ChooseBag` reads the hero's belongings, so every
+            // stock cell and the bag depend on player state.
+            map.may_differ.push(cell);
         }
     }
 }

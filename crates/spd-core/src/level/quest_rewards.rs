@@ -71,7 +71,7 @@ pub(super) fn spawn_npcs(
     if let Some(exit) = rooms.iter().find(|room| room.is_exit() && !room.is_empty()) {
         if let Some(ghost) = quests::try_spawn_ghost(dungeon, exit, map) {
             map.mob_occupied[ghost.cell] = true;
-            map.known_mobs[ghost.cell] = Some("Ghost");
+            map.place_mob(ghost.cell, "Ghost");
             result.quests.push(ghost_report(ghost.quest_type));
             result.items.extend([ghost.weapon, ghost.armor]);
         }
@@ -82,7 +82,7 @@ pub(super) fn spawn_npcs(
     {
         if let Some(wandmaker) = quests::try_spawn_wandmaker(dungeon, entrance, map) {
             map.mob_occupied[wandmaker.cell] = true;
-            map.known_mobs[wandmaker.cell] = Some("Wandmaker");
+            map.place_mob(wandmaker.cell, "Wandmaker");
             result.quests.push(wandmaker_report(
                 wandmaker.quest_type,
                 &wandmaker.wand1,

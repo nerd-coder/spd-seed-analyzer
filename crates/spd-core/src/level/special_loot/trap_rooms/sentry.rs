@@ -34,7 +34,7 @@ pub(crate) fn paint(
     set(map, sentry, PEDESTAL);
     let sentry_cell = cell(map, sentry);
     map.mob_occupied[sentry_cell] = true;
-    map.known_mobs[sentry_cell] = Some("Sentry");
+    map.place_mob(sentry_cell, "Sentry");
 
     // `new EmptyRoom()` constructs a StandardRoom for the sentry's bounds.
     // Its initializer calls `setSizeCat()` before the treasure prize is made.

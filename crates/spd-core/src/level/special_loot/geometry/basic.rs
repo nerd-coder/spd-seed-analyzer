@@ -321,7 +321,7 @@ pub(super) fn paint_demon_spawner(map: &mut TerrainMap, room: &Room) {
     let center = room.as_rect().center_room();
     if let Some(cell) = map.point_to_cell(center.x, center.y) {
         map.mob_occupied[cell] = true;
-        map.known_mobs[cell] = Some("DemonSpawner");
+        map.place_mob(cell, "DemonSpawner");
     }
     let width = room.width() - 2;
     let height = room.height() - 2;

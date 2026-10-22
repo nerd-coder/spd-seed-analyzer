@@ -118,7 +118,7 @@ fn suspicious_chest(
     if Random::float() < mimic_chance {
         if let Some(cell) = map.point_to_cell(center.x, center.y) {
             map.mob_occupied[cell] = true;
-            map.known_mobs[cell] = Some("Mimic");
+            map.place_mob(cell, "Mimic");
         }
         let carried = mimic_carried_items(dungeon, vec![prize], true, MimicPrize::Ordinary);
         let mut out = Vec::new();

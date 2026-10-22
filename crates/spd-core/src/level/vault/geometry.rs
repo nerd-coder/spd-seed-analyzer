@@ -45,7 +45,7 @@ pub(super) fn painter_h(room: &Room) -> i32 {
 
 pub(super) fn occupy_mob(map: &mut TerrainMap, cell: usize, class_name: &'static str) {
     map.mob_occupied[cell] = true;
-    map.known_mobs[cell] = Some(class_name);
+    map.place_mob(cell, class_name);
 }
 
 pub(super) fn chebyshev(map: &TerrainMap, a: usize, b: usize) -> i32 {

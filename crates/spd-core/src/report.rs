@@ -98,11 +98,12 @@ pub struct FloorMap {
     /// Imp vault `VaultLaser` firing schedules; visual-only lasers are omitted.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub laser_beams: Vec<MapLaserBeam>,
-    /// Internal provenance for cells whose main-loop loot facts depend on
-    /// runtime-sensitive persistent Generator history. Never serialized.
+    /// Sorted entity cells that run history or player state can change:
+    /// recorded on a possibly desynced level stream, drawn from a deck at an
+    /// unknown position, or placed by player-dependent logic. Never serialized.
     #[serde(skip)]
     #[doc(hidden)]
-    pub runtime_sensitive_loot_cells: Vec<u32>,
+    pub history_cells: Vec<u32>,
     /// Stable heap positions whose concrete equipment contents/properties are
     /// player-state-sensitive. Never serialized.
     #[serde(skip)]
@@ -174,43 +175,26 @@ impl FloorMap {
         self.mobs.clear();
         self.uncertain_cells.clear();
         self.concealed_cells.clear();
-        self.runtime_sensitive_loot_cells.clear();
+        self.history_cells.clear();
         self.constrained_equipment_cells.clear();
         self
     }
 
     /// Painter-complete layout plus the populated floor's heaps, mobs, and
-    /// markers. `all_uncertain` flags every entity when the floor's population
-    /// stream can diverge with run history; otherwise only the populated map's
-    /// runtime-sensitive cells are flagged (`skip_loot_cells` drops the
-    /// room-prize flags that a fresh floor-one profile pins).
-    pub(crate) fn with_entities_from(
-        mut self,
-        populated: &FloorMap,
-        all_uncertain: bool,
-        skip_loot_cells: bool,
-    ) -> Self {
+    /// markers. Only entities that run history or player state can change
+    /// are flagged uncertain.
+    pub(crate) fn with_entities_from(mut self, populated: &FloorMap) -> Self {
         self.markers = populated.markers.clone();
         self.heaps = populated.heaps.clone();
         self.mobs = populated.mobs.clone();
         self.flatten_grass_under_entities(populated);
         self.concealed_cells = populated.concealed_cells.clone();
-        let mut uncertain: Vec<u32> = if all_uncertain {
-            self.heaps
-                .iter()
-                .map(|heap| heap.cell)
-                .chain(self.mobs.iter().map(|mob| mob.cell))
-                .chain(self.markers.iter().map(|marker| marker.cell))
-                .collect()
-        } else {
-            let loot = (!skip_loot_cells)
-                .then_some(populated.runtime_sensitive_loot_cells.iter())
-                .into_iter()
-                .flatten();
-            loot.chain(populated.constrained_equipment_cells.iter())
-                .copied()
-                .collect()
-        };
+        let mut uncertain: Vec<u32> = populated
+            .history_cells
+            .iter()
+            .chain(&populated.constrained_equipment_cells)
+            .copied()
+            .collect();
         uncertain.sort_unstable();
         uncertain.dedup();
         self.uncertain_cells = uncertain;

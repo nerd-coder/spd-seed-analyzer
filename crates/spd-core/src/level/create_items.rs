@@ -24,6 +24,18 @@ pub struct CreatedLoot {
     pub loot: PlacedLoot,
     /// Exact `randomDropCell` result; absent for unplaced/unsupported late drops.
     pub cell: Option<usize>,
+    /// Run history or player state can change this drop or its cell.
+    pub may_differ: bool,
+}
+
+impl CreatedLoot {
+    fn new(item: GeneratedItem, heap_type: &'static str, cell: Option<usize>) -> Self {
+        Self {
+            may_differ: Random::stream_tainted() || item.history_variable,
+            loot: PlacedLoot { item, heap_type },
+            cell,
+        }
+    }
 }
 
 /// Main createItems random drops + forced itemsToSpawn placement.
@@ -132,13 +144,7 @@ pub fn create_items_main(
                 items_to_spawn.push(GeneratedItem::new("GoldenKey", ItemCategory::Other));
             }
         }
-        out.push(CreatedLoot {
-            loot: PlacedLoot {
-                item: to_drop,
-                heap_type,
-            },
-            cell: Some(cell as usize),
-        });
+        out.push(CreatedLoot::new(to_drop, heap_type, Some(cell as usize)));
     }
 
     // place itemsToSpawn as heaps
@@ -156,35 +162,17 @@ pub fn create_items_main(
         }
         if item.class_name == "TrinketCatalyst" {
             let catalyst_provenance = item.provenance;
-            out.push(CreatedLoot {
-                loot: PlacedLoot {
-                    item,
-                    heap_type: "locked_chest",
-                },
-                cell,
-            });
+            out.push(CreatedLoot::new(item, "locked_chest", cell));
             let key_cell = random_drop_cell(rooms, &mut room_order, map, &mut occupied);
             if key_cell >= 0 {
                 flatten_grass(map, key_cell as usize);
                 let mut key = GeneratedItem::new("GoldenKey", ItemCategory::Other);
                 key.source = Some("forced".into());
                 key.provenance = catalyst_provenance;
-                out.push(CreatedLoot {
-                    loot: PlacedLoot {
-                        item: key,
-                        heap_type: "heap",
-                    },
-                    cell: Some(key_cell as usize),
-                });
+                out.push(CreatedLoot::new(key, "heap", Some(key_cell as usize)));
             }
         } else {
-            out.push(CreatedLoot {
-                loot: PlacedLoot {
-                    item,
-                    heap_type: "heap",
-                },
-                cell,
-            });
+            out.push(CreatedLoot::new(item, "heap", cell));
         }
     }
 
@@ -200,13 +188,7 @@ pub fn create_items_main(
             }
             let mut torch = GeneratedItem::new("Torch", ItemCategory::Other);
             torch.source = Some(DARKNESS_TORCH_SOURCE.into());
-            out.push(CreatedLoot {
-                loot: PlacedLoot {
-                    item: torch,
-                    heap_type: "heap",
-                },
-                cell,
-            });
+            out.push(CreatedLoot::new(torch, "heap", cell));
         }
     }
     Random::pop_generator();
@@ -220,6 +202,11 @@ pub fn create_items_main(
     Random::push_generator_seeded(Random::long());
     Random::pop_generator();
 
+    // Dried Rose petals and Cached Rations drop here only for a hero holding
+    // them, and every drop permutes the level's room order. From depth 2 on,
+    // every later placement therefore depends on player state.
+    let player_state_tail = out.len();
+
     Random::push_generator_seeded(Random::long());
     let drop_chance = 0.25f32 * (dungeon.depth - 1) as f32;
     if Random::float() < drop_chance {
@@ -230,13 +217,8 @@ pub fn create_items_main(
         let cell = random_drop_cell(rooms, &mut room_order, map, &mut occupied);
         if cell >= 0 {
             flatten_grass(map, cell as usize);
-            out.push(CreatedLoot {
-                loot: PlacedLoot {
-                    item: GeneratedItem::new("GuidePage", ItemCategory::Other),
-                    heap_type: "heap",
-                },
-                cell: Some(cell as usize),
-            });
+            let page = GeneratedItem::new("GuidePage", ItemCategory::Other);
+            out.push(CreatedLoot::new(page, "heap", Some(cell as usize)));
         }
     }
     Random::pop_generator();
@@ -249,13 +231,7 @@ pub fn create_items_main(
         if let Some((cell, items)) = ebony::spawn(dungeon, rooms, map, &out) {
             for mut item in items {
                 item.source = Some("ebony_mimic".into());
-                out.push(CreatedLoot {
-                    loot: PlacedLoot {
-                        item,
-                        heap_type: "ebony_mimic",
-                    },
-                    cell: Some(cell),
-                });
+                out.push(CreatedLoot::new(item, "ebony_mimic", Some(cell)));
             }
         }
     }
@@ -271,16 +247,15 @@ pub fn create_items_main(
         }
         let mut item = dungeon.generator.random_using_defaults_any(dungeon.depth);
         item.source = Some(SPYGLASS_SOURCE.into());
-        out.push(CreatedLoot {
-            loot: PlacedLoot {
-                item,
-                heap_type: "heap",
-            },
-            cell,
-        });
+        out.push(CreatedLoot::new(item, "heap", cell));
     }
     Random::pop_generator();
 
+    if dungeon.depth > 1 {
+        for created in &mut out[player_state_tail..] {
+            created.may_differ = true;
+        }
+    }
     out
 }
 
@@ -299,10 +274,7 @@ fn emit_mimic(
         item.source = Some(heap_type.into());
     }
     for item in items {
-        out.push(CreatedLoot {
-            loot: PlacedLoot { item, heap_type },
-            cell: Some(cell),
-        });
+        out.push(CreatedLoot::new(item, heap_type, Some(cell)));
     }
 }
 

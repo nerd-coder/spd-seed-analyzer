@@ -26,6 +26,12 @@ pub struct GeneratorState {
     cats: Vec<CatRuntime>,
     /// Monotone count of calls that advance `ARTIFACT.dropped`.
     artifact_draws: u32,
+    /// Runtime artifact sources (Ring of Wealth, Thief, Transmutation, …) may
+    /// have advanced `ARTIFACT.dropped` before this level was generated.
+    artifacts_follow_history: bool,
+    /// An earlier history-dependent desync may have changed how many
+    /// level-generation draws every deck has seen.
+    decks_unknown: bool,
 }
 
 #[cfg(test)]
@@ -102,11 +108,26 @@ impl GeneratorState {
             default_cat_probs,
             cats,
             artifact_draws: 0,
+            artifacts_follow_history: false,
+            decks_unknown: false,
         }
+    }
+
+    /// Starts one level's generation. Every level after the first is created
+    /// after play, so runtime artifact draws may already have moved that deck.
+    pub(crate) fn begin_level(&mut self, artifacts_follow_history: bool) {
+        self.artifacts_follow_history = artifacts_follow_history;
+    }
+
+    /// Ends one level's generation on its own stream. A desynced level may have
+    /// made a different number of draws from every deck.
+    pub(crate) fn end_level(&mut self) {
+        self.decks_unknown |= Random::stream_tainted();
     }
 
     fn stamp_artifact_condition(&self, mut item: GeneratedItem) -> GeneratedItem {
         item.artifact_conditional = self.artifact_draws > 0;
+        item.history_variable |= Random::stream_tainted();
         item
     }
 
@@ -138,6 +159,10 @@ impl GeneratorState {
 
     /// `Generator.random()` — pick category then item.
     pub fn random(&mut self, depth: i32) -> GeneratedItem {
+        // Category costs differ, so an unknown general deck desyncs the stream.
+        if self.decks_unknown {
+            Random::taint_stream();
+        }
         let mut idx = Random::chances(&self.category_probs);
         if idx < 0 {
             self.using_first_deck = !self.using_first_deck;
@@ -232,6 +257,11 @@ impl GeneratorState {
         depth: i32,
         parchment_scrap_level: Option<i32>,
     ) -> GeneratedItem {
+        // Callers re-roll on identity (duplicate wands, Imp rings, crystal
+        // rewards), so an unknown deck position can desync the stream.
+        if self.decks_unknown {
+            Random::taint_stream();
+        }
         let idx = cat.index();
         // Push category seed deck if present
         let (seed, dropped) = {
@@ -353,6 +383,12 @@ impl GeneratorState {
             let rt = &self.cats[idx];
             (rt.seed, rt.dropped)
         };
+        // Only `UnstableSpellbook` (and deck exhaustion) costs extra ambient
+        // RNG, so a shifted artifact index desyncs the rest of the stream.
+        if self.artifacts_follow_history || self.decks_unknown {
+            Random::taint_stream();
+            self.decks_unknown = true;
+        }
         if let Some(s) = seed {
             Random::push_generator_seeded(s);
             for _ in 0..dropped {

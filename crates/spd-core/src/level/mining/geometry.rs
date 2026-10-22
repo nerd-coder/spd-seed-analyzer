@@ -7,7 +7,7 @@ use crate::rooms::room::Room;
 pub(super) fn occupy_mob(map: &mut TerrainMap, point: Point, class_name: &'static str) {
     let cell = map.point_to_cell(point.x, point.y).unwrap();
     map.mob_occupied[cell] = true;
-    map.known_mobs[cell] = Some(class_name);
+    map.place_mob(cell, class_name);
 }
 
 pub(super) fn point_distance(a: Point, b: Point) -> f32 {

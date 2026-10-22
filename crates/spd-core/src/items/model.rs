@@ -119,6 +119,10 @@ pub struct GeneratedItem {
     /// run-history artifact acquisitions can shift this result's deck stream.
     #[serde(skip)]
     pub artifact_conditional: bool,
+    /// Run history can change this item: it was drawn from a deck whose
+    /// position is unknown, or on a stream that may already have desynced.
+    #[serde(skip)]
+    pub history_variable: bool,
     /// Never serialized: public reports derive safety from generation roles,
     /// not from user-visible source strings.
     #[serde(skip)]
@@ -142,6 +146,7 @@ impl GeneratedItem {
             candidate_classes: Vec::new(),
             source: None,
             artifact_conditional: false,
+            history_variable: false,
             provenance: ItemProvenance::None,
             from_spawn_queue: false,
         }

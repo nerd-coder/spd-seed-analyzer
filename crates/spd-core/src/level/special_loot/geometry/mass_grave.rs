@@ -70,7 +70,7 @@ pub fn paint(
     while i <= Random::int_max(2) {
         let cell = clamped_cell(map, room, 3, |cell| map.mob_occupied[cell]);
         map.mob_occupied[cell] = true;
-        map.known_mobs[cell] = Some("Skeleton");
+        map.place_mob(cell, "Skeleton");
         i += 1;
     }
 

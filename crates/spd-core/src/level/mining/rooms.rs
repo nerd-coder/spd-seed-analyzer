@@ -239,7 +239,7 @@ fn paint_gnoll(map: &mut TerrainMap, rooms: &[Room], room_index: usize, doors: &
             }
         };
         map.mob_occupied[guard_cell] = true;
-        map.known_mobs[guard_cell] = Some("GnollGuard");
+        map.place_mob(guard_cell, "GnollGuard");
         let barricades = if Random::int_max(2) == 0 { 2 } else { 1 };
         let sapper_cell = map.point_to_cell(sapper.x, sapper.y).unwrap();
         for _ in 0..barricades {

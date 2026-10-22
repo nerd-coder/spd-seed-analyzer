@@ -69,7 +69,7 @@ pub(super) fn spawn(
     let &cell = Random::element(&candidates)?;
     let items = mimic_carried_items(dungeon, Vec::new(), false, MimicPrize::Ebony);
     map.mob_occupied[cell] = true;
-    map.known_mobs[cell] = Some("EbonyMimic");
+    map.place_mob(cell, "EbonyMimic");
     Some((cell, items))
 }
 

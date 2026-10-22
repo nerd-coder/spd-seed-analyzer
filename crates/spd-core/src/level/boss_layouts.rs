@@ -46,7 +46,7 @@ pub(super) fn fixed_layout(depth: i32) -> Option<FloorMap> {
         per_run_cells: Vec::new(),
         sentry_scans: Vec::new(),
         laser_beams: Vec::new(),
-        runtime_sensitive_loot_cells: Vec::new(),
+        history_cells: Vec::new(),
         constrained_equipment_cells: Vec::new(),
     };
     if depth == 20 {

@@ -20,7 +20,7 @@ pub(super) struct MapFacts {
     pub mobs: Vec<MapMob>,
     pub markers: Vec<MapMarker>,
     concealed_cells: Vec<u32>,
-    runtime_sensitive_loot_cells: Vec<u32>,
+    history_cells: Vec<u32>,
     constrained_equipment_cells: Vec<u32>,
 }
 
@@ -78,24 +78,7 @@ impl MapFacts {
             });
         }
 
-        let runtime_sensitive_loot_cells = map
-            .known_heaps
-            .iter()
-            .enumerate()
-            .filter_map(|(cell, heap)| {
-                heap.as_ref()
-                    .is_some_and(|heap| {
-                        heap.items.iter().any(|item| {
-                            matches!(
-                                item.provenance,
-                                crate::items::model::ItemProvenance::Room(_)
-                                    | crate::items::model::ItemProvenance::Forced(_)
-                            )
-                        })
-                    })
-                    .then_some(cell as u32)
-            })
-            .collect();
+        let history_cells = map.may_differ.iter().map(|&cell| cell as u32).collect();
         let constrained_equipment_cells = map
             .known_heaps
             .iter()
@@ -122,7 +105,7 @@ impl MapFacts {
             mobs,
             markers,
             concealed_cells: Vec::new(),
-            runtime_sensitive_loot_cells,
+            history_cells,
             constrained_equipment_cells,
         }
     }
@@ -132,14 +115,8 @@ impl MapFacts {
             return;
         };
         let loot = &created.loot;
-        if super::state::is_runtime_sensitive_main_loot(&loot.item) {
-            self.runtime_sensitive_loot_cells.push(cell as u32);
-        }
-        if matches!(
-            loot.item.provenance,
-            crate::items::model::ItemProvenance::Forced(_)
-        ) {
-            self.runtime_sensitive_loot_cells.push(cell as u32);
+        if created.may_differ {
+            self.history_cells.push(cell as u32);
         }
         if loot.heap_type == "ebony_mimic"
             || loot.item.source.as_deref() == Some(super::create_items::SPYGLASS_SOURCE)
@@ -201,6 +178,8 @@ impl MapFacts {
         self.markers.sort_by_key(|marker| marker.cell);
         self.concealed_cells.sort_unstable();
         self.concealed_cells.dedup();
+        self.history_cells.sort_unstable();
+        self.history_cells.dedup();
     }
 
     pub(crate) fn into_floor_map(
@@ -234,7 +213,7 @@ impl MapFacts {
             per_run_cells: Vec::new(),
             sentry_scans: Vec::new(),
             laser_beams: Vec::new(),
-            runtime_sensitive_loot_cells: self.runtime_sensitive_loot_cells,
+            history_cells: self.history_cells,
             constrained_equipment_cells: self.constrained_equipment_cells,
         }
     }

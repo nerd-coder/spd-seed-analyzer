@@ -163,7 +163,7 @@ fn project_map(
             mob.state = crate::report::MapMobState::Wandering;
         }
     }
-    floor_map.runtime_sensitive_loot_cells.clear();
+    floor_map.history_cells.clear();
     floor_map.constrained_equipment_cells.clear();
     floor_map.uncertain_cells = sorted_cells(&facts.uncertain);
     floor_map.per_run_cells = sorted_cells(&facts.per_run);

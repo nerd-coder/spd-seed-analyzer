@@ -39,6 +39,9 @@ impl BlacksmithQuestType {
 #[derive(Debug, Clone, Default)]
 pub struct BlacksmithQuestState {
     pub spawned: bool,
+    /// A spawn attempt ran on a run-history dependent stream, so whether
+    /// (and where) this quest spawned is not seed-determined.
+    pub history_dependent: bool,
     /// Quest type int (1=Crystal, 2=Gnoll).
     pub quest_type: i32,
     pub depth: i32,
@@ -71,9 +74,13 @@ pub fn try_spawn(
     if !(11..=14).contains(&depth) {
         return false;
     }
+    if blacksmith.history_dependent {
+        Random::taint_stream();
+    }
     if blacksmith.spawned {
         return false;
     }
+    blacksmith.history_dependent |= Random::stream_tainted();
     if depth <= 11 || Random::int_max(15 - depth) != 0 {
         return false;
     }

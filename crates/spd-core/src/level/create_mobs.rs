@@ -291,6 +291,6 @@ fn find_position(
 /// Java picks either way.
 fn place_mob(map: &mut TerrainMap, cell: usize, mob: Spawn) -> bool {
     map.mob_occupied[cell] = true;
-    map.known_mobs[cell] = Some(mob.label);
+    map.place_mob(cell, mob.label);
     mob.maybe_large && !map.is_open_space(cell)
 }

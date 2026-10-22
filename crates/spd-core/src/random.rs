@@ -11,6 +11,10 @@ use crate::java_random::JavaRandom;
 thread_local! {
     static ACTIVE: Cell<u64> = const { Cell::new(JavaRandom::new_unseeded().state()) };
     static SAVED: RefCell<Vec<u64>> = const { RefCell::new(Vec::new()) };
+    // Analyzer-only: whether the active stream's position can depend on run
+    // history. A pushed child inherits it; pop restores the parent's flag.
+    static ACTIVE_TAINTED: Cell<bool> = const { Cell::new(false) };
+    static SAVED_TAINTED: RefCell<Vec<bool>> = const { RefCell::new(Vec::new()) };
 
     #[cfg(test)]
     static STACK_MUTATIONS: RefCell<(usize, usize)> = const { RefCell::new((0, 0)) };
@@ -24,11 +28,29 @@ impl Random {
     pub fn reset_generators() {
         SAVED.with(|saved| saved.borrow_mut().clear());
         ACTIVE.with(|active| active.set(JavaRandom::new_unseeded().state()));
+        SAVED_TAINTED.with(|saved| saved.borrow_mut().clear());
+        ACTIVE_TAINTED.with(|tainted| tainted.set(false));
+    }
+
+    /// Marks the active stream as run-history dependent from this point on.
+    pub(crate) fn taint_stream() {
+        ACTIVE_TAINTED.with(|tainted| tainted.set(true));
+    }
+
+    pub(crate) fn clear_stream_taint() {
+        ACTIVE_TAINTED.with(|tainted| tainted.set(false));
+    }
+
+    /// Whether the active stream's position can depend on run history.
+    pub(crate) fn stream_tainted() -> bool {
+        ACTIVE_TAINTED.with(Cell::get)
     }
 
     fn push(generator: JavaRandom) {
         let previous = ACTIVE.with(|active| active.replace(generator.state()));
         SAVED.with(|saved| saved.borrow_mut().push(previous));
+        let tainted = Self::stream_tainted();
+        SAVED_TAINTED.with(|saved| saved.borrow_mut().push(tainted));
         #[cfg(test)]
         STACK_MUTATIONS.with(|mutations| mutations.borrow_mut().0 += 1);
     }
@@ -63,6 +85,8 @@ impl Random {
             return;
         };
         ACTIVE.with(|active| active.set(previous));
+        let tainted = SAVED_TAINTED.with(|saved| saved.borrow_mut().pop().unwrap_or(false));
+        ACTIVE_TAINTED.with(|cell| cell.set(tainted));
         #[cfg(test)]
         STACK_MUTATIONS.with(|mutations| mutations.borrow_mut().1 += 1);
     }

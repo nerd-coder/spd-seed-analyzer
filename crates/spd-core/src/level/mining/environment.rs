@@ -274,6 +274,7 @@ mod tests {
             custom_tiles: Vec::new(),
             custom_terrain: Vec::new(),
             custom_walls: Vec::new(),
+            may_differ: Vec::new(),
         }
     }
 

@@ -341,7 +341,7 @@ pub(super) fn secret_honeypot(
 
     // The Bee guards the shattered pot; its spawn draws nothing.
     map.mob_occupied[broken_pot_cell] = true;
-    map.known_mobs[broken_pot_cell] = Some("Bee");
+    map.place_mob(broken_pot_cell, "Bee");
 
     let mut honey = GeneratedItem::new("Honeypot", ItemCategory::Other);
     honey.source = Some("SecretHoneypotRoom".into());

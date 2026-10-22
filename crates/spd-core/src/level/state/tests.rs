@@ -151,7 +151,7 @@ fn public_projection_omits_the_whole_regular_map_but_keeps_independent_contracts
             per_run_cells: Vec::new(),
             sentry_scans: vec![],
             laser_beams: vec![],
-            runtime_sensitive_loot_cells: runtime_cells,
+            history_cells: runtime_cells,
             constrained_equipment_cells: vec![],
         }),
         layout_map: None,
@@ -258,20 +258,6 @@ fn empty_level_state(depth: i32) -> LevelState {
         room_paint_rng_checkpoints: vec![],
         post_doors_rng_probe: vec![],
     }
-}
-
-#[test]
-fn main_loot_classification_uses_source_provenance() {
-    assert!(is_runtime_sensitive_main_loot(&item("Anything", "heap")));
-    assert!(is_runtime_sensitive_main_loot(&item(
-        "Anything",
-        "locked_chest:heap"
-    )));
-    assert!(is_runtime_sensitive_main_loot(&item(
-        "Anything",
-        "mimic:mimic"
-    )));
-    assert!(!is_runtime_sensitive_main_loot(&item("Mimic", "forced")));
 }
 
 #[test]

@@ -122,7 +122,7 @@ pub(super) fn paint_aquarium(map: &mut TerrainMap, room: &Room) {
             if map.map[cell] == WATER && !fish_cells.contains(&cell) {
                 fish_cells.push(cell);
                 map.mob_occupied[cell] = true;
-                map.known_mobs[cell] = Some("Piranha");
+                map.place_mob(cell, "Piranha");
                 break;
             }
         }

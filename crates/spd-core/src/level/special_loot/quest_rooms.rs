@@ -84,6 +84,6 @@ pub(super) fn ambitious_imp_room_npc(
     };
     if let Some(cell) = map.point_to_cell(x, y) {
         map.mob_occupied[cell] = true;
-        map.known_mobs[cell] = Some("Imp");
+        map.place_mob(cell, "Imp");
     }
 }

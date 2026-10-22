@@ -55,6 +55,9 @@ impl WandmakerQuestType {
 #[derive(Debug, Clone, Default)]
 pub struct WandmakerQuestState {
     pub spawned: bool,
+    /// A spawn attempt ran on a run-history dependent stream, so whether
+    /// (and where) this quest spawned is not seed-determined.
+    pub history_dependent: bool,
     /// 0 = undecided; 1–3 once type is chosen (when room is added).
     pub quest_type: i32,
     /// Set true on the floor where `spawnRoom` adds the quest room.
@@ -92,9 +95,13 @@ pub fn try_spawn_room(
     if !(6..=9).contains(&depth) {
         return false;
     }
+    if wandmaker.history_dependent {
+        Random::taint_stream();
+    }
     if wandmaker.spawned {
         return false;
     }
+    wandmaker.history_dependent |= Random::stream_tainted();
 
     let type_ready = wandmaker.quest_type != 0;
     let roll_ok = depth > 6 && Random::int_max(10 - depth) == 0;

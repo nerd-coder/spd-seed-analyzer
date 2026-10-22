@@ -87,7 +87,7 @@ pub(super) fn crystal_vault(
         .expect("vault pedestal on map");
     if second_heap == "crystal_mimic" {
         map.mob_occupied[second_cell] = true;
-        map.known_mobs[second_cell] = Some("CrystalMimic");
+        map.place_mob(second_cell, "CrystalMimic");
         map.record_mob_loot(second_cell, i2.clone());
     } else {
         map.record_heap(second_cell, "crystal_chest", i2.clone());

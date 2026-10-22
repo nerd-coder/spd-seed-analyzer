@@ -188,7 +188,7 @@ pub fn pool_prize_on_map(
             };
             if map.map[cell] == WATER && !map.mob_occupied[cell] {
                 map.mob_occupied[cell] = true;
-                map.known_mobs[cell] = Some(if phantom { "PhantomPiranha" } else { "Piranha" });
+                map.place_mob(cell, if phantom { "PhantomPiranha" } else { "Piranha" });
                 break;
             }
         }
@@ -281,7 +281,7 @@ pub fn statue_weapon(
         .point_to_cell(center.x, center.y)
         .expect("placed StatueRoom center is inside map bounds");
     map.mob_occupied[cell] = true;
-    map.known_mobs[cell] = Some("Statue");
+    map.place_mob(cell, "Statue");
     // Statue.random: Rat Skull's rare-alt chance is half-effective above base.
     // The float stays on the level-generation stream. Weapon, enchant, and any
     // armored armor+glyph rolls run on a child seeded by one parent long.

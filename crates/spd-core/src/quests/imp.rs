@@ -34,6 +34,9 @@ pub struct ImpSpawnDecks {
 #[derive(Debug, Clone, Default)]
 pub struct ImpQuestState {
     pub spawned: bool,
+    /// A spawn attempt ran on a run-history dependent stream, so whether
+    /// (and where) this quest spawned is not seed-determined.
+    pub history_dependent: bool,
     pub depth: i32,
     /// Retained after the floor report drains `pending_options`.
     pub reward_options: Vec<GeneratedItem>,
@@ -63,9 +66,13 @@ pub fn try_spawn(
     if !(16..=19).contains(&depth) {
         return false;
     }
+    if imp.history_dependent {
+        Random::taint_stream();
+    }
     if imp.spawned {
         return false;
     }
+    imp.history_dependent |= Random::stream_tainted();
     if depth <= 16 || Random::int_max(20 - depth) != 0 {
         return false;
     }

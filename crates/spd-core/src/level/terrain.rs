@@ -1,6 +1,7 @@
 //! Terrain map using SPD `Terrain` IDs for asset-aligned rendering.
 
 use crate::items::model::GeneratedItem;
+use crate::random::Random;
 use crate::report::MapCustomTile;
 use crate::rooms::room::Room;
 use crate::rooms::types::RoomKind;
@@ -131,6 +132,9 @@ pub struct TerrainMap {
     pub custom_terrain: Vec<MapCustomTile>,
     /// Painter-complete custom wall overlays, in Java insertion order.
     pub custom_walls: Vec<MapCustomTile>,
+    /// Entity cells recorded while the level stream was run-history
+    /// dependent, or holding an item whose identity is (unsorted, may repeat).
+    pub(crate) may_differ: Vec<usize>,
 }
 
 fn custom_tile(
@@ -184,6 +188,7 @@ impl TerrainMap {
             custom_tiles: Vec::new(),
             custom_terrain: Vec::new(),
             custom_walls: Vec::new(),
+            may_differ: Vec::new(),
         };
         map.recompute_passable();
         map
@@ -197,15 +202,29 @@ impl TerrainMap {
         self.map.is_empty()
     }
 
+    fn note_entity(&mut self, cell: usize, item: Option<&GeneratedItem>) {
+        if Random::stream_tainted() || item.is_some_and(|item| item.history_variable) {
+            self.may_differ.push(cell);
+        }
+    }
+
     /// A heap now occupies `cell`; a new cell extends the insertion order.
     pub(crate) fn mark_heap(&mut self, cell: usize) {
         if !self.heap_occupied[cell] {
             self.heap_order.push(cell);
         }
         self.heap_occupied[cell] = true;
+        self.note_entity(cell, None);
+    }
+
+    /// A level-generation mob of `class_name` now stands on `cell`.
+    pub(crate) fn place_mob(&mut self, cell: usize, class_name: &'static str) {
+        self.known_mobs[cell] = Some(class_name);
+        self.note_entity(cell, None);
     }
 
     pub(crate) fn record_mob_loot(&mut self, cell: usize, item: GeneratedItem) {
+        self.note_entity(cell, Some(&item));
         self.mob_loot[cell].push(item);
     }
 
@@ -216,6 +235,7 @@ impl TerrainMap {
         item: GeneratedItem,
     ) {
         self.mark_heap(cell);
+        self.note_entity(cell, Some(&item));
         if let Some(heap) = &mut self.known_heaps[cell] {
             heap.items.push(item);
         } else {
@@ -602,6 +622,7 @@ pub fn paint_minimal_with_chasm(rooms: &[Room], chasm_feeling: bool) -> Option<T
         custom_tiles: Vec::new(),
         custom_terrain: Vec::new(),
         custom_walls: Vec::new(),
+        may_differ: Vec::new(),
     })
 }
 
