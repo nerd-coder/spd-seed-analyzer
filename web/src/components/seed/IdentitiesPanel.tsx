@@ -1,9 +1,17 @@
+import { GameSprite } from '@/components/GameSprite'
 import { ItemBox } from '@/components/ItemBox'
 import { itemClassName } from '@/generated/game-ids'
 import { appearanceDescription } from '@/lib/identity'
 import { ItemCategory, itemSprite } from '@/lib/item-kind'
 import { itemLabel } from '@/lib/item-title'
 import type { IdentityEntry, IdentityMaps } from '@/lib/spd-wasm'
+import { CATALOG_ICON, UI_ICONS } from '@/lib/ui-icons'
+
+const ICON_SHEET = {
+  url: UI_ICONS.url,
+  width: UI_ICONS.sheetW,
+  height: UI_ICONS.sheetH,
+}
 
 /** Journal cell at scale 3: 17×3 + 8px padding. */
 const IDENTITY_SCALE = 3
@@ -49,7 +57,7 @@ function IdentityGroup({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="text-sm font-semibold">{title}</h3>
+      <h4 className="text-sm font-semibold">{title}</h4>
       <IdentityGrid entries={entries} category={category} />
     </div>
   )
@@ -57,14 +65,26 @@ function IdentityGroup({
 
 export function IdentitiesPanel({ identities }: { identities: IdentityMaps }) {
   return (
-    <section className="bg-card text-card-foreground rounded-lg border">
-      <div className="space-y-1 px-4 pt-4">
-        <h2 className="font-pixel text-px-1">Identities</h2>
-        <p className="text-muted-foreground text-sm">
+    <section
+      data-identities
+      aria-labelledby="identities-title"
+      className="flex flex-col gap-3"
+    >
+      <div className="flex items-center gap-2">
+        <GameSprite
+          sheet={ICON_SHEET}
+          frames={[CATALOG_ICON]}
+          scale={2}
+          label="Item catalog"
+        />
+        <h3 id="identities-title" className="font-pixel text-px-1">
+          Identities
+        </h3>
+        <span className="text-muted-foreground text-sm">
           Unidentified appearances for this seed
-        </p>
+        </span>
       </div>
-      <div className="flex flex-col gap-4 px-4 pt-4 pb-4">
+      <div className="flex flex-col gap-4">
         <IdentityGroup
           title="Potions"
           entries={identities.potions}

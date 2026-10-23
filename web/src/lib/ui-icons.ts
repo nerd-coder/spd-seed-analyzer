@@ -53,6 +53,9 @@ export const CHALLENGE_ICONS = {
 /** Journal notes icon (`Icons.ALCHEMY`, 16×16). */
 export const ALCHEMY_ICON: IconFrame = { x: 96, y: 48, w: 16, h: 16 }
 
+/** Journal item catalog icon (`Icons.CATALOG`, 13×16). */
+export const CATALOG_ICON: IconFrame = { x: 80, y: 48, w: 13, h: 16 }
+
 export function depthIconFrame(feeling?: string | null): IconFrame {
   const key = (feeling ?? 'none').toLowerCase()
   return DEPTH_ICONS[key] ?? DEPTH_ICONS.none

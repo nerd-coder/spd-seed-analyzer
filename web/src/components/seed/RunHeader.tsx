@@ -2,10 +2,11 @@ import {
   type ChallengeChoice,
   ChallengePicker,
 } from '@/components/seed/ChallengePicker'
+import { IdentitiesPanel } from '@/components/seed/IdentitiesPanel'
 import { SeedTitle } from '@/components/seed/SeedTitle'
 import type { SeedReport } from '@/lib/spd-wasm'
 
-/** Top of a report: the seed, then the run settings that change its floors. */
+/** Top of a report: the seed, the run settings that change its floors, and its identities. */
 export function RunHeader({
   report,
   challengeChoice,
@@ -20,6 +21,7 @@ export function RunHeader({
         choice={challengeChoice}
         identities={report.identities}
       />
+      <IdentitiesPanel identities={report.identities} />
     </header>
   )
 }

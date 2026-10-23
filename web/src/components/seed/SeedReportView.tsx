@@ -2,7 +2,6 @@ import { useRef } from 'react'
 import { AutomaticOutcomes } from '@/components/seed/AutomaticOutcomes'
 import type { ChallengeChoice } from '@/components/seed/ChallengePicker'
 import { DescentRail } from '@/components/seed/DescentRail'
-import { IdentitiesPanel } from '@/components/seed/IdentitiesPanel'
 import { RunHeader } from '@/components/seed/RunHeader'
 import type { TrinketChoice } from '@/components/seed/trinket-offers'
 import { stuckBottom, useCurrentFloor } from '@/hooks/useCurrentFloor'
@@ -47,7 +46,6 @@ export function SeedReportView({
           onSelect={scrollToFloor}
         />
       ) : null}
-      <IdentitiesPanel identities={report.identities} />
       <AutomaticOutcomes report={report} trinketChoice={trinketChoice} />
     </div>
   )
