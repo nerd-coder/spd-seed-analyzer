@@ -1,3 +1,4 @@
+import { GameSprite } from '@/components/GameSprite'
 import { FloorDetail } from '@/components/seed/FloorDetail'
 import {
   catalystOfferClasses,
@@ -8,6 +9,13 @@ import type {
   IdentityMaps,
   TrinketSelectionReport,
 } from '@/lib/spd-wasm'
+import { STAIRS_ICONS, UI_ICONS } from '@/lib/ui-icons'
+
+const ICON_SHEET = {
+  url: UI_ICONS.url,
+  width: UI_ICONS.sheetW,
+  height: UI_ICONS.sheetH,
+}
 
 export function FloorsSection({
   floors,
@@ -27,12 +35,23 @@ export function FloorsSection({
 
   // Ancestors must not set overflow:hidden, or the floor banners cannot stick.
   return (
-    <section className="bg-card text-card-foreground rounded-lg border">
-      <div className="space-y-1 px-4 py-4">
-        <h2 className="font-pixel text-px-1">Floors</h2>
-        <p className="text-muted-foreground text-sm">
-          Items you may find on each floor.
-        </p>
+    <section
+      aria-labelledby="floors-title"
+      className="bg-card text-card-foreground rounded-lg border"
+    >
+      <div className="flex items-center gap-2 px-4 py-4">
+        <GameSprite
+          sheet={ICON_SHEET}
+          frames={[STAIRS_ICONS.none]}
+          scale={2}
+          label="Stairs"
+        />
+        <h2 id="floors-title" className="font-pixel text-px-1">
+          Floors
+        </h2>
+        <span className="text-muted-foreground text-sm">
+          Items you may find on each floor
+        </span>
       </div>
 
       <div>
