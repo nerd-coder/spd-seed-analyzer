@@ -132,7 +132,7 @@ fn fixed_structures_match_normalized_java_oracles() {
 }
 
 #[test]
-fn sewer_boss_structures_match_normalized_java_oracles() {
+fn sewer_boss_structures_match_raw_java_oracles() {
     for (seed, json) in [
         (
             "AAA-AAA-AAA",
@@ -175,27 +175,16 @@ fn sewer_boss_structures_match_normalized_java_oracles() {
             (oracle.width, oracle.height),
             "{seed}"
         );
-        let normalized = oracle
-            .terrain
-            .iter()
-            .map(|&tile| match i32::from(tile) {
-                terrain::EMPTY_DECO | terrain::REGION_DECO | terrain::REGION_DECO_ALT => {
-                    terrain::EMPTY as u16
-                }
-                terrain::WALL_DECO => terrain::WALL as u16,
-                tile => tile as u16,
-            })
-            .collect::<Vec<_>>();
         assert_eq!(
             sewer::last_pre_items_rng(),
             oracle.pre_items_rng,
             "{seed} pre-items RNG"
         );
-        if actual.tiles != normalized {
+        if actual.tiles != oracle.terrain {
             let diffs = actual
                 .tiles
                 .iter()
-                .zip(&normalized)
+                .zip(&oracle.terrain)
                 .enumerate()
                 .filter(|(_, (a, b))| a != b)
                 .take(20)
@@ -235,7 +224,7 @@ fn sewer_boss_structures_match_normalized_java_oracles() {
 }
 
 #[test]
-fn caves_boss_structures_match_normalized_java_oracles() {
+fn caves_boss_structures_match_raw_java_oracles() {
     for (seed, json) in [
         (
             "AAA-AAA-AAA",
@@ -272,23 +261,12 @@ fn caves_boss_structures_match_normalized_java_oracles() {
             (oracle.width, oracle.height),
             "{seed}"
         );
-        let normalized = oracle
-            .terrain
-            .iter()
-            .map(|&tile| match i32::from(tile) {
-                terrain::EMPTY_DECO | terrain::REGION_DECO | terrain::REGION_DECO_ALT => {
-                    terrain::EMPTY as u16
-                }
-                terrain::WALL_DECO => terrain::WALL as u16,
-                tile => tile as u16,
-            })
-            .collect::<Vec<_>>();
-        if actual.tiles != normalized {
+        if actual.tiles != oracle.terrain {
             let width = actual.width as usize;
             let diffs = actual
                 .tiles
                 .iter()
-                .zip(&normalized)
+                .zip(&oracle.terrain)
                 .enumerate()
                 .filter(|(_, (actual, oracle))| actual != oracle)
                 .take(20)
@@ -349,7 +327,20 @@ fn halls_boss_structures_match_exact_java_oracles() {
             (oracle.width, oracle.height),
             "{seed}"
         );
-        assert_eq!(actual.tiles, oracle.terrain, "{seed} raw terrain");
+        let exit = actual
+            .transitions
+            .iter()
+            .find(|transition| transition.transition_type == "REGULAR_EXIT")
+            .expect("halls exit")
+            .cell as usize;
+        assert_eq!(
+            actual.tiles[exit],
+            terrain::EXIT as u16,
+            "{seed} opened exit"
+        );
+        let mut sealed = actual.tiles.clone();
+        sealed[exit] = terrain::WALL_DECO as u16;
+        assert_eq!(sealed, oracle.terrain, "{seed} raw terrain");
         assert_eq!(
             actual.tile_variance, oracle.tile_variance,
             "{seed} tile variance"
@@ -389,23 +380,99 @@ fn halls_boss_custom_layers_match_java_for_preserved_runs() {
         let report =
             crate::analyze_seed_with_profile(seed, 25, &crate::MapProfile::default()).unwrap();
         let actual = report.floors[24].map.as_ref().expect("depth-25 layout");
-        assert_eq!(
-            actual.custom_tiles,
-            oracle
-                .custom_tiles
-                .iter()
-                .map(MapCustomTile::from)
-                .collect::<Vec<_>>(),
-            "{seed} custom tiles"
-        );
-        assert_eq!(
-            actual.custom_walls,
-            oracle
-                .custom_walls
-                .iter()
-                .map(MapCustomTile::from)
-                .collect::<Vec<_>>(),
-            "{seed} custom walls"
-        );
+        let mut tiles: Vec<_> = oracle
+            .custom_tiles
+            .iter()
+            .map(MapCustomTile::from)
+            .collect();
+        let mut walls: Vec<_> = oracle
+            .custom_walls
+            .iter()
+            .map(MapCustomTile::from)
+            .collect();
+        halls::open_center_piece(&mut tiles, &mut walls);
+        assert_eq!(actual.custom_tiles, tiles, "{seed} custom tiles");
+        assert_eq!(actual.custom_walls, walls, "{seed} custom walls");
+    }
+}
+
+fn layer_rects<T: LayerRect>(tiles: &[T]) -> Vec<(String, u32, u32, u32, u32)> {
+    let mut out: Vec<_> = tiles
+        .iter()
+        .map(|tile| {
+            let (x, y, width, height) = tile.rect();
+            (tile.class_name().to_string(), x, y, width, height)
+        })
+        .collect();
+    out.sort();
+    out
+}
+
+#[test]
+fn boss_custom_layer_rects_match_java_oracles() {
+    let fixtures = [
+        (
+            "AAA-AAA-AAA",
+            5,
+            include_str!(
+                "../../../../../tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-5.json"
+            ),
+        ),
+        (
+            "HKT-JZN-XQQ",
+            5,
+            include_str!(
+                "../../../../../tools/java-oracle/fixtures/hkt-jzn-xqq-final-heaps-floor-5.json"
+            ),
+        ),
+        (
+            "AAA-AAA-AAA",
+            15,
+            include_str!(
+                "../../../../../tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-15.json"
+            ),
+        ),
+        (
+            "ZZZ-ZZZ-ZZZ",
+            15,
+            include_str!(
+                "../../../../../tools/java-oracle/fixtures/zzz-zzz-zzz-final-heaps-floor-15.json"
+            ),
+        ),
+        (
+            "AAA-AAA-AAA",
+            26,
+            include_str!(
+                "../../../../../tools/java-oracle/fixtures/aaa-aaa-aaa-final-heaps-floor-26.json"
+            ),
+        ),
+    ];
+    for (seed, depth, json) in fixtures {
+        let oracle = serde_json::from_str::<Fixture>(json)
+            .unwrap()
+            .floors
+            .remove(0);
+        let report =
+            crate::analyze_seed_with_profile(seed, depth, &crate::MapProfile::default()).unwrap();
+        let actual = report.floors[depth as usize - 1].map.as_ref().unwrap();
+        for (kind, actual, oracle) in [
+            ("tiles", &actual.custom_tiles, &oracle.custom_tiles),
+            ("terrain", &actual.custom_terrain, &oracle.custom_terrain),
+            ("walls", &actual.custom_walls, &oracle.custom_walls),
+        ] {
+            assert_eq!(
+                layer_rects(actual),
+                layer_rects(oracle),
+                "{seed} {depth} {kind}"
+            );
+            for layer in actual {
+                assert_eq!(
+                    layer.static_data.len(),
+                    (layer.width * layer.height) as usize,
+                    "{seed} {depth} {}",
+                    layer.class_name
+                );
+            }
+        }
     }
 }

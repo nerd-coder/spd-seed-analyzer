@@ -11,7 +11,7 @@ use crate::level::terrain::{
 use crate::random::Random;
 use crate::rooms::room::Room;
 
-use super::DoorMap;
+use super::{sewer_boss_visuals, DoorMap};
 
 pub(crate) fn paint(map: &mut TerrainMap, room: &Room, ri: usize, doors: &DoorMap) -> bool {
     match room.name.as_str() {
@@ -57,6 +57,7 @@ fn paint_exit(map: &mut TerrainMap, room: &Room) {
     fill_rect(map, c.x - 1, c.y - 1, 3, 2, WALL);
     fill_rect(map, c.x - 1, c.y + 1, 3, 1, EMPTY_SP);
     set(map, c.x, c.y, LOCKED_EXIT);
+    sewer_boss_visuals::sewer_exit(map, c);
 }
 
 fn paint_diamond(map: &mut TerrainMap, room: &Room, ri: usize, doors: &DoorMap) {
@@ -164,6 +165,7 @@ fn paint_thick_pillars(map: &mut TerrainMap, room: &Room, ri: usize, doors: &Doo
 
 /// `Goo boss.pos = level.pointToCell(center())` after the room paint.
 fn place_goo(map: &mut TerrainMap, room: &Room) {
+    sewer_boss_visuals::goo_nest(map, room);
     let center = room.as_rect().center_room();
     if let Some(cell) = map.point_to_cell(center.x, center.y) {
         map.place_mob(cell, "Goo");

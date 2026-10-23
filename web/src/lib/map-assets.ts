@@ -29,6 +29,8 @@ export type MapAssets = MapEntityAssets & {
     hallsSpecial: HTMLImageElement
     carpet: HTMLImageElement
     ratKingRoom: HTMLImageElement
+    sewerBoss: HTMLImageElement
+    cavesBoss: HTMLImageElement
   }
 }
 
@@ -84,6 +86,8 @@ export async function loadMapAssets(
     hallsSpecial,
     carpet,
     ratKingRoom,
+    sewerBoss,
+    cavesBoss,
   ] = await Promise.all([
     loadImage(`/assets/environment/tiles_${tileset}.png`),
     loadImage('/assets/environment/terrain_features.png'),
@@ -103,6 +107,8 @@ export async function loadMapAssets(
     loadImage('/assets/environment/custom_tiles/halls_special.png'),
     loadImage('/assets/environment/custom_tiles/carpet.png'),
     loadImage('/assets/environment/custom_tiles/rat_king_room.png'),
+    loadImage('/assets/environment/custom_tiles/sewer_boss.png'),
+    loadImage('/assets/environment/custom_tiles/caves_boss.png'),
   ])
   return {
     tiles,
@@ -124,6 +130,8 @@ export async function loadMapAssets(
       hallsSpecial,
       carpet,
       ratKingRoom,
+      sewerBoss,
+      cavesBoss,
     },
   }
 }

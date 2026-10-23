@@ -61,6 +61,8 @@ export type MapInspection = {
   uncertain: boolean
   /** Differs on every run, even with the same history (unseeded shuffle). */
   perRun: boolean
+  /** Part of the Imp's shop, which opens only after his quest and the boss. */
+  impShop: boolean
   /** Behind a secret door, a hidden trap, or a concealed entity. */
   hidden: boolean
   secretDoor: boolean
@@ -93,6 +95,16 @@ export function inspectCell(map: FloorMap, cell: number): MapInspection {
   for (const plant of map.plants) {
     if (plant.cell === cell) entries.push({ kind: 'plant', plant })
   }
+  const uncertain = map.uncertain_cells?.includes(cell) ?? false
+  const impShop =
+    uncertain &&
+    map.mobs.some((mob) => mobClassName(mob.mob) === 'ImpShopkeeper') &&
+    (map.mobs.some(
+      (mob) => mob.cell === cell && mobClassName(mob.mob) === 'ImpShopkeeper'
+    ) ||
+      map.heaps.some(
+        (heap) => heap.cell === cell && heap.heap_type === 'for_sale'
+      ))
   const hiddenCell = map.hidden_cells?.includes(cell) ?? false
   const hiddenTrap = map.traps.some(
     (trap) => trap.cell === cell && !trap.visible
@@ -100,8 +112,9 @@ export function inspectCell(map: FloorMap, cell: number): MapInspection {
   return {
     cell,
     entries,
-    uncertain: map.uncertain_cells?.includes(cell) ?? false,
+    uncertain,
     perRun: map.per_run_cells?.includes(cell) ?? false,
+    impShop,
     hidden:
       hiddenCell ||
       hiddenTrap ||

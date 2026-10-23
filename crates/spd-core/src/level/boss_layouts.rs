@@ -4,9 +4,11 @@ use crate::level::terrain;
 use crate::report::{FloorMap, MapTransition};
 
 mod caves;
+mod caves_visuals;
 mod city_overlays;
 mod data;
 mod halls;
+pub(super) mod imp_shop;
 mod last_level;
 mod prison;
 mod sewer;

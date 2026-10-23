@@ -38,11 +38,13 @@ pub(super) fn build(
         }
     }
 
+    let tile_variance = map_facts::tile_variance(WIDTH * HEIGHT, depth_seed);
+    let custom_tiles = custom_tiles(&tiles, &tile_variance);
     FloorMap {
         width: WIDTH as u32,
         height: HEIGHT as u32,
         tileset: terrain::tileset_for_depth(26).to_string(),
-        tile_variance: map_facts::tile_variance(WIDTH * HEIGHT, depth_seed),
+        tile_variance,
         tiles,
         // v4 `LastLevel.cleanWalls` starts at `(height-ROOM_TOP+2)*width`, so the
         // entrance wall row stays on ordinary `Level.cleanWalls` discoverability.
@@ -61,7 +63,7 @@ pub(super) fn build(
         traps: Vec::new(),
         plants: Vec::new(),
         blobs: Vec::new(),
-        custom_tiles: custom_tiles(),
+        custom_tiles,
         custom_terrain: Vec::new(),
         custom_walls: custom_walls(),
         uncertain_cells: Vec::new(),
@@ -88,7 +90,61 @@ fn amulet_room(cell: usize) -> bool {
         || (y == 15 && (6..=10).contains(&x))
 }
 
-fn custom_tiles() -> Vec<MapCustomTile> {
+/// `CustomFloor.CANDLES`, painted from `AMULET_POS - 3 - 3*width`.
+const CANDLES: [i16; 49] = [
+    -1, 42, 46, 46, 46, 43, -1, 42, 46, 46, 46, 46, 46, 43, 46, 46, 45, 19, 44, 46, 46, 46, 46, 19,
+    19, 19, 46, 46, 46, 46, 43, 19, 42, 46, 46, 44, 46, 46, 19, 46, 46, 45, -1, 44, 45, 19, 44, 45,
+    -1,
+];
+/// `CustomFloor.setRect(5, 0, 7, height - ROOM_TOP)`.
+const FLOOR_LEFT: usize = 5;
+const FLOOR_WIDTH: usize = 7;
+const FLOOR_HEIGHT: usize = 54;
+
+/// `LastLevel.CustomFloor.create` before the Amulet is obtained.
+fn custom_floor(map: &[u16], tile_variance: &[u8]) -> Vec<i16> {
+    let candles_start = AMULET_POS as usize - 3 - 3 * WIDTH;
+    let chasm = terrain::CHASM as u16;
+    let mut data = vec![0i16; FLOOR_WIDTH * FLOOR_HEIGHT];
+    let row_start = |i: usize| FLOOR_LEFT + (i / FLOOR_WIDTH) * WIDTH;
+    let mut cell = FLOOR_LEFT;
+    let mut i = 0;
+    while i < data.len() {
+        if i % FLOOR_WIDTH == 0 {
+            cell = row_start(i);
+        }
+        if cell == candles_start {
+            for candle in CANDLES {
+                if data[i] == 0 {
+                    data[i] = candle;
+                }
+                if data[i] == 46 && tile_variance[cell] >= 50 {
+                    data[i] += 1;
+                }
+                if map[cell] != chasm && map[cell + WIDTH] == chasm {
+                    data[i + FLOOR_WIDTH] = 6;
+                }
+                i += 1;
+                cell += 1;
+                if i % FLOOR_WIDTH == 0 {
+                    cell = row_start(i);
+                }
+            }
+        }
+        if map[cell] == terrain::EMPTY_DECO as u16 {
+            data[i] = 27;
+        } else if map[cell] == terrain::EMPTY as u16 {
+            data[i] = 19;
+        } else if data[i] == 0 {
+            data[i] = -1;
+        }
+        cell += 1;
+        i += 1;
+    }
+    data
+}
+
+fn custom_tiles(map: &[u16], tile_variance: &[u8]) -> Vec<MapCustomTile> {
     vec![
         MapCustomTile {
             class_name: "CenterPieceVisuals".into(),
@@ -110,15 +166,11 @@ fn custom_tiles() -> Vec<MapCustomTile> {
         MapCustomTile {
             class_name: "CustomFloor".into(),
             texture: "halls_special".into(),
-            x: 5,
+            x: FLOOR_LEFT as u32,
             y: 0,
-            width: 7,
-            height: 54,
-            static_data: vec![
-                -1, 42, 46, 46, 46, 43, -1, 42, 46, 46, 46, 46, 46, 43, 46, 46, 45, 19, 44, 46, 46,
-                46, 46, 19, 19, 19, 46, 46, 46, 46, 43, 19, 42, 46, 46, 44, 46, 46, 19, 46, 46, 45,
-                -1, 44, 45, 19, 44, 45, -1,
-            ],
+            width: FLOOR_WIDTH as u32,
+            height: FLOOR_HEIGHT as u32,
+            static_data: custom_floor(map, tile_variance),
         },
     ]
 }

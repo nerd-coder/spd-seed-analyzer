@@ -304,6 +304,9 @@ fn create_level_internal(
             for item in &mut imp_shop_stock {
                 item.source = Some("ImpShopRoom".into());
             }
+            if let Some(floor) = layout_map.as_mut() {
+                boss_layouts::imp_shop::place(floor, &imp_shop_stock);
+            }
             placed_items.extend(imp_shop_stock);
         }
         build_ok = layout_map.is_some();

@@ -1048,15 +1048,7 @@ fn aaa_floor_fifteen_badder_bosses_matches_caves_layout_and_rng() {
     assert_eq!(actual.pre_items_rng_probe, expected.pre_items_rng);
     let map = actual.layout_map.as_ref().expect("Caves layout map");
     let terrain = expected.terrain.as_ref().expect("Caves terrain");
-    let normalized = terrain
-        .iter()
-        .map(|&tile| match i32::from(tile) {
-            20 | 33 | 34 => 1,
-            12 => 4,
-            tile => tile as u16,
-        })
-        .collect::<Vec<_>>();
-    assert_eq!(map.tiles, normalized, "Badder Bosses Caves terrain");
+    assert_eq!(&map.tiles, terrain, "Badder Bosses Caves terrain");
     assert_eq!(
         map.discoverable,
         *expected

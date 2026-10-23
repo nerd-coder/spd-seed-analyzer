@@ -138,6 +138,10 @@ pub(super) fn build(dungeon: &mut DungeonState, depth_seed: i64) -> Option<Floor
         .into_floor_map(&map, 25, dungeon.branch, depth_seed)
         .into_layout_only();
     (floor.custom_tiles, floor.custom_walls) = center_piece_layers();
+    // The exit stays sealed as WALL_DECO until `unseal` after Yog-Dzewa
+    // dies; publish the opened stairs so the map shows where they appear.
+    floor.tiles[exit as usize] = terrain::EXIT as u16;
+    open_center_piece(&mut floor.custom_tiles, &mut floor.custom_walls);
     let entrance_xy = (entrance % WIDTH, entrance / WIDTH);
     let exit_xy = (exit % WIDTH, exit / WIDTH);
     floor.transitions = vec![
@@ -151,6 +155,26 @@ pub(super) fn build(dungeon: &mut DungeonState, depth_seed: i64) -> Option<Floor
     floor.transitions[1].right += 1;
     floor.transitions.sort_by_key(|transition| transition.cell);
     Some(floor)
+}
+
+/// `CenterPieceVisuals` / `CenterPieceWalls.updateState` once the exit is `EXIT`.
+pub(super) fn open_center_piece(visuals: &mut [MapCustomTile], walls: &mut [MapCustomTile]) {
+    for layer in visuals
+        .iter_mut()
+        .filter(|layer| layer.class_name == "CenterPieceVisuals")
+    {
+        let data = &mut layer.static_data;
+        data[4] = 19;
+        data[12] = 31;
+        data[14] = 31;
+    }
+    for layer in walls
+        .iter_mut()
+        .filter(|layer| layer.class_name == "CenterPieceWalls")
+    {
+        let data = &mut layer.static_data;
+        (data[3], data[4], data[5], data[13]) = (1, 0, 2, 23);
+    }
 }
 
 fn center_piece_layers() -> (Vec<MapCustomTile>, Vec<MapCustomTile>) {

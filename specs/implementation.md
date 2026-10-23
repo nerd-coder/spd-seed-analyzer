@@ -21,7 +21,9 @@ replays runtime artifact draws and asserts exact entities do not move. Sewer
 floors are mostly exact; from the first shop floor on most seeds flag nearly
 everything. `hidden_cells` (secret-door-only areas) pulse on the canvas. Boss
 maps publish their level-creation entities (Goo, Rat King and gold; prison
-cages and IronKey; Pylons; the Amulet), always exact
+cages and IronKey; Pylons; the Amulet), always exact, plus the depth-20 Imp
+shop as uncertain cells. Boss terrain keeps its decorations and the Java
+custom layers; depth 25 shows the exit opened
 (`specs/analysis/boss-floor-entities.md`).
 
 Vault maps publish room-painted entities plus `VaultLevel.createItems`

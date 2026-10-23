@@ -61,14 +61,6 @@ pub(super) fn build(dungeon: &mut DungeonState, depth_seed: i64) -> Option<Floor
     #[cfg(test)]
     LAST_PRE_ITEMS_RNG.with(|probe| *probe.borrow_mut() = Random::peek_ints(8));
 
-    for tile in &mut map.map {
-        *tile = match *tile {
-            terrain::EMPTY_DECO | terrain::REGION_DECO | terrain::REGION_DECO_ALT => terrain::EMPTY,
-            terrain::WALL_DECO => terrain::WALL,
-            tile => tile,
-        };
-    }
-
     let populated = map_facts::MapFacts::from_room_paint(&map).into_floor_map(
         &map,
         5,

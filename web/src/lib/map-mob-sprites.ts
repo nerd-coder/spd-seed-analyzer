@@ -176,6 +176,9 @@ const MOB_SPRITES: Record<string, MobSprite> = {
   ]),
   Blacksmith: sprite('blacksmith', 13, 16, 15, [...hold(0, 7), 1, 2, 2, 2, 3]),
   RatKing: sprite('ratking', 16, 16, 2, BLINK),
+  Goo: sprite('goo', 20, 14, 10, [2, 1, 0, 0, 1]),
+  // PylonSprite drops one pixel of raise and starts inactive.
+  Pylon: { ...sprite('pylon', 10, 20, 0, [0]), raise: 5 },
   Sheep: sprite('sheep', 16, 15, 8, [...hold(0, 12), 1, 2, 3, 0]),
   Bee: sprite('bee', 16, 16, 12, [0, 1, 1, 0, 2, 2]),
   Wraith: sprite('wraith', 14, 15, 5, [0, 1]),

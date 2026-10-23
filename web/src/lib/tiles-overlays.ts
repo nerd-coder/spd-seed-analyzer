@@ -35,6 +35,8 @@ function customTileImage(assets: MapAssets, texture: string) {
     halls_special: assets.customTiles.hallsSpecial,
     carpet: assets.customTiles.carpet,
     rat_king_room: assets.customTiles.ratKingRoom,
+    sewer_boss: assets.customTiles.sewerBoss,
+    caves_boss: assets.customTiles.cavesBoss,
   }
   return images[customTileStem(texture)] ?? null
 }

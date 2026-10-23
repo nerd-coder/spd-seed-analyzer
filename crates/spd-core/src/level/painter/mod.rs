@@ -10,6 +10,7 @@ mod doors;
 mod params;
 mod room_geometry;
 mod sewer_boss_rooms;
+mod sewer_boss_visuals;
 
 #[cfg(test)]
 mod trap_trace_tests;

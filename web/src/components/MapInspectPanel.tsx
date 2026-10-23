@@ -220,7 +220,8 @@ export const MapInspectPanel = forwardRef<HTMLDivElement, Props>(
     { inspection, identities, tileset, pinned, style },
     ref
   ) {
-    const { entries, uncertain, perRun, hidden, secretDoor } = inspection
+    const { entries, uncertain, perRun, impShop, hidden, secretDoor } =
+      inspection
     const heldTrinket = useContext(HeldTrinketContext)
     return (
       <div
@@ -266,9 +267,11 @@ export const MapInspectPanel = forwardRef<HTMLDivElement, Props>(
           <p className="border-t pt-2 text-xs text-muted-foreground">
             {perRun
               ? 'The game places these consumables in a random order that is not tied to the seed, so which one lands here changes on every run.'
-              : heldTrinket
-                ? `Shown as generated with ${itemLabel(heldTrinket)} +${PICKED_TRINKET_LEVEL} held. Items found before this floor can change what spawns here.`
-                : 'Shown as generated for a fresh run with no trinkets. Items found or trinkets held before this floor can change what spawns here.'}
+              : impShop
+                ? 'The Imp opens this shop only after you finish his quest and defeat the Dwarf King. Items found or trinkets held before this floor can change the stock.'
+                : heldTrinket
+                  ? `Shown as generated with ${itemLabel(heldTrinket)} +${PICKED_TRINKET_LEVEL} held. Items found before this floor can change what spawns here.`
+                  : 'Shown as generated for a fresh run with no trinkets. Items found or trinkets held before this floor can change what spawns here.'}
           </p>
         ) : null}
       </div>

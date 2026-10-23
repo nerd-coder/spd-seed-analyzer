@@ -1,5 +1,6 @@
 //! Pinned SPD v3.3.8 `CavesBossLevel` structural generation.
 
+use super::caves_visuals;
 use crate::dungeon::DungeonState;
 use crate::level::{map_facts, patch, terrain};
 use crate::random::Random;
@@ -99,14 +100,6 @@ pub(super) fn build(dungeon: &mut DungeonState, depth_seed: i64) -> Option<Floor
     #[cfg(test)]
     LAST_PRE_ITEMS_RNG.with(|probe| *probe.borrow_mut() = Random::peek_ints(8));
 
-    for tile in &mut map.map {
-        *tile = match *tile {
-            terrain::EMPTY_DECO | terrain::REGION_DECO | terrain::REGION_DECO_ALT => terrain::EMPTY,
-            terrain::WALL_DECO => terrain::WALL,
-            tile => tile,
-        };
-    }
-
     let populated = map_facts::MapFacts::from_room_paint(&map).into_floor_map(
         &map,
         15,
@@ -117,6 +110,8 @@ pub(super) fn build(dungeon: &mut DungeonState, depth_seed: i64) -> Option<Floor
         .clone()
         .into_layout_only()
         .with_entities_from(&populated);
+    (floor.custom_tiles, floor.custom_terrain, floor.custom_walls) =
+        caves_visuals::layers(&floor.tiles, &PYLON_POSITIONS);
     floor.transitions = vec![
         transition(16 + 2 * WIDTH, "REGULAR_EXIT", (14, 0, 18, 2), 16),
         transition(16 + 25 * WIDTH, "REGULAR_ENTRANCE", (16, 25, 16, 25), 14),
@@ -244,6 +239,7 @@ fn decorate_caves(map: &mut terrain::TerrainMap) {
     }
 }
 
+/// `DungeonTileSheet.floorTile`: water, or a `directVisuals` entry below `CHASM`.
 fn floor_tile(tile: i32) -> bool {
     matches!(
         tile,
@@ -251,24 +247,19 @@ fn floor_tile(tile: i32) -> bool {
             | terrain::EMPTY
             | terrain::GRASS
             | terrain::EMPTY_WELL
-            | terrain::EMPTY_SP
             | terrain::ENTRANCE
             | terrain::EXIT
             | terrain::EMBERS
             | terrain::PEDESTAL
-            | terrain::HIGH_GRASS
+            | terrain::EMPTY_SP
+            | terrain::ENTRANCE_SP
+            | terrain::SECRET_TRAP
             | terrain::TRAP
             | terrain::INACTIVE_TRAP
+            | terrain::CUSTOM_DECO
+            | terrain::CUSTOM_DECO_EMPTY
             | terrain::EMPTY_DECO
             | terrain::WELL
-            | terrain::STATUE
-            | terrain::STATUE_SP
-            | terrain::ALCHEMY
-            | terrain::FURROWED_GRASS
-            | terrain::CUSTOM_DECO_EMPTY
-            | terrain::REGION_DECO
-            | terrain::REGION_DECO_ALT
-            | terrain::ENTRANCE_SP
     )
 }
 

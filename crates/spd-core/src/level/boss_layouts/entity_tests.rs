@@ -3,6 +3,7 @@
 use serde::Deserialize;
 
 use crate::report::FloorMap;
+use spd_objects::MobId;
 
 #[derive(Deserialize)]
 struct Fixture {
@@ -147,5 +148,37 @@ fn boss_entities_match_java_oracles() {
         if oracle.depth == 10 {
             assert_eq!(actual.tiles, oracle.terrain, "{seed} cages and torches");
         }
+    }
+}
+
+#[test]
+fn imp_shop_is_published_as_conditional_entities() {
+    for (seed, json) in [
+        fixture!("AAA-AAA-AAA", "aaa-aaa-aaa-final-heaps-floor-20.json"),
+        fixture!("GFX-PZH-DCH", "gfx-pzh-dch-final-heaps-floor-20.json"),
+    ] {
+        let oracle = serde_json::from_str::<Fixture>(json)
+            .unwrap()
+            .floors
+            .remove(0);
+        let mut actual = public_boss_map(seed, 20);
+        let shop_cells = actual.uncertain_cells.clone();
+        let keeper = 7 + 16 * actual.width;
+        assert!(actual
+            .mobs
+            .iter()
+            .any(|mob| mob.cell == keeper && mob.mob == MobId::ImpShopkeeper));
+        let for_sale: Vec<_> = actual
+            .heaps
+            .iter()
+            .filter(|heap| heap.heap_type == "for_sale")
+            .map(|heap| heap.cell)
+            .collect();
+        assert!(!for_sale.is_empty(), "{seed} imp shop stock");
+        assert_eq!(shop_cells.len(), for_sale.len() + 1, "{seed}");
+        assert!(for_sale.iter().all(|cell| shop_cells.contains(cell)));
+        actual.mobs.retain(|mob| !shop_cells.contains(&mob.cell));
+        actual.heaps.retain(|heap| !shop_cells.contains(&heap.cell));
+        assert_eq!(entities(&actual), oracle_entities(&oracle), "{seed}");
     }
 }
