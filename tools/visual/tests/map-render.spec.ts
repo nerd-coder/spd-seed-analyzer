@@ -864,9 +864,9 @@ test('floor items render as icon slots', async ({ page }) => {
   await expect(page.getByRole('switch', { name: 'Floor maps' })).toHaveCount(0)
   await expect(page.getByRole('heading', { name: 'Identities' })).toBeVisible()
   await expect(page.getByRole('tab', { name: 'Potions' })).toHaveCount(0)
-  await expect(page.getByRole('heading', { name: 'Potions' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Scrolls' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Rings' })).toBeVisible()
+  for (const group of ['Potions', 'Scrolls', 'Rings']) {
+    await expect(page.getByRole('heading', { name: group })).toHaveCount(0)
+  }
   await expect(page.getByRole('heading', { name: 'Floor 1' })).toBeVisible()
   const syntheticItem = page.getByRole('listitem').filter({
     has: page.getByLabel(/Scroll of Transmutation/i),

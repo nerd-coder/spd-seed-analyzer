@@ -46,23 +46,6 @@ function IdentityGrid({
   )
 }
 
-function IdentityGroup({
-  title,
-  entries,
-  category,
-}: {
-  title: string
-  entries: IdentityEntry[]
-  category: ItemCategory
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <h4 className="text-sm font-semibold">{title}</h4>
-      <IdentityGrid entries={entries} category={category} />
-    </div>
-  )
-}
-
 export function IdentitiesPanel({ identities }: { identities: IdentityMaps }) {
   return (
     <section
@@ -84,22 +67,16 @@ export function IdentitiesPanel({ identities }: { identities: IdentityMaps }) {
           Unidentified appearances for this seed
         </span>
       </div>
-      <div className="flex flex-col gap-4">
-        <IdentityGroup
-          title="Potions"
+      <div className="flex flex-col gap-3">
+        <IdentityGrid
           entries={identities.potions}
           category={ItemCategory.Potion}
         />
-        <IdentityGroup
-          title="Scrolls"
+        <IdentityGrid
           entries={identities.scrolls}
           category={ItemCategory.Scroll}
         />
-        <IdentityGroup
-          title="Rings"
-          entries={identities.rings}
-          category={ItemCategory.Ring}
-        />
+        <IdentityGrid entries={identities.rings} category={ItemCategory.Ring} />
       </div>
     </section>
   )
