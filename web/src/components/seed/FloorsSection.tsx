@@ -17,6 +17,26 @@ const ICON_SHEET = {
   height: UI_ICONS.sheetH,
 }
 
+/** Sits above the floor strip; labels the floor list in `FloorsSection`. */
+export function FloorsHeading() {
+  return (
+    <div className="flex items-center gap-2">
+      <GameSprite
+        sheet={ICON_SHEET}
+        frames={[STAIRS_ICONS.none]}
+        scale={2}
+        label="Stairs"
+      />
+      <h2 id="floors-title" className="font-pixel text-px-1">
+        Floors
+      </h2>
+      <span className="text-muted-foreground text-sm">
+        Items you may find on each floor
+      </span>
+    </div>
+  )
+}
+
 export function FloorsSection({
   floors,
   identities,
@@ -39,21 +59,6 @@ export function FloorsSection({
       aria-labelledby="floors-title"
       className="bg-card text-card-foreground rounded-lg border"
     >
-      <div className="flex items-center gap-2 px-4 py-4">
-        <GameSprite
-          sheet={ICON_SHEET}
-          frames={[STAIRS_ICONS.none]}
-          scale={2}
-          label="Stairs"
-        />
-        <h2 id="floors-title" className="font-pixel text-px-1">
-          Floors
-        </h2>
-        <span className="text-muted-foreground text-sm">
-          Items you may find on each floor
-        </span>
-      </div>
-
       <div>
         {ordered.map((floor) => (
           <FloorDetail
