@@ -15,7 +15,7 @@ export function RunHeader({
   challengeChoice: ChallengeChoice
 }) {
   return (
-    <header data-run-header className="flex flex-col gap-6 pb-2">
+    <header data-run-header className="flex flex-col gap-6 pb-6">
       <SeedTitle seed={report.seed} />
       <ChallengePicker
         choice={challengeChoice}
