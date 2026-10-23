@@ -106,6 +106,7 @@ export const ItemClass = {
 
   Alchemize: 'Alchemize',
   AlchemyPage: 'AlchemyPage',
+  Amulet: 'Amulet',
   Ankh: 'Ankh',
   Bomb: 'Bomb',
   CrystalKey: 'CrystalKey',

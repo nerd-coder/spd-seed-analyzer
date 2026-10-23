@@ -136,6 +136,7 @@ export const CLASS_ICON: Record<string, number> = {
   // Consumables / misc (shop + rooms)
   Alchemize: 422,
   AlchemyPage: 497,
+  Amulet: 61,
   Ankh: 48,
   Bomb: 80,
   CrystalKey: 57,
